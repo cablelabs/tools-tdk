@@ -1,0 +1,119 @@
+<!-- 
+ ============================================================================
+  COMCAST CONFIDENTIAL AND PROPRIETARY
+ ============================================================================
+  This file and its contents are the intellectual property of Comcast.  It may
+  not be used, copied, distributed or otherwise  disclosed in whole or in part
+  without the express written permission of Comcast.
+  ============================================================================
+  Copyright (c) 2013 Comcast. All rights reserved.
+  ============================================================================
+-->
+<%--<!DOCTYPE html>--%>
+<%@ page import="com.comcast.rdk.Device" %>
+<%@ page import="com.comcast.rdk.ScriptGroup" %> 
+<%@ page import="com.comcast.rdk.Execution" %> 
+
+<html>
+<head>
+<meta name="layout" content="main">
+<g:set var="entityName"
+	value="${message(code: 'ScriptExecution.label', default: 'ScriptExecution')}" />
+<link rel="stylesheet" href="${resource(dir:'css',file:'jquery.jqplot.min.css')}" />	
+<link rel="stylesheet" href="${resource(dir:'css',file:'shCoreDefault.min.css')}" />	
+<link rel="stylesheet" href="${resource(dir:'css',file:'shThemejqPlot.min.css')}" />
+<title>Trends</title>
+<g:javascript library="chart/jquery.jqplot.min"/>
+<g:javascript library="chart/shCore.min"/>
+<g:javascript library="chart/shBrushJScript.min"/>
+<g:javascript library="chart/shBrushXml.min"/>
+<g:javascript library="chart/jqplot.barRenderer.min"/>
+<g:javascript library="chart/jqplot.categoryAxisRenderer.min"/>
+<g:javascript library="chart/jqplot.pointLabels.min"/>
+<g:javascript library="chart/jqplot.canvasTextRenderer.min"/>
+<g:javascript library="chart/jqplot.canvasAxisLabelRenderer.min" />
+<g:javascript library="chart/jqplot.canvasAxisTickRenderer.min" />
+<g:javascript library="jquery.more"/>
+<g:javascript library="select2"/>
+<g:javascript library="chartview"/>
+<link rel="stylesheet" href="${resource(dir:'css',file:'jquery-ui.css')}" type="text/css" />
+<link rel="stylesheet" href="${resource(dir:'css',file:'select2.css')}" type="text/css" />
+
+<script type="text/javascript">
+
+	$(document).ready(function() {		
+		$("#trendid").addClass("changecolor");	
+		$("#executionId").select2();	
+		var defaultValue = "ExecutionBased";
+		$('input[name=chartOption][value=ExecutionBased]').prop('checked', true);	
+	});
+	
+</script>
+</head>
+<body>	
+<div  id="chart1"></div>
+	<div>
+		<h1>Result Analysis</h1>
+		<g:if test="${flash.message}">
+			<div class="message" role="status">${flash.message}</div>
+		</g:if>
+		<g:if test="${error}">
+			<ul class="errors" role="alert">
+				<li>${error}</li>
+			</ul>
+		</g:if>
+		<br>
+		<div>
+			<input onclick="showExecutionBased();" type="radio" name="chartOption" value="ExecutionBased" checked="checked"/>Chart Based on Execution 
+			&emsp;<input onclick="showDeviceBased();" type="radio" name="chartOption" value="DeviceBased" />Chart Based on Device and ScriptGroup	    	
+		</div>
+		<br/>
+		
+		<div id="executionbased">
+			<table class="noClass" style="border: 1; border-color: black;">
+				<tr>
+					<td style="vertical-align: top;">Executions</td>
+					<td>					
+						<g:select id="executionId" multiple="true" style="height:200px;width:400px" name="execution"  from="${executionList}" optionKey="id" value="" class="many-to-one selectCombo"/>								
+					</td>
+			
+					<td style="vertical-align: top;">Chart Type</td>
+					<td>				
+					<g:select id="chartType1" name="chartType" from="${['ExecutionStatus', 'BenchMark', 'SystemDiagnostics']}" value="${count}" required="" />
+					</td>				
+					
+					<td>
+	          			<input type="button" value="Get Chart" onclick="showChart();" /><br>           			
+	          		</td>           		    		
+				</tr>
+			</table>		
+		</div>
+		
+		<div id="devicebased" style="display:none;" >
+			<table class="noClass" style="border: 1; border-color: black;">
+				<tr>
+					<td style="vertical-align: middle;">Device</td>
+					<td>
+						<g:select id="devices" name="devices" noSelection="['' : 'Please Select']" from="${Device?.list()}" required="" value="" optionKey="id" class="many-to-one selectCombo" />								
+					</td>
+					<td style="vertical-align: middle;">ScriptGroup</td>
+					<td>
+						<g:select id="scriptGrp" name="scriptGrp" noSelection="['' : 'Please Select']" from="${ScriptGroup?.list()}" required=""  optionKey="id"  class="many-to-one selectCombo"/>
+					</td>
+					<td style="vertical-align: middle;">Chart Type</td>
+					<td>				
+					<g:select id="chartType" name="chartType" from="${['ExecutionStatus', 'BenchMark', 'SystemDiagnostics']}" value="${count}" required="" /></td>				
+					
+					<td style="vertical-align: middle;">Result No's</td>
+					<td><g:select id="resultCount" name="result.count" from="${2..10}" value="${count}" style="width:45px;" required="" /></td>          		
+	          		<td>
+	          			<input type="button" value="Get Chart" onclick="showChart();" /><br>           			
+	          		</td>           		    		
+				</tr>				
+			</table>
+		</div>
+		<div class="chartdivclass" id="chartdiv" style="width:100%;height:600px;"></div>
+		
+	</div>	
+</body>
+</html> 

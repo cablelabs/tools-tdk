@@ -1,0 +1,42 @@
+/*
+* ============================================================================
+* COMCAST CONFIDENTIAL AND PROPRIETARY
+* ============================================================================
+* This file and its contents are the intellectual property of Comcast.  It may
+* not be used, copied, distributed or otherwise  disclosed in whole or in part
+* without the express written permission of Comcast.
+* ============================================================================
+* Copyright (c) 2013 Comcast. All rights reserved.
+* ============================================================================
+*/
+
+#ifndef __RDK_TEST_STUB_INTF__
+#define __RDK_TEST_STUB_INTF__
+
+#define IN	
+#define OUT
+
+class RDKTestAgent;
+
+/**************************************************************************************
+ Description   : This Class provides provides interface for the modules.
+ 
+ **************************************************************************************/
+class RDKTestStubInterface
+{
+    public:
+
+        /* Constructor */
+        RDKTestStubInterface(){}
+
+        /* Destructor */
+        virtual ~RDKTestStubInterface(){}
+
+        virtual bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj) = 0;
+        virtual bool cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj) = 0;
+		
+}; /* End of RDKTestStubInterface */
+
+#endif //__OCAP_STUB_H__
+
+

@@ -1,0 +1,652 @@
+/*
+ * ============================================================================
+ * COMCAST CONFIDENTIAL AND PROPRIETARY
+ * ============================================================================
+ * This file and its contents are the intellectual property of Comcast.  It may
+ * not be used, copied, distributed or otherwise  disclosed in whole or in part
+ * without the express written permission of Comcast.
+ * ============================================================================
+ * Copyright (c) 2013 Comcast. All rights reserved.
+ * ============================================================================
+ */
+package com.comcast.rdk
+/**
+ * A class that handles the device creation and device group creation
+ * @author sreejasuma
+ */
+import static com.comcast.rdk.Constants.*
+import grails.converters.JSON
+import java.util.concurrent.ExecutorService
+import org.springframework.dao.DataIntegrityViolationException
+import java.util.concurrent.Executors
+
+
+class DeviceGroupController {
+
+    static allowedMethods = [save: "POST", update: "POST", delete: "POST", updateDevice : "POST"]
+    /**
+     * Injecting devicegroupService
+     */
+    def devicegroupService
+	def utilityService
+	
+	private static final String DEVICESTREAM_QUERY = "delete DeviceStream d where d.device = :instance1"
+	private static final String GATEWAY = "Gateway"
+	
+    static ExecutorService executorService = Executors.newCachedThreadPool()
+    def executionService
+	def grailsApplication
+	
+	def index(){
+		redirect(action: "list")
+	}
+
+    /**
+     * Method to list the device groups.
+     * When list method is called as ajax from devicegrp_resolver.js with the 
+     * params?.streamtable value only the streamlist page will be rendered.
+     */    
+    def list = {
+        
+		/**
+		 * Invoked from 
+		 */
+        if(params?.streamtable) {
+            def result = [url: getApplicationUrl(), streamingDetailsInstanceList: StreamingDetails.list(), streamingDetailsInstanceTotal: StreamingDetails.count()]
+            render view:"streamlist", model:result
+            return
+        }		
+		def groupsInstance = utilityService.getGroup()
+		def deviceInstanceList = Device.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		def deviceGrpInstanceList = DeviceGroup.findAllByGroupsOrGroupsIsNull(groupsInstance)
+        [url: getApplicationUrl(), deviceGroupsInstance : params?.deviceGroupsInstance, deviceInstanceList : deviceInstanceList, deviceInstanceTotal : deviceInstanceList.size(), deviceGroupsInstanceList : deviceGrpInstanceList, deviceGroupsInstanceTotal : deviceGrpInstanceList.size(), deviceId: params.deviceId, deviceGroupId: params.deviceGroupId]
+    }
+
+    /**
+     * Method to create a device group.
+     */
+    def create() {
+        [deviceGroupsInstance: new DeviceGroup(params)]
+    }
+
+    /**
+     * Method to save a device group.
+     */
+    def save() {
+        def deviceGroupsInstance = new DeviceGroup(params)
+        if(DeviceGroup.findByName(params?.name)){
+            flash.message = flash.message = message(code: 'devicegrp.already.exists') 
+            redirect(action: "list")
+            return
+        }
+		deviceGroupsInstance.groups = utilityService.getGroup()
+        if (!deviceGroupsInstance.save(flush: true)) {
+            log.info("Device Group Not Created "+deviceGroupsInstance?.name)
+            log.error( deviceGroupsInstance.errors)
+            redirect(action: "list")
+            return
+        }
+        log.info("Device Group Saved "+deviceGroupsInstance?.name)
+        flash.message = message(code: 'default.created.message', args: [
+            message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+            deviceGroupsInstance.name
+        ])
+        redirect(action: "list")
+    }
+
+    /**
+     * Method to show a device group.
+     */
+    def show(Long id) {
+        def deviceGroupsInstance = DeviceGroup.get(id)
+        if (!deviceGroupsInstance) {
+            flash.message = message(code: 'default.not.found.message', args: [
+                message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+                id
+            ])
+            redirect(action: "list")
+            return
+        }
+        [deviceGroupsInstance: deviceGroupsInstance]
+    }
+
+    /**
+     * Method to edit a device group.
+     */
+    def edit(Long id) {
+        def deviceGroupsInstance = DeviceGroup.get(id)
+        if (!deviceGroupsInstance) {
+            flash.message = message(code: 'default.not.found.message', args: [
+                message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+                id
+            ])
+            redirect(action: "list")
+            return
+        }
+        [deviceGroupsInstance: deviceGroupsInstance]
+    }
+
+    /**
+     * Method to update a device group.
+     */
+    def update(Long id, Long version) {
+        def deviceGroupsInstance = DeviceGroup.get(id)
+
+        if (!deviceGroupsInstance) {
+            flash.message = message(code: 'default.not.found.message', args: [
+                message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+                id
+            ])
+            redirect(action: "list")
+            return
+        }
+        if (version != null) {
+            if (deviceGroupsInstance.version > version) {
+                deviceGroupsInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
+                        [
+                            message(code: 'deviceGroups.label', default: 'DeviceGroups')] as Object[],
+                        "Another user has updated this DeviceGroups while you were editing")
+                redirect(action: "list")
+                return
+            }
+        }
+        deviceGroupsInstance.name = params?.name
+        deviceGroupsInstance.devices = []
+        if (!deviceGroupsInstance.save(flush: true)) {
+            redirect(action: "list", params : [deviceGroupsInstance: deviceGroupsInstance])
+            return
+        }
+        else{
+            log.info("Device Group Updated "+deviceGroupsInstance?.name)
+            def device
+            if((params?.devices) instanceof String ){
+                device = Device.findByStbName(params?.devices)
+                deviceGroupsInstance.addToDevices(device)
+            }
+            else{
+                params.devices.each{ name ->
+                    device = Device.findByStbName(name)
+                    deviceGroupsInstance.addToDevices(device)
+                }
+            }
+        }
+
+        flash.message = message(code: 'default.updated.message', args: [
+            message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+            deviceGroupsInstance.id
+        ])
+		redirect(action: "list", params: [deviceGroupId: params.id])
+    }
+
+	/**
+	 * Method to delete a device group
+	 * @return
+	 */
+    def delete() {
+        def deviceGroupsInstance = DeviceGroup.get(params?.id)
+        if (!deviceGroupsInstance) {
+            flash.message = message(code: 'default.not.found.message', args: [
+                message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+                params?.id
+            ])
+            redirect(action: "list")
+            return
+        }
+
+        try {
+            deviceGroupsInstance.delete(flush: true)
+            flash.message = message(code: 'default.deleted.message', args: [
+                message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+                deviceGroupsInstance?.name
+            ])
+            redirect(action: "list")
+        }
+        catch (DataIntegrityViolationException e) {
+            flash.message = message(code: 'default.not.deleted.message', args: [
+                message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+                deviceGroupsInstance?.name
+            ])
+            redirect(action: "list")
+        }
+    }
+
+	/**
+	 * Method to delete a device group
+	 * @return
+	 */
+    def deleteDeviceGrp() {
+
+        Long id = params.id as Long
+        def deviceGroupsInstance = DeviceGroup.get(id)
+        if (!deviceGroupsInstance) {
+            flash.message = message(code: 'default.not.found.message', args: [
+                message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+                deviceGroupsInstance?.id
+            ])
+            redirect(action: "list")
+            return
+        }
+        try {
+            deviceGroupsInstance.delete(flush: true)
+            flash.message = message(code: 'default.deleted.message', args: [
+                message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+                deviceGroupsInstance?.name
+            ])
+            render("success")
+        }
+        catch (DataIntegrityViolationException e) {
+            flash.message = message(code: 'default.not.deleted.message', args: [
+                message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+                deviceGroupsInstance?.name
+            ])
+            redirect(action: "list")
+        }
+    }
+
+    /**
+     * Create a new device
+     * @return
+     */
+    def createDevice() {
+        def devices = Device.where { boxType { type == GATEWAY } }
+        [url : getApplicationUrl() ,deviceInstance: new Device(params), gateways : devices, editPage : false]
+    }
+
+    /**
+     * Save a new device
+     * @return
+     */
+    def saveDevice() {
+
+        if(Device.findByStbName(params?.stbName)){
+            flash.message = message(code: 'stbname.already.exists')
+			render(flash.message)
+            return
+        }
+		
+		def stbIps = Device.findAllByStbIpAndIsChild(params?.stbIp, 0)
+		
+		if(stbIps){
+			flash.message = message(code: 'stbip.already.exists')
+			render(flash.message)
+			return
+		}
+
+		/*if(Device.findByMacId(params?.macId)){
+			flash.message = "Mac Id already in use. Please use a different Name."
+			render("Mac Id already in use. Please use a different Name.")
+			return
+		}*/
+        
+        /**
+         * Check whether streams are present
+         * and there is no duplicate OcapIds
+         */
+        if((params?.streamid)){
+            int ocapIdSize = params?.ocapId.size()
+            Set setOcapId =  params?.ocapId
+            int setSize = setOcapId.size()
+            if(setSize < ocapIdSize){
+                flash.message = message(code: 'duplicate.ocap.id')
+				render(flash.message)
+                return
+            }
+        }
+		
+		def deviceInstance = new Device(params)
+		deviceInstance.groups = utilityService.getGroup()
+        if (deviceInstance.save(flush: true)) {
+            devicegroupService.saveToDeviceGroup(deviceInstance)
+            saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)
+        }
+        else{
+            flash.message = message(code: 'default.not.created.message', args: [
+            message(code: 'device.label', default: 'Device')])			
+			render(flash.message)
+            return
+        }
+
+      flash.message = message(code: 'default.created.message', args: [
+            message(code: 'device.label', default: 'Device'),
+            deviceInstance.stbName
+        ])
+		render(message(code: 'default.created.message', args: [
+            message(code: 'device.label', default: 'Device'),
+            deviceInstance.stbName
+        ]))
+		
+    }
+
+    /**
+     * Edit device
+     * @return
+     */
+    def editDevice(Long id, final String flag) {
+        def devices = Device.where { boxType { type == GATEWAY } }
+
+        def deviceInstance = Device.get(id)
+        if (!deviceInstance) {           
+            return
+        }
+		
+        def deviceStream = DeviceStream.findAllByDevice(deviceInstance)
+
+        [url : getApplicationUrl(),deviceInstance: deviceInstance, flag : flag, gateways : devices, deviceStreams : deviceStream, editPage : true, uploadBinaryStatus: deviceInstance.uploadBinaryStatus, id: id]
+    }
+
+    /**
+     * Update device
+     * @return
+     */
+    def updateDevice(Long id, Long version) {
+		
+        def deviceInstance = Device.get(id)
+
+        if (!deviceInstance) {
+            flash.message = message(code: 'default.not.found.message', args: [
+                message(code: 'device.label', default: 'Device'),
+                id
+            ])
+            redirect(action: "list")
+            return
+        }
+
+        if (version != null) {
+            if (deviceInstance.version > version) {
+                deviceInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
+                        [
+                            message(code: 'device.label', default: 'Device')] as Object[],
+                        "Another user has updated this Device while you were editing")
+                //render(view: "editDevice", model: [deviceInstance: deviceInstance])
+				redirect(action: "list")
+                return
+            }
+        }
+        boolean deviceInUse = devicegroupService.checkDeviceStatus(deviceInstance)
+        if(deviceInUse){
+			flash.message = message(code: 'device.not.update', args: [deviceInstance.stbIp])
+            redirect(action: "list")
+            return
+        }
+        else{
+			
+			String currentBoxType = deviceInstance?.boxType?.type.toLowerCase()
+			
+			BoxType boxType = BoxType.findById(params?.boxType?.id)
+			
+			String newBoxType = boxType.type.toLowerCase()
+
+            deviceInstance.properties = params
+
+            if(currentBoxType.equals( BOXTYPE_CLIENT )){
+                if(newBoxType.equals( BOXTYPE_CLIENT )){
+                    deviceInstance.gatewayIp = params?.gatewayIp
+                    deviceInstance.recorderId = ""
+                    DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+                }
+                else{
+                    deviceInstance.gatewayIp = ""
+                    deviceInstance.recorderId = params?.recorderId
+                }
+            }
+            else{
+                if(currentBoxType.equals( BOXTYPE_GATEWAY )){
+                    if(newBoxType.equals( BOXTYPE_CLIENT )){
+                        deviceInstance.gatewayIp = params?.gatewayIpedit
+                        deviceInstance.recorderId = ""
+                        DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+                    }
+                    else{
+                        deviceInstance.gatewayIp = ""
+                        deviceInstance.recorderId = params?.recorderIdedit
+                    }
+                }
+            }
+
+            if (!deviceInstance.save(flush: true)) {
+                devicegroupService.saveToDeviceGroup(deviceInstance)
+                redirect(action:"list")
+                return
+            }
+			
+           
+           DeviceStream deviceStream
+
+            if(currentBoxType.equals( BOXTYPE_CLIENT )){
+                if(newBoxType.equals( BOXTYPE_GATEWAY )){
+                    saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)        
+                }
+
+            }
+            else{                
+                if(deviceInstance.boxType.type.toLowerCase().equals( BOXTYPE_GATEWAY )){
+                    for(int i = 0; i < params?.streamid?.size() ; i++){
+                        deviceStream = DeviceStream.findById(params?.streamid[i])
+						
+					/*	DeviceStream.executeUpdate("update DeviceStream d set d.ocapId = :newOcapId where d.id = :deviceStreamId",
+							[newOcapId: params?.ocapId[i], deviceid: deviceStream.id.toLong()] )*/
+						
+                        deviceStream.ocapId = params?.ocapId[i]
+                        deviceStream.save(flush:true)
+                    }
+                }
+            }
+
+            devicegroupService.saveToDeviceGroup(deviceInstance)
+            flash.message = message(code: 'default.updated.message', args: [
+                message(code: 'device.label', default: 'Device'),
+                deviceInstance.stbName
+            ])
+        }
+
+		redirect(action: "list", params: [deviceId: params.id])
+    }
+    
+    /**
+     * Save device specific stream details
+     * @return
+     */
+    def saveDeviceStream(final def streamIdList, final def ocapIdList, final Device deviceInstance){
+        DeviceStream deviceStream
+        StreamingDetails streamingDetails
+        for(int i = 0; i < streamIdList?.size() ; i++){
+            streamingDetails = StreamingDetails.findById(streamIdList[i])
+            deviceStream = new DeviceStream()
+            deviceStream.device = deviceInstance
+            deviceStream.stream = streamingDetails
+            deviceStream.ocapId = ocapIdList[i]
+            deviceStream.save(flush:true)
+        }
+    }
+
+    /**
+     * Delete device
+     * @return
+     */
+    def deviceDelete(Long id) {		
+		List devicesTobeDeleted = []
+		
+        def deviceInstance = Device.get(id)
+        if (!deviceInstance) {
+           
+            redirect(action: "list")
+            return
+        }
+        boolean deviceInUse = devicegroupService.checkDeviceStatus(deviceInstance)
+        if(deviceInUse){
+			flash.message = message(code: 'device.not.update', args: [deviceInstance.stbIp])
+            redirect(action: "list")
+        }
+        else{
+            try {
+				
+				deviceInstance.childDevices.each { childDevice ->
+						devicesTobeDeleted << childDevice
+				}
+				
+                DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+				//DeviceGroup.executeUpdate("delete DeviceGroup d where d.device = :instance1",[instance1:deviceInstance])
+                deviceInstance.delete(flush: true)
+				
+				devicesTobeDeleted.each { childDevice ->					
+					childDevice.delete(flush:true)
+				}				
+				
+                flash.message = message(code: 'default.deleted.message', args: [
+                    message(code: 'device.label', default: 'Device'),
+                    deviceInstance.stbName
+                ])
+                redirect(action: "list")
+            }
+            catch (DataIntegrityViolationException e) {
+                flash.message = message(code: 'default.not.deleted.message', args: [
+                    message(code: 'device.label', default: 'Device'),
+                    deviceInstance.stbName
+                ])
+                redirect(action: "list")
+            }
+        }
+    }
+
+    /**
+     * Delete device
+     * @return
+     */
+    def deleteDevice() {
+        Long id = params.id as Long
+        def deviceInstance = Device.get(id)
+		List devicesTobeDeleted = []
+
+        boolean deviceInUse = devicegroupService.checkDeviceStatus(deviceInstance)
+        if(deviceInUse){
+			flash.message = message(code: 'device.not.update', args: [deviceInstance.stbIp])
+            render(flash.message)
+        }
+        else{
+            try {
+				
+				deviceInstance.childDevices.each { childDevice ->
+					devicesTobeDeleted << childDevice
+				}
+				
+                DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+                deviceInstance.delete(flush: true)
+				
+				devicesTobeDeleted.each { childDevice ->
+					
+					childDevice.delete(flush:true)
+				}
+				
+                flash.message = message(code: 'default.deleted.message', args: [
+                    message(code: 'device.label', default: 'Device'),
+                    deviceInstance.stbName
+                ])
+                render("success")
+            }
+            catch (DataIntegrityViolationException e) {
+                flash.message = message(code: 'default.not.deleted.message', args: [
+                    message(code: 'device.label', default: 'Device'),
+                    deviceInstance.stbName
+                ])
+                render("Exception")
+            }
+        } 
+    }
+
+    /**
+     * Method to get the current url and to create
+     * new url upto the application name
+     * @return
+     */
+    def String getApplicationUrl(){
+        String currenturl = request.getRequestURL().toString();
+        String[] urlArray = currenturl.split( URL_SEPERATOR );
+        String url = urlArray[INDEX_ZERO] + DOUBLE_FWD_SLASH + urlArray[INDEX_TWO] + URL_SEPERATOR + urlArray[INDEX_THREE]
+        return url
+    }
+    
+    /**
+     * Get the type of box from the box selected
+     * @return
+     */
+    def getBoxType(){
+        List boxTypes = []
+        BoxType boxType = BoxType.findById(params?.id)
+        boxTypes.add( boxType.type.toLowerCase().trim() )
+        render boxTypes as JSON
+    }
+
+	/**
+	 * Method to upload binary files to box.
+	 * Invoked by an ajax call.
+	 * Executes expect script with required parameters.
+	 *  
+	 * @return
+	 */
+	def uploadBinary(){
+
+		String outputData = null
+		List uploadResult = []
+		String EXPECT_COMMAND = KEY_EXPECT
+		String  absolutePath
+		
+		String boxIp = params?.boxIp
+		String username = params?.username
+		String password = params?.password
+		String systemPath = params?.systemPath
+		String systemIP = params?.systemIP
+		String boxpath = params?.boxpath
+
+		String boxType = devicegroupService.getBoxType(params?.boxType)
+		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//uploadbinary.exp").file
+		absolutePath = layoutFolder.absolutePath
+		try {
+
+			String[] cmd = [
+				EXPECT_COMMAND,
+				absolutePath,
+				boxType,
+				boxIp,
+				systemIP,
+				username,
+				password,
+				systemPath,
+				boxpath
+			]
+
+			Device deviceInstance = Device.findByStbIp(boxIp);
+
+			ScriptExecutor scriptExecutor = new ScriptExecutor()
+			outputData = scriptExecutor.executeCommand(cmd, deviceInstance)
+			uploadResult = Arrays.asList(outputData.split("\\r?\\n"))
+
+			if(uploadResult.contains(KEY_BINARYTRANSFER)){
+				deviceInstance.uploadBinaryStatus = UploadBinaryStatus.SUCCESS
+			}
+			else{
+				deviceInstance.uploadBinaryStatus = UploadBinaryStatus.FAILURE
+			}
+
+			render uploadResult as JSON
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	
+	/**
+	 * Method to check whether device with same IP address exist or not. If yes returns the id of device
+	 * @return
+	 */
+	def fetchDevice(){
+
+		List deviceInstanceList = []
+		Device deviceInstance = Device.findByStbName(params.stbName)
+		if(deviceInstance){
+			deviceInstanceList.add(deviceInstance.id)
+		}
+		render deviceInstanceList as JSON
+	}
+}
+
+

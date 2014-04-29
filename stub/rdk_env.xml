@@ -1,0 +1,11 @@
+<environment>
+  <components>
+    <tdk>
+      <dependencies>sdk,servicemanager,net-snmp,opensource,iarmbus, mediaframework,closedcaption,devicesettings,iarmmgrs,rdklogger,mediastreamer, recorder, mlt</dependencies>
+      <paths><scripts>tdk</scripts></paths>
+      <is_coverity_supported>True</is_coverity_supported> 
+    </tdk>
+
+  </components>
+</environment>
+

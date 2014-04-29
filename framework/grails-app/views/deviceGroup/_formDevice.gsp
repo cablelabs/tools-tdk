@@ -1,0 +1,219 @@
+<!-- 
+ ============================================================================
+  COMCAST CONFIDENTIAL AND PROPRIETARY
+ ============================================================================
+  This file and its contents are the intellectual property of Comcast.  It may
+  not be used, copied, distributed or otherwise  disclosed in whole or in part
+  without the express written permission of Comcast.
+  ============================================================================
+  Copyright (c) 2013 Comcast. All rights reserved.
+  ============================================================================
+-->
+<%@ page import="com.comcast.rdk.Device" %>
+
+<div id="uploadBinarypopup" style="display: none; overflow: auto; width : 98%; height : 98%;">	
+<div id="uploadBinaryDiv" align="center" style="border: solid; border-width: 1px; border-color: #CCCCCC; border-spacing: 5px 5px;" b>
+		
+			<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'System IP', 'error')} required">
+			<label for="Source IP"> 
+				<g:message code="device.System IP.label" default="Source IP" /> 
+				<span class="required-indicator">*</span>
+		    </label>
+		     <g:textField name="systemIP" id="systemIP" autocomplete="on" onchange="ValidateIPaddress1();"/>
+			</div>
+			<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'System Path', 'error')} required">
+			<label for="Source Path"> 
+				<g:message code="device.Path.label" default="Source Path" /> 
+				<span class="required-indicator">*</span>
+		    </label>
+			<g:textField name="systemPath" id="systemPath" autocomplete="on" />
+			</div>
+			<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'Username', 'error')} required">
+			<label for="Source Username"> 
+				<g:message code="device.Source Username.label" default="Source Username" /> 
+				<span class="required-indicator">*</span>
+		    </label>
+			<g:textField name="username" id="username" autocomplete="on"/>
+			</div>
+			<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'Password', 'error')} required">
+			<label for="Source Password"> 
+				<g:message code="device.Source Password.label" default="Source Password" /> 
+				<span class="required-indicator">*</span>
+		    </label>
+			<g:passwordField name="password" id="password" autocomplete="on"/>
+			</div>
+			
+			<div  class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'System IP', 'error')} required">
+			<label for="Destination IP"> 
+				<g:message code="device.Destination IP.label" default="Destination IP" /> 
+				<span class="required-indicator">*</span>
+		    </label>
+		     <g:textField name="destinationIP" id="destinationIP" value="${deviceInstance?.stbIp}" />
+			</div>
+			
+			<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'Boxpath', 'error')} required">
+			<label for="Destinaton Path"> 
+				<g:message code="device.Boxpath.label" default="Destinaton Path" /> 
+				<span class="required-indicator">*</span>
+		    </label>
+			<g:textField name="boxpath" id="boxpath" autocomplete="on"/>
+			</div>
+			
+			<div align= "center" class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'Buttons', 'error')} required">
+			
+						<span class="buttons" id="uploadBtnSpan"><input type="button" id="upload" value="Upload" 
+					    	onclick="uploadBinary(document.getElementById('boxType').value, document.getElementById('stbIp').value, document.getElementById('username').value, document.getElementById('password').value, document.getElementById('systemPath').value,  document.getElementById('systemIP').value, document.getElementById('boxpath').value, ${id});">
+						</span>
+			</div>
+		
+		<div id="waitingSymbol" style="display: none;">
+			              Please wait.....<img id="s" src="${resource(dir:'images',file:'spinner.gif')}" />
+		</div>
+		<div id="seperator1" style="height: 10px; width: 130px;"> </div>
+	</div>
+	
+	<div id="seperator2" style="height: 20px; width: 130px;"> </div>
+	
+	<div id="uploadResultDiv" style="border-color: #FFAAAA;border-style: solid;
+					border-width: 1px;width: 100%;height:215px;overflow:auto; display: none;" >
+	</div>
+	
+</div>
+	
+	<div id= "uploadButton" align= "center" class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'Upload Buttons', 'error')} required">
+		<table>
+				<tr>
+					<td align="right">
+						
+						<g:if test="${uploadBinaryStatus.toString() == "SUCCESS" }">
+							
+							<span class="buttons" id="uploadBinarySuccess" >
+								<a class="success" id="uploadBinaryLink_"+${id } style="cursor: pointer; font:bold; font-size: 12px;" onclick="hideLink();">Upload Binary</a>
+							</span>
+						</g:if>
+						
+						<g:if test="${uploadBinaryStatus.toString() == "FAILURE" }">
+							
+							<span class="buttons" id="uploadBinaryFailure">
+								<a class="failure" id="uploadBinaryLink_"+${id } style="cursor: pointer; font:bold; font-size: 12px;" onclick="hideLink();">Upload Binary</a>
+							</span>
+						</g:if>
+						<g:if test="${uploadBinaryStatus.toString() == "UNKNOWN" }">
+							
+							<span class="buttons" id="uploadBinaryUnknown">
+								<a class="unknown" id="uploadBinaryLink_"+${id } style="cursor: pointer; font:bold; font-size: 12px;" onclick="hideLink();">Upload Binary</a>
+							</span>
+						</g:if>
+						
+						<g:if test="${uploadBinaryStatus.toString() == "INPROGRESS" }">
+							
+							<div id="uploadBinaryInprogress" align="right">
+		             				 Uploading.....<img id="spinner1" src="${resource(dir:'images',file:'spinner.gif')}" />
+							</div>
+						</g:if>
+				
+				</td>
+			<tr>
+		</table>
+	</div>
+	
+	<div id="waitingSymbol2" style="display: none;" align="right">
+			             Uploading.....<img id="spinner2" src="${resource(dir:'images',file:'spinner.gif')}" />
+	</div>
+	
+
+<g:if test= "${deviceInstance.isChild  == 1}">
+	<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'stbIp', 'error')} required">
+		<label for="macId">
+			<g:message code="device.macId.label" default="Mac Id" />
+			<span class="required-indicator">*</span>
+		</label>
+		<g:textField id="macId" name="macId" required="" value="${deviceInstance?.macId}" class="textwidth"/>
+	</div>
+</g:if>
+
+
+<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'stbName', 'error')} required">
+	<label for="stbName">
+		<g:message code="device.stbName.label" default="Stb Name" />
+		<span class="required-indicator">*</span>
+	</label>
+	<g:textField name="stbName" id="stbName" required="" value="${deviceInstance?.stbName}" class="textwidth"/>
+</div>
+
+
+<g:if test= "${deviceInstance.isChild  == 0}">
+
+	<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'stbIp', 'error')} required">
+		<label for="stbIp">
+			<g:message code="device.stbIp.label" default="Stb Ip" />
+			<span class="required-indicator">*</span>
+		</label>
+		<g:textField id="stbIp" name="stbIp" required="" value="${deviceInstance?.stbIp}" class="textwidth"/>
+	</div>
+
+	<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'boxType', 'error')} required">
+		<label for="boxType">
+			<g:message code="device.boxType.label" default="Box Type" />
+			<span class="required-indicator">*</span>
+		</label>
+		<g:select onchange="javascript:showFields();" id="boxType" name="boxType.id" noSelection="['' : 'Please Select']" from="${com.comcast.rdk.BoxType.list()}" optionKey="id" required="" value="${deviceInstance?.boxType?.id}" class="many-to-one selectCombo"/>
+	</div>
+	
+	<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'boxManufacturer', 'error')} required">
+		<label for="boxManufacturer">
+			<g:message code="device.boxManufacturer.label" default="Box Manufacturer" />
+			<span class="required-indicator">*</span>
+		</label>
+		<g:select id="boxManufacturer" name="boxManufacturer.id" noSelection="['' : 'Please Select']" from="${com.comcast.rdk.BoxManufacturer.list()}" optionKey="id" required="" value="${deviceInstance?.boxManufacturer?.id}" class="many-to-one selectCombo"/>
+	</div>
+	
+	<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'soCVendor', 'error')} required">
+		<label for="boxModel">
+			<g:message code="device.boxModel.label" default="SoC Vendor" />
+			<span class="required-indicator">*</span>
+		</label>
+		<g:select id="soCVendor" name="soCVendor.id" noSelection="['' : 'Please Select']" from="${com.comcast.rdk.SoCVendor.list()}" optionKey="id" required="" value="${deviceInstance?.soCVendor?.id}" class="many-to-one selectCombo"/>
+	</div>
+</g:if>
+
+<g:if  test="${ (deviceInstance?.boxType?.type?.toLowerCase() != 'gateway') }" >
+	<g:if test= "${deviceInstance.isChild  == 0}">
+		<div id="gatewayId" class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'gatewayIp', 'error')}">
+			<label for="gatewayIp">
+				<g:message code="device.gatewayIp.label" default="Gateway" />
+				<span class="required-indicator">*</span>
+			</label>
+			<g:select id="gatewayIp" name="gatewayIp" noSelection="['' : 'Please Select']" from="${gateways?.stbName}" value="${deviceInstance?.gatewayIp}" class="many-to-one selectCombo"/>
+		</div>
+		
+		<div style="display:none;" id="recorderId" class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'recorderId', 'error')}">
+			<label for="recorderId">
+				<g:message code="device.recorderId.label" default="RecorderId" />
+				<span class="required-indicator">*</span>
+			</label>
+			<g:textField name="recorderId" value="${deviceInstance?.recorderId}" class="textwidth"/>
+		</div>
+		
+	</g:if>
+</g:if>
+
+<div style="display:none;" id="gatewayIdedit" class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'gatewayIp', 'error')}">
+	<label for="gatewayIp">
+		<g:message code="device.gatewayIp.label" default="Gateway" />
+		<span class="required-indicator">*</span>
+	</label>
+	<g:select id="gatewayIpedit" name="gatewayIpedit" noSelection="['' : 'Please Select']" from="${gateways?.stbName}" value="${deviceInstance?.gatewayIp}" class="many-to-one selectCombo"/>
+</div>
+
+<g:if test="${ (editPage == true ) && (deviceInstance?.boxType?.type == "Gateway") }">
+<div id="recorderIdedit" class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'recorderId', 'error')}">
+	<label for="recorderId">
+		<g:message code="device.recorderId.label" default="RecorderId" />
+		<span class="required-indicator">*</span>
+	</label>
+	<g:textField name="recorderIdedit" value="${deviceInstance?.recorderId}" class="textwidth"/>
+</div>
+</g:if>
+
+<g:hiddenField id="editFlag" name="editFlag" value="${editPage}"/>

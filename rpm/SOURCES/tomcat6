@@ -1,0 +1,31 @@
+#!/bin/bash
+#Tomcat auto-start at boot
+
+
+export CATALINA_HOME=/opt/comcast/software/tomcat/apache-tomcat-6.0.37
+export JAVA_HOME=/usr/lib/jvm/jdk1.7.0_21
+export PYTHONPATH=/usr/local/share/pythonLib
+
+JAVA_OPTS="-server -Xms1024m -Xmx2096m -XX:MaxPermSize=512m -XX:-UseGCOverheadLimit"
+
+case $1 in
+start)
+ $CATALINA_HOME/bin/startup.sh
+;;
+stop)
+ $CATALINA_HOME/bin/shutdown.sh
+;;
+restart)
+ $CATALINA_HOME/bin/shutdown.sh
+ $CATALINA_HOME/bin/startup.sh
+;;
+force-reload)
+ $CATALINA_HOME/bin/shutdown.sh
+ $CATALINA_HOME/bin/startup.sh
+;;
+status)
+ status tomcat
+;;
+esac
+exit 0
+

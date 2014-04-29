@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Box xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SetTopBox>
+	<Type>
+	    <BoxType>
+	    	<BoxName>Xi3</BoxName>
+	    	<Type>Client</Type>
+	    </BoxType>
+	    <BoxType>
+	    	<BoxName>XG1</BoxName>
+	    	<Type>Gateway</Type>
+	    </BoxType>	   
+	    <BoxType>
+			<BoxName>XG5</BoxName>
+	    	<Type>Gateway</Type>
+	    </BoxType>
+    </Type>  
+    <Model>
+    	<BoxModel>Intel</BoxModel>
+	    <BoxModel>Ace</BoxModel>
+	    <BoxModel>Cisco</BoxModel>
+	    <BoxModel>Motorola</BoxModel>
+    </Model>
+    <Manufacturer>
+    	<BoxManufacturer>Arris</BoxManufacturer>
+    	<BoxManufacturer>Cisco</BoxManufacturer>
+    	<BoxManufacturer>Entropic</BoxManufacturer>
+    	<BoxManufacturer>Humax</BoxManufacturer>
+    	<BoxManufacturer>Intel</BoxManufacturer>
+    	<BoxManufacturer>Motorola</BoxManufacturer>
+    	<BoxManufacturer>Pace</BoxManufacturer>
+    	<BoxManufacturer>Samsung</BoxManufacturer>
+    	<BoxManufacturer>Technicolor</BoxManufacturer>
+    </Manufacturer>
+    <SoC>
+    	<SoCVendor>Parker</SoCVendor>
+    	<SoCVendor>Px001bn</SoCVendor>
+    	<SoCVendor>Rng150</SoCVendor>
+    	<SoCVendor>Intel</SoCVendor>
+    	<SoCVendor>Broadcom – MIPS</SoCVendor>
+    	<SoCVendor>Broadcom - ARM</SoCVendor>    	
+    </SoC>
+  </SetTopBox>  
+</Box>

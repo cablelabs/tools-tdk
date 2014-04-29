@@ -1,0 +1,154 @@
+#!/usr/bin/expect -f
+
+#============================================================================
+#COMCAST CONFIDENTIAL AND PROPRIETARY
+#============================================================================
+#This file and its contents are the intellectual property of Comcast.  It may
+#not be used, copied, distributed or otherwise  disclosed in whole or in part
+#without the express written permission of Comcast.
+#============================================================================
+#Copyright (c) 2013 Comcast. All rights reserved.
+#============================================================================
+
+set timeout -1
+
+set boxtype [lindex $argv 0]
+set boxip [lindex $argv 1]
+set boxusername "root"
+set boxpassword "root"
+
+set systemip [lindex $argv 2]
+set systemusername [lindex $argv 3]
+set systempassword [lindex $argv 4]
+
+set path [lindex $argv 5]
+set boxpath [lindex $argv 6]
+
+if {[llength $argv] != 7} {
+    send_user "Usage: expect uploadbinary.exp 'boxtype' 'boxip' 'systemip' 'systemusername' 'systempassword' 'systempath' 'boxpath'\n"
+    exit
+}
+
+spawn "/bin/bash"
+
+send "telnet $boxip\r"
+
+expect {
+    -re ".*nable to connect.*" {
+        send_user "\nUnable to connect $boxip\n"
+        exit
+    }
+    -re ".*login.*" {
+        exp_send "$boxusername\r"
+        exp_continue
+    }
+    -re ".*sword.*" {
+        exp_send "$boxpassword\r"
+        exp_continue
+    }
+    -re "#"
+}
+
+sleep 2
+send "scp -r $systemusername@$systemip:$path/bin/* $boxpath/.\r"
+
+expect {
+    -re ".*onnecting.*" {
+        exp_send "y\r"
+        exp_continue
+    }
+    -re ".*es.*o.*" {
+        exp_send "yes\r"
+        exp_continue
+    }
+    -re ".*sword.*" {
+        exp_send "$systempassword\r"
+    }
+}
+
+expect {
+    -re ".*sword.*" {
+        send_user "\nIncorrect Password\n"
+        exit
+    }
+    -re ".*o.*such.*file.*" {
+        send_user "\nIncorrect Path. No such file or directory\n"
+        exit
+    }
+    -re "#"
+}
+
+sleep 2
+
+send "mkdir $boxpath/libs\r"
+expect "#"
+
+sleep 2
+
+send "scp -r $systemusername@$systemip:$path/libs/ $boxpath/\r"
+
+expect {
+    -re ".*es.*o.*" {
+        exp_send "yes\r"
+        exp_continue
+    }
+    -re ".*sword.*" {
+        exp_send "$systempassword\r"
+    }
+}
+
+expect {
+    -re ".*sword.*" {
+        send_user "\nIncorrect Password\n"
+        exit
+    }
+    -re ".*o.*such.*file.*" {
+        send_user "\nIncorrect Path. No such file or directory\n"
+        exit
+    }
+    -re "#"
+}
+
+sleep 2
+
+send "chmod -R 777 $boxpath/*\r"
+expect "#"
+
+sleep 2
+
+if {$boxtype == "Xi3"} {
+
+    send "ln -s $boxpath/libs/libiconv.so.2.5.0 $boxpath/libs/libiconv.so.2\r"
+    expect "#"
+
+    sleep 2
+
+}
+
+if {$boxtype == "XG1"} {
+
+    send "ln -s $boxpath/libs/libgstcheck-0.10.so.0.29.0 $boxpath/libs/libgstcheck-0.10.so.0\r"
+    expect "#"
+
+    sleep 2
+
+    send "ln -s $boxpath/libs/libQtTest.so.4.8.5 $boxpath/libs/libQtTest.so.4.8\r"
+    expect "#"
+
+    sleep 2
+
+    send "ln -s $boxpath/libs/libQtTest.so.4.8.5 $boxpath/libs/libQtTest.so.4\r"
+    expect "#"
+
+    sleep 2
+
+    send "ln -s $boxpath/libs/libQtTest.so.4.8.5 $boxpath/libs/libQtTest.so\r"
+    expect "#"
+
+    sleep 2
+
+}
+
+send_user "\nBinaries Transferred\n"
+
+exit
