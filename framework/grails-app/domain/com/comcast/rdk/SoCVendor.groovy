@@ -64,4 +64,8 @@ class SoCVendor {
             return false;
         return true;
     }
+	
+	static mapping = {
+		datasource 'ALL'
+	}
 }

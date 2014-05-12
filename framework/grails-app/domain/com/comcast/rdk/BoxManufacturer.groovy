@@ -22,7 +22,7 @@ class BoxManufacturer {
     String name
 	
 	/**
-	 * Indicates the group name which the device belongs
+	 * Indicates the group name which the manufacturer belongs
 	 */
 	Groups groups
 	
@@ -34,5 +34,9 @@ class BoxManufacturer {
 	@Override
 	String toString() {
 		return name ?: 'NULL'
+	}
+	
+	static mapping = {
+		datasource 'ALL'
 	}
 }

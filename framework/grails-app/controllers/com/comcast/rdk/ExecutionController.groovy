@@ -65,6 +65,10 @@ class ExecutionController {
 	
 	def primitivetestService
 	
+	def executedbService
+	
+	def executescriptService
+	
 	public static Object  lock = new Object()
 	private static int execIdCounter = 0
 	public static final String EXPORT_SCRIPT_LABEL 			= "Script"
@@ -89,10 +93,10 @@ class ExecutionController {
 	public static final String UNDEFINED					= "undefined"
 	
 
-    def index() {
-		
+    def index() {		
         redirect(action: "create")
     }
+	
     /**
      * Method to unschedule a quartz job
      */
@@ -367,7 +371,7 @@ class ExecutionController {
         }
 		else{
 			try{
-				DeviceStatusUpdater.updateDeviceStatus(grailsApplication,deviceStatusService);
+				DeviceStatusUpdater.updateDeviceStatus(grailsApplication,deviceStatusService,executescriptService);
 			}catch(Exception e){
 				e.printStackTrace();
 			}
@@ -429,7 +433,7 @@ class ExecutionController {
      /*   String s = request.getSession().getServletContext().getRealPath("/") 
         s = s.replace( '\\', '/' )
         return s  */
-        return request.getSession().getServletContext().getRealPath(URL_SEPERATOR) 
+       return request.getSession().getServletContext().getRealPath(URL_SEPERATOR) 
     }     
     
     /**
@@ -439,13 +443,28 @@ class ExecutionController {
      * @param suiteName
      * @return
      */
-	  def thirdPartyTest(final String stbName, final String boxType, final String suiteName, final String callbackUrl ){
+	  def thirdPartyTest(final String stbName, final String boxType, final String imageName, final String suiteName, final String test_request, final String callbackUrl ){
         String htmlData = ""
         String outData = ""
-        String url = ""
+        String  url = getApplicationUrl()
         def execName = ""
-		
+		String filePath = "${request.getRealPath('/')}//fileStore"
 		JsonObject jsonOutData = new JsonObject()
+		
+		
+		if(test_request){
+			String status = scriptexecutionService.generateResultBasedOnTestRequest(test_request,callbackUrl,filePath, url, imageName, boxType)
+			if(status){
+				jsonOutData.addProperty("status", "SUCCESS");
+				jsonOutData.addProperty("result", "Result will be send with callback url");
+			}
+			else{
+				jsonOutData.addProperty("status", "FAILED");
+				jsonOutData.addProperty("result", "Error! Please try again");
+			}
+	    }
+	    else{
+	   
 		ScriptGroup scriptGroup = ScriptGroup.findByName(suiteName)
 		def scriptStatusFlag				
         Device deviceInstance
@@ -472,15 +491,23 @@ class ExecutionController {
 						}
 					}
 					if(scriptStatusFlag){
-		     
-							if((deviceInstance.deviceStatus.equals( Status.FREE ))){
+						String status = ""
+							try {
+								status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+								Thread.start{
+									deviceStatusService.updateDeviceStatus(deviceInstance, status)
+								}
+							}
+							catch(Exception eX){
+							}
+							if((status.equals( Status.FREE.toString() ))){
 			                   
 									def scriptname
 									def deviceName
 									ExecutionDevice executionDevice
 				                    def execution                
-				                    url = getApplicationUrl()
-				                    String filePath = "${request.getRealPath('/')}//fileStore"
+				                   
+				                   
 				                    def executionSaveStatus = true
 									/**
 									 * Even if there is multiple devices, the execution instance need to be created only once.
@@ -498,8 +525,9 @@ class ExecutionController {
 										}	
 																			
 										//execName = execName 
-										executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptname, deviceName, scriptGroup)
+										executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptname, deviceName, scriptGroup,url)
 									}
+									
 									if(executionSaveStatus){
 										execution = Execution.findByName(execName)
 										try{
@@ -515,7 +543,7 @@ class ExecutionController {
 											//e.printStackTrace()
 										}
 										String getRealPathString  = getRealPath()											
-										scriptexecutionService.executeScriptGroup(scriptGroup, boxType, execName, executionDevice?.id.toString(), deviceInstance, url, filePath, getRealPathString, callbackUrl )										
+										scriptexecutionService.executeScriptGroup(scriptGroup, boxType, execName, executionDevice?.id.toString(), deviceInstance, url, filePath, getRealPathString, callbackUrl, imageName )										
 									}
 									else{
 										deviceNotExistCnt++
@@ -572,6 +600,8 @@ class ExecutionController {
 			jsonOutData.addProperty("status", "FAILURE");
 			jsonOutData.addProperty("result", url);
         }
+		
+	  }
         render jsonOutData        
     }
 
@@ -593,148 +623,19 @@ class ExecutionController {
 		render device		
 	}
 	
-	def thirdPartyJsonResult(final String execName, final String appurl ){
-		JsonArray jsonArray = new JsonArray()
-		JsonObject compNode
-		JsonObject deviceNode
-		JsonObject executionNode
-		String appUrl = appurl
-		String url
-		appUrl = getApplicationUrl() + "/execution/getDetailedTestResult?execResId="
-		Execution executionInstance = Execution.findByName(execName)
-		if(executionInstance){
-			ScriptGroup scriptGrp = ScriptGroup.findByName(executionInstance?.scriptGroup)
-			def executionResultStatus //= ExecutionResult.findAllByExecutionAndStatusIsNotNull(executionInstance)
-			def scriptStatus = null
-			def executionDevice = ExecutionDevice.findAllByExecution(executionInstance)
-			def executionResult //= ExecutionResult.findAllByExecution(executionInstance)
-
-			executionDevice.each{ execDevice ->
-				url = ""
-				compNode = new JsonObject()
-				deviceNode = new JsonObject()
-				executionResult = ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance, execDevice)
-		
-					List<ExecutionResult> execResult = ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance, execDevice)						
-					def componentMap = [:].withDefault {[]}
-					def systemMap = [:].withDefault {[]}
-					execResult.each{ execResObj ->
-						Script.withTransaction { scriptRes ->
-							Script script = Script.findByName(execResObj?.script)
-							if(script.primitiveTest.module.testGroup.groupValue.toString().equals("E2E") ){
-								List val1 = systemMap.get(script.primitiveTest.module.toString());
-								if(!val1){
-									val1 = []
-									systemMap.put(script.primitiveTest.module.toString(), val1)
-								}
-								val1.add(execResObj?.id)
-							}
-							else{
-								List val = componentMap.get(script.primitiveTest.module.toString());
-								if(!val){
-									val = []
-									componentMap.put(script.primitiveTest.module.toString(), val)
-								}
-								val.add(execResObj?.id)
-							}
-						}							
-					}
-					def statusVal
-					def newmap = [:]
-					JsonArray compArray = new JsonArray();
-					
-					componentMap.each{ k, v ->
-						JsonObject compObject = new JsonObject();
-						
-						compObject.addProperty("ModuleName", k.toString())
-						def lst = v
-						statusVal = SUCCESS_STATUS
-						
-						JsonArray scriptStatusArray = new JsonArray();
-						JsonObject scriptStatusNode
-						lst.each{
-							url = ""
-							scriptStatusNode = new JsonObject()
-							ExecutionResult exResult = ExecutionResult.findById(it)
-							if(!exResult.status.equals(SUCCESS_STATUS)){
-								statusVal = FAILURE_STATUS
-							}
-							scriptStatusNode.addProperty("ScriptName", exResult.script.toString())
-							scriptStatusNode.addProperty("ScriptStatus", exResult.status.toString())
-
-							url = appUrl + exResult?.id.toString()
-							scriptStatusNode.addProperty("LogUrl", url.toString())
-							
-							scriptStatusArray.add(scriptStatusNode)
-							
-						}
-						
-						newmap[k] = statusVal
-						compObject.addProperty("ModuleStatus", statusVal.toString())
-						compObject.add("ScriptDetails", scriptStatusArray)
-						compArray.add(compObject)
-					}
-					
-					JsonArray systemArray = new JsonArray();
-					systemMap.each{ k, v ->
-						JsonObject sysObject = new JsonObject();
-						
-						sysObject.addProperty("ModuleName", k.toString())
-						def lst = v
-						statusVal = SUCCESS_STATUS
-						
-						JsonArray scriptStatusArray = new JsonArray();
-						JsonObject scriptStatusNode
-						lst.each{
-							url = ""
-							scriptStatusNode = new JsonObject()
-							ExecutionResult exResult = ExecutionResult.findById(it)
-							if(!exResult.status.equals(SUCCESS_STATUS)){
-								statusVal = FAILURE_STATUS
-							}
-							scriptStatusNode.addProperty("ScriptName", exResult.script.toString())
-							scriptStatusNode.addProperty("ScriptStatus", exResult.status.toString())
-
-							url = appUrl + exResult?.id.toString()
-							scriptStatusNode.addProperty("LogUrl", url.toString())
-							
-							scriptStatusArray.add(scriptStatusNode)
-							
-						}
-						
-						newmap[k] = statusVal
-						sysObject.addProperty("ModuleStatus", statusVal.toString())
-						sysObject.add("ScriptDetails", scriptStatusArray)
-						systemArray.add(sysObject)
-					}
-
-					deviceNode.addProperty("Device",execDevice?.device.toString())
-					deviceNode.add("ComponentLevelDetails",compArray)
-					deviceNode.add("SystemLevelDetails",systemArray)
-					jsonArray.add(deviceNode)
-				}
-				executionNode = new JsonObject()
-				executionNode.addProperty("ExecutionName",execName)
-				
-				String execStatus				
-				if(executionInstance?.executionStatus){
-					execStatus = executionInstance?.executionStatus
-				}
-				else{
-					execStatus = "InProgress"
-				}
-								
-				executionNode.addProperty("ExecutionStatus",execStatus.toString())
-				executionNode.add("DEVICES", jsonArray)
-			}
+	def thirdPartyJsonResult(final String execName, final String appurl ){		
+		JsonObject executionNode = scriptexecutionService.thirdPartyJsonResultFromController(execName, getApplicationUrl() )
 		render executionNode
 	}
-	
+		
+		
     /**
      * Execute the script
      * @return
      */
     def executeScriptMethod() {		
+		
+		boolean aborted = false
 		def exId
         Script scriptInstance
         def scriptGroupInstance
@@ -758,7 +659,7 @@ class ExecutionController {
 			}
 			deviceName = MULTIPLE
 		}
-		
+
 		if(params?.execName){
 			executionName = params.execName
 		}
@@ -783,17 +684,20 @@ class ExecutionController {
 		else if(repeatCount == 0){
 			htmlData = "Give a valid entry in repeat"
 		}	
-        else{
-			
+        else{			
         	StringBuilder output = new StringBuilder();
 			try{
-			def isBenchMark = "false"
-			def isSystemDiagnostics = "false"
-			if(params?.systemDiagnostics.equals("on")){
-				isSystemDiagnostics = "true"
+			def isBenchMark = FALSE
+			def isSystemDiagnostics = FALSE
+			def rerun = FALSE
+			if(params?.systemDiagnostics.equals(KEY_ON)){
+				isSystemDiagnostics = TRUE
 			}
-			if(params?.benchMarking.equals("on")){
-				isBenchMark = "true"
+			if(params?.benchMarking.equals(KEY_ON)){
+				isBenchMark = TRUE
+			} 
+			if(params?.rerun.equals(KEY_ON)){
+				rerun = TRUE
 			}
             def scriptName
             String url = getApplicationUrl()
@@ -802,7 +706,18 @@ class ExecutionController {
 			def executionNameForCheck
 			for(int i = 0; i < repeatCount; i++ ){ 
 				executionNameForCheck = null
+				
 				deviceList.each{ device ->
+					String status = ""
+					try {
+						 status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+						deviceStatusService.updateDeviceStatus(deviceInstance, status)
+					}
+					catch(Exception eX){
+					}
+
+				if((status.equals( Status.FREE.toString() ))){
+
 					deviceInstance = Device.findById(device)
 					def executionSaveStatus = true
 					def execution = null
@@ -829,7 +744,7 @@ class ExecutionController {
 							else{
 								execName = executionName
 							}
-							executionSaveStatus = executionService.saveExecutionDetails(execName, scriptName, deviceName, scriptGroupInstance)
+							executionSaveStatus = executionService.saveExecutionDetails(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun)
 							if(deviceList.size() > 0 ){
 								executionNameForCheck = execName
 							}
@@ -860,356 +775,36 @@ class ExecutionController {
 							else{								
 								executionService.executeVersionTransferScript(request.getRealPath('/'),filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
 							}
-							int scriptGrpSize = 0
-							int scriptCounter = 0
-							def isMultiple = "true"
-							if(params?.myGroup == TEST_SUITE){
-								scriptGroupInstance = ScriptGroup.findById(params?.scriptGrp,[lock: true])								
-								scriptCounter = 0
-								List<Script> validScriptList = new ArrayList<Script>()
-								scriptGroupInstance.scripts.each { script ->									
-									if(executionService.validateScriptBoxType(script,deviceInstance)){
-										validScriptList << script										
-									}												
-								}
-								scriptGrpSize = validScriptList?.size()
-								validScriptList.each{ scriptObj ->
-									scriptCounter++
-									if(scriptCounter == scriptGrpSize){
-										isMultiple = "false"
-									}
-									htmlData = executeScript(execName, executionDevice, scriptObj , deviceInstance , url, filePath, getRealPath(), isBenchMark, isSystemDiagnostics,executionName,isMultiple)
-									/*if(isMultiple.equals("false")){
-										Execution.withTransaction {
-											Execution executionInstance1 = Execution.findByName(execName)
-											executionInstance1.executionStatus = "COMPLETED"
-											executionInstance1.save(flush:true)
-										}
-									}*/
-									output.append(htmlData)
-									Thread.sleep(6000)
-								}						
-							}
-							else if(params?.myGroup == SINGLE_SCRIPT){
-								if(scripts instanceof String){
-									scriptInstance = Script.findById(params?.scripts,[lock: true])
-									scriptId = scriptInstance?.id
-									isMultiple = "false"
-									htmlData = executeScript(execName, executionDevice, scriptInstance , deviceInstance , url, filePath, getRealPath(), isBenchMark, isSystemDiagnostics,executionName,isMultiple)									
-									output.append(htmlData)
-								}
-								else{
-									scriptCounter = 0
-									List<Script> validScripts = new ArrayList<Script>()
-									scripts.each { script ->
-										
-										scriptInstance = Script.findById(script,[lock: true])
-										if(executionService.validateScriptBoxType(scriptInstance,deviceInstance)){
-											validScripts << scriptInstance											
-										}										
-									}
-									scriptGrpSize = validScripts?.size()
-									validScripts.each{ script ->
-										scriptCounter++
-										if(scriptCounter == scriptGrpSize){
-											isMultiple = "false"
-										}
-										
-										htmlData = executeScript(execName, executionDevice, script , deviceInstance , url, filePath, getRealPath(), isBenchMark, isSystemDiagnostics,executionName,isMultiple)
-									/*	if(isMultiple.equals("false")){
-											Execution.withTransaction {
-												Execution executionInstance1 = Execution.findByName(execName)
-												executionInstance1.executionStatus = "COMPLETED"
-												executionInstance1.save(flush:true)
-											}
-										}*/
-										output.append(htmlData)
-										Thread.sleep(6000)
-									}
-								}
+							if(deviceList.size() > 1){							
+								executescriptService.executeScriptInThread(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
+										filePath, getRealPath(), params?.myGroup, url, isBenchMark, isSystemDiagnostics, params?.rerun)
 							}
 							else{
-								render ""
-								return
-							}
+								htmlData = executescriptService.executescriptsOnDevice(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
+										filePath, getRealPath(), params?.myGroup, url, isBenchMark, isSystemDiagnostics, params?.rerun)
+								output.append(htmlData)														
+							}																							
 						}
 					}
 					else{
 						htmlData = message(code: 'execution.boxtype.nomatch')
 						output.append(htmlData)
 					}
-//					render htmlData
-					htmlData = ""					
-				}
-				/**
-				 * Re run on failure
-				 */
-				def executionObj = Execution.findByName(execName)
-				def executionDeviceObj = ExecutionDevice.findAllByExecutionAndStatusNotEqual(executionObj, SUCCESS_STATUS)
-
-				if((executionDeviceObj.size() > 0 ) && (params?.rerun)){
-					htmlData = reRunOnFailure(request.getRealPath('/'),filePath,execName,executionName)
+					htmlData = ""				
+				}else{
+					htmlData = message(code: 'execution.device.notfree')
 					output.append(htmlData)
 				}
-			}			
-			}finally{
-				deleteOutputFile(executionName)
+			   }	
+			 }			
+			}finally{				 
 			}
-			htmlData = output.toString()	
-					
+			htmlData = output.toString()						
         }
 		render htmlData
     }
 
-	private void deleteOutputFile(String opFileName){
-		try{
-			def fileName = Constants.SCRIPT_OUTPUT_FILE_PATH+opFileName+Constants.SCRIPT_OUTPUT_FILE_EXTN
-			File opFile = grailsApplication.parentContext.getResource(fileName).file
-			if(opFile.exists()){
-				opFile.delete();
-			}
-		}catch(Exception e){
-			e.printStackTrace();
-		}
-		
-	}
 	
-	/**
-	 * Re run the tests if the status of script execution is not failure
-	 * @param realPath
-	 * @param filePath
-	 * @param execName
-	 * @return
-	 */
-	def reRunOnFailure(final String realPath, final String filePath, final String execName,final String uniqueExecutionName){
-		Thread.sleep(10000)
-		Execution executionInstance = Execution.findByName(execName)
-		def resultArray = Execution.executeQuery("select a.result from Execution a where a.name = :exName",[exName: execName])		
-		def result = resultArray[0]
-		def newExecName
-		Execution rerunExecutionInstance
-		def executionSaveStatus = true
-		if(result != SUCCESS_STATUS){
-			def scriptName
-			def scriptGroupInstance = ScriptGroup.findByName(executionInstance?.scriptGroup)
-			/**
-			 * Get all devices for execution
-			 */
-			def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
-			int cnt = 0
-			executionDeviceList.each{ execDeviceInstance ->				
-				if(execDeviceInstance.status != SUCCESS_STATUS){
-					Device deviceInstance = Device.findByStbName(execDeviceInstance?.device)										
-					if(cnt == 0){
-						newExecName = execName + RERUN
-						scriptName = executionInstance?.script
-						def deviceName = deviceInstance?.stbName
-						if(executionDeviceList.size() > 1){
-							deviceName = MULTIPLE
-						}
-						executionSaveStatus = executionService.saveExecutionDetails(newExecName, scriptName, deviceName, scriptGroupInstance)
-						cnt++
-						rerunExecutionInstance = Execution.findByName(newExecName)
-					}				
-					if(executionSaveStatus){
-						
-						ExecutionDevice executionDevice = new ExecutionDevice()
-						executionDevice.execution = rerunExecutionInstance
-						executionDevice.device = deviceInstance?.stbName
-						executionDevice.deviceIp = deviceInstance?.stbIp
-						executionDevice.dateOfExecution = new Date()
-						executionDevice.status = UNDEFINED_STATUS
-						executionDevice.save(flush:true)
-						executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbIp, deviceInstance?.logTransferPort)
-						def executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
-						def scriptInstance
-						def htmlData
-						
-						def resultSize = executionResultList.size()
-						int counter = 0
-						def isMultiple = "true"
-						
-						executionResultList.each{ executionResult ->
-							scriptInstance = Script.findByName(executionResult?.script,[lock: true])
-							if(counter == resultSize){
-								isMultiple = "false"
-							}
-							if(executionService.validateScriptBoxType(scriptInstance,deviceInstance)){
-								htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, getApplicationUrl(), filePath, getRealPath(),"false","false",uniqueExecutionName,isMultiple)
-							}
-						}
-					}
-				}
-			}	
-		}
-	}
-    
-    /**
-     * Method to execute the script
-     * @param scriptGroupInstance
-     * @param scriptInstance
-     * @param deviceInstance
-     * @param url
-     * @return
-     */
-    def String executeScript(final String executionName, final ExecutionDevice executionDevice, final Script scriptInstance,
-            final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String uniqueExecutionName,final String isMultiple) {
-
-        String htmlData = ""
-
-        String scriptData = executionService.convertScriptFromHTMLToPython(scriptInstance.scriptContent)
-
-        String stbIp = STRING_QUOTES + deviceInstance.stbIp + STRING_QUOTES
-
-        Script scriptInstance1 = Script.findById(scriptInstance.id,[lock: true])
-        scriptInstance1.status = Status.ALLOCATED
-        scriptInstance1.save(flush:true)
-
-        Device deviceInstance1 = Device.findById(deviceInstance.id,[lock: true])
-     
-        def executionInstance = Execution.findByName(executionName,[lock: true])
-        def executionId = executionInstance?.id
-        Date executionDate = executionInstance?.dateOfExecution
-        
-        def execStartTime = executionDate?.getTime()
-        
-        def executionResult
-		
-        ExecutionResult.withTransaction { resultstatus ->
-            try {
-                executionResult = new ExecutionResult()
-                executionResult.execution = executionInstance
-				executionResult.executionDevice = executionDevice
-                executionResult.script = scriptInstance1.name
-                executionResult.device = deviceInstance1.stbName
-                if(! executionResult.save(flush:true)) {
-                    log.error "Error saving executionResult instance : ${executionResult.errors}"
-                }
-                resultstatus.flush()
-            }
-            catch(Throwable th) {
-                resultstatus.setRollbackOnly()
-            }
-        }
-        def executionResultId = executionResult?.id
-        scriptData = scriptData.replace( IP_ADDRESS , stbIp )
-        scriptData = scriptData.replace( PORT , deviceInstance?.stbPort )
-
-		String gatewayIp = deviceInstance1?.gatewayIp
-		
-        scriptData = scriptData.replace( REPLACE_TOKEN, LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
-              executionId  + COMMA_SEPERATOR + executionDevice?.id + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance1?.statusPort + COMMA_SEPERATOR + 
-			  scriptInstance?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR + SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR + 
-			  SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR)// + gatewayIp + COMMA_SEPERATOR)
-		
-		scriptData	 = scriptData + "\nprint \"SCRIPTEND#!@~\";"			
-		
-        Date date = new Date()
-        String newFile = FILE_STARTS_WITH+date.getTime().toString()+PYTHON_EXTENSION
-        
-        File file = new File(filePath, newFile)
-        boolean isFileCreated = file.createNewFile()
-        if(isFileCreated) {
-            file.setExecutable(true, false )
-        }
-        PrintWriter fileNewPrintWriter = file.newPrintWriter();
-        fileNewPrintWriter.print( scriptData )
-        fileNewPrintWriter.flush()
-		fileNewPrintWriter.close()
-        String outData = executionService.executeScript( file.getPath() , scriptInstance.executionTime, uniqueExecutionName , scriptInstance.getName())		
-		file.delete()
-		outData?.eachLine { line ->
-			htmlData += (line + HTML_BR )
-		}
-		Date execEndDate = new Date()
-		def execEndTime =  execEndDate.getTime()
-		def timeDifference = ( execEndTime - execStartTime  ) / 60000;
-		String timeDiff =  String.valueOf(timeDifference)
-		if(htmlData.contains(TDK_ERROR)){
-			htmlData = htmlData.replaceAll(TDK_ERROR,"")	
-			if(htmlData.contains("SCRIPTEND#!@~")){
-				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
-			}
-			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff)
-			Thread.sleep(4000)
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
-			def absolutePath = layoutFolder.absolutePath
-			String[] cmd = [
-				PYTHON_COMMAND,
-				absolutePath,
-				deviceInstance?.stbIp,
-				deviceInstance?.agentMonitorPort,
-				"false"
-			]
-			ScriptExecutor scriptExecutor = new ScriptExecutor()
-			def resetExecutionData = scriptExecutor.executeScript(cmd)	
-			Thread.sleep(4000)
-		}
-		else{					
-			if(htmlData.contains("SCRIPTEND#!@~")){	
-				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")				
-		        String outputData = htmlData		        
-				executionService.updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff)			
-			}
-			else{					
-				if((timeDifference >= scriptInstance.executionTime) && (scriptInstance.executionTime != 0))	{	
-					File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
-					def absolutePath = layoutFolder.absolutePath
-						String[] cmd = [
-							PYTHON_COMMAND,
-							absolutePath,
-							deviceInstance?.stbIp,
-							deviceInstance?.agentMonitorPort,
-							"true"
-						]
-						ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
-						def resetExecutionData = scriptExecutor.executeScript(cmd)	
-						htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
-						executionService.updateExecutionResults(htmlData,executionResultId,executionId,executionDevice?.id)
-						Thread.sleep(4000)
-				}				
-			}
-		}
-				
-		String performanceFilePath
-		if(isBenchMark.equals("true") || isSystemDiagnostics.equals("true")){
-			new File("${request.getRealPath('/')}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-			performanceFilePath = "${request.getRealPath('/')}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}//"
-		}
-			
-		if(isBenchMark.equals("true")){
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
-			def absolutePath = layoutFolder.absolutePath
-			
-			String[] cmd = [
-				PYTHON_COMMAND,
-				absolutePath,
-				deviceInstance?.stbIp,
-				deviceInstance?.stbPort,
-				deviceInstance?.logTransferPort,
-				"PerformanceBenchMarking",
-				performanceFilePath
-			]
-			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
-			htmlData += scriptExecutor.executeScript(cmd)
-		}
-		if(isSystemDiagnostics.equals("true")){
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
-			def absolutePath = layoutFolder.absolutePath
-			String[] cmd = [
-				PYTHON_COMMAND,
-				absolutePath,
-				deviceInstance?.stbIp,
-				deviceInstance?.stbPort,
-				deviceInstance?.logTransferPort,
-				"PerformanceSystemDiagnostics",
-				performanceFilePath
-			]
-			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
-			htmlData += scriptExecutor.executeScript(cmd)
-		}	
-        return htmlData
-    }
     
 	def showLogFiles(){		
 		def logFileNames = executionService.getLogFileNames(request.getRealPath('/'), params?.execId, params?.execDeviceId)
@@ -1244,9 +839,7 @@ class ExecutionController {
         if(executionInstance?.script){
             def script = Script.findByName(executionInstance?.script)
             testGroup = script?.primitiveTest?.module?.testGroup
-        }
-		
-		
+        }				
         [executionInstance : executionInstance, executionDeviceInstanceList : executionDeviceList, testGroup : testGroup,executionresults:executionResultMap]
     }
 
@@ -1263,19 +856,7 @@ class ExecutionController {
 			 def script = Script.findByName(executionInstance?.script)
 			 testGroup = script?.primitiveTest?.module?.testGroup
 		 }
-		// String xmlwriter = utilityService.writexml(executionInstance)
-		 
-		/*executionDevice.each{ execDevice ->
-			executionResult = ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance, execDevice)
-			def executionResultStatus = ExecutionResult.findAllByExecutionAndExecutionOutputIsNotNull(executionInstance, execDevice)
-			if((executionResultStatus.size() >= 0) && (executionResultStatus.size() < scriptGrp.scripts.size())){
-				scriptStatus = scriptStatus + " [${execDevice?.device}] :: Script Execution in Progress. ${executionResultStatus.size()} out of ${scriptGrp.scripts.size()} scripts executed"
-			}
-		}
-		*/
-		[executionInstance : executionInstance, executionDeviceInstanceList : executionDevice, testGroup : testGroup ]
-		
-	//	[scriptStatus :scriptStatus]			
+		[executionInstance : executionInstance, executionDeviceInstanceList : executionDevice, testGroup : testGroup ]		
     }
 	 	   
     /**
@@ -1353,20 +934,26 @@ class ExecutionController {
 	 * @return
 	 */
 	def saveLoadModuleStatus(final String execId, final String statusData, final String execDevice, final String execResult){
-		Execution execution = Execution.findById(execId,[lock: true])
-		if(!execution.result.equals( FAILURE_STATUS )){
-			execution.result = statusData.toUpperCase().trim()
-			execution.save(flush:true)
-		}		
-		ExecutionDevice execDeviceInstance = ExecutionDevice.findByExecutionAndId(execution,execDevice)		
-		if(!execDeviceInstance.status.equals( FAILURE_STATUS )){
-			execDeviceInstance.status = statusData.toUpperCase().trim()
-			execDeviceInstance.save(flush:true)
-		}
-		ExecutionResult executionResult = ExecutionResult.findById(execResult,[lock: true])
-		if(!executionResult.status.equals( FAILURE_STATUS )){
-			executionResult.status = statusData.toUpperCase().trim()
-			executionResult.save(flush:true)
+//		executescriptService.saveLoadModuleStatus(execId, statusData, execDevice, execResult)
+		
+		Execution.withTransaction{
+			Execution execution = Execution.findById(execId)
+			if(execution && !(execution?.result?.equals( FAILURE_STATUS ))){
+				execution?.result = statusData?.toUpperCase().trim()
+				execution?.save(flush:true)
+			}
+
+			ExecutionDevice execDeviceInstance = ExecutionDevice.findByExecutionAndId(execution,execDevice)
+			if(execDeviceInstance && !(execDeviceInstance?.status.equals( FAILURE_STATUS ))){
+				execDeviceInstance?.status = statusData?.toUpperCase().trim()
+				execDeviceInstance?.save(flush:true)
+			}
+
+			ExecutionResult executionResult = ExecutionResult.findById(execResult)
+			if(executionResult && !(executionResult?.status.equals( FAILURE_STATUS ))){
+				executionResult?.status = statusData?.toUpperCase().trim()
+				executionResult?.save(flush:true)
+			}
 		}
 	}
 	
@@ -1378,58 +965,64 @@ class ExecutionController {
 	 */
    def saveResultDetails(final String execId, final String resultData, final String execResult,
 	   final String expectedResult, final String resultStatus, final String testCaseName, final String execDevice)
-   {
-		try{
-			def slurper = new JsonSlurper()
-			if(resultData){
-				
-				//def jsonResult = slurper.parseText(resultData)
-				
-				String actualResult = resultData//jsonResult?.result
+   {	   
+//	   try{   
+//		   executescriptService.saveExecutionResultStatus(execId, resultData, execResult, expectedResult, resultStatus,
+//			   testCaseName, execDevice)
+//	   }catch(Exception ex){
+//	   }
+	   
+	   try{
+		   if(resultData){
+			   String actualResult = resultData
+			   if(actualResult){
+				   ExecutionResult.withTransaction {
+					   ExecutionResult executionResult = ExecutionResult.findById(execResult)
 
-				if(actualResult){
-					ExecutionResult executionResult = ExecutionResult.findById(execResult,[lock: true])
+					   ExecuteMethodResult executionMethodResult = new ExecuteMethodResult()
+					   if(resultStatus.equals( STATUS_NONE ) || resultStatus == null ){
+						   executionMethodResult.status = actualResult
+					   }
+					   else{
+						   executionMethodResult.executionResult = executionResult
+						   executionMethodResult.expectedResult = expectedResult
+						   executionMethodResult.actualResult = actualResult
+						   executionMethodResult.status = resultStatus
+					   }
+					   executionMethodResult.functionName = testCaseName
+					   executionMethodResult.save(flush:true)
 
-					ExecuteMethodResult executionMethodResult = new ExecuteMethodResult()
-					if(resultStatus.equals( STATUS_NONE ) || resultStatus == null ){
-						executionMethodResult.status = actualResult
-					}
-					else{
-						executionMethodResult.executionResult = executionResult
-						executionMethodResult.expectedResult = expectedResult
-						executionMethodResult.actualResult = actualResult
-						executionMethodResult.status = resultStatus
-					}
-					executionMethodResult.functionName = testCaseName
-					executionMethodResult.save(flush:true)
+					   executionResult.addToExecutemethodresults(executionMethodResult)
+					   executionResult.save(flush:true)
 
-					executionResult.addToExecutemethodresults(executionMethodResult)
-					executionResult.save(flush:true)
-
-					Execution execution = Execution.findById(execId,[lock: true])
-					ExecutionDevice execDeviceInstance = ExecutionDevice.findById(execDevice)
-					if(!executionResult.status.equals( FAILURE_STATUS )){						
-						executionResult.status = resultStatus
-						executionResult.save(flush:true)
-						if(!execution.result.equals( FAILURE_STATUS )){
-							execution.result = resultStatus
-							execution.save(flush:true)
-						}
-						if(!execDeviceInstance.status.equals( FAILURE_STATUS )){
-							execDeviceInstance.addToExecutionresults(executionResult)
-							execDeviceInstance.status = resultStatus
-							execDeviceInstance.save(flush:true)
-						}
-					}
-				}
-			}
-			else{
-				Execution execution = Execution.findById(execId,[lock: true])
-				execution.result = FAILURE_STATUS
-				execution.save(flush:true)
-			}
-		}catch(Exception ex){
-		}
+					   Execution execution = Execution.findById(execId)
+					   ExecutionDevice execDeviceInstance = ExecutionDevice.findById(execDevice)
+					   if(!executionResult.status.equals( FAILURE_STATUS )){
+						   executionResult.status = resultStatus
+						   executionResult.save(flush:true)
+						   if(!execution.result.equals( FAILURE_STATUS )){
+							   execution.result = resultStatus
+							   execution.save(flush:true)
+						   }
+						   if(!execDeviceInstance.status.equals( FAILURE_STATUS )){
+							   execDeviceInstance.addToExecutionresults(executionResult)
+							   execDeviceInstance.status = resultStatus
+							   execDeviceInstance.save(flush:true)
+						   }
+					   }
+				   }
+			   }
+		   }
+		   else{
+			   Execution.withTransaction {
+				   Execution execution = Execution.findById(execId)
+				   execution.result = FAILURE_STATUS
+				   execution.save(flush:true)
+			   }
+		   }
+	   }catch(Exception ex){
+		   ex.printStackTrace()
+	   }
 	}
 
     /**
@@ -1456,11 +1049,10 @@ class ExecutionController {
         render(template: "searchList", model: [executionInstanceList : executionList])
     }
     
-    
-    
+        
     /**
      * TO DO : Remove this once the port forwarding is automated via config file during reboot.
-     * It is caled during free state
+     * It is called during free state
      * Called only when the user is want to reset all rules.
      * 
      * @param id
@@ -1476,88 +1068,8 @@ class ExecutionController {
             redirect(action: "list")
             return
         }
-        else{
-			def executionResult
-            List existingDevices = []
-            List newDevices = []
-            List deletedDevices = []
-            def boxType
-            List macIdList = []
-            File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//calldevicestatus_cmndline.py").file
-            def absolutePath = layoutFolder.absolutePath
-            def deviceStatus
-            def deviceId
-            List childDeviceList = []
-            List devicesTobeDeleted = []
-
-            Device.withTransaction {
-                try {
-
-                    boxType = device?.boxType?.type?.toLowerCase()
-                    if(boxType == "gateway"){
-
-                        macIdList.removeAll(macIdList)
-                        executionResult =  executionService.executeGetDevices(device)   // execute callgetdevices.py
-
-                        macIdList = executionService.parseExecutionResult(executionResult)
-
-                        int childStbPort
-                        int childStatusPort
-                        int childLogTransferPort
-
-                        childDeviceList.removeAll(childDeviceList)
-
-
-                        if(macIdList.size() > 0 ){
-                            macIdList.each{ macId ->
-                                Device deviceObj = Device.findByMacId(macId)
-
-                                Random rand = new Random()
-                                int max = 100
-                                def randomIntegerList = []
-                                int randomVal
-                                (1..100).each {
-                                    randomVal =  rand.nextInt(max+1)
-                                }
-
-
-                                if(deviceObj){
-                                    deviceObj.childDevices.each { childDevice -> devicesTobeDeleted << childDevice }
-
-
-                                    devicesTobeDeleted.each { childDevice ->
-
-                                        childDevice.delete(flush:true)
-                                    }
-                                }
-
-                            }
-                            existingDevices = device.childDevices
-                            device.childDevices = childDeviceList
-                            deletedDevices = existingDevices - childDeviceList
-                            deletedDevices.each{ stbDevice ->
-
-                                stbDevice.delete(flush:true)
-                            }
-                        }
-                        else{
-                            if(executionResult.contains(FOUND_MACID)){
-
-                                existingDevices = device.childDevices
-                                device.childDevices = childDeviceList
-                                deletedDevices = existingDevices - childDeviceList
-                                deletedDevices.each{ stbDevice ->
-
-                                    stbDevice.delete(flush:true)
-                                }
-                            }
-                        }
-
-                    }
-                }
-                catch(Throwable th) {
-                }
-            }
+        else{			
+			deviceStatusService.resetIPRule(device)
         }
     }
 
@@ -1573,129 +1085,21 @@ class ExecutionController {
 	 */
 	def exportToExcel = {
 
-		if(!params.max) params.max = 100000
-		List executionResultInstanceList = []
-		List executionMethodResultInstanceList = []
-		List executionReportData = []
+		if(!params.max) params.max = 100000		
 		List dataList = []
 		List fieldLabels = []
 		Map fieldMap = [:]
 		Map parameters = [:]
-		List columnWidthList = []
-		columnWidthList = [0.35, 0.5]
-		String deviceDetails
+		List columnWidthList =  [0.35, 0.5]
 
 		Execution executionInstance = Execution.findById(params.id)
-		if(executionInstance){
-
-			int j = 0
-			String fileContents = ""
-			def deviceName = executionInstance?.device
-			Device deviceInstance = Device.findByStbName(deviceName)
-			def deviceIp = deviceInstance?.stbIp
-			def executionTime = executionInstance?.executionTime
-			
-			String filePath = "${request.getRealPath('/')}//logs//version//${executionInstance.id}_version.txt"
-
-			if(filePath){
-				File file = new File(filePath)
-				if(file.exists()){
-					file.eachLine { line ->
-						if(!(line.isEmpty())){
-							if(!(line.startsWith( LINE_STRING ))){
-
-								fileContents = fileContents + line + HTML_BR
-							}
-						}
-					}
-					deviceDetails = fileContents.replace(HTML_BR, NEW_LINE)
-				}
-				else{
-					log.error "No version file found"
-				}
-			}
-			else{
-
-				log.error "Invalid file path"
-			}
-
-			Map mapDevice 			= ["C1":EXPORT_DEVICE_LABEL,"C2":deviceName]
-			Map mapIpAddress 		= ["C1":EXPORT_IPADDRESS_LABEL, "C2": deviceIp]
-			Map mapExecutionTime 	= ["C1":EXPORT_EXECUTION_TIME_LABEL,"C2":executionTime]
-			Map deviceDetailsMap    = ["C1":EXPORT_DEVICE_DETAILS_LABEL,"C2":deviceDetails]
-			Map blankRowMap 		= ["C1":"     ","C2":"     "]
-			dataList.add(blankRowMap)
-			dataList.add(mapDevice)
-			dataList.add(mapIpAddress)
-			dataList.add(mapExecutionTime)
-			dataList.add(deviceDetailsMap)
-			dataList.add(blankRowMap)
-
-			executionResultInstanceList =  ExecutionResult.findAllByExecution(executionInstance)
-			executionResultInstanceList.each{ executionResultInstance ->
-
-				List functionList = []
-				List expectedResultList = []
-				List actualResultList = []
-				List functionStatusList = []
-
-				String scriptName = executionResultInstance?.script
-				String status = executionResultInstance?.status
-				String output = executionResultInstance?.executionOutput
-				String executionOutput
-
-				if(output){
-
-					executionOutput = output.replace(HTML_BR, NEW_LINE)
-				}
-
-				Map scriptNameMap 	= ["C1":EXPORT_SCRIPT_LABEL,"C2":scriptName]
-				Map statusMap 		= ["C1":EXPORT_STATUS_LABEL,"C2":status]
-				Map logDataMap 		= ["C1":EXPORT_LOGDATA_LABEL,"C2":executionOutput]
-
-				dataList.add(scriptNameMap)
-				dataList.add(statusMap)
-
-				executionMethodResultInstanceList = ExecuteMethodResult.findAllByExecutionResult(executionResultInstance)
-				if(executionMethodResultInstanceList){
-
-					executionMethodResultInstanceList.each{ executionMethodResultInstance ->
-						Map executionMethodResultMap = [:]
-						def functionName = executionMethodResultInstance?.functionName
-						def expectedResult = executionMethodResultInstance?.expectedResult
-						def actualResult = executionMethodResultInstance?.actualResult
-						def functionStatus = executionMethodResultInstance?.status
-						functionList.add(functionName)
-						expectedResultList.add(expectedResult)
-						actualResultList.add(actualResult)
-						functionStatusList.add(functionStatus)
-
-					}
-				}
-
-				fieldMap = ["C1":"     ", "C2":"     "]
-				int functionCount = functionList.size()
-				for(int i=0;i<functionCount;i++){
-
-					int index
-					index = i + 1
-					def functionDetails
-					functionDetails = EXPORT_EXPECTED_RESULT_LABEL+expectedResultList[i] + NEW_LINE +
-							EXPORT_ACTUAL_RESULT_LABEL+actualResultList[i] + NEW_LINE + EXPORT_FUNCTION_STATUS_LABEL+functionStatusList[i] + NEW_LINE
-
-					Map functionDetailsMap = ["C1":EXPORT_FUNCTION_LABEL+functionList[i],"C2":functionDetails]
-					dataList.add(functionDetailsMap)
-
-				}
-				dataList.add(logDataMap)
-				dataList.add(blankRowMap)
-			}
-
+		if(executionInstance){			
+			dataList = executedbService.getDataForExcelExport(executionInstance, getRealPath())
+			fieldMap = ["C1":"     ", "C2":"     "]
 			parameters = [ title: EXPORT_SHEET_NAME, "column.widths": columnWidthList ]
 		}
 		else{
 			log.error "Invalid excution instance......"
-
 		}
 
 		params.format = EXPORT_EXCEL_FORMAT
@@ -1704,7 +1108,6 @@ class ExecutionController {
 		response.setHeader("Content-disposition", "attachment; filename="+EXPORT_FILENAME+ executionInstance.name +".${params.extension}")
 		exportService.export(params.format, response.outputStream,dataList, null,fieldMap,[:], parameters)
 		log.info "Completed excel export............. "
-
 
 		/*********** csv support***************************/                                //TODO Use this if csv support needed
 		def type = params.type
@@ -1716,7 +1119,6 @@ class ExecutionController {
 			response.setHeader("Content-disposition", "attachment; filename="+filName+";sheetname=MySheet")
 			exportService.export(params.format, response.outputStream,dataList, fieldLabels,fieldMap,[:], [:])
 		}
-
 	}
 	
 	
@@ -1740,50 +1142,8 @@ class ExecutionController {
 
 		if(params?.checkedRows != UNDEFINED && params?.checkedRows != BLANK_SPACE && params?.checkedRows != null){
 
-			selectedRows = params?.checkedRows.split(COMMA_SEPERATOR)
-			for(int i=0;i<selectedRows.size();i++){
-				if(selectedRows[i] != UNDEFINED && selectedRows[i] != MARK_ALL_ID1 && selectedRows[i] != MARK_ALL_ID2 ){
-					Execution executionInstance = Execution.findById(selectedRows[i].toLong())
-					if(executionInstance){
-						
-						executionResultList  = ExecutionResult.findAllByExecution(executionInstance)
-						executionResultList.each { executionResultInstance ->
-							if(executionResultInstance){
-								executionMethodResultInstanceList = ExecuteMethodResult.findAllByExecutionResult(executionResultInstance)
-								if(executionMethodResultInstanceList){
-									executionMethodResultInstanceList.each { executionMethodResultInstance ->
-										executionMethodResultInstance.delete(flush:true)
-									}
-								}
-							}
-							executionResultInstance.delete(flush:true)
-						}
-						
-						def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
-						
-						executionDeviceList.each{ executionDeviceInstance ->
-							executionDeviceInstance.delete(flush:true)
-						}
-						
-						executionInstance.delete(flush:true)
-						deleteCount ++
-						log.info "Deleted "+executionInstance
-						
-						/**
-						 * Deletes the log files, crash files 
-						
-						String filePath = "${request.getRealPath('/')}//logs"
-						
-						 
-						 */
-						
-					}
-					else{
-						log.info "Invalid executionInstance"
-						message = "Delete failed"
-					}
-				}
-			}
+			selectedRows = params?.checkedRows.split(COMMA_SEPERATOR)			
+			deleteCount =  executedbService.deleteSelectedRowOfExecutionResult(selectedRows)
 
 			if(deleteCount == 1){
 				message = deleteCount+" Result Deleted"
@@ -1817,50 +1177,16 @@ class ExecutionController {
 		}
 	}
 
+	/**
+	 * Download the execution result details in xml format
+	 * @return
+	 */
 	def writexmldata(){
-		Execution executionInstance = Execution.findByName(params?.execName)
-		def executionDevice = ExecutionDevice.findAllByExecution(executionInstance)		
-		def writer = new StringWriter()
-		def xml = new MarkupBuilder(writer)
-		xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")		
-		xml.executionResult(name: executionInstance?.name.toString(), status: executionInstance?.result.toString()) {			
-			executionDevice.each{ executionDeviceInstance ->
-				device(name:executionDeviceInstance?.device.toString(), ip1:executionDeviceInstance?.deviceIp, exectime:executionDeviceInstance?.executionTime, status:executionDeviceInstance?.status)
-				{
-					executionDeviceInstance.executionresults.each{ executionResultInstance ->
-						scripts(name:executionResultInstance?.script, status:executionResultInstance?.status){
-							executionResultInstance.executemethodresults.each{executionResultMthdsInstance ->
-								function(name:executionResultMthdsInstance?.functionName){
-									expectedResult(executionResultMthdsInstance?.expectedResult)
-									actualResult(executionResultMthdsInstance?.actualResult)
-									status(executionResultMthdsInstance?.status)
-								}
-							}
-							logData(executionResultInstance?.executionOutput)
-						}
-						performance(){
-							def benchmarkList = Performance.findAllByExecutionResultAndPerformanceType(executionResultInstance,"BenchMark")
-							Benchmark(){
-								benchmarkList?.each{ bmInstance ->
-									Function(APIName:bmInstance?.processName,ExecutionTime:bmInstance?.processValue)								
-								}
-							}
-							def systemDiagList = Performance.findAllByExecutionResultAndPerformanceType(executionResultInstance,"CPUMEMORY")
-							SystemDiagnostics{
-								systemDiagList?.each{ sdInstance ->
-									Process(Name:sdInstance?.processName,CpuUtilization:sdInstance?.processValue,MemoryUtilization:sdInstance?.processValue1)									
-								}
-							}
-						}
-					}
-				}
-			}
-		}		
+		String writer = executedbService.getExecutionDataInXmlFormat(params?.execName)
 		response.setHeader "Content-disposition", "attachment; filename=${params?.execName}.xml"
 		response.contentType = 'text/xml'
 		response.outputStream << writer.toString()
-		response.outputStream.flush()
-	
+		response.outputStream.flush()	
 	}
 	
 	def readOutputFileData(String executionName){
@@ -1890,12 +1216,15 @@ class ExecutionController {
 				output = output + var
 			}
 		}catch(Exception e){
-			//println "Error in reading output file for "+executionName
 		}
 		render output as String
 	}
 
-	
+	/**
+	 * REST Api : Get the detailed result based on a execution Result
+	 * @param execResId
+	 * @return
+	 */
 	def getDetailedTestResult(final String execResId){
 
 		JsonObject resultNode = new JsonObject()
@@ -1921,4 +1250,61 @@ class ExecutionController {
 		}	
 		render resultNode
 	}
+	
+	/**
+	 * method to stop the execution through ui request
+	 */
+	def stopExecution(){
+		Execution execution = Execution.findById(params?.execid)
+		def listdate = []
+		if(execution?.executionStatus.equals(INPROGRESS_STATUS)){
+			def executionId = params?.execid?.toString()
+			if(!executionService.abortList.contains(executionId)){
+				executionService.abortList.add(executionId)
+			}else{
+				listdate.add("Request to stop already in progress")
+			}
+		}else if(execution?.executionStatus.equals("PAUSED")){
+			executionService.saveExecutionStatus(true, execution?.id)
+		}
+		
+		render listdate as JSON
+	}
+	
+	/**
+	 * REST API to request for stopping the test execution 
+	 * @param executionName
+	 * @return
+	 */
+	def stopThirdPartyTestExecution(final String executionName){
+		Execution execution = Execution.findByName(executionName)
+		JsonObject result = new JsonObject()
+		result.addProperty("ExecutionName", executionName)
+		if(execution?.executionStatus.equals(INPROGRESS_STATUS)){
+			executionService.abortList.add(execution?.id?.toString())
+			result.addProperty("Status", "Requested for abort")
+		}else if(execution?.executionStatus.equals("PAUSED")){
+			executionService.saveExecutionStatus(true, execution?.id)
+		} else{
+			result.addProperty("Status", "Error. No execution found in this name")
+		}
+		render result
+	}
+	
+	/**
+	 * Method to fetch the device status of the selected device
+	 * @return
+	 */
+	def updateDeviceStatus(){
+		def device = Device.get( params?.id )
+		try {
+			String status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, device)
+			deviceStatusService.updateDeviceStatus(device, status);
+			def deviceInstanceList = Device.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(),[order: 'asc', sort: 'stbName'])
+			def result1 = [url: getApplicationUrl(), deviceList : deviceInstanceList, deviceInstanceTotal: deviceInstanceList?.size()]
+			render view:"devicelist", model:result1
+		} catch (Exception e) {
+		}
+	}
+	
 }

@@ -21,9 +21,53 @@
 */
 
 #include "MediaframeworkAgent.h"
-
+#include <ifaddrs.h>
+#include <arpa/inet.h>
 
 /*helper functions for DVR sink*/
+/********************************************************************************************************************
+ Purpose:               To get the Host's IP Address by querrying the network Interface.
+
+ Parameters:
+                             szInterface [IN]    - Interface used to communicate.
+
+ Return:                 string    - IP address of corresponding interface.
+
+*********************************************************************************************************************/
+std::string GetHostIP (const char* szInterface)
+{
+    struct ifaddrs* pIfAddrStruct = NULL;
+    struct ifaddrs* pIfAddrIterator = NULL;
+    void* pvTmpAddrPtr = NULL;
+    char szAddressBuffer [INET_ADDRSTRLEN];
+    getifaddrs (&pIfAddrStruct);
+
+    for (pIfAddrIterator = pIfAddrStruct; pIfAddrIterator != NULL; pIfAddrIterator = pIfAddrIterator->ifa_next)
+    {
+        if (pIfAddrIterator->ifa_addr->sa_family == AF_INET)
+        {
+            // check it is a valid IP4 Address
+            pvTmpAddrPtr = & ( (struct sockaddr_in *)pIfAddrIterator->ifa_addr )-> sin_addr;
+            inet_ntop (AF_INET, pvTmpAddrPtr, szAddressBuffer, INET_ADDRSTRLEN);
+
+            if ( (strcmp (pIfAddrIterator -> ifa_name, szInterface) ) == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    std::cout << "Found IP: " << szAddressBuffer << std::endl;
+
+    if (pIfAddrStruct != NULL)
+    {
+        freeifaddrs (pIfAddrStruct);
+    }
+
+    return szAddressBuffer;
+
+} /* End of GetHostIP */
+
 
 static long long getCurrentTime()
 {
@@ -56,7 +100,21 @@ IRMFMediaSource* createHNSrc(const std::string& url)
 		}
 		else
 		{
-			result= pSrc->open( url.c_str(), 0 );
+			string streamingip;
+			streamingip=GetHostIP("eth1");
+        		string urlIn = url;
+        		string http = "http://";
+        		http.append(streamingip);
+		        cout<<"IP:"<<streamingip;
+		       	size_t pos = 0;
+        		pos = urlIn.find(":8080");
+       	 		if (pos!=std::string::npos)
+        		{
+		                urlIn = urlIn.replace(0,pos,http);
+        		}
+
+        		cout<<"Final URL passed to Open(): "<<urlIn<<endl;
+			result= pSrc->open( urlIn.c_str(), 0 );
 			if ( result != RMF_RESULT_SUCCESS )
 			{
 				DEBUG_PRINT(DEBUG_ERROR, "HNSrc open(%s) failed with rc=0x%X", url.c_str(), (unsigned int) result );
@@ -432,11 +490,31 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
 bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementOpen -->Entry\n");
+	
+        string streamingip;
+	
+	streamingip=GetHostIP("eth1");
+	string urlIn = req["url"].asCString();
+	string http = "http://";
+
+        http.append(streamingip);
+
+	cout<<"After append relace string: "<<http<<endl;
 
 	RMFResult retResult = RMF_RESULT_SUCCESS;	
 	string rmfComponent = req["rmfElement"].asCString();		
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
+
+	size_t pos = 0;
+	pos = urlIn.find(":8080");
+	if (pos!=std::string::npos)
+	{	
+		urlIn = urlIn.replace(0,pos,http);
+	}	
+	
+	cout<<"Final URL passed to Open(): "<<urlIn<<endl;
+
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->open(req["url"].asCString(),0);	
@@ -452,7 +530,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
 	}
 	if(rmfComponent == "HNSrc")
 	{
-		retResult = hnSource->open(req["url"].asCString(),0);	
+		retResult = hnSource->open(urlIn.c_str(),0);	
 		if(RMF_RESULT_SUCCESS != retResult)
 	        {
 			response["result"] = "FAILURE";
@@ -1124,8 +1202,31 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List(IN const Json::Value&
 	/* Get Total recording List */
 	count = dvm->getRecordingCount();
 	
+	char *absPath;
+	char finalPath[64];
+	
+	/* Fetch the TDK path from environment variable "TDK_PATH" */
+	absPath = getenv("TDK_PATH");
+	
+	if(absPath == NULL)
+	{
+		response["log-path"]= "NULL";	
+		response["result"] = "FAILURE";
+		response["details"] = "Enable to find: /opt/TDK/ path to create recordDetails.txt file";
+		DEBUG_PRINT(DEBUG_ERROR, "Enable to find: /opt/TDK/ path to create recordDetails.txt file");
+
+		return TEST_FAILURE;
+	}
+	
+	strcpy(finalPath,absPath);
+	strcat(finalPath,"/");
+	strcat(finalPath,RECORD_DETAILS_TXT);	
+
+        DEBUG_PRINT(DEBUG_TRACE, "Absolute Path: %s\n",absPath);
+        DEBUG_PRINT(DEBUG_TRACE, "Absolute FinalPath: %s\n",finalPath);
+	
 	/*Open a file*/
-	recordDetails.open(RECORD_DETAILS_TXT, ios::out | ios::trunc);
+	recordDetails.open(finalPath, ios::out | ios::trunc);
 	if (recordDetails.is_open())
 	{
         	DEBUG_PRINT(DEBUG_TRACE, "Number of recordings: %d\n",count);
@@ -1175,26 +1276,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List(IN const Json::Value&
 		response["log-path"]= "NULL";	
 		response["result"] = "FAILURE";
 		response["details"] = "File Creation Failed";
-		DEBUG_PRINT(DEBUG_TRACE, "File Creation Failed");
+		DEBUG_PRINT(DEBUG_ERROR, "File Creation Failed");
 		return TEST_FAILURE;
 	}
 
-  	char cwd[1024];
-	string syscwd;
-	if(getcwd(cwd, sizeof(cwd))==NULL)
-	{
-	       response["result"]="FAILURE";
-  	}
-	else if(strcmp(cwd,"/")==0)
-	{
-	       syscwd = std::string(cwd);
-	}
-	else
-	{
-	       syscwd = std::string(cwd)+"/";
-	}
+        DEBUG_PRINT(DEBUG_TRACE, "logpath: Absolute Path: %s\n",finalPath);
 
-	response["log-path"]= syscwd + RECORD_DETAILS_TXT;	
+	response["log-path"]= finalPath;	
 	response["result"] = "SUCCESS";
 	response["details"] = "Recording List File Created Successfully";
 	DEBUG_PRINT(DEBUG_TRACE, "Success");
@@ -1452,7 +1540,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 	unsigned x, y, height, width;
 	bool applyNow;
 	int applynow;
-
+	string streamingip;
 	MediaPlayerSink* pSink = new MediaPlayerSink();
 	HNSource* pSource = new HNSource();
 	RMFState cur_state;
@@ -1486,8 +1574,22 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
 		return TEST_FAILURE;
 	}
+	streamingip=GetHostIP("eth1");
+	string urlIn = req["playuri"].asCString();
+	string http = "http://";
+	http.append(streamingip);
+	cout<<"IP:"<<streamingip;
+	
+	size_t pos = 0;
+	pos = urlIn.find(":8080");
+        if (pos!=std::string::npos)
+        {
+                urlIn = urlIn.replace(0,pos,http);
+        }
 
-	res_HNSrcOpen = pSource->open(req["playuri"].asCString(), 0);
+        cout<<"Final URL passed to Open(): "<<urlIn<<endl;
+		
+	res_HNSrcOpen = pSource->open(urlIn.c_str(), 0);
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of HNSrc open is %d\n", res_HNSrcOpen);
 
 	if(0 != res_HNSrcOpen)
@@ -1653,7 +1755,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 	MediaPlayerSink* pSink = new MediaPlayerSink();
 	HNSource* pSource = new HNSource();
 	RMFState cur_state;
-
+        RMFResult retResult = RMF_RESULT_SUCCESS;
 	x = req["X"].asInt();
 	y = req["Y"].asInt();
 	height = req["H"].asInt();
@@ -1683,8 +1785,23 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
 		return TEST_FAILURE;
 	}
+	string streamingip;
+ 	streamingip=GetHostIP("eth1");
+        string urlIn = req["playuri"].asCString();
+        string http = "http://";
+        http.append(streamingip);
+        cout<<"IP:"<<streamingip;
 
-	res_HNSrcOpen = pSource->open(req["playuri"].asCString(), 0);
+        size_t pos = 0;
+        pos = urlIn.find(":8080");
+        if (pos!=std::string::npos)
+        {
+                urlIn = urlIn.replace(0,pos,http);
+        }
+
+        cout<<"Final URL passed to Open(): "<<urlIn<<endl;
+
+        res_HNSrcOpen = pSource->open(urlIn.c_str(), 0);	
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of HNSrc open is %d\n", res_HNSrcOpen);
 
 	if(0 != res_HNSrcOpen)
@@ -1894,7 +2011,23 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		return TEST_FAILURE;
 	}
 
-	res_HNSrcOpen = pSource->open(req["playuri"].asCString(), 0);
+	string streamingip;
+	streamingip=GetHostIP("eth1");
+        string urlIn = req["playuri"].asCString();
+        string http = "http://";
+        http.append(streamingip);
+        cout<<"IP:"<<streamingip;
+
+        size_t pos = 0;
+        pos = urlIn.find(":8080");
+        if (pos!=std::string::npos)
+        {
+                urlIn = urlIn.replace(0,pos,http);
+        }
+
+        cout<<"Final URL passed to Open(): "<<urlIn<<endl;
+
+        res_HNSrcOpen = pSource->open(urlIn.c_str(), 0);
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of HNSrc open is %d\n", res_HNSrcOpen);
 
 	if(0 != res_HNSrcOpen)
@@ -4291,6 +4424,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                 else
                 {
                         response["result"] = "SUCCESS";
+			response["details"] = "Converted TSB to Recording";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
                         return TEST_SUCCESS;
                 }
@@ -4349,6 +4483,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateRecording(IN cons
                 if ( dvrres == DVRResult_ok )
                 {
                         response["result"] = "SUCCESS";
+			response["details"] = "Created recording";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording -->Exit\n");
                         return TEST_SUCCESS;
                 }
@@ -4468,6 +4603,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording(IN cons
                 if ( DVRResult_ok == result )
                 {
                         response["result"] = "SUCCESS";
+			response["details"] = "Recording deleted";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
                         return TEST_SUCCESS;
                 }

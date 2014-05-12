@@ -56,7 +56,7 @@ class ExecuteMethodResult {
     static mapping = {
         cache true
         sort id : "desc"
-        
+		datasource 'ALL'
     }
     
 }

@@ -1,3 +1,5 @@
+import org.codehaus.groovy.grails.io.support.PathMatchingResourcePatternResolver
+
 /*
  * ============================================================================
  * COMCAST CONFIDENTIAL AND PROPRIETARY
@@ -44,6 +46,34 @@ grails.mime.types = [ html: ['text/html','application/xhtml+xml'],
                       multipartForm: 'multipart/form-data',
 					  jnlp: 'application/x-java-jnlp-file'
                     ]
+
+
+
+private ConfigObject getDataSourcesConfig() {		
+	Properties dataSourcesProps = new Properties()
+	InputStream resourceStream
+	try {		
+		environments {
+			development {
+				resourceStream = new PathMatchingResourcePatternResolver().getResource('file:web-app/appConfig/mailConfig.properties').inputStream
+			}
+			production {
+				resourceStream = new PathMatchingResourcePatternResolver().getResource('classpath:mailConfig.properties').inputStream
+			}
+		}
+	   dataSourcesProps.load(resourceStream)
+	}
+	catch(Exception e){	
+	}finally {
+		resourceStream?.close()
+	}
+	ConfigObject configObject
+	if(dataSourcesProps){
+	 configObject = new ConfigSlurper().parse(dataSourcesProps)
+	}
+	return configObject	
+}
+
 
 // URL Mapping Cache Max Size, defaults to 5000
 //grails.urlmapping.cache.maxsize = 1000
@@ -126,17 +156,20 @@ log4j = {
            'net.sf.ehcache.hibernate'
 
 }
+//grailsApplication.config.EXEC_PATH
 
-grails.mail.default.from="sreejasuma@tataelxsi.co.in"
-grails.mail.default.to="sreejasuma@tataelxsi.co.in"
+ConfigObject emailConfig = getDataSourcesConfig()
 
-grails {
-	mail {
-	  host = "pod51022.outlook.com"
-	  port = 587
-	  username = "sreejasuma@tataelxsi.co.in"
-	  password = "Mon@1310"
-	  props = ["mail.smtp.starttls.enable":"true",
-				   "mail.smtp.port":"587"]
+grails.mail.default.from=emailConfig?.get('default_from')
+grails.mail.default.to=emailConfig?.get('default_to')
+
+	grails {
+		mail {
+		  host = emailConfig?.get('host')
+		  port = emailConfig?.get('port')
+		  username = emailConfig?.get('user_name')
+		  password = emailConfig?.get('user_pwd')
+		  props = ["mail.smtp.starttls.enable":"true",
+					   "mail.smtp.port":emailConfig?.get('port')]
+		}
 	}
-}

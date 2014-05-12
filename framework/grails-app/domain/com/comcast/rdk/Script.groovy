@@ -58,6 +58,16 @@ class Script {
 	 */
 	int executionTime
 	
+	/**
+	 * true if script needs to be skipped while executing test suite
+	 */
+	boolean skip = false
+	
+	/**
+	 * Short description about the reason for skipping the script
+	 */
+	String remarks = ""
+	
 	
 	static hasMany = [boxTypes: BoxType]
 
@@ -77,6 +87,7 @@ class Script {
         scriptContent type: 'text'
         synopsis type: 'text'
         sort name : "asc"
+		datasource 'ALL'
     }
 
     @Override

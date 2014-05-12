@@ -14,8 +14,10 @@ package com.comcast.rdk;
 import static com.comcast.rdk.Constants.*
 
 public class DeviceStatusService {
+	static datasource = 'DEFAULT'
 	def executionService
 	
+	def grailsApplication
 
 	/**
 	 * Method to update the current status of device in DB.
@@ -24,6 +26,7 @@ public class DeviceStatusService {
 	 * @param outData
 	 */
 	public void updateDeviceStatus(final Device device, final String outData ){
+
 		String deviceStatus
 		def deviceInstance
 		def deviceId
@@ -175,4 +178,89 @@ public class DeviceStatusService {
 		catch(Exception e){
 		}
 	}
+	
+	
+	def resetIPRule(final Device device){
+		def executionResult
+		List existingDevices = []
+		List newDevices = []
+		List deletedDevices = []
+		def boxType
+		List macIdList = []
+		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//calldevicestatus_cmndline.py").file
+		def absolutePath = layoutFolder.absolutePath
+		def deviceStatus
+		def deviceId
+		List childDeviceList = []
+		List devicesTobeDeleted = []
+
+		Device.withTransaction {
+			try {
+
+				boxType = device?.boxType?.type?.toLowerCase()
+				if(boxType == "gateway"){
+
+					macIdList.removeAll(macIdList)
+					executionResult =  executionService.executeGetDevices(device)   // execute callgetdevices.py
+
+					macIdList = executionService.parseExecutionResult(executionResult)
+
+					int childStbPort
+					int childStatusPort
+					int childLogTransferPort
+
+					childDeviceList.removeAll(childDeviceList)
+
+
+					if(macIdList.size() > 0 ){
+						macIdList.each{ macId ->
+							Device deviceObj = Device.findByMacId(macId)
+
+							Random rand = new Random()
+							int max = 100
+							def randomIntegerList = []
+							int randomVal
+							(1..100).each {
+								randomVal =  rand.nextInt(max+1)
+							}
+
+
+							if(deviceObj){
+								deviceObj.childDevices.each { childDevice -> devicesTobeDeleted << childDevice }
+
+
+								devicesTobeDeleted.each { childDevice ->
+
+									childDevice.delete(flush:true)
+								}
+							}
+
+						}
+						existingDevices = device.childDevices
+						device.childDevices = childDeviceList
+						deletedDevices = existingDevices - childDeviceList
+						deletedDevices.each{ stbDevice ->
+
+							stbDevice.delete(flush:true)
+						}
+					}
+					else{
+						if(executionResult.contains(FOUND_MACID)){
+
+							existingDevices = device.childDevices
+							device.childDevices = childDeviceList
+							deletedDevices = existingDevices - childDeviceList
+							deletedDevices.each{ stbDevice ->
+
+								stbDevice.delete(flush:true)
+							}
+						}
+					}
+				}
+			}
+			catch(Throwable th) {
+			}
+		}
+	}
+	
 }

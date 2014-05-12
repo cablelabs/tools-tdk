@@ -109,5 +109,9 @@ class JobDetails {
     String toString() {
         return jobName ?: 'NULL'
     }
+	
+	static mapping = {
+		datasource 'ALL'
+	}
    
 }

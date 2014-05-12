@@ -22,7 +22,7 @@ import org.codehaus.groovy.grails.validation.routines.InetAddressValidator
 
 public class DeviceStatusUpdater {
 
-	static final int THREAD_COUNT = 30;
+	static final int THREAD_COUNT = 20;
 
 	/**
 	 * Executer service for handling the device status update process.
@@ -35,7 +35,7 @@ public class DeviceStatusUpdater {
 	 * @param grailsApplication
 	 * @param deviceStatusService
 	 */
-	public static void updateDeviceStatus(def grailsApplication,def deviceStatusService){
+	public static void updateDeviceStatus(def grailsApplication,def deviceStatusService,def executescriptService){
 		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//calldevicestatus_cmndline.py").file
 		def absolutePath = layoutFolder.absolutePath
 		def deviceStatus
@@ -70,7 +70,7 @@ public class DeviceStatusUpdater {
 				ipAddress,
 				device?.stbName
 			]
-			Runnable statusUpdator = new StatusUpdaterTask(cmd, device, deviceStatusService);
+			Runnable statusUpdator = new StatusUpdaterTask(cmd, device, deviceStatusService,executescriptService,grailsApplication);
 			executorService.execute(statusUpdator);
 		}
 	}

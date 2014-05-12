@@ -79,9 +79,9 @@
 			
 					<td style="vertical-align: top;">Chart Type</td>
 					<td>				
-					<g:select id="chartType1" name="chartType" from="${['ExecutionStatus', 'BenchMark', 'SystemDiagnostics']}" value="${count}" required="" />
+						<g:select id="chartType1" name="chartType" from="${['ExecutionStatus', 'BenchMark', 'CPU-Memory_Utilization','Paging','Swaping','LoadAverage']}" value="${count}" required="" />
 					</td>				
-					
+										
 					<td>
 	          			<input type="button" value="Get Chart" onclick="showChart();" /><br>           			
 	          		</td>           		    		
@@ -102,8 +102,7 @@
 					</td>
 					<td style="vertical-align: middle;">Chart Type</td>
 					<td>				
-					<g:select id="chartType" name="chartType" from="${['ExecutionStatus', 'BenchMark', 'SystemDiagnostics']}" value="${count}" required="" /></td>				
-					
+					<g:select id="chartType" name="chartType" from="${['ExecutionStatus', 'BenchMark', 'CPU-Memory_Utilization','Paging','Swaping','LoadAverage']}" value="${count}" required="" /></td>									
 					<td style="vertical-align: middle;">Result No's</td>
 					<td><g:select id="resultCount" name="result.count" from="${2..10}" value="${count}" style="width:45px;" required="" /></td>          		
 	          		<td>
@@ -112,8 +111,7 @@
 				</tr>				
 			</table>
 		</div>
-		<div class="chartdivclass" id="chartdiv" style="width:100%;height:600px;"></div>
-		
+		<div class="chartdivclass" id="chartdiv" style="width:100%;height:600px;"></div>				
 	</div>	
 </body>
 </html> 

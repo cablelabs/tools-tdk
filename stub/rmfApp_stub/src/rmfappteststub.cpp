@@ -106,7 +106,7 @@ bool rmfAppTestStub::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAg
 		}
 		else
 		{
-			DEBUG_PRINT(DEBUG_ERROR, "Warning! Unable to open log file. Won't redirect stdout of %s.\n", RMFAPP_EXEC);
+			DEBUG_PRINT(DEBUG_ERROR, "Warning! Unable to open log file. Won't redirect stdout of %s.\n", RMFAPP_EXEC_SCRIPT);
 		}
 		/* Change directory to the actual location of rmfApp. It doesn't like it when called
 		from elsewhere. */
@@ -117,10 +117,16 @@ bool rmfAppTestStub::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAg
 			exit(-1);
 		}
 		
-		/* Replace the child process with the actual rmfApp process */
-		if (-1 == execl (RMFAPP_EXEC, RMFAPP_EXEC, NULL))
+		DEBUG_PRINT(DEBUG_TRACE, " changing dir to %s done \n", RMFAPP_DIR);
+
+		DEBUG_PRINT(DEBUG_TRACE, " the shell cmd %s \n", SHCMDPATH);
+
+		DEBUG_PRINT(DEBUG_TRACE, " the application started %s \n", RMFAPP_EXEC_SCRIPT);
+
+		/* Replace the child process with the actual runRMFApp script process */
+		if (-1 == execl (SHCMDPATH, SHCMDPATH, RMFAPP_EXEC_SCRIPT, NULL))
 		{
-			DEBUG_PRINT(DEBUG_ERROR, "Error! execl failed! Are you sure the application %s is present?\n", RMFAPP_EXEC);
+			DEBUG_PRINT(DEBUG_ERROR, "Error! execl failed! Are you sure the application %s is present?\n", RMFAPP_EXEC_SCRIPT);
 			exit (-1);
 		}
 	}
@@ -238,7 +244,7 @@ bool rmfAppTestStub::cleanup (IN const char* szVersion,IN RDKTestAgent *ptrAgent
 	/* Restore the original signal handler. */
 	signal (SIGPIPE, old_signal_handler);
 
-	DEBUG_PRINT(DEBUG_LOG, "Done. %s exited with a value 0x%x\n", RMFAPP_EXEC, returnval);
+	DEBUG_PRINT(DEBUG_LOG, "Done. %s exited with a value 0x%x\n", RMFAPP_EXEC_SCRIPT, returnval);
 	return true;
 }	
 
@@ -277,7 +283,7 @@ sendCommandResult rmfAppTestStub::sendCommand (const char * command)
 		perror ("Error");
 		if (errno == EPIPE)
 		{
-			DEBUG_PRINT(DEBUG_ERROR, "The application %s appears to have exited/crashed prematurely.\n", RMFAPP_EXEC);
+			DEBUG_PRINT(DEBUG_ERROR, "The application %s appears to have exited/crashed prematurely.\n", RMFAPP_EXEC_SCRIPT);
 			DEBUG_PRINT(DEBUG_ERROR, "Unable to send command %s.\n", command_buffer);
 			return CHILD_APP_EXITED;
 		}

@@ -209,12 +209,30 @@ class JobSchedulerService implements Job{
 								scriptGroupInstance = ScriptGroup.findById(jobDetails?.scriptGroup,[lock: true])
 								scriptCounter = 0
 								List<Script> validScriptList = new ArrayList<Script>()
+								boolean skipStatus = false
 								scriptGroupInstance.scripts.each { script ->
+									
 									if(validateScriptBoxType(script,deviceInstance)){
-										validScriptList << script
+										
+										if(script.skip){
+											skipStatus = true
+											saveSkipStatus(Execution.findByName(execName), executionDevice, script, deviceInstance)
+										}else{
+											validScriptList << script
+										}
 									}
+									
+									
 								}
 								scriptGrpSize = validScriptList?.size()
+								
+								if(skipStatus && scriptGrpSize <= 0){
+									Execution ex = Execution.findByName(execName)
+									if(ex){
+										updateExecutionStatus(SKIPPED_STATUS, ex?.id)
+									}
+								}
+								
 								validScriptList.each{ scriptObj ->
 									scriptCounter++
 									if(scriptCounter == scriptGrpSize){
@@ -796,6 +814,32 @@ class JobSchedulerService implements Job{
 		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStat where c.id = :execDevId",
 				[newStat: "FAILURE", execDevId: executionDeviceId.toLong()])
 		
+	}
+	
+	public void saveSkipStatus(def executionInstance , def executionDevice , def scriptInstance , def deviceInstance){
+		ExecutionResult.withTransaction { resultstatus ->
+			try {
+				ExecutionResult executionResult = new ExecutionResult()
+				executionResult.execution = executionInstance
+				executionResult.executionDevice = executionDevice
+				executionResult.script = scriptInstance.name
+				executionResult.device = deviceInstance.stbName
+				executionResult.status = SKIPPED_STATUS
+				executionResult.executionOutput = "Test skipped , Reason :"+scriptInstance.remarks
+				if(! executionResult.save(flush:true)) {
+					log.error "Error saving executionResult instance : ${executionResult.errors}"
+				}
+				resultstatus.flush()
+			}
+			catch(Throwable th) {
+				resultstatus.setRollbackOnly()
+			}
+		}
+	}
+	
+	public void updateExecutionStatus(final String status, final long executionId){
+		Execution.executeUpdate("update Execution c set c.outputData = :newStatus where c.id = :execId",
+				[newStatus: status, execId: executionId.toLong()])
 	}
 }
 

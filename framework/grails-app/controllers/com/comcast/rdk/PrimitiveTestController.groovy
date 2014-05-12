@@ -12,6 +12,9 @@
 package com.comcast.rdk
 
 import static com.comcast.rdk.Constants.*
+
+import java.util.Map;
+
 import org.springframework.dao.DataIntegrityViolationException
 import com.google.gson.JsonObject
 import grails.converters.JSON
@@ -29,10 +32,31 @@ class PrimitiveTestController {
         redirect(action: "list", params: params)
     }
 
-    def list() {      
+    def list() {     
 		def primitiveTestList = PrimitiveTest.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])
-        [primitiveTestInstanceList: primitiveTestList, primitiveTestInstanceTotal: primitiveTestList.size()]
+		def primitiveTestMap = createPrimitiveTestMap(primitiveTestList);
+        [primitiveTestInstanceList: primitiveTestList, primitiveTestInstanceTotal: primitiveTestList.size(),primitiveTestMap:primitiveTestMap]
     }
+	
+	/**
+	 * Method to create the filtered script list based on module
+	 * @param scriptInstanceList
+	 * @return
+	 */
+	private Map createPrimitiveTestMap(def primitiveTestList ){
+		List primitiveList = []
+		Map primitiveTestMap = [:]
+		primitiveTestList.each { primitiveTest ->
+				String moduleName = primitiveTest.getModule().getName();
+				List subList = primitiveTestMap.get(moduleName);
+				if(subList == null){
+					subList = []
+					primitiveTestMap.put(moduleName, subList);
+				}
+				subList.add(primitiveTest)
+		}
+		return primitiveTestMap
+	}
 	
 	/**
 	 * TODO: Complete java doc
@@ -105,7 +129,8 @@ class PrimitiveTestController {
 	def create() {
 		def primitiveTestList = PrimitiveTest.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])
 		//def primitiveTestList = PrimitiveTest.list([order: 'asc', sort: 'name'])
-		[primitiveTestList : primitiveTestList, error: params.error, primitiveTestId: params.primitiveTestId, primitiveTestCount : PrimitiveTest.count()]
+		def primitiveTestMap = createPrimitiveTestMap(primitiveTestList);
+		[primitiveTestList : primitiveTestList, error: params.error, primitiveTestId: params.primitiveTestId, primitiveTestCount : PrimitiveTest.count(),,primitiveTestMap:primitiveTestMap]
 	}
 
 	

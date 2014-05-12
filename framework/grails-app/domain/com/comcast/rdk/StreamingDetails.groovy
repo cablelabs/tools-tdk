@@ -58,4 +58,7 @@ class StreamingDetails {
         return streamId ?: 'NULL'
     }
 
+	static mapping = {
+		datasource 'ALL'
+	}
 }

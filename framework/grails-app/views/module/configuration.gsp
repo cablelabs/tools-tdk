@@ -31,20 +31,24 @@
 				</tr>
 				<tr>					
 					<td><g:link controller="streamingDetails" action="list"><span>Streaming Details</span></g:link></td>
-					<td>Option to give streaming details</td>
+					<td>Option to add streaming details</td>
 				</tr>	
 				<tr>					
 					<td><g:link controller="boxManufacturer" action="index"><span>Box Manufacturers</span></g:link></td>
-					<td>Option to give Box Manufacturers</td>
-				</tr>	
+					<td>Option to add Box Manufacturers</td>
+				</tr>
+				<tr>					
+					<td><g:link controller="boxType" action="index"><span>Box Type</span></g:link></td>
+					<td>Option to add Box Type</td>
+				</tr>		
 				<tr>					
 					<td><g:link controller="soCVendor" action="index"><span>SoC Vendors</span></g:link></td>
-					<td>Option to give SoC Vendors</td>
+					<td>Option to add SoC Vendors</td>
 				</tr>	
 				<g:if test="${SecurityUtils.subject.principal.equals("admin")}">	
 				<tr>					
 					<td><g:link controller="groups" action="index"><span>Groups</span></g:link></td>
-					<td>Option to give Groups</td>
+					<td>Option to add Groups</td>
 				</tr>				
 				<tr>					
 					<td><g:link controller="user" action="index"><span>User Management</span></g:link></td>

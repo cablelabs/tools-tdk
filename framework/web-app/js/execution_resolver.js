@@ -52,6 +52,12 @@ $(document).ready(function() {
 	 
 });
 
+function stopExecution(obj){
+	if (confirm('Execution will be stopped after finishing the current test case execution.\nDo you want to stop the execution ? ')) {
+		$.get('stopExecution', {execid: obj}, function(data) {});
+	}
+	
+}
 
 function isNumberKey(evt)
 {
@@ -111,6 +117,16 @@ function showMonthly(){
 
 function showScript(id){
 	$.get('showDevices', {id: id}, function(data) { $("#responseDiv").html(data); });
+	$.get('updateDeviceStatus', {id: id}, function(data) {refreshDevices(data);});
+}
+
+function refreshDevices(data){
+	var container = document.getElementById("device_status");
+	container.innerHTML= data;
+	
+	var selectedId = $("#selectedDevice").val();
+	var deviceInstanceTotal = $("#deviceInstanceTotal").val();
+	highlightTreeElement('deviceExecutionList_', selectedId, deviceInstanceTotal);
 }
 
 function resetDevice(id){

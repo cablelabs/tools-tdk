@@ -112,3 +112,15 @@ Uncomment the following parameters in case of client
 	i)cd tdkbuildenv/tdk/platform
 	ii)make
 		
+ Note : All the stubs and agent will be build by this. The stubs and agent can be build independantly also by using the same Makefile.
+  by using following commands. 
+
+	make agent
+	make IARMBUS_stub
+	make MediaStreamer_stub
+	make Mediaframework_stub
+	make OpenSourceComponent_Stub
+	make RDKLogger_stub
+	make SM_stub
+	make e2e_rmf_stub
+	make rmfApp_stub

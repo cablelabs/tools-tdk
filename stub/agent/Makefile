@@ -42,7 +42,7 @@ endif
 CC	  := g++
 TARGETNAME:=$(TARGETDIR)/agent
 SOURCES   := src/*.cpp
-
+COPTS     += -Wall
 
 #
 # Build the TARGET from library and souce files

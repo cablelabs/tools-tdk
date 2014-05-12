@@ -82,10 +82,16 @@ class UserController {
 				eq('name', "ADMIN")
 			}
 		}
-		mailService.sendMail {
-			to results.email.toArray()
-			subject "New User Registration"
-			body ' [RDK Tool] : User '+userInstance.name+' is registed with username '+userInstance.username
+		println results.email.toArray()
+		try {
+			mailService.sendMail {
+				to results.email.toArray()
+				subject "New User Registration"
+				body ' [RDK Tool] : User '+userInstance.name+' is registed with username '+userInstance.username
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
 		flash.message = message(code: 'default.created.message', args: [message(code: 'shiroUser.label', default: 'User'), userInstance.name])
 		redirect(action: "registerUser", params: [userId: userInstance?.id])

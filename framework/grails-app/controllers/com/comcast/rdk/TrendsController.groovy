@@ -148,7 +148,7 @@ class TrendsController {
 	 * @return
 	 */
 	def getStatusSystemDiagnosticsData(){
-
+		
 		def executionList
 		def cpuMemoryList = []
 		if(params?.executionIds){
@@ -162,7 +162,6 @@ class TrendsController {
 			
 			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
 	
-			def performanceList = []
 			def cpuValues = []
 			def memoryValues = []
 			def performanceSd
@@ -208,6 +207,159 @@ class TrendsController {
 		render mapData as JSON
 	}
 
+	/**
+	 * Shows the chart to draw the chart based on Paging data
+	 * @return
+	 */
+	def getPagingData(){
+		
+		def executionList
+		def systemDiagList = []
+		if(params?.executionIds){
+			executionList = getExecutionLists(params?.executionIds)
+		}
+		else{
+			executionList = getExecutionList(params?.scriptGroup,params?.deviceId,params?.resultCnt)
+		}
+		
+		if(executionList){
+			
+			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
+	
+			def pageInValues = []
+			def pageOutValues = []
+			def performanceSd
+		
+			executionList.each{ execution ->
+				populateChartData(execution)
+				Double pageInTotal = 0
+				Double pageOutTotal = 0
+				execution?.executionresults?.each{ execResult ->
+					
+						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,"PAGING : pgpgin/s")
+						if(performanceSd?.processValue){
+							def pageInVal = 0
+							try {
+								pageInVal = Double.parseDouble(performanceSd?.processValue)
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+							pageInTotal = pageInTotal +  pageInVal
+						}
+						
+						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,"PAGING : pgpgout/s")
+						if(performanceSd?.processValue){
+							def pageOutVal = 0
+							try {
+								pageOutVal = Double.parseDouble(performanceSd?.processValue)
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+							pageOutTotal = pageOutTotal +  pageOutVal
+						}
+				}
+				pageInValues.add(pageInTotal)
+				pageOutValues.add(pageOutTotal)
+			}
+			systemDiagList.add(pageInValues)
+			systemDiagList.add(pageOutValues)
+		}
+		def mapData = [execName: executionList?.name, systemDiag : systemDiagList]
+		render mapData as JSON
+
+	}
+	
+	/**
+	 * Shows the chart to draw the chart based on Swap Data
+	 * @return
+	 */
+	def getSwapData(){
+
+		def executionList
+		def systemDiagList = []
+		if(params?.executionIds){
+			executionList = getExecutionLists(params?.executionIds)
+		}
+		else{
+			executionList = getExecutionList(params?.scriptGroup,params?.deviceId,params?.resultCnt)
+		}
+		
+		if(executionList){
+			
+			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
+			def swapValues = []
+			def performanceSd
+	
+			executionList.each{ execution ->
+				populateChartData(execution)
+				Double swapTotal = 0
+				Double loadAvgTotal = 0
+				execution?.executionresults?.each{ execResult ->											
+						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,"SWAPING")
+						if(performanceSd?.processValue){
+							def swapVal = 0
+							try {
+								swapVal = Double.parseDouble(performanceSd?.processValue)
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+							swapTotal = swapTotal +  swapVal
+						}							
+				}
+				swapValues.add(swapTotal)
+			}
+			systemDiagList.add(swapValues)
+		}
+		def mapData = [execName: executionList?.name, systemDiag : systemDiagList]
+		render mapData as JSON
+	}
+
+	
+	def getLoadAverage(){
+		
+		def executionList
+		def systemDiagList = []
+		if(params?.executionIds){
+			executionList = getExecutionLists(params?.executionIds)
+		}
+		else{
+			executionList = getExecutionList(params?.scriptGroup,params?.deviceId,params?.resultCnt)
+		}
+		
+		if(executionList){
+			
+			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
+			def loadAvgValues = []
+			def performanceSd
+	
+			executionList.each{ execution ->
+				populateChartData(execution)
+				
+				Double loadAvgTotal = 0
+				execution?.executionresults?.each{ execResult ->
+
+						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,"LOAD AVERAGE")
+						if(performanceSd?.processValue){
+							def loadAvgVal = 0
+							try {
+								loadAvgVal = Double.parseDouble(performanceSd?.processValue)
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+							loadAvgTotal = loadAvgTotal +  loadAvgVal
+						}
+				}
+				loadAvgValues.add(loadAvgTotal)
+			}
+			systemDiagList.add(loadAvgValues)
+		}
+		def mapData = [execName: executionList?.name, systemDiag : systemDiagList]
+		
+		println "mapData :::  "+mapData
+		
+		render mapData as JSON
+	}
+	
 	/**
 	 * Returns execution list
 	 * @param scriptGroup

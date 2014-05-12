@@ -61,20 +61,26 @@
 								<li  class="" id="root"><span class="folder">Primitive Tests</span>
 									<ul>
 										<% int primitiveTestIndex = 0; %>
-										<g:each in="${primitiveTestList}" var="test">
-											<%  primitiveTestIndex++; %>
-											
+										<g:each in="${primitiveTestMap}" var="mapEntry">
+										<li id="root"><span class="folder" id="addTestId">${mapEntry.key}</span>
+											<ul id ="module_">
+												<g:each in="${mapEntry.value}" var="test">
+												<%  primitiveTestIndex++; %>
 											<li id="primitiveTestList_${primitiveTestIndex}">
 												<span class="file" id="${test.id}">
 													<a href="#" onclick="makeTestEditable('${test.id}'); highlightTreeElement('primitiveTestList_', '${primitiveTestIndex}', '${primitiveTestCount}'); return false;">${test.name}</a>
 												</span>
+												</li>
+												</g:each>
+												</ul>
 											</li>
-										</g:each>
+											</g:each>
 									</ul>
 								</li>
 							</ul>
 						</div>
 					</td>
+					
 					<td>
 						<div id="responseDiv" style="width: 500px; height: 400px; overflow: auto;"></div>
 					</td>

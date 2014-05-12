@@ -54,6 +54,7 @@ class DeviceGroup
     static mapping = {
         cache true
         sort id : "asc"        
+		datasource 'ALL'
     }
 
    

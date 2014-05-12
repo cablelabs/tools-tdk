@@ -26,41 +26,24 @@ class BoxType {
      * Eg: client, gateway
      */
     String type 
+	
+	/**
+	 * Indicates the group name which the box belongs
+	 */
+	Groups groups
     
     static constraints = {
         name(unique:true, blank:false, nullable:false)
         type(blank:false, nullable:false)
-    }
-    
-    /**
-     * Generated hashCode and Equals
-     */
-    @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
-        return result;
+		groups(nullable:true, blank:true)
     }
 
-    @Override
-    public boolean equals( Object obj ) {
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        BoxType other = ( BoxType ) obj;
-        if ( name == null ) {
-            if ( other.name != null )
-                return false;
-        }
-        else if ( !name.equals( other.name ) )
-            return false;
-        return true;
-    }
-	
 	@Override
 	String toString() {
 		return name ?: 'NULL'
+	}
+	
+	static mapping = {
+		datasource 'ALL'
 	}
 }

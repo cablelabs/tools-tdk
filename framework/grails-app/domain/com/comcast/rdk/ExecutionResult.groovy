@@ -48,6 +48,8 @@ class ExecutionResult {
 	
 	Set performance
 	
+	Device execDevice
+	
     /**
      * Execution can have many execution results.
      */
@@ -59,6 +61,7 @@ class ExecutionResult {
         device(nullable:false, blank:false)
         status(nullable:true, blank:true)
 		executionOutput(nullable:true, blank:true)		
+		execDevice(nullable:true, blank:true)
     }
     
     static mapping = {
@@ -66,6 +69,7 @@ class ExecutionResult {
 		executionOutput type: 'text'
         sort id : "asc"
 		executemethodresults sort: 'id', order: 'asc'
+		datasource 'ALL'
     }
     
 }

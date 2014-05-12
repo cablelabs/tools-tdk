@@ -30,6 +30,11 @@ class ExecutionService {
      * Injects the grailsApplication.
      */
     def grailsApplication
+	
+	/**
+	 * transient variable to keep the list of execution to be aborted
+	 */
+	public static transient List abortList = []
     
     /**
      * Get the name of the day from the number used in cronschedule
@@ -366,9 +371,13 @@ class ExecutionService {
      */
     public boolean validateScriptBoxType(final Script scriptInstance, final Device deviceInstance){
         boolean scriptStatus = true
-        if(!(scriptInstance.boxTypes.find { it.id == deviceInstance.boxType.id })){         
-            scriptStatus = false
-        }
+		Script.withTransaction { trns ->
+			def scriptInstance1 = Script.findById(scriptInstance?.id)			
+			def deviceInstance1 = Device.findById(deviceInstance?.id)
+	        if(!(scriptInstance1.boxTypes.find { it.id == deviceInstance1.boxType.id })){   
+	            scriptStatus = false
+	        }
+		}
         return scriptStatus
     }
     
@@ -749,6 +758,26 @@ class ExecutionService {
 				[newTime: timeDiff, execDevId: executionDeviceId.toLong()])		
 	}
 	
+	public void updateExecutionStatus(final String status, final long executionId){
+		Execution.executeUpdate("update Execution c set c.outputData = :newStatus where c.id = :execId",
+				[newStatus: status, execId: executionId.toLong()])
+	}
+	
+	public void updateExecutionSkipStatusWithTransaction(final String status, final long executionId){
+		Execution.withTransaction {
+		Execution.executeUpdate("update Execution c set c.outputData = :newStatus , c.result = :reslt where c.id = :execId",
+				[newStatus: status, reslt: status, execId: executionId.toLong()])
+		}
+	}
+	
+	
+	public void updateExecutionStatusData(final String status, final long executionId){
+		Execution.withTransaction {
+		Execution.executeUpdate("update Execution c set c.executionStatus = :newStatus where c.id = :execId",
+				[newStatus: status, execId: executionId.toLong()])
+		}
+	}
+	
 	/**
 	 * Method to update the execution report for each test script execution.
 	 * This method will update the ExecutionResult and Execution tables with new execution output.
@@ -806,7 +835,7 @@ class ExecutionService {
 	 * @return
 	 */
 	public boolean saveExecutionDetails(final String execName, String scriptName, String deviceName,
-	 ScriptGroup scriptGroupInstance){
+	 ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun){
 		def executionSaveStatus = true
 		try {
 			Execution execution = new Execution()
@@ -815,8 +844,13 @@ class ExecutionService {
 			execution.device = deviceName
 			execution.scriptGroup = scriptGroupInstance?.name
 			execution.result = UNDEFINED_STATUS
+			execution.executionStatus = INPROGRESS_STATUS
 			execution.dateOfExecution = new Date()
 			execution.groups = getGroup()
+			execution.applicationUrl = appUrl
+			execution.isRerunRequired = rerun?.equals("true")
+			execution.isBenchMarkEnabled = isBenchMark?.equals("true")
+			execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
 			if(! execution.save(flush:true)) {				
 				log.error "Error saving Execution instance : ${execution.errors}"
 				executionSaveStatus = false
@@ -875,83 +909,72 @@ class ExecutionService {
 				}
 				benchmarkPerformanceFile.delete()	
 				
-				
-				
-					boolean beginOfSysstat = false
-					cpuPerformanceFile.eachLine { line ->
-						if(!line?.isEmpty()){
-						
-							if(line.startsWith("ENDOFTOPCOMMAND_!")){
-								beginOfSysstat = true
-							}
-							if(beginOfSysstat){
-								if(line.startsWith("%cpu;")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "%CPU"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								if(line.startsWith("%memused")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "%MEMORY"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								else if( line.startsWith("%swpused")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "SWAPING"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								else if(line.startsWith("ldavg-1;")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "LOAD AVERAGE"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								else if(line.startsWith("pgpgin/s")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "PAGING : pgpgin/s"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								else if(line.startsWith("pgpgout/s")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "PAGING : pgpgout/s"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								
-							}	
+				cpuPerformanceFile.eachLine { line ->
+					if(!line?.isEmpty()){													
+						if(line.startsWith("%cpu;")){
+							stringArray = line?.split(";")
+							performanceInstance = new Performance()
+							performanceInstance.executionResult = executionresult
+							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+							performanceInstance.processName = "%CPU"
+							performanceInstance.processValue = stringArray[1]?.trim()
+							performanceInstance.save(flush:true)
+							executionresult.addToPerformance(performanceInstance)
 						}
-				}
-					
-				}
-				cpuPerformanceFile.delete()				
+						if(line.startsWith("%memused")){
+							stringArray = line?.split(";")
+							performanceInstance = new Performance()
+							performanceInstance.executionResult = executionresult
+							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+							performanceInstance.processName = "%MEMORY"
+							performanceInstance.processValue = stringArray[1]?.trim()
+							performanceInstance.save(flush:true)
+							executionresult.addToPerformance(performanceInstance)
+						}
+						else if( line.startsWith("%swpused")){
+							stringArray = line?.split(";")
+							performanceInstance = new Performance()
+							performanceInstance.executionResult = executionresult
+							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+							performanceInstance.processName = "SWAPING"
+							performanceInstance.processValue = stringArray[1]?.trim()
+							performanceInstance.save(flush:true)
+							executionresult.addToPerformance(performanceInstance)
+						}
+						else if(line.startsWith("ldavg-1;")){
+							stringArray = line?.split(";")
+							performanceInstance = new Performance()
+							performanceInstance.executionResult = executionresult
+							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+							performanceInstance.processName = "LOAD AVERAGE"
+							performanceInstance.processValue = stringArray[1]?.trim()
+							performanceInstance.save(flush:true)
+							executionresult.addToPerformance(performanceInstance)
+						}
+						else if(line.startsWith("pgpgin/s")){
+							stringArray = line?.split(";")
+							performanceInstance = new Performance()
+							performanceInstance.executionResult = executionresult
+							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+							performanceInstance.processName = "PAGING : pgpgin/s"
+							performanceInstance.processValue = stringArray[1]?.trim()
+							performanceInstance.save(flush:true)
+							executionresult.addToPerformance(performanceInstance)
+						}
+						else if(line.startsWith("pgpgout/s")){
+							stringArray = line?.split(";")
+							performanceInstance = new Performance()
+							performanceInstance.executionResult = executionresult
+							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+							performanceInstance.processName = "PAGING : pgpgout/s"
+							performanceInstance.processValue = stringArray[1]?.trim()
+							performanceInstance.save(flush:true)
+							executionresult.addToPerformance(performanceInstance)
+						}														
+					}
+				}					
+			}
+			cpuPerformanceFile.delete()				
 		}
 		new File(filePath+"//logs//performance//${executionInstance?.id}").deleteDir()
 		}catch(Exception e){	
@@ -963,6 +986,106 @@ class ExecutionService {
 		}
 	}	
 	
+	public void saveSkipStatus(def executionInstance , def executionDevice , def scriptInstance , def deviceInstance){
+		ExecutionResult.withTransaction { resultstatus ->
+			try {
+				ExecutionResult executionResult = new ExecutionResult()
+				executionResult.execution = executionInstance
+				executionResult.executionDevice = executionDevice
+				executionResult.script = scriptInstance.name
+				executionResult.device = deviceInstance.stbName
+				executionResult.status = SKIPPED_STATUS
+				executionResult.executionOutput = "Test skipped , Reason :"+scriptInstance.remarks
+				if(! executionResult.save(flush:true)) {
+					log.error "Error saving executionResult instance : ${executionResult.errors}"
+				}
+				resultstatus.flush()
+			}
+			catch(Throwable th) {
+				resultstatus.setRollbackOnly()
+			}
+		}
+	}
 	
+	public boolean isAborted(def executionName){
+		Execution.withTransaction {
+			def ex = Execution.findByName(executionName)
+			if(ex){
+				return ex?.isAborted
+			}
+		}
+		return false;
+	}
+	
+	public void abortExecution(def executionId){
+		Long exId = Long.parseLong(""+executionId)
+		try {
+			Execution.withTransaction {
+				Execution.executeUpdate("update Execution c set c.executionStatus = :newStatus , c.isAborted = :abort where c.id = :execId",
+						[newStatus: ABORTED_STATUS, abort: true, execId: exId?.toLong()])
+			}
+		} catch (Exception e) {
+		}
+
+	}
+	
+	public void saveExecutionStatus(boolean isAborted, def exId){
+				
+		String status = ""
+		if(isAborted){
+			status = ABORTED_STATUS
+		}else{
+			status = COMPLETED_STATUS
+		}
+		try {
+			Execution.executeUpdate("update Execution c set c.executionStatus = :newStatus , c.isAborted = :abort where c.id = :execId",
+					[newStatus: status, abort: isAborted, execId: exId?.toLong()])
+
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+
+	}
+	
+	public void saveExecutionDeviceStatus(boolean isAborted, def exDevId){
+
+		String status = ""
+		if(isAborted){
+			status = ABORTED_STATUS
+		}else{
+			status = COMPLETED_STATUS
+		}
+		try {
+			ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStatus  where c.id = :execId",
+					[newStatus: status, abort: isAborted, execId: exDevId?.toLong()])
+
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+
+}
+	
+	public void savePausedExecutionStatus(def exId){
+		try {
+			Execution.executeUpdate("update Execution c set c.executionStatus = :newStatus where c.id = :execId",
+					[newStatus: "PAUSED", execId: exId?.toLong()])
+
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+
+}
+	
+	public void saveExecutionDeviceStatusData(String status, def exDevId){
+		
+				try {
+					ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStatus  where c.id = :execId",
+							[newStatus: status, execId: exDevId?.toLong()])
+		
+				} catch (Exception e) {
+					e.printStackTrace()
+				}
+		
+		}
 	
 }

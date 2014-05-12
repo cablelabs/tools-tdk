@@ -44,7 +44,9 @@ typedef enum
 	CHILD_APP_EXITED //Error.
 } sendCommandResult;
 
-#define RMFAPP_EXEC "rmfApp" //name of child executable.
+#define SHCMDPATH "/bin/sh" //absolute path of the sh command.
+#define RMFAPP_EXEC_SCRIPT "runRMFApp" //name of child script.
+
 #define RMFAPP_DIR "/mnt/nfs/env"//Location of rmfApp
 #define RMFAPP_LOG_FILE "/opt/logs/rmfapp.log" //Path of log file
 #define RMFAPP_KILL_COMMAND "kill 1" //Command that causes the child to kill the process it is running.

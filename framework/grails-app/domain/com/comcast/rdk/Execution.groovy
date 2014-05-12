@@ -63,7 +63,7 @@ class Execution {
     Date dateOfExecution
     
     /**
-     * Start time of execution
+     * time taken for execution
      */
     String executionTime
 
@@ -76,6 +76,13 @@ class Execution {
 	 * Flag to identify the whether the given instance is marked for deletion or not.
 	 */
 	int isMarked = 0;
+	
+	/**
+	 * Flag to mark the execution as aborted
+	 */
+	boolean isAborted = false
+	
+	boolean isRerunRequired = false
 
 	/**
 	 * Indicates the group name which the device belongs
@@ -85,6 +92,26 @@ class Execution {
 	boolean isPerformanceDone
 	
 	String executionStatus
+	
+	/**
+	 * application url data
+	 */
+	String applicationUrl
+	
+	/**
+	 * Flag to mark is bench mark enabled for the execution 
+	 */
+	boolean isBenchMarkEnabled = false
+	
+	/**
+	 * Flag to mark is SystemDiagnostics enabled for the execution
+	 */
+	boolean isSystemDiagnosticsEnabled = false
+	
+	/**
+	 * Object to save the third party execution details for the execution(optional)
+	 */
+	ThirdPartyExecutionDetails thirdPartyExecutionDetails = null
 	
 	/**
 	 * Execution can have many execution results.
@@ -104,6 +131,12 @@ class Execution {
 		groups(nullable:true, blank:true)
 		isPerformanceDone(nullable:true, blank:true)
 		executionStatus(nullable:true, blank:true)
+		thirdPartyExecutionDetails(nullable:true, blank:true)
+		isBenchMarkEnabled(nullable:true, blank:true)
+		isSystemDiagnosticsEnabled(nullable:true, blank:true)
+		isAborted(nullable:true, blank:true)
+		isRerunRequired(nullable:true, blank:true)
+		applicationUrl(nullable:true, blank:true)
     }
     
     static mapping = {
@@ -111,6 +144,7 @@ class Execution {
         outputData type: 'text'
         sort id : "desc"
 		executionresults sort:'id' , order: 'asc'
+		datasource 'ALL'
     }
     
     @Override

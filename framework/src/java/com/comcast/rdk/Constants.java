@@ -52,7 +52,11 @@ public final class Constants
     public static final String FAILURE_STATUS       = "FAILURE";
     public static final String SUCCESS_STATUS       = "SUCCESS";
     public static final String UNDEFINED_STATUS     = "UNDEFINED";
-    public static final String INPROGRESS_STATUS    = "IN PROGRESS";
+    public static final String INPROGRESS_STATUS    = "IN-PROGRESS";
+    public static final String SKIPPED_STATUS    	= "SKIPPED";
+    public static final String ABORTED_STATUS    	= "ABORTED";
+    public static final String COMPLETED_STATUS    	= "COMPLETED";
+    
     public static final String ERROR_STATUS         = "error";
     public static final String KEY_GROUP            = "Suite";
     public static final String URL_SEPERATOR        = "/";
@@ -140,4 +144,15 @@ public final class Constants
     public static final String SCRIPT_OUTPUT_FILE_EXTN = ".txt";
     
     public static final String TDK_ERROR = "#TDK_@error-";
+    
+    public static final String TRUE = "true";
+    public static final String FALSE = "false";
+    public static final String KEY_BENCHMARK = "BENCHMARK";
+    public static final String KEY_SYSTEMDIAGNOSTICS = "SYSTEMDIAGNOSTICS";
+    public static final String KEY_SCRIPTEND = "SCRIPTEND#!@~";
+    public static final String PENDING = "PENDING";
+    public static final String PAUSED = "PAUSED";
+    public static final String SKIPPED = "SKIPPED";
+    public static final String KEY_PERFORMANCE_BM = "PerformanceBenchMarking";
+    public static final String KEY_PERFORMANCE_SD ="PerformanceSystemDiagnostics";
 }

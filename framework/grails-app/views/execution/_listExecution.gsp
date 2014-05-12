@@ -9,6 +9,7 @@
   Copyright (c) 2013 Comcast. All rights reserved.
   ============================================================================
 -->
+
 <%@ page import="com.comcast.rdk.Execution" %>
 	<g:if test="${executionInstanceList}">
 		<div id="list-executor" class="content scaffold-list" role="main">		
@@ -30,6 +31,7 @@
 						<g:sortableColumn style="width:15%;" property="dateOfExecution" title="${message(code: 'execution.dateOfExecution.label', default: 'Date Of Execution')}" />
 					
 						<g:sortableColumn style="width:10%;" property="result" title="${message(code: 'execution.result.label', default: 'Result')}" />
+						<th width="10%"></th>
 						<g:sortableColumn style="width:10%;" property="export" title="${message(code: 'execution.result.label', default: '        ')}" />
 					    
 					</tr>
@@ -54,15 +56,39 @@
 							</g:if>
 							<g:else>
 								${fieldValue(bean: executionInstance, field: "scriptGroup")}
-							</g:else>													
+							</g:else>	
+							
+							<g:if test=	"${executionInstance?.isBenchMarkEnabled || executionInstance?.isSystemDiagnosticsEnabled }">
+								(p)
+							</g:if>													
 						</td>
 						<td align="center" width="15%">${fieldValue(bean: executionInstance, field: "device")}</td>
 						<td align="center" nowrap width="15%">${fieldValue(bean: executionInstance, field: "dateOfExecution")}</td>
-						<td align="center" width="10%"><g:link onclick="showExecutionLog(${executionInstance.id}); return false;" id="${executionInstance.id}">
+						<td align="center" width="15%"><g:link onclick="showExecutionLog(${executionInstance.id}); return false;" id="${executionInstance.id}">
+							<g:if test="${(executionInstance.executionStatus)}"> 
 							
+							<g:if test="${fieldValue(bean: executionInstance, field: 'executionStatus').equals('COMPLETED')}"> 
 								${fieldValue(bean: executionInstance, field: "result")}
-													
-						</g:link></td>
+							</g:if>
+							<g:else>
+								${fieldValue(bean: executionInstance, field: "executionStatus")}
+							</g:else>
+							</g:if>	
+							<g:else>
+								${fieldValue(bean: executionInstance, field: "result")}
+							</g:else>				
+						</g:link>
+						</td>
+						<td>
+							<g:if test="${(executionInstance.executionStatus)}"> 
+							
+							<g:if test="${fieldValue(bean: executionInstance, field: 'executionStatus').equals('IN-PROGRESS') || fieldValue(bean: executionInstance, field: 'executionStatus').equals('PAUSED')}"> 
+								<g:if test="${executionInstance?.scriptGroup}">
+									<img src="../images/execution_stop.png" onclick="stopExecution(${executionInstance.id})" id="${executionInstance.id}" />
+								</g:if>
+							</g:if>
+							</g:if>
+						</td>
 						<td width="5%">
 						 
 						<g:link action="exportToExcel" id="${executionInstance.id}" ><img src="../images/excel.png" /></g:link>

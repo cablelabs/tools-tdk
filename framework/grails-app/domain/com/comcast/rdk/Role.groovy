@@ -28,4 +28,8 @@ class Role {
 		return name ?: 'NULL'
 	}
 	
+	
+	static mapping = {
+		datasource 'ALL'
+	}
 }

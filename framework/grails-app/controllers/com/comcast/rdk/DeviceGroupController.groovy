@@ -16,6 +16,7 @@ package com.comcast.rdk
  */
 import static com.comcast.rdk.Constants.*
 import grails.converters.JSON
+import java.sql.Timestamp
 import java.util.concurrent.ExecutorService
 import org.springframework.dao.DataIntegrityViolationException
 import java.util.concurrent.Executors
@@ -46,8 +47,7 @@ class DeviceGroupController {
      * When list method is called as ajax from devicegrp_resolver.js with the 
      * params?.streamtable value only the streamlist page will be rendered.
      */    
-    def list = {
-        
+    def list = {	
 		/**
 		 * Invoked from 
 		 */
@@ -57,7 +57,7 @@ class DeviceGroupController {
             return
         }		
 		def groupsInstance = utilityService.getGroup()
-		def deviceInstanceList = Device.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		def deviceInstanceList = Device.findAllByGroupsOrGroupsIsNull(groupsInstance,[order: 'asc', sort: 'stbName'])
 		def deviceGrpInstanceList = DeviceGroup.findAllByGroupsOrGroupsIsNull(groupsInstance)
         [url: getApplicationUrl(), deviceGroupsInstance : params?.deviceGroupsInstance, deviceInstanceList : deviceInstanceList, deviceInstanceTotal : deviceInstanceList.size(), deviceGroupsInstanceList : deviceGrpInstanceList, deviceGroupsInstanceTotal : deviceGrpInstanceList.size(), deviceId: params.deviceId, deviceGroupId: params.deviceGroupId]
     }
@@ -585,11 +585,6 @@ class DeviceGroupController {
 	 */
 	def uploadBinary(){
 
-		String outputData = null
-		List uploadResult = []
-		String EXPECT_COMMAND = KEY_EXPECT
-		String  absolutePath
-		
 		String boxIp = params?.boxIp
 		String username = params?.username
 		String password = params?.password
@@ -597,7 +592,21 @@ class DeviceGroupController {
 		String systemIP = params?.systemIP
 		String boxpath = params?.boxpath
 
-		String boxType = devicegroupService.getBoxType(params?.boxType)
+		List uploadResult = uploadBinaries(boxIp, username, password, systemPath, systemIP, boxpath)
+		render uploadResult as JSON
+	}
+
+	
+	def uploadBinaries(final String boxIp, final String username, final String password, final String systemPath,
+		final String systemIP, final String boxpath){
+		
+		String outputData = null
+		List uploadResult = []
+		String EXPECT_COMMAND = KEY_EXPECT
+		String  absolutePath
+		
+		def device = Device.findByStbIp(boxIp)
+		String boxType = device?.boxType?.name
 		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//uploadbinary.exp").file
 		absolutePath = layoutFolder.absolutePath
 		try {
@@ -627,12 +636,25 @@ class DeviceGroupController {
 				deviceInstance.uploadBinaryStatus = UploadBinaryStatus.FAILURE
 			}
 
-			render uploadResult as JSON
+			return uploadResult
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
 	}
-
+	
+	
+	def uploadAgentBinaries( final String systemIP, final String systemPath, final String username, final String password, 
+		final String boxIp, final String boxpath){
+		List uploadResult = uploadBinaries(boxIp, username, password, systemPath, systemIP, boxpath)
+		List resultList = []
+		def cnt = 0
+		if(uploadResult){
+			cnt = uploadResult?.size()
+			resultList = uploadResult[cnt--]
+		}
+		render resultList as JSON		
+	}
+	
 	
 	/**
 	 * Method to check whether device with same IP address exist or not. If yes returns the id of device

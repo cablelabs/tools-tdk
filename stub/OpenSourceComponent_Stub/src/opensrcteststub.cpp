@@ -214,6 +214,7 @@ bool OpensourceTestStub::OpensourceTestStub_Execute(IN const Json::Value& req, O
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nExiting OpensourceTestStub_Execute function");
 
+	return true;
 }
 /******************************************************************************************************************************
  *Function name	: getsummarylogpath
@@ -243,9 +244,9 @@ string OpensourceTestStub:: getsummarylogpath(string envPath)
 	else
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Not able to open LOGPATH_INFO file\n");
-		return NULL;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n Exiting getsummarylogpath function \n");
+	return NULL;
 }
 
 /******************************************************************************************************************************
@@ -276,9 +277,10 @@ string OpensourceTestStub:: getstatus(string envPath1)
 	else
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Not able to open SUITE_STATUS file\n");
-		return NULL;
 	}
+
 	DEBUG_PRINT(DEBUG_TRACE,"\n Exiting getstatus function \n");
+	return NULL;
 }
 
 /**************************************************************************

@@ -9,6 +9,8 @@
  * Copyright (c) 2013 Comcast. All rights reserved.
  * ============================================================================
  */
+import grails.util.Environment;
+
 import java.io.IOException
 import com.comcast.rdk.User
 import com.comcast.rdk.Role
@@ -24,7 +26,10 @@ class BootStrap {
 	def grailsApplication
 
     def primitivetestService
+	def migrationService
      
+	def mailService
+	
     def init = { servletContext ->
 				
 		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
@@ -32,25 +37,23 @@ class BootStrap {
 
 		layoutFolder = grailsApplication.parentContext.getResource("//logs//crashlogs//execId_logdata.txt").file
 		def absolutePath1 = layoutFolder.absolutePath
-
+		User.withTransaction {
 		def user = new User(username: "admin", passwordHash: new Sha256Hash("password").toHex(),
 			name : "ADMINISTRATOR", email : "sreejasuma@tataelxsi.co.in")
         user.addToPermissions("*:*")
         user.save(flush:true)
+		}
 		createRolesAndAssignForAdmin()
-		
-		def boxManufacturer
-		
-        def modules = Module.list()
-        if(!modules) {
-            primitivetestService.parseAndSaveStubXml()
-        }
 
+		BoxType.withTransaction {
         def boxTypes = BoxType.list()
         if(!boxTypes){
-            primitivetestService.parseAndSaveBoxTypes()
+			def boxtype = new BoxType(name : "IPClient-3", type : "Client")
+			boxtype.save(flush:true)
+			boxtype = new BoxType(name : "Hybrid-1", type : "Gateway")
+			boxtype.save(flush:true)
         }
-        
+		}
        int port = Integer.parseInt("8089")
         try
         {
@@ -59,7 +62,10 @@ class BootStrap {
         }catch(IOException e)
         {
            e.printStackTrace()
-        }   
+        }
+		if(Environment.current.name == 'production'){
+			migrationService.doMigration()
+		}
     }
     
     def destroy = {        
@@ -76,6 +82,7 @@ class BootStrap {
 		def permModule = "Module:*:*"
 		def permStreamingDetails = "StreamingDetails:*:*"
 		
+		Role.withTransaction {
 		def adminRole = Role.findByName("ADMIN")
 		if(!adminRole)
 		{
@@ -88,6 +95,8 @@ class BootStrap {
 				adminUser.addToRoles(adminRole)
 			}
 		}
+		}
+		Role.withTransaction {
 		Role testerRole = Role.findByName("TESTER")
 		if(!testerRole)
 		{
@@ -136,6 +145,7 @@ class BootStrap {
 				testerRole.save(flush:true)
 			}
 		}		
+		}	
 	}
 
 }

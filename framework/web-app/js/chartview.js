@@ -22,9 +22,12 @@ function showChart(){
 	var resultcount = $("#resultCount").val();
 
 	var ticks = ['1', '2', '3', '4'];
-	var labels = ["Success", "Failure", "Undefined","Not Executed"];
+	var labels = ["Success", "Failure", "Undefined", "Not Executed"];
 	var labelsBenchMark = ["Execution Time(millisec)"];
 	var labelsSd = ["CPU Utilization","Memory Utilization"];
+	var labelsSd1 = ["Paging In","Paging Out"];
+	var labelsSwap = ["Swaping"];
+	var labelsLoadAvg = ["Load Average"];
 	var chartType = null;
 	var executionIds = $("#executionId").val();
 	var executionIdList = null
@@ -121,7 +124,7 @@ function showChart(){
 		    });	 
 		});	
 	}
-	else if(chartType == "SystemDiagnostics"){	
+	else if(chartType == "CPU-Memory_Utilization"){			
 		$.get('getStatusSystemDiagnosticsData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
 			
 			plot3 = $.jqplot('chartdiv', data.systemDiag, {
@@ -157,19 +160,131 @@ function showChart(){
 		        }
 		    });	 
 		});	
+	}
+	else if(chartType == "Paging"){	
+		$.get('getPagingData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
+			
+			plot3 = $.jqplot('chartdiv', data.systemDiag, {
+		        seriesDefaults: {
+		            renderer:$.jqplot.BarRenderer,
+		            rendererOptions: {
+		                barWidth: 20
+		             },
+		            pointLabels: { show: true }
+		        },
+		        legend: {
+		            show: true,
+		            placement: 'outsideGrid',
+		            labels: labelsSd1,
+		            location: 'ne',
+		            rowSpacing: '0px'
+		        },
+		        axes: {
+		            xaxis: {
+		                renderer: $.jqplot.CategoryAxisRenderer,
+		                label:'Execution Name',
+		                ticks: data.execName,
+		                tickOptions:{
+		                    angle: -60
+		                },
+		                tickRenderer:$.jqplot.CanvasAxisTickRenderer
+		                
+		            },
+		            yaxis: {
+		        	    labelRenderer: $.jqplot.CanvasAxisLabelRenderer,			           
+			            label:'Values'
+		        	}
+		        }
+		    });	 
+		});	
 	}    
+	else if(chartType == "Swaping"){	
+		$.get('getSwapData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
+			
+			plot3 = $.jqplot('chartdiv', data.systemDiag, {
+		        seriesDefaults: {
+		            renderer:$.jqplot.BarRenderer,
+		            rendererOptions: {
+		                barWidth: 20
+		             },
+		            pointLabels: { show: true }
+		        },
+		        legend: {
+		            show: true,
+		            placement: 'outsideGrid',
+		            labels: labelsSwap,
+		            location: 'ne',
+		            rowSpacing: '0px'
+		        },
+		        axes: {
+		            xaxis: {
+		                renderer: $.jqplot.CategoryAxisRenderer,
+		                label:'Execution Name',
+		                ticks: data.execName,
+		                tickOptions:{
+		                    angle: -60
+		                },
+		                tickRenderer:$.jqplot.CanvasAxisTickRenderer
+		                
+		            },
+		            yaxis: {
+		        	    labelRenderer: $.jqplot.CanvasAxisLabelRenderer,			           
+			            label:'Percentage'
+		        	}
+		        }
+		    });	 
+		});	
+	}
+	else if(chartType == "LoadAverage"){	
+	
+		$.get('getLoadAverage', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
+			
+			plot3 = $.jqplot('chartdiv', data.systemDiag, {
+		        seriesDefaults: {
+		            renderer:$.jqplot.BarRenderer,
+		            rendererOptions: {
+		                barWidth: 20
+		             },
+		            pointLabels: { show: true }
+		        },
+		        legend: {
+		            show: true,
+		            placement: 'outsideGrid',
+		            labels: labelsLoadAvg,
+		            location: 'ne',
+		            rowSpacing: '0px'
+		        },
+		        axes: {
+		            xaxis: {
+		                renderer: $.jqplot.CategoryAxisRenderer,
+		                label:'Execution Name',
+		                ticks: data.execName,
+		                tickOptions:{
+		                    angle: -60
+		                },
+		                tickRenderer:$.jqplot.CanvasAxisTickRenderer
+		                
+		            },
+		            yaxis: {
+		        	    labelRenderer: $.jqplot.CanvasAxisLabelRenderer,			           
+			            label:'Value'
+		        	}
+		        }
+		    });	 
+		});	
+	}
 	$('#chartOptionsDiv').show();
 	//showExecutionStatusChart();
 }
 
 function showExecutionBased(){
-	$( ".chartdivclass" ).empty();	
+	$(".chartdivclass").empty();	
 	$("#executionbased").show();	
 	$("#devicebased").hide();
 }
 
 function showDeviceBased(){
-	$( ".chartdivclass" ).empty();	
+	$(".chartdivclass").empty();	
 	$("#executionbased").hide();	
 	$("#devicebased").show();	
 }

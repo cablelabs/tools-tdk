@@ -141,7 +141,7 @@ bool IARMBUSAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgent
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::get_LastReceivedEventDetails, "TestMgr_IARMBUS_GetLastReceivedEventDetails");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::InvokeSecondApplication, "TestMgr_IARMBUS_InvokeSecondApplication");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_GetContext, "TestMgr_IARMBUS_GetContext");
-	return (prereqcheck("Daemon"));
+	return (prereqcheck((char*)"Daemon"));
 
 }
 

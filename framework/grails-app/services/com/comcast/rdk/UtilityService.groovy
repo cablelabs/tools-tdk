@@ -15,6 +15,7 @@ import org.apache.shiro.SecurityUtils
 import groovy.xml.MarkupBuilder
 import org.custommonkey.xmlunit.*
 class UtilityService {
+	static datasource = 'DEFAULT'
 
 	def Groups getGroup(){
 		def user = User.findByUsername(SecurityUtils.subject.principal)

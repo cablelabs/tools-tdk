@@ -57,6 +57,18 @@
 		</tr>
 
 		<tr>
+			<td></td>
+			<td><g:checkBox name="skipStatus" checked="${script.skip}" />&nbsp;Skip
+					Execution</td>
+		</tr>
+		<tr>
+			<td style="width: 15%;">Reason For Skipping</td>
+			<td><g:textArea name="remarks" style="width:465px;height:20px;"
+						value="${script.remarks}">
+				</g:textArea></td>
+		</tr>
+
+			<tr>
 			<td style="width:15%;">Synopsis</td>
 			<td>
 				<g:textArea  name="synopsis" style="width:465px;height:40px;" value="${script.synopsis}" >

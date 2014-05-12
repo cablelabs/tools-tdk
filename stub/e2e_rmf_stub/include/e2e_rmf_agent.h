@@ -38,6 +38,9 @@
 #include <malloc.h>
 #include <fstream>
 
+#include <ifaddrs.h>
+#include <arpa/inet.h>
+
 using namespace std;
 
 #define SKIP_FORWARD 0

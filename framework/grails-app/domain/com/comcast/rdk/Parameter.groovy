@@ -75,4 +75,8 @@ class Parameter {
     {
         return parameterType ?: 'NULL'
     }
+	
+	static mapping = {
+		datasource 'ALL'
+	}
 }

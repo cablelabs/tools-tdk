@@ -93,7 +93,6 @@ class RecordingDetails:
   	# Return Value : duration
 
 		line = self.getLine(index)
-                #duration = int (line.split(": ")[-1])
                 duration = self.find_between(line, "Duration: ", "SegmentName")
 		return int(duration[:-1])
 

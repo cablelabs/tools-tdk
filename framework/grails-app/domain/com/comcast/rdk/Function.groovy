@@ -69,4 +69,8 @@ class Function {
     String toString() {
         return name ?: 'NULL'
     }
+	
+	static mapping = {
+		datasource 'ALL'
+	}
 }

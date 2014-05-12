@@ -20,6 +20,7 @@ class SecurityFilters {
 		user: ['changePassword','registerUser','saveUser'],
 		primitiveTest : ['getJson','getStreamDetails'],
 		execution : ['saveLoadModuleStatus','saveResultDetails','getDeviceStatusList','getDeviceStatus','thirdPartyJsonResult','thirdPartyTest','showResult','getDetailedTestResult'],
+		deviceGroup : ['uploadAgentBinaries'],
     ];
 
     private boolean findAction(actionMap, controllerName, actionName) {

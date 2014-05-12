@@ -23,8 +23,9 @@ import org.hibernate.loader.custom.CustomLoader;
 //@DisallowConcurrentExecution
 class DeviceStatusJob {
 	static triggers = { //simple repeatCount : -1
-		simple repeatInterval: 30000l }
+		simple repeatInterval: 20000l }
 	def executionService
+	def executescriptService
 	def devicegroupService
 	def deviceStatusService
 	def grailsApplication
@@ -41,7 +42,7 @@ class DeviceStatusJob {
 	 */
 	synchronized def execute() {
 		try{
-			DeviceStatusUpdater.updateDeviceStatus(grailsApplication,deviceStatusService);		
+			DeviceStatusUpdater.updateDeviceStatus(grailsApplication,deviceStatusService,executescriptService);		
 		}catch(Exception e){			
 			e.printStackTrace();
 		}

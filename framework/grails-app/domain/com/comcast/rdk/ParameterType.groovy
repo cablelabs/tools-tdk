@@ -49,4 +49,8 @@ class ParameterType {
     String toString() {
         return name ?: 'NULL'
     }
+	
+	static mapping = {
+		datasource 'ALL'
+	}
 }

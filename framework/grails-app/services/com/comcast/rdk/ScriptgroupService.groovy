@@ -20,6 +20,7 @@ import static com.comcast.rdk.Constants.KEY_GROUP
  */
 
 class ScriptgroupService {
+	static datasource = 'DEFAULT'
 
     
     /**

@@ -86,6 +86,8 @@ class PrimitiveTest {
 	String toString() {
 		return name ?: ''
 	}
-   
+	static mapping = {
+		datasource 'ALL'
+	}
     
 }

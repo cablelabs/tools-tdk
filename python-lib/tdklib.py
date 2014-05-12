@@ -275,7 +275,6 @@ class PrimitiveTestCase:
 			return 
 
 	def __del__(self):
-#		self.tcpClient.close()
 		return
 
     	#------------------------------------------------------------------------------
@@ -364,9 +363,14 @@ class PrimitiveTestCase:
 	# Description  : Shows the result SUCCESS/FAILURE
 	# Parameters   : None
 	# Return Value : Result of the test execution 
-    	
-		message = self.getValueFromJSON("TDK__#@$00_result")
-		return message
+    		
+		if "Method not found." in self.result:
+			print "#TDK_@error-ERROR : Method not registered with Test Agent"
+                        sys.stdout.flush()
+                        exit()
+		else:
+			message = self.getValueFromJSON("TDK__#@$00_result")
+			return message
 
 	########## End of Function ##########
 
@@ -599,7 +603,6 @@ class PrimitiveTestCase:
 			returnvalue = 1
 			obj = self.getStreamDetails(01)
 			gatewayip = obj.getGatewayIp()
-		#	gatewayip = "192.168.30.50"
 			recobj = RecordList(str(gatewayip),8087,self.realpath,self.url)
 			returnvalue = recobj.getList()
 			if(returnvalue == 0):

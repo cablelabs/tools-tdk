@@ -83,7 +83,19 @@
 			<input type="text" id="execTime" name="executionTime" size="5"/>(min)
 			</td>
 		</tr>
-	
+
+		<tr>
+			<td></td>
+			<td><g:checkBox name="skipStatus" checked="false" />&nbsp;Skip
+				Execution</td>
+		</tr>
+		<tr>
+			<td style="width: 15%;">Reason For Skipping</td>
+			<td><g:textArea name="remarks" style="width:465px;height:20px;"
+					value="">
+				</g:textArea></td>
+		</tr>
+
 		<tr>
 			<td>Synopsis</td>
 			<td><g:textArea name="synopsis" style="width:465px;height:40px;">

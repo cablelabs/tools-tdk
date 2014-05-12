@@ -26,6 +26,54 @@
 static MediaPlayerSink *pSink = NULL;
 static HNSource *pSource = NULL;
 
+
+
+
+/********************************************************************************************************************
+ Purpose:               To get the Host's IP Address by querrying the network Interface.
+
+ Parameters:
+                             szInterface [IN]    - Interface used to communicate.
+
+ Return:                 string    - IP address of corresponding interface.
+
+*********************************************************************************************************************/
+std::string GetHostIP (const char* szInterface)
+{
+    struct ifaddrs* pIfAddrStruct = NULL;
+    struct ifaddrs* pIfAddrIterator = NULL;
+    void* pvTmpAddrPtr = NULL;
+    char szAddressBuffer [INET_ADDRSTRLEN];
+    getifaddrs (&pIfAddrStruct);
+
+    for (pIfAddrIterator = pIfAddrStruct; pIfAddrIterator != NULL; pIfAddrIterator = pIfAddrIterator->ifa_next)
+    {
+        if (pIfAddrIterator->ifa_addr->sa_family == AF_INET)
+        {
+            // check it is a valid IP4 Address
+            pvTmpAddrPtr = & ( (struct sockaddr_in *)pIfAddrIterator->ifa_addr )-> sin_addr;
+            inet_ntop (AF_INET, pvTmpAddrPtr, szAddressBuffer, INET_ADDRSTRLEN);
+
+            if ( (strcmp (pIfAddrIterator -> ifa_name, szInterface) ) == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    std::cout << "Found IP: " << szAddressBuffer << std::endl;
+
+    if (pIfAddrStruct != NULL)
+    {
+        freeifaddrs (pIfAddrStruct);
+    }
+
+    return szAddressBuffer;
+
+} /* End of GetHostIP */
+
+
+
 /* Time taken to tune the channel.
 	totalTuningTime = (time difference of HNSrc->open() API call and return) + (time difference of HNSrc->play() API call and return)
  */
@@ -79,10 +127,36 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 	Time tuneTime;
 	struct timeval startTime, endTime;
 	int sTime = 0, eTime = 0;
-	
+	RMFResult retResult = RMF_RESULT_SUCCESS;
+
+#if ENABLE_XG1_CODECOMPILE
+	/*Fetching the streming interface IP: eth1 */
+        string streamingip;
+		
+	streamingip=GetHostIP("eth1");
+	string urlIn = url;
+	string http = "http://";
+
+        http.append(streamingip);
+
+	cout<<"Incoming url: "<<url<<endl;
+	cout<<"After appending streaming IP to http: "<<http<<endl;
+
+        cout<<"IP:"<<streamingip<<endl;
+	size_t pos = 0;
+	pos = urlIn.find(":8080");
+	urlIn = urlIn.replace(0,pos,http);
+		
+	cout<<"Final URL passed to Open(): "<<urlIn<<endl;
+        retHNSrcValue = pSource->open(urlIn.c_str(),mime);
+
+	DEBUG_PRINT(DEBUG_TRACE, "XG1:Passed Open() with streamingIP URL\n");
+#else
 	sTime = tuneTime.getTime(&startTime);
         retHNSrcValue = pSource->open(url,mime);
 	eTime = tuneTime.getTime(&endTime);
+	DEBUG_PRINT(DEBUG_TRACE, "XI3:Passed Open() without streamingIP URL\n");
+#endif
 
         if(RMF_RESULT_SUCCESS != retHNSrcValue)
         {

@@ -42,7 +42,7 @@
 								<td><g:checkBox name="${scriptListInstance?.id}"
 										value="${false}" /></td>
 								<td><g:link id="${scriptListInstance?.id}"
-										onclick="showScript('${scriptListInstance?.id}','STATIC');return false;">
+										onclick="showScript('${scriptListInstance?.id}','');return false;">
 										${fieldValue(bean: scriptListInstance, field: "name")}
 									</g:link></td>
 
@@ -76,7 +76,7 @@
 			<g:textField style="display:none;width: 239px;" id="newSuiteId" name="newSuiteName" value="" />
 			</td>
 			<td>
-			<span class="buttons"><g:actionSubmit action="addScriptGroup" class="save" name="addScriptGrp" value="ADD" />
+			<span class="buttons"><g:actionSubmit action="addScriptGroupfromSeachList" class="save" name="addScriptGrp" value="ADD" />
 			</span>
 			</td>
 			<td>			

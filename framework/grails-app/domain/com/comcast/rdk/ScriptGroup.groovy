@@ -53,6 +53,7 @@ class ScriptGroup {
     static mapping = {
         cache true
         sort name : "asc"            
+		datasource 'ALL'
     }
     
     @Override

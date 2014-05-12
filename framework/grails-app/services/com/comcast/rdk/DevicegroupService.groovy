@@ -17,6 +17,7 @@ package com.comcast.rdk
  */
 
 class DevicegroupService {
+	static datasource = 'DEFAULT'
     
     /**
      * Method to save the device to a DeviceGroup, according to the box chosen for execution

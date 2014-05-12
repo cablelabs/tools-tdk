@@ -320,8 +320,22 @@ class ScriptGroupController {
             scriptInstance.primitiveTest = PrimitiveTest.findById(params?.ptest)
             scriptInstance.scriptContent = params?.scriptArea
             scriptInstance.synopsis = params.synopsis
+			scriptInstance.remarks = params.remarks
 			scriptInstance.groups = utilityService.getGroup()
-			scriptInstance.executionTime = params?.executionTime
+			if(params?.executionTime){
+				int time = 0
+				try {
+					time = Integer.parseInt(params?.executionTime)
+				} catch (Exception e) {
+					e.printStackTrace()
+				}
+				scriptInstance.executionTime =  time
+			}
+			if(params?.skipStatus.equals("on")){
+				scriptInstance.skip = true
+			}else{
+				scriptInstance.skip = false
+			}
 						
 			def boxTypes = params?.boxTypes
 			def boxTypesList = []
@@ -371,6 +385,13 @@ class ScriptGroupController {
 		scriptInstance.name = params.name
 		scriptInstance.scriptContent = params.scriptArea
 		scriptInstance.synopsis = params.synopsis
+		scriptInstance.remarks = params?.remarks
+		
+		if(params?.skipStatus.equals("on")){
+			scriptInstance.skip = true
+		}else{
+		scriptInstance.skip = false
+		}
 		scriptInstance.primitiveTest = PrimitiveTest.findById(params.ptest)
 		scriptInstance.executionTime = Integer.parseInt(params?.executionTime)
 	

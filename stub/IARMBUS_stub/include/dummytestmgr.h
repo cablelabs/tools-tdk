@@ -27,10 +27,7 @@
 #include "libIBus.h"
 
 
-#define IARM_BUS_DUMMYMGR_NAME                                            "DummyTestMgr"
-static IARM_Result_t _dummyAPI0 (void *arg);
-static IARM_Result_t _dummyAPI1 (void *arg);
-
+#define IARM_BUS_DUMMYMGR_NAME			  "DummyTestMgr"
 
 /*
  * Declare Published Events

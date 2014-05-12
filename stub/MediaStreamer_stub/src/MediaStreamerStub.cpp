@@ -72,6 +72,7 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool MediaStreamerAgent::initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "Registering wrapper functions with the agent\n");
+#ifdef RDK_BR_1DOT3
 	ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::MediaStreamerAgent_LiveTune_Request,"TestMgr_MediaStreamer_LiveTune_Request");	
 	ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::MediaStreamerAgent_Recording_Request,"TestMgr_MediaStreamer_Recording_Request");
 	ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::MediaStreamerAgent_Recorded_Urls,"TestMgr_MediaStreamer_Recorded_Urls");
@@ -79,6 +80,7 @@ bool MediaStreamerAgent::initialize(IN const char* szVersion, IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::MediaStreamerAgent_Live_Playback,"TestMgr_MediaStreamer_Live_Playback");
 	ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::MediaStreamerAgent_Recording_Playback,"TestMgr_MediaStreamer_Recording_Playback");
 	ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay,"TestMgr_MediaStreamer_DVR_Trickplay");
+#endif
 #ifdef RDK_BR_2DOT0
 	ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::MediaStreamerAgent_ScheduleRecording,"TestMgr_MediaStreamer_ScheduleRecording");
 	ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::MediaStreamerAgent_checkRecording_status,"TestMgr_MediaStreamer_checkRecording_status");
@@ -87,7 +89,7 @@ bool MediaStreamerAgent::initialize(IN const char* szVersion, IN RDKTestAgent *p
 #endif
 	return TEST_SUCCESS;
 }
-
+#ifdef RDK_BR_1DOT3
 /**************************************************************************
 Function name : MediaStreamerAgent::MediaStreamerAgent_LiveTune_Request
 
@@ -618,6 +620,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& 
 	DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_DVR_Trickplay ---> Exit\n");
 	return TEST_FAILURE;
 }
+#endif
 #ifdef RDK_BR_2DOT0
 /**************************************************************************
 Function name : MediaStreamerAgent::MediaStreamerAgent_ScheduleRecording()
@@ -965,6 +968,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
 #endif
 }
 #endif
+#ifdef RDK_BR_1DOT3
 /**************************************************************************
 Function name : MediaStreamerAgent::curlRequest()
 
@@ -1432,12 +1436,14 @@ string MediaStreamerAgent::frameURL(Mode mode, string Id)
 	switch(mode)
 	{
 		case LIVE_TUNE_REQUEST: 
-		validurl = "http://127.0.0.1:8080/videoStreamInit?recorderId="+getRecorderId()+"live="+Id;
-		break;
+			validurl = "http://127.0.0.1:8080/videoStreamInit?recorderId="+getRecorderId()+"live="+Id;
+			break;
 		case RECORDING_REQUEST: 
-		validurl = "http://127.0.0.1:8080/videoStreamInit?recorderId="+getRecorderId()+"recordingId="+Id;
-                validurl = "http://127.0.0.1:8080/videoStreamInit?recordingId="+Id;
-		break;        
+			validurl = "http://127.0.0.1:8080/videoStreamInit?recorderId="+getRecorderId()+"recordingId="+Id;
+                	validurl = "http://127.0.0.1:8080/videoStreamInit?recordingId="+Id;
+			break;        
+                default :
+                	break;
 	}
 	DEBUG_PRINT(DEBUG_LOG,"framedURL is: %s\n",  validurl.c_str());
 	DEBUG_PRINT(DEBUG_TRACE, "frameURL with mode and id ---> Exit\n");
@@ -1486,17 +1492,20 @@ string MediaStreamerAgent::frameURL(Mode mode)
 	switch(mode)
 	{      
 		case RECORDING_URL_LIST:
-		validUrl_Info = "http://127.0.0.1:8080/vldms/info/recordingurls";
-		break;
+			validUrl_Info = "http://127.0.0.1:8080/vldms/info/recordingurls";
+			break;
 		case RECORDING_URL_METADATA:
-		validUrl_Info = "http://127.0.0.1:8080/vldms/info/recordings";
-		break;      
+			validUrl_Info = "http://127.0.0.1:8080/vldms/info/recordings";
+			break;      
+                default :
+                        break;
+
 	}
 	DEBUG_PRINT(DEBUG_LOG,"framedURL is: %s\n", validUrl_Info.c_str());
 	DEBUG_PRINT(DEBUG_TRACE, "frameURL with mode ---> Exit\n");
 	return validUrl_Info;
 }
-
+#endif
 /**************************************************************************
 Function name : MediaStreamerAgent::CreateObject()
 
@@ -1524,6 +1533,7 @@ bool MediaStreamerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAg
         {
                 return TEST_FAILURE;
 	}
+#ifdef RDK_BR_1DOT3
 	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_LiveTune_Request");	
 	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_Recording_Request");
 	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_Recorded_Urls");
@@ -1531,6 +1541,7 @@ bool MediaStreamerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAg
 	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_Live_Playback");
 	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_Recording_Playback");
 	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_DVR_Trickplay");
+#endif
 #ifdef RDK_BR_2DOT0
 	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_ScheduleRecording");
 	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_checkRecording_status");

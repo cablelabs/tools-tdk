@@ -32,4 +32,8 @@ class Performance {
 		processValue(nullable:true, blank:true)
 		processValue1(nullable:true, blank:true)
     }
+	
+	static mapping = {
+		datasource 'ALL'
+	}
 }

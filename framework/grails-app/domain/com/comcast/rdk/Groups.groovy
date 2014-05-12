@@ -23,4 +23,8 @@ class Groups {
 	String toString() {
 		return name ?: 'NULL'
 	}
+	
+	static mapping = {
+		datasource 'ALL'
+	}
 }

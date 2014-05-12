@@ -41,6 +41,18 @@ function populateBoxManufacturerField(that){
 	});
 }
 
+
+function populateBoxTypeField(that){
+	$.get('getBoxType', {id:that.id}, function(data) {		
+		document.getElementById("boxTypeId").value = that.id;
+		document.getElementById("name").value = data[0];
+		document.getElementById("typeId").value = data[1];
+		$("#updateBtn").show(); 
+		$("#resetBtn").show(); 
+		$("#createBtn").hide(); 
+	});
+}
+
 function populateSoCVendorField(that){
 	$.get('getSoCVendor', {id:that.id}, function(data) {		
 		document.getElementById("soCVendorId").value = that.id;

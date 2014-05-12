@@ -25,7 +25,7 @@ endif
 
 LDOPTS    += -L $(IMAGE_PATH)/usr/local/lib/ 
 
-CFLAGS += -g -Wall -DGCC4_XXX
+CFLAGS += -g -Wall -DGCC4_XXX -DENABLE_XG1_CODECOMPILE
 
 #debug log level
 ifeq ($(DEBUG_LEVEL),TRACE)
@@ -58,6 +58,7 @@ INCLUDES  +=    -I./include \
             	-I${PLATFORM_SDK}/include/libxml2
 
 LDOPTS    +=  -L $(IMAGE_PATH)/usr/local/lib \
+              -L $(IMAGE_PATH)/usr/lib \
               -L $(IMAGE_PATH)/lib \
               -L $(IMAGE_PATH)/mnt/nfs/lib \
               -L $(IMAGE_PATH)/mnt/nfs/bin/ \

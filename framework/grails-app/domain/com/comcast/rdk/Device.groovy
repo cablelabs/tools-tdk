@@ -128,6 +128,7 @@ class Device
     static mapping = {
         cache true
         sort id : "asc"       
+		datasource 'ALL' 
     }
 
     @Override

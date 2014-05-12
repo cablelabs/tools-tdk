@@ -17,6 +17,32 @@
 #include "libIBus.h"
 #include "dummytestmgr.h"
 
+/**
+ * These functions are invoked from other applications(test agent)
+ */
+static IARM_Result_t _dummyAPI0(void *arg)
+{
+    IARM_Result_t retCode = IARM_RESULT_SUCCESS;
+        printf("Inside fun1");
+    IARM_Bus_DUMMYMGR_DummyAPI0_Param_t *param = (IARM_Bus_DUMMYMGR_DummyAPI0_Param_t *)arg;
+    printf("i=%d",param->i);
+    param->iret=(param->i)+0x10000000;
+        printf("Exit fun1");
+    return retCode;
+
+}
+
+static IARM_Result_t _dummyAPI1(void *arg)
+{
+    IARM_Result_t retCode = IARM_RESULT_SUCCESS;
+    printf("Inside fun2");
+    IARM_Bus_DUMMYMGR_DummyAPI1_Param_t *param = (IARM_Bus_DUMMYMGR_DummyAPI1_Param_t *)arg;
+    param->jret=(param->j)+0x10000000;
+    printf("j=%d",param->j);
+    printf("Exit fun2");
+    return retCode;
+}
+
 int main()
 {
 
@@ -43,30 +69,4 @@ int main()
 	IARM_Bus_Disconnect();
 	IARM_Bus_Term();
 	printf("\nExit main\n");
-}
-
-/**
- * These functions are invoked from other applications(test agent)
- */
-static IARM_Result_t _dummyAPI0(void *arg)
-{
-    IARM_Result_t retCode = IARM_RESULT_SUCCESS;
-        printf("Inside fun1");
-    IARM_Bus_DUMMYMGR_DummyAPI0_Param_t *param = (IARM_Bus_DUMMYMGR_DummyAPI0_Param_t *)arg;
-    printf("i=%d",param->i);
-    param->iret=(param->i)+0x10000000;
-        printf("Exit fun1");
-    return retCode;
-
-}
-
-static IARM_Result_t _dummyAPI1(void *arg)
-{
-    IARM_Result_t retCode = IARM_RESULT_SUCCESS;
-    printf("Inside fun2");
-    IARM_Bus_DUMMYMGR_DummyAPI1_Param_t *param = (IARM_Bus_DUMMYMGR_DummyAPI1_Param_t *)arg;
-    param->jret=(param->j)+0x10000000;
-    printf("j=%d",param->j);
-    printf("Exit fun2");
-    return retCode;
 }

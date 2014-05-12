@@ -752,7 +752,6 @@ int Agent()
     std::string strFilePath;
     std::string strCommand;
     int nReturnValue = RETURN_SUCCESS;
-    int nCrashReportStatus = RETURN_SUCCESS;
 
     if (!networking::init())
     {
@@ -960,6 +959,7 @@ void *AgentExecuter (void *)
         }
     }
 
+    return NULL;
 }/* End of AgentExecuter */
 
 

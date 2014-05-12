@@ -54,5 +54,9 @@ class User {
     {
         return username ?: 'NULL'
     }
+	
+	static mapping = {
+		datasource 'ALL'
+	}
     
 }

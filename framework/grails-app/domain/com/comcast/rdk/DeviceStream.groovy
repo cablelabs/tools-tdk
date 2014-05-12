@@ -40,6 +40,10 @@ class DeviceStream
         stream(nullable:false, blank:false)
         ocapId(nullable:false, blank:false)       
     }
+	
+	static mapping = {
+		datasource 'ALL'
+	}
       
     
 }
