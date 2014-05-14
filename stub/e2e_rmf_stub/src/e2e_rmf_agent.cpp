@@ -61,7 +61,7 @@ std::string GetHostIP (const char* szInterface)
         }
     }
 
-    std::cout << "Found IP: " << szAddressBuffer << std::endl;
+    DEBUG_PRINT(DEBUG_TRACE, "Found IP: %s\n",szAddressBuffer);
 
     if (pIfAddrStruct != NULL)
     {
@@ -139,23 +139,70 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 
         http.append(streamingip);
 
-	cout<<"Incoming url: "<<url<<endl;
-	cout<<"After appending streaming IP to http: "<<http<<endl;
+	DEBUG_PRINT(DEBUG_TRACE, "Incoming URL: %s\n",url);
+	DEBUG_PRINT(DEBUG_TRACE, "After appending streaming IP to http: %s\n",http.c_str());
+	DEBUG_PRINT(DEBUG_TRACE, "IP : %s\n",streamingip.c_str());
 
-        cout<<"IP:"<<streamingip<<endl;
 	size_t pos = 0;
 	pos = urlIn.find(":8080");
 	urlIn = urlIn.replace(0,pos,http);
 		
-	cout<<"Final URL passed to Open(): "<<urlIn<<endl;
+	DEBUG_PRINT(DEBUG_TRACE, "XG1:Final URL passed to Open(): %s\n",urlIn.c_str());
+
+	sTime = tuneTime.getTime(&startTime);
         retHNSrcValue = pSource->open(urlIn.c_str(),mime);
+	eTime = tuneTime.getTime(&endTime);
 
 	DEBUG_PRINT(DEBUG_TRACE, "XG1:Passed Open() with streamingIP URL\n");
 #else
+        char cmd[128] = "arp -n | cut -d ' ' -f 2 | cut -b 2- | sed 's/.$//'";
+        FILE* pipe = popen(cmd, "r");
+
+        if (!pipe)
+	{
+		response["result"] = "FAILURE";
+                response["details"] = "Error on popen()";
+		DEBUG_PRINT(DEBUG_ERROR, "Error on popen()\n");
+
+		return TEST_FAILURE;
+	}
+        char buffer[128] = {'\0'};
+
+        std::string resultip = "";
+	char ip[128] = {'\0'};
+
+        if(fgets(buffer, sizeof(buffer), pipe) != NULL)
+	{
+		sscanf(buffer,"%s",ip);
+        }
+        pclose(pipe);
+
+	if(strcmp(ip,"") == 0)
+	{
+		response["result"] = "FAILURE";
+                response["details"] = "Failed to fetch streaming ip";
+                DEBUG_PRINT(DEBUG_ERROR, "Failed to fetch streaming ip\n");
+
+                return TEST_FAILURE;
+	}	
+
+	resultip = ip;
+	DEBUG_PRINT(DEBUG_TRACE, "IP :%send\n",resultip.c_str());
+	string urlIn = url;
+	string http = "http://";
+
+        http.append(resultip);
+
+	size_t pos = 0;
+	pos = urlIn.find(":8080");
+	urlIn = urlIn.replace(0,pos,http);
+
+	DEBUG_PRINT(DEBUG_TRACE, "XI3:Final URL passed to Open(): %s\n",urlIn.c_str());
+
 	sTime = tuneTime.getTime(&startTime);
-        retHNSrcValue = pSource->open(url,mime);
+        retHNSrcValue = pSource->open(urlIn.c_str(),mime);
 	eTime = tuneTime.getTime(&endTime);
-	DEBUG_PRINT(DEBUG_TRACE, "XI3:Passed Open() without streamingIP URL\n");
+	DEBUG_PRINT(DEBUG_TRACE, "XI3:Passed Open() with streamingIP URL\n");
 #endif
 
         if(RMF_RESULT_SUCCESS != retHNSrcValue)

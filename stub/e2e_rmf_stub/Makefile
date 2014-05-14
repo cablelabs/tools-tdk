@@ -25,7 +25,7 @@ endif
 
 LDOPTS    += -L $(IMAGE_PATH)/usr/local/lib/ 
 
-CFLAGS += -g -Wall -DGCC4_XXX -DENABLE_XG1_CODECOMPILE
+CFLAGS += -g -Wall -DGCC4_XXX
 
 #debug log level
 ifeq ($(DEBUG_LEVEL),TRACE)

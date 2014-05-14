@@ -29,6 +29,7 @@ char LastEvent[40],g_ManagerName[20];
 /*These global variables are to check the test app with event handler and BusCall APIS*/
 int g_evtData[EVTDATA_MAX_SIZE],g_iter=0;
 char g_evtName[EVTDATA_MAX_SIZE];
+std::string g_tdkPath = getenv("TDK_PATH");
 
 /**************************************************************************
  *
@@ -44,7 +45,9 @@ char g_evtName[EVTDATA_MAX_SIZE];
 bool prereqcheck(char *ownerName )
 {
 	std::string pre_req_chk;
-	pre_req_chk ="pidstat | grep Main >"PRE_REQ_CHECK;
+	std::string pre_req_chk_file;
+	pre_req_chk_file= g_tdkPath + "/" + PRE_REQ_CHECK;
+	pre_req_chk ="pidstat | grep Main >" + pre_req_chk_file;
 	int offset;
 	std::string line;
 	std::ifstream Myfile;
@@ -83,7 +86,7 @@ bool prereqcheck(char *ownerName )
 		DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
 		return TEST_FAILURE;
 	}
-	Myfile.open (PRE_REQ_CHECK);
+	Myfile.open (pre_req_chk_file.c_str());
 
 	if(Myfile.is_open())
 	{

@@ -18,8 +18,8 @@
 
 * ============================================================================*/
 
-#ifndef __MEDIASTREAMER_STUB_H__
-#define __MEDIASTREAMER_STUB_H__
+#ifndef __RECORDER_STUB_H__
+#define __RECORDER_STUB_H__
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 #include <fstream>
@@ -28,35 +28,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
-
+#if 0
 #ifdef RDK_BR_2DOT0
 #include "mediaplayersink.h"
 #include "hnsource.h"
 #include "rmfqamsrc.h"
 #include "rmf_platform.h"
 #endif
+#endif
 
-#include <exception>
+//#include <exception>
 
 #define IN
 #define OUT
-#define CMAF_MAX_NAME_LEN 64
+//#define CMAF_MAX_NAME_LEN 64
 
 #define TEST_SUCCESS true
 #define TEST_FAILURE false 
 
+#define RECORDER_PATTERN "DVR_RECORDING_STATE"
+#define RECORDER_LOG_PATH "/opt/TDK/recorderlog.txt"
+#define OCAPRI_LOG_PATH "/opt/logs/ocapri_log.txt"
 using namespace std;
 #define NUMBER_OCAPID 10
 
 class RDKTestAgent;
-class MediaStreamerAgent : public RDKTestStubInterface
+class RecorderAgent : public RDKTestStubInterface
 {
 	public:
-		void* MediaStreamerAgenthandle;
+		void* RecorderAgenthandle;
 
 		/*Constuctor*/
-		MediaStreamerAgent();
-
+		RecorderAgent();
+		bool Recorder_ScheduleRecording(IN const Json::Value& request, OUT Json::Value& response);
+		bool Recorder_checkRecording_status(IN const Json::Value& request, OUT Json::Value& response);
+		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);		
+		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
+#if 0
 		// Declaring enum type Mode for framing requested URL
 		enum Mode
 		{             
@@ -79,6 +87,8 @@ class MediaStreamerAgent : public RDKTestStubInterface
 		bool MediaStreamerAgent_Live_Trickplay(IN const Json::Value& request, OUT Json::Value& response);
 		bool MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& request, OUT Json::Value& response);
 #ifdef RDK_BR_2DOT0
+		bool MediaStreamerAgent_ScheduleRecording(IN const Json::Value& request, OUT Json::Value& response);
+		bool MediaStreamerAgent_checkRecording_status(IN const Json::Value& request, OUT Json::Value& response);
 		bool RMFStreamerAgent_InterfaceTesting(IN const Json::Value& request, OUT Json::Value& response);
 		bool RMFStreamerAgent_Player(IN const Json::Value& request, OUT Json::Value& response);
 #endif
@@ -94,8 +104,9 @@ class MediaStreamerAgent : public RDKTestStubInterface
 		string frameURL(enum Mode, string Id);
 		string frameURL(enum Mode);		
 		string frameURL(string playurl, string play_speed, string time_position);
+#endif
 };
 
-	extern "C" MediaStreamerAgent* CreateObject();
+	extern "C" RecorderAgent* CreateObject();
 
-#endif //__MEDIASTREAMER_Stub
+#endif //__RECORDER_Stub
