@@ -81,6 +81,21 @@ static long long getCurrentTime()
 	return currentTime;
 }
 
+/* Create test recording spec */
+void createTestRecordingSpec (string recordingId, string playUrl, RecordingSpec &spec)
+{
+	char work[TITLE_LEN] = {'\0'};
+	sprintf( work, "{\"title\":\"Test Recording for %s\"}", recordingId.c_str());
+
+        spec.setRecordingId(recordingId);
+	spec.addLocator( playUrl );
+	spec.setProperties( work );
+        spec.setStartTime( getCurrentTime());
+        spec.setDuration(REC_DURATION);
+        spec.setDeletePriority(PRIORITY);
+        spec.setBitRate( RecordingBitRate_high );
+}
+
 IRMFMediaSource* createHNSrc(const std::string& url)
 {
 	RMFResult result= RMF_RESULT_SUCCESS;
@@ -96,7 +111,7 @@ IRMFMediaSource* createHNSrc(const std::string& url)
 		result= pSrc->init();
 		if ( result != RMF_RESULT_SUCCESS )
 		{
-			DEBUG_PRINT(DEBUG_ERROR, "HNSrc init failed with rc=0x%X", (unsigned int)result);
+			DEBUG_PRINT(DEBUG_ERROR, "HNSrc init failed with rc=0x%X\n", (unsigned int)result);
 		}
 		else
 		{
@@ -105,7 +120,7 @@ IRMFMediaSource* createHNSrc(const std::string& url)
         		string urlIn = url;
         		string http = "http://";
         		http.append(streamingip);
-		        cout<<"IP:"<<streamingip;
+		        cout<<"IP: "<<streamingip<<endl;
 		       	size_t pos = 0;
         		pos = urlIn.find(":8080");
        	 		if (pos!=std::string::npos)
@@ -207,7 +222,9 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSpace, "TestMgr_DVRManager_GetSpace");
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingCount, "TestMgr_DVRManager_GetRecordingCount");
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex, "TestMgr_DVRManager_GetRecordingInfoByIndex");
+        ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex, "TestMgr_DVRManager_CheckRecordingInfoByIndex");
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoById, "TestMgr_DVRManager_GetRecordingInfoById");
+        ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoById, "TestMgr_DVRManager_CheckRecordingInfoById");
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetIsRecordingInProgress, "TestMgr_DVRManager_GetIsRecordingInProgress");
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSize, "TestMgr_DVRManager_GetRecordingSize");
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingDuration, "TestMgr_DVRManager_GetRecordingDuration");
@@ -1755,7 +1772,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 	MediaPlayerSink* pSink = new MediaPlayerSink();
 	HNSource* pSource = new HNSource();
 	RMFState cur_state;
-        RMFResult retResult = RMF_RESULT_SUCCESS;
+        //RMFResult retResult = RMF_RESULT_SUCCESS;
 	x = req["X"].asInt();
 	y = req["Y"].asInt();
 	height = req["H"].asInt();
@@ -3823,7 +3840,6 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 
 	IRMFMediaSource *src = 0;
 	DVRSink *dvrSink = 0;
-	char work[TITLE_LEN] = {'\0'};
 
 	if ( playUrl.compare( 0, 7, "http://" ) == 0 )
 	{
@@ -3847,16 +3863,9 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 
 	// Create recording
 	RecordingSpec spec;
-	spec.setRecordingId(recordingId);
-	spec.setStartTime( getCurrentTime());
-	spec.setDuration(REC_DURATION);
-	spec.setDeletePriority(PRIORITY);
-	spec.setBitRate( RecordingBitRate_high );
-	sprintf( work, "{\"title\":\"DVRSink test recording\"}");
-	spec.setProperties( work );
-	spec.addLocator( playUrl );
+	createTestRecordingSpec (recordingId, playUrl, spec);
 	res_DVR = DVRManager::getInstance()->createRecording( spec );
-	if ( res_DVR != DVRResult_ok )
+	if (( DVRResult_ok != res_DVR) && (DVRResult_alreadyExists != res_DVR))
 	{
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm --->createRecording failed\n");
 		response["result"] = "FAILURE";
@@ -3920,6 +3929,21 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 						src = 0;
 						DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm --->source termination success\n");
 					}
+
+					res_DVR = DVRManager::getInstance()->deleteRecording ( recordingId );
+					DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", (int)res_DVR);
+                                	if ( DVRResult_ok != res_DVR )
+                                	{
+                                        	response["result"] = "FAILURE";
+                                        	response["details"] = "MediaframeworkAgent_DVRSink_InitTerm -> Failed to delete recording";
+
+						src->term();
+						delete src;
+						src = 0;
+
+                                        	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRSink_InitTerm --> Exit\n");
+                                        	return TEST_FAILURE;
+                                	}
 
 					DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_Init&term --->Exit\n");
 					return TEST_SUCCESS;	
@@ -4056,6 +4080,102 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex
         DVRManager *dvm= DVRManager::getInstance();
         if (dvm)
         {
+                RecordingInfo *pRecInfo = dvm->getRecordingInfoByIndex( index );
+                if ( !pRecInfo )
+                {
+                        DEBUG_PRINT(DEBUG_ERROR, "Recording Index: %d not found \n", index);
+
+			// Pre-condition: Create test recording
+                        RecordingSpec spec;
+                        int dvrres = DVRResult_ok;
+                        string playUrl = req["playUrl"].asString();
+
+                        char sRecId[25] = {'\0'};
+                        int iRecId = rand() % 10000 + 2000;
+
+                        sprintf(sRecId, "%d", iRecId);
+			std::string randRecId(sRecId);
+                        spec.setRecordingId(randRecId);
+
+                        createTestRecordingSpec (randRecId, playUrl, spec);
+			DEBUG_PRINT(DEBUG_TRACE, "Creating new recording:%s\n", randRecId.c_str());
+                        dvrres= dvm->createRecording( spec );
+
+                        if (( DVRResult_ok != dvrres ) && ( DVRResult_alreadyExists != dvrres ))
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to create recording for GetRecordingInfoByIndex";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+			pRecInfo = dvm->getRecordingInfoByIndex( index );
+			if ( !pRecInfo )
+			{
+				response["result"] = "FAILURE";
+				response["details"] = "Failed to get RecordingInfoByIndex";
+				DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
+				return TEST_FAILURE;
+			}
+
+			DEBUG_PRINT(DEBUG_TRACE, "Index:%d, RecordingId:%s, Title:%s\n", index, pRecInfo->recordingId.c_str(), pRecInfo->title);
+			sprintf(stringDetails, "RecordingId:%s,Title:%s", pRecInfo->recordingId.c_str(), pRecInfo->title );
+
+                        // Post-condition: Delete test recording
+                        int res_DVR = dvm->deleteRecording ( randRecId );
+                        DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
+                        if ( DVRResult_ok != res_DVR )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to delete recording for GetRecordingInfoByIndex";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex --> Exit\n");
+                                return TEST_FAILURE;
+                        }
+                        else
+                        {
+                                response["result"] = "SUCCESS";
+                                response["details"] = stringDetails;
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
+                                return TEST_SUCCESS;
+                        }
+                }
+		else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "Index:%d, RecordingId:%s, Title:%s\n", index, pRecInfo->recordingId.c_str(), pRecInfo->title);
+                        sprintf(stringDetails, "RecordingId:%s,Title:%s", pRecInfo->recordingId.c_str(), pRecInfo->title );
+
+                       	response["result"] = "SUCCESS";
+                       	response["details"] = stringDetails;
+                       	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
+                       	return TEST_SUCCESS;
+                }
+        }
+
+        response["result"] = "FAILURE";
+        response["details"] = "Failed to get DVR Manager instance";
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
+        return TEST_FAILURE;
+}
+
+/**************************************************************************
+Function name : MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex
+
+Arguments     : Input argument is 'index'. Output argument is "SUCCESS" or "FAILURE".
+
+Description   : Receives the request from Test Manager to get RecordingInfoByIndex.
+                Gets the response from DVRManager element and send it to the Test Manager.
+**************************************************************************/
+
+bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex --->Entry\n");
+
+        char stringDetails[75] = {'\0'};
+        int index = req["index"].asInt();
+
+        DVRManager *dvm= DVRManager::getInstance();
+        if (dvm)
+        {
                 int count = dvm->getRecordingCount();
                 DEBUG_PRINT(DEBUG_TRACE, "RecordingCount: %d\n", count);
 
@@ -4069,7 +4189,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex
                 {
                         response["result"] = "FAILURE";
                         response["details"] = "Failed to get RecordingInfo. Index not found";
-                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex -->Exit\n");
                         return TEST_FAILURE;
                 }
 
@@ -4080,24 +4200,23 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex
                         sprintf(stringDetails, "RecordingId:%s,Title:%s", pRecInfo->recordingId.c_str(), pRecInfo->title );
                         response["result"] = "SUCCESS";
                         response["details"] = stringDetails;
-                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex -->Exit\n");
                         return TEST_SUCCESS;
                 }
                 else
                 {
                         response["result"] = "FAILURE";
                         response["details"] = "Failed to get RecordingInfo by Index";
-                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex -->Exit\n");
                         return TEST_FAILURE;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get RecordingInfo by Index";
-        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex -->Exit\n");
         return TEST_FAILURE;
 }
-
 
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoById
@@ -4119,30 +4238,69 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoById(IN
         if (dvm)
         {
                 RecordingInfo *pRecInfo= dvm->getRecordingInfoById( recordingId );
-                if ( pRecInfo )
+                if ( !pRecInfo )
                 {
-                        DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s, Title:%s\n", pRecInfo->recordingId.c_str(), pRecInfo->title );
-                        if (recordingId == pRecInfo->recordingId)
+                        DEBUG_PRINT(DEBUG_TRACE, "RecordingId: %s not found \n", recordingId.c_str());
+                        DEBUG_PRINT(DEBUG_TRACE, "Creating RecordingId: %s\n", recordingId.c_str());
+                        // Pre-condition: Create test recording
+                        RecordingSpec spec;
+			int dvrres = DVRResult_ok;
+                        string playUrl = req["playUrl"].asString();
+                        createTestRecordingSpec (recordingId, playUrl, spec);
+                        dvrres= dvm->createRecording( spec );
+
+			if (( DVRResult_ok != dvrres ) && ( DVRResult_alreadyExists != dvrres ))
                         {
-                                sprintf(stringDetails, "RecordingId:%s,Title:%s", pRecInfo->recordingId.c_str(), pRecInfo->title );
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to create recording for GetRecordingInfoById";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+			pRecInfo = dvm->getRecordingInfoById( recordingId );
+			if ( !pRecInfo )
+			{
+				response["result"] = "FAILURE";
+				response["details"] = "Failed to get RecordingInfoById";
+				DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
+				return TEST_FAILURE;
+			}
+			
+			sprintf(stringDetails, "RecordingId:%s,Title:%s", pRecInfo->recordingId.c_str(), pRecInfo->title );
+
+                        // Post-condition: Delete test recording
+                        int res_DVR = dvm->deleteRecording ( recordingId );
+                        DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
+                        if ( DVRResult_ok != res_DVR )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to delete recording for GetRecordingInfoById";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById --> Exit\n");
+                                return TEST_FAILURE;
+                        }
+                        else
+                        {
                                 response["result"] = "SUCCESS";
                                 response["details"] = stringDetails;
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
                                 return TEST_SUCCESS;
                         }
-                        else
-                        {
-                                response["result"] = "FAILURE";
-                                response["details"] = "Failed to get RecordingInfoById";
-                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
-                                return TEST_FAILURE;
-                        }
+                }
+
+                DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s, Title:%s\n", pRecInfo->recordingId.c_str(), pRecInfo->title );
+                if (recordingId == pRecInfo->recordingId)
+                {
+			sprintf(stringDetails, "RecordingId:%s,Title:%s", pRecInfo->recordingId.c_str(), pRecInfo->title );
+
+                        response["result"] = "SUCCESS";
+                        response["details"] = stringDetails;
+                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
+                        return TEST_SUCCESS;
                 }
                 else
                 {
-                        DEBUG_PRINT(DEBUG_ERROR, "No record found with requested Id\n");
                         response["result"] = "FAILURE";
-                        response["details"] = "No record found with requested Id";
+                        response["details"] = "Failed to get RecordingInfoById";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
                         return TEST_FAILURE;
                 }
@@ -4154,6 +4312,60 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoById(IN
         return TEST_FAILURE;
 }
 
+/**************************************************************************
+Function name : MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoById
+
+Arguments     : Input argument is 'recordingId'. Output argument is "SUCCESS" or "FAILURE".
+
+Description   : Receives the request from Test Manager to get RecordingInfoById.
+                Gets the response from DVRManager element and send it to the Test Manager.
+**************************************************************************/
+
+bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoById(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoById --->Entry\n");
+
+        char stringDetails[75] = {'\0'};
+        string recordingId = req["recordingId"].asString();
+
+        DVRManager *dvm= DVRManager::getInstance();
+        if (dvm)
+        {
+                RecordingInfo *pRecInfo= dvm->getRecordingInfoById( recordingId );
+                if ( pRecInfo )
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s, Title:%s\n", pRecInfo->recordingId.c_str(), pRecInfo->title );
+                        if (recordingId == pRecInfo->recordingId)
+                        {
+                                sprintf(stringDetails, "RecordingId:%s,Title:%s", pRecInfo->recordingId.c_str(), pRecInfo->title );
+                                response["result"] = "SUCCESS";
+                                response["details"] = stringDetails;
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoById -->Exit\n");
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to get RecordingInfoById";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoById -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_ERROR, "No record found with requested Id\n");
+                        response["result"] = "FAILURE";
+                        response["details"] = "No record found with requested Id";
+                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoById -->Exit\n");
+                        return TEST_FAILURE;
+                }
+        }
+
+        response["result"] = "FAILURE";
+        response["details"] = "Failed to get DVR Manager instance";
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoById -->Exit\n");
+        return TEST_FAILURE;
+}
 
 
 /**************************************************************************
@@ -4174,6 +4386,67 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetIsRecordingInProgres
         {
                 char stringDetails[30] = {'\0'};
                 string recordingId = req["recordingId"].asString();
+
+                RecordingInfo *pRecInfo= dvm->getRecordingInfoById( recordingId );
+                if ( !pRecInfo )
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s not found \n", recordingId.c_str());
+                        DEBUG_PRINT(DEBUG_TRACE, "Creating RecordingId:%s\n", recordingId.c_str());
+                        // Pre-condition: Create test recording
+                        RecordingSpec spec;
+			int dvrres = DVRResult_ok;
+                        string playUrl = req["playUrl"].asString();
+                        createTestRecordingSpec (recordingId, playUrl, spec);
+                        dvrres= dvm->createRecording( spec );
+
+			if (( DVRResult_ok != dvrres ) && ( DVRResult_alreadyExists != dvrres ))
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "RecordingId not found. Failed to create test recording";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+			pRecInfo= dvm->getRecordingInfoById( recordingId );
+                        if ( !pRecInfo )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to get RecordingInfoById for GetIsRecordingInProgress";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+                	bool recStatus = dvm->isRecordingInProgress( recordingId );
+                	DEBUG_PRINT(DEBUG_LOG, "RecordingId:%s, IsRecordingInProgress: %d\n", recordingId.c_str(), recStatus);
+
+                	if (true == recStatus)
+                	{
+                        	sprintf(stringDetails, "%s", "Recording IS InProgress");
+                	}
+                	else
+                	{
+                        	sprintf(stringDetails, "%s", "Recording IS NOT InProgress");
+                	}
+
+                        // Post-condition: Delete test recording
+                        int res_DVR = dvm->deleteRecording ( recordingId );
+                        DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
+                        if ( DVRResult_ok != res_DVR )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to delete recording for GetIsRecordingInProgress";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress --> Exit\n");
+                                return TEST_FAILURE;
+                        }
+                        else
+                        {
+                                response["result"] = "SUCCESS";
+                                response["details"] = stringDetails;
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress -->Exit\n");
+                                return TEST_SUCCESS;
+                        }
+                }
+
                 bool recStatus = dvm->isRecordingInProgress( recordingId );
                 DEBUG_PRINT(DEBUG_LOG, "RecordingId:%s, IsRecordingInProgress: %d\n", recordingId.c_str(), recStatus);
 
@@ -4217,6 +4490,60 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSize(IN con
         {
                 char stringDetails[35] = {'\0'};
                 string recordingId = req["recordingId"].asString();
+
+                RecordingInfo *pRecInfo= dvm->getRecordingInfoById( recordingId );
+                if ( !pRecInfo )
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s not found \n", recordingId.c_str());
+                        DEBUG_PRINT(DEBUG_TRACE, "Creating RecordingId:%s\n", recordingId.c_str());
+
+                        // Pre-condition: Create test recording
+                        RecordingSpec spec;
+			int dvrres = DVRResult_ok;
+                        string playUrl = req["playUrl"].asString();
+                        createTestRecordingSpec (recordingId, playUrl, spec);
+                        dvrres= dvm->createRecording( spec );
+
+			if (( DVRResult_ok != dvrres ) && ( DVRResult_alreadyExists != dvrres ))
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "RecordingId not found. Failed to create test recording";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+			pRecInfo= dvm->getRecordingInfoById( recordingId );
+                        if ( !pRecInfo )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to get RecordingInfoById for GetRecordingSize";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+			long long recSize = dvm->getRecordingSize( recordingId );
+                	DEBUG_PRINT(DEBUG_LOG, "RecordingId:%s, RecordingSize: %lld\n", recordingId.c_str(), recSize);
+                	sprintf(stringDetails, "RecordingSize: %lld", recSize);
+
+                        // Post-condition: Delete test recording
+                        int res_DVR = dvm->deleteRecording ( recordingId );
+                        DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
+                        if ( DVRResult_ok != res_DVR )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to delete recording for GetRecordingSize";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize --> Exit\n");
+                                return TEST_FAILURE;
+                        }
+                        else
+                        {
+                                response["result"] = "SUCCESS";
+                                response["details"] = stringDetails;
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize -->Exit\n");
+                                return TEST_SUCCESS;
+                        }
+                }
+
                 long long recSize = dvm->getRecordingSize( recordingId );
 
                 DEBUG_PRINT(DEBUG_LOG, "RecordingId:%s, RecordingSize: %lld\n", recordingId.c_str(), recSize);
@@ -4253,6 +4580,59 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingDuration(IN
         {
                 char stringDetails[35] = {'\0'};
                 string recordingId = req["recordingId"].asString();
+
+                RecordingInfo *pRecInfo= dvm->getRecordingInfoById( recordingId );
+                if ( !pRecInfo )
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s not found \n", recordingId.c_str());
+                        DEBUG_PRINT(DEBUG_TRACE, "Creating RecordingId:%s\n", recordingId.c_str());
+                        // Pre-condition: Create test recording
+                        RecordingSpec spec;
+			int dvrres = DVRResult_ok;
+                        string playUrl = req["playUrl"].asString();
+                        createTestRecordingSpec (recordingId, playUrl, spec);
+                        dvrres= dvm->createRecording( spec );
+
+			if (( DVRResult_ok != dvrres ) && ( DVRResult_alreadyExists != dvrres ))
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "RecordingId not found. Failed to create test recording";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+                        pRecInfo= dvm->getRecordingInfoById( recordingId );
+                        if ( !pRecInfo )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to get RecordingInfoById for GetRecordingDuration";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+			long long recDuration = dvm->getRecordingDuration( recordingId );
+                	DEBUG_PRINT(DEBUG_LOG, "RecordingId:%s, RecordingDuration: %lld\n", recordingId.c_str(), recDuration);
+                	sprintf(stringDetails, "RecordingDuration: %lld", recDuration);
+
+                        // Post-condition: Delete test recording
+                        int res_DVR = dvm->deleteRecording ( recordingId );
+                        DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
+                        if ( DVRResult_ok != res_DVR )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to delete recording for GetRecordingDuration";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration --> Exit\n");
+                                return TEST_FAILURE;
+                        }
+                        else
+                        {
+                                response["result"] = "SUCCESS";
+                                response["details"] = stringDetails;
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration -->Exit\n");
+                                return TEST_SUCCESS;
+                        }
+                }
+
                 long long recDuration = dvm->getRecordingDuration( recordingId );
 
                 DEBUG_PRINT(DEBUG_LOG, "RecordingId:%s, RecordingDuration: %lld\n", recordingId.c_str(), recDuration);
@@ -4291,6 +4671,59 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingStartTime(I
         {
                 char stringDetails[35] = {'\0'};
                 string recordingId = req["recordingId"].asString();
+
+                RecordingInfo *pRecInfo= dvm->getRecordingInfoById( recordingId );
+                if ( !pRecInfo )
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s not found \n", recordingId.c_str());
+                        DEBUG_PRINT(DEBUG_TRACE, "Creating RecordingId:%s\n", recordingId.c_str());
+                        // Pre-condition: Create test recording
+                        RecordingSpec spec;
+			int dvrres = DVRResult_ok;
+                        string playUrl = req["playUrl"].asString();
+                        createTestRecordingSpec (recordingId, playUrl, spec);
+                        dvrres= dvm->createRecording( spec );
+
+			if (( DVRResult_ok != dvrres ) && ( DVRResult_alreadyExists != dvrres ))
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "RecordingId not found. Failed to create test recording";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+                        pRecInfo= dvm->getRecordingInfoById( recordingId );
+                        if ( !pRecInfo )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to get RecordingInfoById for GetRecordingStartTime";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+                	long long recStartTime = dvm->getRecordingStartTime( recordingId );
+                	DEBUG_PRINT(DEBUG_LOG, "RecordingId:%s, RecordingStartTime: %lld\n", recordingId.c_str(), recStartTime);
+                	sprintf(stringDetails, "RecordingStartTime: %lld", recStartTime);
+
+                        // Post-condition: Delete test recording
+                        int res_DVR = dvm->deleteRecording ( recordingId );
+                        DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
+                        if ( DVRResult_ok != res_DVR )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to delete recording for GetRecordingStartTime";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime --> Exit\n");
+                                return TEST_FAILURE;
+                        }
+                        else
+                        {
+                                response["result"] = "SUCCESS";
+                                response["details"] = stringDetails;
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime -->Exit\n");
+                                return TEST_SUCCESS;
+                        }
+                }
+
                 long long recStartTime = dvm->getRecordingStartTime( recordingId );
 
                 DEBUG_PRINT(DEBUG_LOG, "RecordingId:%s, RecordingStartTime: %lld\n", recordingId.c_str(), recStartTime);
@@ -4374,6 +4807,9 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateTSB(IN const Json
                         response["result"] = "SUCCESS";
                         sprintf(stringDetails, "TSBId: %s", tsbId.c_str());
                         response["details"] = stringDetails;
+
+			//Post-Condition: Reset tsb
+			tsbId.clear();
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateTSB -->Exit\n");
                         return TEST_SUCCESS;
                 }
@@ -4411,6 +4847,91 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                 int dvrres = DVRResult_ok;
                 string tsbId = req["tsbId"].asString();
                 string recordingId = req["recordingId"].asString();
+
+		// Check whether tsbId is present
+   		RecordingInfo *pTSBRecInfo = dvm->getRecordingInfoById( tsbId );
+   		if ( !pTSBRecInfo )
+   		{
+			// Create TSB with default duration
+			dvrres= dvm->createTSB( -1LL, tsbId );
+			DEBUG_PRINT(DEBUG_ERROR, "Result of createTSB: %d\n", dvrres);
+			if ( DVRResult_ok != dvrres )
+			{
+                        	response["result"] = "FAILURE";
+                        	response["details"] = "Failed to create TSB";
+                        	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
+                        	return TEST_FAILURE;
+                	}
+			DEBUG_PRINT(DEBUG_ERROR, "Created TSBId: %s for ConvertTSBToRecording \n", tsbId.c_str());
+
+			pTSBRecInfo = dvm->getRecordingInfoById( tsbId );
+                        if ( !pTSBRecInfo )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to get recording info by tsbId for ConvertTSBToRecording";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+   		}
+
+		// Check whether recordingId is present
+                RecordingInfo *pRecInfo= dvm->getRecordingInfoById( recordingId );
+                if ( !pRecInfo )
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "Creating RecordingId: %s\n", recordingId.c_str());
+                        // Pre-condition: Create test recording
+                        RecordingSpec spec;
+                        string playUrl = req["playUrl"].asString();
+                        createTestRecordingSpec (recordingId, playUrl, spec);
+                        dvrres= dvm->createRecording( spec );
+
+			if (( DVRResult_ok != dvrres ) && ( DVRResult_alreadyExists != dvrres ))
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "RecordingId not found. Failed to create test recording";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+                        pRecInfo= dvm->getRecordingInfoById( recordingId );
+                        if ( !pRecInfo )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to get RecordingInfoById for ConvertTSBToRecording";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+
+			dvrres= dvm->convertTSBToRecording( tsbId, recordingId );
+			DEBUG_PRINT(DEBUG_TRACE, "Result of convertTSBToRecording: %d\n", dvrres);
+                	if ( (dvrres != DVRResult_ok) && (dvrres != DVRResult_cciExclusions) )
+                	{
+                        	response["result"] = "FAILURE";
+                        	response["details"] = "Failed to convert TSB to Recording";
+                        	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
+                        	return TEST_FAILURE;
+                	}
+
+                        // Post-condition: Delete test recording and clear tsb
+			tsbId.clear();
+
+                        int res_DVR = dvm->deleteRecording ( recordingId );
+                        DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
+                        if ( DVRResult_ok != res_DVR )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to delete recording for ConvertTSBToRecording";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording --> Exit\n");
+                                return TEST_FAILURE;
+                        }
+                        else
+                        {
+                                response["result"] = "SUCCESS";
+                                response["details"] = "Converted TSB to Recording";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
+                                return TEST_SUCCESS;
+                        }
+                }
 
                 dvrres= dvm->convertTSBToRecording( tsbId, recordingId );
                 DEBUG_PRINT(DEBUG_TRACE, "Result of convertTSBToRecording: %d\n", dvrres);
@@ -4458,41 +4979,84 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateRecording(IN cons
                 RecordingSpec spec;
                 long long recordDuration = 0;
                 string recordingTitle, recordingId, qamLocator;
+		char stringDetails[256] = {'\0'};
 
                 recordingTitle = req["recordingTitle"].asString();
                 recordingId = req["recordingId"].asString();
                 recordDuration= req["recordDuration"].asDouble();
                 qamLocator=req["qamLocator"].asString();
 
-                long long now= getCurrentTime();
                 recordDuration *= 1000;
                 sprintf( work, "{\"title\":\"%s %s\"}", recordingId.c_str(), recordingTitle.c_str());
                 DEBUG_PRINT(DEBUG_TRACE, "Recording title to be set : %s\n", work);
 
                 // Create recording
-                spec.setRecordingId(recordingId);
-                spec.setStartTime( now );
+                createTestRecordingSpec (recordingId, qamLocator, spec);
                 spec.setDuration(recordDuration);
-                spec.setDeletePriority(PRIORITY);
-                spec.setBitRate( RecordingBitRate_high );
                 spec.setProperties( work );
-                spec.addLocator( qamLocator );
 
                 dvrres= dvm->createRecording( spec );
                 DEBUG_PRINT(DEBUG_TRACE, "Result of createRecording: %d\n", dvrres);
-                if ( dvrres == DVRResult_ok )
+
+                if ( DVRResult_ok == dvrres )
                 {
+			sprintf(stringDetails, "Created recording id: %s", recordingId.c_str());
                         response["result"] = "SUCCESS";
-			response["details"] = "Created recording";
+			response["details"] = stringDetails;
+
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording -->Exit\n");
-                        return TEST_SUCCESS;
                 }
+		else if (DVRResult_alreadyExists == dvrres)
+		{
+			DEBUG_PRINT(DEBUG_TRACE, "Recording Id %s already exists.\n", recordingId.c_str());
+
+			char sRecId[25] = {'\0'};
+			int iRecId = rand() % 10000 + 2000;
+
+			sprintf(sRecId, "%d", iRecId);
+			recordingId = std::string(sRecId);
+			spec.setRecordingId(recordingId);
+
+			DEBUG_PRINT(DEBUG_TRACE, "Creating new Recording Id %s \n", recordingId.c_str());
+			dvrres= dvm->createRecording( spec );
+			DEBUG_PRINT(DEBUG_TRACE, "Result of createRecording: %d\n", dvrres);
+			
+			if ( DVRResult_ok != dvrres )
+                	{
+                        	response["result"] = "FAILURE";
+                        	response["details"] = "Retry to create recording failed";
+                        	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording -->Exit\n");
+                        	return TEST_FAILURE;
+                	}
+
+                        sprintf(stringDetails, "Created recording id: %s", recordingId.c_str());
+                        response["result"] = "SUCCESS";
+                        response["details"] = stringDetails;
+
+			DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording -->Exit\n");
+		}
                 else
                 {
                         response["result"] = "FAILURE";
                         response["details"] = "Get on DVR manager instance success but failed to create record";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording -->Exit\n");
                         return TEST_FAILURE;
+                }
+
+                // Post-condition: Delete test recording
+                int res_DVR = dvm->deleteRecording ( recordingId );
+                DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording %s\n", res_DVR, recordingId.c_str());
+                if ( DVRResult_ok != res_DVR )
+                {
+                       response["result"] = "FAILURE";
+                       response["details"] = "Failed to delete recording after create recording";
+                       DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording --> Exit\n");
+                       return TEST_FAILURE;
+                }
+                else
+                {
+                       DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
+                       return TEST_SUCCESS;
                 }
         }
 
@@ -4522,53 +5086,91 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_UpdateRecording(IN cons
                 char work[256] = {'\0'};
                 char stringDetails[256] = {'\0'};
                 int dvrres;
+		RecordingSpec spec;
+		bool newRec = false;
 
                 string recordingId = req["recordingId"].asString();
                 RecordingInfo *pRecInfo= dvm->getRecordingInfoById( recordingId );
 
-                if ( pRecInfo )
-                {
-                        DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s, RecordingTitle:%s", pRecInfo->recordingId.c_str(), pRecInfo->title);
+   		if ( !pRecInfo )
+   		{
+			DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s not found \n", recordingId.c_str());
 
-                        // Create recording spec from record info
-                        RecordingSpec spec;
-                        spec.setRecordingId(pRecInfo->recordingId);
-                        spec.setStartTime(pRecInfo->requestedStartTime);
-                        spec.setDuration(pRecInfo->requestedDuration);
-                        spec.setEntitlementId(pRecInfo->entitlementId);
-                        spec.setIsPPV(pRecInfo->isPPV);
-                        spec.setBitRate(pRecInfo->bitRate);
+			newRec = true;
 
-                        // Update the recording title
-                        sprintf( work, "{\"title\":\"%s Updated test record\"}", recordingId.c_str());
-                        DEBUG_PRINT(DEBUG_TRACE, "Updated title to be set : %s\n", work);
+			// Pre-condition: Create test recording
+			string playUrl = req["playUrl"].asString();
+        		createTestRecordingSpec (recordingId, playUrl, spec);
 
-                        spec.setProperties( work );
+			DEBUG_PRINT(DEBUG_TRACE, "Creating RecordingId:%s\n", recordingId.c_str());
+			dvrres= dvm->createRecording( spec );
 
-                        dvrres= dvm->updateRecording( spec );
-                        DEBUG_PRINT(DEBUG_TRACE, "Result of updateRecording: %d\n", dvrres);
-                        if ( dvrres == DVRResult_ok )
-                        {
-                                DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s, RecordingTitle:%s", pRecInfo->recordingId.c_str(), pRecInfo->title);
-                                sprintf(stringDetails, "UpdatedTitle: %s", pRecInfo->title);
-                                response["result"] = "SUCCESS";
-                                response["details"] = stringDetails;
+			if (( DVRResult_ok != dvrres ) && ( DVRResult_alreadyExists != dvrres ))
+                	{
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to create recording for update recording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording -->Exit\n");
-                                return TEST_SUCCESS;
-                        }
-                        else
+                                return TEST_FAILURE;
+                	}
+
+                        pRecInfo= dvm->getRecordingInfoById( recordingId );
+                        if ( !pRecInfo )
                         {
                                 response["result"] = "FAILURE";
-                                response["details"] = "Get on record info success but failed to update record";
+                                response["details"] = "Failed to get RecordingInfoById for update recording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording -->Exit\n");
                                 return TEST_FAILURE;
                         }
+   		}
+
+                DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s, RecordingTitle:%s", pRecInfo->recordingId.c_str(), pRecInfo->title);
+
+                // Create recording spec from existing record info
+                spec.setRecordingId(pRecInfo->recordingId);
+                spec.setStartTime(pRecInfo->requestedStartTime);
+                spec.setDuration(pRecInfo->requestedDuration);
+                spec.setEntitlementId(pRecInfo->entitlementId);
+                spec.setIsPPV(pRecInfo->isPPV);
+                spec.setBitRate(pRecInfo->bitRate);
+
+                // Update the recording title
+                sprintf( work, "{\"title\":\"%s Updated test record\"}", recordingId.c_str());
+                DEBUG_PRINT(DEBUG_TRACE, "Updated title to be set : %s\n", work);
+
+                spec.setProperties( work );
+
+                dvrres= dvm->updateRecording( spec );
+                DEBUG_PRINT(DEBUG_TRACE, "Result of updateRecording: %d\n", dvrres);
+                if ( dvrres == DVRResult_ok )
+                {
+                	DEBUG_PRINT(DEBUG_TRACE, "RecordingId:%s, RecordingTitle:%s", pRecInfo->recordingId.c_str(), pRecInfo->title);
+                        sprintf(stringDetails, "UpdatedTitle: %s", pRecInfo->title);
+
+                        // Post-condition: Delete test recording
+			if (true == newRec)
+			{
+	                	int res_DVR = dvm->deleteRecording ( recordingId );
+                        	DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
+                        	if ( DVRResult_ok != res_DVR )
+                        	{
+                                	response["result"] = "FAILURE";
+                                	response["details"] = "Failed to delete recording for UpdateRecording";
+                                	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording --> Exit\n");
+                                	return TEST_FAILURE;
+                        	}
+			}
+
+                        response["result"] = "SUCCESS";
+                        response["details"] = stringDetails;
+                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording -->Exit\n");
+                        return TEST_SUCCESS;
                 }
                 else
                 {
                         response["result"] = "FAILURE";
-                        response["details"] = "Failed to get RecordingInfoById";
-                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
+			sprintf(stringDetails, "Failed to update record. Error code: %d", dvrres);
+                        response["details"] = stringDetails;
+                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording -->Exit\n");
                         return TEST_FAILURE;
                 }
         }
@@ -4607,10 +5209,50 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording(IN cons
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
                         return TEST_SUCCESS;
                 }
+		else if (DVRResult_notFound == result)
+		{
+                        DEBUG_PRINT(DEBUG_ERROR, "RecordingId %s not found. Creating now \n", recordingId.c_str());
+                        RecordingSpec spec;
+                        string playUrl = req["playUrl"].asString();
+
+			// Pre-condition: Create test recording
+                        createTestRecordingSpec (recordingId, playUrl, spec);
+                        result = dvm->createRecording( spec );
+
+                        if ( DVRResult_ok != result )
+                        {
+                                response["result"] = "FAILURE";
+                                response["details"] = "Failed to create recording for DeleteRecording";
+                                DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
+                                return TEST_FAILURE;
+                        }
+			else
+			{
+				DEBUG_PRINT(DEBUG_TRACE, "Retrying to delete recording \n");
+				result= dvm->deleteRecording ( recordingId );
+
+				if ( DVRResult_ok == result )
+				{
+					response["result"] = "SUCCESS";
+					response["details"] = "Recording deleted";
+					DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
+					return TEST_SUCCESS;
+				}
+				else
+				{
+					DEBUG_PRINT(DEBUG_ERROR, "Retry: Error deleting recording : %d\n", result);
+					response["result"] = "FAILURE";
+					response["details"] = "Failed to delete recording";
+					DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
+					return TEST_FAILURE;
+				}
+			}
+		}
                 else
                 {
+			DEBUG_PRINT(DEBUG_ERROR, "Error deleting recording : %d\n", result);
                         response["result"] = "FAILURE";
-                        response["details"] = "Failed to delete recording. RecordingId not found";
+                        response["details"] = "Failed to delete recording";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
                         return TEST_FAILURE;
                 }
@@ -4678,6 +5320,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
         if (dvm)
         {
                 char stringDetails[50] = {'\0'};
+
                 RecordingSegmentInfo *pSegInfo= dvm->getRecordingSegmentInfoByIndex( index );
                 if ( pSegInfo )
                 {
@@ -4691,9 +5334,9 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
                 }
                 else
                 {
-                        DEBUG_PRINT(DEBUG_TRACE, "Failed to get RecordingSegmentInfoByIndex. Index more than number of Segments\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "Failed to get RecordingSegmentInfoByIndex.\n");
                         response["result"] = "FAILURE";
-                        response["details"] = "Failed to get RecordingSegmentInfoByIndex";
+                        response["details"] = "Failed to get RecordingSegmentInfo by given index";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
                         return TEST_FAILURE;
                 }

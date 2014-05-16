@@ -130,7 +130,9 @@ class MediaframeworkAgent : public RDKTestStubInterface
                 bool MediaframeworkAgent_DVRManager_GetSpace(IN const Json::Value& req, OUT Json::Value& response);
                 bool MediaframeworkAgent_DVRManager_GetRecordingCount(IN const Json::Value& req, OUT Json::Value& response);
                 bool MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex(const Json::Value&, Json::Value&);
+		bool MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex(const Json::Value&, Json::Value&);
                 bool MediaframeworkAgent_DVRManager_GetRecordingInfoById(const Json::Value&, Json::Value&);
+		bool MediaframeworkAgent_DVRManager_CheckRecordingInfoById(const Json::Value&, Json::Value&);
                 bool MediaframeworkAgent_DVRManager_GetIsRecordingInProgress(const Json::Value&, Json::Value&);
                 bool MediaframeworkAgent_DVRManager_GetRecordingSize(const Json::Value&, Json::Value&);
                 bool MediaframeworkAgent_DVRManager_GetRecordingDuration(const Json::Value&, Json::Value&);
