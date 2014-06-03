@@ -35,6 +35,28 @@ bool OpensourceTestStub::initialize(IN const char* szVersion,IN RDKTestAgent *pt
 	return true;
 }
 
+/***************************************************************************
+ *Function name : testmodulepre_requisites
+ *Descrption    : testmodulepre_requisites will  be used for setting the
+ *                pre-requisites that are necessary for this component
+ *
+ *****************************************************************************/
+std::string OpensourceTestStub::testmodulepre_requisites()
+{
+        return "SUCCESS";
+}
+
+/***************************************************************************
+ *Function name : testmodulepost_requisites
+ *Descrption    : testmodulepost_requisites will be used for resetting the
+ *                pre-requisites that are set
+ *
+ *****************************************************************************/
+bool OpensourceTestStub::testmodulepost_requisites()
+{
+        return true;
+}
+
 /*******************************************************************************************************
  *Function name	: OpensourceTestStub_Execute
  *Descrption	: OpensourceTestStub_Execute wrapper function will be used to execute opensource test suites
@@ -42,7 +64,6 @@ bool OpensourceTestStub::initialize(IN const char* szVersion,IN RDKTestAgent *pt
 bool OpensourceTestStub::OpensourceTestStub_Execute(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nEntering OpensourceTestStub_Execute function");
-
 	if (getenv ("OPENSOURCETEST_PATH")!=NULL)
 	{
 		/* Declaring the variables */
@@ -315,6 +336,7 @@ extern "C" void DestroyObject(OpensourceTestStub *stubobj)
 {
 	DEBUG_PRINT(DEBUG_LOG,"\n Destroying Opensourcetest stub object");
 	delete stubobj;
+
 
 }
 

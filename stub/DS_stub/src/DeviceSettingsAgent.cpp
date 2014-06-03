@@ -103,7 +103,28 @@ bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 
 	return TEST_SUCCESS;
 }
+/***************************************************************************
+ *Function name : testmodulepre_requisites
+ *Descrption    : testmodulepre_requisites will  be used for setting the
+ *                pre-requisites that are necessary for this component
+ *                
+ *****************************************************************************/
 
+std::string DeviceSettingsAgent::testmodulepre_requisites()
+{
+	return "SUCCESS";
+}
+/***************************************************************************
+ *Function name : testmodulepost_requisites
+ *Descrption    : testmodulepost_requisites will be used for resetting the 
+ *                pre-requisites that are set
+ *                
+ *****************************************************************************/
+
+bool DeviceSettingsAgent::testmodulepost_requisites()
+{
+	return TEST_SUCCESS;
+}
 
 /***************************************************************************
  *Function name	: DSmanagerInitialize

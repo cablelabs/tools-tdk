@@ -41,14 +41,16 @@ typedef enum _DEBUG_LEVEL_
 #endif
 
 #define DEBUG_PRINT(eDebugLevel,pui8Debugmsg...)\
-	do{\
-		if(eDebugLevel <= DEBUG_ENABLE)\
-		{\
-			fprintf(stderr,"\nFunction Name: %s; Line: %d :- \n",__FUNCTION__,__LINE__);\
-			fprintf(stderr,pui8Debugmsg);\
-			fflush(stderr);\
-		}\
-	}while(0)
+    do{\
+            if(eDebugLevel <= DEBUG_ENABLE)\
+            {\
+                fprintf(stderr,"\nFunction Name: %s; Line: %d :- \n",__FUNCTION__,__LINE__);\
+                fprintf(stderr,pui8Debugmsg);\
+                fflush(stderr);\
+                fprintf(stdout, pui8Debugmsg);\
+                fflush(stdout);\
+            }\
+        }while(0)
 
 
 /**************************************************************************************
@@ -81,7 +83,7 @@ Return:                bool  -      Always returning true from this function.
 *********************************************************************************************************************/
 		template <class T> bool RegisterMethod (T& refObj, bool (T::*ptrFn) (const Json::Value&, Json::Value&), const char* szName )
 		{
-			std::cout << "Registering " << szName << std::endl;
+			DEBUG_PRINT (DEBUG_ERROR, "Registering %s \n", szName);
 			m_ptrRPCServer -> AddMethod (new Json::Rpc::RpcMethod <T> (refObj, ptrFn, std::string (szName)));
 			return true;
 		}
@@ -97,7 +99,7 @@ Return:                bool  -      Always returning true from this function.
 *********************************************************************************************************************/
 		bool UnregisterMethod (const char* szName)
 		{
-			std::cout << std::endl << "Unregistering " << szName << std::endl;
+			DEBUG_PRINT (DEBUG_LOG,  "Unregistering %s \n", szName);
 			m_ptrRPCServer -> DeleteMethod (szName);
 			return true;
 		}

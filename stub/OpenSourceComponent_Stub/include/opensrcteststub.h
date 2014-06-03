@@ -32,6 +32,8 @@ class OpensourceTestStub : public RDKTestStubInterface
 {
 	public:
 		OpensourceTestStub();
+		std::string testmodulepre_requisites();
+                bool testmodulepost_requisites();
 		bool initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
 		bool OpensourceTestStub_Execute(IN const Json::Value& req, OUT Json::Value& response);

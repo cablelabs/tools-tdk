@@ -37,6 +37,8 @@ class RDKLoggerAgent : public RDKTestStubInterface
                 bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
 
                 bool cleanup(const char*, RDKTestAgent*);
+		std::string testmodulepre_requisites();
+                bool testmodulepost_requisites();
 
                 //RDKLoggerAgent Wrapper functions
 		bool RDKLoggerAgent_Init(IN const Json::Value& req, OUT Json::Value& response);

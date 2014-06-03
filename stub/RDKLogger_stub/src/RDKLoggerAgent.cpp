@@ -117,6 +117,30 @@ bool RDKLoggerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAge
         return TEST_SUCCESS;
 }
 
+/***************************************************************************
+ *Function name : testmodulepre_requisites
+ *Descrption    : testmodulepre_requisites will  be used for setting the
+ *                pre-requisites that are necessary for this component
+ *
+ *****************************************************************************/
+
+std::string RDKLoggerAgent::testmodulepre_requisites()
+{
+        return "SUCCESS";
+}
+/***************************************************************************
+ *Function name : testmodulepost_requisites
+ *Descrption    : testmodulepost_requisites will be used for resetting the
+ *                pre-requisites that are set
+ *
+ *****************************************************************************/
+
+bool RDKLoggerAgent::testmodulepost_requisites()
+{
+        return TEST_SUCCESS;
+}
+
+
 /**************************************************************************
 Function name : RDKLoggerAgent::RDKLoggerAgent_Init
 

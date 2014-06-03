@@ -81,6 +81,8 @@ class DeviceSettingsAgent : public RDKTestStubInterface
 
 		/*inherited functions*/
 		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
+		std::string testmodulepre_requisites();
+                bool testmodulepost_requisites();
 		bool DSmanagerInitialize(IN const Json::Value& req, OUT Json::Value& response);
 		bool DSmanagerDeinitialize(IN const Json::Value& req, OUT Json::Value& response);
 		bool FP_setBrightness(IN const Json::Value& req, OUT Json::Value& response);

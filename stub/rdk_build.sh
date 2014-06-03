@@ -102,6 +102,7 @@ elif [ "x"$RDK_PLATFORM_SOC = "xbroadcom" ]; then
 	source ${RDK_PROJECT_ROOT_PATH}/build_scripts/setBCMenv.sh
         echo $BCMAPP 
 	export PLATFORM_SDK=$BCMAPP
+	export RDK_VERSION=RDK2DOT0
 	COMPILER=mipsel-linux-
 	export JSONRPC_PATH=$RDK_PROJECT_ROOT_PATH/opensource/jsonrpc/
 	export JSONCPP_PATH=$RDK_PROJECT_ROOT_PATH/opensource/jsoncpp/
@@ -150,9 +151,6 @@ function rebuild()
 
 function install()
 {
-    cp -r $OPENSOURCE_PATH/lib/sa $TDK_BIN_PATH
-    cp $OPENSOURCE_PATH/bin/sar $TDK_BIN_PATH
-    cp $OPENSOURCE_PATH/bin/pidstat $TDK_BIN_PATH
     true	
 }
 

@@ -92,4 +92,5 @@ iptables -t nat -A PREROUTING -i $GATEWAY_BOX_WAN_INTERFACE -p tcp --dport $FWD_
 iptables -t nat -A PREROUTING -i $GATEWAY_BOX_WAN_INTERFACE -p tcp --dport $FWD_STATUS_PORT -j DNAT --to-destination $CLIENT_IP:$CLIENT_STATUS_PORT
 iptables -t nat -A PREROUTING -i $GATEWAY_BOX_WAN_INTERFACE -p udp --dport $FWD_TFTP_PORT -j DNAT --to-destination $CLIENT_IP:$CLIENT_TFTP_PORT
 iptables -t nat -A PREROUTING -i $GATEWAY_BOX_WAN_INTERFACE -p tcp --dport $FWD_AGENT_MONITOR_PORT -j DNAT --to-destination $CLIENT_IP:$CLIENT_AGENT_MONITOR_PORT
+iptables -t nat -A POSTROUTING -j MASQUERADE -o $GATEWAY_BOX_WAN_INTERFACE 
 echo "Done."

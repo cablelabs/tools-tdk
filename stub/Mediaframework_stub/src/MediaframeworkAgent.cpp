@@ -21,8 +21,7 @@
 */
 
 #include "MediaframeworkAgent.h"
-#include <ifaddrs.h>
-#include <arpa/inet.h>
+
 
 /*helper functions for DVR sink*/
 /********************************************************************************************************************
@@ -67,6 +66,19 @@ std::string GetHostIP (const char* szInterface)
     return szAddressBuffer;
 
 } /* End of GetHostIP */
+
+
+/*
+	Convert the IP Address from string to long.
+*/
+long convertIPStrToLong(const char *ip_addr_str)
+{
+        long ipAddr, ip1, ip2, ip3, ip4;
+        sscanf(ip_addr_str, "%4ld.%4ld.%4ld.%4ld", &ip1, &ip2, &ip3, &ip4);
+	DEBUG_PRINT(DEBUG_TRACE, "ip1 = %ld, ip2 = %ld, ip3 = %ld, ip4 = %ld\n",ip1, ip2, ip3, ip4);
+        ipAddr = ((ip1 << 24) & 0xFF000000) | ((ip2 << 16) & 0x00FF0000) | ((ip3 << 8) & 0x0000FF00) | (ip4 & 0x000000FF);
+        return ipAddr;
+}
 
 
 static long long getCurrentTime()
@@ -163,6 +175,97 @@ static void getGthreadInstance()
 	DEBUG_PRINT(DEBUG_TRACE, "g_thread_init is up already\n");
 }
 
+string qamsrcpre_requisites()
+{
+        DEBUG_PRINT(DEBUG_TRACE, "QAM src pre_requisites --> Entry\n");
+        ifstream logfile;
+        string MF_testmodule_PR_cmd, MF_testmodule_PR_log,line;
+        MF_testmodule_PR_cmd= g_tdkPath + "/" + QAM_PRE_REQUISITE_FILE;
+        MF_testmodule_PR_log= g_tdkPath + "/" + QAM_PRE_REQUISITE_LOG_PATH;
+        string pre_req_chk= MF_testmodule_PR_cmd;
+        try
+        {
+                system((char *)pre_req_chk.c_str());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of qam  pre-requisite script\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                return "FAILURE";
+        }
+        logfile.open(MF_testmodule_PR_log.c_str());
+        if(logfile.is_open())
+        {
+                if(getline(logfile,line)>0);
+                {
+                        logfile.close();
+                        DEBUG_PRINT(DEBUG_LOG,"\n qamsrc Pre-Requisites set\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Exit\n");
+                        return line;
+                }
+                logfile.close();
+                DEBUG_PRINT(DEBUG_ERROR,"\n qamsrc Pre-Requisites not set\n");
+                return "FAILURE";
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the qamsrc pre-requisites log file.\n");
+                return "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE, "QAM src pre_requisites --> Entry\n");
+        return "FAILURE";
+}
+
+
+/**************************************************************************
+Function name : MediaframeworkAgent::testmodulepre_requisites
+
+Arguments     : None
+
+Description   : Setting Pre-requisites needed to execute Mediaframework tests
+
+***************************************************************************/
+std::string MediaframeworkAgent::testmodulepre_requisites()
+{
+        DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Entry\n");
+        ifstream logfile;
+        string MF_testmodule_PR_cmd, MF_testmodule_PR_log,line;
+        MF_testmodule_PR_cmd= g_tdkPath + "/" + PRE_REQUISITE_FILE;
+        MF_testmodule_PR_log= g_tdkPath + "/" + PRE_REQUISITE_LOG_PATH;
+        string pre_req_chk= "source "+MF_testmodule_PR_cmd;
+        try
+        {
+                system((char *)pre_req_chk.c_str());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of pre-requisite script\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                return "FAILURE<DETAILS>Exception occured execution of pre-requisite script";
+        }
+        logfile.open(MF_testmodule_PR_log.c_str());
+        if(logfile.is_open())
+        {
+                if(getline(logfile,line)>0);
+                {
+                        logfile.close();
+                        DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites set\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Exit\n");
+                        return line;
+                }
+                logfile.close();
+                DEBUG_PRINT(DEBUG_ERROR,"\nPre-Requisites not set\n");
+                return "FAILURE<DETAILS>Proper result is not found in the log file";
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the log file.\n");
+                return "FAILURE<DETAILS>Unable to open the log file";
+        }
+}
+
+
 /*************************************************************************
   Function name : MediaframeworkAgent::MediaframeworkAgent
 
@@ -189,7 +292,6 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "Mediaframework Initialize----->Entry\n");
-
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetMute, "TestMgr_MPSink_SetGetMute");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetVolume, "TestMgr_MPSink_SetGetVolume");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges, "TestMgr_HNSrc_GetBufferedRanges");
@@ -199,26 +301,9 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 
 	/*DVR Recording List*/
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List, "TestMgr_DVR_Rec_List");
-
-	/*QAM Source */
-
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_InitTerm, "TestMgr_QAMSource_InitTerm");
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_OpenClose, "TestMgr_QAMSource_OpenClose");
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_Play, "TestMgr_QAMSource_Play");
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_Pause, "TestMgr_QAMSource_Pause");
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetTsId, "TestMgr_QAMSource_GetTsId");
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetLtsId, "TestMgr_QAMSource_GetLtsId");
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_Init_Uninit_Platform, "TestMgr_QAMSource_Init_Uninit_Platform");
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetUseFactoryMethods, "TestMgr_QAMSource_GetUseFactoryMethods");
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_Get_Free_LowLevelElement, "TestMgr_QAMSource_Get_Free_LowLevelElement");
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetQAMSourceInstance, "TestMgr_QAMSource_GetQAMSourceInstance");
-	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_QAMSource_ChangeURI, "TestMgr_QAMSource_ChangeURI");
-	
 	/*DVR sink*/
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm, "TestMgr_DVRSink_init_term");
-
 	/*DVR Manager*/
-
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSpace, "TestMgr_DVRManager_GetSpace");
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingCount, "TestMgr_DVRManager_GetRecordingCount");
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex, "TestMgr_DVRManager_GetRecordingInfoByIndex");
@@ -258,26 +343,77 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource,"TestMgr_RmfElement_Sink_SetSource");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_MpSinkSetVideoRectangle,"TestMgr_RmfElement_MpSink_SetVideoRectangle");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init,"TestMgr_RmfElement_QAMSrc_RmfPlatform_Init");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Uninit,"TestMgr_RmfElement_QAMSrc_RmfPlatform_Uninit");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform,"TestMgr_RmfElement_QAMSrc_InitPlatform");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UninitPlatform,"TestMgr_RmfElement_QAMSrc_UninitPlatform");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethods,"TestMgr_RmfElement_QAMSrc_UseFactoryMethods");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetTSID,"TestMgr_RmfElement_QAMSrc_GetTSID");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID,"TestMgr_RmfElement_QAMSrc_GetLTSID");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement,"TestMgr_RmfElement_QAMSrc_GetLowLevelElement");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement,"TestMgr_RmfElement_QAMSrc_FreeLowLevelElement");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI,"TestMgr_RmfElement_QAMSrc_ChangeURI");
+
+
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_InitPlatform,"TestMgr_RmfElement_HNSink_InitPlatform");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_UninitPlatform,"TestMgr_RmfElement_HNSink_UninitPlatform");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetProperties,"TestMgr_RmfElement_HNSink_SetProperties");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetSourceType,"TestMgr_RmfElement_HNSink_SetSourceType");
+
 #endif	
-	
 	return TEST_SUCCESS;
 }
 
 
 #if 1
 
+static RMFQAMSrc* qamSource=NULL;
 static DVRSource* dvrSource=NULL;
 static HNSource* hnSource=NULL;
 static MediaPlayerSink* mpSink=NULL;
+static HNSink* hnSink=NULL;
+
+/*QAMSrc rmf platform instance */
+static rmfPlatform *mPlatform = NULL;
+static void* lowSrcElement = NULL;
+
 
 bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementCreateInstance -->Entry\n");
-
-	string rmfInstance = req["rmfElement"].asCString();	
 	
+	string rmfInstance = req["rmfElement"].asCString();	
+	string factoryFlag = req["factoryEnable"].asCString();
+	const char *qamUrl = req["qamSrcUrl"].asCString();
+
         DEBUG_PRINT(DEBUG_TRACE, "RMF Insatnce: %s\n",rmfInstance.c_str());
 
+	if(rmfInstance == "QAMSrc")
+	{	
+		RMFQAMSrc::disableCaching();
+		if(factoryFlag == "true")
+		{
+			qamSource = RMFQAMSrc::getQAMSourceInstance(qamUrl); 
+        		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc instance created by using getQAMSourceInstance() \n");
+		}
+		else
+		{	
+			qamSource = new RMFQAMSrc();
+        		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc new instance created \n");
+		}
+		
+		if (!qamSource)
+		{
+			response["result"] = "FAILURE";
+	                response["details"] = "QAMSrc instance creation failed";
+        	        DEBUG_PRINT(DEBUG_ERROR, "QAMSrc instance creation failed \n");
+
+	                return TEST_FAILURE;
+		}
+
+        	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc instance created \n");
+		response["details"] = "QAMSrc instance creation successful";
+	}
 	if(rmfInstance == "DVRSrc")
 	{
 		dvrSource = new DVRSource();
@@ -320,6 +456,20 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const 
         	DEBUG_PRINT(DEBUG_TRACE, "MediaPlayerSink is created \n");
                 response["details"] = "MediaPlayerSink instance creation successful";
 	}
+	if(rmfInstance == "HNSink")
+	{
+		hnSink = new HNSink;
+                if ( NULL == hnSink )
+                {
+                        DEBUG_PRINT(DEBUG_ERROR, "Error: unable to create hnSink\n");
+                        response["result"] = "FAILURE";
+                        response["details"] = "Error: unable to create hnSink";
+
+                        return TEST_FAILURE;
+                }
+        	DEBUG_PRINT(DEBUG_TRACE, "HNSink is created \n");
+                response["details"] = "HNSink instance creation successful";
+	}
 	if(rmfInstance == "")
 	{
 		DEBUG_PRINT(DEBUG_ERROR, "Error: Enter the Src/Sink element to be created\n");
@@ -340,8 +490,25 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementRemoveInstance -->Entry\n");
 
 	string rmfInstance = req["rmfElement"].asCString();	
+	string factoryFlag = req["factoryEnable"].asCString();
 	
         DEBUG_PRINT(DEBUG_TRACE, "RMF Insatnce: %s\n",rmfInstance.c_str());
+
+	if(rmfInstance == "QAMSrc")
+	{
+		if(factoryFlag == "true")		
+		{
+			RMFQAMSrc::freeQAMSourceInstance(qamSource);
+        		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc instance freed using freeQAMSourceInsatnce() \n");
+		}
+		else
+		{
+			delete qamSource;	
+        		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc instance deleted \n");
+		}
+		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc is deleted \n");
+		response["details"] = "QAMSrc instance deleted successful";
+	}
 	if(rmfInstance == "DVRSrc")
 	{
 		delete dvrSource;
@@ -362,6 +529,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const 
         	
 		DEBUG_PRINT(DEBUG_TRACE, "MediaPlayerSink is deleted \n");
                 response["details"] = "MediaPlayerSink instance deleted successful";
+	}
+	if(rmfInstance == "HNSink")
+	{
+		delete hnSink;
+        	
+		DEBUG_PRINT(DEBUG_TRACE, "HNSink is deleted \n");
+                response["details"] = "HNSink instance deleted successful";
 	}
 	if(rmfInstance == "")
 	{
@@ -386,6 +560,21 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Valu
 	string rmfComponent = req["rmfElement"].asCString();		
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
+	
+	if(rmfComponent == "QAMSrc")
+	{
+		retResult = qamSource->init();	
+		if(RMF_RESULT_SUCCESS != retResult)
+	        {
+			response["result"] = "FAILURE";
+	                response["details"] = "QAMSrc init() FAILURE";
+			
+			delete qamSource;
+			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init() FAILURE\n");
+			return TEST_FAILURE;
+		}
+                response["details"] = "QAMSrc init successful";
+	}
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->init();	
@@ -428,6 +617,20 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Valu
 		}
                 response["details"] = "MediaPlayerSink init() successful";
 	}
+	if(rmfComponent == "HNSink")
+	{
+		retResult = hnSink->init();	
+		if(RMF_RESULT_SUCCESS != retResult)
+	        {
+			response["result"] = "FAILURE";
+	                response["details"] = "HNSink init() FAILURE";
+
+			delete hnSink;
+			DEBUG_PRINT(DEBUG_ERROR, "HNSink init() FAILURE\n");
+			return TEST_FAILURE;
+		}
+                response["details"] = "HNSink init() successful";
+	}
 	if(rmfComponent == "")
 	{
 		DEBUG_PRINT(DEBUG_ERROR, "Error: Enter the Src/Sink element to initiate init()\n");
@@ -450,6 +653,19 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
 	string rmfComponent = req["rmfElement"].asCString();		
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
+	if(rmfComponent == "QAMSrc")
+	{
+		retResult = qamSource->term();	
+		if(RMF_RESULT_SUCCESS != retResult)
+	        {
+			response["result"] = "FAILURE";
+	                response["details"] = "QAMSrc term() FAILURE";
+
+			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc term() FAILURE\n");
+			return TEST_FAILURE;
+		}
+                response["details"] = "QAMSrc term() successful";
+	}
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->term();	
@@ -488,6 +704,19 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
 			return TEST_FAILURE;
 		}
                 response["details"] = "MediaPlayerSink term() successful";
+	}
+	if(rmfComponent == "HNSink")
+	{
+		retResult = hnSink->term();	
+		if(RMF_RESULT_SUCCESS != retResult)
+	        {
+			response["result"] = "FAILURE";
+	                response["details"] = "HNSink term() FAILURE";
+
+			DEBUG_PRINT(DEBUG_ERROR, "HNSink term() FAILURE\n");
+			return TEST_FAILURE;
+		}
+                response["details"] = "HNSink term() successful";
 	}
 	if(rmfComponent == "")
 	{
@@ -532,6 +761,19 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
 	
 	cout<<"Final URL passed to Open(): "<<urlIn<<endl;
 
+	if(rmfComponent == "QAMSrc")
+	{
+		retResult = qamSource->open(req["url"].asCString(),0);	
+		if(RMF_RESULT_SUCCESS != retResult)
+	        {
+			response["result"] = "FAILURE"; 
+	                response["details"] = "QAMSrc open() FAILURE";
+
+			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc open() FAILURE\n");
+			return TEST_FAILURE;
+		}
+                response["details"] = "QAMSrc open() successful";
+	}
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->open(req["url"].asCString(),0);	
@@ -582,6 +824,19 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementClose(IN const Json::Val
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
 
+	if(rmfComponent == "QAMSrc")
+	{
+		retResult = qamSource->close();	
+		if(RMF_RESULT_SUCCESS != retResult)
+	        {
+			response["result"] = "FAILURE";
+	                response["details"] = "QAMSrc close() FAILURE";
+
+			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc close() FAILURE\n");
+			return TEST_FAILURE;
+		}
+                response["details"] = "QAMSrc close() successful";
+	}
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->close();	
@@ -631,6 +886,20 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Val
 	string rmfComponent = req["rmfElement"].asCString();		
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
+	
+	if(rmfComponent == "QAMSrc")
+	{
+		retResult = qamSource->pause();	
+		if(RMF_RESULT_SUCCESS != retResult)
+	        {
+			response["result"] = "FAILURE";
+	                response["details"] = "QAMSrc pause() FAILURE";
+
+			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc pause() FAILURE\n");
+			return TEST_FAILURE;
+		}
+                response["details"] = "QAMSrc pause() successful";
+	}
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->pause();	
@@ -686,6 +955,27 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
         int playArgs = req["defaultPlay"].asInt();
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
+	
+	if(rmfComponent == "QAMSrc")
+	{
+		if(1 == playArgs)
+		{
+			float speed = req["playSpeed"].asFloat();
+		        double time = req["playTime"].asDouble();
+			retResult = qamSource->play(speed,time);	
+			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc play() with speed and time\n");
+			
+		}
+		if(RMF_RESULT_SUCCESS != retResult)
+	        {
+			response["result"] = "FAILURE";
+	                response["details"] = "QAMSrc play() FAILURE";
+
+			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc play() FAILURE\n");
+			return TEST_FAILURE;
+		}
+                response["details"] = "QAMSrc play() successful";
+	}
 	if(rmfComponent == "DVRSrc")
 	{
 		if(0 == playArgs)
@@ -909,7 +1199,52 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                 response["details"] = "MPSink setSource() successful";
 		DEBUG_PRINT(DEBUG_TRACE, "MPSink setSource() successful\n");
 	}
+	if(rmfSrcComponent == "QAMSrc" && rmfSinkComponent == "MPSink")
+	{
+		if(qamSource == NULL || mpSink == NULL)
+                {
+                        response["result"] = "FAILURE";
+                        response["details"] = "Create QAMSrc/MPSink instances first";
 
+                        DEBUG_PRINT(DEBUG_ERROR, "Create QAMSrc/MPSink Instance \n");
+                        return TEST_FAILURE;
+
+                }
+                retResult = mpSink->setSource(qamSource);
+                if(RMF_RESULT_SUCCESS != retResult)
+                {
+                        response["result"] = "FAILURE";
+                        response["details"] = "mpSink setSource() FAILURE";
+
+                        DEBUG_PRINT(DEBUG_ERROR, "mpSink setSource() FAILURE\n");
+                        return TEST_FAILURE;
+                }
+                response["details"] = "mpSink setSource() successful";
+		DEBUG_PRINT(DEBUG_TRACE, "mpSink setSource() successful\n");
+	}
+	if(rmfSrcComponent == "QAMSrc" && rmfSinkComponent == "HNSink")
+	{
+		if(qamSource == NULL || hnSink == NULL)
+                {
+                        response["result"] = "FAILURE";
+                        response["details"] = "Create QAMSrc/HNSink instances first";
+
+                        DEBUG_PRINT(DEBUG_ERROR, "Create QAMSrc/HNSink Instance \n");
+                        return TEST_FAILURE;
+
+                }
+                retResult = hnSink->setSource(qamSource);
+                if(RMF_RESULT_SUCCESS != retResult)
+                {
+                        response["result"] = "FAILURE";
+                        response["details"] = "hnSink setSource() FAILURE";
+
+                        DEBUG_PRINT(DEBUG_ERROR, "hnSink setSource() FAILURE\n");
+                        return TEST_FAILURE;
+                }
+                response["details"] = "hnSink setSource() successful";
+		DEBUG_PRINT(DEBUG_TRACE, "hnSink setSource() successful\n");
+	}
 	if(rmfSrcComponent == "" && rmfSinkComponent == "")
 	{
 		DEBUG_PRINT(DEBUG_ERROR, "Error: Enter the Src/Sink element to be used\n");
@@ -1107,8 +1442,6 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaInfo(IN const Js
         return TEST_SUCCESS;
 }
 
-
-
 bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementGetState -->Entry\n");
@@ -1117,6 +1450,40 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::
 	RMFState currentState;
         
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
+	
+	if(rmfComponent == "QAMSrc")
+	{
+		retResult = qamSource->getState(&currentState,NULL);
+		if(RMF_STATE_CHANGE_FAILURE == retResult)
+		{
+			response["result"] = "FAILURE";
+			response["details"] = "QAMSrc GetState() FAILURE";
+			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc GetState() FAILURE\n");
+
+			return TEST_FAILURE;
+		}
+		switch(currentState)
+		{
+			case RMF_STATE_VOID_PENDING: 
+				 response["details"] = "QAMSrc GetState() successful, Current State is: VOID";
+				 break;
+			case RMF_STATE_NULL:
+				 response["details"] = "QAMSrc GetState() successful, Current State is: NULL";
+				 break;
+			case RMF_STATE_READY:
+				 response["details"] = "QAMSrc GetState() successful, Current State is: READY";
+				 break;
+			case RMF_STATE_PAUSED: 
+				 response["details"] = "QAMSrc GetState() successful, Current State is: PAUSED";
+				 break;
+			case RMF_STATE_PLAYING:
+				 response["details"] = "QAMSrc GetState() successful, Current State is: PLAYING";
+				 break;
+			default: 
+				 response["details"] = "QAMSrc GetState() successful, Current State is: INVALID";
+				 break;
+		}
+	}
 	if(rmfComponent == "DVRSrc")
         {
                 retResult = dvrSource->getState(&currentState,NULL);
@@ -1197,6 +1564,466 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementGetState -->Exit\n");
         return TEST_SUCCESS;
 }
+
+#if 1
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPatform_Init -->Entry\n");
+	int platformRes = RMF_SUCCESS;
+
+#if 1
+	string result;
+	result = qamsrcpre_requisites();
+	/*Checking for pre_requisites*/
+	if(result == "FAILURE")
+	{
+                response["result"] = "FAILURE";
+                response["details"] = "Mediaframework, QAMSrc related pre_requisites failed";
+                DEBUG_PRINT(DEBUG_ERROR, "Mediaframework, QAMSrc related pre_requisites failed\n");
+
+                return TEST_FAILURE;
+	}
+#endif
+
+	/* Initialzing the gthread instance */
+	getGthreadInstance();
+		
+	mPlatform = rmfPlatform::getInstance();
+        platformRes = mPlatform->init( 0, NULL);
+        DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);			
+	
+        if(RMF_SUCCESS != platformRes)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "RMF Platform init failed";
+                DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
+
+                return TEST_FAILURE;
+        }
+
+        response["result"] = "SUCCESS";
+        response["details"] = "RMF Platform init success";
+        DEBUG_PRINT(DEBUG_TRACE, "RMF Platform init success and result is %d\n",platformRes);
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Uninit(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPatform_Uninit -->Entry\n");
+	int platformRes = RMF_SUCCESS;
+
+	platformRes = mPlatform->uninit();
+        DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
+
+        if(RMF_SUCCESS != platformRes)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "RMF Platform uninit failed";
+                DEBUG_PRINT(DEBUG_ERROR, "RMF Platform uninit failed and result is %d\n",platformRes);
+
+                return TEST_FAILURE;
+        }
+	
+        response["result"] = "SUCCESS";
+        response["details"] = "RMF Platform uninit success";
+        DEBUG_PRINT(DEBUG_TRACE, "RMF Platform uninit success and result is %d\n",platformRes);
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Uninit -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform -->Entry\n");
+	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
+
+	retResultQAMSource = RMFQAMSrc::init_platform();
+        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
+	
+	if(RMF_RESULT_SUCCESS != retResultQAMSource)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "QAMSrc init_platform failed";
+                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
+
+                return TEST_FAILURE;
+        }
+
+        response["result"] = "SUCCESS";
+        response["details"] = "QAMSrc init_platform success";
+        DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform success and result is %ld\n",retResultQAMSource);
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_InitPlatform -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UninitPlatform(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_UninitPlatform -->Entry\n");
+	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
+
+	retResultQAMSource = RMFQAMSrc::uninit_platform();
+        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
+
+	if(RMF_RESULT_SUCCESS != retResultQAMSource)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "QAMSrc uninit_platform failed";
+                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc uninit_platform failed and result is %ld\n",retResultQAMSource);
+
+                return TEST_FAILURE;
+        }
+
+        response["result"] = "SUCCESS";
+        response["details"] = "QAMSrc uninit_platform success";
+        DEBUG_PRINT(DEBUG_ERROR, "QAMSrc uninit_platform success and result is %ld\n",retResultQAMSource);
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_UninitPlatform -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethods(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethods -->Entry\n");
+	bool useFactory, rmfUseFactory;
+	FILE *fp = NULL;
+        char resultBuffer[BUFFER_LENGTH] = {'\0'};
+
+	useFactory = RMFQAMSrc::useFactoryMethods();
+
+	/*Reading the rmfconfig.ini file check whether the flag is set to true or false */
+	fp = popen(CMD,"r");
+	if(fp == NULL)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "Popen error, popen failed to open";
+                DEBUG_PRINT(DEBUG_ERROR, "Popen error, popen failed to open\n");
+
+                return TEST_FAILURE;
+        }
+	if(fgets(resultBuffer,BUFFER_LENGTH,fp)!= NULL)
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "In /etc/rmfconfig.ini, QAMSRC.FACTORY.ENABLED=%s \n",resultBuffer);
+        }
+        else
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "Cannot read /etc/rmfconfig.ini";
+                DEBUG_PRINT(DEBUG_ERROR, "Cannot read /etc/rmfconfig.ini\n");
+
+                return TEST_FAILURE;
+        }
+	pclose(fp);
+	
+	if (strncmp("TRUE",resultBuffer,strlen(resultBuffer)))
+	{
+		rmfUseFactory = true;
+	}
+	else
+	{
+		rmfUseFactory = false;
+	}
+	
+	if(rmfUseFactory == useFactory)
+	{
+                response["result"] = "SUCCESS";
+                response["details"] = "QAMSrc useFactoryMethods() successful";
+
+        	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc useFactoryMethods() successful\n");
+	}
+	else
+	{
+                response["result"] = "FAILURE";
+                response["details"] = "QAMSrc useFactoryMethods() failure";
+
+        	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc useFactoryMethods() failure\n");
+		return TEST_FAILURE;
+	}
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethods -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetTSID(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetTSID -->Entry\n");
+	unsigned int tsID;
+	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
+
+        retResultQAMSource = qamSource->getTSID(tsID);
+        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc getTSID is %ld\n",retResultQAMSource);
+
+        if(RMF_RESULT_SUCCESS != retResultQAMSource)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "QAMSrc getTSID failed";
+                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc getTSID failed and result is %ld\n",retResultQAMSource);
+
+                return TEST_FAILURE;
+        }
+
+	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getTSID value: %u\n",tsID);
+
+        response["result"] = "SUCCESS";
+        response["details"] = "QAMSrc getTSID success";
+        DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getTSID success and result is %ld\n",retResultQAMSource);
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetTSID -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID -->Entry\n");
+	unsigned int ltsID;
+	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
+
+        retResultQAMSource = qamSource->getLTSID(ltsID);
+        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc getLTSID is %ld\n",retResultQAMSource);
+
+        if(RMF_RESULT_SUCCESS != retResultQAMSource)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "QAMSrc getLTSID failed";
+                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc getLTSID failed and result is %ld\n",retResultQAMSource);
+
+                return TEST_FAILURE;
+        }
+
+	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getLTSID value is %u\n",ltsID);
+
+        response["result"] = "SUCCESS";
+        response["details"] = "QAMSrc getLTSID success";
+        DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getLTSID success and result is %ld\n",retResultQAMSource);
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement -->Entry\n");
+
+	lowSrcElement = RMFQAMSrc::getLowLevelElement();
+
+        if (NULL == lowSrcElement)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "QAMSrc getLowlevelelement failure";
+                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc getLowlevelelement failure\n");
+
+                return TEST_FAILURE;
+        }
+
+        response["result"] = "SUCCESS";
+        response["details"] = "QAMSrc getLowLevelElement() success";
+        DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getLowLevelElement() success \n");
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement -->Entry\n");
+
+	RMFQAMSrc::freeLowLevelElement(lowSrcElement);
+
+        response["result"] = "SUCCESS";
+        response["details"] = "QAMSrc freeLowLevelElement() success";
+        DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeLowLevelElement() success\n");
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI -->Entry\n");
+	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
+	const char *new_ocaplocator = req["url"].asCString();
+	bool newInstance;
+        RMFQAMSrc *new_qamsrc = new RMFQAMSrc();
+	
+	retResultQAMSource = RMFQAMSrc::changeURI(new_ocaplocator,qamSource,&new_qamsrc,newInstance);
+        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc changeURI is %ld\n",retResultQAMSource);
+	
+	 if(RMF_RESULT_SUCCESS != retResultQAMSource)
+        {
+        	response["result"] = "SUCCESS";
+	        response["details"] = "QAMSrc changeURI() success";
+	        DEBUG_PRINT(DEBUG_ERROR, "QAMSrc changeURI() success and result is %ld\n",retResultQAMSource);
+	}
+	
+        response["result"] = "SUCCESS";
+        response["details"] = "QAMSrc changeURI() success";
+        DEBUG_PRINT(DEBUG_TRACE, "QAMSrc changeURI() success and result is %ld\n",retResultQAMSource);
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetProperties(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_SetProperties -->Entry\n");
+	
+	HNSinkProperties_t hnProps;
+	memset( &hnProps, 0, sizeof(hnProps) );
+
+	string urlIn = req["url"].asCString();
+	string dtcpFlag = req["dctpEnable"].asCString();
+        int socketId = req["socketId"].asInt();
+        string streamIp = req["streamIp"].asCString();
+	int type = req["typeFlag"].asInt();
+	string useChunk	= req["useChunkTransfer"].asCString();
+
+	string streamingIp;
+	
+	if( dtcpFlag == "true")
+	{
+		hnProps.dtcp_enabled = true;
+		cout << "in dtcp true"<<endl;
+	}
+	else
+	{
+		hnProps.dtcp_enabled = false;
+		cout << "in dtcp false"<<endl;
+	}
+        hnProps.dtcp_cci = 0x01; //Get EMI value from the source stream CCI. Setting to Copy-No-More as default.
+
+	if( useChunk == "true")
+	{
+		hnProps.use_chunked_transfer = true;
+		cout << "in useChunkTransfer true"<<endl;
+	}
+	else
+	{
+		hnProps.use_chunked_transfer = false;
+		cout << "in useChunkTransfer false"<<endl;
+	}
+
+	/*Positive Test Case*/
+	if(type == 0)
+	{	
+
+	        hnProps.socketId = socketId;
+		cout<<"SocketId:"<<hnProps.socketId<<endl;
+
+		/* Set remoteIp as eth1 interface Ip*/
+		streamingIp = GetHostIP("eth1");
+	        hnProps.remote_ip = convertIPStrToLong(streamingIp.c_str());
+	        DEBUG_PRINT(DEBUG_TRACE, "HNSink setHNSinkProperties() remoteIp: %ld\n",hnProps.remote_ip);
+
+		string hnUrl = "http://" + streamingIp + "/vldms/tuner?ocap_locator=" + urlIn;
+		DEBUG_PRINT(DEBUG_TRACE, "HNSink setHNSinkProperties() url: %s\n",hnUrl.c_str());
+		strncpy(hnProps.url,hnUrl.c_str(), sizeof(hnProps.url));
+		hnProps.url[sizeof(hnProps.url)-1] = 0;
+
+		/* Using setSourceType to set source type */
+		strncpy(hnProps.source_type,"QAM_SRC",sizeof(hnProps.source_type));
+	        hnSink->setHNSinkProperties( hnProps );
+	}
+	else
+	{
+	        hnProps.socketId = socketId;
+
+	        hnProps.remote_ip = convertIPStrToLong(streamIp.c_str());
+	        DEBUG_PRINT(DEBUG_TRACE, "HNSink setHNSinkProperties() remoteIp: %ld\n",hnProps.remote_ip);
+
+		string hnUrl = "http://" + streamIp + "/vldms/tuner?ocap_locator=" + urlIn;
+		DEBUG_PRINT(DEBUG_TRACE, "HNSink setHNSinkProperties() url: %s\n",hnUrl.c_str());
+		strncpy(hnProps.url,hnUrl.c_str(), sizeof(hnProps.url));
+		hnProps.url[sizeof(hnProps.url)-1] = 0;
+		
+		/* Using setSourceType to set source type */
+		strncpy(hnProps.source_type,"QAM_SRC",sizeof(hnProps.source_type));
+	        hnSink->setHNSinkProperties( hnProps );
+	}
+	
+        DEBUG_PRINT(DEBUG_TRACE, "HNSink setHNSinkProperties() success\n");
+        response["result"] = "SUCCESS";
+        response["details"] = "HNSink setHNSinkProperties() success";
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_SetProperties -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetSourceType(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_SetSourceType -->Entry\n");
+
+	const char *rmfSrc = req["rmfElement"].asCString();
+	char rmfSource[16];
+
+	strcpy(rmfSource,rmfSrc);
+
+	/* Source suppose to be in QAM_SRC,HN_SRC,DVR_SRC */	
+        DEBUG_PRINT(DEBUG_TRACE, "RMF Src : %s\n",rmfSource);
+
+	hnSink->setSourceType(rmfSource);
+
+        DEBUG_PRINT(DEBUG_TRACE, "HNSink setSourceType() success\n");
+        response["result"] = "SUCCESS";
+        response["details"] = "HNSink setSourceType() success";
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_SetSourceType -->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_InitPlatform(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_InitPlatform -->Entry\n");
+	RMFResult retResult = RMF_RESULT_SUCCESS;	
+	
+	retResult = HNSink::init_platform();	
+	if (RMF_RESULT_SUCCESS != retResult)
+	{
+        	DEBUG_PRINT(DEBUG_ERROR, "HNSink init_platform() failed\n");
+        	response["result"] = "FAILURE";
+               	response["details"] = "HNSink init_platform() failed";
+
+                return TEST_FAILURE;
+	}
+
+        DEBUG_PRINT(DEBUG_TRACE, "HNSink init_platform() success\n");
+
+        response["result"] = "SUCCESS";
+        response["details"] = "HNSink init_platform() success";
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_InitPlatform -->Exit\n");
+
+	return TEST_SUCCESS; 
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_UninitPlatform(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_UninitPlatform -->Entry\n");
+	RMFResult retResult = RMF_RESULT_SUCCESS;	
+	
+	retResult = HNSink::uninit_platform();	
+	if (RMF_RESULT_SUCCESS != retResult)
+	{
+
+        	DEBUG_PRINT(DEBUG_ERROR, "HNSink uninit_platform() failed\n");
+        	response["result"] = "FAILURE";
+               	response["details"] = "HNSink uninit_platform() failed";
+
+                return TEST_FAILURE;
+	}
+
+
+        DEBUG_PRINT(DEBUG_TRACE, "HNSink uninit_platform() success\n");
+
+        response["result"] = "SUCCESS";
+        response["details"] = "HNSink uninit_platform() success";
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_UninitPlatform -->Exit\n");
+
+	return TEST_SUCCESS; 
+}
+
+#endif
 
 #endif
 
@@ -2210,109 +3037,6 @@ Arguments     : Output arguments is "SUCCESS" or "FAILURE"
 Description   : Receives the request from Test Manager to Initialize and Termination of the QAMSource Element.
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_InitTerm(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_InitTerm ---> Entry\n");
-	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-	RMFQAMSrc *qamsrc = NULL;	
-	int platformRes = RMF_SUCCESS;
-	rmfPlatform *mPlatform = NULL;
-		
-	getGthreadInstance();	
-	
-	mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-	
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	
-	retResultQAMSource = RMFQAMSrc::init_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc init_platform failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-                platformRes = mPlatform->uninit();
-                DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-	
-	RMFQAMSrc::disableCaching();
-	
-	qamsrc = new RMFQAMSrc();
-        if(!qamsrc)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc instance create failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc instance create failed \n");
-
-                retResultQAMSource =  RMFQAMSrc::uninit_platform();
-                DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-                platformRes = mPlatform->uninit();
-                DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-
-        retResultQAMSource = qamsrc->init();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init is %ld\n",retResultQAMSource);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc init failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init failed and result is %ld\n",retResultQAMSource);
-
-                delete qamsrc;
-                retResultQAMSource = RMFQAMSrc::uninit_platform();
-                DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-                platformRes = mPlatform->uninit();
-                DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-	
-	retResultQAMSource = qamsrc->term();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc init success but term failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init success but term failed and result is %ld\n",retResultQAMSource);
-		
-		delete qamsrc;
-	        retResultQAMSource = RMFQAMSrc::uninit_platform();
-                DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-	        platformRes = mPlatform->uninit();
-	        DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-	
-	delete qamsrc;
-        retResultQAMSource = RMFQAMSrc::uninit_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-        platformRes = mPlatform->uninit();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-	response["result"] = "SUCCESS";
-        response["details"] = "QAMSrc init and term success";
-	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_QAMSource_InitTerm ---> Exit\n");
-
-	return TEST_SUCCESS;
-}
 
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_QAMSource_OpenClose
@@ -2322,162 +3046,7 @@ Arguments     : Input argument is OCAPLOCATOR,i.e SourceId. Output arguments is 
 Description   : Receives the request from Test Manager to Open and Close the QAMSource Component
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_OpenClose(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_OpenClose ---> Entry\n");
-	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-	RMFQAMSrc *qamsrc = NULL;	
-	int platformRes = RMF_SUCCESS;
-	rmfPlatform *mPlatform = NULL;
-	const char *ocaplocator = req["ocaplocator"].asCString();
-		
-	getGthreadInstance();	
-		
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSource ocapLocator is %s\n",ocaplocator);
 	
-	mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-	
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	
-	retResultQAMSource = RMFQAMSrc::init_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc init_platform failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-                platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-	
-	RMFQAMSrc::disableCaching();
-	
-	qamsrc = new RMFQAMSrc();
-
-        if(!qamsrc)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc instance create failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc instance create failed \n");
-
-                retResultQAMSource = RMFQAMSrc::uninit_platform();
-        	DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-                platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-
-        retResultQAMSource = qamsrc->init();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init is %ld\n",retResultQAMSource);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc init failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init failed and result is %ld\n",retResultQAMSource);
-
-                delete qamsrc;
-                retResultQAMSource = RMFQAMSrc::uninit_platform();
-        	DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-                platformRes = mPlatform->uninit();
-                DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-	
-	retResultQAMSource = qamsrc->open(ocaplocator,  NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc open is %ld\n",retResultQAMSource);
-	
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc intialized but open failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc initialized but open failed and result is %ld\n",retResultQAMSource);
-
-        	retResultQAMSource = qamsrc->term();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-		delete qamsrc;
-	
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-        	DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	
-	float speed = 1.0;
-        double time = 0.0;
-	
-	retResultQAMSource = qamsrc->play(speed,time);	
-	DEBUG_PRINT(DEBUG_LOG, "Result of QAMSrc play is %ld\n",retResultQAMSource);
-
-        retResultQAMSource = qamsrc->close();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc close is %ld\n",retResultQAMSource);
-		
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc open success but close failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc open success but close failed and result is %ld\n",retResultQAMSource);
-			
-        	retResultQAMSource = qamsrc->term();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-
-		delete qamsrc;	
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-        	DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-		
-		return TEST_FAILURE;
-	}	
-
-	retResultQAMSource = qamsrc->term();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc init success but term failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init success but term failed and result is %ld\n",retResultQAMSource);
-	
-		delete qamsrc;
-	        retResultQAMSource = RMFQAMSrc::uninit_platform();
-        	DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-	        platformRes = mPlatform->uninit();
-	        DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-	
-	delete qamsrc;
-        retResultQAMSource = RMFQAMSrc::uninit_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-        platformRes = mPlatform->uninit();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-	response["result"] = "SUCCESS";
-        response["details"] = "QAMSrc open and close success";	
-	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_QAMSource_OpenClose ---> Exit\n");
-
-	return TEST_SUCCESS;
-}
-
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_QAMSource_Play
 
@@ -2486,219 +3055,6 @@ Arguments     : Input argument is OCAPLOCATOR,i.e SourceId. Output arguments is 
 Description   : Receives the request from Test Manager to Play the Live content
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_Play(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_Play ---> Entry\n");
-
-#ifdef ENABLE_DVRSRC_MPSINK
-
-	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-	RMFQAMSrc *qamsrc = NULL;	
-	int platformRes = RMF_SUCCESS;
-	rmfPlatform *mPlatform = NULL;
-
-	RMFMediaSinkBase* playSink;
-	MediaPlayerSink* pSink= 0;
-	const char *ocaplocator = req["ocaplocator"].asCString();
-	float speed = 1.0;
-        double time = 0.0;	
-		
-	getGthreadInstance();	
-
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSource ocapLocator is %s\n",ocaplocator);
-
-	mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-		
-	retResultQAMSource = RMFQAMSrc::init_platform();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc init_platform failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-		platformRes = mPlatform->uninit();
-                DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}	
-
-        RMFQAMSrc::disableCaching();
-	qamsrc = new RMFQAMSrc();
-
-        if(!qamsrc)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc instance create failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc instance create failed \n");
-
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-                DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-        }	
-	
-	retResultQAMSource = qamsrc->init();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init failed and result is %ld\n",retResultQAMSource);
-		
-		delete qamsrc;	
-		RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();	
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}
-
-	retResultQAMSource = qamsrc->open(ocaplocator,  NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc open is %ld\n",retResultQAMSource);
-	
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc open failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc initialized but open failed and result is %ld\n",retResultQAMSource);
-
-        	retResultQAMSource = qamsrc->term();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-		delete qamsrc;	
-	 	retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	pSink = new MediaPlayerSink();			
-
-        if(!pSink)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "MPSink instance create failed";
-		DEBUG_PRINT(DEBUG_ERROR, "MPSink instance create failed \n");
-
-		return TEST_FAILURE;
-        }	
-	
-	retResultQAMSource = pSink->init();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink init is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "MPSink init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "MPSink init failed and result is %ld\n",retResultQAMSource);
-
-		return TEST_FAILURE;
-	}
-
-	pSink->setVideoRectangle(X_VALUE, Y_VALUE, WIDTH, HEIGHT);
-	playSink = pSink;
-	playSink->setSource(qamsrc);
-	
-	retResultQAMSource = qamsrc->play(speed,time);	
-	DEBUG_PRINT(DEBUG_LOG, "Result of QAMSrc play is %ld\n",retResultQAMSource);
-	
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc play failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc play failed and result is %ld\n",retResultQAMSource);
-  		
-		retResultQAMSource = qamsrc->close();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc close is %ld\n",retResultQAMSource);
-         	retResultQAMSource = qamsrc->term();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-		
-		delete qamsrc;	
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}	
-	
-	sleep(30);
-
-	playSink->setSource ( NULL );
-
-        retResultQAMSource = qamsrc->close();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc close is %ld\n",retResultQAMSource);
-		
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc close failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc close failed and result is %ld\n",retResultQAMSource);
-
-		return TEST_FAILURE;
-	}	
-
-        retResultQAMSource = qamsrc->term();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc term failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc term failed and result is %ld\n",retResultQAMSource);
-
-		return TEST_FAILURE;
-	}
-
-	delete qamsrc;	
-	retResultQAMSource = RMFQAMSrc::uninit_platform();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-        
-	pSink->term ();
-	delete pSink;
-
-	platformRes = mPlatform->uninit();	
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform uninit failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform uninit failed and result is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}
-	
-	response["result"] = "SUCCESS";
-	response["details"] = "QAMSrc Play Successful";
-
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_Play ---> Exit\n");
-	return TEST_SUCCESS;
-#else
-        response["result"] = "FAILURE";
-        response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
-        DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
-        return TEST_FAILURE;
-#endif
-
-}
 
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_QAMSource_Pause
@@ -2708,238 +3064,6 @@ Arguments     : Input argument is OCAPLOCATOR,i.e SourceId. Output arguments is 
 Description   : Receives the request from Test Manager to Pause the Live content
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_Pause(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_Pause ---> Entry\n");
-
-#ifdef ENABLE_DVRSRC_MPSINK
-
-	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-	RMFQAMSrc *qamsrc = NULL;	
-	int platformRes = RMF_SUCCESS;
-	rmfPlatform *mPlatform = NULL;
-
-	RMFMediaSinkBase* playSink;
-	MediaPlayerSink* pSink= 0;
-	const char *ocaplocator = req["ocaplocator"].asCString();
-	float speed = 1.0;
-        double time = 0.0;	
-		
-	getGthreadInstance();	
-
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSource ocapLocator is %s\n",ocaplocator);
-
-	mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-		
-	retResultQAMSource = RMFQAMSrc::init_platform();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc init_platform failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}	
-
-        RMFQAMSrc::disableCaching();
-	qamsrc = new RMFQAMSrc();
-
-        if(!qamsrc)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc instance create failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc instance create failed \n");
-
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-        }	
-	
-	retResultQAMSource = qamsrc->init();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init failed and result is %ld\n",retResultQAMSource);
-		
-		delete qamsrc;	
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();	
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}
-
-	retResultQAMSource = qamsrc->open(ocaplocator,  NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc open is %ld\n",retResultQAMSource);
-	
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc open failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc initialized but open failed and result is %ld\n",retResultQAMSource);
-
-        	retResultQAMSource = qamsrc->term();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-		delete qamsrc;	
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	pSink = new MediaPlayerSink();			
-
-        if(!pSink)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "MPSink instance create failed";
-		DEBUG_PRINT(DEBUG_ERROR, "MPSink instance create failed \n");
-
-		return TEST_FAILURE;
-        }	
-	
-	retResultQAMSource = pSink->init();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink init is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "MPSink init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "MPSink init failed and result is %ld\n",retResultQAMSource);
-
-		return TEST_FAILURE;
-	}
-
-	pSink->setVideoRectangle(X_VALUE, Y_VALUE, WIDTH, HEIGHT);
-	playSink = pSink;
-	playSink->setSource(qamsrc);
-	
-	retResultQAMSource = qamsrc->play(speed,time);	
-	DEBUG_PRINT(DEBUG_LOG, "Result of QAMSrc play is %ld\n",retResultQAMSource);
-	
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc play failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc play failed and result is %ld\n",retResultQAMSource);
-  		
-		retResultQAMSource = qamsrc->close();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc close is %ld\n",retResultQAMSource);
-         	retResultQAMSource = qamsrc->term();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-		delete qamsrc;	
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}	
-	
-	sleep(30);
-	
-	retResultQAMSource = qamsrc->pause();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc pause is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc pause failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc pause failed and result is %ld\n",retResultQAMSource);
-  		
-		retResultQAMSource = qamsrc->close();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc close is %ld\n",retResultQAMSource);
-         	retResultQAMSource = qamsrc->term();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-
-		delete qamsrc;	
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}
-	
-	playSink->setSource ( NULL );
-        retResultQAMSource = qamsrc->close();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc close is %ld\n",retResultQAMSource);
-		
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc close failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc close failed and result is %ld\n",retResultQAMSource);
-
-		return TEST_FAILURE;
-	}	
-
-        retResultQAMSource = qamsrc->term();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc term failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc term failed and result is %ld\n",retResultQAMSource);
-
-		return TEST_FAILURE;
-	}
-	delete qamsrc;	
-	retResultQAMSource = RMFQAMSrc::uninit_platform();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-        
-	pSink->term ();
-	delete pSink;
-
-	platformRes = mPlatform->uninit();	
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform uninit failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform uninit failed and result is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}
-	
-	response["result"] = "SUCCESS";
-	response["details"] = "QAMSrc Pause Successful";
-	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_QAMSource_Pause ---> Exit\n");
-
-	return TEST_SUCCESS;
-#else
-        response["result"] = "FAILURE";
-        response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
-        DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
-        return TEST_FAILURE;
-#endif
-}
 
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetTsId
@@ -2949,101 +3073,6 @@ Arguments     : Input argument is OCAPLOCATOR,i.e SourceId. Output arguments is 
 Description   : Receives the request from Test Manager to get transferstream id from PAT the QAMSource Component
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetTsId(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_GetTsId ---> Entry\n");
-	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-	RMFQAMSrc *qamsrc = NULL;	
-	int platformRes = RMF_SUCCESS;
-	rmfPlatform *mPlatform = NULL;
-	const char *ocaplocator = req["ocaplocator"].asCString();
-		
-	getGthreadInstance();	
-		
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSource ocapLocator is %s\n",ocaplocator);
-	
-	mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-	
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	
-	retResultQAMSource = RMFQAMSrc::init_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc init_platform failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-                platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-	
-	RMFQAMSrc::disableCaching();
-        
-	qamsrc = RMFQAMSrc::getQAMSourceInstance(ocaplocator );
-        if(!qamsrc)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "getQAMSrc instance failed";
-		DEBUG_PRINT(DEBUG_ERROR, "getQAMSrc instance failed \n");
-
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-        	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-        }
-
-	unsigned int tsID;
-        retResultQAMSource = qamsrc->getTSID(tsID);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc getTSID is %ld\n",retResultQAMSource);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc getTSID failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc getTSID failed and result is %ld\n",retResultQAMSource);
-        	
-		RMFQAMSrc::freeQAMSourceInstance(qamsrc);
-		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeQAMSourceInsatnce call Done\n");
-		
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-        	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-		
-		return TEST_FAILURE;
-        }
-
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getTSID value is %u\n",tsID);
-	
-	RMFQAMSrc::freeQAMSourceInstance(qamsrc);
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeQAMSourceInsatnce call Done\n");
-
-        retResultQAMSource = RMFQAMSrc::uninit_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-        platformRes = mPlatform->uninit();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-	response["result"] = "SUCCESS";
-        response["details"] = "QAMSrc GetTSID success";
-	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_QAMSource_GetTsId ---> Exit\n");
-
-	return TEST_SUCCESS;
-}
 
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetLtsId
@@ -3053,101 +3082,6 @@ Arguments     : Input argument is OCAPLOCATOR,i.e SourceId. Output arguments is 
 Description   : Receives the request from Test Manager to get LTSID corresponding to the QAMSource Instance
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetLtsId(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_GetLtsId ---> Entry\n");
-	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-	RMFQAMSrc *qamsrc = NULL;	
-	int platformRes = RMF_SUCCESS;
-	rmfPlatform *mPlatform = NULL;
-	const char *ocaplocator = req["ocaplocator"].asCString();
-		
-	getGthreadInstance();	
-		
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSource ocapLocator is %s\n",ocaplocator);
-	
-	mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-	
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	
-	retResultQAMSource = RMFQAMSrc::init_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc init_platform failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-                platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-	
-	RMFQAMSrc::disableCaching();
-	
-	qamsrc = RMFQAMSrc::getQAMSourceInstance(ocaplocator);
-        if(!qamsrc)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "getQAMSrc instance failed";
-		DEBUG_PRINT(DEBUG_ERROR, "getQAMSrc instance failed \n");
-
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-        	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-        }
-
-	unsigned int ltsID;
-        retResultQAMSource = qamsrc->getLTSID(ltsID);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc getLTSID is %ld\n",retResultQAMSource);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc getLTSID failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc getLTSID failed and result is %ld\n",retResultQAMSource);
-	
-		RMFQAMSrc::freeQAMSourceInstance(qamsrc);
-		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeQAMSourceInsatnce call Done\n");
-
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-        	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-		
-		return TEST_FAILURE;
-        }
-
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getLTSID value is %u\n",ltsID);
-	
-	RMFQAMSrc::freeQAMSourceInstance(qamsrc);
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeQAMSourceInsatnce call Done\n");
-
-        retResultQAMSource = RMFQAMSrc::uninit_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-        platformRes = mPlatform->uninit();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-	response["result"] = "SUCCESS";
-        response["details"] = "QAMSrc GetLTSID success";
-	
-	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_QAMSource_GetLtsId ---> Exit\n");
-	return TEST_SUCCESS;
-}
 
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_QAMSource_Init_Uninit_Platform
@@ -3157,67 +3091,6 @@ Arguments     : Output arguments is "SUCCESS" or "FAILURE"
 Description   : Receives the request from Test Manager to Initialize and Uninitialize platform dependent functionalities.
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_Init_Uninit_Platform(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_Init_Uninit_Platform ---> Entry\n");
-	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-	int platformRes = RMF_SUCCESS;
-	rmfPlatform *mPlatform = NULL;
-		
-	getGthreadInstance();	
-	
-	mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-	
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	
-	retResultQAMSource = RMFQAMSrc::init_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc init_platform failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-                platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-	
-        retResultQAMSource = RMFQAMSrc::uninit_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-        
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc uninit_platform failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc uninit_platform failed and result is %ld\n",retResultQAMSource);
-
-                platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-	
-	platformRes = mPlatform->uninit();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-	response["result"] = "SUCCESS";
-        response["details"] = "QAMSrc init and unint platform success";
-	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_QAMSource_Init_Uninit_Platform ---> Exit\n");
-
-	return TEST_SUCCESS;
-}
 
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetUseFactoryMethods
@@ -3227,88 +3100,6 @@ Arguments     : Output arguments is "SUCCESS" or "FAILURE"
 Description   : Receives the request from Test Manager to Check if factory methods are to be used by the client. By Calling Init_Platform to read rmfconfig.ini and set the useFactory class varible.
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetUseFactoryMethods(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_GetUseFactoryMethods ---> Entry\n");
-	bool useFactory;
-        RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-        int platformRes = RMF_SUCCESS;
-        rmfPlatform *mPlatform = NULL;
-
-        getGthreadInstance();
-
-        mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-        DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-
-        if(RMF_SUCCESS != platformRes)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "Platform init failed";
-                DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-
-        retResultQAMSource = RMFQAMSrc::init_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc init_platform failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-                platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }	
-	
-	/* Assumption: In rmfconfig.ini, "QAMSRC.FACTORY.ENABLED" is set to TRUE.
-		So, useFactory value should be TRUE.
-	*/
-	useFactory = RMFQAMSrc::useFactoryMethods();
-	
-	if(false == useFactory)
-	{
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-	        DEBUG_PRINT(DEBUG_TRACE, "Result of uninit_platform is %ld\n",retResultQAMSource);
-
-                platformRes = mPlatform->uninit();
-	        DEBUG_PRINT(DEBUG_TRACE, "Result of rmf platform uninit is %d\n",platformRes);
-
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc useFactoryMethods failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc useFactoryMethods failed\n");
-	
-                return TEST_FAILURE;
-	}	
-
-	retResultQAMSource = RMFQAMSrc::uninit_platform();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-        if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "QAMSrc uninit_platform failed";
-                DEBUG_PRINT(DEBUG_ERROR, "QAMSrc uninit_platform failed and result is %ld\n",retResultQAMSource);
-
-                platformRes = mPlatform->uninit();
-	        DEBUG_PRINT(DEBUG_ERROR, "Result of platform uninit is %d\n",platformRes);
-
-                return TEST_FAILURE;
-        }
-
-        platformRes = mPlatform->uninit();
-        DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-        response["result"] = "SUCCESS";
-        response["details"] = "QAMSrc GetUseFactoryMethods success";
-
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_GetUseFactoryMethods ---> Exit\n");
-        return TEST_SUCCESS;
-}
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_QAMSource_Get_Free_LowLevelElement
 
@@ -3317,112 +3108,6 @@ Arguments     : Output arguments is "SUCCESS" or "FAILURE"
 Description   : Receives the request from Test Manager to get unused low level element of qamsrc.
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_Get_Free_LowLevelElement(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_Get_Free_LowLevelElement ---> Entry\n");
-	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-	RMFQAMSrc *qamsrc = NULL;	
-	int platformRes = RMF_SUCCESS;
-	rmfPlatform *mPlatform = NULL;
-	void* lowSrcElement = NULL;	
-
-	const char *ocaplocator = req["ocaplocator"].asCString();
-		
-	getGthreadInstance();	
-
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSource ocapLocator is %s\n",ocaplocator);
-
-	mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	
-	retResultQAMSource = RMFQAMSrc::init_platform();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc init_platform failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}	
-
-        RMFQAMSrc::disableCaching();
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getQAMSourceInstance called \n");
-        qamsrc = RMFQAMSrc::getQAMSourceInstance(ocaplocator);
-        if(!qamsrc)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "getQAMSourceInstance instance failed returns NULL";
-		DEBUG_PRINT(DEBUG_ERROR, "getQAMSourceInstance instance failed returns NULL\n");
-			
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-        }
-
-	lowSrcElement = RMFQAMSrc::getLowLevelElement();
-	
-	if (NULL == lowSrcElement)
-	{
-        	response["result"] = "FAILURE";
-	        response["details"] = "QAMSrc getLowlevelelement failure";	
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc getLowlevelelement failure\n");
-
-        	RMFQAMSrc::freeQAMSourceInstance(qamsrc);
-		
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}
-	
-	RMFQAMSrc::freeLowLevelElement(lowSrcElement);
-        DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeLowLevelElement invoked\n");
-
-
-        RMFQAMSrc::freeQAMSourceInstance(qamsrc);
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeQAMSourceInstance successful \n");
-	
-	retResultQAMSource = RMFQAMSrc::uninit_platform();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-        
-	platformRes = mPlatform->uninit();	
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform uninit failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform uninit failed and result is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}
-	
-	response["result"] = "SUCCESS";
-	response["details"] = "QAMSrc getLowlevelelement and freeLowLevelElement Successful";
-
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_Get_Free_LowLevelElement ---> Exit\n");
-	return TEST_SUCCESS;
-}
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetQAMSourceInstance
 
@@ -3431,86 +3116,6 @@ Arguments     : Input argument is OCAPLOCATOR,i.e SourceId. Output arguments is 
 Description   : Receives the request from Test Manager to gets a RMFQAMSrc instance from QAMSrc factory corresponding to ocaplocator
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_GetQAMSourceInstance(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_GetQAMSourceInstance ---> Entry\n");
-	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-	RMFQAMSrc *qamsrc = NULL;	
-	int platformRes = RMF_SUCCESS;
-	rmfPlatform *mPlatform = NULL;
-
-	const char *ocaplocator = req["ocaplocator"].asCString();
-		
-	getGthreadInstance();	
-
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSource ocapLocator is %s\n",ocaplocator);
-
-	mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	
-	retResultQAMSource = RMFQAMSrc::init_platform();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc init_platform failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-		platformRes = mPlatform->uninit();
-
-		return TEST_FAILURE;
-	}	
-
-        RMFQAMSrc::disableCaching();
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getQAMSourceInstance called \n");
-        qamsrc = RMFQAMSrc::getQAMSourceInstance(ocaplocator);
-        if(!qamsrc)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "getQAMSourceInstance failed returns NULL";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSourceInstance failed returns NULL\n");
-
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-        }
-        RMFQAMSrc::freeQAMSourceInstance(qamsrc);
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeQAMSourceInstance call Done \n");
-	retResultQAMSource = RMFQAMSrc::uninit_platform();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-        
-	platformRes = mPlatform->uninit();	
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform uninit failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform uninit failed and result is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}
-	
-	response["result"] = "SUCCESS";
-	response["details"] = "QAMSrc getQAMSourceInstance Successful";
-
-	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_QAMSource_GetQAMSourceInstance ---> Exit\n");
-	return TEST_SUCCESS;
-}
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_QAMSource_ChangeURI
 
@@ -3519,302 +3124,6 @@ Arguments     : Input argument is OCAPLOCATOR and new OCAPLOCATOR to change. Out
 Description   : Receives the request from Test Manager to Update URI of existing qam instance with new one if possible.If not possible, gets a new instance and returns it.
 Gets the response from QAMSrc element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_QAMSource_ChangeURI(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_LOG, "MediaframeworkAgent_QAMSource_ChangeURI ---> Entry\n");
-
-#ifdef ENABLE_DVRSRC_MPSINK
-
-	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
-	RMFQAMSrc *qamsrc = NULL;	
-	int platformRes = RMF_SUCCESS;
-	rmfPlatform *mPlatform = NULL;
-
-	RMFMediaSinkBase* playSink;
-	MediaPlayerSink* pSink= 0;
-	float speed = 1.0;
-        double time = 0.0;
-	
-	const char *ocaplocator = req["ocaplocator"].asCString();
-	const char *new_ocaplocator = req["newocaplocator"].asCString();
-		
-	getGthreadInstance();	
-
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSource ocapLocator is %s\n",ocaplocator);
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSource new_ocapLocator is %s\n",new_ocaplocator);
-
-	mPlatform = rmfPlatform::getInstance();
-        platformRes = mPlatform->init( 0, NULL);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform init is %d\n",platformRes);
-
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
-	
-		return TEST_FAILURE;
-	}
-	
-	retResultQAMSource = RMFQAMSrc::init_platform();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc init_platform is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc init_platform failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
-
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}	
-
-        RMFQAMSrc::disableCaching();
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getQAMSourceInstance called \n");
-        qamsrc = RMFQAMSrc::getQAMSourceInstance(ocaplocator);
-        if(!qamsrc)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "getQAMSourceInstance failed returns NULL";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSourceInstance failed returns NULL\n");
-
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		return TEST_FAILURE;
-        }
-
-	pSink = new MediaPlayerSink();			
-        if(!pSink)
-        {
-		response["result"] = "FAILURE";
-		response["details"] = "MPSink instance create failed";
-		DEBUG_PRINT(DEBUG_ERROR, "MPSink instance create failed \n");
-
-		return TEST_FAILURE;
-        }	
-	
-	retResultQAMSource = pSink->init();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink init is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "MPSink init failed";
-		DEBUG_PRINT(DEBUG_ERROR, "MPSink init failed and result is %ld\n",retResultQAMSource);
-
-		return TEST_FAILURE;
-	}
-
-	pSink->setVideoRectangle(X_VALUE, Y_VALUE, WIDTH, HEIGHT);
-	playSink = pSink;
-	playSink->setSource(qamsrc);
-	
-	retResultQAMSource = qamsrc->play(speed,time);	
-	DEBUG_PRINT(DEBUG_LOG, "Result of QAMSrc open is %ld\n",retResultQAMSource);
-	
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc open failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc initialized but open failed and result is %ld\n",retResultQAMSource);
-
-        	RMFQAMSrc::freeQAMSourceInstance(qamsrc);
-		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeQAMSourceInstance call Done \n");
-		delete qamsrc;	
-
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-		platformRes = mPlatform->uninit();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-	
-		retResultQAMSource = playSink->term();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink init is %ld\n",retResultQAMSource);
-		delete playSink;		
-
-		return TEST_FAILURE;
-	}
-	
-	sleep(30);
-	
-	retResultQAMSource = qamsrc->pause();	
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc pause is %ld\n",retResultQAMSource);
-
-        bool newInstance;
-        RMFQAMSrc *new_qamsrc = new RMFQAMSrc();
-
-        retResultQAMSource = RMFQAMSrc::changeURI(new_ocaplocator,qamsrc,&new_qamsrc,newInstance);
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc changeURI is %ld\n",retResultQAMSource);
-
-	if(RMF_RESULT_SUCCESS != retResultQAMSource)
-        {
-                delete new_qamsrc;
-
-		retResultQAMSource = RMFQAMSrc::uninit_platform();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-        
-		platformRes = mPlatform->uninit();	
-		DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-		if(RMF_SUCCESS != platformRes)
-		{
-			response["result"] = "FAILURE";
-			response["details"] = "Platform uninit failed";
-			DEBUG_PRINT(DEBUG_ERROR, "Platform uninit failed and result is %d\n",platformRes);
-
-			return TEST_FAILURE;
-		}
-
-                retResultQAMSource = playSink->term();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink init is %ld\n",retResultQAMSource);
-                delete playSink;
-
-		response["result"] = "FAILURE";
-		response["details"] = "QAMSrc changeURI failed";
-		DEBUG_PRINT(DEBUG_ERROR, "QAMSrc changeURI failed and result is %ld\n",retResultQAMSource);
-
-		return TEST_FAILURE;
-        }
-
-	if(newInstance == true)
-        {
-                retResultQAMSource = playSink->setSource(NULL);
-		DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink setSource is %ld\n",retResultQAMSource);
-
-                retResultQAMSource = playSink->setSource(new_qamsrc);
-		DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink setSource is %ld\n",retResultQAMSource);
-
-                retResultQAMSource = new_qamsrc->play(speed,time);
-		DEBUG_PRINT(DEBUG_LOG, "Result of QAMSrc play is %ld\n",retResultQAMSource);
-                
-		if(RMF_RESULT_SUCCESS != retResultQAMSource)
-                {
-			response["result"] = "FAILURE";
-			response["details"] = "QAMSrc play failed";
-			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc play failed and result is %ld\n",retResultQAMSource);
-
-                	retResultQAMSource = playSink->term();
-			DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink init is %ld\n",retResultQAMSource);
-	                delete playSink;
-				
-                	retResultQAMSource = new_qamsrc->pause();
-			DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc pause is %ld\n",retResultQAMSource);
-
-        	        retResultQAMSource = new_qamsrc->close();
-			DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc close is %ld\n",retResultQAMSource);
-	                retResultQAMSource = new_qamsrc->term();
-			DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-
-        	        delete new_qamsrc;
-			
-			retResultQAMSource = RMFQAMSrc::uninit_platform();
-			DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-        
-			platformRes = mPlatform->uninit();	
-			DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-			if(RMF_SUCCESS != platformRes)
-			{
-				response["result"] = "FAILURE";
-				response["details"] = "Platform uninit failed";
-				DEBUG_PRINT(DEBUG_ERROR, "Platform uninit failed and result is %d\n",platformRes);
-
-				return TEST_FAILURE;
-			}
-			return TEST_FAILURE;
-                }
-                sleep(10);
-
-                retResultQAMSource = new_qamsrc->pause();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc pause is %ld\n",retResultQAMSource);
-
-                retResultQAMSource = new_qamsrc->close();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc close is %ld\n",retResultQAMSource);
-                retResultQAMSource = new_qamsrc->term();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc term is %ld\n",retResultQAMSource);
-
-                delete new_qamsrc;
-	}
-	else
-	{
-                retResultQAMSource = playSink->setSource(NULL);
-		DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink setSource is %ld\n",retResultQAMSource);
-
-                retResultQAMSource = playSink->setSource(qamsrc);
-		DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink setSource is %ld\n",retResultQAMSource);
-
-                retResultQAMSource = qamsrc->play(speed,time);
-		DEBUG_PRINT(DEBUG_LOG, "Result of QAMSrc play is %ld\n",retResultQAMSource);
-                
-		if(RMF_RESULT_SUCCESS != retResultQAMSource)
-                {
-			response["result"] = "FAILURE";
-			response["details"] = "QAMSrc play failed";
-			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc play failed and result is %ld\n",retResultQAMSource);
-
-                	retResultQAMSource = qamsrc->pause();
-			DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc pause is %ld\n",retResultQAMSource);
-						
-        		RMFQAMSrc::freeQAMSourceInstance(qamsrc);
-			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeQAMSourceInstance call Done \n");
-		
-			retResultQAMSource = RMFQAMSrc::uninit_platform();
-			DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-        
-			platformRes = mPlatform->uninit();	
-			DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-			if(RMF_SUCCESS != platformRes)
-			{
-				response["result"] = "FAILURE";
-				response["details"] = "Platform uninit failed";
-				DEBUG_PRINT(DEBUG_ERROR, "Platform uninit failed and result is %d\n",platformRes);
-
-				return TEST_FAILURE;
-			}
-
-			return TEST_FAILURE;
-                }
-
-                sleep(10);
-                retResultQAMSource = qamsrc->pause();
-		DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc pause is %ld\n",retResultQAMSource);
-	        RMFQAMSrc::freeQAMSourceInstance(qamsrc);
-		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeQAMSourceInstance call Done \n");
-	}
-
-	retResultQAMSource = RMFQAMSrc::uninit_platform();
-	DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc uninit_platform is %ld\n",retResultQAMSource);
-        
-	platformRes = mPlatform->uninit();	
-	DEBUG_PRINT(DEBUG_TRACE, "Result of platform uninit is %d\n",platformRes);
-
-	if(RMF_SUCCESS != platformRes)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Platform uninit failed";
-		DEBUG_PRINT(DEBUG_ERROR, "Platform uninit failed and result is %d\n",platformRes);
-
-		return TEST_FAILURE;
-	}
-	
-	response["result"] = "SUCCESS";
-	response["details"] = "QAMSrc ChangeURI Successful";
-
-	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_QAMSource_ChangeURI ---> Exit\n");
-	return TEST_SUCCESS;
-#else
-        response["result"] = "FAILURE";
-        response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
-        DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
-        return TEST_FAILURE;
-#endif
-
-}
 
 /**************************************************************************
   Function name : MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm
@@ -4874,6 +4183,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                         }
    		}
 
+                if ( (pTSBRecInfo->shadowedById == recordingId))
+                {
+                	response["result"] = "SUCCESS";
+                        response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";
+                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
+                        return TEST_SUCCESS;
+                }
+
 		// Check whether recordingId is present
                 RecordingInfo *pRecInfo= dvm->getRecordingInfoById( recordingId );
                 if ( !pRecInfo )
@@ -4901,6 +4218,18 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
                                 return TEST_FAILURE;
                         }
+
+			if ( (pTSBRecInfo->shadowedById == recordingId) && (pRecInfo->shadowingId == tsbId) )
+			{
+				response["result"] = "SUCCESS";
+				response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";
+
+                        	int res_DVR = dvm->deleteRecording ( recordingId );
+                        	DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
+
+				DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
+				return TEST_SUCCESS;
+			}
 
 			dvrres= dvm->convertTSBToRecording( tsbId, recordingId );
 			DEBUG_PRINT(DEBUG_TRACE, "Result of convertTSBToRecording: %d\n", dvrres);
@@ -4931,6 +4260,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
                                 return TEST_SUCCESS;
                         }
+                }
+
+		if ( (pTSBRecInfo->shadowedById == recordingId) && (pRecInfo->shadowingId == tsbId) )
+                {
+                	response["result"] = "SUCCESS";
+                        response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";
+                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
+                        return TEST_SUCCESS;
                 }
 
                 dvrres= dvm->convertTSBToRecording( tsbId, recordingId );
@@ -5347,6 +4684,64 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
         return TEST_FAILURE;
 }
+/**************************************************************************
+Function name : MediaframeworkAgent::testmodulepost_requisites
+
+Arguments     : None
+
+Description   : Re-Setting the Pre-requisites which was set after execution
+
+***************************************************************************/
+bool MediaframeworkAgent::testmodulepost_requisites()
+{
+        DEBUG_PRINT(DEBUG_TRACE, "testmodulepost_requisites --> Entry\n");
+        ifstream logfile;
+        string MF_testmodule_POST_cmd, MF_testmodule_POST_log,line;
+        MF_testmodule_POST_cmd= g_tdkPath + "/" + POST_REQUISITE_FILE;
+        MF_testmodule_POST_log= g_tdkPath + "/" + POST_REQUISITE_LOG_PATH;
+        string post_req_chk= "source "+MF_testmodule_POST_cmd;
+
+	/*TODO:Commented due to the bug RDKTT:106  */
+#if 0
+        int offset;
+        try
+        {
+		
+                system((char *)post_req_chk.c_str());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of post-requisite script\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                return TEST_FAILURE;
+        }
+        logfile.open(MF_testmodule_POST_log.c_str());
+        if(logfile.is_open())
+        {
+                if(getline(logfile,line)>0);
+                {
+                        if ((offset = line.find("SUCCESS", 0)) != std::string::npos) {
+                        logfile.close();
+                        DEBUG_PRINT(DEBUG_LOG,"\nPost-Requisites set %s\n",line.c_str());
+                        DEBUG_PRINT(DEBUG_TRACE, "testmodulepost_requisites --> Exit\n");
+                        return TEST_SUCCESS;
+                        }
+                        DEBUG_PRINT(DEBUG_ERROR,"\nPost-Requisites Reset Failed - %s\n", line.c_str());
+                        return TEST_FAILURE;
+                }
+                logfile.close();
+                DEBUG_PRINT(DEBUG_ERROR,"\nPost-Requisites not set\n");
+                return TEST_FAILURE;
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the log file.\n");
+                return TEST_FAILURE;
+        }
+#endif
+	return TEST_SUCCESS;
+}
+
 
 /**************************************************************************
   Function Name   : CreateObject
@@ -5388,19 +4783,6 @@ bool MediaframeworkAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptr
 	/*DVR Recording List*/
 	ptrAgentObj->UnregisterMethod("TestMgr_DVR_Rec_List");
 
-	/*QAM Source*/
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_InitTerm");
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_OpenClose");
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_Play");
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_Pause");
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_GetTsId");
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_GetLtsId");
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_Init_Uninit_Platform");
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_GetUseFactoryMethods");
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_Get_Free_LowLevelElement");
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_GetQAMSourceInstance");
-	ptrAgentObj->UnregisterMethod("TestMgr_QAMSource_ChangeURI");
-
 	/*DVR sink*/
 	ptrAgentObj->UnregisterMethod("TestMgr_DVRSink_init_term");
 
@@ -5441,6 +4823,22 @@ bool MediaframeworkAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptr
 
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_Sink_SetSource");
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_MpSink_SetVideoRectangle");
+
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_RmfPlatform_Init");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_RmfPlatform_Uninit");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_InitPlatform");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_UninitPlatform");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_UseFactoryMethods");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_GetLTSID");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_GetLowLevelElement");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_FreeLowLevelElement");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_ChangeURI");
+
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_HNSink_InitPlatform");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_HNSink_UninitPlatform");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_HNSink_SetProperties");
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_HNSink_SetSourceType");
+
 #endif
 
 	return TEST_SUCCESS;
@@ -5455,7 +4853,6 @@ Description   : This function will be used to destory the MediaframeAgent object
  **************************************************************************/
 extern "C" void DestroyObject(MediaframeworkAgent *stubobj)
 {
-	DEBUG_PRINT(DEBUG_TRACE, "Destroying Mediainterface Agent object\n");
+	DEBUG_PRINT(DEBUG_TRACE, "Destroying Mediaframework Agent object\n");
 	delete stubobj;
 }
-

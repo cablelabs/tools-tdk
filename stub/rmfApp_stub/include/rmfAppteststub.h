@@ -63,11 +63,13 @@ typedef enum
 class rmfAppTestStub : public RDKTestStubInterface
 {	
 	public:
-	
         rmfAppTestStub ();
+
         bool initialize (IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
         bool cleanup (IN const char* szVersion,IN RDKTestAgent	*ptrAgentObj);
      	bool rmfAppTestStub_Execute (IN const Json::Value& req, OUT Json::Value& response);
+        std::string testmodulepre_requisites();
+        bool testmodulepost_requisites();
 		
 	private:
 	

@@ -25,6 +25,7 @@
 #include <ifaddrs.h>
 #include <stdio.h>
 #include <errno.h>
+#include <algorithm>
 
 /* Application Includes */
 #include "rpcmethods.h"
@@ -38,34 +39,45 @@ extern 	     Json::Rpc::TcpServer go_Server;
 bool   	     bBenchmarkEnabled;
 
 /* Constants */
-#define LIB_NAME_SIZE 50     // Maximum size of component interface library name
+#define LIB_NAME_SIZE 50       // Maximum size of component interface library name
 #define COMMAND_SIZE  100    // Maximum size of command
-#define ERROR_SIZE    50     // Maximum size of error string
-#define BUFFER_SIZE   32     // Maximum size of buffer
+#define ERROR_SIZE    50         // Maximum size of error string
+#define BUFFER_SIZE   32        // Maximum size of buffer
 
 #define DEVICE_LIST_FILE     "devicesFile.ini"                 	// File to populate connected devices
 #define CRASH_STATUS_FILE    "crashStatus.ini"               	// File to store test details on a device crash
 #define REBOOT_CONFIG_FILE   "rebootconfig.ini"            	// File to store the state of test before reboot 
+#define MODULE_LIST_FILE     "modulelist.ini"            	// File to store list of loaded modules 
+#define BENCHMARKING_FILE    "benchmark.log"
+#define SYSDIAGNOSTIC_FILE   "systemDiagnostics.log"
+#define SYSSTATAVG_FILE      "sysStatAvg.log"
 
-#define GET_DEVICES_SCRIPT   "$TDK_PATH/get_moca_devices.sh"   	// Script to find connected devices
-#define SET_ROUTE_SCRIPT     "$TDK_PATH/configure_iptables.sh"  // Script to set port forwarding rules to connected devices
-#define SYSSTAT_SCRIPT       "sh $TDK_PATH/runSysStat.sh"	// Script to get system diagnostic info from sar command
+#define GET_DEVICES_SCRIPT   "$TDK_PATH/get_moca_devices.sh"      // Script to find connected devices
+#define SET_ROUTE_SCRIPT     "$TDK_PATH/configure_iptables.sh"        // Script to set port forwarding rules to connected devices
+#define SYSSTAT_SCRIPT       "sh $TDK_PATH/runSysStat.sh"	          // Script to get system diagnostic info from sar command
+#define NULL_LOG_FILE        "cat /dev/null > "
+
+#ifndef RDKVERSION
+#define RDKVERSION "NOT_DEFINED"       
+#endif
 
 typedef void* handler;
 typedef std::map <std::string, RDKTestStubInterface*> ModuleMap;
+typedef std::map <int, std::string> LoadedModuleMap;
 
 ModuleMap o_gModuleMap;                            // Map to store loaded modules and its handle
 ModuleMap::iterator o_gModuleMapIter;
 
+LoadedModuleMap o_gLoadedModuleMap;                            // Map to store loaded modules and its handle
+LoadedModuleMap::iterator o_gLoadedModuleMapIter;
+
 std::fstream so_DeviceFile;
+int LoadedModuleId = 0;
 
 /* Initializations */
-int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;     // Setting status of device as FREE by default
+int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of device as FREE by default
 
 using namespace std;
-
-
-
 
 
 /********************************************************************************************************************
@@ -76,7 +88,7 @@ using namespace std;
  Return:                 Name of the interface if it a valid IP address, else an "NOT VALID" string.
 
 *********************************************************************************************************************/
-char* GetHostIPInterface (const char* pszIPaddr)
+char* RpcMethods::GetHostIPInterface (const char* pszIPaddr)
 {
     struct ifaddrs *pAddrs; 
     struct ifaddrs *pAddrIterator;
@@ -118,6 +130,39 @@ char* GetHostIPInterface (const char* pszIPaddr)
 
 
 
+/********************************************************************************************************************
+ Purpose:               To print details for the failure of raising a signal.
+ 
+ Parameters:          Nil
+                          
+ Return:                 Nil
+
+*********************************************************************************************************************/
+void RpcMethods::SignalFailureDetails()
+{
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nSignal Failure Details --> Entry\n");
+	
+    DEBUG_PRINT (DEBUG_ERROR, "Details : ");
+    switch(errno)
+    {
+        case EINVAL :
+                    DEBUG_PRINT (DEBUG_ERROR, "The value of sig is incorrect or is not the number of a supported signal \n");
+                    break;
+				
+        case EPERM :
+                    DEBUG_PRINT (DEBUG_ERROR, "The caller does not have permission to send the signal to any process specified by pid \n");
+                    break;
+    
+        case ESRCH : 
+                    DEBUG_PRINT (DEBUG_ERROR, "No processes or process groups correspond to pid \n");  
+                    break;
+    }
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nSignal Failure Details --> Exit\n");
+         	
+} /* End of SignalFailureDetails */
+
 
 
 /********************************************************************************************************************
@@ -131,63 +176,138 @@ char* GetHostIPInterface (const char* pszIPaddr)
 *********************************************************************************************************************/
 std::string RpcMethods::LoadLibrary (char* pszLibName)
 {
-    void* pvHandle = NULL;
-    bool bRet = true;
+    size_t nPos = 0;
     char* pszError;
+    bool bRet = true;
+    void* pvHandle = NULL;
+    int nMapEntryStatus = FLAG_NOT_SET;
+    std::string strFilePath;
+    std::string strDelimiter;
+    std::fstream o_ModuleListFile;
+    std::string strPreRequisiteStatus;
+    std::string strPreRequisiteDetails;
+    std::string strLibName(pszLibName);
     std::string strLoadLibraryDetails = "Module Loaded Successfully";
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nLoad Library --> Entry\n");
 
     m_iLoadStatus = FLAG_SET;
     pszError = new char [ERROR_SIZE];
     RDKTestStubInterface* (*pfnCreateObject)(void);
     RDKTestStubInterface* pRDKTestStubInterface;
-	
-    /* Dynamically loading library */
-    pvHandle = dlopen (pszLibName, RTLD_LAZY | RTLD_GLOBAL);
-    if (!pvHandle)
-    {
-        pszError = dlerror();
-        std::cout << pszError << std::endl;
-        std::string strErrorDetails (pszError);
-        strLoadLibraryDetails = strErrorDetails; 
-		
-        m_iLoadStatus = FLAG_NOT_SET;
-        RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
- 
-        return strLoadLibraryDetails;        // Return with error details when dlopen fails.
-	
-    }
 
-    /* Executing  "CreateObject" function of loaded module */
-    pfnCreateObject = (RDKTestStubInterface* (*) (void)) dlsym (pvHandle, "CreateObject");
-    if ( (pszError = dlerror()) != NULL)
+    do
     {
-        std::cout << pszError << std::endl;
-        strLoadLibraryDetails = "Registering CreateObj Failed";
+        /* Parse through module map to find the module */
+        for (o_gModuleMapIter = o_gModuleMap.begin(); o_gModuleMapIter != o_gModuleMap.end(); o_gModuleMapIter ++ )
+        {
+            if (o_gModuleMapIter -> first == strLibName)
+            {
+                DEBUG_PRINT (DEBUG_LOG, "Found Module : %s \nModule Already Loaded \n", strLibName.c_str());
+                LoadedModuleId = LoadedModuleId + 1;
+                o_gLoadedModuleMap.insert (std::make_pair (LoadedModuleId, pszLibName));
+                nMapEntryStatus = FLAG_SET;
+                break;
+            }
+        }
 
-        m_iLoadStatus = FLAG_NOT_SET;
-        RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
-		
-        return strLoadLibraryDetails;        // Returns with error details when fails to invoke "CreateObject".
-		
-    }	
-    pRDKTestStubInterface = pfnCreateObject();
-	
-    /* Adding loaded module into map */
-    o_gModuleMap.insert (std::make_pair (pszLibName, pRDKTestStubInterface));
-	
-    /* Executing "initialize" function of loaded module */
-    bRet = pRDKTestStubInterface -> initialize ("0.0.1", m_pAgent);
-    if(bRet == false)
-    {
-        strLoadLibraryDetails = "component initialize failed";
-	
-        m_iLoadStatus = FLAG_NOT_SET;
-        RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
-		
-        return strLoadLibraryDetails;        // Returns with error details when fails to invoke "initialize".
-		
-    }
+        if(nMapEntryStatus == FLAG_SET)
+        {
+            break;
+        }
 
+        /* Dynamically loading library */
+        pvHandle = dlopen (pszLibName, RTLD_LAZY | RTLD_GLOBAL);		
+        if (!pvHandle)
+        {
+            pszError = dlerror();
+            DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
+            std::string strErrorDetails (pszError);
+            strLoadLibraryDetails = strErrorDetails; 
+		
+            m_iLoadStatus = FLAG_NOT_SET;
+			
+            break;                                            // Return with error details when dlopen fails.
+        }
+
+        /* Executing  "CreateObject" function of loaded module */
+        pfnCreateObject = (RDKTestStubInterface* (*) (void)) dlsym (pvHandle, "CreateObject");
+        if ( (pszError = dlerror()) != NULL)
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
+            strLoadLibraryDetails = "Registering CreateObj Failed";
+
+            m_iLoadStatus = FLAG_NOT_SET;
+			
+            break;                                         // Returns with error details when fails to invoke "CreateObject".
+		
+        }	
+		
+        pRDKTestStubInterface = pfnCreateObject();
+		
+        /* Executing "testmodulepre_requisites" function of loaded module to enable pre-requisites */
+        strPreRequisiteDetails = pRDKTestStubInterface -> testmodulepre_requisites ();
+	 std::transform(strPreRequisiteDetails.begin(), strPreRequisiteDetails.end(), strPreRequisiteDetails.begin(), ::toupper);
+
+        if (strPreRequisiteDetails.find("SUCCESS") != std::string::npos) 
+        {
+            DEBUG_PRINT (DEBUG_LOG, "Pre-Requisites set successfully \n");
+        }
+        else
+        {
+            strDelimiter = "<DETAILS>";
+            while ( (nPos = strPreRequisiteDetails.find (strDelimiter)) != std::string::npos)
+            {
+                strPreRequisiteStatus = strPreRequisiteDetails.substr (0, nPos);
+                strPreRequisiteDetails.erase (0, nPos + strDelimiter.length());
+            }
+
+            DEBUG_PRINT (DEBUG_LOG, "Setting Pre-Requisites Failed \n");
+            DEBUG_PRINT (DEBUG_LOG, "Details : %s \n", strPreRequisiteDetails.c_str());
+
+            strLoadLibraryDetails = strPreRequisiteDetails;
+	
+            m_iLoadStatus = FLAG_NOT_SET;
+
+            break;                                        // Returns with error details when fails to invoke "testmodulepre_requisites".
+
+        }
+
+        /* Adding loaded module into map */
+        o_gModuleMap.insert (std::make_pair (pszLibName, pRDKTestStubInterface));
+	
+        /* Executing "initialize" function of loaded module */
+        bRet = pRDKTestStubInterface -> initialize ("0.0.1", m_pAgent);
+        if (bRet == false)
+        {
+            strLoadLibraryDetails = "component initialize failed";
+	
+            m_iLoadStatus = FLAG_NOT_SET;
+
+            break;                                        // Returns with error details when fails to invoke "initialize".
+		
+        }
+
+        /* Extracting path to file */
+        strFilePath = RpcMethods::sm_strTDKPath;
+        strFilePath.append(MODULE_LIST_FILE);
+    
+        o_ModuleListFile.open (strFilePath.c_str(), ios::out);
+
+        /* Adding the module names into file */
+        if (o_ModuleListFile.is_open())
+        {
+            o_ModuleListFile << pszLibName << std::endl;
+        }
+        else
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "Unable to open reboot configuration file \n");
+        }
+   
+        o_ModuleListFile.close();    
+		
+    }while(0);
+	
     return strLoadLibraryDetails;            // Returns when library loaded successfully.
 	
 } /* End of LoadLibrary */
@@ -204,9 +324,12 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
 *********************************************************************************************************************/
 std::string RpcMethods::UnloadLibrary (char* pszLibName)
 {
+    DEBUG_PRINT (DEBUG_TRACE, "\nUnload Library --> Entry\n");
+
     char* pszError;
     bool bRet = true;
     void* pvHandle = NULL;
+    std::string strFilePath;
     std::string strLibName(pszLibName);
     int nMapEntryStatus = FLAG_NOT_SET;
     std::string strUnloadLibraryDetails = "Module Unloaded Successfully";
@@ -217,73 +340,116 @@ std::string RpcMethods::UnloadLibrary (char* pszLibName)
     m_iUnloadStatus = FLAG_SET;
     pszError = new char [ERROR_SIZE];	
 
-    /* Parse through module map to find the module */
-    for (o_gModuleMapIter = o_gModuleMap.begin(); o_gModuleMapIter != o_gModuleMap.end(); o_gModuleMapIter ++ )
+
+    do
     {
-        if (o_gModuleMapIter -> first == strLibName)
+
+        for (o_gLoadedModuleMapIter = o_gLoadedModuleMap.begin(); o_gLoadedModuleMapIter != o_gLoadedModuleMap.end(); o_gLoadedModuleMapIter ++ )
         {
-            std::cout << "Found Loaded Module : " << strLibName << std::endl;
-            nMapEntryStatus = FLAG_SET ;
-            break;
+            if (o_gLoadedModuleMapIter -> second == strLibName)
+            {
+                DEBUG_PRINT (DEBUG_LOG, "Found Loaded Module : %s \n", strLibName.c_str());
+                nMapEntryStatus = FLAG_SET ;
+                break;
+            }
         }
-    }
 
-    /* Check if module name is present in module map */
-    if (nMapEntryStatus == FLAG_NOT_SET)
-    {
-        std::cout << "Module name not found in Module Map" << std::endl ;
-        strUnloadLibraryDetails = "Module name not found in Module Map";
+        if (nMapEntryStatus == FLAG_SET)
+        {
+            /* Removing map entry */
+            o_gLoadedModuleMap.erase (o_gLoadedModuleMapIter);	
+            m_iUnloadStatus = FLAG_SET;
+            RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
 		
-        m_iUnloadStatus = FLAG_NOT_SET;
-        RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
-		
-        return strUnloadLibraryDetails;               // Return with error details when module name is not found in module map.
+            break;               // Return with error details when module name is not found in module map.
+        }	
+    	
 
-    }
+        /* Parse through module map to find the module */
+        for (o_gModuleMapIter = o_gModuleMap.begin(); o_gModuleMapIter != o_gModuleMap.end(); o_gModuleMapIter ++ )
+        {
+            if (o_gModuleMapIter -> first == strLibName)
+            {
+                DEBUG_PRINT (DEBUG_LOG, "Found Loaded Module : %s \n", strLibName.c_str());
+                nMapEntryStatus = FLAG_SET ;
+                break;
+            }
+        }
 
+        /* Check if module name is present in module map */
+        if (nMapEntryStatus == FLAG_NOT_SET)
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "Module name not found in Module Map \n");
+            strUnloadLibraryDetails = "Module name not found in Module Map";
+		
+            m_iUnloadStatus = FLAG_NOT_SET;
+            RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
+		
+            break;               // Return with error details when module name is not found in module map.
 
-    /* Get the handle of library */
-    pvHandle = dlopen (pszLibName, RTLD_LAZY | RTLD_GLOBAL);
-    if (!pvHandle)
-    {
-        pszError = dlerror();
-        std::cout << pszError << std::endl ;
-        std::string strErrorDetails (pszError);
-        strUnloadLibraryDetails = "Load Module for cleanup failed : " + strErrorDetails;
-		
-        m_iUnloadStatus = FLAG_NOT_SET;
-        RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
-		
-        return strUnloadLibraryDetails;               // Return with error details when dlopen fails.
-    }
+        }
 
-    /* Calling "DestroyObject" */
-    pfnDestroyObject = (void (*)(RDKTestStubInterface*)) dlsym (pvHandle, "DestroyObject");
-    if ( (pszError = dlerror()) != NULL)  
-    {
-        std::cout << pszError << std::endl ;
-        std::string strErrorDetails(pszError);
-        strUnloadLibraryDetails = "Clean up Failed : " + strErrorDetails;
+        /* Get the handle of library */
+        pvHandle = dlopen (pszLibName, RTLD_LAZY | RTLD_GLOBAL);
+        if (!pvHandle)
+        {
+            pszError = dlerror();
+            DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
+            std::string strErrorDetails (pszError);
+            strUnloadLibraryDetails = "Load Module for cleanup failed : " + strErrorDetails;
 		
-        m_iUnloadStatus = FLAG_NOT_SET;
-        RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
+            m_iUnloadStatus = FLAG_NOT_SET;
+            RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
 		
-        return strUnloadLibraryDetails;        	
-    }
+            break;               // Return with error details when dlopen fails.
+        }
+
+        /* Calling "DestroyObject" */
+        pfnDestroyObject = (void (*)(RDKTestStubInterface*)) dlsym (pvHandle, "DestroyObject");
+        if ( (pszError = dlerror()) != NULL)  
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
+            std::string strErrorDetails(pszError);
+            strUnloadLibraryDetails = "Clean up Failed : " + strErrorDetails;
+		
+            m_iUnloadStatus = FLAG_NOT_SET;
+            RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
+		
+            break;        	
+        }
 	
-    /* Calling CleanUp of module */
-    std::cout << "Going to cleanup" << std::endl;
-    pRDKTestStubInterface = o_gModuleMapIter -> second;
-    bRet = pRDKTestStubInterface -> cleanup ("0.0.1", m_pAgent);
-    pfnDestroyObject (pRDKTestStubInterface);
+        /* Calling CleanUp of module */
+        DEBUG_PRINT (DEBUG_LOG, "Going to cleanup \n");
+        pRDKTestStubInterface = o_gModuleMapIter -> second;
+        bRet = pRDKTestStubInterface -> testmodulepost_requisites();
+        bRet = pRDKTestStubInterface -> cleanup ("0.0.1", m_pAgent);
+        pfnDestroyObject (pRDKTestStubInterface);
 
-    /* Closing Handle */
-    dlclose (pvHandle);
-    pvHandle = NULL;
+
+        /* Extracting path to file */
+        strFilePath = RpcMethods::sm_strTDKPath;
+        strFilePath.append(MODULE_LIST_FILE);
+
+        /* Delete the configuration file */
+        if (remove (strFilePath.c_str()) != 0 )
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "\n\nAlert : Error in deleting %s \n", SHOW_DEFINE(MODULE_LIST_FILE) );
+        }
+        else
+        {
+            DEBUG_PRINT (DEBUG_TRACE, "\n %s successfully deleted\n\n\n" SHOW_DEFINE(MODULE_LIST_FILE) ); 
+        }
+
+        /* Closing Handle */
+        dlclose (pvHandle);
+        pvHandle = NULL;
 		
-    /* Removing map entry */
-    o_gModuleMap.erase (o_gModuleMapIter);
-	
+        /* Removing map entry */
+        o_gModuleMap.erase (o_gModuleMapIter);
+
+
+    }while(0);	
+
     return strUnloadLibraryDetails;	
 
 } /* End of UnloadLibrary */
@@ -302,14 +468,13 @@ std::string RpcMethods::UnloadLibrary (char* pszLibName)
 *********************************************************************************************************************/
 void RpcMethods::SetCrashStatus (const char* pszExecId, const char* pszDeviceId, const char* pszTestCaseId, const char* pszExecDevId )
 {
-    std::string strEnvPath;
     std::string strFilePath;
     std::ofstream o_CrashStatusFile;
 
+    DEBUG_PRINT (DEBUG_TRACE, "\nSet Crash Status --> Entry\n");
+
     /* Extracting path to file */
-    strEnvPath = getenv ("TDK_PATH");
-    strFilePath.append(strEnvPath);
-    strFilePath.append("/");
+    strFilePath = RpcMethods::sm_strTDKPath;
     strFilePath.append(CRASH_STATUS_FILE);
     
     o_CrashStatusFile.open (strFilePath.c_str(), ios::out);
@@ -326,7 +491,7 @@ void RpcMethods::SetCrashStatus (const char* pszExecId, const char* pszDeviceId,
     }
     else
     {
-        std::cout << "\nAlert!!! Opening " << SHOW_DEFINE(CRASH_STATUS_FILE) << " failed" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Opening %s failed \n", SHOW_DEFINE(CRASH_STATUS_FILE) );
     }
 
 } /* End of SetCrashStatus */
@@ -341,14 +506,13 @@ void RpcMethods::SetCrashStatus (const char* pszExecId, const char* pszDeviceId,
 *********************************************************************************************************************/
 void RpcMethods::ResetCrashStatus()
 {
-    std::string strEnvPath;
     std::string strFilePath;
     std::ofstream o_CrashStatusFile;
 
+    DEBUG_PRINT (DEBUG_TRACE, "\nReset Crash Status --> Entry\n");
+
     /* Extracting path to file */
-    strEnvPath = getenv ("TDK_PATH");
-    strFilePath.append(strEnvPath);
-    strFilePath.append("/");
+    strFilePath = RpcMethods::sm_strTDKPath;
     strFilePath.append(CRASH_STATUS_FILE);
     
     o_CrashStatusFile.open (strFilePath.c_str(), ios::out);
@@ -361,17 +525,17 @@ void RpcMethods::ResetCrashStatus()
     }
     else
     {
-        std::cout << "\nAlert!!! Opening " << SHOW_DEFINE(CRASH_STATUS_FILE) << " failed" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Opening %s failed \n", SHOW_DEFINE(CRASH_STATUS_FILE) );
     }
 
     /* Delete the configuration file */
     if (remove (strFilePath.c_str()) != 0 )
     {
-        std::cout << "\nAlert : Error deleting " << SHOW_DEFINE(CRASH_STATUS_FILE) << " file\n";
+        DEBUG_PRINT (DEBUG_ERROR, "\nAlert : Error deleting %s file \n", SHOW_DEFINE(CRASH_STATUS_FILE) );
     }
     else
     {
-        std::cout << std::endl << SHOW_DEFINE(CRASH_STATUS_FILE) << " successfully deleted\n" ;
+        DEBUG_PRINT (DEBUG_TRACE, "\n%s successfully deleted \n", SHOW_DEFINE(CRASH_STATUS_FILE) );
     }
 
 }/* End of ResetCrashStatus */
@@ -394,38 +558,27 @@ void RpcMethods::ResetCrashStatus()
 bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
+
+    std::string strFilePath;
+    std::string strLoadModuleDetails;
+    std::string strNullLog;
+
+    char szLibName[LIB_NAME_SIZE];
+    char szCommand[COMMAND_SIZE];
+	
     const char* pszExecId = NULL;
     const char* pszDeviceId = NULL;
     const char* pszExecDevId = NULL;
     const char* pszTestCaseId = NULL;
-    std::string strLoadModuleDetails;
-    char szLibName[LIB_NAME_SIZE];
+    const char* pszSysDiagFlag = NULL; 
     const char* pszModuleName = NULL;
     const char* pszBenchMarkingFlag = NULL;
-    const char* pszSysDiagFlag = NULL; 
+	
     RpcMethods::sm_nDeviceStatusFlag = DEVICE_BUSY;
-    string tdkPath, createNewFile;
 
     /* Prepare JSON response */
     response["jsonrpc"] = "2.0";
     response["id"] = request["id"];
-
-    std::cout << "\nIn LoadModule\n";
-    std::cout << "Received query: " << request << std::endl;
-    
-    /* Extract module name from json request, construct library name and load that library using LoadLibrary() */
-    pszModuleName = request ["param1"].asCString();
-    if (NULL != pszModuleName && (LIB_NAME_SIZE - 12) > strlen (pszModuleName))
-    {	
-	
-        sprintf (szLibName, "lib%sstub.so", pszModuleName);
-        strLoadModuleDetails = LoadLibrary (szLibName);
-    }
-    else
-    {
-        m_iLoadStatus = FLAG_NOT_SET;
-        strLoadModuleDetails = "Could not resolve Module Name";
-    }
 
     /* Extracting Execution ID, Device ID and Testcase ID and setting the crash status */   
     if (request["execID"] != Json::Value::null)
@@ -445,60 +598,102 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
         pszExecDevId = request ["execDevID"].asCString();    
     }
 
+    /* Clear old log files */      
+    sprintf (szCommand, "rm -rf %s/*", RpcMethods::sm_strLogFolderPath.c_str()); //Constructing Command
+    system (szCommand);
+    sleep(1);
+
+    strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
+    strNullLog.append(BENCHMARKING_FILE);
+    system(strNullLog.c_str());
+
+    strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
+    strNullLog.append(SYSDIAGNOSTIC_FILE);
+    system(strNullLog.c_str());
+
+    strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
+    strNullLog.append(SYSSTATAVG_FILE);
+    system(strNullLog.c_str());
+
+#ifdef AGENT_LOG_ENABLE
+	
+    /* Constructing path to new log file */
+    strFilePath = RpcMethods::sm_strLogFolderPath;
+    strFilePath.append(pszExecId);
+    strFilePath.append(pszDeviceId);
+    strFilePath.append(pszTestCaseId);
+    strFilePath.append(pszExecDevId);
+    strFilePath.append("_AgentConsole.log");
+
+    /* Redirecting stdout buffer to logfile */
+    if((RpcMethods::sm_pLogStream = freopen(strFilePath.c_str(), "w", stdout)) == NULL)
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
+    }
+
+#endif
+	
+    fprintf(stdout,"\nStarting Execution..\n");
+	
+    DEBUG_PRINT (DEBUG_LOG, "\nRPC Load Module --> Entry \n");
+    //DEBUG_PRINT (DEBUG_LOG, "Received query: %s \n", request.asCString().c_str());
+    cout << "Received query: \n" << request << endl;
+    
+    /* Extract module name from json request, construct library name and load that library using LoadLibrary() */
+    pszModuleName = request ["param1"].asCString();
+    if (NULL != pszModuleName && (LIB_NAME_SIZE - 12) > strlen (pszModuleName))
+    {	
+	
+        sprintf (szLibName, "lib%sstub.so", pszModuleName);
+        strLoadModuleDetails = LoadLibrary (szLibName);
+    }
+    else
+    {
+        m_iLoadStatus = FLAG_NOT_SET;
+        strLoadModuleDetails = "Could not resolve Module Name";
+    }
 
     /* Construct Json response message with result and details */
     if (m_iLoadStatus == FLAG_SET)
     {
-	tdkPath = getenv ("TDK_PATH");	
-        if (tdkPath.empty() == 0)
+        pszBenchMarkingFlag =  request ["performanceBenchMarkingEnabled"].asCString();
+        if (strcmp(pszBenchMarkingFlag,"true") == 0)
         {
-		pszBenchMarkingFlag =  request ["performanceBenchMarkingEnabled"].asCString();
-		if (strcmp(pszBenchMarkingFlag,"true")== 0)
-		{
-             		createNewFile = "cat /dev/null > "+  tdkPath + "/benchmark.log";
-               		system(createNewFile.c_str());
-               		std::cout << "Creating log file: " << tdkPath << "/benchmark.log" << std::endl;
-
-			bBenchmarkEnabled = true;
-		}
-		else
-		{
-			bBenchmarkEnabled = false;
-		}
-
-		pszSysDiagFlag =  request ["performanceSystemDiagnosisEnabled"].asCString();
-        	if (strcmp(pszSysDiagFlag,"true")== 0)
-        	{
-			createNewFile = "cat /dev/null > "+  tdkPath + "/systemDiagnostics.log";
-               		system(createNewFile.c_str());
-               		std::cout << "Creating log file: " << tdkPath << "/systemDiagnostics.log" << std::endl;
-
-			system (SYSSTAT_SCRIPT);
-        	}
-
-        	response["result"] = "Success";
-        	std::cout << "Module Loaded : " << pszModuleName << std::endl;
-
-        	SetCrashStatus (pszExecId, pszDeviceId, pszTestCaseId, pszExecDevId);
-    	}
+                bBenchmarkEnabled = true;
+        }
         else
         {
-                std::cout << "Failed to extract environment variable TDK_PATH" << std::endl;
-                response["result"] = "FAILURE";
+                bBenchmarkEnabled = false;
         }
-    }	
+
+        pszSysDiagFlag =  request ["performanceSystemDiagnosisEnabled"].asCString();
+        if (strcmp(pszSysDiagFlag,"true") == 0)
+        {
+    		system (SYSSTAT_SCRIPT);
+        }
+			
+        response["result"] = "Success";
+        DEBUG_PRINT (DEBUG_LOG, "Module Loaded : %s \n",pszModuleName);
+
+        SetCrashStatus (pszExecId, pszDeviceId, pszTestCaseId, pszExecDevId);
+    }
     else
     {
         response["result"] = "FAILURE";
-        std::cout << "Module Loading Failed" << std::endl;
-        std::cout << "Failure Details : " << strLoadModuleDetails << std::endl;
+        RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
+        DEBUG_PRINT (DEBUG_ERROR, "Module Loading Failed \n");
+        DEBUG_PRINT (DEBUG_ERROR, "Failure Details : %s", strLoadModuleDetails.c_str());
     }
 
     response["details"] = strLoadModuleDetails;
+
+    DEBUG_PRINT (DEBUG_LOG, "\nRPC Load Module --> Exit \n"); 
 	
     return bRet;
 	
 } /* End of RPCLoadModule */
+
+
 
 /********************************************************************************************************************
  Purpose:               Extract Module name from Json request, Unload the corresponding module using UnloadLibrary() and 
@@ -516,18 +711,21 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
 bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
+    void* pvHandle = NULL;
     const char* pszModuleName;
     const char* pszScriptSuiteEnabled;
     char szLibName [LIB_NAME_SIZE];
     std::string strUnloadModuleDetails;
+    int nReturnValue = RETURN_SUCCESS;
 
     /* Constructing JSON response */
     response["jsonrpc"] = "2.0";
     response["id"]	= request["id"];
  
-    std::cout << "\nIn UnloadModule\n";
-    std::cout << "Received query: " << request << std::endl;
-
+    DEBUG_PRINT (DEBUG_LOG, "\nRPC Unload Module --> Entry\n");
+    //DEBUG_PRINT (DEBUG_LOG, "Received query: %s \n", request.asCString());
+    cout << "Received query: \n" << request << endl;
+	
     /* Extracting module name and constructing corresponding library name */
     pszModuleName = request["param1"].asCString();
     sprintf (szLibName, "lib%sstub.so", pszModuleName);
@@ -539,13 +737,13 @@ bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& respo
     /* Check the status of unloading and construct corresponding Json response */
     if (m_iUnloadStatus == FLAG_NOT_SET)
     {
-        std::cout << "Unloading Module Failed" << std::endl;
-        std::cout << "Failure Details : " << strUnloadModuleDetails;
+        DEBUG_PRINT (DEBUG_ERROR, "Unloading Module Failed \n");
+        DEBUG_PRINT (DEBUG_ERROR, "Failure Details : %s \n", strUnloadModuleDetails.c_str());
         response["result"] = "FAILURE";
     }	
     else
     {	
-        std::cout << "\nModule Unloaded : " << pszModuleName << std::endl;
+        DEBUG_PRINT (DEBUG_LOG, "\nModule Unloaded : %s \n", pszModuleName);
         response["result"] = "SUCCESS";
     }
 
@@ -564,8 +762,19 @@ bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& respo
         }
     }
 
+    DEBUG_PRINT (DEBUG_LOG, "\nRPC Unload Module --> Exit \n"); 
+
+#ifdef AGENT_LOG_ENABLE
+
+    fclose(RpcMethods::sm_pLogStream);
+    RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
+
+#endif
+	
     return bRet;
+	
 } /* End of RPCUnloadModule */
+
 
 
 /********************************************************************************************************************
@@ -583,10 +792,13 @@ bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& respo
 *********************************************************************************************************************/
 bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& response)
 {
-    std::cout << "\nGoing to enable box Reboot \n";
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPC Enable Reboot --> Entry\n");
+    //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
+    cout << "Received query: \n" << request << endl;
+
+    DEBUG_PRINT (DEBUG_LOG, "\nGoing to enable box Reboot \n");
 
     bool bRet = true;
-    std::string strEnvPath;
     std::string strFilePath;
     char szLibName [LIB_NAME_SIZE];
     std::string strUnloadModuleDetails;
@@ -598,9 +810,7 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
     response["result"] = "SUCCESS";
 
     /* Extracting path to file */
-    strEnvPath = getenv ("TDK_PATH");
-    strFilePath.append(strEnvPath);
-    strFilePath.append("/");
+    strFilePath = RpcMethods::sm_strTDKPath;
     strFilePath.append(REBOOT_CONFIG_FILE);
     
     o_RebootConfigFile.open (strFilePath.c_str(), ios::out);
@@ -609,9 +819,9 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
     for( o_gModuleMapIter = o_gModuleMap.begin(); o_gModuleMapIter != o_gModuleMap.end(); o_gModuleMapIter ++ )
     { 
         sprintf (szLibName, "%s", (o_gModuleMapIter -> first).c_str());
-        std::cout << "\nGoing to Unload Library : " << szLibName << std::endl << std::endl; 
+        DEBUG_PRINT (DEBUG_LOG, "\nGoing to Unload Library : %s \n\n", szLibName); 
         strUnloadModuleDetails = UnloadLibrary (szLibName);
-        std::cout << "\nUnload Library Details : " << strUnloadModuleDetails << std::endl;
+        DEBUG_PRINT (DEBUG_LOG, "\nUnload Library Details : %s \n", strUnloadModuleDetails.c_str());
 		
         /* Adding the module names into file */
         if (o_RebootConfigFile.is_open())
@@ -620,7 +830,7 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
         }
         else
         {
-            std::cout << "Unable to open reboot configuration file" << std::endl;
+            DEBUG_PRINT (DEBUG_ERROR, "Unable to open reboot configuration file \n");
             response ["result"] = "FAILURE";
             response ["details"] = "Unable to open reboot configuration file";
         }
@@ -634,7 +844,7 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
     response ["result"] = "SUCCESS";
     response ["details"] = "Preconditions  set. Going for a reboot";
 
-    std::cout << "Going for a REBOOT !!!" << std::endl;
+    DEBUG_PRINT (DEBUG_ERROR, "Going for a REBOOT !!!\n\n");
     system ("reboot");
 
     return bRet;
@@ -656,10 +866,7 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
 *********************************************************************************************************************/
 bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Value& response)
 {
-    std::cout << "\n\nRestoring Previous State \n";
-
     bool bRet = true;
-    std::string strEnvPath;
     std::string strFilePath;
     std::string strLineInFile;
     std::string strLoadLibraryDetails;
@@ -679,36 +886,7 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
 
     RpcMethods::sm_nDeviceStatusFlag = DEVICE_BUSY;
 
-    /* Extracting path to file */
-    strEnvPath = getenv ("TDK_PATH");
-    strFilePath.append(strEnvPath);
-    strFilePath.append("/");
-    strFilePath.append(REBOOT_CONFIG_FILE);
-    
-    /* Read the module names from configuration file and load those modules */
-    o_RebootConfigFile.open (strFilePath.c_str(), ios::in);
-    if (o_RebootConfigFile.is_open())
-    {
-        while (getline (o_RebootConfigFile, strLineInFile))
-        {	
-            sprintf (szLibName, "%s", strLineInFile.c_str());
-            std::cout << "\nGoing to Load Module : " << szLibName << std::endl;
-            strLoadLibraryDetails = LoadLibrary (szLibName);	
-            std::cout << "\nLoad Module Details : " << strLoadLibraryDetails << std::endl;
-        }
-		
-        o_RebootConfigFile.close();
-    }
-    else
-    {
-        std::cout << "Failed to open configuration file" << std::endl;
-        response["result"] = "FAILURE";
-        response["details"] = "Failed to open configuration file";
-    }
-
-    std::cout << "Received query: " << request << std::endl;
-
-    /* Exatracting Ececution ID, Device ID and Testcase ID and setting the crash status after reboot */   
+    /* Extracting Ececution ID, Device ID and Testcase ID */   
     if (request["execID"] != Json::Value::null)
     {
         pszExecId = request ["execID"].asCString();    
@@ -726,16 +904,66 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
         pszExecDevId = request ["execDevID"].asCString();    
     }
 
+#ifdef AGENT_LOG_ENABLE
+
+    /* Extracting file to log file */
+    strFilePath = RpcMethods::sm_strLogFolderPath;
+    strFilePath.append(pszExecId);
+    strFilePath.append(pszDeviceId);
+    strFilePath.append(pszTestCaseId);
+    strFilePath.append(pszExecDevId);
+    strFilePath.append("_AgentConsole.log");
+
+    /* Redirecting stdout buffer to log file */
+    if((RpcMethods::sm_pLogStream = freopen(strFilePath.c_str(), "a", stdout)) == NULL)
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
+    }
+
+    fprintf(stdout,"\nRestoring previous state after box reboot..\n");
+
+#endif
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPC Restore Previouse State --> Entry\n");
+    //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
+    cout << "Received query: \n" << request << endl;
+
+    /* Extracting path to file */
+    strFilePath = RpcMethods::sm_strTDKPath;
+    strFilePath.append(REBOOT_CONFIG_FILE);
+    
+    /* Read the module names from configuration file and load those modules */
+    o_RebootConfigFile.open (strFilePath.c_str(), ios::in);
+    if (o_RebootConfigFile.is_open())
+    {
+        while (getline (o_RebootConfigFile, strLineInFile))
+        {	
+            sprintf (szLibName, "%s", strLineInFile.c_str());
+            DEBUG_PRINT (DEBUG_LOG, "\nGoing to Load Module : %s \n", szLibName);
+            strLoadLibraryDetails = LoadLibrary (szLibName);	
+            DEBUG_PRINT (DEBUG_LOG, "\nLoad Module Details : %s \n", strLoadLibraryDetails.c_str());
+        }
+		
+        o_RebootConfigFile.close();
+    }
+    else
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "Failed to open configuration file \n");
+        response["result"] = "FAILURE";
+        response["details"] = "Failed to open configuration file";
+    }
+
+    /* Setting the crash status after reboot */
     SetCrashStatus (pszExecId, pszDeviceId, pszTestCaseId,pszExecDevId);
 
     /* Delete the configuration file */
     if (remove (strFilePath.c_str()) != 0 )
     {
-        std::cout << std::endl << "\nAlert : Error in deleting " << SHOW_DEFINE(REBOOT_CONFIG_FILE) ;
+        DEBUG_PRINT (DEBUG_ERROR, "\n\nAlert : Error in deleting %s \n", SHOW_DEFINE(REBOOT_CONFIG_FILE) );
     }
     else
     {
-        std::cout << std::endl << SHOW_DEFINE(REBOOT_CONFIG_FILE) << " successfully deleted\n\n\n" ;
+        DEBUG_PRINT (DEBUG_TRACE, "\n %s successfully deleted\n\n\n" SHOW_DEFINE(REBOOT_CONFIG_FILE) ); 
     }
 		
     return bRet;
@@ -763,8 +991,11 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
 {
     bool bRet = true;
     char* pszInterface;
-    std::string strEnvPath;
     std::string strFilePath;
+
+    //DEBUG_PRINT (DEBUG_TRACE, "\nRPCGetHostStatus --> Entry\n");
+    //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
+    //cout << "Received query: \n" << request << endl;
 
     /* Constructing JSON response */
     response["jsonrpc"] = "2.0";
@@ -799,9 +1030,7 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
             RpcMethods::sm_szBoxInterface = pszInterface;
 
             /* Extracting file path */
-            strEnvPath = getenv ("TDK_PATH");
-            strFilePath.append(strEnvPath);
-            strFilePath.append("/");
+            strFilePath = RpcMethods::sm_strTDKPath;
             strFilePath.append(CONFIGURATION_FILE);
 			
             /* Writing details into configuration file */
@@ -816,7 +1045,7 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
         }
         else
         {
-            std::cout << "\nInterface or Box IP not Valid!!! " << std::endl;
+            DEBUG_PRINT (DEBUG_ERROR, "\nInterface or Box IP not Valid!!! \n");
         }
 	
         RpcMethods::sm_nStatusQueryFlag = FLAG_SET;
@@ -849,11 +1078,93 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
 *********************************************************************************************************************/
 bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& response)
 {
+    char* pszError;
     bool bRet = true;
-    int nReturnValue ;
+    int nReturnValue;
+    std::string strFilePath;
+    void* pvHandle = NULL;
+    std::string strLineInFile;
     std::string strEnableReset;
+    int nPgid = RETURN_SUCCESS;
+    std::fstream o_ModuleListFile;
+    char szLibName [LIB_NAME_SIZE];
     const char* pszEnableReset = NULL;
 
+    pszError = new char [ERROR_SIZE];
+    RDKTestStubInterface* (*pfnCreateObject)(void);
+    RDKTestStubInterface* pRDKTestStubInterface;
+    void (*pfnDestroyObject) (RDKTestStubInterface*);
+
+    fprintf(stdout,"\nResetting Agent..\n");
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPCResetAgent --> Entry\n");
+    //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
+    cout << "Received query: \n" << request << endl;
+
+    /* Extracting path to file */
+    strFilePath= getenv ("TDK_PATH");
+    strFilePath.append("/");
+    strFilePath.append(MODULE_LIST_FILE);
+
+    /* Read the module names from configuration file and load those modules */
+    o_ModuleListFile.open (strFilePath.c_str(), ios::in);
+    if (o_ModuleListFile.is_open())
+    {
+        while (getline (o_ModuleListFile, strLineInFile))
+        {	
+            sprintf (szLibName, "%s", strLineInFile.c_str());
+        }
+
+        /* Dynamically loading library */
+        pvHandle = dlopen (szLibName, RTLD_LAZY | RTLD_GLOBAL);
+        if (!pvHandle)
+        {
+            pszError = dlerror();
+            DEBUG_PRINT (DEBUG_ERROR, "Failed to get handle for component : %s \n", pszError);
+        }
+
+        /* Executing  "CreateObject" function of loaded module */
+        pfnCreateObject = (RDKTestStubInterface* (*) (void)) dlsym (pvHandle, "CreateObject");
+        if ( (pszError = dlerror()) != NULL)
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
+        }	
+        pRDKTestStubInterface = pfnCreateObject();
+
+        /* Calling Post requisites for module */
+        bRet = pRDKTestStubInterface -> testmodulepost_requisites();
+ 
+        /* Calling "DestroyObject" */
+        pfnDestroyObject = (void (*)(RDKTestStubInterface*)) dlsym (pvHandle, "DestroyObject");
+        if ( (pszError = dlerror()) != NULL)  
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
+        }
+	
+        pfnDestroyObject (pRDKTestStubInterface);
+
+        /* Closing Handle */
+        dlclose (pvHandle);
+        pvHandle = NULL;		
+		
+        o_ModuleListFile.close();
+		
+    }
+    else
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "Failed to get list of loaded modules \n");
+    }
+
+    /* Delete the Module list file */
+    if (remove (strFilePath.c_str()) != 0 )
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "\n\nAlert : Error in deleting %s \n", SHOW_DEFINE(MODULE_LIST_FILE) );
+    }
+    else
+    {
+        DEBUG_PRINT (DEBUG_TRACE, "\n %s successfully deleted\n\n\n" SHOW_DEFINE(MODULE_LIST_FILE) ); 
+    }
+
+    /* Constructing JSON response */
     response["jsonrpc"] = "2.0";
     response["id"] = request["id"];
 
@@ -862,11 +1173,35 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         pszEnableReset = request ["enableReset"].asCString();  
         strEnableReset = std::string(pszEnableReset);
     }
-
+	
     /* Restart Agent if true */
     if (strEnableReset == "true")
     {
-	std::cout << "\n\nAgent Restarting...\n";
+        DEBUG_PRINT (DEBUG_LOG, "\n\nAgent Restarting...\n");
+
+        /* Find group id for agent process */
+        nPgid = getpgid(RpcMethods::sm_nAgentPID);
+
+        /* Ignore SIGINT signal in agent monitor process */
+        signal (SIGINT, SIG_IGN);
+        sleep(1);
+
+        /* Send SIGINT signal to all process in the group */
+        nReturnValue = kill ( (-1 * nPgid), SIGINT);
+        if (nReturnValue == RETURN_SUCCESS)
+        {
+            DEBUG_PRINT (DEBUG_TRACE, "Sent SIGINT signal to all process in group successfully \n");
+        }
+        else
+        {
+            DEBUG_PRINT (DEBUG_TRACE, "Alert!!! Unable to send SIGINT signal to all process in the group \n");
+        }
+
+        /* Set SIGINT signal status to default */
+        signal (SIGINT, SIG_DFL);
+        sleep(2);	
+
+        /* Restart Agent */
         nReturnValue = kill (RpcMethods::sm_nAgentPID, SIGKILL);
         if (nReturnValue == RETURN_SUCCESS)
         {
@@ -874,10 +1209,13 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         }
         else
         {
-            std::cout << "Alert!!! Unable to restart agent" << std::endl;
+            DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Unable to restart agent \n");
+            SignalFailureDetails();
             response["result"] = "FAILURE";
         }
+
     }
+	
     /* Set device state to FREE on script exits abruptly */
     else if (strEnableReset == "false")
     {
@@ -887,40 +1225,85 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         {
             response["result"] = "SUCCESS";
         }
+        else
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "Failed to set device status \n");
+            SignalFailureDetails();
+            response["result"] = "FAILURE";
+        }
         
     }
     else
     {
-        std::cout << "Alert!!! Unable to reset Agent..Unknown Parameter" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Unable to reset Agent..Unknown Parameter");
         response["result"] = "FAILURE";
     }
 
-    if (nReturnValue != RETURN_SUCCESS)
-    {
-        std::cout << "Alert!!! Unable to reset Agent" << std::endl;
-        std::cout << "Details : ";
-        switch(errno)
-        {
-            case EINVAL :
-                        std::cout << "The value of sig is incorrect or is not the number of a supported signal" << std::endl; 
-                        break;
-				
-            case EPERM :
-                        std::cout << "The caller does not have permission to send the signal to any process specified by pid" << std::endl;
-                        break;
-    
-            case ESRCH : 
-	                 std::cout << "No processes or process groups correspond to pid" << std::endl;  
-                        break;
-        }
-         
-        response["result"] = "FAILURE";
-		
-    }
-        
+#ifdef AGENT_LOG_ENABLE
+
+    fclose(RpcMethods::sm_pLogStream);
+    RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
+
+#endif
+	
     return bRet;
 
 }/* End of RPCResetAgent */
+
+
+
+
+/********************************************************************************************************************
+ Purpose:               Returns RDK version for which TDK package is built.
+ Parameters:   
+                             request [IN]       - Json request.
+                             response [OUT]  - Json response with result RDK version.
+ 
+ Return:                 bool  -      Always returning true from this function.
+
+*********************************************************************************************************************/
+bool RpcMethods::RPCGetRDKVersion (const Json::Value& request, Json::Value& response)
+{
+
+    bool bRet = true;
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPCGetRDKVersion --> Entry\n");
+    //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
+    //cout << "Received query: \n" << request << endl;
+
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+    response["result"] = RDKVERSION;
+
+    return bRet;
+
+}/* End of RPCGetRDKVersion */
+
+
+
+
+/********************************************************************************************************************
+ Purpose:               Returns log path where agent console logs are present.
+ Parameters:   
+                             request [IN]       - Json request.
+                             response [OUT]  - Json response with result log path.
+ 
+ Return:                 bool  -      Always returning true from this function.
+
+*********************************************************************************************************************/
+bool RpcMethods::RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Value& response)
+{
+    bool bRet = true;
+
+    /* Preparing JSON Response */
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+    response["result"] = RpcMethods::sm_strLogFolderPath;
+
+    return bRet;
+
+}/* End of RPCGetAgentConsoleLogPath */
+
 
 
 /********************************************************************************************************************
@@ -938,29 +1321,32 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
 bool RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
-    string tdkPath, logPath;
+    std::string strLogPath;
 
     /* Constructing JSON response */
     response["jsonrpc"] = "2.0";
     response["id"]	= request["id"];
  
-    std::cout << "\nIn RPCPerformanceBenchMarking\n";
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPCPerformanceBenchMarking --> Entry\n");
     std::cout << "Received query: " << request << std::endl;
 
-    tdkPath = getenv ("TDK_PATH");
-    logPath = tdkPath+"/benchmark.log";
+    /* Extracting log file path */
+    strLogPath = RpcMethods::sm_strTDKPath;
+    strLogPath.append(BENCHMARKING_FILE);
 
-    if (std::ifstream(logPath.c_str()))
+    if (std::ifstream(strLogPath.c_str()))
     {
         response["result"]  = "SUCCESS";
     }
     else
     {
-        std::cout << "Error!!! benchmark.log not found" << std::endl;
+	DEBUG_PRINT (DEBUG_ERROR, "\nError!!! %s not found\n", BENCHMARKING_FILE);
         response["result"]  = "FAILURE";
     }
 
-    response["logpath"] = logPath.c_str();
+    response["logpath"] = strLogPath.c_str();
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPCPerformanceBenchMarking --> Exit \n");
 
     return bRet;
 	
@@ -983,30 +1369,33 @@ bool RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::V
 bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
-    string tdkPath, logPath;	
+    std::string strLogPath;	
 
     /* Constructing JSON response */
     response["jsonrpc"] = "2.0";
     response["id"]	= request["id"];
 
-    std::cout << "\nIn RPCPerformanceSystemDiagnostics\n";
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPCPerformanceSystemDiagnostics --> Entry \n");
     std::cout << "Received query: " << request << std::endl;
-    	
-    tdkPath = getenv ("TDK_PATH");
-    logPath = tdkPath+"/systemDiagnostics.log";
-
-    if (std::ifstream(logPath.c_str()))
+    
+    /* Extracting log file path */
+    strLogPath = RpcMethods::sm_strTDKPath;
+    strLogPath.append(SYSDIAGNOSTIC_FILE);
+	
+    if (std::ifstream(strLogPath.c_str()))
     {
        	response["result"]  = "SUCCESS";
     }
     else
     {
-       	std::cout << "Error!!! systemDiagnostics.log not found" << std::endl;
+	DEBUG_PRINT (DEBUG_ERROR, "\nError!!! %s not found\n", SYSDIAGNOSTIC_FILE);
        	response["result"]  = "FAILURE";
     }
 
-    response["logpath"] = logPath.c_str();
-    
+    response["logpath"] = strLogPath.c_str();
+   
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPCPerformanceSystemDiagnostics --> Exit \n");
+ 
     return bRet;
 	
 } /* End of RPCPerformanceSystemDiagnostics */
@@ -1030,17 +1419,18 @@ bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Js
 bool RpcMethods::RPCGetConnectedDevices (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
-    std::string strEnvPath;
     std::string strFilePath;
     std::string strClientMAC;
     std::string strDeviceList = "DEVICES=";
     std::string strDelimiter = ",";
     char szCommand[COMMAND_SIZE];
 
+    //DEBUG_PRINT (DEBUG_TRACE, "\nRPCGetConnectedDevices --> Entry\n");
+    //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
+    //cout << "Received query: \n" << request << endl;
+
     /* Extracting file path */
-    strEnvPath = getenv ("TDK_PATH");
-    strFilePath.append(strEnvPath);
-    strFilePath.append("/");
+    strFilePath = RpcMethods::sm_strTDKPath;
     strFilePath.append(DEVICE_LIST_FILE);
 
     /* Constructing the command to invoke script */
@@ -1076,6 +1466,7 @@ bool RpcMethods::RPCGetConnectedDevices (const Json::Value& request, Json::Value
 
         so_DeviceFile.close();
         RpcMethods::sm_nGetDeviceFlag = FLAG_NOT_SET;
+		
     }
     else
     {
@@ -1099,7 +1490,6 @@ bool RpcMethods::RPCGetConnectedDevices (const Json::Value& request, Json::Value
 bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
-    std::string strEnvPath;
     std::string strFilePath;
     const char* pszAgentPort;
     const char* pszStatusPort;
@@ -1107,6 +1497,10 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
     const char* pszAgentMonitorPort;
     const char* pszClientMAC = NULL;
     char szCommand[COMMAND_SIZE];
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPCSetClientRoute --> Entry\n");
+    //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
+    cout << "Received query: \n" << request << endl;
 
     /* Constructing JSON response */
     response["jsonrpc"] = "2.0";
@@ -1141,9 +1535,7 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
         sprintf (szCommand, "%s %s %s %s %s %s", SHOW_DEFINE(SET_ROUTE_SCRIPT), pszClientMAC, pszAgentPort, pszStatusPort, pszLogTransferPort, pszAgentMonitorPort); 
 
         /* Extracting path to file */
-        strEnvPath = getenv ("TDK_PATH");
-        strFilePath.append(strEnvPath);
-        strFilePath.append("/");
+        strFilePath = RpcMethods::sm_strTDKPath;
         strFilePath.append(PORT_FORWARD_RULE_FILE);
     
         /* Adding command to configuration file to set route accross reboot */
@@ -1155,15 +1547,16 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
         }
         else
         {
-            std::cout << "\nAlert!!! Opening " << SHOW_DEFINE(PORT_FORWARD_RULE_FILE) << " failed" << std::endl;
+            DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Opening %s failed \n", SHOW_DEFINE(PORT_FORWARD_RULE_FILE) );
         }
 
-        std::cout << "Setting route for " << pszClientMAC << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Setting route for %s \n", pszClientMAC);
 	
         system (szCommand); //Calling script
 		
         response["result"] = "SUCCESS";
         RpcMethods::sm_nRouteSetFlag = FLAG_NOT_SET;	
+		
     }
     else
     {

@@ -49,6 +49,30 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 }
 
 /***************************************************************************
+ *Function name : testmodulepre_requisites
+ *Descrption    : testmodulepre_requisites will  be used for setting the
+ *                pre-requisites that are necessary for this component
+ *
+ *****************************************************************************/
+
+std::string ServiceManagerAgent::testmodulepre_requisites()
+{
+        return "SUCCESS";
+}
+/***************************************************************************
+ *Function name : testmodulepost_requisites
+ *Descrption    : testmodulepost_requisites will be used for resetting the
+ *                pre-requisites that are set
+ *
+ *****************************************************************************/
+
+bool ServiceManagerAgent::testmodulepost_requisites()
+{
+        return TEST_SUCCESS;
+}
+
+
+/***************************************************************************
  *Function name : SM_RegisterService 
  *Descrption    : This function will register the given service with the serviceManger component
  *parameter [in]: req-  service_name-Name of the service.

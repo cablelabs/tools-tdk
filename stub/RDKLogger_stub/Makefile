@@ -27,7 +27,8 @@ endif
 #CONFIG_DIR=/config
 #Configuration flags.  Comment the definition for disabling and uncomment for enabling.
 
-CONFIG_DIR :=/mnt/nfs/env
+#CONFIG_DIR :=/mnt/nfs/env
+CONFIG_DIR :=/etc
 
 ifdef CONFIG_DIR
  CONFIG_PREFIX=$(CONFIG_DIR)/
@@ -52,6 +53,7 @@ INCLUDES  :=    -I./include \
                 -I$(JSONRPC_PATH)/include \
                 -I$(JSONCPP_PATH)/include \
                 -I$(CURL_PATH)\
+		-I$(CURL_PATH)/../ \
 		-I$(RDK_BUILD_DIR)/rdklogger/include
 		
 LDOPTS    := 	-L $(IMAGE_PATH)/usr/lib -lrdkloggers

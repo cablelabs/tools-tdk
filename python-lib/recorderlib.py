@@ -68,11 +68,11 @@ def startRecorderApp(realpath,arg):
 			outdata = subprocess.check_output(cmd, shell=True)
     			signal.alarm(0)  # reset the alarm
 		except Timout:
-    			print "#TDK_@error-ERROR : Timeout!! Taking too long"
+    			print "#TDK_@error-ERROR : Timeout!! No Response Received by Recorder Server"
 			sys.stdout.flush()
 #			sys.exit()
 		except:
-			print "#TDK_@error-ERROR : Unable to initiate App"
+			print "#TDK_@error-ERROR : Unable to initiate Recorder Server"
 			sys.stdout.flush()
 			sys.exit()
 		

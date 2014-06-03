@@ -25,6 +25,7 @@
 #include <ifaddrs.h>
 #include <iostream>
 #include <pthread.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <arpa/inet.h>
 #include <sys/types.h>
@@ -55,7 +56,6 @@
 using namespace std;
 using namespace Json;
 
-
 jmp_buf g_JumpBuffer;  //  Declaring global jmp_buf variable to be used by both main and signal handler
 
 static volatile bool s_bAgentMonitorRun = true;  //  Variable to run agent monitor. Set to false to stop monitoring.
@@ -82,8 +82,9 @@ string RpcMethods::sm_strBoxIP = "";
 const char* RpcMethods::sm_szBoxName = NULL;
 const char* RpcMethods::sm_szManagerIP = NULL;
 const char* RpcMethods::sm_szBoxInterface = NULL;
-
-
+FILE* RpcMethods::sm_pLogStream = NULL;
+std::string RpcMethods::sm_strLogFolderPath = "";
+std::string RpcMethods::sm_strTDKPath = "";
 
 /********************************************************************************************************************
  Purpose:               To get a substring seperated by a delimiter.
@@ -142,8 +143,8 @@ std::string GetHostIP (const char* szInterface)
             }		
         } 
     }	
-	
-    std::cout << "Found IP: " << szAddressBuffer << std::endl;
+
+    DEBUG_PRINT (DEBUG_TRACE, "Found IP: %s\n", szAddressBuffer);
 
     if (pIfAddrStruct != NULL) 
     {
@@ -175,7 +176,6 @@ int SendInfo (char* strStringToSend, int nStringSize)
     int nDestination;
     int nInfoSockDesc;    
     void *pvReturnValue;    
-    std::string strEnvPath;
     std::string strFilePath;
     std::string strManagerIP;
     
@@ -192,25 +192,14 @@ int SendInfo (char* strStringToSend, int nStringSize)
     }	
 
     /* Extracting path to file */
-    strEnvPath = getenv ("TDK_PATH");
-    if (strEnvPath.empty() == 0)
-    {
-        strFilePath.append(strEnvPath);
-        strFilePath.append("/");
-    	 strFilePath.append(CONFIGURATION_FILE);
-    }
-    else
-    {
-        std::cout << "Failed to extract environment variable TDK_PATH" << std::endl;
-	
-        return DEVICE_INFO_FAILURE;     // Return when failed to get environment path
-    }
-	
+    strFilePath = RpcMethods::sm_strTDKPath;
+    strFilePath.append(CONFIGURATION_FILE);
+   
     /* Open the configuration file and extracts Test manager IP address */
     go_ConfigFile.open (strFilePath.c_str(), ios::in);
     if (go_ConfigFile.is_open())
     {
-        std::cout << "\nConfiguration file " << SHOW_DEFINE (CONFIGURATION_FILE) << " found" << std::endl;
+        DEBUG_PRINT (DEBUG_LOG, "\nConfiguration file %s found \n", SHOW_DEFINE (CONFIGURATION_FILE));
 		
         /* Parsing configuration file to get manager IP */
         pvReturnValue = getline (go_ConfigFile, strManagerIP); 
@@ -219,11 +208,11 @@ int SendInfo (char* strStringToSend, int nStringSize)
         {
             strManagerIP = GetSubString (strManagerIP, ":");
             RpcMethods::sm_szManagerIP = strManagerIP.c_str();
-            std::cout << "Test Manager IP is " << RpcMethods::sm_szManagerIP << std::endl;
+            DEBUG_PRINT (DEBUG_LOG, "Test Manager IP is %s \n", RpcMethods::sm_szManagerIP);
         }
         else
         {
-            std::cout << "Failed to extract Test Manager IP Address" << std::endl;
+            DEBUG_PRINT (DEBUG_ERROR, "Failed to extract Test Manager IP Address");
 
             return DEVICE_INFO_FAILURE;     // Return when failed to extract Test Manager IP Address
 		 
@@ -232,7 +221,7 @@ int SendInfo (char* strStringToSend, int nStringSize)
     }
     else
     {
-        std::cout << "\nAlert!!! Configuration file " << SHOW_DEFINE(CONFIGURATION_FILE) << " not found" << std::endl;
+        DEBUG_PRINT (DEBUG_TRACE, "\nAlert!!! Configuration file %s not found \n", SHOW_DEFINE(CONFIGURATION_FILE));
         	
         return DEVICE_INFO_FAILURE;     // Return when failed to open configuration file
         
@@ -289,19 +278,18 @@ static void SignalHandler (int nCode)
     {
         case SIGINT    :
         case SIGTERM :
-            std::cout << "\nAgent Shutttingdown...\n";
             s_bAgentMonitorRun = false;
             s_bAgentRun = false;
             s_bAgentReset = false;
             break;
 			
         case SIGABRT :
-            std::cout << std::endl << "Alert!!! Agent caught an Abort signal! Attempting recovery.." << std::endl;
+            DEBUG_PRINT (DEBUG_LOG, "\nAlert!!! Agent caught an Abort signal! Attempting recovery..\n");
             longjmp (g_JumpBuffer,0);
             break;
 			
         case SIGSEGV :
-            std::cout << std::endl << "Alert!!! Segmentation fault signal caught! Attempting recovery.." << std::endl;
+            DEBUG_PRINT (DEBUG_LOG, "\nAlert!!! Segmentation fault signal caught! Attempting recovery..\n");
             s_bAgentRun = false;
             longjmp (g_JumpBuffer,0);
             break;
@@ -340,19 +328,16 @@ int SendDetailsToManager()
     char szBoxInfo[INFO_STRING_SIZE];
     int nSendInfoStatus = 0;
     std::string strBoxName;
-    std::string strEnvPath;
     std::string strFilePath;
 
     /* Extracting path to file */
-    strEnvPath = getenv ("TDK_PATH");
-    strFilePath.append(strEnvPath);
-    strFilePath.append("/");
+    strFilePath = RpcMethods::sm_strTDKPath;
     strFilePath.append(CONFIGURATION_FILE);
     
     go_ConfigFile.open (strFilePath.c_str(), ios::in);
     if (go_ConfigFile.is_open())
     {
-        std::cout << "\nConfiguration file " << SHOW_DEFINE (CONFIGURATION_FILE) << " found" << std::endl;
+        DEBUG_PRINT (DEBUG_LOG, "\nConfiguration file %s found \n", SHOW_DEFINE (CONFIGURATION_FILE));
 			
         /* Parsing configuration file to get box name */
         for (int i=0; i<2; i++)
@@ -361,7 +346,7 @@ int SendDetailsToManager()
 
             if (!pvReturnValue)
             {
-                std::cout << "Unable to find device name" << std::endl;
+                DEBUG_PRINT (DEBUG_ERROR, "Unable to find device name \n");
 
                 nSendInfoStatus =  DEVICE_INFO_FAILURE;     // Info failure when failed to retrieve device name
                 break;
@@ -376,7 +361,7 @@ int SendDetailsToManager()
         {
             strBoxName = GetSubString (strBoxName, ":");		
             RpcMethods::sm_szBoxName = strBoxName.c_str();
-            std::cout << "Box Name is " << RpcMethods::sm_szBoxName << std::endl;
+            DEBUG_PRINT (DEBUG_LOG, "Box Name is %s \n", RpcMethods::sm_szBoxName);
 			        
             /* Sending the box name and box ip address to Test Manager */
             szBoxInfo[0] = '\0';
@@ -390,7 +375,7 @@ int SendDetailsToManager()
     }
     else
     {
-        std::cout << "\nAlert!!! Configuration file " << SHOW_DEFINE(CONFIGURATION_FILE) << " not found" << std::endl;
+        DEBUG_PRINT (DEBUG_LOG, "\nAlert!!! Configuration file %s not found", SHOW_DEFINE(CONFIGURATION_FILE));
         nSendInfoStatus = DEVICE_INFO_FAILURE;
     }
 
@@ -420,7 +405,6 @@ void* ReportCrash (void*)
     int nCount = 0;
     int nCrashFlag = FLAG_SET;
     std::string strExecId;
-    std::string strEnvPath;
     std::string strFilePath;
     std::string strDeviceId;
     std::string strTestcaseId;
@@ -430,24 +414,22 @@ void* ReportCrash (void*)
     char szCrashDetails [INFO_STRING_SIZE];
     int nSendInfoStatus = RETURN_SUCCESS;
 
-    std::cout << "\nStarting Crash Details Processing..\n";
+    DEBUG_PRINT (DEBUG_TRACE, "\nStarting Crash Details Processing..\n");
 
     /* Extracting path to file */	
-    strEnvPath = getenv ("TDK_PATH");
-    strFilePath.append(strEnvPath);
-    strFilePath.append("/");
+    strFilePath = RpcMethods::sm_strTDKPath;
     strFilePath.append(CRASH_STATUS_FILE);
   	
     o_CrashStatusFile.open (strFilePath.c_str(), ios::in);
     if (o_CrashStatusFile.is_open())
     {
-        std::cout << "\nConfiguration file " << SHOW_DEFINE (CRASH_STATUS_FILE) << " found" << std::endl;
+        DEBUG_PRINT (DEBUG_LOG, "\nConfiguration file %s found", SHOW_DEFINE (CRASH_STATUS_FILE) );
 		
         /* Parsing configuration file to get crash status */
         pvReturnValue = getline (o_CrashStatusFile, strCrashStatus); 
         if (!pvReturnValue)
         {
-            std::cout << "Failed to retrieve status on crash" << std::endl;
+            DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve status on crash");
             nCrashFlag = FLAG_NOT_SET ;
         }
         else
@@ -457,14 +439,14 @@ void* ReportCrash (void*)
 
         if ((strCrashStatus == "YES") && (nCrashFlag == FLAG_SET))
         {
-            std::cout << "\nAlert !!! Crash occured in previous execution. Trying to send test details to Test Manager... " << std::endl;
-            std::cout << "Test Details :  ";
+            DEBUG_PRINT (DEBUG_LOG, "\nAlert !!! Crash occured in previous execution. Trying to send test details to Test Manager... \n");
+            DEBUG_PRINT (DEBUG_LOG, "Test Details :  ");
 	
             /* Parsing configuration file to get execution ID */
             pvReturnValue = getline (o_CrashStatusFile, strExecId); 
             if (!pvReturnValue)
             {
-                std::cout << "Failed to retrieve execution ID" << std::endl;
+                DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve execution ID \n");
                 nCrashFlag = FLAG_NOT_SET ;
             }
             else
@@ -477,7 +459,7 @@ void* ReportCrash (void*)
             pvReturnValue = getline (o_CrashStatusFile, strDeviceId);
             if (!pvReturnValue)
             {
-                std::cout << "Failed to retrieve Device ID" << std::endl;
+                DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve Device ID \n");
                 nCrashFlag = FLAG_NOT_SET ;
             }
             else
@@ -490,7 +472,7 @@ void* ReportCrash (void*)
             pvReturnValue = getline (o_CrashStatusFile, strTestcaseId); 
             if (!pvReturnValue)
             {
-                std::cout << "Failed to retrieve Testcase ID" << std::endl;
+                DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve Testcase ID \n");
                 nCrashFlag = FLAG_NOT_SET ;
             }
             else
@@ -503,7 +485,7 @@ void* ReportCrash (void*)
             pvReturnValue = getline (o_CrashStatusFile, strExecDeviceId); 
             if (!pvReturnValue)
             {
-                std::cout << "Failed to retrieve Execution Device ID" << std::endl;
+                DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve Execution Device ID \n");
                 nCrashFlag = FLAG_NOT_SET ;
             }
             else
@@ -517,10 +499,10 @@ void* ReportCrash (void*)
             /* Sending the test details to Test Manager */
             if (nCrashFlag == FLAG_SET)
             {
-                std::cout << std::endl << "    Execution ID : " << strExecId << std::endl;
-                std::cout << "    Device ID    : " << strDeviceId << std::endl;
-                std::cout << "    Testcase ID  : " << strTestcaseId << std::endl;
-                std::cout << "    Execution Device ID  : " << strExecDeviceId << std::endl;
+                DEBUG_PRINT (DEBUG_LOG, "\n    Execution ID : %s \n", strExecId.c_str());
+                DEBUG_PRINT (DEBUG_LOG, "    Device ID    : %s \n", strDeviceId.c_str());
+                DEBUG_PRINT (DEBUG_LOG, "    Testcase ID  : %s \n", strTestcaseId.c_str());
+                DEBUG_PRINT (DEBUG_LOG, "    Execution Device ID  : %s \n", strExecDeviceId.c_str());
 				
                 szCrashDetails[0] = '\0';
                 strcat(szCrashDetails, "CRASH_");			
@@ -546,30 +528,30 @@ void* ReportCrash (void*)
                 nSendInfoStatus = SendInfo (szCrashDetails, strlen (szCrashDetails)); 
                 if (nSendInfoStatus == DEVICE_INFO_SUCCESS)
                 {
-                    std::cout << "Sent crash details to Test Manager successfully" << std::endl;
+                    DEBUG_PRINT (DEBUG_LOG, "Sent crash details to Test Manager successfully");
 				
                 }
             }
             else
             {
-                std::cout << "Not found" << std::endl;
+                DEBUG_PRINT (DEBUG_LOG, "Not found \n");
             }
 
             /* Delete the configuration file */
             if (remove (strFilePath.c_str()) != 0 )
             {
-                std::cout << "\nAlert : Unable to delete " << SHOW_DEFINE(CRASH_STATUS_FILE) << " file\n";
+                DEBUG_PRINT (DEBUG_LOG, "\nAlert : Unable to delete %s file \n", SHOW_DEFINE(CRASH_STATUS_FILE) );
             }
             else
             {
-                std::cout << std::endl << SHOW_DEFINE(CRASH_STATUS_FILE) << " successfully deleted\n" ;
+                DEBUG_PRINT (DEBUG_LOG, "\n%s successfully deleted \n", SHOW_DEFINE(CRASH_STATUS_FILE) );
             }
 			
         }
 
         else
         {
-            std::cout << "Unable to report crash to Test Manager" << std::endl;
+            DEBUG_PRINT (DEBUG_LOG, "Unable to report crash to Test Manager \n");
         }
 		
     }
@@ -590,24 +572,24 @@ void* ReportCrash (void*)
 *********************************************************************************************************************/
 void *CheckStatus (void *)
 {
-    std::cout << "\nStarting Device Status Monitoring..\n";
+    DEBUG_PRINT (DEBUG_TRACE, "\nStarting Device Status Monitoring..\n");
 
     Json::Rpc::TcpServer o_Status (ANY_ADDR, RDK_DEVICE_STATUS_PORT);
     RpcMethods o_RpcMethods (NULL);
 
     if (!networking::init())
     {
-        std::cerr << "Alert!!! Device Status Monitoring Network initialization failed" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Network initialization failed \n");
     }
 
     if (!o_Status.Bind())
     {
-        std::cout << "Alert!!! Device Status Monitoring Bind failed" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Bind failed \n");
     }
 
     if (!o_Status.Listen())
     {
-        std::cout << "Alert!!! Device Status Monitoring Listen failed" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Listen failed \n");
     }
 
     /* Registering methods to status server */
@@ -626,7 +608,7 @@ void *CheckStatus (void *)
     }
 
     /* clean up and exit */
-    std::cout << "\nExiting Device Status Monitoring..\n";
+    DEBUG_PRINT (DEBUG_TRACE, "\nExiting Device Status Monitoring..\n");
     o_Status.Close();
     networking::cleanup();
     pthread_exit (NULL);
@@ -652,12 +634,11 @@ void *ProcessDeviceDetails (void *)
 {
     int nCount = 0;
     void *pvReturnValue;
-    std::string strEnvPath;
     std::string strFilePath;
     int nDeviceInfoStatus = 0;
     std::string strBoxInterface;	
 
-    std::cout << "\nStarting Device Details Processing..\n";
+    DEBUG_PRINT (DEBUG_TRACE, "\nStarting Device Details Processing..\n");
 		
     /* Waiting to get a status query */
     while (RpcMethods::sm_nStatusQueryFlag == FLAG_NOT_SET)
@@ -675,15 +656,13 @@ void *ProcessDeviceDetails (void *)
     if (RpcMethods::sm_nStatusQueryFlag == FLAG_NOT_SET)
     {
         /* Extracting path to file */
-        strEnvPath = getenv ("TDK_PATH");
-        strFilePath.append(strEnvPath);
-        strFilePath.append("/");
-    	 strFilePath.append(CONFIGURATION_FILE);
+        strFilePath = RpcMethods::sm_strTDKPath;
+        strFilePath.append(CONFIGURATION_FILE);
 	
         go_ConfigFile.open (strFilePath.c_str(), ios::in);
         if (go_ConfigFile.is_open())
         {
-            std::cout << "\nConfiguration file " << SHOW_DEFINE(CONFIGURATION_FILE) << " found" << std::endl;
+            DEBUG_PRINT (DEBUG_LOG, "\nConfiguration file %s found \n", SHOW_DEFINE(CONFIGURATION_FILE) );
 
             /* Finding the box interface from configuration file */
             for (int i=0; i<3; i++)
@@ -691,7 +670,7 @@ void *ProcessDeviceDetails (void *)
                 pvReturnValue = getline (go_ConfigFile, strBoxInterface);
                 if (!pvReturnValue)
                 {
-                    std::cout << "Unable to find device network interface" << std::endl;
+                    DEBUG_PRINT (DEBUG_ERROR, "Unable to find device network interface \n");
                     break;
                 }
 
@@ -704,7 +683,7 @@ void *ProcessDeviceDetails (void *)
             {
                 strBoxInterface = GetSubString (strBoxInterface, ":");	
                 RpcMethods::sm_szBoxInterface = strBoxInterface.c_str();
-                std::cout << "\nBox interface is " << RpcMethods::sm_szBoxInterface << std::endl;
+                DEBUG_PRINT (DEBUG_LOG, "\nBox interface is %s \n");
             
                 /* Getting box IP address of corresponding interface */
                 RpcMethods::sm_strBoxIP = GetHostIP (RpcMethods::sm_szBoxInterface);
@@ -713,7 +692,7 @@ void *ProcessDeviceDetails (void *)
                 nDeviceInfoStatus = SendDetailsToManager();
                 if (nDeviceInfoStatus == DEVICE_INFO_FAILURE)
                 {
-                    std::cout << "\nAlert!!! Agent not able to communicate with Test Manager" << std::endl;
+                    DEBUG_PRINT (DEBUG_TRACE, "\nAlert!!! Agent not able to communicate with Test Manager");
                 }
 			
             }
@@ -721,7 +700,7 @@ void *ProcessDeviceDetails (void *)
         }
         else
         {
-            std::cout << "\nAlert!!! Configuration file " << SHOW_DEFINE(CONFIGURATION_FILE) << " not found" << std::endl;
+            DEBUG_PRINT (DEBUG_LOG, "\nAlert!!! Configuration file %s not found \n", SHOW_DEFINE(CONFIGURATION_FILE) );
         }
 			
     }
@@ -748,14 +727,14 @@ void *ProcessDeviceDetails (void *)
 int Agent()
 {
     char * pszCommand;
-    std::string strEnvPath;
     std::string strFilePath;
     std::string strCommand;
     int nReturnValue = RETURN_SUCCESS;
+    int nCrashReportStatus = RETURN_SUCCESS;
 
     if (!networking::init())
     {
-        std::cerr << "Alert!!! Networking initialization failed" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Networking initialization failed \n");
 		
         return RETURN_FAILURE;  // Returns failure if Networking initialization failed 
     }
@@ -763,27 +742,27 @@ int Agent()
     /* Registering signals to signal handler */	
     if (signal (SIGUSR2, SignalHandler) == SIG_ERR)
     {
-        std::cout << "Alert!!! Error signal SIGUSR2 will not be handled" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Error signal SIGUSR2 will not be handled \n");
     }
 	
     if (signal (SIGTERM, SignalHandler) == SIG_ERR)
     {
-        std::cout << "Alert!!! Error signal SIGTERM will not be handled" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Error signal SIGTERM will not be handled \n");
     }
 	
     if (signal (SIGINT, SignalHandler) == SIG_ERR)
     {
-        std::cout << "Alert!!! Error signal SIGINT will not be handled" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Error signal SIGINT will not be handled \n");
     }
 	
     if (signal (SIGSEGV, SignalHandler) == SIG_ERR)
     {
-        std::cout << "Alert!!! Error signal SIGSEGV will not be handled" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Error signal SIGSEGV will not be handled \n");
     }
 
     if (signal (SIGABRT, SignalHandler) == SIG_ERR)
     {
-        std::cout << "Alert!!! Error signal SIGABRT will not be handled" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Error signal SIGABRT will not be handled \n");
     }
 
     /* Create AgentObj */
@@ -791,7 +770,7 @@ int Agent()
 
     if (!go_Server.Bind())
     {
-        std::cout << "Alert!!! Test Agent Bind failed" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Test Agent Bind failed \n");
 		
         return RETURN_FAILURE;   // Returns failure if Bind failed
         
@@ -799,7 +778,7 @@ int Agent()
 
     if (!go_Server.Listen())
     {
-        std::cout << "Alert!!! Test Agent Listen failed" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Test Agent Listen failed \n");
 		
         return RETURN_FAILURE;   // Returns failure if Listen failed
         
@@ -820,16 +799,14 @@ int Agent()
     #ifdef PORT_FORWARD
 
     /* Extracting path to file */
-    strEnvPath = getenv ("TDK_PATH");
-    strFilePath.append(strEnvPath);
-    strFilePath.append("/");
+    strFilePath = RpcMethods::sm_strTDKPath;
     strFilePath.append(PORT_FORWARD_RULE_FILE);
 
     /* Set iptable rules that was set in previous power cycle from the details in file */
     go_PortforwardFile.open(strFilePath.c_str(), ios::in);
     if (go_PortforwardFile.is_open())
     {
-        std::cout << std::endl << SHOW_DEFINE(PORT_FORWARD_RULE_FILE) << " found" << std::endl;
+        DEBUG_PRINT (DEBUG_LOG, "\n%s found \n", SHOW_DEFINE(PORT_FORWARD_RULE_FILE) );
         while (getline (go_PortforwardFile, strCommand))
         {
             strCommand = GetSubString (strCommand, "=");
@@ -849,33 +826,33 @@ int Agent()
     nReturnValue = pthread_create (&deviceStatusThreadId, NULL, CheckStatus, NULL);
     if(nReturnValue != RETURN_SUCCESS)
     {
-        std::cout << "\nAlert!!! Failed to start Device Status Monitoring\n" << nReturnValue;
+        DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Device Status Monitoring\n");
     }
 			
     /* Starting new thread for sending box information to Test Manager */
     nReturnValue = pthread_create (&deviceDetailsThreadId, NULL, ProcessDeviceDetails, NULL);
     if (nReturnValue != RETURN_SUCCESS)
     {
-        std::cout << "\nAlert!!! Failed to start Box Details Processing\n" << nReturnValue;
+        DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Box Details Processing\n");
     }
 
     /* Report if a crash occured on previous execution */
     nReturnValue = pthread_create (&crashDetailsThreadId, NULL, ReportCrash, NULL);
     if (nReturnValue != RETURN_SUCCESS)
     {
-        std::cout << "\nAlert!!! Failed to start Crash Details Processing\n" << nReturnValue;
+        DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Crash Details Processing\n");
     }
 		
     /* Agent going for test execution */	
     sleep(1);
-    std::cout << "\n\nAgent Ready for Execution..." << std::endl;
+    DEBUG_PRINT (DEBUG_LOG, "\n\nAgent Ready for Execution... \n");
 
     /* Agent Recovery from seg fault and abort signal */
     nReturnValue = 0;
     nReturnValue = setjmp (g_JumpBuffer); // Setting the jump buffer for agent recovery
     if (nReturnValue)
     {
-        std::cout << "Agent Recovering...\n";
+        DEBUG_PRINT (DEBUG_LOG, "Agent Recovering...\n");
     }
 
     /* Msg loop */
@@ -891,8 +868,7 @@ int Agent()
         catch(...)
         {
             /* Agent Recovery from termination */
-            std::cout << "\nAlert!!! Termination caught.. Agent Attempting Recovery...\n";
-    //        RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
+            DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Termination caught.. Agent Attempting Recovery...\n");
         }
         
     }
@@ -949,7 +925,7 @@ void *AgentExecuter (void *)
         }
         else if (nPID < RETURN_SUCCESS)
         {
-            std::cout << "\n Alert!!!Failed to spawn process for Agent execution\n";
+            DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!!Failed to spawn process for Agent execution \n");
         }
         else
         {
@@ -959,7 +935,6 @@ void *AgentExecuter (void *)
         }
     }
 
-    return NULL;
 }/* End of AgentExecuter */
 
 
@@ -981,17 +956,17 @@ int AgentMonitor()
     int nPID = RETURN_SUCCESS;
     int nReturnValue = RETURN_SUCCESS;
 
-    std::cout << "\nStarting Agent Monitoring..\n";
+    DEBUG_PRINT (DEBUG_LOG, "\nStarting Agent Monitoring..\n");
 
     /* Registering signals to signal handler */
     if (signal (SIGTERM, SignalHandler) == SIG_ERR)
     {
-        std::cout << "Alert!!! Error signal SIGTERM will not be handled" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Error signal SIGTERM will not be handled \n");
     }
 	
     if (signal (SIGINT, SignalHandler) == SIG_ERR)
     {
-        std::cout << "Alert!!! Error signal SIGINT will not be handled" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Error signal SIGINT will not be handled \n");
     }
 
     /* Create AgentMonitorObj */
@@ -1000,7 +975,7 @@ int AgentMonitor()
 
     if (!networking::init())
     {
-        std::cerr << "Alert!!! Agent Monitoring Network initialization failed" << std::endl;
+        std::cerr << "Alert!!! Agent Monitoring Network initialization failed \n";
 		
         return RETURN_FAILURE;  // Returns failure if Networking initialization failed
         
@@ -1008,7 +983,7 @@ int AgentMonitor()
 
     if (!o_Monitor.Bind())
     {
-        std::cout << "Alert!!! Agent Monitoring Bind failed" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Agent Monitoring Bind failed \n");
 
         return RETURN_FAILURE;   // Returns failure if Bind failed
         
@@ -1016,7 +991,7 @@ int AgentMonitor()
 
     if (!o_Monitor.Listen())
     {
-        std::cout << "Alert!!! Agent Monitoring Listen failed" << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Agent Monitoring Listen failed \n");
 
         return RETURN_FAILURE;   // Returns failure if Listen failed
 		
@@ -1024,12 +999,14 @@ int AgentMonitor()
 
     /* Registering methods to agent monitor */
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCResetAgent, std::string("ResetAgent")));
+    o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetRDKVersion, std::string("GetRDKVersion")));
+    o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetAgentConsoleLogPath, std::string("GetAgentConsoleLogPath")));	
 
     /* Starting a thread for agent execution */
     nReturnValue = pthread_create (&agentExecuterThreadId, NULL, AgentExecuter, NULL);
     if(nReturnValue != RETURN_SUCCESS)
     {
-        std::cout << "\nAlert!!! Failed to start execute Agent " << nReturnValue << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start execute Agent  \n");
 
         return RETURN_FAILURE;   // Returns failure if failed to start agent execution thread
 		
@@ -1043,7 +1020,7 @@ int AgentMonitor()
     }
     else if (nPID < RETURN_SUCCESS)
     {
-        std::cout << "\n Alert!!! Couldnot start tftp server for logfile transfer\n";
+        DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!! Couldnot start tftp server for logfile transfer \n");
     }
     else
     {
@@ -1054,7 +1031,7 @@ int AgentMonitor()
         }
 
         /* clean up and exit */
-        std::cout << "\nExiting Agent Monitoring..\n";
+        DEBUG_PRINT (DEBUG_LOG, "\nExiting Agent Monitoring..\n");
         o_Monitor.Close();
         networking::cleanup();
     }
@@ -1078,22 +1055,55 @@ int AgentMonitor()
 int main()
 {
     char* pszPath;
+    std::string strEnvPath;
+    std::string strFolderPath;
     int nReturnValue = RETURN_SUCCESS;
-	
+
+#ifdef AGENT_LOG_ENABLE
+
+    RpcMethods::sm_pLogStream = freopen(NULL_LOG, "w", stdout);
+
+#endif
+
     /* Checking environment variable TDK_PATH */
     pszPath = getenv ("TDK_PATH");
     if (pszPath != NULL)
     {
-        std::cout << "TDK_PATH : " << pszPath << std::endl;
+        DEBUG_PRINT (DEBUG_LOG, "TDK_PATH : %s", pszPath);
     }
     else
     {
-        std::cout << "Alert!!! TDK_PATH not exported " << std::endl;
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! TDK_PATH not exported \n");
 		
         return RETURN_FAILURE;   // Returns failure if TDK_PATH not exported
     }
-	
+
+    /* Extracting path to logs folder */
+    strEnvPath = getenv ("TDK_PATH");
+    strFolderPath.append(strEnvPath);
+    strFolderPath.append("/");
+    RpcMethods::sm_strTDKPath = strFolderPath;
+    strFolderPath.append("logs");
+    RpcMethods::sm_strLogFolderPath = strFolderPath;
+    RpcMethods::sm_strLogFolderPath.append("/");
+
+    /* Creating logs directory */
+    nReturnValue = mkdir (strFolderPath.c_str(), 0777);
+    if (nReturnValue != RETURN_SUCCESS)
+    {
+        DEBUG_PRINT (DEBUG_TRACE, "Alert!!! Unable to create logs folder \n");
+    }
+
+    /* Starting agent monitor */
     nReturnValue = AgentMonitor();
+
+#ifdef AGENT_LOG_ENABLE
+
+    fclose(RpcMethods::sm_pLogStream);
+
+#endif
+
+    DEBUG_PRINT (DEBUG_LOG, "\nAgent Shutttingdown...\n");
 	
     return nReturnValue;
 	

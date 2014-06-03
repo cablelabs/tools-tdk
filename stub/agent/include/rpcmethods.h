@@ -28,6 +28,7 @@
 #define RETURN_FAILURE -1
 #define CONFIGURATION_FILE "tdkconfig.ini"
 #define PORT_FORWARD_RULE_FILE "forwardRule.ini"
+#define NULL_LOG "/dev/null"
 
 #define STR(x)   #x
 #define SHOW_DEFINE(x) STR(x)
@@ -42,6 +43,7 @@ class RpcMethods
 {
 	
     public:
+        static FILE *sm_pLogStream;
         static int sm_nAgentPID;
         static int sm_nDeviceStatusFlag;
         static int sm_nStatusQueryFlag;
@@ -51,6 +53,8 @@ class RpcMethods
         static const char* sm_szBoxName;
         static const char* sm_szBoxInterface;
         static std::string sm_strBoxIP;
+        static std::string sm_strLogFolderPath;
+        static std::string sm_strTDKPath;
 
         /* Constructor */
         RpcMethods (RDKTestAgent *pAgent)
@@ -64,6 +68,8 @@ class RpcMethods
         bool RPCRestorePreviousState (const Json::Value& request, Json::Value& response);
         bool RPCGetHostStatus (const Json::Value& request, Json::Value& response);
         bool RPCResetAgent (const Json::Value& request, Json::Value& response);
+        bool RPCGetRDKVersion (const Json::Value& request, Json::Value& response);
+        bool RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Value& response);
         bool RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response);
         bool RPCPerformanceBenchMarking (const Json::Value& request, Json::Value& response);
 
@@ -81,10 +87,12 @@ class RpcMethods
         int m_iLoadStatus;
         int m_iUnloadStatus;
 
+        char* GetHostIPInterface (const char* pszIPaddr);
         std::string LoadLibrary (char* pszLibName);
         std::string UnloadLibrary (char* pszLibName);
         void SetCrashStatus (const char* pszExecId, const char* pszDeviceId, const char* pszTestCaseId, const char* pszExecDevId);
         void ResetCrashStatus();     
+        void SignalFailureDetails();
 	 
 }; /* End of RpcMethods */
 

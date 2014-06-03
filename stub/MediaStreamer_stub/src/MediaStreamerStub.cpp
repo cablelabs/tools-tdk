@@ -56,6 +56,28 @@ MediaStreamerAgent::MediaStreamerAgent()
 	DEBUG_PRINT(DEBUG_TRACE, "Initializing MediastreamerAgent\n");
 }
 
+/***************************************************************************
+ *Function name : testmodulepre_requisites
+ *Descrption    : testmodulepre_requisites will  be used for setting the
+ *                pre-requisites that are necessary for this component
+ *
+ *****************************************************************************/
+std::string MediaStreamerAgent::testmodulepre_requisites()
+{
+        return "SUCCESS";
+}
+
+/***************************************************************************
+ *Function name : testmodulepost_requisites
+ *Descrption    : testmodulepost_requisites will be used for resetting the
+ *                pre-requisites that are set
+ *
+ *****************************************************************************/
+bool MediaStreamerAgent::testmodulepost_requisites()
+{
+        return true;
+}
+
 /**************************************************************************
 Function name : MediaStreamerAgent::initialize
 
@@ -653,6 +675,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value&
 	{
 		fprintf(stderr, "curl_easy_perform() failed: %s \n",curl_easy_strerror(curlResponse));
 		response["result"]="FAILURE";
+		response["details"]="CURL API Failed";
 		return false;
 	}
 	curl_easy_cleanup(curl);
@@ -698,7 +721,7 @@ Description   : Receives the RequestURL  from Test Manager and makes to play RMF
 bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RMFStreamerAgent_Player ---> Entry\n");
-#ifdef ENABLE_DVRSRC_MPSINK	
+//#ifdef ENABLE_DVRSRC_MPSINK	
 	int res_HNSrcGetState;
 	int sleep_time = request["play_time"].asInt();
 	int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcPlay, res_MPSinksetrect;
@@ -836,12 +859,12 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
         response["result"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_TRACE, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
         return TEST_SUCCESS;
-#else
+/*#else
         response["result"] = "FAILURE";
         response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
         DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
         return TEST_FAILURE;
-#endif
+#endif*/
 }
 #endif
 #ifdef RDK_BR_1DOT3
@@ -1426,6 +1449,7 @@ bool MediaStreamerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAg
 #endif
 	/* All done, close things cleanly */
 	return TEST_SUCCESS;
+
 }
 
 /**************************************************************************

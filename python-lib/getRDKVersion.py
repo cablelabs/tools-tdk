@@ -22,40 +22,38 @@ import sys
 # Methods
 #------------------------------------------------------------------------------
 
-def resetAgent(deviceIP,devicePort,enableReset):
+def getRDKVersion(deviceIP,devicePort):
 
-        # Syntax       : resetAgent.resetAgent (deviceIP,devicePort,enableReset)
-        # Description  : Sends a json message to reset agent.
-        # Parameters   : deviceIP - IP address of the device under test.
-	#		 devicePort - Port Number of the device under test.
-	#		 enableReset - true/false 
-	#		 true - To restart agent
-	#		 false - To reset device state to FREE
-        # Return Value : Nil
+        # Syntax       : getDevices.getConnectedDevices( deviceIP,devicePort )
+        # Description  : Sends a json query to get the MAC address of connected devices from the json response.
+        # Parameters   : deviceIP - IP address of the device under test(Gateway box).
+	#		 devicePort - Port Number of the device under test(Gateway box). 
+        # Return Value : Returns string which holds MAC address of connected devices.
 
 	try:
         	port = devicePort
         	tcpClient = socket.socket()
         	tcpClient.connect((deviceIP, port))
 
-       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'ResetAgent','enableReset':enableReset}
+       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'GetRDKVersion'}
      		query = json.dumps(jsonMsg)
         	tcpClient.send(query) #Sending json query
 
 		result = tcpClient.recv(1048) #Receiving response
 		tcpClient.close()
 
-		resultIndex = result.find("result") + len("result"+"\":\"")
+		if "Method not found." in result:
+                        print "METHOD_NOT_FOUND"
+			sys.stdout.flush()
 
-                message = result[resultIndex:]
-                message = message[:(message.find("\""))]
-                if "SUCCESS" in message.upper():
-			print "Test timed out.. Agent Reset.."
 		else:
-			print "Test timed out.. Failed to reset agent.."
-		sys.stdout.flush()
+			resultIndex = result.find("result") + len("result"+"\":\"")
+	                message = result[resultIndex:]
+        	        message = message[:(message.find("\""))]
+			print message
+			sys.stdout.flush()
 
 	except socket.error:
-		print "ERROR: Script timed out.. Unable to reach agent.." 
+		print "AGENT_NOT_FOUND"
 		sys.stdout.flush()
 

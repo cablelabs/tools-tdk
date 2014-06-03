@@ -13,32 +13,33 @@
 #------------------------------------------------------------------------------
 # module imports
 #------------------------------------------------------------------------------
+import sys
+import json
+import tftpy
 import socket
 import select
-import json
-import sys
 
 #------------------------------------------------------------------------------
 # Methods
 #------------------------------------------------------------------------------
 
-def resetAgent(deviceIP,devicePort,enableReset):
+def consoleLogTransfer(deviceIP,agentPort,logTransferPort,fileName,localFilePath):
 
-        # Syntax       : resetAgent.resetAgent (deviceIP,devicePort,enableReset)
-        # Description  : Sends a json message to reset agent.
+        # Syntax       : consoleLogTransfer.consoleLogTransfer (deviceIP,agentPort,logTransferPort,fileName,localFilePath)
+        # Description  : Sends a json query to get path to console log file and transfer the same.
         # Parameters   : deviceIP - IP address of the device under test.
-	#		 devicePort - Port Number of the device under test.
-	#		 enableReset - true/false 
-	#		 true - To restart agent
-	#		 false - To reset device state to FREE
+	#		 agentPort - Port Number of the device under test. 
+	#		 logTransferPort - Port Number for log transfer using TFTP.
+	#		 fileName - Name of log file.
+	#		 localFilePath - Path to which the file is transferred.
         # Return Value : Nil
 
+	# Sending JSON request to get log path
 	try:
-        	port = devicePort
         	tcpClient = socket.socket()
-        	tcpClient.connect((deviceIP, port))
+        	tcpClient.connect((deviceIP, agentPort))
 
-       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'ResetAgent','enableReset':enableReset}
+       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'GetAgentConsoleLogPath'}
      		query = json.dumps(jsonMsg)
         	tcpClient.send(query) #Sending json query
 
@@ -49,13 +50,28 @@ def resetAgent(deviceIP,devicePort,enableReset):
 
                 message = result[resultIndex:]
                 message = message[:(message.find("\""))]
-                if "SUCCESS" in message.upper():
-			print "Test timed out.. Agent Reset.."
-		else:
-			print "Test timed out.. Failed to reset agent.."
 		sys.stdout.flush()
 
 	except socket.error:
-		print "ERROR: Script timed out.. Unable to reach agent.." 
+		print "ERROR: Unable to connect agent.." 
 		sys.stdout.flush()
+		sys.exit()
 
+	# Transferring file using TFTP
+	try:
+
+		remoteFile = message + "/" + fileName
+		localFile = localFilePath + "/" + fileName
+		print localFile
+		print remoteFile
+		client = tftpy.TftpClient( deviceIP, logTransferPort )
+		client.download( remoteFile, localFile, timeout=20 )
+	except TypeError:
+      		print "Connection Error!!! Transfer of " + remoteFile + " Failed: Make sure Agent is running"
+		sys.exit()
+
+	except:
+      		print "Error!!! Transfer of " + remoteFile + " Failed.."
+		sys.exit()
+
+# End of File

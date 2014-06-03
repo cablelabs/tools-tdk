@@ -68,6 +68,8 @@ class MediaStreamerAgent : public RDKTestStubInterface
 		/*inherited functions*/
 		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);		
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
+		std::string testmodulepre_requisites();
+                bool testmodulepost_requisites();
 
 		/*MediaStreamerAgent Wrapper functions*/
 	        bool MediaStreamerAgent_LiveTune_Request(IN const Json::Value& request, OUT Json::Value& response);

@@ -63,6 +63,8 @@ $(OBJS): $(SOURCES)
 $(LIB): $(OBJS)
 	$(CROSSCOMPILE)g++ $(OBJS) -fPIC $(LIBOPTS) -o $(LIBRECORDER) $(LDOPTS)
 	rm -rf $(OBJDIR)
+	mkdir -p $(TDK_BIN_PATH)/scripts
+	cp -r ../platform/Recorder_stub/scripts/* $(TDK_BIN_PATH)/scripts
 	mv $(LIBRECORDER) $(LIBDIR)
 #
 # Build everything

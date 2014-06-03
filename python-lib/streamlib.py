@@ -56,6 +56,7 @@ class StreamingDetails:
     	# Description  : returns the Gateway IP of corresponding stream
   	# Return Value : gateway IP 
 
+
 		gateway = self.data['gatewayip']
 		if (gateway == "null"):
 			print "#TDK_@error-ERROR : Please make sure corresponding gateway device is selected in \"Devices\" page"
@@ -145,7 +146,7 @@ class StreamingDetails:
   	# Return Value : videoformat
 
 		videoformat = self.data['videoformat']
-		if (recorderid == "null"):
+		if (videoformat == "null"):
                         print "#TDK_@error-ERROR : Please make sure Video Format is selected for requested stream ID"
                         sys.stdout.flush()
                         sys.exit()

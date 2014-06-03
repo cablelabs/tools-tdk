@@ -65,7 +65,8 @@ class IARMBUSAgent : public RDKTestStubInterface
 		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
-
+		std::string testmodulepre_requisites();
+                bool testmodulepost_requisites();
 		/*IARM Wrapper functions*/
 		bool IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value& response);
 		bool IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value& response);

@@ -34,14 +34,14 @@
 #echo "rxerr/s: Total number of bad packets received per second" >> systemDiagnostics.log
 #echo "txerr/s: Total number of errors that happened per second while transmitting packets" >> systemDiagnostics.log
 
+export PATH=$PATH:/usr/local/bin:/usr/local/lib:/usr/local/lib/sa
 export TDK_PATH=/opt/TDK
-export PATH=$PATH:$TDK_PATH:$TDK_PATH/sa
 
-#echo "ENDOFTOPCOMMAND_!" >> systemDiagnostics.log
+cd $TDK_PATH
 
 sar -q -r -S -B -u -b -n DEV -n EDEV 1 1 | awk ' /Average:/ { print $0 }' > sysStatAvg.log
 
-echo "#CPU START" >> systemDiagnostics.log
+echo "#CPU START" > systemDiagnostics.log
 cat sysStatAvg.log | awk 'BEGIN { RS="" ; FS="\n" } { print "%cpu;",$2 }' | awk -F ' ' '{ print $1" "$4 }' >> systemDiagnostics.log
 echo "#CPU END" >> systemDiagnostics.log
 echo "#MEMORY START" >> systemDiagnostics.log

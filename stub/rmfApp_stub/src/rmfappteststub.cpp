@@ -32,8 +32,32 @@ rmfAppTestStub::rmfAppTestStub ()
 	child_pid = 0; 
 	DEBUG_PRINT(DEBUG_LOG, "Creating new stub object.\n");
 }
+/***************************************************************************
+ *Function name : testmodulepre_requisites
+ *Descrption    : testmodulepre_requisites will  be used for setting the
+ *                pre-requisites that are necessary for this component
+ *
+ *****************************************************************************/
+
+std::string rmfAppTestStub::testmodulepre_requisites()
+{
+        return "SUCCESS";
+}
+/***************************************************************************
+ *Function name : testmodulepost_requisites
+ *Descrption    : testmodulepost_requisites will be used for resetting the
+ *                pre-requisites that are set
+ *
+ *****************************************************************************/
+
+bool rmfAppTestStub::testmodulepost_requisites()
+{
+        return true;
+}
+
 
 /**************************************************************************
+
 * Function name: initialize ()
 * Descrption: Registers the RPC methods of the stub with the server and forks
 * the actual rmfApp application. Sets up a 'pipe' to communicate with the child

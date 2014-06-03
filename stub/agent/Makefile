@@ -16,13 +16,21 @@ ifeq ($(DEBUG_LEVEL),ERROR)
 COPTS     += -DDEBUG_LEVEL_ERROR
 endif
 
+#Defining RDK version
+ifndef RDK_VERSION
+$(error You must define the RDK_VERSION variable in def.inc)
+else
+COPTS     += -DRDKVERSION="\"$(RDK_VERSION)\""
+endif
+
+COPTS += -DAGENT_LOG_ENABLE
+
 #
 # Source files
 #
 LDOPTS    +=    -L $(IMAGE_PATH)/usr/local/lib \
 		-L ../../opensource/lib/
 
-#TARGETDIR     := ../../$(VERSION)/bin/
 INCLUDES  += -I ./include \
              -I$(PLATFORM_SDK)/include \
              -I$(JSONRPC_PATH)/include \
@@ -42,7 +50,7 @@ endif
 CC	  := g++
 TARGETNAME:=$(TARGETDIR)/agent
 SOURCES   := src/*.cpp
-COPTS     += -Wall
+
 
 #
 # Build the TARGET from library and souce files

@@ -116,11 +116,14 @@ Uncomment the following parameters in case of client
   by using following commands. 
 
 	make agent
-	make IARMBUS_stub
 	make MediaStreamer_stub
-	make Mediaframework_stub
 	make OpenSourceComponent_Stub
-	make RDKLogger_stub
 	make SM_stub
-	make e2e_rmf_stub
+	make IARMBUS_stub
+	make DS_stub
+	make ClosedCaption_stub
+	make RDKLogger_stub
+	make TDKIntegration_Stub
 	make rmfApp_stub
+	make Recorder_stub
+	make Mediaframework_stub

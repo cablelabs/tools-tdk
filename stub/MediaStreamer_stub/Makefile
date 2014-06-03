@@ -47,7 +47,7 @@ LDOPTS    :=    -L $(IMAGE_PATH)/mnt/nfs/bin/target-snmp/lib      \
                 -L$(IMAGE_PATH)/usr/lib \
                 -L $(IMAGE_PATH)/mnt/nfs/lib \
                 -L $(IMAGE_PATH)/mnt/nfs/bin \
-                -ldvrmgr -ltinyxml -l:libuuid.so.1 -l:libcrypto.so.0.9.8 -lTasseograph -l:libssl.so.0.9.8 -lfwloader -l:libreadline.so.6 -l:libnetsnmp.so.15 -l:libnetsnmpagent.so.15 -l:libnetsnmphelpers.so.15 -lpodmgr -lsysResource -lsectionfilter -linbsimanager -linbsectionfilter -lqamsrc -l:libssl.so.0.9.8 -l:libhistory.so.6 -l:libgstreamer-0.10.so.0 -l:libgio-2.0.so.0 -lglib-2.0 -llog4c -l:libgobject-2.0.so.0 -lmspod_pal -linit -lrdkloggers -lrdklogger
+                -ldvrmgr -ltinyxml -l:libuuid.so.1 -l:libcrypto.so.0.9.8 -lTasseograph -l:libssl.so.0.9.8 -lfwloader -l:libreadline.so.6 -l:libnetsnmp.so.15 -l:libnetsnmpagent.so.15 -l:libnetsnmphelpers.so.15 -lpodmgr -lsysResource -lsectionfilter -linbsimanager -linbsectionfilter -lqamsrc -l:libssl.so.0.9.8 -l:libhistory.so.6 -l:libgstreamer-0.10.so.0 -l:libgio-2.0.so.0 -lglib-2.0 -llog4c -l:libgobject-2.0.so.0 -lmspod_pal -linit -lrdkloggers -lrdklogger -l:libncurses.so.5
 
 SOURCES   := $(RDK_BUILD_DIR)/mediaframework/core/rmfbase.cpp \
 	     $(RDK_BUILD_DIR)/mediaframework/mediaplayersink/mediaplayersink.cpp \

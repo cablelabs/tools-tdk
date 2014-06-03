@@ -144,9 +144,36 @@ bool IARMBUSAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgent
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::get_LastReceivedEventDetails, "TestMgr_IARMBUS_GetLastReceivedEventDetails");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::InvokeSecondApplication, "TestMgr_IARMBUS_InvokeSecondApplication");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_GetContext, "TestMgr_IARMBUS_GetContext");
-	return (prereqcheck((char*)"Daemon"));
+	return TEST_SUCCESS;
 
 }
+
+/***************************************************************************
+ *Function name : testmodulepre_requisites
+ *Descrption    : testmodulepre_requisites will  be used for setting the
+ *                pre-requisites that are necessary for this component
+ *
+ *****************************************************************************/
+
+std::string IARMBUSAgent::testmodulepre_requisites()
+{
+	if ((prereqcheck((char*)"Daemon"))== TEST_SUCCESS)
+	        return "SUCCESS";
+	else
+		return "FAILURE<DETAILS> Pre-requisite check failed for Daemon Mgr";
+}
+/***************************************************************************
+ *Function name : testmodulepost_requisites
+ *Descrption    : testmodulepost_requisites will be used for resetting the
+ *                pre-requisites that are set
+ *
+ *****************************************************************************/
+
+bool IARMBUSAgent::testmodulepost_requisites()
+{
+        return TEST_SUCCESS;
+}
+
 
 /**************************************************************************
  *

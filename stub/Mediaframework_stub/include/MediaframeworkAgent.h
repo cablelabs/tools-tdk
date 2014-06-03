@@ -19,29 +19,34 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <stdlib.h>
-#include "rdkteststubintf.h"
-#include "rdktestagentintf.h"
 #include <signal.h>
 #include <wait.h>
+#include <ifaddrs.h>
+#include <arpa/inet.h>
 
 #include <fstream>
 #include <string.h>
-
-using namespace std;
 
 #include <glib.h>
 #include <iostream>
 #include <termios.h>
 
+#include "rdkteststubintf.h"
+#include "rdktestagentintf.h"
+
 #include "mediaplayersink.h"
 #include "hnsource.h"
 #include "DVRSource.h" 
 #include "DVRSink.h" 
+#include "hnsink.h"
 #include "dvrmanager.h"
 #include "rmf_osal_init.h"
 
 #include "rmfqamsrc.h"
 #include "rmf_platform.h"
+
+#define BUFFER_LENGTH 64
+#define CMD "cat /etc/rmfconfig.ini | grep \"QAMSRC.FACTORY.ENABLED\" | cut -d \"=\" -f 2"
 
 #define IN
 #define OUT
@@ -62,8 +67,16 @@ using namespace std;
 #define TITLE_LEN	40
 
 #define RECORD_DETAILS_TXT "recordDetails.txt"
+#define PRE_REQUISITE_LOG_PATH "logs/Mediaframework_testmodule_prereq_details.log"
+#define PRE_REQUISITE_FILE "scripts/mediaframework_test_module_pre-script.sh"
+#define POST_REQUISITE_LOG_PATH "logs/Mediaframework_testmodule_postreq_details.log"
+#define POST_REQUISITE_FILE "scripts/mediaframework_test_module_post-script.sh"
+#define QAM_PRE_REQUISITE_FILE "scripts/mediaframework_qamsrc_test_module_pre-script.sh"
+#define QAM_PRE_REQUISITE_LOG_PATH "logs/Mediaframework_qamsrc_testmodule_postreq_details.log"
+
 using namespace std;
 
+string g_tdkPath = getenv("TDK_PATH");
 
 class RDKTestAgent;
 class MediaframeworkAgent : public RDKTestStubInterface
@@ -74,8 +87,9 @@ class MediaframeworkAgent : public RDKTestStubInterface
 
                 //Inherited functions
                 bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
-
                 bool cleanup(const char*, RDKTestAgent*);
+		std::string testmodulepre_requisites();
+		bool testmodulepost_requisites();	
 		
 		/*Optimised Code */
 #if 1
@@ -96,7 +110,24 @@ class MediaframeworkAgent : public RDKTestStubInterface
 		bool MediaframeworkAgent_RmfElementSetMediaTime(IN const Json::Value& req, OUT Json::Value& response);
 		bool MediaframeworkAgent_RmfElementGetMediaTime(IN const Json::Value& req, OUT Json::Value& response);	
 		bool MediaframeworkAgent_RmfElementGetMediaInfo(IN const Json::Value& req, OUT Json::Value& response);	
-		bool MediaframeworkAgent_RmfElementGetState(IN const Json::Value& req, OUT Json::Value& response);	
+		bool MediaframeworkAgent_RmfElementGetState(IN const Json::Value& req, OUT Json::Value& response);
+
+		bool MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Uninit(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_QAMSrc_UninitPlatform(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethods(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_QAMSrc_GetTSID(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI(IN const Json::Value& req, OUT Json::Value& response);
+		
+		bool MediaframeworkAgent_RmfElement_HNSink_InitPlatform(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_HNSink_UninitPlatform(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_HNSink_SetProperties(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_RmfElement_HNSink_SetSourceType(IN const Json::Value& req, OUT Json::Value& response);
+		
 #endif
 
                 //Mediaframework Wrapper functions
@@ -109,19 +140,6 @@ class MediaframeworkAgent : public RDKTestStubInterface
 	
 		/*DVR Recording List*/
 		bool MediaframeworkAgent_DVR_Rec_List(IN const Json::Value& req, OUT Json::Value& response);
-
-		/*QAM Source*/
-		bool MediaframeworkAgent_QAMSource_InitTerm(IN const Json::Value& req, OUT Json::Value& response);
-		bool MediaframeworkAgent_QAMSource_OpenClose(IN const Json::Value& req, OUT Json::Value& response);
-		bool MediaframeworkAgent_QAMSource_Play(IN const Json::Value& req, OUT Json::Value& response);
-		bool MediaframeworkAgent_QAMSource_Pause(IN const Json::Value& req, OUT Json::Value& response);
-		bool MediaframeworkAgent_QAMSource_GetTsId(IN const Json::Value& req, OUT Json::Value& response);
-		bool MediaframeworkAgent_QAMSource_GetLtsId(IN const Json::Value& req, OUT Json::Value& response);
-		bool MediaframeworkAgent_QAMSource_Init_Uninit_Platform(IN const Json::Value& req, OUT Json::Value& response);
-		bool MediaframeworkAgent_QAMSource_GetUseFactoryMethods(IN const Json::Value& req, OUT Json::Value& response);
-		bool MediaframeworkAgent_QAMSource_Get_Free_LowLevelElement(IN const Json::Value& req, OUT Json::Value& response);
-		bool MediaframeworkAgent_QAMSource_GetQAMSourceInstance(IN const Json::Value& req, OUT Json::Value& response);
-		bool MediaframeworkAgent_QAMSource_ChangeURI(IN const Json::Value& req, OUT Json::Value& response);
 		
 		/*DVR sink*/
         	bool MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Value& req, OUT Json::Value& response);

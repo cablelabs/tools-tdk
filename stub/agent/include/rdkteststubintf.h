@@ -13,6 +13,8 @@
 #ifndef __RDK_TEST_STUB_INTF__
 #define __RDK_TEST_STUB_INTF__
 
+#include <string>
+
 #define IN	
 #define OUT
 
@@ -32,11 +34,13 @@ class RDKTestStubInterface
         /* Destructor */
         virtual ~RDKTestStubInterface(){}
 
+        virtual std::string testmodulepre_requisites() = 0;
+        virtual bool testmodulepost_requisites() = 0;
         virtual bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj) = 0;
         virtual bool cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj) = 0;
 		
 }; /* End of RDKTestStubInterface */
 
-#endif //__OCAP_STUB_H__
+#endif //__RDK_TEST_STUB_INTF__
 
 

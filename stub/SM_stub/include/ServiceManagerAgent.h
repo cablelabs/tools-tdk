@@ -38,6 +38,8 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		/*inherited functions*/
 		/*ServiceManagerAgent Wrapper functions*/
 		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
+		std::string testmodulepre_requisites();
+                bool testmodulepost_requisites();
 		bool SM_RegisterService(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_UnRegisterService(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_DoesServiceExist(IN const Json::Value& req, OUT Json::Value& response);

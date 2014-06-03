@@ -22,6 +22,7 @@ import socket
 import signal
 import urllib
 import dvrlib
+import datetime
 import threading
 import streamlib
 import recordinglib
@@ -30,7 +31,9 @@ from resetAgent import resetAgent
 from time import gmtime, strftime
 from devicestatus import getStatus
 from recorderlib import startRecorderApp
-
+import MySQLdb
+import shutil
+#import _mysql
 
 #------------------------------------------------------------------------------
 # module class
@@ -216,7 +219,6 @@ class RecordList:
         	else:
                 	return 1
 
-
 	########## End of Function ##########
 
 
@@ -332,6 +334,20 @@ class PrimitiveTestCase:
 
 	########## End of Function ##########
 
+	def getUTCTime(self):
+
+	# To get UTC time
+
+	# Syntax       : OBJ.getUTCTime()
+	# Description  : Method to return current UTC time
+	# Parameters   : Nil
+	# Return Value : Current UTC time 
+		
+		timeStamp = strftime("%m%d%H%M%Y", datetime.datetime.utcnow().timetuple())
+		return timeStamp
+
+	########## End of Function ##########
+
 	def executeTestCase(self, expectedResult):
 
 	# Send the JSON Message to Server over TCP
@@ -345,13 +361,15 @@ class PrimitiveTestCase:
 		print "Executing %s...." %self.testCaseName
 		sys.stdout.flush()
 		self.tcpClient.send(self.jsonMsgValue)
+		t1 = time.time();
 		self.result = self.tcpClient.recv(1024)
+		t2 = time.time();executionTime = t2-t1;
 		self.expectedResult = expectedResult
 
 		self.result = self.result.replace("result","TDK__#@$00_result")
 		self.result = self.result.replace("details","TDK__#@$00_details")
 		self.result = self.result.replace("log-path","TDK__#@$00_log-path")
-		return
+		return executionTime;
 
 	########## End of Function ##########
 
@@ -519,7 +537,21 @@ class PrimitiveTestCase:
             
         	ipAddress = self.ip
         	port = self.logTransferPort
+		#dir = self.realpath + str(self.execID) previously it was like this
+		dir = self.realpath + str(self.execID)
+#		print "Directory path:",dir
+		#checking if directory is exists or not if exists then rename the existing one as <execID>old and create new with name <execID>.
+		try:
+                        os.makedirs(dir)
+                except OSError:
+                        if os.path.exists(dir):
+                                shutil.move(dir, dir+"old")
+                        else:
+                                print "\n Error in log Directory path \n"
+
+		#TODO
 		destinationLogPath = self.realpath + "logs/" + str(self.execID) + "/" + str(self.execDevId) + "/" 
+		#destinationLogPath = self.realpath +  str(self.execID) + "/" + str(self.execDevId) + "/" 
 		timeStamp = strftime("%d%m%y%H%M%S", gmtime())
                 if not os.path.exists(destinationLogPath):
                         os.makedirs(destinationLogPath)
@@ -691,6 +723,9 @@ class TDKScriptingLibrary:
 		self.IP = None
 		self.realpath = None
 		self.tcpClient = None
+		self.data1=None
+		self.data2=None
+		self.execName=None
 		return 
 
 	def __del__(self):
@@ -749,8 +784,13 @@ class TDKScriptingLibrary:
 			self.performanceBenchMarkingEnabled = performanceBenchMarkingEnabled  
 			self.performanceSystemDiagnosisEnabled = performanceSystemDiagnosisEnabled 
 			self.scriptSuiteEnabled = scriptSuiteEnabled
+#			print "In tdklib 1"
 			self.tcpClient.connect((self.IP, self.portValue))
-		
+#			print "In tdklib 2"
+			self.data1 = "Connected to "+ self.IP +" Box for testing "+ self.componentName;#print "Connected to "+ self.IP +" Box for testing "+ self.componentName
+			self.execName = executionName
+			print "Test Execution Name is: %s" %self.execName
+	
 			#For DynamicLoading ....
 			#Load the particular shared object  before executing
 			print "Connected to "+ self.IP +" Box for testing "+ self.componentName
@@ -780,6 +820,7 @@ class TDKScriptingLibrary:
 			exit()
 		else:
 			print "Connected to Server!\n"
+			self.data2 = "Connected to Server!";#print "Connected to Server!\n";
 			sys.stdout.flush()
 			self.result = self.tcpClient.recv(1048)
 
@@ -802,7 +843,7 @@ class TDKScriptingLibrary:
 			message = message[:(message.find("\""))]
 			return message
 		else:
-			return "#TDK_@error-Error in socket.. Please check STB is up and agent is running inside it"
+			return "#TDK_@error-Unable to find result in response message"
 			
 	########## End of Function ##########
 
@@ -993,7 +1034,186 @@ class TDKScriptingLibrary:
 
 	########## End of Function ##########
 
-	
+	def insertExecutionDetails(self,executionTime, testName, tcName, outData, devName, executeMethodId):
+	# Insert the execution details into database
+        # Syntax       : obj.insertExecutionDetails(executionTime, "WebkitTest", "OpenSource_Comp_Test", outData, devName);
+        # Description  : Insert the execution details in execution table of database
+        # Parameters   : executionTime - time taken for execution of tests in seconds; testName - name of test on basis of which we can select script; tcName - testcaseName, outData - output Data, devName - name of device(STB) in which tests are executing
+        # Return Value : null
+        	try:
+	            if "WebkitTest" in testName:
+        	        script = "WebkitTest_Directfb"
+	            elif "GstreamerTest" in testName:
+        	        script = "GstreamerBasePluginTest"
+		    elif "RdkUnitTest_Webkit" in testName:
+                        script = "RdkUnitTest_Webkit"
+		    elif "DLNATest" in testName:
+        	        script = "DlnaTest"
+                    else:
+                        script = "OpenSource_Comp_Test";
+                        print "other than opensource test";
+
+        	    executionDate = strftime("%Y-%m-%d %H:%M:%S", gmtime());
+		    print "Date of Execution: "+executionDate;
+		    print "Device Name: "+devName;
+		    #execName = devName+"-"+strftime("%Y%m%d%H%M%S", gmtime());
+	            print "execution name inside insert function: %s" %self.execName;
+	            #resultobj = PrimitiveTestCase(tcName);
+        	    conn = MySQLdb.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+        	    #conn = _mysql.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+                    cur = conn.cursor()
+		    print "\n+++++++++++++++\n"
+                    outputData= self.data1 + "<br/>" + self.data2 + "<br/>" + outData;
+		    print "final ouputData in tdklib is: " + outputData;
+		    	
+                    query1 = """INSERT INTO execution (id, version, date_of_execution, device, device_group, execution_time, is_marked, name, output_data, result, script, script_group, groups_id, is_performance_done) VALUES ('%s','%s','%s','%s','%s','%s','%d','%s','%s','%s','%s','%s', NULL, 0)""" % (self.execID, self.rdkversion, executionDate, devName, "NULL", executionTime, 0, self.execName, outputData, tcName.resultStatus, script, "NULL");
+                    print query1;
+                    cur.execute(query1);
+                    print "Row(s) were updated :" +  str(cur.rowcount);
+		    conn.commit();
+		    print "\n+++++++++++++++\n"
+		    query4 = "INSERT INTO execution_device (id, version, date_of_execution, device, device_ip, execution_id, execution_time, status) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s')" % (self.execDevId, self.rdkversion, executionDate, devName, self.IP, self.execID, executionTime, tcName.resultStatus);
+                    print query4;
+                    cur.execute(query4);
+                    print "Row(s) were updated :" +  str(cur.rowcount);
+                    conn.commit();
+		    print "\n+++++++++++++++\n"
+		    query2 = """INSERT INTO execution_result (id, version, device, execution_id, execution_device_id, execution_output, script, status) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s')""" % (self.resultId, self.rdkversion, devName, self.execID, self.execDevId, outputData, script,  tcName.resultStatus);
+                    print query2;
+                    cur.execute(query2);
+                    print "Row(s) were updated :" +  str(cur.rowcount);
+                    conn.commit();
+		    print "\n+++++++++++++++\n"
+		    expectedResult = "Test Suite Executed"
+                    query3 = """INSERT INTO execute_method_result (id, version, actual_result, execution_result_id, expected_result, function_name, status) VALUES ('%s','%s','%s','%s','%s','%s','%s')""" % (executeMethodId, self.rdkversion, tcName.resultStatus, self.resultId, expectedResult, tcName.testCaseName, tcName.resultStatus);
+                    print query3;
+                    cur.execute(query3);
+                    print "Row(s) were updated :" +  str(cur.rowcount);
+                    conn.commit();
+		    print "\n+++++++++++++++\n"
+		    conn.close();
+		except Exception, e:
+			print "ERROR : exception in inserting data!\n";
+			print "Exception type is: %s" %e;
+		else:
+			print "Unload module Success\n"
+    ########## End of Function ##########
+
+	def fetchLastExecutionId(self):
+    	# fetch last inserted executionId from the database
+    	# Syntax       : obj.fetchLastExecutionId();
+    	# Description  : fetch last inserted executionId from  execution table of database
+   	# Parameters   : 
+    	# Return Value : executionId
+    		try:
+        		conn = MySQLdb.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+        		#conn = _mysql.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+	                cur = conn.cursor()
+        	        query = "SELECT id FROM execution ORDER BY id DESC limit 1";
+	                #print query;
+			cur.execute(query);
+			lastExecId = list(cur.fetchall());
+	                #print "list value: ", lastExecId;
+			#print "Row(s) were updated :" +  str(cur.rowcount);
+		        #print "Last ExecutionId fetched from the database is:", lastExecId[0];
+			for execId in lastExecId:
+				print (execId[0] + 1)
+			conn.commit();
+        	        conn.close();
+                	return execId[0];
+		except Exception, e:
+                        print "ERROR : exception in fetching last executionId!\n";
+                        print "Exception type is: %s" %e;
+                else:
+                        print "Unload module Success\n"
+    ########## End of Function ##########	
+
+	def fetchLastExecutionResultId(self):
+        # fetch last inserted executionresultId from the database
+        # Syntax       : obj.fetchLastExecutionResultId();
+        # Description  : fetch last inserted executionresultId from  execution_result table of database
+        # Parameters   :
+        # Return Value : executionresultId
+                try:
+                        conn = MySQLdb.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+                        #conn = _mysql.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+                        cur = conn.cursor()
+                        query = "SELECT id FROM execution_result ORDER BY id DESC limit 1";
+                        print query;
+                        cur.execute(query);
+                        lastExecResId = list(cur.fetchall());
+                        print "list value: ", lastExecResId;
+                        print "Row(s) were updated :" +  str(cur.rowcount);
+                        print "Last ExecutionId fetched from the database is:", lastExecResId[0];
+                        for execResId in lastExecResId:
+                                print execResId[0]
+                        conn.commit();
+                        conn.close();
+                        return execResId[0];
+                except Exception, e:
+                        print "ERROR : exception in fetching last executionResultId!\n";
+                        print "Exception type is: %s" %e;
+                else:
+                        print "Unload module Success\n"
+    ########## End of Function ##########
+
+        def fetchLastExecuteMethodResultId(self):
+        # fetch last inserted executemethodresultId from the database
+        # Syntax       : obj.fetchLastExecuteMethodResultId();
+        # Description  : fetch last inserted executemethodresultId from  execute_method_result table of database
+        # Parameters   :
+        # Return Value : executemethodresultId
+                try:
+                        conn = MySQLdb.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+                        #conn = _mysql.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+                        cur = conn.cursor()
+                        query = "SELECT id FROM execute_method_result ORDER BY id DESC limit 1";
+                        print query;
+                        cur.execute(query);
+                        lastExecMethResId = list(cur.fetchall());
+			print "list value: ", lastExecMethResId;
+                        print "Row(s) were updated :" +  str(cur.rowcount);
+                        print "Last ExecuteMethodResultId fetched from the database is:", lastExecMethResId[0];
+                        for execMethResId in lastExecMethResId:
+                                print execMethResId[0]
+                        conn.commit();
+                        conn.close();
+                        return execMethResId[0];
+                except Exception, e:
+                        print "ERROR : exception in fetching last executeMethodResultId!\n";
+                        print "Exception type is: %s" %e;
+                else:
+                        print "Unload module Success\n"
+    ########## End of Function ##########
+
+	def fetchLastExecutionDeviceId(self):
+        # fetch last inserted executionDeviceId from the database
+        # Syntax       : obj.fetchLastExecutionDeviceId();
+        # Description  : fetch last inserted executiondeviceId from  execute_method_result table of database
+        # Parameters   :
+        # Return Value : executemethodresultId
+                try:
+                        conn = MySQLdb.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+                        #conn = _mysql.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+                        cur = conn.cursor()
+                        query = "SELECT id FROM execution_device ORDER BY id DESC limit 1";
+                        print query;
+                        cur.execute(query);
+                        lastExecDevId = list(cur.fetchall());
+                        print "list value: ", lastExecDevId;
+                        print "Row(s) were updated :" +  str(cur.rowcount);
+                        print "Last ExecutionDeviceId fetched from the database is:", lastExecDevId[0];
+                        for execDevId in lastExecDevId:
+                                print execDevId[0]
+                        conn.commit();
+                        conn.close();
+                        return execDevId[0];
+                except Exception, e:
+                        print "ERROR : exception in fetching last executionDeviceId!\n";
+                        print "Exception type is: %s" %e;
+                else:
+                        print "Unload module Success\n"
+    ########## End of Function ##########	
 ########## End of Class  ##########
 
 

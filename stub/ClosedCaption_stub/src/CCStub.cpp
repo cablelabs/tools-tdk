@@ -28,7 +28,7 @@ CCAgent::CCAgent()
  *
  * @return                : returns the description of the error string if its a failure or returns success string
  ***********************************************************************************************************************/
-char* getResult(int retval,char *resultDetails)
+char* getResult_CC(int retval,char *resultDetails)
 {
     if(retval==0)
         return (char*)"SUCCESS";
@@ -102,6 +102,29 @@ bool CCAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
     return TEST_SUCCESS;
 }
 
+/***************************************************************************
+ *Function name : testmodulepre_requisites
+ *Descrption    : testmodulepre_requisites will  be used for setting the
+ *                pre-requisites that are necessary for this component
+ *
+ *****************************************************************************/
+
+std::string CCAgent::testmodulepre_requisites()
+{
+        return "SUCCESS";
+}
+/***************************************************************************
+ *Function name : testmodulepost_requisites
+ *Descrption    : testmodulepost_requisites will be used for resetting the
+ *                pre-requisites that are set
+ *
+ *****************************************************************************/
+
+bool CCAgent::testmodulepost_requisites()
+{
+        return TEST_SUCCESS;
+}
+
 
 /**************************************************************************************************************************
  * @Function Description : CCInit Function will be used for intialize the required resources before call the Closed caption APIS
@@ -148,7 +171,7 @@ bool CCAgent::CCInit(IN const Json::Value& req, OUT Json::Value& response)
 
         CCStatus_t ccStatus = CCStatus_OFF;
         returnvalue = ccSetCCState(ccStatus, 0);
-        response["result"]=getResult(returnvalue,resultDetails);
+        response["result"]=getResult_CC(returnvalue,resultDetails);
         response["details"]=resultDetails;
         DEBUG_PRINT(DEBUG_ERROR,"\nCCAgent_Init --->result %s\n",response["result"].asCString());
         free(resultDetails);
@@ -199,7 +222,7 @@ bool CCAgent::CCGetSupportedServiceNumber(IN const Json::Value& req, OUT Json::V
     }
     else
     {
-        response["result"]=getResult(returnvalue,resultDetails);
+        response["result"]=getResult_CC(returnvalue,resultDetails);
         response["details"]=resultDetails;
     }
     free(stubservicesArray );
@@ -241,7 +264,7 @@ bool CCAgent::CCGetSupportedServiceNumberCount(IN const Json::Value& req, OUT Js
     }
     else
     {
-        response["result"]=getResult(returnvalue,resultDetails);
+        response["result"]=getResult_CC(returnvalue,resultDetails);
         response["details"]=resultDetails;
     }
 
@@ -391,7 +414,7 @@ bool CCAgent::CCShow(IN const Json::Value& req, OUT Json::Value& response)
     char *resultDetails;
     resultDetails=(char *)malloc(sizeof(char)*16);
     retval=ccShow();
-    response["result"]=getResult(retval,resultDetails);
+    response["result"]=getResult_CC(retval,resultDetails);
     response["details"]=resultDetails;
     return TEST_SUCCESS;
 }
@@ -409,7 +432,7 @@ bool CCAgent::CCHide(IN const Json::Value& req, OUT Json::Value& response)
     char *resultDetails;
     resultDetails=(char *)malloc(sizeof(char)*16);
     retval=ccHide();
-    response["result"]=getResult(retval,resultDetails);
+    response["result"]=getResult_CC(retval,resultDetails);
     response["details"]=resultDetails;
     free(resultDetails);
     return TEST_SUCCESS;
@@ -457,7 +480,7 @@ bool CCAgent::CCSetGetState(IN const Json::Value& request, OUT Json::Value& resp
 
     }
     DEBUG_PRINT(DEBUG_LOG,"\nset and get\n");
-    response["result"]=getResult(retval,resultDetails);
+    response["result"]=getResult_CC(retval,resultDetails);
     response["details"]=resultDetails;
     DEBUG_PRINT(DEBUG_ERROR,"\nCalling CCGetState %s \n",response["result"].asCString());
     free(stringDetails);
@@ -502,7 +525,7 @@ bool CCAgent::CCSetGetDigitalChannel(IN const Json::Value& request, OUT Json::Va
         if(returnvalue!=0)
         {
             DEBUG_PRINT(DEBUG_ERROR,"\n Execution Failed on ccSetDigitalChannel()\n");
-            response["result"]=getResult(returnvalue,resultDetails);
+            response["result"]=getResult_CC(returnvalue,resultDetails);
             response["details"]=resultDetails;
             free(resultDetails);
             return TEST_FAILURE;
@@ -530,7 +553,7 @@ bool CCAgent::CCSetGetDigitalChannel(IN const Json::Value& request, OUT Json::Va
     }
     else
     {
-        response["result"]=getResult(returnvalue,resultDetails);
+        response["result"]=getResult_CC(returnvalue,resultDetails);
         response["details"]=resultDetails;
     }
     free(stringDetails);
@@ -576,7 +599,7 @@ bool CCAgent::CCSetGetAnalogChannel(IN const Json::Value& request, OUT Json::Val
    /* returnvalue=ccSetCCState(ccStatus, 0);
     if (returnvalue!=0)
     { 
-    response["result"]=getResult(returnvalue,resultDetails);
+    response["result"]=getResult_CC(returnvalue,resultDetails);
     response["details"]="ccSEtCCstate functon failed to return";
     free(resultDetails);
     return TEST_FAILURE;
@@ -591,7 +614,7 @@ bool CCAgent::CCSetGetAnalogChannel(IN const Json::Value& request, OUT Json::Val
         if(returnvalue!=0)
         {
             DEBUG_PRINT(DEBUG_ERROR,"\n Execution Failed on ccSetAnalogChannel()\n");
-            response["result"]=getResult(returnvalue,resultDetails);
+            response["result"]=getResult_CC(returnvalue,resultDetails);
             response["details"]=resultDetails;
             free(resultDetails);
             return TEST_FAILURE;
@@ -621,7 +644,7 @@ bool CCAgent::CCSetGetAnalogChannel(IN const Json::Value& request, OUT Json::Val
     }
     else
     {
-        response["result"]=getResult(returnvalue,resultDetails);
+        response["result"]=getResult_CC(returnvalue,resultDetails);
         response["details"]=resultDetails;
     }
     free(stringDetails);
@@ -891,7 +914,7 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
     }
 
     DEBUG_PRINT(DEBUG_ERROR,"\nStringDetails  : %s\n",stringDetails1);
-    response["result"]=getResult(retval,resultDetails);
+    response["result"]=getResult_CC(retval,resultDetails);
     //response["details"]=resultDetails;
         
     free(stringDetails);
