@@ -57,6 +57,13 @@
 		</tr>
 
 		<tr>
+			<td>RDK Version</td>
+			<td>
+				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.list()}" optionKey="id" required="" value="${script.rdkVersions}" class="many-to-one selectCombo" multiple="true"/>
+			</td>
+		</tr>
+
+		<tr>
 			<td></td>
 			<td><g:checkBox name="skipStatus" checked="${script.skip}" />&nbsp;Skip
 					Execution</td>
@@ -93,4 +100,16 @@
 		</tr>
 	</table>
 </g:form>
+
+<g:form name="downloadScriptForm" action="exportScriptContent" controller="scriptGroup" method="post">
+		<input type="hidden" name="id" id="id" value="${script.id}">
+		<table>
+		<tr></tr>
+			<tr>
+				<td style="width: 15%;"></td>
+				<td style="width: 80%;"><input type="submit"
+					value="Download Script" id="download"></td>
+			</tr>
+		</table>
+	</g:form>
 </g:if>

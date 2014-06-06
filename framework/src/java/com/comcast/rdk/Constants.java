@@ -56,6 +56,9 @@ public final class Constants
     public static final String SKIPPED_STATUS    	= "SKIPPED";
     public static final String ABORTED_STATUS    	= "ABORTED";
     public static final String COMPLETED_STATUS    	= "COMPLETED";
+    public static final String NOT_APPLICABLE_STATUS="N/A";
+    
+    
     
     public static final String ERROR_STATUS         = "error";
     public static final String KEY_GROUP            = "Suite";

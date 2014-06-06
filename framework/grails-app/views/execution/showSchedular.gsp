@@ -18,7 +18,8 @@
 	<g:hiddenField name="isBenchMark" id="isBenchMark" value="${isBenchMark}" />
 	<g:hiddenField name="rerun" id="rerun" value="${rerun}" />
 	<g:hiddenField name="repeatCount" id="repeatCount" value="${repeatCount}" />
-
+	<g:hiddenField name="devices" id="repeatCount" value="${devices}" />
+	
 	<table id="scheduletable">
 	<tr>
 	<th>Schedule Job</th>		

@@ -42,6 +42,11 @@ class Script {
 	 */
     Set boxTypes
 	
+	/**
+	 * RDK Versions of script
+	 */
+	Set rdkVersions
+	
     /**
      * Status of the script
      * Whether the script is selected for execution 
@@ -69,7 +74,7 @@ class Script {
 	String remarks = ""
 	
 	
-	static hasMany = [boxTypes: BoxType]
+	static hasMany = [boxTypes: BoxType , rdkVersions : RDKVersions]
 
     static constraints = {
         name(nullable:false, blank:false, unique:true)

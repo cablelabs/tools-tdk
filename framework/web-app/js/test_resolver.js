@@ -166,7 +166,11 @@ function isTestExist(testName){
 }
 
 
-
+function clearValues(){
+	$("#parameterTable").html('');
+	$("#buttons").hide();
+	$("#tableheader").hide();
+}
 
 
 

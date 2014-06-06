@@ -201,13 +201,18 @@ class PrimitiveTestController {
 	
     def deleteTest() {
         Long id = params.id as Long
-        def primitiveTestInstance = PrimitiveTest.get(id)
+        PrimitiveTest primitiveTestInstance = PrimitiveTest.get(id)
         if (!primitiveTestInstance) {
             flash.message = message(code: 'default.not.found.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveTestInstance?.name])
             redirect(action: "create")
             return
         }
-
+		def script = Script.findByPrimitiveTest(primitiveTestInstance)	
+		if(script){
+			flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveTestInstance?.name])
+            render("success")
+			return
+		}	
         try {
           primitiveTestInstance.delete(flush: true)
           flash.message = message(code: 'default.deleted.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveTestInstance?.name])
@@ -215,7 +220,7 @@ class PrimitiveTestController {
         }
         catch (DataIntegrityViolationException e) {
             flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveTestInstance?.name])
-            redirect(action: "create")
+            render("success")
         }
     }
     

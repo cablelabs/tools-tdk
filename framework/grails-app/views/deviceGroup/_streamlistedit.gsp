@@ -44,7 +44,7 @@
 					
 					<td align="center">${deviceStream?.stream?.videoFormat}</td>
 					
-					<td align="center"><g:hiddenField name="streamid" value="${deviceStream?.id}" />
+					<td align="center"><g:hiddenField name="streamid" value="${deviceStream?.stream?.streamId}" />
 					
 					<g:textField name="ocapId"  style="width:55px;" required="" value="${deviceStream?.ocapId}"/></td>
 				</tr>

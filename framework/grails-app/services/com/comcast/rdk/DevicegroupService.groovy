@@ -51,19 +51,19 @@ class DevicegroupService {
         
         boolean deviceInUse = false
         boolean isAllocatedDeviceGrp = false
-        if(device.deviceStatus.equals( Status.ALLOCATED.toString() )){
+        if(device.deviceStatus.equals( Status.BUSY)){
             deviceInUse = true
         }
         else{
             /**
              * Selecting deviceGroups based on whether selected device exists
-             * in the device group's and status of the DeviceGroup is Allocated.
+             * in the device group's and status of the DeviceGroup is Busy.
              * In this case the device cannot be deleted.
              */
             def deviceAllocated = DeviceGroup.where {
-                devices { id == device.id } && status == Status.ALLOCATED.toString()
+                devices { id == device.id } && status == Status.BUSY
             }
-            deviceAllocated.each{
+            deviceAllocated?.each{
                 isAllocatedDeviceGrp = true
                 return true
             }
@@ -102,4 +102,26 @@ class DevicegroupService {
 		return boxName
 	}
 
+	/**
+	 * Method to remove the  device reference from execution result objects while deleting the device
+	 */
+	def updateExecDeviceReference(def device){
+
+		try {
+			def exResultList = ExecutionResult.findAllByExecDevice(device)
+			exResultList.each {exResult ->
+				ExecutionResult.withTransaction{ tran ->
+					try {
+						ExecutionResult.executeUpdate("update ExecutionResult c set c.execDevice = null  where c.id = :execResultId",
+								[execResultId: exResult?.id?.toLong()])
+						
+					} catch (Exception e) {
+						e.printStackTrace()
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
 }

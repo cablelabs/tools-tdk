@@ -48,6 +48,9 @@
   <g:if test="${flash.message}">
     <div class="message">${flash.message}</div>
   </g:if>
+  <g:if test="${flash.error}">
+    <div class="errors">${flash.error}</div>
+  </g:if>
   <g:form action="signIn">
     <input type="hidden" name="targetUri" value="${targetUri}" />
     <div style="width:40%;margin: 0 auto;align:center;">

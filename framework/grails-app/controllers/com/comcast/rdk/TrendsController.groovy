@@ -78,19 +78,19 @@ class TrendsController {
 				
 				executionSuccessResultList = ExecutionResult.findAllByExecutionAndStatus(execution,SUCCESS_STATUS)
 				executionFailureResultList = ExecutionResult.findAllByExecutionAndStatus(execution,FAILURE_STATUS)
-				executionUndefinedResultList = ExecutionResult.findAllByExecutionAndStatus(execution,UNDEFINED_STATUS)
+				//executionUndefinedResultList = ExecutionResult.findAllByExecutionAndStatus(execution,UNDEFINED_STATUS)
 	
-				int unexecutedScripts = scriptGrpSize - (executionSuccessResultList.size() + executionFailureResultList.size() + executionUndefinedResultList.size())
+				int unexecutedScripts = scriptGrpSize - (executionSuccessResultList.size() + executionFailureResultList.size())// + executionUndefinedResultList.size())
 	
 				executionSuccessList.add(executionSuccessResultList.size())
 				executionFailureList.add(executionFailureResultList.size())
-				executionUndefinedList.add(executionUndefinedResultList.size())
+				//executionUndefinedList.add(executionUndefinedResultList.size())
 				executionNotExecutedList.add(unexecutedScripts)
 			}
 	
 			listdate.add(executionSuccessList)
 			listdate.add(executionFailureList)
-			listdate.add(executionUndefinedList)
+			//listdate.add(executionUndefinedList)
 			listdate.add(executionNotExecutedList)
 		}
 		def mapData = [listdate:listdate, execName: executionList?.name, yCount : scriptGrpSize]
@@ -98,9 +98,9 @@ class TrendsController {
 	}
 	
 	def populateChartData(final Execution executionInstance){
-		if(!executionInstance?.isPerformanceDone){
+		//if(!executionInstance?.isPerformanceDone){
 			executionService.setPerformance(executionInstance,request.getRealPath('/'))
-		}
+		//}
 	}
 
 	/**
@@ -354,9 +354,7 @@ class TrendsController {
 			systemDiagList.add(loadAvgValues)
 		}
 		def mapData = [execName: executionList?.name, systemDiag : systemDiagList]
-		
-		println "mapData :::  "+mapData
-		
+				
 		render mapData as JSON
 	}
 	

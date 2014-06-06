@@ -42,7 +42,7 @@
 					<label for="devices">
 						<g:message code="deviceGroups.devices.label" default="Devices" />		
 					</label>		
-					<g:select style="width: 210px" name="devices" from="${com.comcast.rdk.Device.list().stbName}" value="${deviceGroupsInstance?.devices.stbName}" />			
+					<g:select style="width: 210px;height: 410px" name="devices" from="${com.comcast.rdk.Device.list().stbName}" value="${deviceGroupsInstance?.devices.stbName}" />			
 					<%--<g:select style="width: 140px" name="devices" from="${com.comcast.rdk.Device.list().stbName}" multiple="multiple" size="5" value="${deviceGroupsInstance?.devices*.stbName}" class="many-to-many"/>				
 				--%></div>				
 			</fieldset>

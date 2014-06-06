@@ -346,6 +346,7 @@ class ScriptGroupController {
 				render("Error in saving Script. Try Again." )             
             }
             else{
+				scriptgroupService.saveToScriptGroup(scriptInstance)
                 scriptgroupService.saveToDefaultGroup(scriptInstance, boxTypesList)
 				render(message(code: 'default.created.message', args: [
                     message(code: 'script.label', default: 'Script'),
@@ -522,5 +523,24 @@ class ScriptGroupController {
 		render scriptInstanceList as JSON
 	}
 	
+	/**
+	 * Method to download the script content as python script file.
+	 * @return
+	 */
+	def exportScriptContent(){
+		if(params?.id){
+			Script script = Script.findById(params?.id)
+			params.format = "text"
+			params.extension = "py"
+			String data = script?.scriptContent
+			response.setHeader("Content-Type", "application/octet-stream;")
+			response.setHeader("Content-Disposition", "attachment; filename=\""+ script?.name+".py\"")
+			response.setHeader("Content-Length", ""+data.length())
+			response.outputStream << data.getBytes()
+		}else{
+			flash.message = "Download failed. No valid script is available for download."
+			redirect(action: "list")
+		}
+	}
     
 }

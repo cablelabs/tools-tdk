@@ -49,8 +49,14 @@ class BoxTypeController {
 					def idDb = params?.("id"+countVariable).toLong()
 					boxTypeInstance = BoxType.get(idDb)
 					if (boxTypeInstance) {
-						  boxTypeInstance.delete(flush: true)
+						try{
+							 boxTypeInstance.delete(flush: true)
+						  }
+						  catch (DataIntegrityViolationException e) {
+							  flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'boxType.label', default: 'BoxType'),  boxTypeInstance.name])
+						  }						 
 					}
+					
 				}
 			}
 		}

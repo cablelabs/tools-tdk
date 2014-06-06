@@ -48,8 +48,12 @@ class PrimitivetestService {
      * @return
      * @author ajith
      */
-    public JsonObject getJsonData(final PrimitiveTest primitiveTest, final String idValue=ID_DEFAULT) {
-
+    public JsonObject getJsonData(final PrimitiveTest primitiveTest, String idValue) {
+		
+		if(idValue == null){
+			idValue = ID_DEFAULT
+		}
+		
         log.info(" getJsonData ::::::::: "+primitiveTest?.name)        
         JsonObject outData = new JsonObject()
         if(primitiveTest){

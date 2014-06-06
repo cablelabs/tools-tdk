@@ -324,11 +324,11 @@ class ModuleController {
         }
         catch (org.springframework.dao.DataIntegrityViolationException e) {
             log.trace e.printStackTrace()
-            flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), params.id])}"
+            flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), functionInstance?.name])}"
         }
         catch (Exception e) {
             log.trace e.printStackTrace()
-            flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), params.id])}"
+            flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), functionInstance?.name])}"
         }
         
         redirect(action: "show", id : params?.moduleid)    

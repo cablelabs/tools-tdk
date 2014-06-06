@@ -12,7 +12,11 @@
 package com.comcast.rdk
 
 import static com.comcast.rdk.Constants.*
+
 import org.apache.shiro.SecurityUtils
+import org.codehaus.groovy.grails.web.json.JSONObject
+import org.junit.After;
+import grails.converters.JSON
 import java.util.List;
 import java.util.concurrent.FutureTask
 import java.util.regex.Matcher
@@ -34,7 +38,9 @@ class ExecutionService {
 	/**
 	 * transient variable to keep the list of execution to be aborted
 	 */
-	public static transient List abortList = []
+	public static volatile List abortList = []
+	
+	public static volatile List deviceAllocatedList = []
     
     /**
      * Get the name of the day from the number used in cronschedule
@@ -99,6 +105,28 @@ class ExecutionService {
         }
         
     }
+	
+	def getAgentConsoleLogData(final String realPath, final String executionId, final String executionDeviceId, final String execResId){
+		def summaryFilePath = "${realPath}//logs//consolelog//${executionId}//${executionDeviceId}//${execResId}"
+		String fileContents = ""
+		try{
+			File directory = new File(summaryFilePath)
+			directory.eachFile { file ->
+				if (file.isFile()) {
+					String fileName = file.getName()
+					if(fileName.startsWith( "${executionId}" )){
+						file.eachLine { line ->
+							fileContents = fileContents + "<br>"+ line
+						}						
+					}
+				}
+			}
+		}
+		catch(Exception ex){
+		}
+		return fileContents
+	}
+	
 	
 	def getLogFileNames(final String realPath, final String executionId, final String executionDeviceId){
 		def mapVals = [:]
@@ -263,7 +291,7 @@ class ExecutionService {
      * @return
      */
     public String executeScript(final String executionData) {
-        new ScriptExecutor().execute( getCommand( executionData ))
+        new ScriptExecutor().execute( getCommand( executionData ),1)
     }
 	
 	public String executeScript(final String executionData , final String executionName, final String scriptName) {
@@ -380,6 +408,32 @@ class ExecutionService {
 		}
         return scriptStatus
     }
+	
+	/**
+	 * Validates whether the RDK version of device is same as that
+	 * of the RDK versions specified in the script
+	 * @param scriptInstance
+	 * @param device rdkVersion
+	 * @return
+	 */
+	public boolean validateScriptRDKVersion(final Script scriptInstance, final String rdkVersion){
+		boolean scriptStatus = true
+		String versionText = rdkVersion
+		if(rdkVersion){
+			versionText = rdkVersion.trim()
+		}
+		if(versionText && !(versionText.equals("NOT_AVAILABLE") || versionText.equals("NOT_VALID") || versionText.equals("")) ){
+			Script.withTransaction { trns ->
+				def scriptInstance1 = Script.findById(scriptInstance?.id)
+				if(scriptInstance1.rdkVersions.size() > 0 && !(scriptInstance1.rdkVersions.find { 
+					it.buildVersion.equals(versionText) 
+					})){
+					scriptStatus = false
+				}
+			}
+		}
+		return scriptStatus
+	}
     
     /**
      * Validates whether the boxtype of device is same as that
@@ -433,12 +487,186 @@ class ExecutionService {
 			versnNewPrintWriter.close()
 	        executeScript( versnFile.getPath() )
 	        versnFile.delete()
-        }
-		catch(Exception ex){
 			
-		}
+			Device device = Device.findByStbIp(stbIp)
+			
+			if(device?.boxType?.type?.equalsIgnoreCase(BOXTYPE_CLIENT)){
+				getDeviceDetails(device,logTransferPort,realPath)
+			}
+			
+        }
+		catch(Exception ex){			
+		}		
     }
+	
+	
+	def getDeviceDetails(Device device, def logTransferPort, def realPath){
+		
+		try {
+			new File("${realPath}//logs//devicelogs//${device?.stbName}").mkdirs()
+
+		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+		def absolutePath = layoutFolder.absolutePath
+		def filePath = "${realPath}//logs//devicelogs//${device?.stbName}//"
+		
+		String[] cmd = [
+			"python",
+			absolutePath,
+			device?.stbIp,
+			logTransferPort,
+			"/opt/TDK/trDetails.log",
+			filePath+"${device?.stbName}.txt"
+		]
+
+	    ScriptExecutor scriptExecutor = new ScriptExecutor()
+	    def outputData = scriptExecutor.executeScript(cmd,1)
+		
+		parseAndSaveDeviceDetails(device, filePath)		
+		} catch (Exception e) {
+			e.printStackTrace()
+		}		
+	}
     
+	
+	def parseAndSaveDeviceDetails(Device device, def filePath){
+
+		try {
+			File file = new File(filePath+"${device?.stbName}.txt")
+
+			def map = [:]
+			def bootargs = false
+
+			def driversloaded = false
+			def driversLoaded = ""
+
+			def partitions = false
+			def partition = ""
+
+			def mounts = false
+			def mount = ""
+
+			file.eachLine { line ->
+				if(line.startsWith("{\"paramList\"")){
+					JSONObject userJson = JSON.parse(line)
+					userJson.each { id, data ->
+						data.each{ val ->
+
+							switch ( val.name.toString().trim() ) {
+
+								case "Device.DeviceInfo.Manufacturer":
+									map["Manufacturer"] = val.value.toString()
+
+								case "Device.DeviceInfo.ModelName":
+									map["ModelName"] = val.value.toString()
+
+								case "Device.DeviceInfo.SerialNumber":
+									map["SerialNumber"] = val.value.toString()
+
+								case "Device.DeviceInfo.HardwareVersion":
+									map["HardwareVersion"] = val.value.toString()
+
+								case "Device.DeviceInfo.SoftwareVersion":
+									map["SoftwareVersion"] = val.value.toString()
+
+								case "Device.DeviceInfo.ProcessorNumberOfEntries":
+									map["NumberOfProcessor"] = val.value.toString()
+
+								case "Device.DeviceInfo.Processor.1.Architecture":
+									map["Architecture"] = val.value.toString()
+
+								case "Device.DeviceInfo.UpTime":
+									map["UpTime"] = val.value.toString()
+
+								case "Device.DeviceInfo.ProcessStatus.ProcessNumberOfEntries":
+									map["NumberOfProcessRunning"] = val.value.toString()
+
+								case "Device.Ethernet.InterfaceNumberOfEntries":
+									map["NumberOfInterface"] = val.value.toString()
+
+								case "Device.DeviceInfo.MemoryStatus.Total":
+									map["TotalMemory"] = val.value.toString()
+
+								case "Device.DeviceInfo.MemoryStatus.Free":
+									map["FreeMemory"] = val.value.toString()
+
+								default:
+									log.info("Default")
+							}
+						}
+					}
+				}
+
+				if(bootargs){
+					map["BootArgs"] = line
+					bootargs = false
+				}
+
+				if(line.startsWith("#Bootagrs START")){
+					bootargs = true
+				}
+
+				if(line.startsWith("#Driversloaded END")){
+					map["Driversloaded"] = driversLoaded
+					driversloaded = false
+				}
+
+				if(driversloaded){
+					driversLoaded = driversLoaded + line + "<br>"
+				}
+
+				if(line.startsWith("#Driversloaded")){
+					driversloaded = true
+				}
+
+				if(line.startsWith("#Partitions END")){
+					map["Partitions"] = partition
+					partitions = false
+				}
+
+				if(partitions){
+					partition = partition + line + "<br>"
+				}
+
+				if(line.startsWith("#Partitions START")){
+					partitions = true
+				}
+
+				if(line.startsWith("#mounts END")){
+					map["Mount"] = mount
+					mounts = false
+				}
+
+				if(mounts){
+					mount = mount + line + "<br>"
+				}
+
+				if(line.startsWith("#mounts START")){
+					mounts = true
+				}
+			}
+
+			def deviceDetailsList = DeviceDetails.findAllByDevice(device)
+
+			if(deviceDetailsList?.size() > 0){
+				DeviceDetails.executeUpdate("delete DeviceDetails d where d.device = :instance1",[instance1:device])
+			}
+
+			DeviceDetails deviceDetails = new DeviceDetails()
+
+			map?.each{ k,v ->
+				deviceDetails = new DeviceDetails()
+				deviceDetails.device = device
+				deviceDetails.deviceParameter = k
+				deviceDetails.deviceValue = v
+				deviceDetails.save(flush:true)
+			}
+
+		} catch (Exception e) {
+		}
+
+	}
+
+	
     /**
      * Search execution list based on different search criterias of
      * script, device, and execution from and to dates.
@@ -628,7 +856,7 @@ class ExecutionService {
 	def executeGetDevices(Device device){
 		def outputArray
 		def executionResult
-		def outputData
+		def outputData = ""
 		def macIdList = []
 		def absolutePath
 		def boxIp = device?.stbIp
@@ -637,7 +865,8 @@ class ExecutionService {
 		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callgetdevices.py").file
 		absolutePath = layoutFolder.absolutePath
 
-		if(boxIp != null && port != null ){
+		try {
+			if(boxIp != null && port != null ){
 			String[] cmd = [
 				PYTHON_COMMAND,
 				absolutePath,
@@ -646,11 +875,68 @@ class ExecutionService {
 			]
 
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
-			outputData = scriptExecutor.executeScript(cmd)
+			outputData = scriptExecutor.executeScript(cmd,1)
 			//	 outputData = "DEVICES=<incomplete>,bb:cc:EE:dd:24,bb:cc:EE:dd:26,"  // Dummy data for testing purpose
 		}
 
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+
 		return outputData
+	}
+	
+	/**
+	 * Method to fetch the RDK version of the device
+	 * @param device
+	 * @return
+	 */
+	def getRDKBuildVersion(Device device){
+		
+		def outputData
+		def absolutePath
+		def boxIp = device?.stbIp
+		def port = device?.agentMonitorPort
+
+		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callGetRDKVersion.py").file
+		absolutePath = layoutFolder.absolutePath
+
+		try {
+			if(boxIp != null && port != null ){
+				String[] cmd = [
+				                PYTHON_COMMAND,
+				                absolutePath,
+				                boxIp,
+				                port
+				                ]
+				                		
+				ScriptExecutor scriptExecutor = new ScriptExecutor()
+				outputData = scriptExecutor.executeScript(cmd,1)
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		if(outputData){
+			outputData = outputData.trim()
+		}else{
+			outputData = ""
+		}
+		String rdkVersion = ""
+		if(outputData.equals("METHOD_NOT_FOUND") || outputData.equals("AGENT_NOT_FOUND") || outputData.equals("NOT_DEFINED")){
+			rdkVersion = "NOT_AVAILABLE"
+		}else if(outputData.contains("DOT")){
+			rdkVersion = outputData.replace("DOT",".")
+		}else if(!outputData.startsWith("RDK")){
+			rdkVersion = "RDK"+outputData.replace("DOT",".")
+		}else{
+			rdkVersion = outputData
+		}
+		
+		if(rdkVersion && rdkVersion.contains(" ")){
+			rdkVersion.replaceAll(" ", "")
+		}
+		
+		return rdkVersion
 	}
 
 
@@ -720,22 +1006,26 @@ class ExecutionService {
 		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callsetroute.py").file
 		absolutePath = layoutFolder.absolutePath
 
-		if(clientMAC != null && clientAgentPort != null && clientStatusPort != null && clientLogTransferPort != null && 
-			clientAgentMonitorPort  != null ){
-			String[] cmd = [
-				PYTHON_COMMAND,
-				absolutePath,
-				deviceIP,
-				devicePort,
-				clientMAC,
-				clientAgentPort,
-				clientStatusPort,
-				clientLogTransferPort,
-				clientAgentMonitorPort
-			]
-
-			ScriptExecutor scriptExecutor = new ScriptExecutor()
-			outputData = scriptExecutor.executeScript(cmd)
+		try {
+			if(clientMAC != null && clientAgentPort != null && clientStatusPort != null && clientLogTransferPort != null && 
+					clientAgentMonitorPort  != null ){
+				String[] cmd = [
+				                PYTHON_COMMAND,
+				                absolutePath,
+				                deviceIP,
+				                devicePort,
+				                clientMAC,
+				                clientAgentPort,
+				                clientStatusPort,
+				                clientLogTransferPort,
+				                clientAgentMonitorPort
+				                ]
+				                		
+				                		ScriptExecutor scriptExecutor = new ScriptExecutor()
+				outputData = scriptExecutor.executeScript(cmd,1)
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
 	}
 	
@@ -767,6 +1057,13 @@ class ExecutionService {
 		Execution.withTransaction {
 		Execution.executeUpdate("update Execution c set c.outputData = :newStatus , c.result = :reslt where c.id = :execId",
 				[newStatus: status, reslt: status, execId: executionId.toLong()])
+		}
+	}
+	
+	public void updateExecutionDeviceSkipStatusWithTransaction(final String status, final long executionId){
+		ExecutionDevice.withTransaction {
+		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStat where c.id = :execDevId",
+				[newStat: status, execDevId: executionId])
 		}
 	}
 	
@@ -837,6 +1134,11 @@ class ExecutionService {
 	public boolean saveExecutionDetails(final String execName, String scriptName, String deviceName,
 	 ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun){
 		def executionSaveStatus = true
+		int scriptCnt = 0
+		if(scriptGroupInstance?.scripts?.size() > 0){
+			scriptCnt = scriptGroupInstance?.scripts?.size()
+		}
+		
 		try {
 			Execution execution = new Execution()
 			execution.name = execName
@@ -851,6 +1153,7 @@ class ExecutionService {
 			execution.isRerunRequired = rerun?.equals("true")
 			execution.isBenchMarkEnabled = isBenchMark?.equals("true")
 			execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
+			execution.scriptCount = scriptCnt
 			if(! execution.save(flush:true)) {				
 				log.error "Error saving Execution instance : ${execution.errors}"
 				executionSaveStatus = false
@@ -863,126 +1166,146 @@ class ExecutionService {
 		return executionSaveStatus
 	}
 	 
+	 public void saveRepeatExecutionDetails(String execName , String deviceName , int currentExecutionCount, int pending){
+		 
+		try {
+			Execution exe = Execution.findByName(execName)
+			RepeatPendingExecution.withTransaction{
+				RepeatPendingExecution rExecution = new RepeatPendingExecution()
+				rExecution.deviceName = deviceName
+				rExecution.completeExecutionPending = pending
+				rExecution.currentExecutionCount = currentExecutionCount
+				rExecution.executionName = execName
+				rExecution.status = "PENDING"
+				if(!rExecution.save(flush:true)){
+				}
+			}
+
+		} catch (Exception e) {
+		
+			 e.printStackTrace()
+		 }
+	 }
 	 
 	public void setPerformance(final Execution executionInstance, final String filePath){
 		try{
-		Execution execution = executionInstance
-		def executionDevice = ExecutionDevice.findAllByExecution(executionInstance)
-		def executionResult
-		def benchmarkPerformanceFile
-		def cpuPerformanceFile
-		def sysStatFile
-		Performance performanceInstance
-		def stringArray
-		executionDevice.each{ executiondevice ->
-			executionResult = ExecutionResult.findAllByExecutionDevice(executiondevice)
-			executionResult.each { executionresult ->
-				benchmarkPerformanceFile = new File(filePath+"//logs//performance//${executionInstance?.id}//${executiondevice?.id}//${executionresult?.id}//benchmark.log")
-				cpuPerformanceFile = new File(filePath+"//logs//performance//${executionInstance?.id}//${executiondevice?.id}//${executionresult?.id}//systemDiagnostics.log")
-				sysStatFile = new File(filePath+"//logs//performance//${executionInstance?.id}//${executiondevice?.id}//${executionresult?.id}//sysStat.log")
-				
-				if(benchmarkPerformanceFile.exists() || cpuPerformanceFile.exists()){
-					execution.isPerformanceDone = true
-					execution.save(flush:true)
-				}
-				if(benchmarkPerformanceFile.exists()){
-					int count = 0
-					benchmarkPerformanceFile.eachLine { line ->
-						if(!line?.isEmpty()){
-							if(count < 6){
-								stringArray = line.split("~")	
-								if(stringArray.size() >= 2){
-									if(stringArray[0] && stringArray[1]){
-										performanceInstance = new Performance()
-										performanceInstance.executionResult = executionresult
-										performanceInstance.performanceType = "BENCHMARK"
-										performanceInstance.processName = stringArray[0].trim()
-										performanceInstance.processValue = stringArray[1].trim()
-										performanceInstance.save(flush:true)
-										executionresult.addToPerformance(performanceInstance)
+			Execution execution = executionInstance
+			def executionDevice = ExecutionDevice.findAllByExecution(executionInstance)
+			def executionResult
+			def benchmarkPerformanceFile
+			def cpuPerformanceFile
+			Performance performanceInstance
+			def stringArray
+			executionDevice.each{ executiondevice ->
+				executionResult = ExecutionResult.findAllByExecutionDevice(executiondevice)
+				executionResult.each { executionresult ->
+					benchmarkPerformanceFile = new File(filePath+"//logs//performance//${executionInstance?.id}//${executiondevice?.id}//${executionresult?.id}//benchmark.log")
+					cpuPerformanceFile = new File(filePath+"//logs//performance//${executionInstance?.id}//${executiondevice?.id}//${executionresult?.id}//systemDiagnostics.log")
+
+					if(benchmarkPerformanceFile.exists() || cpuPerformanceFile.exists()){
+						execution.isPerformanceDone = true
+						execution.save(flush:true)
+					}
+					if(benchmarkPerformanceFile.exists()){
+						int count = 0
+						benchmarkPerformanceFile?.eachLine { line ->
+							if(!line?.isEmpty()){
+								if(count < 6){
+									stringArray = line.split("~")
+									if(stringArray.size() >= 2){
+										if(stringArray[0] && stringArray[1]){
+											performanceInstance = new Performance()
+											performanceInstance.executionResult = executionresult
+											performanceInstance.performanceType = "BENCHMARK"
+											performanceInstance.processName = stringArray[0].trim()
+											performanceInstance.processValue = stringArray[1].trim()
+											performanceInstance.save(flush:true)
+											executionresult.addToPerformance(performanceInstance)
+										}
 									}
 								}
+								count++;
 							}
-							count++;
-						}						
-					}					
-				}
-				benchmarkPerformanceFile.delete()	
-				
-				cpuPerformanceFile.eachLine { line ->
-					if(!line?.isEmpty()){													
-						if(line.startsWith("%cpu;")){
-							stringArray = line?.split(";")
-							performanceInstance = new Performance()
-							performanceInstance.executionResult = executionresult
-							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-							performanceInstance.processName = "%CPU"
-							performanceInstance.processValue = stringArray[1]?.trim()
-							performanceInstance.save(flush:true)
-							executionresult.addToPerformance(performanceInstance)
 						}
-						if(line.startsWith("%memused")){
-							stringArray = line?.split(";")
-							performanceInstance = new Performance()
-							performanceInstance.executionResult = executionresult
-							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-							performanceInstance.processName = "%MEMORY"
-							performanceInstance.processValue = stringArray[1]?.trim()
-							performanceInstance.save(flush:true)
-							executionresult.addToPerformance(performanceInstance)
-						}
-						else if( line.startsWith("%swpused")){
-							stringArray = line?.split(";")
-							performanceInstance = new Performance()
-							performanceInstance.executionResult = executionresult
-							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-							performanceInstance.processName = "SWAPING"
-							performanceInstance.processValue = stringArray[1]?.trim()
-							performanceInstance.save(flush:true)
-							executionresult.addToPerformance(performanceInstance)
-						}
-						else if(line.startsWith("ldavg-1;")){
-							stringArray = line?.split(";")
-							performanceInstance = new Performance()
-							performanceInstance.executionResult = executionresult
-							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-							performanceInstance.processName = "LOAD AVERAGE"
-							performanceInstance.processValue = stringArray[1]?.trim()
-							performanceInstance.save(flush:true)
-							executionresult.addToPerformance(performanceInstance)
-						}
-						else if(line.startsWith("pgpgin/s")){
-							stringArray = line?.split(";")
-							performanceInstance = new Performance()
-							performanceInstance.executionResult = executionresult
-							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-							performanceInstance.processName = "PAGING : pgpgin/s"
-							performanceInstance.processValue = stringArray[1]?.trim()
-							performanceInstance.save(flush:true)
-							executionresult.addToPerformance(performanceInstance)
-						}
-						else if(line.startsWith("pgpgout/s")){
-							stringArray = line?.split(";")
-							performanceInstance = new Performance()
-							performanceInstance.executionResult = executionresult
-							performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-							performanceInstance.processName = "PAGING : pgpgout/s"
-							performanceInstance.processValue = stringArray[1]?.trim()
-							performanceInstance.save(flush:true)
-							executionresult.addToPerformance(performanceInstance)
-						}														
+						benchmarkPerformanceFile.delete()
 					}
-				}					
+					if(cpuPerformanceFile.exists()){
+						cpuPerformanceFile?.eachLine { line ->
+							if(!line?.isEmpty()){
+								if(line.startsWith("%cpu;")){
+									stringArray = line?.split(";")
+									performanceInstance = new Performance()
+									performanceInstance.executionResult = executionresult
+									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+									performanceInstance.processName = "%CPU"
+									performanceInstance.processValue = stringArray[1]?.trim()
+									performanceInstance.save(flush:true)
+									executionresult.addToPerformance(performanceInstance)
+								}
+								if(line.startsWith("%memused")){
+									stringArray = line?.split(";")
+									performanceInstance = new Performance()
+									performanceInstance.executionResult = executionresult
+									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+									performanceInstance.processName = "%MEMORY"
+									performanceInstance.processValue = stringArray[1]?.trim()
+									performanceInstance.save(flush:true)
+									executionresult.addToPerformance(performanceInstance)
+								}
+								else if( line.startsWith("%swpused")){
+									stringArray = line?.split(";")
+									performanceInstance = new Performance()
+									performanceInstance.executionResult = executionresult
+									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+									performanceInstance.processName = "SWAPING"
+									performanceInstance.processValue = stringArray[1]?.trim()
+									performanceInstance.save(flush:true)
+									executionresult.addToPerformance(performanceInstance)
+								}
+								else if(line.startsWith("ldavg-1;")){
+									stringArray = line?.split(";")
+									performanceInstance = new Performance()
+									performanceInstance.executionResult = executionresult
+									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+									performanceInstance.processName = "LOAD AVERAGE"
+									performanceInstance.processValue = stringArray[1]?.trim()
+									performanceInstance.save(flush:true)
+									executionresult.addToPerformance(performanceInstance)
+								}
+								else if(line.startsWith("pgpgin/s")){
+									stringArray = line?.split(";")
+									performanceInstance = new Performance()
+									performanceInstance.executionResult = executionresult
+									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+									performanceInstance.processName = "PAGING : pgpgin/s"
+									performanceInstance.processValue = stringArray[1]?.trim()
+									performanceInstance.save(flush:true)
+									executionresult.addToPerformance(performanceInstance)
+								}
+								else if(line.startsWith("pgpgout/s")){
+									stringArray = line?.split(";")
+									performanceInstance = new Performance()
+									performanceInstance.executionResult = executionresult
+									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
+									performanceInstance.processName = "PAGING : pgpgout/s"
+									performanceInstance.processValue = stringArray[1]?.trim()
+									performanceInstance.save(flush:true)
+									executionresult.addToPerformance(performanceInstance)
+								}
+							}
+						}
+						cpuPerformanceFile?.delete()
+					}
+				}
+
 			}
-			cpuPerformanceFile.delete()				
-		}
-		new File(filePath+"//logs//performance//${executionInstance?.id}").deleteDir()
-		}catch(Exception e){	
-			try{			
-				new File(filePath+"//logs//performance//${executionInstance?.id}").deleteDir()
+			new File(filePath+"//logs//performance//${executionInstance?.id}")?.deleteDir()
+		}catch(Exception e){
+			try{
+				new File(filePath+"//logs//performance//${executionInstance?.id}")?.deleteDir()
 			}catch(Exception ex){
 			}
-				
+
 		}
 	}	
 	
@@ -1004,6 +1327,50 @@ class ExecutionService {
 			catch(Throwable th) {
 				resultstatus.setRollbackOnly()
 			}
+		}
+		
+		try {
+			Execution.withTransaction {
+				Execution execution = Execution.findById(executionInstance?.id)
+						if(!execution.result.equals( FAILURE_STATUS )){
+							execution.result = FAILURE_STATUS
+									execution.save(flush:true)
+						}
+			}
+			
+			ExecutionDevice.withTransaction {
+				ExecutionDevice execDeviceInstance = ExecutionDevice.findById(executionDevice?.id)
+						if(!execDeviceInstance.status.equals( FAILURE_STATUS )){
+							execDeviceInstance.status = FAILURE_STATUS
+									execDeviceInstance.save(flush:true)
+						}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+	
+	public void saveNotApplicableStatus(def executionInstance , def executionDevice , def scriptInstance , def deviceInstance, String reason){
+		try{
+		ExecutionResult.withTransaction { resultstatus ->
+			try {
+				ExecutionResult executionResult = new ExecutionResult()
+				executionResult.execution = executionInstance
+				executionResult.executionDevice = executionDevice
+				executionResult.script = scriptInstance?.name
+				executionResult.device = deviceInstance?.stbName
+				executionResult.status = Constants.NOT_APPLICABLE_STATUS
+				executionResult.executionOutput = "Test not executed. Reason : "+reason
+				if(! executionResult.save(flush:true)) {
+					log.error "Error saving executionResult instance : ${executionResult.errors}"
+				}
+				resultstatus.flush()
+			}
+			catch(Throwable th) {
+				resultstatus.setRollbackOnly()
+			}
+		}
+		}catch(Exception ee){
 		}
 	}
 	
@@ -1087,5 +1454,49 @@ class ExecutionService {
 				}
 		
 		}
+	
+	/**
+	 * Refreshes the status in agent as it is called with flag false
+	 * @param deviceInstance
+	 * @return
+	 */
+	def resetAgent(def deviceInstance,String hardReset){
+		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
+		def absolutePath = layoutFolder.absolutePath
+		String[] cmd = [
+			PYTHON_COMMAND,
+			absolutePath,
+			deviceInstance?.stbIp,
+			deviceInstance?.agentMonitorPort,
+			hardReset
+		]
+		ScriptExecutor scriptExecutor = new ScriptExecutor()
+		def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+		Thread.sleep(4000)
+	}
+	
+	/**
+	 * Refreshes the status in agent as it is called with flag false
+	 * @param deviceInstance
+	 * @return
+	 */
+	def resetAgent(def deviceInstance){
+		try {
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.agentMonitorPort,
+				FALSE
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor()
+			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			Thread.sleep(4000)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
 	
 }

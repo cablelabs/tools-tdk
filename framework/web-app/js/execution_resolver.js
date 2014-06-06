@@ -49,7 +49,18 @@ $(document).ready(function() {
 
 	$("#scripts").select2();
 
-	 
+	$(":checkbox").each(function() {
+		$('.resultCheckbox').prop('checked', false);
+		mark(this);
+	});
+	
+	$('.markAll').prop('checked', false);
+	
+	$('#repeatId').attr('readonly', false);
+	
+	/*
+jQuery 1.9+   $('#inputId').prop('readonly', true);
+	 */
 });
 
 function stopExecution(obj){
@@ -155,9 +166,10 @@ function showExecutionLog(id){
 }	
 
 function showScheduler(id){	
+	
 	var scriptGroup = $("#scriptGrp").val();
 	var scripts = $("#scripts").val();
-
+    var deviceList = $("#devices").val();
 	var repeatid = $("#repeatId").val();
 
 	 if ($('input[name=myGroup]:checked').val()=='TestSuite'){     	
@@ -180,6 +192,19 @@ function showScheduler(id){
 		systemDiag = "true";
 	}
 	
+	if( (deviceList =="" || deviceList == null ) ){
+		alert("Please select Device");
+		return false;
+	}
+	
+	if(deviceList.length > 1){	
+		alert("Scheduling is not currently allowed for multiple devices");
+		return false;
+	}
+	else{
+		id = deviceList.toString();		
+	}
+
 	if((scripts=="" || scripts == null )&& scriptGroup == "" ){
 		alert("Please select Script/ScriptGroup");
 		return false;
@@ -187,8 +212,8 @@ function showScheduler(id){
 	if(scripts){
 		var scriptVals = scripts.toString()
 	}
-	
-	$.get('showSchedular', {deviceId : id, scriptGroup : scriptGroup, scripts:scriptVals, repeatId:repeatid, rerun:reRun, systemDiagnostics : systemDiag , benchMarking : benchmark}, function(data) { $("#scheduleJobPopup").html(data); });		
+
+	$.get('showSchedular', {deviceId : id, devices : deviceList.toString(), scriptGroup : scriptGroup, scripts:scriptVals, repeatId:repeatid, rerun:reRun, systemDiagnostics : systemDiag , benchMarking : benchmark}, function(data) { $("#scheduleJobPopup").html(data); });		
 	$("#scheduleJobPopup").modal({ opacity : 40, overlayCss : {
 		  backgroundColor : "#c4c4c4" }, containerCss: {
 	            width: 800,
@@ -200,13 +225,45 @@ function showScheduler(id){
 	} );	
 }
 
+function showCleanUpPopUp(){
+	$("#cleanupPopup").modal({ opacity : 40, overlayCss : {
+		  backgroundColor : "#c4c4c4" }, containerCss: {
+	            width: 600,
+	            height: 250	            
+	        } }, { onClose : function(dialog) {
+		  $.modal.close(); } });
+}
+
 function showDateTime(){
+	
 	$('#defexecName').val(" ");
-	var stbName = $('#stbname').val();
+	checkDeviceList();
+	var stbName
+	var deviceList = $("#devices").val();
+	 if(deviceList.length > 1){	
+		 stbName = "multiple"
+	 }else{
+		 stbName = $('#stbname').val();
+	 }
+	
 	$.get('showDateTime', {}, function(data) { 	
 		$('#defexecName').val(stbName+"-"+data[0]);
 		$('#newexecName').val(stbName+"-"+data[0]);
-	});	
+	});		
+}
+
+function checkDeviceList(){
+	 var deviceList = $("#devices").val();
+	 if(deviceList.length > 1){		
+		 $("#repeatId").val(1);
+		// document.getElementById("repeatId").disabled = true;
+		 $('#repeatId').attr('readonly', true);
+			
+	 }
+	 else{
+		 $('#repeatId').attr('readonly', false);			
+		// document.getElementById("repeatId").disabled = false;
+	 }
 }
 
 function showEditableExecName(){
@@ -247,6 +304,14 @@ function showWaitSpinner(){
 	repeatTask = setInterval("updateLog()",5000);
 }
 
+function showSpinner(){
+	$("#delspinnr").show();
+}
+
+function hideSpinner(){
+	$("#delspinnr").hide();
+}
+
 function updateLog(){
 	var execName = "";
 	if(  $("#defexecName").is(":visible") == true )
@@ -268,10 +333,13 @@ function completed(){
 	if(repeatTask){
 		clearInterval(repeatTask);
 	}
+	showDateTime();
 	$('#resultDiv123').show();
 	$('#dynamicResultDiv').hide();
+	
 }
 function changeStyles(){
+	showDateTime();
 	$("#popup").hide();
 	$("#executeBtn").show();
 }
@@ -411,11 +479,13 @@ function showScriptTypes(){
 function showFulltextDeviceDetails(k){
 	$("#fulltext"+k).show();
 	$("#firstfourlines"+k).hide();
+	$("#showlessdd"+k).show();	
 }
 
 function showMintextDeviceDetails(k){
 	$("#fulltext"+k).hide();
 	$("#firstfourlines"+k).show();
+	$("#showlessdd"+k).hide();	
 }
 
 
@@ -463,12 +533,16 @@ function clickCheckbox(me) {
 	if (me.checked) {
 		$(":checkbox").each(function() {
 			$('.resultCheckbox').prop('checked', true);
-			mark(this)
+			if(this.id != "benchmarkId" && this.id != "rerunId" && this.id != "systemDiagId"){
+				mark(this);
+			}
 		});
 	} else {
 		$(":checkbox").each(function() {
 			$('.resultCheckbox').prop('checked', false);
-			mark(this)
+			if(this.id != "benchmarkId" && this.id != "rerunId" && this.id != "systemDiagId"){
+			mark(this);
+			}
 		});
 	}
 }

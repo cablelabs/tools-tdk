@@ -128,12 +128,18 @@ public class DeviceStatusUpdater {
 			device?.stbName
 		]
 
-		String outData =  new ScriptExecutor().executeScript(cmd)
+		String outData = ""
+		
+		try {
+			outData =  new ScriptExecutor().executeScript(cmd,1)
 
-		if(outData != null){
+			if(outData != null){
 
-			outData = outData.trim()
+				outData = outData.trim()
 
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
 
 		return outData;

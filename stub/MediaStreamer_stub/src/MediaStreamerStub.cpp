@@ -77,6 +77,49 @@ bool MediaStreamerAgent::testmodulepost_requisites()
 {
         return true;
 }
+/********************************************************************************************************************
+ Purpose:               To get the Host's IP Address by querrying the network Interface.
+
+ Parameters:
+                             szInterface [IN]    - Interface used to communicate.
+
+ Return:                 string    - IP address of corresponding interface.
+
+*********************************************************************************************************************/
+std::string GetHostIP (const char* szInterface)
+{
+    struct ifaddrs* pIfAddrStruct = NULL;
+    struct ifaddrs* pIfAddrIterator = NULL;
+    void* pvTmpAddrPtr = NULL;
+    char szAddressBuffer [INET_ADDRSTRLEN];
+    getifaddrs (&pIfAddrStruct);
+
+    for (pIfAddrIterator = pIfAddrStruct; pIfAddrIterator != NULL; pIfAddrIterator = pIfAddrIterator->ifa_next)
+    {
+        if (pIfAddrIterator->ifa_addr->sa_family == AF_INET)
+        {
+            // check it is a valid IP4 Address
+            pvTmpAddrPtr = & ( (struct sockaddr_in *)pIfAddrIterator->ifa_addr )-> sin_addr;
+            inet_ntop (AF_INET, pvTmpAddrPtr, szAddressBuffer, INET_ADDRSTRLEN);
+
+            if ( (strcmp (pIfAddrIterator -> ifa_name, szInterface) ) == 0)
+            {
+                break;
+            }
+        }
+    }
+
+    std::cout << "Found IP: " << szAddressBuffer << std::endl;
+
+    if (pIfAddrStruct != NULL)
+    {
+        freeifaddrs (pIfAddrStruct);
+    }
+
+    return szAddressBuffer;
+
+} /* End of GetHostIP */
+
 
 /**************************************************************************
 Function name : MediaStreamerAgent::initialize
@@ -138,6 +181,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_LiveTune_Request(IN const Json::Valu
 		errorStatus_LiveTune = "0";
 	}	
 	response["result"] = errorStatus_LiveTune;
+	response["details"] = "SUCCESS";
 	DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_LiveTune_Request ---> Exit\n");
 	return TEST_SUCCESS;
 }
@@ -206,6 +250,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Request(IN const Json::Val
 		errorStatus_Recording = "0";
 	}
 	response["result"] = errorStatus_Recording;
+	response["details"] = "SUCCESS";
 	DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Request ---> Exit\n");
 	return TEST_SUCCESS;	
 }
@@ -274,6 +319,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Urls(IN const Json::Value& 
 			getline(recordedListmodFile, line_Urls);
 		}while(!recordedListmodFile.eof());
 		response["result"] = "SUCCESS";
+		response["details"] = "SUCCESS";
 		response["log-path"] = logFilePath_Urls;		
 		recordedListmodFile.close();
 		DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Urls ---> Exit\n");
@@ -359,6 +405,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Metadata(IN const Json::Val
 			getline(recMetadatamodFile, line_Metadata);
 		}
 		response["result"] = "SUCCESS";
+		response["details"] = "SUCCESS";
 		response["log-path"] = logFilePath_Metadata;
 		recMetadatamodFile.close();
 		DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Metadata ---> Exit\n");
@@ -431,6 +478,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Live_Playback(IN const Json::Value& 
 	if("SUCCESS" == errorStatus_Live) 
 	{
 		response["result"] = "SUCCESS";
+		response["details"] = "SUCCESS";
 		DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Live_Playback ---> Exit\n");
 		return TEST_SUCCESS;
 	}
@@ -517,6 +565,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Playback(IN const Json::Va
 	if("SUCCESS" == errorStatus_Rec) 
 	{
 		response["result"] = "SUCCESS";
+		response["details"] = "SUCCESS";
 		DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
 		return TEST_SUCCESS;
 	}
@@ -617,6 +666,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& 
 		if(errorStatus_Dvr == play_speed_Dvr)
 		{
 			response["result"] = "SUCCESS";
+			response["details"] = "SUCCESS";
 			DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_DVR_Trickplay ---> Exit\n");
 			return TEST_SUCCESS;
 		}
@@ -657,10 +707,29 @@ bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value&
 	CURL *curl;
 	
 	DEBUG_PRINT(DEBUG_LOG,"\nURL from TestFramework : %s\n",request["URL"].asCString());
+        /*Fetching the streming interface IP: eth1 */
+        string streamingip;
+        streamingip=GetHostIP("eth1");
+        string urlIn = url;
+        string http = "http://";
+
+        http.append(streamingip);
+
+        DEBUG_PRINT(DEBUG_TRACE, "Incoming URL: %s\n",url.c_str());
+        DEBUG_PRINT(DEBUG_TRACE, "After appending streaming IP to http: %s\n",http.c_str());
+        DEBUG_PRINT(DEBUG_TRACE, "IP : %s\n",streamingip.c_str());
+
+        size_t pos = 0;
+        pos = urlIn.find(":8080");
+        urlIn = urlIn.replace(0,pos,http);
+
+        DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to CURL(): %s\n",urlIn.c_str());
+
+	
         curl = curl_easy_init();
 	if(curl)
 	{
-		curl_easy_setopt(curl, CURLOPT_URL,(char *)url.c_str());
+		curl_easy_setopt(curl, CURLOPT_URL,(char *)urlIn.c_str());
 		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
 
 		//write in to a file
@@ -1331,15 +1400,17 @@ Description   : Frames the valid URL depends on the required case. Returns the f
 string MediaStreamerAgent::frameURL(Mode mode, string Id)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "frameURL with mode and id ---> Entry\n");
-	string validurl;	
+	string validurl;
+        string streamingip;
+        streamingip=GetHostIP("eth1");		
 	switch(mode)
 	{
 		case LIVE_TUNE_REQUEST: 
-			validurl = "http://127.0.0.1:8080/videoStreamInit?recorderId="+getRecorderId()+"live="+Id;
+			validurl = "http://"+streamingip+":8080/videoStreamInit?recorderId="+getRecorderId()+"live="+Id;
 			break;
 		case RECORDING_REQUEST: 
-			validurl = "http://127.0.0.1:8080/videoStreamInit?recorderId="+getRecorderId()+"recordingId="+Id;
-                	validurl = "http://127.0.0.1:8080/videoStreamInit?recordingId="+Id;
+			validurl = "http://"+streamingip+":8080/videoStreamInit?recorderId="+getRecorderId()+"recordingId="+Id;
+                	//validurl = "http://127.0.0.1:8080/videoStreamInit?recordingId="+Id;
 			break;        
                 default :
                 	break;
@@ -1388,13 +1459,16 @@ string MediaStreamerAgent::frameURL(Mode mode)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "frameURL with mode ---> Entry\n");
 	string validUrl_Info;
+        string streamingip;
+        streamingip = GetHostIP("eth1");	
 	switch(mode)
 	{      
 		case RECORDING_URL_LIST:
-			validUrl_Info = "http://127.0.0.1:8080/vldms/info/recordingurls";
+		
+			validUrl_Info = "http://"+streamingip+":8080/vldms/info/recordingurls";
 			break;
 		case RECORDING_URL_METADATA:
-			validUrl_Info = "http://127.0.0.1:8080/vldms/info/recordings";
+			validUrl_Info = "http://"+streamingip+":8080/vldms/info/recordings";
 			break;      
                 default :
                         break;
@@ -1442,8 +1516,6 @@ bool MediaStreamerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAg
 	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_DVR_Trickplay");
 #endif
 #ifdef RDK_BR_2DOT0
-	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_ScheduleRecording");
-	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_checkRecording_status");
 	ptrAgentObj->UnregisterMethod("TestMgr_RMFStreamer_InterfaceTesting");
 	ptrAgentObj->UnregisterMethod("TestMgr_RMFStreamer_Player");
 #endif

@@ -105,6 +105,7 @@
 			<div class="pagination" style="width: 70%; align: left;">
 				<g:paginate total="${groupsInstanceTotal}" />
 			</div>
+			&nbsp;<span class="buttons"><g:actionSubmit disabled="true" class="delete" id="delete"  action="deleteGroup" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
 		</div>
 	</g:form>
 </body>

@@ -25,7 +25,9 @@
 	<label for="devices">
 		<g:message code="deviceGroups.devices.label" default="Devices" />		
 	</label>
-	<select id="devices" name="devices" class="selectCombo" >
+	<%--<g:select id="devices" style="width: 210px;height: 410px;" name="devices" multiple="true" from="${com.comcast.rdk.Device.list().stbName}" value="" />
+	--%>
+	<select id="devices" name="devices" class="selectCombo" multiple="true" style="width: 210px;height: 410px;" >
 			<g:each in="${com.comcast.rdk.Device.list()}"
 				var="device">
 				<option value="${device.id}">

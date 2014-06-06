@@ -39,6 +39,7 @@ function newPopup(url) {
 }
 
 $(function() {
+
 	$.datepicker.setDefaults({		
 		changeMonth: true,
 		changeYear: true	
@@ -46,6 +47,8 @@ $(function() {
 	
 	 $( "#datepicker" ).datepicker();
 	 $( "#todatepicker" ).datepicker();
+	 $( "#cleanFromDate" ).datepicker();
+	 $( "#cleanToDate" ).datepicker();
 
 });
 
@@ -77,7 +80,6 @@ $(document).ready(function() {
 		</g:if>
 		<br>
 		<g:hiddenField id="url" name="url" value="${url}"/>
-	
 		<table class="noClass" style="border: 1; border-color: black;">
 			<tr>
 				<td>
@@ -217,6 +219,33 @@ $(document).ready(function() {
        	</ul>
 	</div>
 	<div id="executionLogPopup" style="display: none; overflow: auto; width : 98%; height : 98%;">			
+	</div>
+
+	<div id="cleanupPopup" style="display: none; overflow: auto;">			
+		<g:form controller="execution" ><br>
+		<table>																	
+			<tr>
+				<td valign="middle">From</td>
+				<td valign="middle"><input type="text" id="cleanFromDate" name="cleanFromDate" />
+				</td>
+				<td valign="middle">To</td>
+				<td valign="middle"><input type="text" id="cleanToDate" name="cleanToDate"/>										
+				</td>
+				<td></td>
+				<td valign="middle">
+				<span class="buttons">
+					<g:submitToRemote before="showSpinner();" class="delete" action="deleteExecutions" update="searchDelResultDiv" value="Delete" onSuccess="hideSpinner();" />
+					
+					<span id="delspinnr" style="display: none;">											
+						<img id="ss" src="${resource(dir:'images',file:'spinner.gif')}" />
+					</span>	
+					
+				</span>										
+				</td>
+			</tr>
+		</table>
+		<span id="searchDelResultDiv"></span>
+		</g:form>
 	</div>
 
 	<g:hiddenField name = "selectedDevice" id = "selectedDevice" value = ""/>

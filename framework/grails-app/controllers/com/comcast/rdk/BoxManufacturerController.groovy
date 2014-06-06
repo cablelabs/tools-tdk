@@ -45,7 +45,7 @@ class BoxManufacturerController {
 			return
 		}
 
-		flash.message = message(code: 'default.created.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'), boxManufacturerInstance.id])
+		flash.message = message(code: 'default.created.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'), boxManufacturerInstance.name])
 		redirect(action: "create")
 	}
 
@@ -59,7 +59,12 @@ class BoxManufacturerController {
 					def idDb = params?.("id"+countVariable).toLong()
 					boxManufacturerInstance = BoxManufacturer.get(idDb)
 					if (boxManufacturerInstance) {
+						try{
 						  boxManufacturerInstance.delete(flush: true)
+						}
+						catch (DataIntegrityViolationException e) {
+				            flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'),  boxManufacturerInstance.name])				           
+				        }
 					}
 				}
 			}
@@ -83,7 +88,7 @@ class BoxManufacturerController {
 		def boxManufacturerListCnt = BoxManufacturer.findAllByGroupsOrGroupsIsNull(groupsInstance)
 		params.max = Math.min(max ?: 10, 100)
         if (!boxManufacturerInstance) {
-            flash.message = message(code: 'default.not.found.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'), id])
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'), boxManufacturerInstance?.name])
 			render(view: "create", model: [boxManufacturerInstance: boxManufacturerInstance, boxManufacturerInstanceList: boxManufacturerList, boxManufacturerInstanceTotal: boxManufacturerListCnt.size()])
             return
         }
@@ -105,7 +110,7 @@ class BoxManufacturerController {
             return
         }
 
-        flash.message = message(code: 'default.updated.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'), boxManufacturerInstance.id])
+        flash.message = message(code: 'default.updated.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'), boxManufacturerInstance.name])
         redirect(action: "create")
     }
 

@@ -21,8 +21,8 @@ function showChart(){
 	
 	var resultcount = $("#resultCount").val();
 
-	var ticks = ['1', '2', '3', '4'];
-	var labels = ["Success", "Failure", "Undefined", "Not Executed"];
+	var ticks = ['1', '2', '3'];
+	var labels = ["Success", "Failure", "Not Executed"];
 	var labelsBenchMark = ["Execution Time(millisec)"];
 	var labelsSd = ["CPU Utilization","Memory Utilization"];
 	var labelsSd1 = ["Paging In","Paging Out"];
@@ -51,11 +51,11 @@ function showChart(){
 		$.get('getStatusChartData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 	
 	  		
 		    plot2 = $.jqplot('chartdiv', data.listdate, {
-		    	seriesColors:['green', 'red', 'grey', '#C7754C'],
+		    	seriesColors:['green', 'red', 'grey'],
 		        seriesDefaults: {
 		            renderer:$.jqplot.BarRenderer,
 		            rendererOptions: {
-		                barWidth: 8
+		                barWidth: 10
 		             },
 		            pointLabels: { show: true }
 		        },

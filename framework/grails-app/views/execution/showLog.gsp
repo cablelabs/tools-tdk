@@ -12,6 +12,8 @@
 <%@ page import="java.io.*"%>
 <%@ page import="com.comcast.rdk.ExecutionResult"%>
 <%@ page import="com.comcast.rdk.Performance"%>
+<%@ page import="com.comcast.rdk.DeviceDetails"%>
+<%@ page import="com.comcast.rdk.Device"%>
 <head>
 <script type='text/javascript'>
 function viewOnClick(me,k,i)
@@ -46,6 +48,8 @@ $(function() {
 
 function showHideLink(k){
 	$('#hidelink'+k).show();
+	$('#showlink'+k).hide();
+	$('#testSucc'+k).show();
 }
 
 function hideLogs(k){
@@ -54,14 +58,16 @@ function hideLogs(k){
 	$('#hidelink'+k).hide();
 }
 
-function showLogs(k){
+/*function showLogs(k){
 	$('#hidelink'+k).show();
 	$('#testSucc'+k).show();
 	$('#showlink'+k).hide();
-}
+}*/
 
 function showCrashHideLink(k){
 	$('#hidecrashlink'+k).show();
+	$('#showcrashlink'+k).hide();
+	$('#testCrashSucc'+k).show();
 }
 
 function hideCrashLogs(k){
@@ -70,15 +76,46 @@ function hideCrashLogs(k){
 	$('#hidecrashlink'+k).hide();
 }
 
-function showCrashLogs(k){
+/*function showCrashLogs(k){
 	$('#hidecrashlink'+k).show();
 	$('#testCrashSucc'+k).show();
 	$('#showcrashlink'+k).hide();
+}*/
+
+function showConsoleHideLink(k,i){
+	$('#hideconsolelink'+k+'_'+i).show();
+	$('#consoleLog'+k+'_'+i).show();
+	$('#showconsolelink'+k+'_'+i).hide();
 }
 
+function hideConsoleLogs(k,i){
+	$('#showconsolelink'+k+'_'+i).show();
+	$('#consoleLog'+k+'_'+i).hide();
+	$('#hideconsolelink'+k+'_'+i).hide();
+}
+
+/*function showConsoleLogs(k,i){
+	$('#hideconsolelink'+k+'_'+i).show();
+	$('#consoleLog'+k+'_'+i).show();
+	$('#showconsolelink'+k+'_'+i).hide();
+}*/
+
+function showParameters(k){
+	$('#divDD'+k).show();
+	$('#hideDevParam'+k).show();
+	$('#showDevParam'+k).hide();
+}
+
+function hideParameters(k){
+	$('#divDD'+k).hide();
+	$('#hideDevParam'+k).hide();
+	$('#showDevParam'+k).show();
+}
 
 </script>
 
+
+<g:if test="${executionDeviceInstanceList?.size() > 0}">
 
 <g:each in="${executionDeviceInstanceList}" status="k"  var="executionDeviceInstance">
 <table id="logtable" >
@@ -102,8 +139,38 @@ function showCrashLogs(k){
 		<td class="tdhead">Time taken for execution(min)</td>
 		<td>${executionDeviceInstance?.executionTime}</td>				
 	</tr>
+	
 	<tr class="trborder even">
-		<td class="tdhead">Device Details</td>
+		<td class="tdhead">Device Parameters</td>
+		<td>		
+			<%
+			   def device = Device.findByStbName(executionDeviceInstance?.device) 
+			   def deviceDetailsList = DeviceDetails.findAllByDevice(device)	
+			%>			
+			<g:if test="${deviceDetailsList}">
+						
+			<span id="showDevParam${k}" ><g:link  onclick="showParameters(${k}); return false;"><b><i>Show</i></b></g:link></span>
+		    <span id="hideDevParam${k}" style="display:none;"><g:link onclick="hideParameters(${k}); return false;"><b><i>Hide</i></b></g:link></span>		
+						
+			<div id="divDD${k}" style="display:none;width: 600px;overflow: auto;">			
+				<table style="width:70%;">
+					<g:each in="${deviceDetailsList}" var="deviceDetailsInstance">
+						<tr>
+							<td>${deviceDetailsInstance.deviceParameter}</td>
+							<td>${deviceDetailsInstance.deviceValue}</td>
+						</tr>
+					</g:each>
+				</table>			
+			</div>	
+			</g:if>
+			<g:else>
+				Not Available
+			</g:else>	
+		</td>				
+	</tr>
+	
+	<tr class="trborder even">
+		<td class="tdhead">Device Details</td>		
 		<td>
 		<%
 			int c = 0
@@ -129,15 +196,41 @@ function showCrashLogs(k){
            		
        	 	}
 		 %>	
-		<span id="firstfourlines${k}">${firstfourLine} &emsp; <g:link  onclick="showFulltextDeviceDetails(${k}); return false;"><b><i>Show More</i></b></g:link></span>
-		<span id="fulltext${k}" style="display:none;">${fileContents}&emsp; <g:link onclick="showMintextDeviceDetails(${k}); return false;"><b><i>Show Less</i></b></g:link></span>		
+		<g:if test="${!(fileContents.isEmpty())}">
+			<span id="showlessdd${k}" style="display:none;"><g:link onclick="showMintextDeviceDetails(${k}); return false;"><b><i>Show Less</i></b></g:link></span><br>
+			<span id="firstfourlines${k}">${firstfourLine} &emsp; <g:link  onclick="showFulltextDeviceDetails(${k}); return false;"><b><i>Show More</i></b></g:link></span>
+			<span id="fulltext${k}" style="display:none;">${fileContents}&emsp; </span>
+		</g:if>		
+		<g:else>
+			<b>Unable to fetch Device Details due to Network Traffic error</b>
+		</g:else>
 		</td>				
 	</tr>
 	<tr class="odd">
 		<th>Test Group</th>
 		<th>Result : ${executionDeviceInstance?.status}</th>			
 	</tr>	
-	
+	<tr class="even">
+		<td></td>
+		<td>
+			<table >
+			<g:if test="${(statusResults?.get(executionDeviceInstance))?.size() > 0}">
+			<tr class="scripthead" >
+					<td colspan="2" class="tdhead">Summary</td>
+			</tr>
+			</g:if>
+			<g:each in="${statusResults.get(executionDeviceInstance)}" status="i"  var="executionStatusInstance">						
+				<g:each in="${executionStatusInstance}"  var="statusItem">		
+					
+				  <tr class="even">
+						<td class="tdhead" style="white-space:nowrap;text-align: right;">${statusItem.key }</td>
+						<td>${statusItem.value }</td>
+					</tr>
+				</g:each>		   
+			</g:each>
+			</table>	
+		</td>
+	</tr>
 	<tr class="even">	
 		<td class="tdhead" style="vertical-align: middle; text-align: center;">
 		  <g:if test="${executionInstance?.script}">
@@ -148,7 +241,7 @@ function showCrashLogs(k){
 		  </g:else>
 		</td>
 		<td>
-		
+
 		<g:each in="${executionresults.get(executionDeviceInstance)}" status="i"  var="executionResultInstance">
 		<section class="round-border">
 			<table>
@@ -164,25 +257,46 @@ function showCrashLogs(k){
 				<g:each in="${executionResultInstance.executemethodresults}"  var="executionResultMthdsInstance">
 				<tr class="fnhead">
 					<td>Function Name</td>
-					<td colspan="3">${executionResultMthdsInstance?.functionName}</td>				
+					<td colspan="4">${executionResultMthdsInstance?.functionName}</td>				
 				</tr>
 				<tr>
 					<td>ExpectedResult</td>
-					<td colspan="3">${executionResultMthdsInstance?.expectedResult}</td>				
+					<td colspan="4">${executionResultMthdsInstance?.expectedResult}</td>				
 				</tr>
 				<tr>
 					<td>ActualResult</td>
-					<td colspan="3">${executionResultMthdsInstance?.actualResult}</td>				
+					<td colspan="4">${executionResultMthdsInstance?.actualResult}</td>				
 				</tr>
 				<tr>
 					<td>Status</td>
-					<td colspan="3">${executionResultMthdsInstance?.status}</td>				
+					<td colspan="4">${executionResultMthdsInstance?.status}</td>				
 				</tr>
 				</g:each>
 				<tr>
 					<td>Log Data </td>
-					<td colspan="3"><div style="overflow : auto; height : 180px;">${executionResultInstance?.executionOutput}</div></td>				
+					<td colspan="4"><div style="overflow : auto; height : 180px;">${executionResultInstance?.executionOutput}</div></td>				
 				</tr>
+				
+				<tr>
+					<td>Agent Console Log		
+					
+					</td>	
+					<td colspan="4">
+						&emsp;<span id="showconsolelink${k}_${i}" >
+						<g:remoteLink action="showAgentLogFiles" update="consoleLog${k}_${i}" onSuccess="showConsoleHideLink(${k},${i});" params="[execResId : "${executionResultInstance?.id}", execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}"]">Show</g:remoteLink>						
+						</span>
+
+						<span id="hideconsolelink${k}_${i}" style="display:none;"><a style="color:#7E2217;" href="#" onclick="hideConsoleLogs(${k},${i})">Hide</a></span>
+					</td>					
+				</tr>
+				<tr>
+					<td></td>
+					<td colspan="4">
+						<div id="consoleLog${k}_${i}"></div>	
+						
+					</td>	
+				</tr>
+
 				</tbody>
 			</table>
 			</section>			
@@ -245,8 +359,6 @@ function showCrashLogs(k){
 							</g:if>					
 						</tbody>
 						</table>
-						
-						
 				</section>		
 				</span>		
 			</g:if>
@@ -255,19 +367,30 @@ function showCrashLogs(k){
 	</tr>
 	<tr>
 		<td colspan="2">
-			<g:remoteLink action="showLogFiles" id="1" update="testSucc${k}" onSuccess="showHideLink(${k});" params="[execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}"]">Show Log Files</g:remoteLink>						
+			<b>Log Files</b>						
 			&emsp;<span id="hidelink${k}" style="display:none;"><a style="color:#7E2217;" href="#" onclick="hideLogs(${k})">Hide</a></span>
-			<span id="showlink${k}" style="display:none;"><a style="color:#7E2217;" href="#" onclick="showLogs(${k})">Show</a></span>
+			<span id="showlink${k}">
+			&emsp;<g:remoteLink style="color:#7E2217;" action="showLogFiles" id="1" update="testSucc${k}" onSuccess="showHideLink(${k});" params="[execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}"]">Show</g:remoteLink>								
+			</span>
 			<div id="testSucc${k}"></div>
 		</td>	
 	</tr>
 	<tr>
 		<td colspan="2">
-			<g:remoteLink action="showCrashLogFiles" id="1" update="testCrashSucc${k}" onSuccess="showCrashHideLink(${k});" params="[execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}"]">Show Crash Log Files</g:remoteLink>						
+			<b>Crash Log Files</b>					
 			&emsp;<span id="hidecrashlink${k}" style="display:none;"><a style="color:#7E2217;" href="#" onclick="hideCrashLogs(${k})">Hide</a></span>
-			<span id="showcrashlink${k}" style="display:none;"><a style="color:#7E2217;" href="#" onclick="showCrashLogs(${k})">Show</a></span>
+			&emsp;<span id="showcrashlink${k}">			
+			<g:remoteLink style="color:#7E2217;" action="showCrashLogFiles" id="1" update="testCrashSucc${k}" onSuccess="showCrashHideLink(${k});" params="[execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}"]">Show</g:remoteLink>
+			</span>
 			<div id="testCrashSucc${k}"></div>
 		</td>	
 	</tr>
 </table>	
 </g:each>
+
+</g:if>
+<g:else>
+<div>
+${executionInstance?.outputData}
+</div>
+</g:else>

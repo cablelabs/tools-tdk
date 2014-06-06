@@ -83,6 +83,13 @@
 			<input type="text" id="execTime" name="executionTime" size="5"/>(min)
 			</td>
 		</tr>
+		
+		<tr>
+			<td>RDK Version</td>
+			<td>
+				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.list()}" optionKey="id" required="" value="" class="many-to-one selectCombo" multiple="true"/>
+			</td>
+		</tr>
 
 		<tr>
 			<td></td>

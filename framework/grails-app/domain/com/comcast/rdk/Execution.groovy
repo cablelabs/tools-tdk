@@ -114,6 +114,11 @@ class Execution {
 	ThirdPartyExecutionDetails thirdPartyExecutionDetails = null
 	
 	/**
+	 * Script Count
+	 */
+	int scriptCount = 0
+	
+	/**
 	 * Execution can have many execution results.
 	 */
 	static hasMany = [ executionresults : ExecutionResult ]
@@ -137,6 +142,7 @@ class Execution {
 		isAborted(nullable:true, blank:true)
 		isRerunRequired(nullable:true, blank:true)
 		applicationUrl(nullable:true, blank:true)
+		scriptCount(nullable:true, blank:true)
     }
     
     static mapping = {

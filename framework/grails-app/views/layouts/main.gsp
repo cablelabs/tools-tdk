@@ -115,7 +115,7 @@ function showStreamDetails12(){
 				<tr>
 					<td>Username :</td>
 					<td><g:textField name="username" required=""
-							value="${SecurityUtils.subject.principal}" /></td>
+							value="${SecurityUtils.subject.principal}" /><g:passwordField name="toEscapeFrmBrowser"  value="" style="display:none;" /></td>
 				</tr>
 				<tr>
 					<td>Old Password :</td>

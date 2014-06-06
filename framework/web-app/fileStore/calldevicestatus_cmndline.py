@@ -37,8 +37,8 @@ boxname = sys.argv[4]
 #SIGALRM is only usable on a unix platform
 signal.signal(signal.SIGALRM, timeout)
 
-#change 4 to however many seconds you need
-signal.alarm(4)
+#change 15 to however many seconds you need
+signal.alarm(15)
 
 try:
     status = getStatus(boxipaddress,testmanageripaddress,boxname,port)  # Calling getStatus to get box status

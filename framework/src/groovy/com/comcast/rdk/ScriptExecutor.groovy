@@ -138,6 +138,37 @@ class ScriptExecutor {
 		process.destroy()
 		return outputData
 	}
+	
+	/**
+	 * Method to execute a script.
+	 * This method executes a particular command with specified arguments.
+	 * @param command
+	 * @return
+	 */
+	def executeScript(final String[] command, final int waittime) {
+		
+		Process process = Runtime.getRuntime().exec( command )
+		StreamReaderJob dataReader = new StreamReaderJob(process.getInputStream())
+		StreamReaderJob errorReader = new StreamReaderJob(process.getErrorStream())
+
+		FutureTask< String > dataReaderTask = new FutureTask< String > (dataReader)
+		FutureTask< String > errorReaderTask = new FutureTask< String > (errorReader)
+		executorService.execute(dataReaderTask)
+		executorService.execute(errorReaderTask)
+		if(waittime == 0){
+			int exitCode = process.waitFor()
+		}
+		else{
+			process.waitForOrKill(waittime*60000)
+		}
+		String outputData = dataReaderTask.get()
+		String errorData = errorReaderTask.get()
+		if(errorData && (errorData.length() > 0 )){
+			//println "errorData :: "+errorData
+		}
+		process.destroy()
+		return outputData
+	}
 }
 
 

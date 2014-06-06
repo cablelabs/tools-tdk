@@ -26,38 +26,84 @@ public class DeviceStatusService {
 	 * @param outData
 	 */
 	public void updateDeviceStatus(final Device device, final String outData ){
-
 		String deviceStatus
 		def deviceInstance
 		def deviceId
 		Device.withTransaction {
-		deviceInstance = Device.findByStbName(device?.stbName)
-	//	deviceInstance = Device.findByStbName(device?.stbName,[lock:true])
-		if(deviceInstance){
-			deviceId = deviceInstance?.id
-			if(outData.equals( Status.BUSY.toString() )){
-				deviceStatus = Status.BUSY
-			}
-			else if(outData.equals( Status.FREE.toString() )){
-				deviceStatus = Status.FREE
-			}
-			else if(outData.equals( Status.NOT_FOUND.toString() )){
-				deviceStatus = Status.NOT_FOUND
-			}
-			else if(outData.equals( Status.HANG.toString() )){
-				deviceStatus = Status.HANG
-			}
-			else{
-				deviceStatus = Status.NOT_FOUND
-			}
-			try{
-				deviceInstance.deviceStatus = deviceStatus
-				deviceInstance.save(flush:true)
-
-				updateMocaDevices(deviceInstance,deviceInstance.boxType)
-			}catch(Exception e){
+			deviceInstance = Device.findByStbName(device?.stbName)
+		//	deviceInstance = Device.findByStbName(device?.stbName,[lock:true])
+			if(deviceInstance){
+				deviceId = deviceInstance?.id
+				if(executionService.deviceAllocatedList.contains(deviceId)){
+					deviceStatus = Status.BUSY
+				}
+				else{
+					if(outData.equals( Status.BUSY.toString() )){
+						deviceStatus = Status.BUSY
+					}
+					else if(outData.equals( Status.FREE.toString() )){
+						deviceStatus = Status.FREE
+					}
+					else if(outData.equals( Status.NOT_FOUND.toString() )){
+						deviceStatus = Status.NOT_FOUND
+					}
+					else if(outData.equals( Status.HANG.toString() )){
+						deviceStatus = Status.HANG
+					}
+					else{
+						deviceStatus = Status.NOT_FOUND
+					}			
+				}
+				try{
+					deviceInstance.deviceStatus = deviceStatus
+					deviceInstance.save(flush:true)
+	
+					updateMocaDevices(deviceInstance,deviceInstance.boxType)
+				}catch(Exception e){
+				}
 			}
 		}
+	}
+	
+	public void updateOnlyDeviceStatus(final Device device, final String outData ){
+		String deviceStatus
+		def deviceInstance
+		def deviceId
+		Device.withTransaction {
+			deviceInstance = Device.findByStbName(device?.stbName)
+			if(deviceInstance){
+				deviceId = deviceInstance?.id
+				if(executionService.deviceAllocatedList.contains(deviceId)){
+					deviceStatus = Status.BUSY
+				}
+				else{
+					if(outData.equals( Status.BUSY.toString() )){
+						deviceStatus = Status.BUSY
+					}
+					else if(outData.equals( Status.FREE.toString() )){
+						deviceStatus = Status.FREE
+					}
+					else if(outData.equals( Status.NOT_FOUND.toString() )){
+						deviceStatus = Status.NOT_FOUND
+					}
+					else if(outData.equals( Status.HANG.toString() )){
+						deviceStatus = Status.HANG
+					}
+					else{
+						deviceStatus = Status.NOT_FOUND
+					}
+				}
+
+				try{
+					Device.withTransaction {
+						deviceInstance = Device.findByStbName(device?.stbName)
+						deviceInstance.deviceStatus = deviceStatus
+						deviceInstance.save(flush:true)
+					}
+				}catch(Exception e){
+				}
+
+			}
 		}
 	}
 

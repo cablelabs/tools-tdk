@@ -283,10 +283,7 @@ class DeviceGroupController {
          * and there is no duplicate OcapIds
          */
         if((params?.streamid)){
-            int ocapIdSize = params?.ocapId.size()
-            Set setOcapId =  params?.ocapId
-            int setSize = setOcapId.size()
-            if(setSize < ocapIdSize){
+			if(checkDuplicateOcapId(params?.ocapId)){
                 flash.message = message(code: 'duplicate.ocap.id')
 				render(flash.message)
                 return
@@ -357,7 +354,6 @@ class DeviceGroupController {
                         [
                             message(code: 'device.label', default: 'Device')] as Object[],
                         "Another user has updated this Device while you were editing")
-                //render(view: "editDevice", model: [deviceInstance: deviceInstance])
 				redirect(action: "list")
                 return
             }
@@ -414,21 +410,36 @@ class DeviceGroupController {
 
             if(currentBoxType.equals( BOXTYPE_CLIENT )){
                 if(newBoxType.equals( BOXTYPE_GATEWAY )){
+					
+					/**
+					 * Check whether streams are present
+					 * and there is no duplicate OcapIds
+					 */
+					if((params?.streamid)){
+						if(checkDuplicateOcapId(params?.ocapId)){
+							flash.message = message(code: 'duplicate.ocap.id')
+							redirect(action:"list")
+							return
+						}
+					}
+					
                     saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)        
                 }
-
             }
             else{                
                 if(deviceInstance.boxType.type.toLowerCase().equals( BOXTYPE_GATEWAY )){
-                    for(int i = 0; i < params?.streamid?.size() ; i++){
-                        deviceStream = DeviceStream.findById(params?.streamid[i])
-						
-					/*	DeviceStream.executeUpdate("update DeviceStream d set d.ocapId = :newOcapId where d.id = :deviceStreamId",
-							[newOcapId: params?.ocapId[i], deviceid: deviceStream.id.toLong()] )*/
-						
-                        deviceStream.ocapId = params?.ocapId[i]
-                        deviceStream.save(flush:true)
-                    }
+					/**
+					 * Check whether streams are present
+					 * and there is no duplicate OcapIds
+					 */
+					if((params?.streamid)){
+						if(checkDuplicateOcapId(params?.ocapId)){
+							flash.message = message(code: 'duplicate.ocap.id')
+							redirect(action:"list")
+							return
+						}
+					}
+					saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)
                 }
             }
 
@@ -441,72 +452,164 @@ class DeviceGroupController {
 
 		redirect(action: "list", params: [deviceId: params.id])
     }
-    
+	
+	/**
+	 * Check for duplicate ocapid's
+	 * @param ocapIdList
+	 * @return
+	 */
+	def boolean checkDuplicateOcapId(def ocapIdList){
+		boolean isDuplicate = false
+		int ocapIdSize = ocapIdList.size()
+		Set setOcapId =  ocapIdList
+		int setSize = setOcapId.size()
+		if(setSize < ocapIdSize){
+			isDuplicate = true
+		}
+		return isDuplicate
+	}
+
     /**
      * Save device specific stream details
      * @return
      */
     def saveDeviceStream(final def streamIdList, final def ocapIdList, final Device deviceInstance){
+		
+		def deviceStreamList = DeviceStream.findAllByDevice(deviceInstance)		
+		if(deviceStreamList?.size() > 0){
+			DeviceStream.executeUpdate("delete DeviceStream d where d.device = :instance1",[instance1:deviceInstance])
+		}
+				
         DeviceStream deviceStream
         StreamingDetails streamingDetails
+
         for(int i = 0; i < streamIdList?.size() ; i++){
-            streamingDetails = StreamingDetails.findById(streamIdList[i])
+			
+            streamingDetails = StreamingDetails.findByStreamId(streamIdList[i].toString())
             deviceStream = new DeviceStream()
             deviceStream.device = deviceInstance
             deviceStream.stream = streamingDetails
             deviceStream.ocapId = ocapIdList[i]
-            deviceStream.save(flush:true)
+            if(!(deviceStream.save(flush:true))){							
+			}
         }
     }
-
+	
     /**
      * Delete device
      * @return
      */
-    def deviceDelete(Long id) {		
+	def deviceDelete(Long id) {
 		List devicesTobeDeleted = []
-		
-        def deviceInstance = Device.get(id)
-        if (!deviceInstance) {
-           
-            redirect(action: "list")
-            return
-        }
-        boolean deviceInUse = devicegroupService.checkDeviceStatus(deviceInstance)
-        if(deviceInUse){
+
+		def deviceInstance = Device.get(id)
+		if (!deviceInstance) {
+
+			redirect(action: "list")
+			return
+		}
+		boolean deviceInUse = devicegroupService.checkDeviceStatus(deviceInstance)
+		if(deviceInUse){
 			flash.message = message(code: 'device.not.update', args: [deviceInstance.stbIp])
-            redirect(action: "list")
-        }
-        else{
-            try {
-				
-				deviceInstance.childDevices.each { childDevice ->
-						devicesTobeDeleted << childDevice
+			redirect(action: "list")
+		}
+		else{
+			try {
+
+				def deviceDetailsList = DeviceDetails.findAllByDevice(deviceInstance)
+
+				if(deviceDetailsList?.size() > 0){
+					DeviceDetails.executeUpdate("delete DeviceDetails d where d.device = :instance1",[instance1:deviceInstance])
 				}
-				
-                DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+
+				deviceInstance.childDevices.each { childDevice ->
+					devicesTobeDeleted << childDevice?.id
+				}
+
+				DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+				devicegroupService.updateExecDeviceReference(deviceInstance)
 				//DeviceGroup.executeUpdate("delete DeviceGroup d where d.device = :instance1",[instance1:deviceInstance])
-                deviceInstance.delete(flush: true)
-				
-				devicesTobeDeleted.each { childDevice ->					
-					childDevice.delete(flush:true)
-				}				
-				
-                flash.message = message(code: 'default.deleted.message', args: [
-                    message(code: 'device.label', default: 'Device'),
-                    deviceInstance.stbName
-                ])
-                redirect(action: "list")
-            }
-            catch (DataIntegrityViolationException e) {
-                flash.message = message(code: 'default.not.deleted.message', args: [
-                    message(code: 'device.label', default: 'Device'),
-                    deviceInstance.stbName
-                ])
-                redirect(action: "list")
-            }
-        }
-    }
+
+				if(deviceInstance.isChild == 1){
+					try {
+						def devices = Device.findAll()
+						devices?.each{ device ->
+							def devInstance = device.childDevices.find { it.id == deviceInstance.id }
+							if(devInstance){
+								Device.withTransaction {
+									Device parentDevice = Device.findById(device?.id)
+									parentDevice.removeFromChildDevices(deviceInstance)
+								}
+							}
+						}
+					} catch (Exception e) {
+						e.printStackTrace()
+					}
+
+				}
+
+				try {
+					if(!deviceInstance.delete(flush: true)){
+							Device.withTransaction {
+								Device dev = Device.findById(deviceInstance?.id)
+								if(dev){
+									dev?.delete(flush: true)
+								}
+							}
+					}
+				} catch (Exception e) {
+					Device.withTransaction {
+						Device dev = Device.findById(deviceInstance?.id)
+						if(dev){
+							dev?.delete(flush: true)
+						}
+					}
+				}
+				devicesTobeDeleted.each { childDeviceId ->
+
+					Device childDevice = Device.findById(childDeviceId)
+					devicegroupService.updateExecDeviceReference(childDevice)
+
+					try {
+						def status
+						Device.withTransaction {
+							status = childDevice.delete(flush: true)
+						}
+
+						if(!status){
+								Device.withTransaction {
+									Device dev = Device.findById(childDevice?.id)
+									if(dev){
+										dev?.delete(flush: true)
+									}
+								}
+						}
+					} catch (Exception e) {
+						Device.withTransaction {
+							Device dev = Device.findById(childDevice?.id)
+							if(dev){
+								dev?.delete(flush: true)
+							}
+						}
+					}
+				}
+
+				flash.message = message(code: 'default.deleted.message', args: [
+					message(code: 'device.label', default: 'Device'),
+					deviceInstance.stbName
+				])
+				redirect(action: "list")
+			}
+			catch (DataIntegrityViolationException e) {
+				flash.message = message(code: 'default.not.deleted.message', args: [
+					message(code: 'device.label', default: 'Device'),
+					deviceInstance.stbName
+				])
+				redirect(action: "list")
+			}
+		}
+	}
+	
 
     /**
      * Delete device
@@ -523,26 +626,95 @@ class DeviceGroupController {
             render(flash.message)
         }
         else{
-            try {
+			try {
 				
-				deviceInstance.childDevices.each { childDevice ->
-					devicesTobeDeleted << childDevice
+				def deviceDetailsList = DeviceDetails.findAllByDevice(deviceInstance)
+				
+				if(deviceDetailsList?.size() > 0){
+					DeviceDetails.executeUpdate("delete DeviceDetails d where d.device = :instance1",[instance1:deviceInstance])
 				}
 				
-                DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
-                deviceInstance.delete(flush: true)
+
+				deviceInstance.childDevices.each { childDevice -> devicesTobeDeleted << childDevice?.id }
 				
-				devicesTobeDeleted.each { childDevice ->
+
+				DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+				devicegroupService.updateExecDeviceReference(deviceInstance)
+				
+				if(deviceInstance.isChild == 1){
+					try {
+						def devices = Device.findAll()
+					devices?.each{ device ->
+						def devInstance = device.childDevices.find { it.id == deviceInstance.id }
+						if(devInstance){
+							Device.withTransaction {
+								Device parentDevice = Device.findById(device?.id)
+								parentDevice.removeFromChildDevices(deviceInstance)
+							}
+						}
+					}
+					} catch (Exception e) {
+						e.printStackTrace()
+					}
 					
-					childDevice.delete(flush:true)
 				}
-				
-                flash.message = message(code: 'default.deleted.message', args: [
-                    message(code: 'device.label', default: 'Device'),
-                    deviceInstance.stbName
-                ])
-                render("success")
-            }
+				try {
+					if(!deviceInstance.delete(flush: true)){
+							Device.withTransaction {
+								Device dev = Device.findById(deviceInstance?.id)
+								if(dev){
+										if(!dev?.delete(flush: true)){
+											
+										}
+								}
+							}
+					}
+				} catch (Exception e) {
+
+						Device.withTransaction {
+							Device dev = Device.findById(deviceInstance?.id)
+							if(dev){
+								if(!dev?.delete(flush: true)){
+
+								}
+							}
+						}
+
+				}
+					devicesTobeDeleted.each { childDeviceId ->
+
+						Device childDevice = Device.findById(childDeviceId)
+						devicegroupService.updateExecDeviceReference(childDevice)
+
+						try {
+							def status
+							Device.withTransaction {
+								status = childDevice.delete(flush: true)
+							}
+							if(!status){
+									Device.withTransaction {
+										Device dev = Device.findById(childDevice?.id)
+										if(dev){
+											dev?.delete(flush: true)
+										}
+									}
+							}
+						} catch (Exception e) {
+								Device.withTransaction {
+									Device dev = Device.findById(childDevice?.id)
+									if(dev){
+										dev?.delete(flush: true)
+									}
+								}
+						}
+					}
+
+				flash.message = message(code: 'default.deleted.message', args: [
+					message(code: 'device.label', default: 'Device'),
+					deviceInstance.stbName
+				])
+				render("success")
+			}
             catch (DataIntegrityViolationException e) {
                 flash.message = message(code: 'default.not.deleted.message', args: [
                     message(code: 'device.label', default: 'Device'),

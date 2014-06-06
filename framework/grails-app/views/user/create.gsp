@@ -42,11 +42,12 @@
 					<g:render template="form"/>
 					<div class="fieldcontain ${hasErrors(bean: userInstance, field: 'roles', 'error')} ">
 					<label for="roles">
-						<g:message code="user.roles.label" default="Role" />		
+						<g:message code="user.roles.label" default="Role" />
+						<span class="required-indicator">*</span>		
 					</label>
 					<%--<g:select id="roleid" name="roles" from="${com.comcast.rdk.Role.list()}" multiple="multiple" style="width:150px;" optionKey="id" size="5" value="${userInstance?.roles*.id}" class="many-to-many"/>
 				--%>
-				<g:select id="roleid" name="roles" from="${com.comcast.rdk.Role.list()}" style="width:150px;" optionKey="id" value="${userInstance?.roles*.id}" class="many-to-one" noSelection="['null': 'Select One']"/>
+				<g:select id="roleid" name="roles" from="${com.comcast.rdk.Role.list()}" required="" style="width:150px;" optionKey="id" value="${userInstance?.roles*.id}" class="many-to-one" />
 				</div>
 					
 				</fieldset>

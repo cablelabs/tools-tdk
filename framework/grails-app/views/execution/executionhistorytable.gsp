@@ -103,6 +103,7 @@
 			</div>
 			
 			<div class="pagination" style="width: 98%;">
+					<a href="#" onclick="showCleanUpPopUp();"><label> <b>Date based CleanUp </b></label></a>&emsp;&emsp;&emsp;
 					<input type="checkbox" name="markAll" id="markAll2" class="markAll" onclick="clickCheckbox(this)">
 					<label> <b>Mark All </b></label>	
 					<img src="../images/trash.png" onclick="deleteResults();return false;" style="cursor: pointer;" alt="Delete"/>

@@ -26,6 +26,9 @@ class ExecutedbService {
 	 * Injects the grailsApplication.
 	 */
 	def grailsApplication
+	
+	
+	
 
 	/**
 	 * Injects the executionService.
@@ -68,6 +71,20 @@ class ExecutedbService {
 		xml.executionResult(name: executionInstance?.name.toString(), status: executionInstance?.result.toString()) {
 			executionDevice.each{ executionDeviceInstance ->
 				device(name:executionDeviceInstance?.device.toString(), ip1:executionDeviceInstance?.deviceIp, exectime:executionDeviceInstance?.executionTime, status:executionDeviceInstance?.status) {
+					
+					def summaryMap = getStatusList(executionInstance,executionDeviceInstance,executionDeviceInstance.executionresults?.size()?.toString())
+
+					Summary(){
+						TotalScriptsExecuted(summaryMap.get("Total Scripts in ScriptGroup"))
+						Success(summaryMap?.get("SUCCESS"))
+						Failure(summaryMap?.get("FAILURE"))
+						NotApplicable(summaryMap?.get("N/A"))
+						Skipped(summaryMap?.get("SKIPPED"))
+						Pending(summaryMap?.get("PENDING"))						
+						ScriptTimedOut(summaryMap?.get("TIMED OUT"))	
+						Undefined(summaryMap?.get("UNDEFINED"))
+					}
+
 					executionDeviceInstance.executionresults.each{ executionResultInstance ->
 						scripts(name:executionResultInstance?.script, status:executionResultInstance?.status){
 							executionResultInstance.executemethodresults.each{executionResultMthdsInstance ->
@@ -83,7 +100,7 @@ class ExecutedbService {
 							def benchmarkList = Performance.findAllByExecutionResultAndPerformanceType(executionResultInstance,"BenchMark")
 							Benchmark(){
 								benchmarkList?.each{ bmInstance ->
-									Function(APIName:bmInstance?.processName,ExecutionTime:bmInstance?.processValue)
+									Function(APIName:bmInstance?.processName,ExecutionTime:bmInstance?.processValue+"(ms)")
 								}
 							}
 							def systemDiagList = Performance.findAllByExecutionResultAndPerformanceType(executionResultInstance,"SYSTEMDIAGNOSTICS")
@@ -106,9 +123,10 @@ class ExecutedbService {
 	 * @param selectedRows
 	 * @return
 	 */
-	def deleteSelectedRowOfExecutionResult(def selectedRows) {
+	def deleteSelectedRowOfExecutionResult(def selectedRows, String realPath) {
 		List executionResultList = []
 		List executionMethodResultInstanceList = []
+		List performanceList = []
 		int deleteCount = 0
 
 		for(int i=0;i<selectedRows.size();i++){
@@ -125,6 +143,10 @@ class ExecutedbService {
 									executionMethodResultInstance.delete(flush:true)
 								}
 							}
+							performanceList = Performance.findAllByExecutionResult(executionResultInstance)
+							performanceList.each{ performance ->
+								performance.delete(flush:true)
+							}
 						}
 						executionResultInstance.delete(flush:true)
 					}
@@ -135,6 +157,8 @@ class ExecutedbService {
 						executionDeviceInstance.delete(flush:true)
 					}
 
+					def execId = executionInstance?.id
+					
 					executionInstance.delete(flush:true)
 					deleteCount ++
 					log.info "Deleted "+executionInstance
@@ -142,6 +166,33 @@ class ExecutedbService {
 					/**
 					 * Deletes the log files, crash files 										  
 					 */
+					
+					String logFilePath = "${realPath}//logs//"+execId
+					def logFiles = new File(logFilePath)
+					if(logFiles.exists()){
+						logFiles?.deleteDir()
+					}
+					String crashFilePath = "${realPath}//logs//crashlogs//"
+					
+					new File(crashFilePath).eachFileRecurse { file->
+						if((file?.name).startsWith(execId.toString())){
+							file?.delete()
+						}
+					}
+					
+					String versionFilePath = "${realPath}//logs//version//"+execId
+					def versionFiles = new File(versionFilePath)
+					if(versionFiles.exists()){
+						versionFiles?.deleteDir()
+					}
+					
+					String agentLogFilePath = "${realPath}//logs//consolelog//"+execId
+					def agentLogFiles = new File(agentLogFilePath)
+					if(agentLogFiles.exists()){
+						agentLogFiles?.deleteDir()
+					}
+					
+					
 				}
 				else{
 					log.info "Invalid executionInstance"
@@ -150,6 +201,7 @@ class ExecutedbService {
 		}
 		return deleteCount
 	}
+		
 
 	/**
 	 * Function to create data in excel format for execution result
@@ -189,6 +241,10 @@ class ExecutedbService {
 		Map deviceDetailsMap = [:]
 		Map blankRowMap = [:]
 
+		Map summaryHead = [:]
+		Map statusValue = [:]
+
+		
 
 		executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
 
@@ -235,7 +291,21 @@ class ExecutedbService {
 			dataList.add(deviceDetailsMap)
 			dataList.add(blankRowMap)
 
-			executionResultInstanceList =  ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance,executionDeviceInstance)
+			executionResultInstanceList =  ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance,executionDeviceInstance)//,[sort: "script",order: "asc"])
+			
+			def summaryMap = getStatusList(executionInstance,executionDeviceInstance,executionResultInstanceList?.size()?.toString())
+		
+			mapDevice 			= ["C1":"SUMMARY","C2":"   "]
+			dataList.add(mapDevice)
+			
+			summaryMap.each{ mapInfo->				
+				statusValue 	= ["C1": mapInfo.key, "C2": mapInfo.value ]
+				dataList.add(statusValue)				
+			}
+			
+			blankRowMap 		= ["C1":"     ","C2":"     "]
+			dataList.add(blankRowMap)
+			
 			executionResultInstanceList.each{ executionResultInstance ->
 
 				List functionList = []
@@ -296,7 +366,7 @@ class ExecutedbService {
 				systemDiagList = Performance.findAllByExecutionResultAndPerformanceType(executionResultInstance,KEY_SYSTEMDIAGNOSTICS)
 
 				benchmarkList?.each{ bmInstance ->
-					benchMarkDetails = benchMarkDetails + bmInstance?.processName + HYPHEN + bmInstance?.processValue + NEW_LINE
+					benchMarkDetails = benchMarkDetails + bmInstance?.processName + HYPHEN + bmInstance?.processValue +"(ms)" + NEW_LINE
 				}
 
 				systemDiagList?.each{ sdInstance ->
@@ -325,8 +395,60 @@ class ExecutedbService {
 	 * @return
 	 */
 	def populateChartData(final Execution executionInstance,final String realPath){
-		if(!executionInstance?.isPerformanceDone){
+	//	if(!executionInstance?.isPerformanceDone){
 			executionService.setPerformance(executionInstance,realPath)
-		}
+	//	}
 	}
+	
+	/**
+	 * Get the execution status summary of script executed from the results.
+	 * @param executionInstance
+	 * @param executionDevice
+	 * @param scriptCnt
+	 * @return
+	 */
+	def Map getStatusList(final Execution executionInstance, final ExecutionDevice executionDevice, final String scriptCnt){
+
+		def listStatusCount = [:]
+		int scriptCount = 0
+		
+		if(executionInstance?.scriptGroup){			
+			ScriptGroup scriptGrp = ScriptGroup.findByName(executionInstance?.scriptGroup)			
+			if(scriptGrp){
+				
+				def successCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"SUCCESS")
+				
+				def failureCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"FAILURE")
+				
+				def skippedCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"SKIPPED")
+				
+				def naCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"N/A")
+				
+				def pendingCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"PENDING")
+				
+				def unknownCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"UNDEFINED")
+				
+				def timeoutCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"SCRIPT TIME OUT")
+
+				if((executionInstance?.scriptCount != 0 ) && (executionInstance?.scriptCount != null)){
+					scriptCount = executionInstance?.scriptCount
+				}
+				else{
+					scriptCount = Integer.parseInt(scriptCnt)
+				}
+				
+				listStatusCount.put("Total Scripts in ScriptGroup",scriptCount?.toString())
+				listStatusCount.put("SUCCESS",successCount?.toString())
+				listStatusCount.put("FAILURE",failureCount?.toString())
+				listStatusCount.put("N/A",naCount?.toString())				
+				listStatusCount.put("SKIPPED",skippedCount?.toString())
+				listStatusCount.put("PENDING",pendingCount?.toString())
+				listStatusCount.put("TIMED OUT",timeoutCount?.toString())
+				listStatusCount.put("UNDEFINED",unknownCount?.toString())
+			}
+		}		
+		return listStatusCount
+	}
+
+
 }

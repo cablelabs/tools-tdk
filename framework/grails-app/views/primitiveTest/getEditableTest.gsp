@@ -26,20 +26,24 @@
 		<tr>
 			<td>Test Name</td>
 			<td>
-				<input type="text" name="testName" id="testName" size="37" maxlength="150" value="${primitiveTest.name}">
+				<input type="text" name="testName" id="testName" size="37" maxlength="150" value="${primitiveTest.name}" disabled="true">
 			</td>
 		</tr>
 		<tr>
 			<td>Select Module</td>
 			<td>
-				<g:select from="${Module.list([order: 'asc', sort: 'name'])}" id="module"
+				<input type="text" name="module" id="module" size="37" maxlength="150" value="${primitiveTest.module?.name}" disabled="true">
+				<%--<g:select from="${Module.list([order: 'asc', sort: 'name'])}" id="module"
 					name="module" style="width: 250px" optionKey="id" value="${primitiveTest.module?.id}"/>
+			--%>
 			</td>
 		</tr>
 		<tr>
 			<td>Select Function</td>
 			<td id="functionTd">
-				<select name="functionValue" id="functionValue" style="width: 250px" onchange="getAssociatedParameters()">
+				<input type="text" name="functionValue" id="functionValue" size="37" maxlength="150" 
+						value="${primitiveTest?.function?.name}" disabled="true">
+				<%--<select name="functionValue" id="functionValue" style="width: 250px" onchange="getAssociatedParameters()">
 					<g:each in="${functions}" var="function">
 						<g:if test="${function.id == primitiveTest.function.id}">
 							<option value="${function.id}" selected="selected">${function.name}</option>
@@ -48,7 +52,7 @@
 							<option value="${function.id}">${function.name}</option>
 						</g:else>
 					</g:each>
-				</select>
+				</select>--%>
 			</td>
 		</tr>
 		<tr>

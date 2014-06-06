@@ -43,7 +43,7 @@ class UserController {
         }
 
         flash.message = message(code: 'default.created.message', args: [message(code: 'user.label', default: 'User'), userInstance.username])
-        redirect(action: "create", id: userInstance.id)
+        redirect(action: "create")
     }
 	
 	/**
@@ -82,18 +82,17 @@ class UserController {
 				eq('name', "ADMIN")
 			}
 		}
-		println results.email.toArray()
 		try {
 			mailService.sendMail {
 				to results.email.toArray()
 				subject "New User Registration"
-				body ' [RDK Tool] : User '+userInstance.name+' is registed with username '+userInstance.username
+				body ' [RDK Tool] : User '+userInstance.name+' is registed with username '+userInstance?.username + "Approval pending from Administrator"
 			}
 
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
-		flash.message = message(code: 'default.created.message', args: [message(code: 'shiroUser.label', default: 'User'), userInstance.name])
+		flash.message = message(code: 'default.registered.message', args: [message(code: 'user.label', default: 'User'), userInstance?.name])
 		redirect(action: "registerUser", params: [userId: userInstance?.id])
 	}
 	

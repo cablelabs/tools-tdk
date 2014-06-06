@@ -37,8 +37,9 @@ $(document).ready(function() {
 				</span>
 				<span id="givenExcName" style="display:none;">
 					<g:textField id="newexecName" name="execName" required="" value="${device?.stbName}-${datetime}" class="textwidth"/>
-					<a href="#"><img style="vertical-align: middle;" src="../images/undo.png" onclick="showDefaultExecName();"/></a>
-				</span>						
+					<a href="#"><img style="vertical-align: middle;" src="../images/undo.png" onclick="showDefaultExecName();"/></a>					
+				</span>		
+				<a href="#"><img style="vertical-align: middle;" src="../images/refresh.gif" onclick="showDateTime();"/></a>				
 			</td>		
 		</tr>
 		<tr>
@@ -79,7 +80,7 @@ $(document).ready(function() {
 			<td>				
 				<%--<g:textField size="5" onkeypress="return digitonly(event);" id="repeatId" name="repeatNo" required="" value="1" />&nbsp; times (Not Applicable for scheduling)
 				--%>
-				<input size="5" id="repeatId" onkeypress="return isNumberKey(event)" type="text" name="repeatNo" required="" value="1">&nbsp; times (Not Applicable for scheduling)				
+				<input size="5" id="repeatId" onkeypress="return isNumberKey(event)" type="text" name="repeatNo" required="" value="1">&nbsp; times		
 				&emsp;&emsp;<g:checkBox id="rerunId" name="rerun" checked="false" />&nbsp;Re-Run on Failure										
 			</td>						
 		</tr>
@@ -94,7 +95,8 @@ $(document).ready(function() {
 				<g:hiddenField name="pageFlag" value="execute"/>
 				<span id="executeBtn" class="buttons"><g:submitToRemote class="save" before="showWaitSpinner();" 
 				action="executeScriptMethod" controller="execution" update="resultDiv123" value="Execute" 
-				onComplete="completed()" onFailure="changeStyles()"  onSuccess="changeStyles()" ></g:submitToRemote>&emsp;	
+				onComplete="completed()" onFailure="changeStyles()"  onSuccess="changeStyles()" >
+				</g:submitToRemote>&emsp;	
 				</span>
 				<span id="scheduleBtn" class="buttons">
 					<input type=button class="save"  onclick="showScheduler(${device?.id});return false;"

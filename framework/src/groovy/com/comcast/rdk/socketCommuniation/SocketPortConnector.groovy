@@ -92,8 +92,12 @@ public class SocketPortConnector extends Thread
 								  filePath
 							  ]
 													  
-							 ScriptExecutor scriptExecutor = new ScriptExecutor()
-							 def outputData = scriptExecutor.executeScript(cmd)
+							 try {
+								 ScriptExecutor scriptExecutor = new ScriptExecutor()
+								 def outputData = scriptExecutor.executeScript(cmd,1)
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
 						 }				     
 					 }
 				  }

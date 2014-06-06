@@ -40,6 +40,10 @@
 				<tr>					
 					<td><g:link controller="boxType" action="index"><span>Box Type</span></g:link></td>
 					<td>Option to add Box Type</td>
+				</tr>
+				<tr>					
+					<td><g:link controller="RDKVersions" action="index"><span>RDK Versions</span></g:link></td>
+					<td>Option to add RDK Versions</td>
 				</tr>		
 				<tr>					
 					<td><g:link controller="soCVendor" action="index"><span>SoC Vendors</span></g:link></td>

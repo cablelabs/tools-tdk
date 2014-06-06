@@ -43,7 +43,7 @@
 					
 					<td align="center">${fieldValue(bean: streamingDetailsInstance, field: "videoFormat")}</td>
 					
-					<td align="center"><g:hiddenField name="streamid" value="${streamingDetailsInstance.id}" />
+					<td align="center"><g:hiddenField name="streamid" value="${streamingDetailsInstance.streamId}" />
 					
 						<g:textField name="ocapId"  style="width:55px;" required="" value=""/></td>
 				</tr>

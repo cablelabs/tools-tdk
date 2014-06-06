@@ -53,6 +53,17 @@ function populateBoxTypeField(that){
 	});
 }
 
+function populateRDKVersionsField(that){
+	$.get('getRDKVersions', {id:that.id}, function(data) {		
+		document.getElementById("rdkVersionsId").value = that.id;
+//		document.getElementById("name").value = data[0];
+		document.getElementById("buildVersion").value = data[0];
+		$("#updateBtn").show(); 
+		$("#resetBtn").show(); 
+		$("#createBtn").hide(); 
+	});
+}
+
 function populateSoCVendorField(that){
 	$.get('getSoCVendor', {id:that.id}, function(data) {		
 		document.getElementById("soCVendorId").value = that.id;
@@ -65,8 +76,7 @@ function populateSoCVendorField(that){
 
 function populateGroupField(that){
 
-	$.get('getGroup', {id:that.id}, function(data) {		
-		alert(data[0]);
+	$.get('getGroup', {id:that.id}, function(data) {			
 		document.getElementById("groupId").value = that.id;
 		document.getElementById("name").value = data[0];
 		$("#updateBtn").show(); 

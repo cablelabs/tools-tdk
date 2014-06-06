@@ -50,6 +50,8 @@ class ExecutionResult {
 	
 	Device execDevice
 	
+	String deviceIdString
+	
     /**
      * Execution can have many execution results.
      */
@@ -62,6 +64,7 @@ class ExecutionResult {
         status(nullable:true, blank:true)
 		executionOutput(nullable:true, blank:true)		
 		execDevice(nullable:true, blank:true)
+		deviceIdString(nullable:true, blank:true)
     }
     
     static mapping = {

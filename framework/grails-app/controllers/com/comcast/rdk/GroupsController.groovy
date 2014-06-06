@@ -34,8 +34,8 @@ class GroupsController {
             render(view: "create", model: [groupsInstance: groupsInstance,groupsInstanceList: Groups.list(params), groupsInstanceTotal: Groups.count()])
             return
         }
-        flash.message = message(code: 'default.created.message', args: [message(code: 'groups.label', default: 'Groups'), groupsInstance.id])
-        redirect(action: "create", id: groupsInstance.id)
+        flash.message = message(code: 'default.created.message', args: [message(code: 'groups.label', default: 'Groups'), groupsInstance?.name])
+        redirect(action: "create")
     }
 
    
@@ -43,7 +43,7 @@ class GroupsController {
         def groupsInstance = Groups.get(id)
 		params.max = Math.min(max ?: 10, 100)
         if (!groupsInstance) {
-            flash.message = message(code: 'default.not.found.message', args: [message(code: 'groups.label', default: 'Groups'), id])
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'groups.label', default: 'Groups'), groupsInstance?.name])
             redirect(action: "create")
             return
         }
@@ -65,8 +65,8 @@ class GroupsController {
             return
         }
 
-        flash.message = message(code: 'default.updated.message', args: [message(code: 'groups.label', default: 'Groups'), groupsInstance.id])
-        redirect(action: "create", id: groupsInstance.id)
+        flash.message = message(code: 'default.updated.message', args: [message(code: 'groups.label', default: 'Groups'), groupsInstance?.name])
+        redirect(action: "create")
     }
 
     def deleteGroup(){
@@ -80,7 +80,12 @@ class GroupsController {
 					def idDb = params?.("id"+countVariable).toLong()
 					groupInstance = Groups.get(idDb)
 					if (groupInstance) {
-						groupInstance.delete(flush: true)
+						try{
+							groupInstance.delete(flush: true)
+						}
+						catch (DataIntegrityViolationException e) {
+							flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'groups.label', default: 'Groups'),  groupsInstance?.name])
+						}						
 					}
 				}
 			}

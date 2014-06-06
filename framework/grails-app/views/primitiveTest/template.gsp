@@ -59,7 +59,7 @@
 						onSuccess = "updateTestList(document.getElementById('testName').value);" >
 					</g:submitToRemote>	
 			</span>&emsp;
-			<input type="reset" value="Reset" id="cancel">				
+			<input type="reset" value="Reset" id="cancel" onclick="clearValues()">				
 			</td>
 		</tr>
 	</table>

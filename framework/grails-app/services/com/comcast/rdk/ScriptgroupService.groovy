@@ -22,6 +22,26 @@ import static com.comcast.rdk.Constants.KEY_GROUP
 class ScriptgroupService {
 	static datasource = 'DEFAULT'
 
+	
+	/**
+	 * Method to save the device to a DeviceGroup, according to the box chosen for execution
+	 * If the device group exists then add the device to that group.
+	 * Else create a Device group and add the device to the group.
+	 * @param deviceInstance
+	 * @return
+	 */
+	def saveToScriptGroup(final Script scriptInstance){
+		String moduleName = scriptInstance.primitiveTest.module.name
+		def scriptGrpInstance = ScriptGroup.findByName(moduleName)
+		if(!scriptGrpInstance){
+			scriptGrpInstance = new ScriptGroup()
+			scriptGrpInstance.name = moduleName
+		}
+			
+		scriptGrpInstance.addToScripts(scriptInstance)
+		scriptGrpInstance.save(flush:true)
+
+	}
     
     /**
      * Method to save the script to a script group, according to the library chosen for the script

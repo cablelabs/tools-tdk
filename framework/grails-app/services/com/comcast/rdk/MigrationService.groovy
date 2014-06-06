@@ -31,6 +31,7 @@ class MigrationService {
 	 * @return
 	 */
 	def doMigration() {
+		println " migration "
 		//		backup()
 		long time = System.currentTimeMillis()
 		Role.withSession{ Role.findAll() }
@@ -49,6 +50,7 @@ class MigrationService {
 				cleanData()
 			}
 		} catch (Throwable e) {
+	//	println " Error "+e.getMessage()
 			e.printStackTrace()
 		}
 		println "MIGRATION COMPLETED" + (System.currentTimeMillis() - time )
@@ -114,6 +116,7 @@ class MigrationService {
 		migrateBoxManufacturers()
 		migrateBoxModel()
 		migrateBoxType()
+		migrateRDKVersion()
 	}
 
 	/**
@@ -151,7 +154,6 @@ class MigrationService {
 				}
 			}
 		}
-
 		migrationList.each{ mObject ->
 			Role.withSession {
 				Role obj
@@ -238,7 +240,6 @@ class MigrationService {
 				}
 			}
 		}
-
 		migrationList.each{ mObject ->
 			def groups
 			Groups.withSession {
@@ -278,7 +279,6 @@ class MigrationService {
 				}
 			}
 		}
-
 		migrationList.each{ mObject ->
 			def groups
 			Groups.withSession {
@@ -318,7 +318,6 @@ class MigrationService {
 				}
 			}
 		}
-
 		migrationList.each{ migrateObj ->
 			def groups
 			Groups.withSession {
@@ -358,7 +357,6 @@ class MigrationService {
 				}
 			}
 		}
-
 		migrationList.each{ migrateObj ->
 			BoxType.withSession {
 				try{
@@ -370,6 +368,50 @@ class MigrationService {
 		}
 
 	}
+	
+	/**
+	 * Migrate data from RDK Version
+	 * @return
+	 */
+	def migrateRDKVersion(){
+		def rdkVersionTempList = []
+		RDKVersions.temp.withSession {
+			rdkVersionTempList = RDKVersions.temp.findAll();
+		}
+
+		List migrationList = []
+		rdkVersionTempList.each {tempEntry ->
+			RDKVersions.withSession {
+				def rdkVersion = RDKVersions.findByBuildVersion(tempEntry?.buildVersion)
+				if(!rdkVersion){
+					migrationList.add(tempEntry)
+				}
+			}
+		}
+		migrationList.each{ mObject ->
+			def groups
+			Groups.withSession {
+				groups = Groups.findByName(mObject?.groups?.name)
+			}
+			RDKVersions.withSession {
+				try{
+					RDKVersions rdkVersion  = new RDKVersions()
+					rdkVersion.properties = mObject.getProperties()
+
+					if(groups){
+						rdkVersion.groups = groups
+					}
+					if(!rdkVersion.save(flush:true)){
+					//	println "Error saving rdkVersion instance : ${rdkVersion.errors}"
+					}
+				}catch(Exception e ){
+				}
+			}
+		}
+
+	}
+	
+	
 
 	/**
 	 * Migrate data from Script
@@ -383,13 +425,26 @@ class MigrationService {
 
 		List migrationList = []
 
+		
 		scriptTempList.each{ mScript ->
 			try{
 
+				def module
+				Module.withSession{
+					module = Module.findByName(mScript?.primitiveTest?.module?.name)
+				}
+	
+				def function
+				Function.withSession{
+					function = Function.findByNameAndModule(mScript?.primitiveTest?.function?.name,module)
+				}
+				
 				def primitiveTest
 				PrimitiveTest.withSession {
-					primitiveTest = PrimitiveTest.findByName(mScript?.primitiveTest?.name)
+					primitiveTest = PrimitiveTest.findByNameAndFunctionAndModule(mScript?.primitiveTest?.name,function,module)
 				}
+				
+				
 				def groups
 				Groups.withSession {
 					groups = Groups.findByName(mScript?.groups?.name)
@@ -398,18 +453,24 @@ class MigrationService {
 				Script.withSession {
 
 					script = Script.findByName(mScript?.name)
+					
 					if(!script){
 						script  = new Script()
 					}
 					script.properties = mScript.getProperties()
 					script.properties.put("boxTypes", [:])
+					script.properties.put("rdkVersions", [:])
 					if(groups){
 						script.groups = groups
 					}
 					if(primitiveTest){
 						script.primitiveTest = primitiveTest
 					}
-					script.save(flush:true)
+					
+					
+					if(!script.save(flush:true)){
+						// println "Error saving script instance : ${script.errors}"
+					}
 				}
 				def boxTypes = mScript?.boxTypes
 				boxTypes.each { boxType ->
@@ -421,6 +482,20 @@ class MigrationService {
 					Script.withSession {
 						if(bType){
 							script.addToBoxTypes(bType)
+						}
+					}
+				}
+				
+				def rdkVersions = mScript?.rdkVersions
+				rdkVersions.each { rdkVersion ->
+					def rdkVer
+					RDKVersions.withSession{
+						rdkVer = RDKVersions.findByBuildVersion(rdkVersion?.buildVersion)
+					}
+
+					Script.withSession {
+						if(rdkVer){
+							script.addToRdkVersions(rdkVer)
 						}
 					}
 				}
@@ -448,7 +523,6 @@ class MigrationService {
 				}
 			}
 		}
-
 		migrationList.each{ migrateObj ->
 			ScriptGroup newObject
 			ScriptGroup.withSession {
@@ -483,7 +557,6 @@ class MigrationService {
 	 */
 	private boolean cleanDB(){
 		cleanScripts()
-		//		cleanScriptGroup()
 		cleanPrimitiveTests()
 		cleanParameters()
 		cleanParameterTypes()
@@ -570,6 +643,28 @@ class MigrationService {
 		}
 
 		migrationList.each{ mObject -> deleteBoxManufacturer(mObject) }
+	}
+	
+	/**
+	 * Removing box RDKVersions that are migrated or available in the existing DB
+	 */
+	private void cleanRDKVersions(){
+		def rdkVersionTempList = []
+		RDKVersions.temp.withSession {
+			rdkVersionTempList = RDKVersions.temp.findAll();
+		}
+
+		List migrationList = []
+		rdkVersionTempList.each {testEntry ->
+			RDKVersions.withSession {
+				def test = RDKVersions.findByBuildVersion(testEntry?.buildVersion)
+				if(test){
+					migrationList.add(testEntry)
+				}
+			}
+		}
+
+		migrationList.each{ mObject -> deleteRDKVersions(mObject) }
 	}
 
 	/**
@@ -691,8 +786,14 @@ class MigrationService {
 
 		List migrationList = []
 		funTempList.each {testEntry ->
+			
+			Module mod
+			Module.withSession{
+			 mod = Module.findByName(testEntry?.module?.name)
+			}
+			
 			Function.withSession {
-				def test = Function.findByName(testEntry?.name)
+				def test = Function.findByNameAndModule(testEntry?.name,mod)
 				if(test){
 					migrationList.add(testEntry)
 				}
@@ -714,7 +815,17 @@ class MigrationService {
 		paramTypeTempList.each {testEntry ->
 			ParameterType.withSession {
 				String  name = testEntry?.function?.name
-				Function fun = Function.findByName(name)
+				
+				Module mod 
+				Module.withSession{
+				 mod = Module.findByName(testEntry?.function?.module?.name)
+				}
+				
+				Function fun
+				Function.withSession{
+					fun = Function.findByNameAndModule(name,mod)
+				}
+				
 				def test = ParameterType.findByNameAndFunction(testEntry?.name,fun)
 				if(test){
 					migrationList.add(testEntry)
@@ -728,22 +839,38 @@ class MigrationService {
 	 * Removing PrimitiveTests that are migrated or available in the existing DB
 	 */
 	private void cleanPrimitiveTests(){
-		def primitiveTempList = []
-		PrimitiveTest.temp.withSession {
-			primitiveTempList = PrimitiveTest.temp.findAll();
-		}
+		try {
+			def primitiveTempList = []
+			PrimitiveTest.temp.withSession {
+				primitiveTempList = PrimitiveTest.temp.findAll();
+			}
 
-		List migrationList = []
-		primitiveTempList.each {testEntry ->
-			PrimitiveTest.withSession {
-				def test = PrimitiveTest.findByName(testEntry?.name)
-				if(test){
-					migrationList.add(testEntry)
+			List migrationList = []
+			primitiveTempList.each {testEntry ->
+
+				def module
+				Module.withSession{
+					module = Module.findByName(testEntry?.module?.name)
+				}
+
+				def function
+				Function.withSession{
+					function = Function.findByNameAndModule(testEntry?.function?.name,module)
+				}
+
+
+				PrimitiveTest.withSession {
+					def test = PrimitiveTest.findByNameAndFunctionAndModule(testEntry?.name,function,module)
+//					def test = PrimitiveTest.findByName(testEntry?.name)
+					if(test){
+						migrationList.add(testEntry)
+					}
 				}
 			}
+			migrationList.each{ mObject -> deletePrimitiveTest(mObject) }
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
-
-		migrationList.each{ mObject -> deletePrimitiveTest(mObject) }
 	}
 
 	/**
@@ -760,9 +887,16 @@ class MigrationService {
 		parameterTempList.each {parameterEntry ->
 			def pType
 			def fn
-			Function.withSession {
-				fn = Function.findByName(parameterEntry?.parameterType?.function?.name)
+			
+			Module mod
+			Module.withSession{
+			 mod = Module.findByName(parameterEntry?.parameterType?.function?.module?.name)
 			}
+			
+			Function.withSession {
+				fn = Function.findByNameAndModule(parameterEntry?.parameterType?.function?.name,mod)
+			}
+			
 			if(fn){
 				ParameterType.withSession {
 					pType = ParameterType.findByNameAndFunction(parameterEntry?.parameterType?.name,fn)
@@ -801,7 +935,6 @@ class MigrationService {
 				}
 			}
 		}
-
 		migrationList.each{ mObject -> deleteScripts(mObject) }
 	}
 
@@ -809,22 +942,28 @@ class MigrationService {
 	 * Removing Script groups that are migrated or available in the existing DB
 	 */
 	private void cleanScriptGroup(){
-		def sgTempList = []
-		ScriptGroup.temp.withSession {
-			sgTempList = ScriptGroup.temp.findAll();
-		}
 
-		List migrationList = []
-		sgTempList.each {sgEntry ->
-			ScriptGroup.withSession {
-				def scriptGroup = ScriptGroup.findByName(sgEntry?.name)
-				if(scriptGroup){
-					migrationList.add(sgEntry)
+
+		try {
+			def sgTempList = []
+			ScriptGroup.temp.withSession {
+				sgTempList = ScriptGroup.temp.findAll();
+			}
+
+			List migrationList = []
+			sgTempList.each {sgEntry ->
+				ScriptGroup.withSession {
+					def scriptGroup = ScriptGroup.findByName(sgEntry?.name)
+					if(scriptGroup){
+						migrationList.add(sgEntry)
+					}
 				}
 			}
-		}
 
-		migrationList.each{ mObject -> deleteScriptGroup(mObject) }
+			migrationList.each{ mObject -> deleteScriptGroup(mObject) }
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 	}
 
 	/**
@@ -838,7 +977,9 @@ class MigrationService {
 
 			boolean flag = removeFromScriptSuite(mObject)
 			if(flag){
-				mObject.temp.delete()
+				if(mObject.temp.delete()){
+				//	println "Error saving function instance : ${mObject.errors}"
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace()
@@ -919,35 +1060,27 @@ class MigrationService {
 			parameterTempList = ParameterType.temp.findAll();
 		}
 
-		List migrationList = []
-		parameterTempList.each {parameterEntry ->
-
-			def fun
-			Function.withSession {
-				fun = Function.findByName(parameterEntry?.function?.name)
-			}
-
-			ParameterType.withSession {
-
-				if(fun){
-					def parameter = ParameterType.findByNameAndFunction(parameterEntry.name,fun)
-					if(!parameter){
-						migrationList.add(parameterEntry)
-					}
-				}
-			}
-		}
+		List migrationList = parameterTempList
 
 		migrationList.each{ mParam ->
 
 			try{
+				
+				Module mod
+				Module.withSession{
+				 mod = Module.findByName(mParam?.function?.module?.name)
+				}
+				
 				def function
 				Function.withSession {
-					function = Function.findByName(mParam?.function?.name)
+					function = Function.findByNameAndModule(mParam?.function?.name,mod)
 				}
 				ParameterType.withSession {
 
-					ParameterType paramType  = new ParameterType()
+					ParameterType paramType = ParameterType.findByNameAndFunction(mParam?.name,function)
+					if(paramType == null){
+						paramType  = new ParameterType()
+					}
 					paramType.properties = mParam.getProperties()
 					if(function){
 						paramType.function = function
@@ -973,52 +1106,81 @@ class MigrationService {
 			primitiveTempList = PrimitiveTest.temp.findAll();
 		}
 
-		List migrationList = []
-		primitiveTempList.each {primitiveEntry ->
-			PrimitiveTest.withSession {
-				def primitive = PrimitiveTest.findByName(primitiveEntry.name)
-				if(!primitive){
-					migrationList.add(primitiveEntry)
-				}
-			}
-		}
-
+		List migrationList = primitiveTempList
+		
 		PrimitiveTest.withSession {
 			migrationList.each{ mPrimitive ->
 				try{
-					PrimitiveTest primitiveTest  = new PrimitiveTest()
+					
+					def module = Module.findByName(mPrimitive?.module?.name)
+					
+					
+					def function = Function.findByNameAndModule(mPrimitive?.function?.name,module)
+					
+
+					
+					
+					PrimitiveTest primitiveTest
+					PrimitiveTest.withSession {
+
+						primitiveTest = PrimitiveTest.findByNameAndFunctionAndModule(mPrimitive?.name,function,module)
+					}
+					
+					if(primitiveTest == null){
+						primitiveTest  = new PrimitiveTest()
+					}
+						
 					primitiveTest.properties = mPrimitive.getProperties()
 					primitiveTest.properties.put("parameters", [:])
-					def function = Function.findByName(mPrimitive?.function?.name)
-					if(function){
-						primitiveTest.function = function
-					}
-
-					def module = Module.findByName(mPrimitive?.module?.name)
+					
 					if(module){
 						primitiveTest.module = module
 					}
-
+					
+					if(function){
+						primitiveTest.function = function
+					}
 					def groups = Groups.findByName(mPrimitive?.groups?.name)
+					
 					if(groups){
 						primitiveTest.groups = groups
 					}
-
-					primitiveTest.save(flush:true)
-
+					
+					
+					if(!primitiveTest.save(flush:true)){
+					//	println "Error saving primitiveTest instance : ${primitiveTest.errors}"
+					}
+					
+					
 					def paramList = mPrimitive?.parameters
 					paramList.each { param ->
 						def paramType = ParameterType.findByNameAndFunction(param?.parameterType?.name,function)
 						if(paramType){
+							def ppp
+							Parameter parameter = null
 							Parameter.withSession {
-								def ppp = Parameter.findByParameterTypeAndValue(paramType, param?.value)
-								if(ppp){
-									primitiveTest.addToParameters(ppp)
+								
+								if(paramType){
+									def paramtrList = Parameter.findAllByParameterTypeAndValue(paramType,param?.value)
+									paramtrList.each { p ->
+										if(parameter == null && p.primitiveTest == null){
+											parameter =p;
+										}
+										
+									}
+									
+								}
+							}
+							
+							if(parameter){
+								PrimitiveTest.withSession {
+									primitiveTest.addToParameters(parameter)
 								}
 							}
 						}
 					}
 				}catch(Exception e ){
+			//	println " errorr "+e.getMessage()
 				}
 			}
 		}
@@ -1038,53 +1200,45 @@ class MigrationService {
 		Parameter.temp.withSession {
 			parameterTempList = Parameter.temp.list();
 		}
-		List migrationList = []
+		List migrationList = parameterTempList
 		int counter = 0;
 		List paramList = []
-		parameterTempList.each {parameterEntry ->
-			def pType
-			def fn
-			Function.withSession {
-				fn = Function.findByName(parameterEntry?.parameterType?.function?.name)
-			}
-			if(fn){
-				ParameterType.withSession {
-					pType = ParameterType.findByNameAndFunction(parameterEntry?.parameterType?.name,fn)
-				}
-				if(pType){
-					Parameter.withSession {
-						def parameter = Parameter.findByParameterTypeAndValue(pType,parameterEntry?.value)
-						if(!parameter){
-							migrationList.add(parameterEntry)
-						}else{
-							if(paramList.contains(parameter)){
-							}else{
-								paramList.add(parameter)
-							}
-							counter++
-						}
-					}
-				}
-			}
-		}
-
 		migrationList.each{ mParam ->
 
 			try{
+				
+				Module mod
+			Module.withSession{
+			 mod = Module.findByName(mParam?.parameterType?.function?.module?.name)
+			}
+				
 				def fn
 				Function.withSession {
-					fn = Function.findByName(mParam?.parameterType?.function?.name)
+					fn = Function.findByNameAndModule(mParam?.parameterType?.function?.name,mod)
 				}
+				
+				def parameterType
+				ParameterType.withSession {
+					parameterType = ParameterType.findByNameAndFunction(mParam?.parameterType?.name,fn)
+				}
+
+
 				if(fn){
 					Parameter.withSession {
-						Parameter parameter  = new Parameter()
+						Parameter parameter
+						if(parameterType){
+							parameter = Parameter.findByParameterTypeAndValue(parameterType,mParam?.value)
+						}
+						if(parameter == null){
+							parameter  = new Parameter()
+						}
 						parameter.properties = mParam.getProperties()
-						def parameterType = ParameterType.findByNameAndFunction(mParam?.parameterType?.name,fn)
+						parameterType = ParameterType.findByNameAndFunction(mParam?.parameterType?.name,fn)
 						if(parameterType){
 							parameter.parameterType = parameterType
-						}
 						parameter.primitiveTest = null
 						parameter.save(flush:true)
+						}
 					}
 				}
 			}catch(Exception e ){
@@ -1141,18 +1295,9 @@ class MigrationService {
 			moduleTempList = Module.temp.findAll();
 		}
 
-		List migrationList = []
-		moduleTempList.each {moduleEntry ->
-			Module.withSession {
-				def module = Module.findByName(moduleEntry?.name)
-				if(!module){
-					migrationList.add(moduleEntry)
-				}
-			}
-		}
+		List migrationList = moduleTempList
 
 		List savedList = []
-
 		migrationList.each{ mModule ->
 			def groups
 			Groups.withSession {
@@ -1162,7 +1307,10 @@ class MigrationService {
 			Module module
 			Module.withSession {
 				try{
-					module  = new Module()
+					module = Module.findByName(mModule?.name)
+					if(module == null){
+						module  = new Module()
+					}
 					module.properties = mModule.getProperties()
 					module.properties.put("logFileNames", [:])
 					module.groups = null
@@ -1193,26 +1341,33 @@ class MigrationService {
 			funTempList = Function.temp.findAll();
 		}
 
-		List migrationList = []
-		funTempList.each {function ->
-			Function.withSession {
-				def fun = Function.findByName(function.name)
-				if(!fun){
-					migrationList.add(function)
-				}
-			}
-		}
-
+		List migrationList = funTempList
+		
 		migrationList.each{ mObject ->
+			
+			Module mod
+			Module.withSession{
+			 mod = Module.findByName(mObject?.module?.name)
+			}
+			
 			Function.withSession {
 				try{
-					Function ff  = new Function()
-					ff.properties = mObject.getProperties()
-					def mod = Module.findByName(mObject?.module?.name)
-					if(mod){
-						ff.module = mod
+
+					Function ff = Function.findByNameAndModule(mObject.name,mod)
+
+					if(ff == null){
+						ff  = new Function()
 					}
-					ff.save(flush:true)
+					
+					ff.properties = mObject.getProperties()
+					def mod1 = Module.findByName(mObject?.module?.name)
+					//					ff.name = mObject?.name
+					if(mod1){
+						ff.module = mod1
+					}
+					if(!ff.save(flush:true)){
+					//	println "Error saving function instance : ${ff.errors}"
+					}
 				}catch(Exception e ){
 					e.printStackTrace()
 				}
@@ -1227,7 +1382,7 @@ class MigrationService {
 		BoxType.temp.withSession{
 
 			try {
-				boxType.temp.delete(flush:true);
+				boxType.temp.delete();
 			} catch (Exception e) {
 				e.printStackTrace()
 			}
@@ -1262,6 +1417,20 @@ class MigrationService {
 	def deleteBoxManufacturer(def mObject){
 
 		BoxManufacturer.temp.withSession{
+			try {
+				mObject.temp.delete()
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+		}
+	}
+	
+	/**
+	 * Method to delete rdk versions from temp db
+	 */
+	def deleteRDKVersions(def mObject){
+
+		RDKVersions.temp.withSession{
 			try {
 				mObject.temp.delete()
 			} catch (Exception e) {
@@ -1305,6 +1474,7 @@ class MigrationService {
 			try {
 				mObject.temp.delete()
 			} catch (Exception e) {
+			//	println "Error in delete"+e.getMessage()
 				e.printStackTrace()
 			}
 		}

@@ -79,7 +79,7 @@ class SoCVendorController {
             return
         }
 
-        flash.message = message(code: 'default.updated.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'), soCVendorInstance.id])
+        flash.message = message(code: 'default.updated.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'), soCVendorInstance.name])
         redirect(action: "create")
     }
 	
@@ -93,7 +93,12 @@ class SoCVendorController {
 					def idDb = params?.("id"+countVariable).toLong()
 					soCVendorInstance = SoCVendor.get(idDb)
 					if (soCVendorInstance) {
-						  soCVendorInstance.delete(flush: true)
+						try{
+							 soCVendorInstance.delete(flush: true)
+						 }
+						 catch (DataIntegrityViolationException e) {
+							 flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'),  soCVendorInstance.name])
+						 }						 
 					}
 				}
 			}

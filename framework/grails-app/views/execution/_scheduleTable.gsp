@@ -55,7 +55,7 @@
 			
 				<td align="center">${scrLst }</td>
 			
-				<td align="center">${deviceInstance.stbName} </td>
+				<td align="center">${deviceInstance?.stbName} </td>
 				
 				<td align="center">${fieldValue(bean: jobDetailsInstance, field: "queryString")}
 				<g:hiddenField id="id" name="id${count}" value="${jobDetailsInstance?.id}" /></td>	
