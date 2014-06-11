@@ -87,12 +87,13 @@ class RpcMethods
         int m_iLoadStatus;
         int m_iUnloadStatus;
 
-        char* GetHostIPInterface (const char* pszIPaddr);
+        void SignalFailureDetails();
         std::string LoadLibrary (char* pszLibName);
         std::string UnloadLibrary (char* pszLibName);
+        char* GetHostIPInterface (const char* pszIPaddr);
+        bool DeleteModuleFromFile (std::string strLibName);
+        void ResetCrashStatus();
         void SetCrashStatus (const char* pszExecId, const char* pszDeviceId, const char* pszTestCaseId, const char* pszExecDevId);
-        void ResetCrashStatus();     
-        void SignalFailureDetails();
 	 
 }; /* End of RpcMethods */
 

@@ -61,21 +61,23 @@ bool   	     bBenchmarkEnabled;
 #define RDKVERSION "NOT_DEFINED"       
 #endif
 
+/* Structure to hold module details */
+struct sModuleDetails 
+{
+    std::string strModuleName;
+    RDKTestStubInterface* pRDKTestStubInterface;
+};
+
 typedef void* handler;
-typedef std::map <std::string, RDKTestStubInterface*> ModuleMap;
-typedef std::map <int, std::string> LoadedModuleMap;
+typedef std::map <int, sModuleDetails> ModuleMap;
 
 ModuleMap o_gModuleMap;                            // Map to store loaded modules and its handle
 ModuleMap::iterator o_gModuleMapIter;
 
-LoadedModuleMap o_gLoadedModuleMap;                            // Map to store loaded modules and its handle
-LoadedModuleMap::iterator o_gLoadedModuleMapIter;
-
-std::fstream so_DeviceFile;
-int LoadedModuleId = 0;
-
 /* Initializations */
 int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of device as FREE by default
+std::fstream so_DeviceFile;
+static int nModuleId = 0;      
 
 using namespace std;
 
@@ -166,6 +168,50 @@ void RpcMethods::SignalFailureDetails()
 
 
 /********************************************************************************************************************
+ Purpose:               To delete a module name from module list file
+ 
+ Parameters:            
+                             strLibName[IN] - Name of the library to be deleted from file.
+						
+ Return:                 bool - true/false
+
+*********************************************************************************************************************/
+bool RpcMethods::DeleteModuleFromFile (std::string strLibName)
+{
+    bool bRet = true;
+    std::string strLine;
+    std::string strFilePath;
+    std::string strTempFilePath;
+    std::ifstream o_ModuleListFile;
+    std::ofstream o_TempFile;
+	
+    strFilePath = RpcMethods::sm_strTDKPath;
+    strFilePath.append(MODULE_LIST_FILE);
+    strTempFilePath.append("temp.txt");
+	
+    o_ModuleListFile.open (strFilePath.c_str());
+    o_TempFile.open (strTempFilePath.c_str());
+
+    while (getline(o_ModuleListFile, strLine))
+    {
+        if (strLine != strLibName)
+        {
+            o_TempFile << strLine << std::endl;
+        }
+    }
+	
+    o_ModuleListFile.close();
+    o_TempFile.close();
+    remove(strFilePath.c_str());
+    rename(strTempFilePath.c_str(), strFilePath.c_str());
+
+    return bRet;
+
+}
+
+
+
+/********************************************************************************************************************
  Purpose:               To dynamically load a module using dlopen. Also, add the module to map for later unloading.
                              It will also invoke "initialize" method of loaded module.
  Parameters:            
@@ -197,25 +243,7 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
     RDKTestStubInterface* pRDKTestStubInterface;
 
     do
-    {
-        /* Parse through module map to find the module */
-        for (o_gModuleMapIter = o_gModuleMap.begin(); o_gModuleMapIter != o_gModuleMap.end(); o_gModuleMapIter ++ )
-        {
-            if (o_gModuleMapIter -> first == strLibName)
-            {
-                DEBUG_PRINT (DEBUG_LOG, "Found Module : %s \nModule Already Loaded \n", strLibName.c_str());
-                LoadedModuleId = LoadedModuleId + 1;
-                o_gLoadedModuleMap.insert (std::make_pair (LoadedModuleId, pszLibName));
-                nMapEntryStatus = FLAG_SET;
-                break;
-            }
-        }
-
-        if(nMapEntryStatus == FLAG_SET)
-        {
-            break;
-        }
-
+    {   
         /* Dynamically loading library */
         pvHandle = dlopen (pszLibName, RTLD_LAZY | RTLD_GLOBAL);		
         if (!pvHandle)
@@ -273,8 +301,11 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
 
         }
 
-        /* Adding loaded module into map */
-        o_gModuleMap.insert (std::make_pair (pszLibName, pRDKTestStubInterface));
+        nModuleId = nModuleId + 1;
+        sModuleDetails o_ModuleDetails;
+        o_ModuleDetails.strModuleName = pszLibName;
+        o_ModuleDetails.pRDKTestStubInterface = pRDKTestStubInterface;
+        o_gModuleMap.insert (std::make_pair (nModuleId, o_ModuleDetails));
 	
         /* Executing "initialize" function of loaded module */
         bRet = pRDKTestStubInterface -> initialize ("0.0.1", m_pAgent);
@@ -292,7 +323,7 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
         strFilePath = RpcMethods::sm_strTDKPath;
         strFilePath.append(MODULE_LIST_FILE);
     
-        o_ModuleListFile.open (strFilePath.c_str(), ios::out);
+        o_ModuleListFile.open (strFilePath.c_str(), ios::out | ios::app);
 
         /* Adding the module names into file */
         if (o_ModuleListFile.is_open())
@@ -301,7 +332,7 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
         }
         else
         {
-            DEBUG_PRINT (DEBUG_ERROR, "Unable to open reboot configuration file \n");
+            DEBUG_PRINT (DEBUG_ERROR, "Unable to open Module List file \n");
         }
    
         o_ModuleListFile.close();    
@@ -340,42 +371,23 @@ std::string RpcMethods::UnloadLibrary (char* pszLibName)
     m_iUnloadStatus = FLAG_SET;
     pszError = new char [ERROR_SIZE];	
 
-
     do
     {
-
-        for (o_gLoadedModuleMapIter = o_gLoadedModuleMap.begin(); o_gLoadedModuleMapIter != o_gLoadedModuleMap.end(); o_gLoadedModuleMapIter ++ )
-        {
-            if (o_gLoadedModuleMapIter -> second == strLibName)
-            {
-                DEBUG_PRINT (DEBUG_LOG, "Found Loaded Module : %s \n", strLibName.c_str());
-                nMapEntryStatus = FLAG_SET ;
-                break;
-            }
-        }
-
-        if (nMapEntryStatus == FLAG_SET)
-        {
-            /* Removing map entry */
-            o_gLoadedModuleMap.erase (o_gLoadedModuleMapIter);	
-            m_iUnloadStatus = FLAG_SET;
-            RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
-		
-            break;               // Return with error details when module name is not found in module map.
-        }	
-    	
-
+        sModuleDetails o_ModuleDetails;
+   
         /* Parse through module map to find the module */
         for (o_gModuleMapIter = o_gModuleMap.begin(); o_gModuleMapIter != o_gModuleMap.end(); o_gModuleMapIter ++ )
         {
-            if (o_gModuleMapIter -> first == strLibName)
+            o_ModuleDetails = o_gModuleMapIter -> second;
+            if (o_ModuleDetails.strModuleName == strLibName)
             {
                 DEBUG_PRINT (DEBUG_LOG, "Found Loaded Module : %s \n", strLibName.c_str());
+		  pRDKTestStubInterface = o_ModuleDetails.pRDKTestStubInterface;
                 nMapEntryStatus = FLAG_SET ;
                 break;
             }
         }
-
+		
         /* Check if module name is present in module map */
         if (nMapEntryStatus == FLAG_NOT_SET)
         {
@@ -420,25 +432,11 @@ std::string RpcMethods::UnloadLibrary (char* pszLibName)
 	
         /* Calling CleanUp of module */
         DEBUG_PRINT (DEBUG_LOG, "Going to cleanup \n");
-        pRDKTestStubInterface = o_gModuleMapIter -> second;
         bRet = pRDKTestStubInterface -> testmodulepost_requisites();
         bRet = pRDKTestStubInterface -> cleanup ("0.0.1", m_pAgent);
         pfnDestroyObject (pRDKTestStubInterface);
 
-
-        /* Extracting path to file */
-        strFilePath = RpcMethods::sm_strTDKPath;
-        strFilePath.append(MODULE_LIST_FILE);
-
-        /* Delete the configuration file */
-        if (remove (strFilePath.c_str()) != 0 )
-        {
-            DEBUG_PRINT (DEBUG_ERROR, "\n\nAlert : Error in deleting %s \n", SHOW_DEFINE(MODULE_LIST_FILE) );
-        }
-        else
-        {
-            DEBUG_PRINT (DEBUG_TRACE, "\n %s successfully deleted\n\n\n" SHOW_DEFINE(MODULE_LIST_FILE) ); 
-        }
+        bRet = DeleteModuleFromFile(strLibName);
 
         /* Closing Handle */
         dlclose (pvHandle);
@@ -812,13 +810,19 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
     /* Extracting path to file */
     strFilePath = RpcMethods::sm_strTDKPath;
     strFilePath.append(REBOOT_CONFIG_FILE);
-    
+
     o_RebootConfigFile.open (strFilePath.c_str(), ios::out);
 
     /* Iterate over the map to find out currently loaded modules and unload the same */
-    for( o_gModuleMapIter = o_gModuleMap.begin(); o_gModuleMapIter != o_gModuleMap.end(); o_gModuleMapIter ++ )
-    { 
-        sprintf (szLibName, "%s", (o_gModuleMapIter -> first).c_str());
+
+   sModuleDetails o_ModuleDetails;
+   
+   /* Parse through module map to find the module */
+   for (o_gModuleMapIter = o_gModuleMap.begin(); o_gModuleMapIter != o_gModuleMap.end(); o_gModuleMapIter ++ )
+   {
+        o_ModuleDetails = o_gModuleMapIter -> second;
+        sprintf (szLibName, "%s", o_ModuleDetails.strModuleName.c_str());
+   
         DEBUG_PRINT (DEBUG_LOG, "\nGoing to Unload Library : %s \n\n", szLibName); 
         strUnloadModuleDetails = UnloadLibrary (szLibName);
         DEBUG_PRINT (DEBUG_LOG, "\nUnload Library Details : %s \n", strUnloadModuleDetails.c_str());
@@ -1105,46 +1109,52 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
     strFilePath.append("/");
     strFilePath.append(MODULE_LIST_FILE);
 
-    /* Read the module names from configuration file and load those modules */
+    /* Read the module names from configuration file and load those modules for setting postrequsites */
     o_ModuleListFile.open (strFilePath.c_str(), ios::in);
     if (o_ModuleListFile.is_open())
     {
         while (getline (o_ModuleListFile, strLineInFile))
         {	
             sprintf (szLibName, "%s", strLineInFile.c_str());
-        }
+            bRet = DeleteModuleFromFile (strLineInFile);
 
-        /* Dynamically loading library */
-        pvHandle = dlopen (szLibName, RTLD_LAZY | RTLD_GLOBAL);
-        if (!pvHandle)
-        {
-            pszError = dlerror();
-            DEBUG_PRINT (DEBUG_ERROR, "Failed to get handle for component : %s \n", pszError);
-        }
+            /* Dynamically loading library */
+            pvHandle = dlopen (szLibName, RTLD_LAZY | RTLD_GLOBAL);
+            if (!pvHandle)
+            {
+                pszError = dlerror();
+                DEBUG_PRINT (DEBUG_ERROR, "Failed to get handle for component : %s \n", pszError);
+                break;
+            }
 
-        /* Executing  "CreateObject" function of loaded module */
-        pfnCreateObject = (RDKTestStubInterface* (*) (void)) dlsym (pvHandle, "CreateObject");
-        if ( (pszError = dlerror()) != NULL)
-        {
-            DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
-        }	
-        pRDKTestStubInterface = pfnCreateObject();
+            /* Executing  "CreateObject" function of loaded module */
+            pfnCreateObject = (RDKTestStubInterface* (*) (void)) dlsym (pvHandle, "CreateObject");
+            if ( (pszError = dlerror()) != NULL)
+            {
+                DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
+		  break;
+            }	
+            pRDKTestStubInterface = pfnCreateObject();
 
-        /* Calling Post requisites for module */
-        bRet = pRDKTestStubInterface -> testmodulepost_requisites();
+            /* Calling Post requisites for module */
+            DEBUG_PRINT (DEBUG_LOG, "Executing Post requisites for %s \n", szLibName);
+            bRet = pRDKTestStubInterface -> testmodulepost_requisites();
  
-        /* Calling "DestroyObject" */
-        pfnDestroyObject = (void (*)(RDKTestStubInterface*)) dlsym (pvHandle, "DestroyObject");
-        if ( (pszError = dlerror()) != NULL)  
-        {
-            DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
-        }
+            /* Calling "DestroyObject" */
+            pfnDestroyObject = (void (*)(RDKTestStubInterface*)) dlsym (pvHandle, "DestroyObject");
+            if ( (pszError = dlerror()) != NULL)  
+            {
+                DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
+                break;
+            }
 	
-        pfnDestroyObject (pRDKTestStubInterface);
+            pfnDestroyObject (pRDKTestStubInterface);
 
-        /* Closing Handle */
-        dlclose (pvHandle);
-        pvHandle = NULL;		
+            /* Closing Handle */
+            dlclose (pvHandle);
+            pvHandle = NULL;		
+			
+        }
 		
         o_ModuleListFile.close();
 		
