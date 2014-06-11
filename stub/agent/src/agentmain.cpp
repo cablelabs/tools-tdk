@@ -941,7 +941,7 @@ void *AgentExecuter (void *)
 
 /********************************************************************************************************************
  Description:           Start and monitor agent execution. Invoke the corresponding rpc method on 
-                        receiving "AgentResest" message from Test Manager. It also starts TFTP server
+                        receiving "AgentReset" message from Test Manager. It also starts TFTP server
                         for log transferring. 
  
  Parameters:          null
