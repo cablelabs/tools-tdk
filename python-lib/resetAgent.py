@@ -31,7 +31,7 @@ def resetAgent(deviceIP,devicePort,enableReset):
 	#		 enableReset - true/false 
 	#		 true - To restart agent
 	#		 false - To reset device state to FREE
-        # Return Value : Nil
+        # Return Value : 0
 
 	try:
         	port = devicePort
@@ -53,9 +53,14 @@ def resetAgent(deviceIP,devicePort,enableReset):
 			print "Test timed out.. Agent Reset.."
 		else:
 			print "Test timed out.. Failed to reset agent.."
+			sys.stdout.flush()
+			return 1
+
 		sys.stdout.flush()
 
 	except socket.error:
 		print "ERROR: Script timed out.. Unable to reach agent.." 
 		sys.stdout.flush()
-
+		return 1
+	
+	return 0

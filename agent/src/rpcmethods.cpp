@@ -68,18 +68,29 @@ struct sModuleDetails
     RDKTestStubInterface* pRDKTestStubInterface;
 };
 
+using namespace std;
+
 typedef void* handler;
 typedef std::map <int, sModuleDetails> ModuleMap;
 
 ModuleMap o_gModuleMap;                            // Map to store loaded modules and its handle
 ModuleMap::iterator o_gModuleMapIter;
 
-/* Initializations */
-int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of device as FREE by default
-std::fstream so_DeviceFile;
-static int nModuleId = 0;      
+/* To enable port forwarding. In gateway boxes only  */
+#ifdef PORT_FORWARD
 
-using namespace std;
+    /* Map to hold details of client devices */
+    typedef std::map <std::string, std::string> ClientDeviceMap;
+    extern ClientDeviceMap o_gClientDeviceMap;
+    extern ClientDeviceMap::iterator o_gClientDeviceMapIter;
+
+#endif /* PORT_FORWARD */
+
+
+/* Initializations */
+static int nModuleId = 0;  
+std::fstream so_DeviceFile;
+int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of device as FREE by default
 
 
 /********************************************************************************************************************
@@ -464,7 +475,7 @@ std::string RpcMethods::UnloadLibrary (char* pszLibName)
  Return:                void
 
 *********************************************************************************************************************/
-void RpcMethods::SetCrashStatus (const char* pszExecId, const char* pszDeviceId, const char* pszTestCaseId, const char* pszExecDevId )
+void RpcMethods::SetCrashStatus (const char* pszExecId, const char* pszDeviceId, const char* pszTestCaseId, const char* pszExecDevId, const char* pszResultId)
 {
     std::string strFilePath;
     std::ofstream o_CrashStatusFile;
@@ -485,6 +496,7 @@ void RpcMethods::SetCrashStatus (const char* pszExecId, const char* pszDeviceId,
         o_CrashStatusFile << "Device ID :" << pszDeviceId << std::endl;
         o_CrashStatusFile << "TestCase ID :" << pszTestCaseId << std::endl;
         o_CrashStatusFile << "ExecDev ID :" << pszExecDevId<< std::endl;
+        o_CrashStatusFile << "Result ID :" << pszResultId << std::endl;
         o_CrashStatusFile.close();
     }
     else
@@ -565,6 +577,7 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
     char szCommand[COMMAND_SIZE];
 	
     const char* pszExecId = NULL;
+    const char* pszResultId = NULL;
     const char* pszDeviceId = NULL;
     const char* pszExecDevId = NULL;
     const char* pszTestCaseId = NULL;
@@ -595,6 +608,10 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
     {
         pszExecDevId = request ["execDevID"].asCString();    
     }
+    if (request["resultID"] != Json::Value::null)
+    {
+        pszResultId = request ["resultID"].asCString();    
+    }
 
     /* Clear old log files */      
     sprintf (szCommand, "rm -rf %s/*", RpcMethods::sm_strLogFolderPath.c_str()); //Constructing Command
@@ -613,6 +630,7 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
     strNullLog.append(SYSSTATAVG_FILE);
     system(strNullLog.c_str());
 
+/* Redirecting console log to a file */
 #ifdef AGENT_LOG_ENABLE
 	
     /* Constructing path to new log file */
@@ -623,13 +641,16 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
     strFilePath.append(pszExecDevId);
     strFilePath.append("_AgentConsole.log");
 
+    /* Redirecting stderr buffer to stdout */
+    dup2(fileno(stdout), fileno(stderr));
+	
     /* Redirecting stdout buffer to logfile */
     if((RpcMethods::sm_pLogStream = freopen(strFilePath.c_str(), "w", stdout)) == NULL)
     {
         DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
     }
-
-#endif
+	
+#endif /* End of AGENT_LOG_ENABLE */
 	
     fprintf(stdout,"\nStarting Execution..\n");
 	
@@ -673,7 +694,7 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
         response["result"] = "Success";
         DEBUG_PRINT (DEBUG_LOG, "Module Loaded : %s \n",pszModuleName);
 
-        SetCrashStatus (pszExecId, pszDeviceId, pszTestCaseId, pszExecDevId);
+        SetCrashStatus (pszExecId, pszDeviceId, pszTestCaseId, pszExecDevId, pszResultId);
     }
     else
     {
@@ -762,12 +783,13 @@ bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& respo
 
     DEBUG_PRINT (DEBUG_LOG, "\nRPC Unload Module --> Exit \n"); 
 
+/* Closing console log output file */
 #ifdef AGENT_LOG_ENABLE
 
     fclose(RpcMethods::sm_pLogStream);
     RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
 
-#endif
+#endif /* End of AGENT_LOG_ENABLE */
 	
     return bRet;
 	
@@ -878,6 +900,7 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
     char szLibName [LIB_NAME_SIZE];
 
     const char* pszExecId = NULL;
+    const char* pszResultId = NULL;
     const char* pszDeviceId = NULL;
     const char* pszExecDevId = NULL;
     const char* pszTestCaseId = NULL;
@@ -907,7 +930,12 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
     {
         pszExecDevId = request ["execDevID"].asCString();    
     }
+    if (request["resultID"] != Json::Value::null)
+    {
+        pszResultId = request ["resultID"].asCString();    
+    }
 
+/* Redirecting console log to a file */
 #ifdef AGENT_LOG_ENABLE
 
     /* Extracting file to log file */
@@ -918,6 +946,9 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
     strFilePath.append(pszExecDevId);
     strFilePath.append("_AgentConsole.log");
 
+    /* Redirecting stderr buffer to stdout */
+    dup2 (fileno(stdout), fileno(stderr));
+	
     /* Redirecting stdout buffer to log file */
     if((RpcMethods::sm_pLogStream = freopen(strFilePath.c_str(), "a", stdout)) == NULL)
     {
@@ -926,7 +957,7 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
 
     fprintf(stdout,"\nRestoring previous state after box reboot..\n");
 
-#endif
+#endif /* End of AGENT_LOG_ENABLE */
 
     DEBUG_PRINT (DEBUG_TRACE, "\nRPC Restore Previouse State --> Entry\n");
     //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
@@ -958,7 +989,7 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
     }
 
     /* Setting the crash status after reboot */
-    SetCrashStatus (pszExecId, pszDeviceId, pszTestCaseId,pszExecDevId);
+    SetCrashStatus (pszExecId, pszDeviceId, pszTestCaseId, pszExecDevId, pszResultId);
 
     /* Delete the configuration file */
     if (remove (strFilePath.c_str()) != 0 )
@@ -1041,9 +1072,9 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
             go_ConfigFile.open (strFilePath.c_str(), ios::out);
             if (go_ConfigFile.is_open())
             {
-                go_ConfigFile << "Manager IP:" << RpcMethods::sm_szManagerIP << std::endl;
-                go_ConfigFile << "Box Name :" << RpcMethods::sm_szBoxName << std::endl;
-                go_ConfigFile << "Box Interface:" << RpcMethods::sm_szBoxInterface << std::endl;
+                go_ConfigFile << "Manager IP@" << RpcMethods::sm_szManagerIP << std::endl;
+                go_ConfigFile << "Box Name @" << RpcMethods::sm_szBoxName << std::endl;
+                go_ConfigFile << "Box Interface@" << RpcMethods::sm_szBoxInterface << std::endl;
                 go_ConfigFile.close();
             }
         }
@@ -1089,6 +1120,7 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
     void* pvHandle = NULL;
     std::string strLineInFile;
     std::string strEnableReset;
+    int nPID = RETURN_SUCCESS;
     int nPgid = RETURN_SUCCESS;
     std::fstream o_ModuleListFile;
     char szLibName [LIB_NAME_SIZE];
@@ -1211,19 +1243,31 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         signal (SIGINT, SIG_DFL);
         sleep(2);	
 
-        /* Restart Agent */
-        nReturnValue = kill (RpcMethods::sm_nAgentPID, SIGKILL);
-        if (nReturnValue == RETURN_SUCCESS)
+        /* Start tftp server for logfile transfer */
+        nPID = fork();
+        if (nPID == RETURN_SUCCESS)
         {
-            response["result"] = "SUCCESS";
+            system (START_TFTP_SERVER);
+        }
+        else if (nPID < RETURN_SUCCESS)
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!! Couldnot start tftp server for logfile transfer \n");
         }
         else
         {
-            DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Unable to restart agent \n");
-            SignalFailureDetails();
-            response["result"] = "FAILURE";
+            /* Restart Agent */
+            nReturnValue = kill (RpcMethods::sm_nAgentPID, SIGKILL);
+            if (nReturnValue == RETURN_SUCCESS)
+            {
+                response["result"] = "SUCCESS";
+            }
+            else
+            {
+                DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Unable to restart agent \n");
+                SignalFailureDetails();
+                response["result"] = "FAILURE";
+            }
         }
-
     }
 	
     /* Set device state to FREE on script exits abruptly */
@@ -1249,12 +1293,13 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         response["result"] = "FAILURE";
     }
 
+/* Closing console log output file */
 #ifdef AGENT_LOG_ENABLE
 
     fclose(RpcMethods::sm_pLogStream);
     RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
 
-#endif
+#endif /* End of AGENT_LOG_ENABLE */
 	
     return bRet;
 
@@ -1544,23 +1589,29 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
         /* Constructing command */
         sprintf (szCommand, "%s %s %s %s %s %s", SHOW_DEFINE(SET_ROUTE_SCRIPT), pszClientMAC, pszAgentPort, pszStatusPort, pszLogTransferPort, pszAgentMonitorPort); 
 
+        o_gClientDeviceMap.insert (std::make_pair (pszClientMAC, szCommand));
+
         /* Extracting path to file */
         strFilePath = RpcMethods::sm_strTDKPath;
         strFilePath.append(PORT_FORWARD_RULE_FILE);
     
         /* Adding command to configuration file to set route accross reboot */
-        go_PortforwardFile.open (strFilePath.c_str(), ios::out | ios::app);
+        go_PortforwardFile.open (strFilePath.c_str(), ios::out);
         if (go_PortforwardFile.is_open())
         {
-            go_PortforwardFile << pszClientMAC << "=" << szCommand << std::endl;
-            go_PortforwardFile.close();
+            /* Parse through map to find the client devices to update configuration file */
+            for (o_gClientDeviceMapIter = o_gClientDeviceMap.begin(); o_gClientDeviceMapIter != o_gClientDeviceMap.end(); o_gClientDeviceMapIter ++ )
+            {
+                go_PortforwardFile << o_gClientDeviceMapIter -> first << "=" << o_gClientDeviceMapIter -> second << std::endl;
+            }
+            go_PortforwardFile.close();	
         }
         else
         {
             DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Opening %s failed \n", SHOW_DEFINE(PORT_FORWARD_RULE_FILE) );
         }
 
-        DEBUG_PRINT (DEBUG_ERROR, "Setting route for %s \n", pszClientMAC);
+        DEBUG_PRINT (DEBUG_ERROR, "\nSetting route for %s \n", pszClientMAC);
 	
         system (szCommand); //Calling script
 		
@@ -1574,6 +1625,7 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
     }
 
     return bRet;
+	
 } /* End of RPCSetClientRoute */
 
 

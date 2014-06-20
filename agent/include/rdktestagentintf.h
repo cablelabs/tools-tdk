@@ -44,10 +44,8 @@ typedef enum _DEBUG_LEVEL_
     do{\
             if(eDebugLevel <= DEBUG_ENABLE)\
             {\
-                fprintf(stderr,"\nFunction Name: %s; Line: %d :- \n",__FUNCTION__,__LINE__);\
-                fprintf(stderr,pui8Debugmsg);\
-                fflush(stderr);\
-                fprintf(stdout, pui8Debugmsg);\
+                fprintf(stdout,"\n\nFunction Name: %s; Line: %d :- \n",__FUNCTION__,__LINE__);\
+                fprintf(stdout,pui8Debugmsg);\
                 fflush(stdout);\
             }\
         }while(0)

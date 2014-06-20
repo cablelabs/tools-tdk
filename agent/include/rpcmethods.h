@@ -26,9 +26,10 @@
 #define FLAG_NOT_SET 1
 #define RETURN_SUCCESS 0
 #define RETURN_FAILURE -1
+#define NULL_LOG "/dev/null"
 #define CONFIGURATION_FILE "tdkconfig.ini"
 #define PORT_FORWARD_RULE_FILE "forwardRule.ini"
-#define NULL_LOG "/dev/null"
+#define START_TFTP_SERVER "udpsvd -vE 0.0.0.0 69 tftpd"
 
 #define STR(x)   #x
 #define SHOW_DEFINE(x) STR(x)
@@ -45,13 +46,15 @@ class RpcMethods
     public:
         static FILE *sm_pLogStream;
         static int sm_nAgentPID;
-        static int sm_nDeviceStatusFlag;
-        static int sm_nStatusQueryFlag;
         static int sm_nRouteSetFlag;
         static int sm_nGetDeviceFlag;
+        static int sm_nStatusQueryFlag;
+        static int sm_nDeviceStatusFlag;
+		
         static const char* sm_szManagerIP;
         static const char* sm_szBoxName;
         static const char* sm_szBoxInterface;
+		
         static std::string sm_strBoxIP;
         static std::string sm_strLogFolderPath;
         static std::string sm_strTDKPath;
@@ -93,7 +96,7 @@ class RpcMethods
         char* GetHostIPInterface (const char* pszIPaddr);
         bool DeleteModuleFromFile (std::string strLibName);
         void ResetCrashStatus();
-        void SetCrashStatus (const char* pszExecId, const char* pszDeviceId, const char* pszTestCaseId, const char* pszExecDevId);
+        void SetCrashStatus (const char* pszExecId, const char* pszDeviceId, const char* pszTestCaseId, const char* pszExecDevId, const char* pszResultId);
 	 
 }; /* End of RpcMethods */
 

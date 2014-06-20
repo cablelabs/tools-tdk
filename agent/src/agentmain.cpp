@@ -51,7 +51,6 @@
 
 #define CRASH_STATUS_FILE "crashStatus.ini"
 #define FLUSH_IP_TABLE "sh $TDK_PATH/flush_iptables.sh"
-#define START_TFTP_SERVER "udpsvd -vE 0.0.0.0 69 tftpd"
 
 using namespace std;
 using namespace Json;
@@ -71,6 +70,18 @@ pthread_t crashDetailsThreadId;
 pthread_t agentExecuterThreadId;
 
 Json::Rpc::TcpServer go_Server (ANY_ADDR, RDK_TEST_AGENT_PORT);
+
+
+/* To enable port forwarding. In gateway boxes only  */
+#ifdef PORT_FORWARD
+
+    /* Map to hold details of client devices */
+    typedef std::map <std::string, std::string> ClientDeviceMap;
+    ClientDeviceMap o_gClientDeviceMap;
+    ClientDeviceMap::iterator o_gClientDeviceMapIter;
+
+#endif /* PORT_FORWARD */
+
 
 /* Initialization */
 int RpcMethods::sm_nAgentPID = 0;
@@ -206,7 +217,7 @@ int SendInfo (char* strStringToSend, int nStringSize)
         go_ConfigFile.close();
         if (pvReturnValue)
         {
-            strManagerIP = GetSubString (strManagerIP, ":");
+            strManagerIP = GetSubString (strManagerIP, "@");
             RpcMethods::sm_szManagerIP = strManagerIP.c_str();
             DEBUG_PRINT (DEBUG_LOG, "Test Manager IP is %s \n", RpcMethods::sm_szManagerIP);
         }
@@ -359,7 +370,7 @@ int SendDetailsToManager()
         /* Sending details to Test Manager */
         if (pvReturnValue)
         {
-            strBoxName = GetSubString (strBoxName, ":");		
+            strBoxName = GetSubString (strBoxName, "@");		
             RpcMethods::sm_szBoxName = strBoxName.c_str();
             DEBUG_PRINT (DEBUG_LOG, "Box Name is %s \n", RpcMethods::sm_szBoxName);
 			        
@@ -368,7 +379,6 @@ int SendDetailsToManager()
             strcat(szBoxInfo, RpcMethods::sm_szBoxName);
             strcat(szBoxInfo, ",");
             strcat(szBoxInfo, RpcMethods::sm_strBoxIP.c_str());
-		
             nSendInfoStatus = SendInfo (szBoxInfo, strlen(szBoxInfo)); 
         }	
         
@@ -406,6 +416,7 @@ void* ReportCrash (void*)
     int nCrashFlag = FLAG_SET;
     std::string strExecId;
     std::string strFilePath;
+    std::string strResultId;
     std::string strDeviceId;
     std::string strTestcaseId;
     std::string strCrashStatus;
@@ -493,6 +504,19 @@ void* ReportCrash (void*)
                 strExecDeviceId = GetSubString (strExecDeviceId, ":");
                 if (strExecDeviceId == "")  (nCrashFlag = FLAG_NOT_SET);
             }
+					
+            /* Parsing configuration file to get Result ID */
+            pvReturnValue = getline (o_CrashStatusFile, strResultId);
+            if (!pvReturnValue)
+            {
+                DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve Result ID \n");
+                nCrashFlag = FLAG_NOT_SET ;
+            }
+            else
+            {
+                strResultId = GetSubString (strResultId, ":");
+                if (strResultId == "")  (nCrashFlag = FLAG_NOT_SET);
+            }
 			
             o_CrashStatusFile.close();
 
@@ -500,6 +524,7 @@ void* ReportCrash (void*)
             if (nCrashFlag == FLAG_SET)
             {
                 DEBUG_PRINT (DEBUG_LOG, "\n    Execution ID : %s \n", strExecId.c_str());
+                DEBUG_PRINT (DEBUG_LOG, "    Result ID     : %s \n", strResultId.c_str());
                 DEBUG_PRINT (DEBUG_LOG, "    Device ID    : %s \n", strDeviceId.c_str());
                 DEBUG_PRINT (DEBUG_LOG, "    Testcase ID  : %s \n", strTestcaseId.c_str());
                 DEBUG_PRINT (DEBUG_LOG, "    Execution Device ID  : %s \n", strExecDeviceId.c_str());
@@ -513,6 +538,8 @@ void* ReportCrash (void*)
                 strcat(szCrashDetails, strTestcaseId.c_str());
                 strcat(szCrashDetails, ",");
                 strcat(szCrashDetails, strExecDeviceId.c_str());
+                strcat(szCrashDetails, ",");
+                strcat(szCrashDetails, strResultId.c_str());
             
                 /* Waiting to get a status query */
                 while (RpcMethods::sm_nStatusQueryFlag == FLAG_NOT_SET)
@@ -681,9 +708,9 @@ void *ProcessDeviceDetails (void *)
             /* Communicate with Test Manager after retrieveng device IP address */
             if (pvReturnValue)
             {
-                strBoxInterface = GetSubString (strBoxInterface, ":");	
+                strBoxInterface = GetSubString (strBoxInterface, "@");	
                 RpcMethods::sm_szBoxInterface = strBoxInterface.c_str();
-                DEBUG_PRINT (DEBUG_LOG, "\nBox interface is %s \n");
+                DEBUG_PRINT (DEBUG_LOG, "\nBox interface is %s \n",RpcMethods::sm_szBoxInterface);
             
                 /* Getting box IP address of corresponding interface */
                 RpcMethods::sm_strBoxIP = GetHostIP (RpcMethods::sm_szBoxInterface);
@@ -726,9 +753,7 @@ void *ProcessDeviceDetails (void *)
 *********************************************************************************************************************/
 int Agent()
 {
-    char * pszCommand;
     std::string strFilePath;
-    std::string strCommand;
     int nReturnValue = RETURN_SUCCESS;
     int nCrashReportStatus = RETURN_SUCCESS;
 
@@ -798,6 +823,12 @@ int Agent()
     /* To set route to client devices. For gateway boxes only */
     #ifdef PORT_FORWARD
 
+    size_t nPos = 0;
+    char * pszCommand;
+    std::string strCommand;
+    std::string strClientMACAddr;
+    std::string strDelimiter = "=";
+
     /* Extracting path to file */
     strFilePath = RpcMethods::sm_strTDKPath;
     strFilePath.append(PORT_FORWARD_RULE_FILE);
@@ -809,11 +840,19 @@ int Agent()
         DEBUG_PRINT (DEBUG_LOG, "\n%s found \n", SHOW_DEFINE(PORT_FORWARD_RULE_FILE) );
         while (getline (go_PortforwardFile, strCommand))
         {
-            strCommand = GetSubString (strCommand, "=");
+            while ( (nPos = strCommand.find (strDelimiter)) != std::string::npos)
+            {
+                strClientMACAddr = strCommand.substr (0, nPos);
+                strCommand.erase (0, nPos + strDelimiter.length());
+            }
+
+            DEBUG_PRINT (DEBUG_LOG, "\nSetting route for %s \n",strClientMACAddr.c_str());
             pszCommand = new char[strCommand.length() + 1];
             strcpy (pszCommand, strCommand.c_str());
             system (pszCommand); // Executing port forward script
+            o_gClientDeviceMap.insert (std::make_pair (strClientMACAddr, pszCommand));
         }
+		
         go_PortforwardFile.close();
     }
 	
@@ -1026,6 +1065,8 @@ int AgentMonitor()
     {
         while (s_bAgentMonitorRun)
         {
+            waitpid (-1, NULL, WNOHANG | WUNTRACED);
+		
             /* server waiting indefinitely */
             o_Monitor.WaitMessage(1000);
         }
