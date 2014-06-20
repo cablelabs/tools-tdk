@@ -144,7 +144,7 @@ class DeviceGroupController {
             if (deviceGroupsInstance.version > version) {
                 deviceGroupsInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
                         [
-                            message(code: 'deviceGroups.label', default: 'DeviceGroups')] as Object[],
+                            message(code: 'deviceGroups.label', default: 'DeviceGroup')] as Object[],
                         "Another user has updated this DeviceGroups while you were editing")
                 redirect(action: "list")
                 return
@@ -172,8 +172,8 @@ class DeviceGroupController {
         }
 
         flash.message = message(code: 'default.updated.message', args: [
-            message(code: 'deviceGroups.label', default: 'DeviceGroups'),
-            deviceGroupsInstance.id
+            message(code: 'deviceGroups.label', default: 'DeviceGroup'),
+            deviceGroupsInstance.name
         ])
 		redirect(action: "list", params: [deviceGroupId: params.id])
     }

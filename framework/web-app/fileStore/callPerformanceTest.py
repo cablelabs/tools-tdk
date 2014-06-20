@@ -38,6 +38,8 @@ try:
 
 	result = tcpClient.recv(1048) #Receiving response
 
+	tcpClient.close()
+
 	# Extracting result and logpath from response message
 	resultIndex = result.find("result") + len("result"+"\":\"")
 	message = result[resultIndex:]

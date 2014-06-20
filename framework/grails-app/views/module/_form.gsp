@@ -27,7 +27,7 @@
 	<g:select name="testGroup" from="${com.comcast.rdk.TestGroup?.values()}" keys="${com.comcast.rdk.TestGroup.values()*.name()}" required="" value="${moduleInstance?.testGroup?.name()}"/>
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: moduleInstance, field: 'rdkVersion', 'error')} required">
+<%--<div class="fieldcontain ${hasErrors(bean: moduleInstance, field: 'rdkVersion', 'error')} required">
 	<label for="name">
 		<g:message code="module.rdkVersion.label" default="RDK Version" />
 		<span class="required-indicator">*</span>
@@ -35,7 +35,7 @@
 	<g:textField name="rdkVersion" required="" value="${moduleInstance?.rdkVersion}"/> 	
 </div>
 
-<div class="fieldcontain ${hasErrors(bean: moduleInstance, field: 'executionTime', 'error')} required">
+--%><div class="fieldcontain ${hasErrors(bean: moduleInstance, field: 'executionTime', 'error')} required">
 	<label for="name">
 		<g:message code="module.executionTime.label" default="Execution TimeOut" />
 		<span class="required-indicator">*</span>

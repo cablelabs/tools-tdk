@@ -37,6 +37,10 @@
 #define NUM_DIGITALCHANNEL_RANGE 	63
 #define ERRORVALUE                  	100
 
+
+#define TEST_INVALID 1000
+#define TEST_DEFAULT 1001
+
 class RDKTestAgent;
 class CCAgent : public RDKTestStubInterface
 {

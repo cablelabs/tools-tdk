@@ -62,7 +62,7 @@
 									<ul>
 										<% int primitiveTestIndex = 0; %>
 										<g:each in="${primitiveTestMap}" var="mapEntry">
-										<li id="root"><span class="folder" id="addTestId">${mapEntry.key}</span>
+										<li class="closed"><span class="folder" id="addTestId">${mapEntry.key}</span>
 											<ul id ="module_">
 												<g:each in="${mapEntry.value}" var="test">
 												<%  primitiveTestIndex++; %>

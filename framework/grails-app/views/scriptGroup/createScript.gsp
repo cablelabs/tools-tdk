@@ -10,6 +10,8 @@
   ============================================================================
 -->
 <%@ page import="com.comcast.rdk.Script"%>
+<%@ page import="org.apache.shiro.SecurityUtils"%>
+<%@ page import="com.comcast.rdk.User" %>
 
 <script type="text/javascript">
 	var scripttextarea = document.getElementById('scriptArea');
@@ -93,14 +95,14 @@
 
 		<tr>
 			<td></td>
-			<td><g:checkBox name="skipStatus" checked="false" />&nbsp;Skip
+			<td><g:checkBox name="skipStatus" checked="false" onclick="showSkipRemarks(this)" />&nbsp;Skip
 				Execution</td>
 		</tr>
 		<tr>
-			<td style="width: 15%;">Reason For Skipping</td>
-			<td><g:textArea name="remarks" style="width:465px;height:20px;"
+			<td style="width: 15%;"><span id="skipReason" style="display:none;">Reason For Skipping</span></td>
+			<td><span id="skipRemarks" style="display:none;" style="display:none;"><g:textArea name="remarks" style="width:465px;height:20px;"
 					value="">
-				</g:textArea></td>
+				</g:textArea></span></td>
 		</tr>
 
 		<tr>
@@ -117,6 +119,7 @@
 		</tr>
 
 		<tr id="buttons">
+			<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 			<td colspan="2" align="center">
 					<span id="saveScript" >
 						<g:submitToRemote action="saveScript" controller="scriptGroup" update="scriptMessageDiv" 
@@ -126,6 +129,7 @@
 					</span>
 				 <input type="reset" value="Reset" id="cancel" onclick="clearScriptArea();"/>&emsp;
 			</td>
+			</g:if>
 		</tr>
 
 	</table>

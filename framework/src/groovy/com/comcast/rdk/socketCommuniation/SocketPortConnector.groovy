@@ -17,113 +17,126 @@ import com.comcast.rdk.Device
 import com.comcast.rdk.Script
 import com.comcast.rdk.ScriptExecutor
 
-public class SocketPortConnector extends Thread
-{
+public class SocketPortConnector extends Thread {
 
-    private static ServerSocket serverSocket;
+	private static ServerSocket serverSocket;
 
 	private static String fileTransferPath
 	private static String destinationCrashFile
 	private static final String CRASH_TOKEN = "CRASH_"
 	public SocketPortConnector(){
-		
 	}
 
-    public SocketPortConnector(int port, String filePath, String destFile) throws IOException
-    {
-	   fileTransferPath = filePath
-	   destinationCrashFile = destFile
-       serverSocket = new ServerSocket(port);	   
-       //serverSocket.setSoTimeout(10000);	 		   
-    }
-	
+	public SocketPortConnector(int port, String filePath, String destFile) throws IOException {
+		fileTransferPath = filePath
+		destinationCrashFile = destFile
+		serverSocket = new ServerSocket(port);
+		//serverSocket.setSoTimeout(10000);
+	}
+
 	public static closeServerSocket(){
-	//	println "closeServerSocket ---------------------------------- "
-		serverSocket.close()		
+		//	println "closeServerSocket ---------------------------------- "
+		serverSocket.close()
 	}
 
-    public void run()
-    {
-       while(!(serverSocket.closed))
-       {
-          try
-          {
-			//  println " BEGIN "		
-             Socket server = serverSocket.accept()
-             BufferedReader br = new BufferedReader(new InputStreamReader(server.getInputStream(), "UTF8"))             
-             String dataFromSocket = br.readLine()
-			 if(dataFromSocket.toString().startsWith(CRASH_TOKEN)){
-				 String[] dataArray1 = dataFromSocket.split( UNDERSCORE )
-				 String details = dataArray1[1]
-				 String[] detailsArray = details.split( COMMA_SEPERATOR )
-				 String execId = detailsArray[0]
-				 String deviceId = detailsArray[1]
-				 String scriptId = detailsArray[2]
-				 String execDeviceId = detailsArray[3]
+	public void run() {
+		while(!(serverSocket.closed)) {
+			try {
+				//  println " BEGIN "
+				Socket server = serverSocket.accept()
+				BufferedReader br = new BufferedReader(new InputStreamReader(server.getInputStream(), "UTF8"))
+				String dataFromSocket = br.readLine()
+				if(dataFromSocket.toString().startsWith(CRASH_TOKEN)){
+					String[] dataArray1 = dataFromSocket.split( UNDERSCORE )
+					String details = dataArray1[1]
+					String[] detailsArray = details.split( COMMA_SEPERATOR )
+					if(detailsArray.length == 5){
+						String execId = detailsArray[0]
+						String deviceId = detailsArray[1]
+						String scriptId = detailsArray[2]
+						String execDeviceId = detailsArray[3]
+						String execResultId = detailsArray[4]
 
-				 def devStbIp
-				 def devLogTransferPort
-				 Device.withTransaction{
-					 Device device = Device.findById(deviceId)
-					 devStbIp = device?.stbIp
-					 devLogTransferPort = device?.logTransferPort					 
-				 }
-				 Script.withTransaction {
-					 Script script = Script.findById(scriptId)
-					 String filePath = ""
-					 int cnt = 0
-					 script?.primitiveTest?.module?.logFileNames?.each{ logfilename ->
-						 
-						 String logFileName  = logfilename.toString()
-						 int lastIndex = logFileName.lastIndexOf('/')
-						 int stringLength = logFileName.length()
-						 String extractedFileName = logFileName.substring(lastIndex+1, stringLength)
-						 
-						 cnt++
-						 if((logFileName) && !(logFileName.isEmpty())){
-							 filePath = destinationCrashFile.replace("execId_logdata.txt", "${execId}_${execDeviceId}_${cnt}${extractedFileName}")
-							 
-							  String[] cmd = [
-								  "python",
-								  fileTransferPath,
-								  devStbIp,
-								  devLogTransferPort,
-								  logFileName,
-								  filePath
-							  ]
-													  
-							 try {
-								 ScriptExecutor scriptExecutor = new ScriptExecutor()
-								 def outputData = scriptExecutor.executeScript(cmd,1)
-							} catch (Exception e) {
-								e.printStackTrace()
+						def devStbIp
+						def devLogTransferPort
+						Device.withTransaction{
+							Device device = Device.findById(deviceId)
+							devStbIp = device?.stbIp
+							devLogTransferPort = device?.logTransferPort
+						}
+						Script.withTransaction {
+							Script script = Script.findById(scriptId)
+							String filePath = ""
+							String directoryPath = ""
+							int cnt = 0
+							script?.primitiveTest?.module?.logFileNames?.each{ logfilename ->
+
+								String logFileName  = logfilename.toString()
+								int lastIndex = logFileName.lastIndexOf('/')
+								int stringLength = logFileName.length()
+								String extractedFileName = logFileName.substring(lastIndex+1, stringLength)
+
+								cnt++
+								if((logFileName) && !(logFileName.isEmpty())){
+									filePath = destinationCrashFile.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}//${execId}_${execDeviceId}_${cnt}${extractedFileName}")
+									directoryPath = destinationCrashFile.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
+									new File(directoryPath).mkdirs()
+
+									String[] cmd = [
+										"python",
+										fileTransferPath,
+										devStbIp,
+										devLogTransferPort,
+										logFileName,
+										filePath
+									]
+
+									try {
+										ScriptExecutor scriptExecutor = new ScriptExecutor()
+										def outputData = scriptExecutor.executeScript(cmd,1)
+									}catch (Exception e) {
+										e.printStackTrace()
+									}
+								}
 							}
-						 }				     
-					 }
-				  }
-			 }	 
-			 else{
-	             String[] dataArray = dataFromSocket.split( COMMA_SEPERATOR )
-	             if(dataArray){
-	                 if(dataArray[0] && dataArray[1]){
-	                     String stbName = dataArray[0]
-	                     String stbIp = dataArray[1]
-	                     Device device = Device.findByStbName(stbName.trim())
-	                     if(device){
-	                         Device.executeUpdate("update Device c set c.stbIp = :newStatus where c.id = :devId",[newStatus: stbIp,  devId: (device?.id)])                         
-	                     }
-	                 }
-	             }  
-			 }     
-             server.close();
-          }catch(IOException e)
-          {
-             e.printStackTrace()           
-          }
-          catch(Exception ex)
-          {
-             ex.printStackTrace()         
-          }
-       }
-    }    
+						}
+					}
+				}
+				else{
+					try {
+						String[] dataArray = dataFromSocket.split( COMMA_SEPERATOR )
+						if(dataArray){
+							if(dataArray[0] && dataArray[1]){
+								String stbName = dataArray[0]
+								String stbIp = dataArray[1]
+								Device device = Device.findByStbName(stbName.trim())
+								if(device){
+									if(!device?.isChild){
+										Device.executeUpdate("update Device c set c.stbIp = :newStatus where c.id = :devId",[newStatus: stbIp,  devId: (device?.id)])
+										device?.childDevices.each { child ->
+											try {
+												Device.executeUpdate("update Device c set c.stbIp = :newStatus  where c.id = :devId",[newStatus: stbIp, devId: (child?.id)])
+											} catch (Exception e) {
+												e.printStackTrace()
+											}
+										}
+									}
+								}
+							}
+						}
+					} catch (Exception e) {
+						e.printStackTrace()
+					}
+				}
+				server.close();
+			}catch(IOException e)
+			{
+				e.printStackTrace()
+			}
+			catch(Exception ex)
+			{
+				ex.printStackTrace()
+			}
+		}
+	}
 }

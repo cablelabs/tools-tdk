@@ -43,8 +43,9 @@ class ScriptExecutor {
      */
     public String execute(final String executionScript, final int waittime) {
         Process process = Runtime.getRuntime().exec( executionScript )
-        StreamReaderJob dataReader = new StreamReaderJob(process.getInputStream(),outputFileName);
-        StreamReaderJob errorReader = new StreamReaderJob(process.getErrorStream(),outputFileName);
+		StringBuilder dataRead = new StringBuilder( "" )
+        StreamReaderJob dataReader = new StreamReaderJob(process.getInputStream(),outputFileName,dataRead);
+        StreamReaderJob errorReader = new StreamReaderJob(process.getErrorStream(),outputFileName,dataRead);
         
         FutureTask< String > dataReaderTask = new FutureTask< String > (dataReader);
         FutureTask< String > errorReaderTask = new FutureTask< String > (errorReader);
@@ -179,6 +180,7 @@ class StreamReaderJob implements Callable< String > {
     InputStream inputStream = null
 	String outputFileName = null
 	String intialData = ""
+	StringBuilder dataRead = new StringBuilder( "" )
     /**
      * Constructor that takes the input stream.
      * @param inputStream
@@ -191,6 +193,12 @@ class StreamReaderJob implements Callable< String > {
 		this.inputStream = inputStream
 		this.outputFileName = outputFileName;
 	}
+	public StreamReaderJob(InputStream inputStream , String outputFileName,StringBuilder dataRead) {
+		this.inputStream = inputStream
+		this.outputFileName = outputFileName;
+		this.dataRead = dataRead
+	}
+	
     /**
      * This method will be called by the invoking thread.
      * Reads the data from the input stream and adds the content to a String buffer.
@@ -203,7 +211,6 @@ class StreamReaderJob implements Callable< String > {
 
         InputStreamReader inputStreamReader = new InputStreamReader(inputStream)
         BufferedReader bufferedReader = new BufferedReader(inputStreamReader)
-        StringBuilder dataRead = new StringBuilder( "" )
         try {
             String data = ""
             while((data = bufferedReader.readLine()) != null) {

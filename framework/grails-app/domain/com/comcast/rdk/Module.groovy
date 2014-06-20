@@ -29,10 +29,10 @@ class Module{
     /**
      * RDK Version
      */
-    String rdkVersion
+    String rdkVersion = "1"
 	
 	/**
-	 * RDK Version
+	 * Time required for executing script
 	 */
 	int executionTime
     

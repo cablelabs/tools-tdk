@@ -41,9 +41,11 @@ public class DeviceStatusUpdater {
 		def deviceStatus
 		def deviceId
 		String filePath = absolutePath//"${RequestContextHolder.currentRequestAttributes().currentRequest.getRealPath("/")}//fileStore//calldevicestatus_cmndline.py"
-		def deviceList = Device.list()
-		//def deviceList1 = Device.list()
-		//	def deviceInstance
+		def deviceList 
+		Device.withTransaction {
+			deviceList = Device.getAll()
+		}
+		
 		def ipAddress
 		NetworkInterface nface
 		Enumeration ne = NetworkInterface.getNetworkInterfaces();
@@ -60,23 +62,43 @@ public class DeviceStatusUpdater {
 			}
 		}
 		List childDeviceList = []
-		deviceList?.each{ device ->
-			int port = Integer.parseInt(device?.statusPort)
-			String[] cmd = [
-				PYTHON_COMMAND,
-				filePath,
-				device?.stbIp,
-				port,
-				ipAddress,
-				device?.stbName
-			]
-			Runnable statusUpdator = new StatusUpdaterTask(cmd, device, deviceStatusService,executescriptService,grailsApplication);
-			executorService.execute(statusUpdator);
+		deviceList?.each{ dev ->
+			def device
+			String devIp = ""
+			String devName = ""
+
+			try {
+				def resultArray = Device.executeQuery("select a.stbIp, a.stbName,a.statusPort from Device a where a.id = :devId",[devId: dev?.id])
+				if(resultArray && resultArray?.size() == 1){
+					def subArray = resultArray[0]
+					if(subArray && subArray?.size() == 3){
+						devIp = subArray[0]
+						devName = subArray[1]
+						int port = Integer.parseInt(subArray[2])
+						Device.withTransaction {
+							device = Device.findByIdAndStbName(dev?.id,devName)
+						}
+
+						String[] cmd = [
+							PYTHON_COMMAND,
+							filePath,
+							devIp,
+							port,
+							ipAddress,
+							devName
+						]
+						Runnable statusUpdator = new StatusUpdaterTask(cmd, device, deviceStatusService,executescriptService,grailsApplication);
+						executorService.execute(statusUpdator);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
 		}
 	}
 
 	public static String fetchDeviceStatus(def grailsApplication,Device device){
-
+		
 		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//calldevicestatus_cmndline.py").file
 
 		def absolutePath = layoutFolder.absolutePath

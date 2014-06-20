@@ -33,9 +33,6 @@
 				<option value="${device.id}">
 					${device.stbName}
 				</option>
-				<option value="${device.id}">
-					${device.boxType}
-				</option>
 			</g:each>
 	</select>	
 </div>

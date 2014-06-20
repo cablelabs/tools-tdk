@@ -8,6 +8,9 @@
 
 static bool CCInitFlag = true;
 
+gsw_CcAttributes CCGetDefaultAttribute;
+
+#define INVALID_VALUE 123456789 
 /*****************************************************************************************************************
  *
  * This Constructor function for CCAgent class
@@ -139,7 +142,6 @@ bool CCAgent::testmodulepost_requisites()
 bool CCAgent::CCInit(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_ERROR,"\nCCAgent_Init --->Entry %d\n",CCInitFlag);
-
     if(CCInitFlag == true)
     {
         int status = 0, returnvalue;
@@ -177,7 +179,24 @@ bool CCAgent::CCInit(IN const Json::Value& req, OUT Json::Value& response)
         free(resultDetails);
         DEBUG_PRINT(DEBUG_ERROR,"\nCCAgent_Init --->Exit \n");
         CCInitFlag = false;
-        return TEST_SUCCESS;
+       
+    ccGetAttributes(&CCGetDefaultAttribute,GSW_CC_TYPE_DIGITAL);
+
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.charBgColor.rgb : %x\n",CCGetDefaultAttribute.charBgColor.rgb);
+    DEBUG_PRINT(DEBUG_LOG,"\nCGetDefaultAttribute.charFgColor.rgb:%x \n",CCGetDefaultAttribute.charFgColor.rgb);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.winColor.rgb : %x\n",CCGetDefaultAttribute.winColor.rgb);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.edgeColor : %d\n",CCGetDefaultAttribute.edgeColor.rgb);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.charBgOpacity : %d\n",CCGetDefaultAttribute.charBgOpacity);
+    DEBUG_PRINT(DEBUG_LOG,"\nCGetDefaultAttribute.charFgOpacity : %d\n",CCGetDefaultAttribute.charFgOpacity);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.winOpacity :%d\n",CCGetDefaultAttribute.winOpacity);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCCGetDefaultAttribute.fontSize :%d\n",CCGetDefaultAttribute.fontSize);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.fontStyle :%s\n",CCGetDefaultAttribute.fontStyle);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.fontItalic :%d\n",CCGetDefaultAttribute.fontItalic);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.fontUnderline :%d\n",CCGetDefaultAttribute.fontUnderline);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.borderType :%d\n",CCGetDefaultAttribute.borderType);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.edgeType :%d\n",CCGetDefaultAttribute.edgeType);
+
+    return TEST_SUCCESS;
     }
     else
     {
@@ -674,21 +693,28 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
     std::string Categories = request["Categories"].asString();
     char *stringDetails ;
     char stringDetails1[30] = "ccAttributeValue :";
-
-    DEBUG_PRINT(DEBUG_ERROR,"\n Categories : color Invalid AttributeType :%d %d %s\n", request["ccType"].asInt(), request["ccAttribute"].asInt(),request["Categories"].asCString());
+    char *CCSupportedStyle[] = {"embedded", "Default", "MonospacedSerif", "ProportionalSerif","MonospacedSansSerif", "ProportionalSansSerif","Casual", "Cursive", "SmallCapital"}; 
+    char CCInvalidStyle[] = "Timesnewroman";
+    DEBUG_PRINT(DEBUG_ERROR,"\n CCtype :%d  AttributeType :%d category %s Parameter : %d \n", request["ccType"].asInt(), request["ccAttribute"].asInt(),request["Categories"].asCString(), request["value"].asInt());
 
     gsw_CcType ccType=(gsw_CcType)request["ccType"].asInt();
     gsw_CcAttribType AttributeType=(gsw_CcAttribType)request["ccAttribute"].asInt();
 
 
     resultDetails=(char *)malloc(sizeof(char)*16);
-    DEBUG_PRINT(DEBUG_ERROR,"\nAttributeType= %d,Categories =%s\n",AttributeType,request["Categories"].asCString());
+    //DEBUG_PRINT(DEBUG_ERROR,"\nAttributeType= %d,Categories =%s\n",AttributeType,request["Categories"].asCString());
+int setvalue=request["value"].asInt();
+
 
     if(Categories.compare("color")==0)
     {
-        // static unsigned long ccColor=request["value"].asInt();
-        int setvalue=request["value"].asInt();
-        static unsigned long ccColor=CCSupportedColors[setvalue];
+         static unsigned long ccColor;
+        
+        if(setvalue==TEST_INVALID ||setvalue == TEST_DEFAULT)
+            ccColor= INVALID_VALUE;
+        else
+            ccColor=CCSupportedColors[setvalue];
+         
         switch(AttributeType)
         {
         case GSW_CC_ATTRIB_FONT_COLOR:
@@ -713,13 +739,19 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
             break;
         default:
             DEBUG_PRINT(DEBUG_ERROR,"\n Categories : color Invalid AttributeType :%d\n",AttributeType);
-            break;
+             break;
 
         }
     }
     else if(Categories.compare("Opacity")==0)
     {
-        gsw_CcOpacity ccOpacity = (gsw_CcOpacity)request["value"].asInt();
+        gsw_CcOpacity ccOpacity;
+        
+        if( setvalue==TEST_INVALID ||setvalue == TEST_DEFAULT)
+            ccOpacity= (gsw_CcOpacity)INVALID_VALUE;
+        else
+            ccOpacity = (gsw_CcOpacity)request["value"].asInt();
+
         switch(AttributeType)
         {
         case GSW_CC_ATTRIB_WIN_OPACITY:
@@ -742,7 +774,11 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
     }
     else if(Categories.compare("size")==0)
     {
-        gsw_CcFontSize ccSize =(gsw_CcFontSize)request["value"].asInt();
+        gsw_CcFontSize ccSize;
+        if( setvalue==TEST_INVALID ||setvalue == TEST_DEFAULT )
+            ccSize =(gsw_CcFontSize) INVALID_VALUE;
+        else
+            ccSize = (gsw_CcFontSize)request["value"].asInt();
         if (AttributeType == GSW_CC_ATTRIB_FONT_SIZE)
         {
             CCAttribute.fontSize = ccSize;
@@ -751,7 +787,12 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
     }
     else if(Categories.compare("style")==0)
     {
-        char *ccStyle = (char *)request["value"].asCString();
+        char *ccStyle; 
+        
+        if(setvalue==TEST_INVALID ||setvalue == TEST_DEFAULT)
+            ccStyle = (char*)CCInvalidStyle;
+        else
+            ccStyle = CCSupportedStyle[setvalue]; 
         if (AttributeType == GSW_CC_ATTRIB_FONT_STYLE)
         {
             strcpy(CCAttribute.fontStyle,ccStyle);
@@ -761,12 +802,22 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
     else if(Categories.compare("type")==0)
     {
         DEBUG_PRINT(DEBUG_ERROR,"\n Categories :AttributeType :%d \n",AttributeType);
-        gsw_CcBorderType ccType =(gsw_CcBorderType)request["value"].asInt();
+        gsw_CcBorderType ccBrdType =(gsw_CcBorderType)request["value"].asInt();
         gsw_CcEdgeType ccEdgeType=(gsw_CcEdgeType)request["value"].asInt();
+        if(setvalue==TEST_INVALID ||setvalue == TEST_DEFAULT)
+         { 
+         ccBrdType =(gsw_CcBorderType)INVALID_VALUE;
+         ccEdgeType=(gsw_CcEdgeType)INVALID_VALUE;
+         }
+        else
+         {
+         ccBrdType =(gsw_CcBorderType)request["value"].asInt();
+         ccEdgeType=(gsw_CcEdgeType)request["value"].asInt();
+         }
         switch(AttributeType)
         {
         case GSW_CC_ATTRIB_BORDER_TYPE:
-            CCAttribute.borderType = ccType;
+            CCAttribute.borderType = ccBrdType;
             flagValue =11;
             break;
         case GSW_CC_ATTRIB_EDGE_TYPE:
@@ -781,7 +832,11 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
     }
     else if(Categories.compare("fontItalic")==0)
     {
-        gsw_CcTextStyle ccFontItalic =(gsw_CcTextStyle)request["value"].asInt();
+        gsw_CcTextStyle ccFontItalic;
+        if(setvalue==TEST_INVALID ||setvalue == TEST_DEFAULT)
+           ccFontItalic  = (gsw_CcTextStyle)INVALID_VALUE;
+        else
+            ccFontItalic =(gsw_CcTextStyle)request["value"].asInt();
         if (AttributeType == GSW_CC_ATTRIB_FONT_ITALIC)
         {
             CCAttribute.fontItalic = ccFontItalic;
@@ -790,7 +845,11 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
     }
     else if(Categories.compare("fontUnderline")==0)
     {
-        gsw_CcTextStyle ccFontUnderline =(gsw_CcTextStyle)request["value"].asInt();
+        gsw_CcTextStyle ccFontUnderline;
+        if(setvalue==TEST_INVALID ||setvalue == TEST_DEFAULT)
+           ccFontUnderline  = (gsw_CcTextStyle)INVALID_VALUE;
+        else
+           ccFontUnderline =(gsw_CcTextStyle)request["value"].asInt();
         if (AttributeType == GSW_CC_ATTRIB_FONT_UNDERLINE)
         {
             CCAttribute.fontUnderline = ccFontUnderline;
@@ -805,10 +864,13 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
         return TEST_FAILURE;
     }
 
+if(setvalue != TEST_DEFAULT) 
+{
     try
     {
         ccSetAttributes(&CCAttribute, AttributeType, ccType);
-        
+      
+        DEBUG_PRINT(DEBUG_LOG,"\nsetting the atributes \n");
     }
     catch(...)
     {
@@ -818,9 +880,20 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
         return TEST_FAILURE;
 
     }
-    retval=ccGetAttributes(&CCGetAttribute, ccType);
 
-    DEBUG_PRINT(DEBUG_LOG,"\nCCGetAttribute.charBgColor.rgb : %x\n",CCGetAttribute.charBgColor.rgb);
+ retval=ccGetAttributes(&CCGetAttribute, ccType);
+
+}
+
+else if (setvalue == TEST_DEFAULT)
+{ 
+    memcpy( &CCGetAttribute, &CCGetDefaultAttribute , sizeof(CCGetDefaultAttribute)); 
+    //CCGetAttribute = CCGetDefaultAttribute;
+    DEBUG_PRINT(DEBUG_LOG,"\nAssigning default atributes \n");
+}
+
+
+    /*DEBUG_PRINT(DEBUG_LOG,"\nCCGetAttribute.charBgColor.rgb : %x\n",CCGetAttribute.charBgColor.rgb);
     DEBUG_PRINT(DEBUG_LOG,"\nCGetAttribute.charFgColor.rgb:%x \n",CCGetAttribute.charFgColor.rgb);
     DEBUG_PRINT(DEBUG_LOG,"\nCCGetAttribute.winColor.rgb : %x\n",CCGetAttribute.winColor.rgb);
     DEBUG_PRINT(DEBUG_LOG,"\nCCGetAttribute.edgeColor : %d\n",CCGetAttribute.edgeColor.rgb);
@@ -832,7 +905,7 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
     DEBUG_PRINT(DEBUG_LOG,"\nCCGetAttribute.fontItalic :%d\n",CCGetAttribute.fontItalic);
     DEBUG_PRINT(DEBUG_LOG,"\nCCGetAttribute.fontUnderline :%d\n",CCGetAttribute.fontUnderline);
     DEBUG_PRINT(DEBUG_LOG,"\nCCGetAttribute.borderType :%d\n",CCGetAttribute.borderType);
-    DEBUG_PRINT(DEBUG_LOG,"\nCCGetAttribute.edgeType :%d\n",CCGetAttribute.edgeType);
+    DEBUG_PRINT(DEBUG_LOG,"\nCCGetAttribute.edgeType :%d\n",CCGetAttribute.edgeType);*/
 
     stringDetails = (char*)malloc(sizeof(char)*30);
     DEBUG_PRINT(DEBUG_ERROR,"\nflagvalue  : %d\n",flagValue);
@@ -914,13 +987,21 @@ bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& 
     }
 
     DEBUG_PRINT(DEBUG_ERROR,"\nStringDetails  : %s\n",stringDetails1);
-    response["result"]=getResult_CC(retval,resultDetails);
+    //response["result"]=getResult_CC(retval,resultDetails);
     //response["details"]=resultDetails;
-        
+    
+    if (setvalue != TEST_DEFAULT)
+        response["result"]=getResult_CC(retval,resultDetails);
+    else
+        response["result"]="SUCCESS";
+    
     free(stringDetails);
     free(resultDetails);
     return TEST_SUCCESS;
+
+
 }
+
 
 /*****************************************************************************************************************
  *

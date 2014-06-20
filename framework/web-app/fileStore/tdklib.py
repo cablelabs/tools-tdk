@@ -86,7 +86,7 @@ class RecordList:
         # Return Value : 0 on success and 1 on failure
 
     		obj = TDKScriptingLibrary("rmfapp","2.0");
-    		obj.configureTestCase(self.url,self.path,0000,00,00,self.ipaddress,self.portnumber,69,8088,00,00,"false","false","false",'E2E_rmfapp_record_and_quit');
+    		obj.configureTestCase(self.url,self.path,0000,00,00,self.ipaddress,self.portnumber,69,8088,00,00,"false","false","false",'TdkRmfApp_CreateRecord');
 
     		#Get the result of connection with test component and STB
     		result =obj.getLoadModuleResult();
@@ -96,28 +96,46 @@ class RecordList:
          		return 1;
 
     		obj.setLoadModuleStatus(result);
+		print "rmfApp module loading status :%s" %result;	
+	
+		obj.initiateReboot();
 
     		#Prmitive test case which initiates recording if no recordings found
-    		tdkTestObj = obj.createTestStep('E2E_rmfapp_record_url');
+    		tdkTestObj = obj.createTestStep('TdkRmfApp_CreateRecording');
 
     		streamDetails = tdkTestObj.getStreamDetails('01');
 
     		recordtitle = "test_dvr"
-    		recordid = "117712"
+    		recordid = "117712111"
 		recordduration = "4"
+		ocapid = streamDetails.getOCAPID();
 
-    		cmd = 'record -id ' + recordid + ' -duration ' + recordduration + ' -title ' + recordtitle + ' http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://' + streamDetails.getOCAPID();
+		print recordid
+		print recordduration
+		print recordtitle
+		print ocapid
 
-    		tdkTestObj.addParameter("rmfapp_command",cmd);
+		tdkTestObj.addParameter("recordId",recordid);
+		tdkTestObj.addParameter("recordDuration",recordduration);
+		tdkTestObj.addParameter("recordTitle",recordtitle);
+		tdkTestObj.addParameter("ocapId",ocapid);
 
-    		expectedresult="Test Suite Executed"
+    		expectedresult="SUCCESS"
 
     		#Execute the test case in STB
     		tdkTestObj.executeTestCase(expectedresult);
-
+		
+		print "After execution test tdkRmfApp."
+		
+		time.sleep(3);	
+		
+		print "After Sleeping."		
+	
     		#Get the result of execution
     		result = tdkTestObj.getResult();
 
+		print "After Checking for result."	
+	
     		if expectedresult in result:
          		tdkTestObj.setResultStatus("SUCCESS");
     		else:
@@ -127,8 +145,8 @@ class RecordList:
          		return 1;
 
     		duration = int(recordduration)
-    		time.sleep(duration * 60) #delay so that recording will happen.
-
+		
+		obj.initiateReboot();
     		obj.unloadModule("rmfapp");
     		return 0;
 
@@ -210,7 +228,6 @@ class RecordList:
                 	#check if numOfRecordings is 0, then initiate the recording.
                 	if 0 == self.numOfRecordings:
 	                        retrmfAppMod = self.rmfAppMod();
-        			resetAgent(self.ipaddress,8090,"true")
 				time.sleep(8);
         	                retgetRecordList = self.getRecordList();
 
@@ -476,6 +493,48 @@ class PrimitiveTestCase:
 		return message
 	
 	########## End of Function ##########
+
+        def getClientIPAddress(self, mac):
+
+        # To get the moca ip address for a mac address
+
+        # Syntax       : OBJ.getClientIPAddress(mac)
+        # Description  : Send query to TDKagent to get client ipaddress for corresponding mac address
+        # Parameters   : mac address
+        # Return Value : client moca ip address
+
+                try:
+                        message = {'jsonrpc':'2.0','id':'2','method':'getClientMocaIpAddress','MACaddr':str(mac)}
+                        query = json.dumps(message)
+                        self.tcpClient.send(query)
+
+                except socket.error:
+                        print "******************************************************************************************"
+                        print " #TDK_@error-Error while Connecting to Server ... "
+                        print " Please ensure the Box " + self.IP + " is up and Test Agent is running..."
+                        print "******************************************************************************************"
+                        sys.stdout.flush()
+                        exit()
+                except:
+                        print "#TDK_@error-ERROR : Unable to connect.. Please check box is up and agent is running.....\n"
+			print "Details : "
+			logging.exception('')
+                        sys.stdout.flush()
+                        exit()
+
+                result = self.tcpClient.recv(1048)
+                resultIndex = result.find("result") + len("result"+"\":\"")
+                message = result[resultIndex:]
+                result = message[:(message.find("\""))]
+
+                if((result == "") | ("incomplete" in result)):
+                        print "#TDK_@error-ERROR : Given mac address does not have available Moca IP address\n"
+                        sys.stdout.flush()
+                        exit()
+
+                return result
+
+	########## End of Function ##########
   
 	def initiateRecorderApp(self, arg):
 
@@ -545,12 +604,15 @@ class PrimitiveTestCase:
                         os.makedirs(dir)
                 except OSError:
                         if os.path.exists(dir):
-                                shutil.move(dir, dir+"old")
+								try:
+									shutil.move(dir, dir+"old")
+								except:
+									print "\n Error in log Directory path \n"
                         else:
                                 print "\n Error in log Directory path \n"
 
 		#TODO
-		destinationLogPath = self.realpath + "logs/" + str(self.execID) + "/" + str(self.execDevId) + "/" 
+		destinationLogPath = self.realpath + "logs/" + str(self.execID) + "/" + str(self.execDevId) + "/" + str(self.resultId) + "/" 
 		#destinationLogPath = self.realpath +  str(self.execID) + "/" + str(self.execDevId) + "/" 
 		timeStamp = strftime("%d%m%y%H%M%S", gmtime())
                 if not os.path.exists(destinationLogPath):
@@ -779,11 +841,37 @@ class TDKScriptingLibrary:
 			self.IP = deviceIp
 			self.portValue = devicePort
 			self.realpath = path
-			self.logTransferPort = logTransferPort
-			self.statusPort = statusPort
 			self.performanceBenchMarkingEnabled = performanceBenchMarkingEnabled  
 			self.performanceSystemDiagnosisEnabled = performanceSystemDiagnosisEnabled 
 			self.scriptSuiteEnabled = scriptSuiteEnabled
+
+			# Querry Test Manager to get status port and log transfer port
+                        url = self.url + "/execution/getClientPort?deviceIP=" + str(self.IP) + "&agentPort=" + str(self.portValue)
+                        try:
+                                loadstring = urllib.urlopen(url).read()
+
+                                if "null" in loadstring:
+                                        self.logTransferPort = logTransferPort
+                                        self.statusPort = statusPort
+                                else:
+                                        data = json.loads(loadstring)
+                                        self.logTransferPort = int(data["logTransferPort"])
+                                        self.statusPort = int(data["statusPort"])
+
+                        except ValueError, details:
+                                print "#TDK_@error-ERROR : Unable to access url for getting device port numbers !!!"
+                                print "Details : ", details
+                                sys.stdout.flush()
+                                exit()
+                        except:
+                                print "#TDK_@error-ERROR : Unable to access url for getting device port numbers !!!"
+				print "Details : "
+				logging.exception('')
+#                               print "Details : ", sys.exc_info()[0]
+                                sys.stdout.flush()
+                                exit()
+
+			# Connecting to device
 #			print "In tdklib 1"
 			self.tcpClient.connect((self.IP, self.portValue))
 #			print "In tdklib 2"
@@ -798,7 +886,8 @@ class TDKScriptingLibrary:
 	
 			final = {'jsonrpc':'2.0','id':'2','method':'LoadModule','param1':self.componentName,'version':self.rdkversion,\
 				 'execID':str(self.execID),'deviceID':str(self.deviceId),'testcaseID':str(self.testcaseID),\
-				 'execDevID':str(self.execDevId),'performanceBenchMarkingEnabled':str(self.performanceBenchMarkingEnabled), \
+				 'execDevID':str(self.execDevId),'resultID':str(self.resultId),\
+				 'performanceBenchMarkingEnabled':str(self.performanceBenchMarkingEnabled), \
 				 'performanceSystemDiagnosisEnabled': str(self.performanceSystemDiagnosisEnabled) }
 			query = json.dumps(final)
 			self.tcpClient.send(query)
@@ -816,6 +905,8 @@ class TDKScriptingLibrary:
 			exit()
 		except:
 			print "#TDK_@error-ERROR : Unable to connect.. Please check box is up and agent is running.....\n"
+			print "Details : "
+			logging.exception('')
 			sys.stdout.flush()
 			exit()
 		else:
@@ -919,6 +1010,8 @@ class TDKScriptingLibrary:
 			exit()
 		except:
 			print "#TDK_@error-ERROR : Unable to connect.. Please check box is up and agent is running.....\n"
+			print "Details : "
+			logging.exception('')
 			sys.stdout.flush()
 			exit()
 		else:
@@ -966,6 +1059,8 @@ class TDKScriptingLibrary:
 			exit()
 		except:
 			print "#TDK_@error-ERROR : Unable to connect.. Please check box is up and agent is running.....\n"
+			print "Details : "
+			logging.exception('')
 			sys.stdout.flush()
 			exit()
 		else:
@@ -998,7 +1093,7 @@ class TDKScriptingLibrary:
 		try:
 			message = {'jsonrpc':'2.0','id':'2','method':'RestorePreviousState','version':self.rdkversion,\
 				   'execID':str(self.execID),'deviceID':str(self.deviceId),'testcaseID':str(self.testcaseID),\
-				   'execDevID':str(self.execDevId)}
+				   'execDevID':str(self.execDevId),'resultID':str(self.resultId)}
 			query = json.dumps(message)
 
 			self.tcpClient = socket.socket()
@@ -1014,6 +1109,8 @@ class TDKScriptingLibrary:
 			exit()
 		except:
 			print "#TDK_@error-ERROR : Unable to connect.. Please check box is up and agent is running.....\n"
+			print "Details : "
+			logging.exception('')
 			sys.stdout.flush()
 			exit()
 		else:
@@ -1249,19 +1346,99 @@ class CreateTestThread (threading.Thread):
 	def run(self):
 		print "Starting Thread for " + self.IP + "\n"
 		sys.stdout.flush()
-		try:
-               		self.returnValue = self.function(self.IP,self.port,self.args,self.kwargs)
-		except:
-			print "#TDK_@error-ERROR : An Exception Occured in CreateTestThread"
-			sys.stdout.flush()
-			exit()
+               	
+		self.returnValue = self.function(self.IP,self.port,self.args,self.kwargs)
 
 		print "Exiting Thread for " + self.IP + "\n"
 		sys.stdout.flush()
 
-
 	def __del__(self):
 		return
+
+
+########## End of Class  ##########
+
+
+#------------------------------------------------------------------------------
+# module class
+#------------------------------------------------------------------------------
+
+class ClientList:
+
+        """
+        Class to fetch details of a client box
+
+        Description  : This class is used to get details of client boxes connected to a gateway
+        Syntax       : OBJ = ClientList (clientList)
+        Parameters   : clientList - List of client devices with their mac address and agent port number
+        """
+
+        #------------------------------------------------------------------------------
+        # __init__ and __del__ block
+        #------------------------------------------------------------------------------
+
+        def __init__(self, clientList):
+                self.clientList = clientList
+                self.clientLength = len(self.clientList)
+                return
+
+        def __del__(self):
+                return
+
+        #------------------------------------------------------------------------------
+        # Public methods
+        #------------------------------------------------------------------------------
+
+        def getNumberOfClientDevices(self):
+
+        # To get number of client devices
+
+        # Syntax       : OBJ.getNumberOfClientDevices()
+        # Description  : To get number of client devices
+        # Parameters   : none
+        # Return Value : number of client devices
+
+                return len(self.clientList)
+
+        ########## End of Function ##########
+
+        def getAgentPort(self,index):
+
+        # To get agent port number of device with given index
+
+        # Syntax       : OBJ.getAgentPort(index)
+        # Description  : To get agent port number
+        # Parameters   : index of client device in client list
+        # Return Value : port number
+
+                if (index <= self.clientLength):
+                        return self.clientList[index][1]
+                else:
+                        print "Only \"" + str(self.clientLength) + "\" client devices are available for test execution"
+                        sys.stdout.flush()
+                        exit()
+
+        ########## End of Function ##########
+
+
+        def getClientMACAddress(self, index):
+
+        # To get mac address of device with given index
+
+        # Syntax       : OBJ.getClientMACAddress()
+        # Description  : To get mac address
+        # Parameters   : index of client device in client list
+        # Return Value : mac address
+
+                if (index <= self.clientLength):
+                        mac = self.clientList[index][0]
+                        return mac
+                else:
+                        print "Only \"" + str(self.clientLength) + "\" client devices are available for test execution"
+                        sys.stdout.flush()
+                        exit()
+
+        ########## End of Function ##########
 
 
 ########## End of Class  ##########

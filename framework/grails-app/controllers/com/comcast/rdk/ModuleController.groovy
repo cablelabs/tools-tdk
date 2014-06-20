@@ -314,50 +314,81 @@ class ModuleController {
      */
     def deleteFunction = {
         Function functionInstance
+		def unDeletedList = []
 		def selectedFunctions = params.findAll { it.value == KEY_ON }
         try{
 			selectedFunctions.each{
-				functionInstance = Function.findById(it.key)
-				functionInstance.delete(flush: true)
+				def key = it.key
+				try {
+					Function.withTransaction { resultstatus ->
+						functionInstance = Function.findById(key)
+						try{
+							if(!functionInstance.delete(flush:true)){
+								unDeletedList.add(functionInstance?.name)
+							}
+						}
+						catch (org.springframework.dao.DataIntegrityViolationException e) {
+							unDeletedList.add(functionInstance?.name)
+						}						
+						resultstatus.flush()
+					}
+				} catch (Exception e) {
+					unDeletedList.add(functionInstance?.name)
+				}
 			}        
 			flash.message = "Function/s deleted"
-        }
-        catch (org.springframework.dao.DataIntegrityViolationException e) {
-            log.trace e.printStackTrace()
-            flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), functionInstance?.name])}"
-        }
+        }      
         catch (Exception e) {
             log.trace e.printStackTrace()
-            flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), functionInstance?.name])}"
+            flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), unDeletedList.toString() ])}"
         }
-        
+		if(unDeletedList.size() > 0){
+			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), unDeletedList.toString() ])}"
+		}
         redirect(action: "show", id : params?.moduleid)    
     }
     
     /**
      * Deletes the selected parameter/s
      */
-    def deleteParameterType = {       
-        def parameterTypeInstance
+	def deleteParameterType = {
+		def parameterTypeInstance
+		def unDeletedList = []
 		def selectedParameters = params.findAll { it.value == KEY_ON }
-        try{
+		try{
 			selectedParameters.each{
-				parameterTypeInstance = ParameterType.findById(it.key)
-				parameterTypeInstance.delete(flush: true)
-			}		
+				def key = it.key
+				try {					
+					ParameterType.withTransaction { resultstatus ->
+						parameterTypeInstance = ParameterType.findById(key)
+						try{
+							if(!parameterTypeInstance.delete(flush:true)){
+								unDeletedList.add(parameterTypeInstance?.name)
+							}
+						}
+						catch (org.springframework.dao.DataIntegrityViolationException e) {
+							unDeletedList.add(parameterTypeInstance?.name)
+						}
+						
+						resultstatus.flush()
+					}
+				} catch (Exception e) {
+					unDeletedList.add(parameterTypeInstance?.name)
+				}
+			}
 			flash.message = "Parameter/s deleted"
-        }
-        catch (org.springframework.dao.DataIntegrityViolationException e) {
-            log.trace e.printStackTrace()
-            flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), parameterTypeInstance.name])}"
-        }      
-        catch (Exception e) {
-            log.trace e.printStackTrace()
-            flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), parameterTypeInstance.name])}"            
-        }
-        
-        redirect(action: "show", id : params?.moduleid)
-    }
+		}
+
+		catch (Exception e) {
+			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), parameterTypeInstance?.name])}"
+		}
+
+		if(unDeletedList.size() > 0){
+			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), unDeletedList.toString() ])}"
+		}
+
+		redirect(action: "show", id : params?.moduleid)
+	}
     
     /**
      * Get the functions under the specific modules 

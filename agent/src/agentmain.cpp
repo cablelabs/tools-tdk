@@ -819,9 +819,11 @@ int Agent()
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCPerformanceBenchMarking, std::string("PerformanceBenchMarking")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCPerformanceSystemDiagnostics, std::string("PerformanceSystemDiagnostics")));
 
-
     /* To set route to client devices. For gateway boxes only */
     #ifdef PORT_FORWARD
+
+    go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetClientMocaIpAddress, std::string("getClientMocaIpAddress")));	
+
 
     size_t nPos = 0;
     char * pszCommand;

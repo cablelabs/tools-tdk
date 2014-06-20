@@ -10,24 +10,13 @@
  * ============================================================================
  */
 
-#include <fstream>
-#include <iostream>
-
-#include <rdktestagentintf.h>
 #include "TDKIntegrationStub.h"
-#include <malloc.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
-#include <curl/curl.h>
 
 string g_tdkPath = getenv("TDK_PATH");
 
 using namespace std;
 #ifdef RMFAGENT
+static float totalTuningTime;
 static MediaPlayerSink *pSink = NULL;
 static HNSource *pSource = NULL;
 #endif
@@ -38,7 +27,7 @@ Arguments     : NULL
  **************************************************************************/
 TDKIntegrationStub::TDKIntegrationStub()
 {
-	TDKIntegrationStubhandle=NULL;
+	DEBUG_PRINT(DEBUG_LOG,"TDKIntegrationTest Initialized");
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::initialize
@@ -52,9 +41,11 @@ bool TDKIntegrationStub::initialize(IN const char* szVersion,IN RDKTestAgent *pt
 {
 	DEBUG_PRINT(DEBUG_LOG,"TDKIntegrationTest Initialized");
 #ifdef HYBRID
+#ifdef RDK_BR_1DOT3
 	/*Register stub function for callback*/
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::TDKIntegrationT2pTuning,"TestMgr_HybridE2E_T2pTuning");
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::TDKIntegrationT2pTrickplay,"TestMgr_HybridE2E_T2pTrickMode");
+#endif
 #endif
 #ifdef IPCLIENT
 	/*Dvr stub wrapper functions*/
@@ -88,8 +79,11 @@ bool TDKIntegrationStub::initialize(IN const char* szVersion,IN RDKTestAgent *pt
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_Play_Pause_Pause, "TestMgr_Dvr_Play_Pause_Pause");
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_Play_Play, "TestMgr_Dvr_Play_Play");
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_GETURL, "TestMgr_LiveTune_GETURL");
+        /*E2E_RMF_TSB*/
+        ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFTSB_Play, "TestMgr_TSB_Play");
 	/* E2E RF Video */
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_ChannelChange, "TestMgr_RF_Video_ChannelChange");
+	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult, "TestMgr_MDVR_GetResult");
 #endif
 	return TEST_SUCCESS;
 }
@@ -159,6 +153,7 @@ std::string GetHostIP (const char* szInterface)
 } /* End of GetHostIP */
 
 #ifdef HYBRID
+#ifdef RDK_BR_1DOT3
 /**************************************************************************
   Function name : TDKIntegrationStub::TDKIntegrationT2pTuning
 
@@ -168,7 +163,6 @@ Description   : Send the T2pmsg for tuning to the Videoproxy and get the respons
  ***************************************************************************/
 bool TDKIntegrationStub::TDKIntegrationT2pTuning(IN const Json::Value& request, OUT Json::Value& response)
 {
-#ifdef RDK_BR_1DOT3
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::TDKIntegrationT2pTuning--Entry\n");
 	string ocapid, line;
 	ifstream fileInput;
@@ -228,7 +222,7 @@ bool TDKIntegrationStub::TDKIntegrationT2pTuning(IN const Json::Value& request, 
 	{
 		response["result"] = "SUCCESS";
 		response["details"]="SUccess:Successfully got the error response";
-		response["log-path"] = "t2ptuneresponse.txt";
+		response["log-path"] = g_tdkPath+ "t2ptuneresponse.txt";
 		return TEST_SUCCESS;	
 	}
 	else
@@ -237,77 +231,12 @@ bool TDKIntegrationStub::TDKIntegrationT2pTuning(IN const Json::Value& request, 
 		response["result"] = "FAILURE";
 		response["details"]="FAILURE:Generic error Not OK";
 		//response["log-path"]=syscwd+"t2ptuneresponse.txt";
-		response["log-path"] = "t2ptuneresponse.txt";
+		response["log-path"] = g_tdkPath+"t2ptuneresponse.txt";
 		return TEST_FAILURE;	
 	}
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::TDKIntegrationT2pTuning--Exit\n");
 	return TEST_SUCCESS;
-#endif
-#ifdef RDK_BR_2DOT0
-	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::TDKIntegrationTuning of 2.0 LiveTrickplay--Entry\n");
-	CURL *curl;
-	CURLcode curlResponse;
-	int errorResponse;
-	FILE *filepointer;
-	string url;
-	Json::Value root;
-	string ocapid = (char*)request["ValidocapId"].asCString();
-        string streamingip;
-        streamingip = GetHostIP("eth1");
-	url = "http://"+streamingip+":8080/videoStreamInit?live="+ocapid;
-	DEBUG_PRINT(DEBUG_LOG,"The FRAMED URL %s\n",url.c_str());
-	curl = curl_easy_init();
-	if(curl)
-	{
-		curl_easy_setopt(curl, CURLOPT_URL,(char *)url.c_str());
-		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-		//write in to a file
-		filepointer = fopen("response.json","wb");
-		curl_easy_setopt( curl, CURLOPT_WRITEDATA, filepointer ) ;
-		curlResponse = curl_easy_perform(curl);
-		DEBUG_PRINT(DEBUG_ERROR,"The curlResponse value %d\n",curlResponse);
-		fclose(filepointer);
-	}
-	if(curlResponse != CURLE_OK)
-	{
-		fprintf(stderr, "curl_easy_perform() failed: %s \n",curl_easy_strerror(curlResponse));
-		response["result"] = "FAILURE";
-		response["details"] = "FAILURE:curl_easy_perform() failed";
-		return TEST_FAILURE;
-	}
-
-	curl_easy_cleanup(curl);
-
-	std::ifstream file("response.json");
-	file>>root;
-	errorResponse=root["errorCode"].asInt();
-
-	response["details"] = root["videoStreamingURL"].asString();
-
-	DEBUG_PRINT(DEBUG_LOG,"\nJSON Response from MediaStreamer :-\n");
-	DEBUG_PRINT(DEBUG_LOG,"\nErrorCode         : %d\n",root["errorCode"].asInt());
-	DEBUG_PRINT(DEBUG_LOG,"\nErrorDescription  : %s \n",root["errorDescription"].asCString());
-	DEBUG_PRINT(DEBUG_LOG,"\nVideoStreamingURL : %s\n",root["videoStreamingURL"].asCString());
-
-	if(!errorResponse)
-	{
-		response["result"] = "SUCCESS";
-	}
-	else
-	{
-		//Filling json response with FAILURE status and error message
-		response["result"] = "FAILURE";
-		response["details"] = "FAILURE: Json message";
-		return TEST_FAILURE;
-
-	}
-
-	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::TDKIntegrationTuning of 2.0 LiveTrickplay--Exit\n");
-#endif
-	return TEST_SUCCESS;
 }
-#endif
-#ifdef HYBRID
 /**************************************************************************
   Function name : TDKIntegrationStub::TDKIntegrationT2pTrickplay
 
@@ -317,7 +246,6 @@ Description   : Changes the trick play rate and captures the log in /t2ptrickmod
  ***************************************************************************/
 bool TDKIntegrationStub::TDKIntegrationT2pTrickplay(IN const Json::Value& request, OUT Json::Value& response)
 {
-#ifdef RDK_BR_1DOT3
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegration::TDKIntegrationT2pTrickplay--Entry\n");
 	int errorResponse = 0;
 	ifstream fileInput;
@@ -373,8 +301,8 @@ bool TDKIntegrationStub::TDKIntegrationT2pTrickplay(IN const Json::Value& reques
 	if(errorResponse)
 	{
 		response["result"] = "SUCCESS";
-		response["details"] = "FAILURE:Status found in t2ptrickmoderesponse.txt";
-		response["log-path"] = "t2ptrickmoderesponse.txt";
+		response["details"] = "SUCCESS:Status found in t2ptrickmoderesponse.txt";
+		response["log-path"] = g_tdkPath+"t2ptrickmoderesponse.txt";
 	}
 	else
 	{
@@ -382,176 +310,13 @@ bool TDKIntegrationStub::TDKIntegrationT2pTrickplay(IN const Json::Value& reques
 		response["result"] = "FAILURE";
 		response["details"] = "FAILURE:Generic error not OK";
 		//response["log-path"]=syscwd+"t2ptrickmoderesponse.txt";
-		response["log-path"] = "t2ptrickmoderesponse.txt";
+		response["log-path"] = g_tdkPath+"t2ptrickmoderesponse.txt";
 		return TEST_FAILURE;
 	}
-	return TEST_SUCCESS;
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegration::TDKIntegrationT2pTrickplay--Exit\n");
-#endif
-#ifdef RDK_BR_2DOT0
-	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegration::TDKIntegration_LiveTrickplay of 2.0 --Entry\n");
-	int res_HNSrcGetState;
-	float trickplaySpeed = request["trickPlayRate"].asFloat();
-	int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcPlay, res_MPSinksetrect, res_HNSrcSetSpeed;
-	int res_MPSinksetsrc, res_MPSinkInit, res_MPSinkTerm, res_HNSrcClose, res_HNSrcGetSpeed;
-	char* playuri = (char*)request["VideostreamURL"].asCString();
-	stringstream details;
-	RMFState curstate;
-	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegration::TDKIntegration_LiveTrickplay of 2.0 --Entry\n");
-	pSource = new HNSource();
-        pSink =  new MediaPlayerSink();
-	res_HNSrcInit = pSource->init();
-	DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Initialize is %d\n", res_HNSrcInit);
-	if(0 != res_HNSrcInit)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Failed to Initialize hnsource";
-		DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
-		return TEST_FAILURE;
-	}
-
-	res_HNSrcOpen = pSource->open(playuri, 0);
-	DEBUG_PRINT(DEBUG_LOG, "RMF Result of HNSrc open is %d\n", res_HNSrcOpen);
-	if(0 != res_HNSrcOpen)
-	{
-		pSource->term();
-		response["result"] = "FAILURE";
-		response["details"] = "Failed to Open hnsource";
-		DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
-		return TEST_FAILURE;
-	}
-
-	res_MPSinkInit = pSink->init();
-	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Initialize is %d\n", res_MPSinkInit);
-
-	if(0 != res_MPSinkInit)
-	{
-		pSource->close();
-		pSource->term();
-		response["result"] = "FAILURE";
-		response["details"] = "Failed to Initialze Mpsink";
-		DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
-		return TEST_FAILURE;
-	}
-
-	res_MPSinksetrect = pSink->setVideoRectangle(0, 0, 1280, 720, true);
-	DEBUG_PRINT(DEBUG_LOG, "RMF Result of setting Video resolution is %d\n", res_MPSinksetrect);
-
-	if(0 != res_MPSinksetrect)
-	{
-		pSink->term();
-		pSource->close();
-		pSource->term();
-		response["result"] = "FAILURE";
-		response["details"] = "Failed to set Video resolution";
-		DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
-		return TEST_FAILURE;
-	}
-
-	res_MPSinksetsrc = pSink->setSource(pSource);
-	DEBUG_PRINT(DEBUG_LOG, "RMF Result of setting source is %d\n", res_MPSinksetsrc);
-
-	if(0 != res_MPSinksetsrc)
-	{
-		pSink->term();
-		pSource->close();
-		pSource->term();
-		response["result"] = "FAILURE";
-		response["details"] = "Failed to do set source";
-		DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
-		return TEST_FAILURE;
-	}
-
-	res_HNSrcPlay = pSource->play();
-	DEBUG_PRINT(DEBUG_LOG, "RMF Result of Play is %d\n", res_HNSrcPlay);
-	sleep(30);
-
-	if(0 != res_HNSrcPlay)
-	{
-		pSink->term();
-		pSource->close();
-		pSource->term();
-		response["result"] = "FAILURE";
-		response["details"] = "Failed to play video using Hnsource and Mpsink pipeline";
-		DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
-		return TEST_FAILURE;
-	}
-
-	res_HNSrcGetState = pSource->getState(&curstate, NULL);
-	DEBUG_PRINT(DEBUG_LOG, "RMF Result of getState is %d\n", res_HNSrcGetState);
-	if (curstate != RMF_STATE_PLAYING)
-	{
-		DEBUG_PRINT(DEBUG_ERROR, "Play API call is Success, but Video is not playing");
-		response["result"] = "FAILURE";
-		response["details"] = "Play API call is Success, but Video is not playing";
-		DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
-		return TEST_FAILURE;
-	}
-
-	DEBUG_PRINT(DEBUG_LOG, "Video is playing\n");
-	if(0.0 == trickplaySpeed)
-	{
-		response["result"] = "SUCCESS";
-		response["details"] = "Pause the video is not required in 2.0 LiveTrickplay";
-	}
-	else
-	{
-		res_HNSrcSetSpeed = pSource->setSpeed(trickplaySpeed);
-		if(0 != res_HNSrcSetSpeed)
-		{
-			response["result"] = "FAILURE";
-			response["details"] = "HNSrc setSpeed() FAILURE";
-			DEBUG_PRINT(DEBUG_ERROR, "HNSrc setSpeed() FAILURE\n");
-			return TEST_FAILURE;
-		}
-		response["details"] = "HNSrc setSpeed() successful";
-		res_HNSrcGetSpeed = pSource->getSpeed(trickplaySpeed);
-		if(0 != res_HNSrcGetSpeed)
-		{
-			response["result"] = "FAILURE";
-			response["details"] = "FAILURE:Video is not playing for Requested Trickrate in Live ";
-			DEBUG_PRINT(DEBUG_ERROR, "HNSrc setSpeed() FAILURE\n");
-			return TEST_FAILURE;
-		}
-		//response["details"] = "Video is not playing successfully with requested TrickRate";
-		details << "HNSrc getSpeed() successful, Speed:" << trickplaySpeed;
-		response["details"] = details.str();
-	}
-	res_MPSinkTerm = pSink->term();
-	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPsink termination is %d\n", res_MPSinkTerm);
-
-	res_HNSrcClose = pSource->close();
-	DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource close is %d\n", res_HNSrcClose);
-	res_HNSrcTerm = pSource->term();
-	DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource termination is %d\n", res_HNSrcTerm);
-
-	if(0 != res_MPSinkTerm)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Video played successfully, but failed to terminate MPSink";
-		DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
-		return TEST_FAILURE;
-	}
-	if(0 != res_HNSrcClose)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Video played successfully, but failed to close Hnsource";
-		DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
-		return TEST_FAILURE;
-	}
-	if(0 != res_HNSrcTerm)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Video played successfully, but failed to terminate Hnsource";
-		DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
-		return TEST_FAILURE;
-	}
-
-	response["result"] = "SUCCESS";
-	DEBUG_PRINT(DEBUG_TRACE, "TDKIntegration_Player--->Exit\n");
-#endif	
 	return TEST_SUCCESS;
 }
+#endif
 #endif
 #ifdef IPCLIENT
 /**************************************************************************
@@ -569,8 +334,7 @@ bool TDKIntegrationStub::E2EStubGetRecURLS(IN const Json::Value& request, OUT Js
 	FILE *ErrorCheck;
 	int sysRetValCurl, sysRetValScript;
 	string recordedurl = request["RecordURL"].asString();
-        
-	char cmd[128] = "arp -n -i eth1| cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+	char cmd[128] = "arp -n -i eth1|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'"; 
         FILE* pipe = popen(cmd, "r");
 
         if (!pipe)
@@ -674,7 +438,6 @@ bool TDKIntegrationStub::E2EStubPlayURL(IN const Json::Value& request, OUT Json:
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2EStubPlayURL--Entry\n");
 	int sysRetValScript, errorResponse = 0;
 	char* playPattern =(char *)"+";
-	int curline =0;
 	char cwd[1024];
 	string syscwd, line;
 	string validurl=request["videoStreamURL"].asString();
@@ -704,7 +467,6 @@ bool TDKIntegrationStub::E2EStubPlayURL(IN const Json::Value& request, OUT Json:
 	{
 		while(getline(fileInput, line))
 		{
-			curline++;
 			if (line.find(playPattern, 0) != string::npos)
 			{
 				DEBUG_PRINT(DEBUG_ERROR,"\nURL is Playing found:+++\n");
@@ -767,7 +529,7 @@ bool TDKIntegrationStub::E2ELinearTVstubGetURL(IN const Json::Value& request, OU
 
 	DEBUG_PRINT(DEBUG_LOG,"\nValidurl form TestFramework : %s\n",request["Validurl"].asCString());
 
-        char cmd[128] = "arp -n -i eth1| cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+        char cmd[128] = "arp -n -i eth1|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
         FILE* pipe = popen(cmd, "r");
 
         if (!pipe)
@@ -938,7 +700,6 @@ bool TDKIntegrationStub::E2ELinearTVstubPlayURL(IN const Json::Value& request, O
 /* Time taken to tune the channel.
    totalTuningTime = (time difference of HNSrc->open() API call and return) + (time difference of HNSrc->play() API call and return)
  */
-static float totalTuningTime;
 /**************************************************************************
   Function name : init_open_HNsrc_MPsink
 
@@ -1014,7 +775,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 
 	DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Passed Open() with streamingIP URL\n");
 #else
-	char cmd[128] = "arp -n -i eth1| cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+	char cmd[128] = "arp -n -i eth1|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
 	FILE* pipe = popen(cmd, "r");
 
 	if (!pipe)
@@ -1226,68 +987,6 @@ bool changePlaySpeed(float newSpeed,OUT Json::Value& response)
 
 	return TEST_SUCCESS;
 }
-
-/**************************************************************************
-  Function name : parseProcVideoStatus
-
-Arguments     : Input argument is Json object. Output argument is "SUCCESS" or "FAILURE".
-
-Description   : Helper Function to parse the /proc/video_status to check whther is video is playing
-video_status: will be "yes" if playing, "no" if not playing.
- ****************************************************************************/
-bool parseProcVideoStatus(OUT Json::Value& response)
-{
-	FILE *fp = NULL;
-	char resultBuffer[BUFFER_LENGTH] = {'\0'};
-	char cmd[CMD_LENGTH] = CMD;
-
-	DEBUG_PRINT(DEBUG_TRACE, " Entered into %s\n",__FUNCTION__);
-
-	/* Reading the /proc/video_status to no whether video is playing or not */
-	fp = popen(cmd,"r");
-	if(fp == NULL)
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Popen error, popen failed to open";
-		DEBUG_PRINT(DEBUG_ERROR, "Popen error, popen failed to open\n");
-
-		return TEST_FAILURE;
-	}
-
-	if(fgets(resultBuffer,BUFFER_LENGTH,fp)!= NULL)
-	{
-		DEBUG_PRINT(DEBUG_TRACE, "Result of /proc/video_status: %s\n",resultBuffer);
-	}
-	else
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Cannot read /proc/videos_status";
-		DEBUG_PRINT(DEBUG_ERROR, "Cannot read /proc/videos_status\n");
-
-		return TEST_FAILURE;
-	}
-
-	if(0 == strncmp(resultBuffer,"no",2))
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Video not playing.";
-		DEBUG_PRINT(DEBUG_ERROR, "Video not playing\n");
-
-		return TEST_FAILURE;
-	}
-
-	if(0 == strncmp(resultBuffer,"yes",3))
-	{
-		DEBUG_PRINT(DEBUG_TRACE, "Video playing.\n");
-	}
-
-	pclose(fp);
-
-	DEBUG_PRINT(DEBUG_TRACE, "Passed %s\n",__FUNCTION__);
-
-	return TEST_SUCCESS;
-}
-
 /**************************************************************************
   Function name : skipNumberOfSeconds
 
@@ -1437,6 +1136,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	{
 		return TEST_FAILURE;
 	}
+	DEBUG_PRINT(DEBUG_ERROR, "After init_open_HNsrc_MPsink------------------\n");
 
 	retHNSrcValue = pSource->play();
 	sleep(1);
@@ -3353,7 +3053,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 
         DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to CURL(): %s\n",urlIn.c_str());
 #else
-        char cmd[128] = "arp -n -i eth1| cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+        char cmd[128] = "arp -n -i eth1|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
         FILE* pipe = popen(cmd, "r");
 
         if (!pipe)
@@ -3441,6 +3141,235 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ERMF_GETURL---Exit\n");
 	return TEST_SUCCESS;
 }
+/**************************************************************************
+  Function name : TDKIntegrationStub::E2ERMFTSB_Play
+
+Arguments     : IN const Json::Value,OUT Json::Value
+
+Description   : Get the Streaming URL from the TM and play with Hnsrc->MPsink Pipeline.
+Return the SUCCESS or FAILURE  to the testFramework.
+ ***************************************************************************/
+bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegration::TDKIntegration_TSB --Entry\n");
+        int res_HNSrcGetState;
+        float SpeedRate = request["SpeedRate"].asFloat();
+        int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcPlay, res_MPSinksetrect, res_HNSrcSetSpeed, res_HNSrcPause;
+        int res_MPSinksetsrc, res_MPSinkInit, res_MPSinkTerm, res_HNSrcClose, res_HNSrcGetSpeed;
+        char* playuri = (char*)request["VideostreamURL"].asCString();
+        stringstream details;
+        RMFState curstate;
+        pSource = new HNSource();
+        pSink =  new MediaPlayerSink();
+        res_HNSrcInit = pSource->init();
+        DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Initialize is %d\n", res_HNSrcInit);
+        if(0 != res_HNSrcInit)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to Initialize hnsource";
+                DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+                return TEST_FAILURE;
+        }
+        DEBUG_PRINT(DEBUG_LOG, "URL From TM is %s\n", playuri);
+        res_HNSrcOpen = pSource->open(playuri, 0);
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of HNSrc open is %d\n", res_HNSrcOpen);
+        if(0 != res_HNSrcOpen)
+        {
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to Open hnsource";
+                DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+                return TEST_FAILURE;
+        }
+
+        res_MPSinkInit = pSink->init();
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Initialize is %d\n", res_MPSinkInit);
+
+        if(0 != res_MPSinkInit)
+        {
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to Initialze Mpsink";
+                DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+                return TEST_FAILURE;
+        }
+
+        res_MPSinksetrect = pSink->setVideoRectangle(0, 0, 1280, 720, true);
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of setting Video resolution is %d\n", res_MPSinksetrect);
+
+        if(0 != res_MPSinksetrect)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to set Video resolution";
+                DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+                return TEST_FAILURE;
+        }
+
+        res_MPSinksetsrc = pSink->setSource(pSource);
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of setting source is %d\n", res_MPSinksetsrc);
+        if(0 != res_MPSinksetsrc)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to do set source";
+                DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+                return TEST_FAILURE;
+        }
+
+        res_HNSrcPlay = pSource->play();
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of Play is %d\n", res_HNSrcPlay);
+        sleep(30);
+        DEBUG_PRINT(DEBUG_LOG, "Playing the Video for 30 seconds\n");
+        if(0 != res_HNSrcPlay)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to play video using Hnsource and Mpsink pipeline";
+                DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+                return TEST_FAILURE;
+        }
+
+        res_HNSrcGetState = pSource->getState(&curstate, NULL);
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of getState is %d\n", res_HNSrcGetState);
+        if (curstate != RMF_STATE_PLAYING)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                DEBUG_PRINT(DEBUG_ERROR, "Play API call is Success, but Video is not playing");
+                response["result"] = "FAILURE";
+                response["details"] = "Play API call is Success, but Video is not playing";
+                DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+                return TEST_FAILURE;
+        }
+        //SpeedRate = 0.5;
+        DEBUG_PRINT(DEBUG_LOG, "Video is playing");
+        DEBUG_PRINT(DEBUG_LOG, "Value from TM:%f",SpeedRate);
+        if (SpeedRate >0)
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "\nPause the video for Forward speed\n");
+                res_HNSrcPause = pSource->pause();
+                DEBUG_PRINT(DEBUG_LOG, "RMF Result of Pause is %d\n", res_HNSrcPause);
+                sleep(100);
+                DEBUG_PRINT(DEBUG_LOG, "Pausing the Video for 100 seconds \n");
+                if(0 != res_HNSrcPause)
+                {
+			if(curstate != RMF_STATE_PAUSED)
+			{
+	                        pSink->term();
+        	                pSource->close();
+                	        pSource->term();
+	                        DEBUG_PRINT(DEBUG_ERROR, "Video not paused");
+        	                response["result"] = "FAILURE";
+                	        response["details"] = "Video not paused";
+	                        DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+        	                return TEST_FAILURE;
+			}
+                }
+        }
+
+        res_HNSrcSetSpeed = pSource->setSpeed(SpeedRate);
+        if(0 != res_HNSrcSetSpeed)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "HNSrc setSpeed() FAILURE";
+                DEBUG_PRINT(DEBUG_ERROR, "HNSrc setSpeed() FAILURE\n");
+                return TEST_FAILURE;
+        }
+        response["details"] = "HNSrc setSpeed() successful";
+        res_HNSrcGetSpeed = pSource->getSpeed(SpeedRate);
+        if(0 != res_HNSrcGetSpeed)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "FAILURE:Video is not playing for Requested Trickrate in Live ";
+                DEBUG_PRINT(DEBUG_ERROR, "HNSrc setSpeed() FAILURE\n");
+                return TEST_FAILURE;
+        }
+        details << "HNSrc getSpeed() successful, Speed:" << SpeedRate;
+        response["details"] = details.str();
+
+        res_MPSinkTerm = pSink->term();
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPsink termination is %d\n", res_MPSinkTerm);
+        res_HNSrcClose = pSource->close();
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource close is %d\n", res_HNSrcClose);
+        res_HNSrcTerm = pSource->term();
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource termination is %d\n", res_HNSrcTerm);
+
+        if(0 != res_MPSinkTerm)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "Video played successfully, but failed to terminate MPSink";
+                DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+                return TEST_FAILURE;
+        }
+        if(0 != res_HNSrcClose)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "Video played successfully, but failed to close Hnsource";
+                DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+                return TEST_FAILURE;
+        }
+        if(0 != res_HNSrcTerm)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "Video played successfully, but failed to terminate Hnsource";
+                DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+                return TEST_FAILURE;
+        }
+
+        response["result"] = "SUCCESS";
+        response["details"] = "Video played with TSB successfully";
+        DEBUG_PRINT(DEBUG_TRACE, "TDKIntegration_Player--->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/**************************************************************************
+  Function name : TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult
+
+  Arguments     : Input argument is Overall result list from all clients.
+                  Output argument is "SUCCESS" or "FAILURE".
+
+  Description   : Finds if the final result list contains any failure.
+***************************************************************************/
+
+bool TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_LOG, "E2ERMFAgent_MDVR_GetResult ----> Entry\n");
+
+        string result = req["resultList"].asCString();
+
+        DEBUG_PRINT(DEBUG_LOG, "Overall execution result  = %s\n", result.c_str());
+
+        if(result.find("FAILURE") != std::string::npos)
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "One or more clients failed to execute successfully\n");
+                response["result"] = "FAILURE";
+                response["details"] = "One or more clients failed to execute successfully";
+                DEBUG_PRINT(DEBUG_LOG, "E2ERMFAgent_MDVR_GetResult ----> Exit\n");
+                return TEST_FAILURE;
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_LOG, "All Clients executed successfully\n");
+                response["result"] = "SUCCESS";
+                response["details"] = "All Clients executed successfully";
+        }
+
+        DEBUG_PRINT(DEBUG_LOG, "E2ERMFAgent_MDVR_GetResult ----> Exit\n");
+
+        return TEST_SUCCESS;
+}
 #endif
 /**************************************************************************
   Function name : TDKIntegrationStub::CreateObject()
@@ -3498,8 +3427,10 @@ bool TDKIntegrationStub::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAg
 	ptrAgentObj->UnregisterMethod("TestMgr_Dvr_Play_Pause_Pause");
 	ptrAgentObj->UnregisterMethod("TestMgr_Dvr_Play_Play");
 	ptrAgentObj->UnregisterMethod("TestMgr_LiveTune_GETURL");
+        ptrAgentObj->UnregisterMethod("TestMgr_TSB_Play");
 	/* E2E RF Video */
 	ptrAgentObj->UnregisterMethod("TestMgr_RF_Video_ChannelChange");
+	ptrAgentObj->UnregisterMethod("TestMgr_MDVR_GetResult");
 #endif
 	return TEST_SUCCESS;
 }

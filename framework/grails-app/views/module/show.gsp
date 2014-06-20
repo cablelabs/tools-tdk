@@ -59,10 +59,17 @@
 					<span id="name-label" class="property-label"><g:message code="module.name.label" default="Module Name" />&emsp;</span>					
 						<span class="property-value" aria-labelledby="name-label"><g:fieldValue bean="${moduleInstance}" field="name"/></span>					
 				</li>
+				
+				<li class="fieldcontain">
+					<span id="name-label" class="property-label"><g:message code="module.name.label" default="Test Group" />&emsp;</span>			
+					<span class="property-value" aria-labelledby="name-label"><g:fieldValue bean="${moduleInstance}" field="testGroup"/></span>					
+				</li>
+				
 				<li class="fieldcontain">
 					<span id="name-label" class="property-label"><g:message code="module.name.label" default="Crash FileNames" />&emsp;</span>			
 					<span class="property-value" aria-labelledby="name-label"><g:fieldValue bean="${moduleInstance}" field="logFileNames"/></span>					
 				</li>
+				
 				<li class="fieldcontain">
 					<span id="name-label" class="property-label"><g:message code="module.name.label" default="Execution TimeOut" />&emsp;</span>			
 					<span class="property-value" aria-labelledby="name-label">
@@ -71,8 +78,7 @@
 					<input type="button" value="Update" onclick="${remoteFunction(action:"updateTimeOut", onSuccess="callMe();" , params: " \'moduleId=\' + document.getElementById(\'moduleid\').value + \'&timeout=\' +document.getElementById(\'executionTime\').value")}"/>
 					</g:form>					
 					</span>					
-				</li>
-				
+				</li>				
 				</g:if>							
 			</ol>
 			<g:if test="${functionInstanceList}">

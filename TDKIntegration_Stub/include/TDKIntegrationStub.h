@@ -23,10 +23,13 @@
 #include <fstream>
 #include <iostream>
 #include "rdkteststubintf.h"
+#include <rdktestagentintf.h>
 #include <string.h>
 #include <sstream>
 #include <malloc.h>
 #include <fstream>
+#include <stdlib.h>
+#include <curl/curl.h>
 
 #include <ifaddrs.h>
 #include <arpa/inet.h>
@@ -68,7 +71,6 @@ class RDKTestAgent;
 class TDKIntegrationStub : public RDKTestStubInterface
 {
 	public:
-		void* TDKIntegrationStubhandle;
 
 		/*Ctor*/
 		TDKIntegrationStub();
@@ -81,8 +83,10 @@ class TDKIntegrationStub : public RDKTestStubInterface
 
 		/*LiveTrickplay Wrapper functions*/
 #ifdef HYBRID
+#ifdef RDK_BR_1DOT3
 		bool TDKIntegrationT2pTuning(IN const Json::Value& request, OUT Json::Value& response);
 		bool TDKIntegrationT2pTrickplay(IN const Json::Value& request, OUT Json::Value& response);
+#endif
 #endif
 		/*1DOT3 DVR Testing Wrapper functions*/
 #ifdef IPCLIENT
@@ -116,8 +120,10 @@ class TDKIntegrationStub : public RDKTestStubInterface
 		bool E2ERMFAgent_Play_Pause_Pause(IN const Json::Value& , OUT Json::Value& );
 		bool E2ERMFAgent_Play_Play(IN const Json::Value& , OUT Json::Value& );
 		bool E2ERMFAgent_GETURL(IN const Json::Value& , OUT Json::Value& );
+		bool E2ERMFTSB_Play(IN const Json::Value& , OUT Json::Value& );
 		/* E2E RF Video */
 		bool E2ERMFAgent_ChannelChange(IN const Json::Value& , OUT Json::Value&);
+		bool E2ERMFAgent_MDVR_GetResult(IN const Json::Value& , OUT Json::Value&);
 
 #endif	
 

@@ -150,7 +150,15 @@ class UserController {
             render(view: "create", model: [userInstance: userInstance, userInstanceList: User.list(params), userInstanceTotal: User.count()])
             return
         }
-
+		
+		def userBasedOnName = User?.findByName(params?.username)
+		
+		if(userBasedOnName && (userBasedOnName?.id !=  userInstance?.id)){
+			flash.message = message(code: 'default.not.unique.message', args: [message(code: 'user.label', default: 'UserName')])
+			render(view: "create", model: [userInstance: userInstance, userInstanceList: User.list(params), userInstanceTotal: User.count()])
+            return
+		}
+		
         if (version != null) {
             if (userInstance.version > version) {
                 userInstance.errors.rejectValue("version", "default.optimistic.locking.failure",

@@ -27,9 +27,11 @@ rmfAppTestStub::rmfAppTestStub ()
 	application crashing or prematurely exiting. This condition can be detected by the EPIPE
 	error thrown when the parent attempts to write to the pipe. Not ignoring this signal will
 	cause the stub to quit upon receiving the signal. */
+#if 0
 	old_signal_handler = signal (SIGPIPE, SIG_IGN);
 	tunnel[PIPE_READ_END] = 0; tunnel[PIPE_WRITE_END]= 0;
 	child_pid = 0; 
+#endif
 	DEBUG_PRINT(DEBUG_LOG, "Creating new stub object.\n");
 }
 /***************************************************************************
@@ -72,8 +74,15 @@ bool rmfAppTestStub::testmodulepost_requisites()
 ***************************************************************************/	
 bool rmfAppTestStub::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
 {
-	int log_fd = 0;
+	//int log_fd = 0;
 	DEBUG_PRINT(DEBUG_LOG, "rmfAppTestStub Initialize");
+
+	/*TODO: Need to separate running tdkRmfApp from rmfAppStub. */
+	/*To record the content using tdkRmfApp  */
+	ptrAgentObj->RegisterMethod(*this,&rmfAppTestStub::rmfAppTestStub_CreateRecord,"TestMgr_CreateRecord");
+
+
+#if 0
 	
 	/*Register stub function for callback*/
 	if (true != 
@@ -83,6 +92,7 @@ bool rmfAppTestStub::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAg
 		return false;
 	}
 	
+
 	/* Set up the pipe for IPC*/
 	if (pipe (tunnel))
 	{
@@ -154,10 +164,56 @@ bool rmfAppTestStub::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAg
 			exit (-1);
 		}
 	}
+#endif
 	return true;
 }
 
+bool rmfAppTestStub::rmfAppTestStub_CreateRecord(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE, "rmfAppTestStub_CreateRecord -->Entry\n");	
 
+	#if 1
+	string completeCmd = "/opt/TDK/tdkRmfApp ";
+	string recordCmd = "record";
+	string recordId = req["recordId"].asCString();
+	string duration = req["recordDuration"].asCString();
+	string title = req["recordTitle"].asCString();
+	string ocap = "ocap://";
+	string ocapId = req["ocapId"].asCString();
+	ocap.append(ocapId);
+
+	
+	/*Framing the command to record using tdkRmfApp*/
+	completeCmd.append(recordCmd);
+	completeCmd.append(" ");
+	completeCmd.append(recordId);
+	completeCmd.append(" ");
+	completeCmd.append(duration);
+	completeCmd.append(" ");
+	completeCmd.append(title);
+	completeCmd.append(" ");
+	completeCmd.append(ocap);
+	
+	#endif
+	
+        DEBUG_PRINT(DEBUG_TRACE, "The Complete Command: %s \n",completeCmd.c_str());
+
+	if(-1 == (system(completeCmd.c_str())))
+	{
+                DEBUG_PRINT(DEBUG_ERROR, "Error: tdkRmfApp failed to record.\n");
+                response["result"] = "FAILURE";
+                response["details"] = "Error: tdkRmfApp failed to record.";
+                return TEST_FAILURE;
+	}
+
+
+        DEBUG_PRINT(DEBUG_TRACE, "tdkRmfApp recorded successfully.\n");
+        response["result"] = "SUCCESS";
+        response["details"] = "tdkRmfApp recorded successfully. \n";
+
+	DEBUG_PRINT(DEBUG_TRACE, "rmfAppTestStub_CreateRecord -->Exit\n");	
+        return TEST_SUCCESS;
+}
 
 
 /**************************************************************************
@@ -174,7 +230,8 @@ bool rmfAppTestStub::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAg
 * not indicate the success or failure of the command executed in rmfApp, but 
 * merely that the command has been sent to the application. Result of the actual 
 * application has to be deduced from the logs.
-***************************************************************************/	
+***************************************************************************/
+#if 0	
 bool rmfAppTestStub::rmfAppTestStub_Execute (IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "Entering rmfApp TestStub_Execute\n");
@@ -205,7 +262,7 @@ bool rmfAppTestStub::rmfAppTestStub_Execute (IN const Json::Value& req, OUT Json
 	return true;
 }
 
-
+#endif
 /**************************************************************************
 * Function name: CreateObject ()
 * Descrption: Handle provided to C libraries to create an object of this class.
@@ -235,9 +292,18 @@ extern "C" rmfAppTestStub* CreateObject ()
  ***************************************************************************/	
 bool rmfAppTestStub::cleanup (IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
 {
-	int returnval;
+//	int returnval;
 	DEBUG_PRINT(DEBUG_LOG, "rmfAppTestStub shutting down\n");
+
 	
+	if(NULL == ptrAgentObj)
+	{
+		return TEST_FAILURE;
+	}
+
+	ptrAgentObj->UnregisterMethod("TestMgr_CreateRecord");
+
+#if 0	
 	/* Unregister RPC methods. */
 	if (true != ptrAgentObj->UnregisterMethod (RMFAPP_RPC_COMMAND_STRING))
 	{
@@ -269,6 +335,7 @@ bool rmfAppTestStub::cleanup (IN const char* szVersion,IN RDKTestAgent *ptrAgent
 	signal (SIGPIPE, old_signal_handler);
 
 	DEBUG_PRINT(DEBUG_LOG, "Done. %s exited with a value 0x%x\n", RMFAPP_EXEC_SCRIPT, returnval);
+#endif
 	return true;
 }	
 
@@ -285,6 +352,7 @@ bool rmfAppTestStub::cleanup (IN const char* szVersion,IN RDKTestAgent *ptrAgent
 				CHILD_APP_EXITED - Child app is no longer running.
 				COMMUNICATION_FAILURE - Failed to send command to child app.
 ***************************************************************************/	
+#if 0
 sendCommandResult rmfAppTestStub::sendCommand (const char * command)
 {
 	char command_buffer[RMFAPP_MAX_COMMAND_LENGTH];
@@ -324,7 +392,7 @@ sendCommandResult rmfAppTestStub::sendCommand (const char * command)
 		return COMMAND_SENT;
 	}
 }
-
+#endif
 /**************************************************************************
 * Function name: DestroyObject ()
 * Descrption: Handle to destroy the stub object from a C library.

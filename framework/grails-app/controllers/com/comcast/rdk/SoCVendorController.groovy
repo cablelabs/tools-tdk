@@ -51,7 +51,7 @@ class SoCVendorController {
     }
 
     def update(Long id, Long version,Integer max) {
-        def soCVendorInstance = SoCVendor.get(id)
+        def soCVendorInstance = SoCVendor.get(id)		
 		def groupsInstance = utilityService.getGroup()
 		def soCVendorList = SoCVendor.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
 		def soCVendorListCnt = SoCVendor.findAllByGroupsOrGroupsIsNull(groupsInstance)
@@ -61,7 +61,15 @@ class SoCVendorController {
             render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt.size()])
             return
         }
-
+		
+		def socVendorBasedOnName = SoCVendor?.findByName(params?.name)
+		
+		if(socVendorBasedOnName && (socVendorBasedOnName?.id !=  soCVendorInstance?.id)){
+			flash.message = message(code: 'default.not.unique.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor Name')])
+			render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt.size()])
+			return
+		}
+		
         if (version != null) {
             if (soCVendorInstance.version > version) {
                 soCVendorInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
