@@ -408,6 +408,8 @@ class ScriptGroupController {
 		}
 
 		scriptInstance.properties = params
+		
+		scriptgroupService.updateScriptsFromRDKVersionBoxTypeTestSuites(scriptInstance)
 
 		flash.message = message(code: 'default.updated.message', args: [
 			message(code: 'script.label', default: 'Script'),

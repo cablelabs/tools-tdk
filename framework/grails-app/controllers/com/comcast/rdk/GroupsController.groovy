@@ -48,6 +48,14 @@ class GroupsController {
             return
         }
 
+		def groupBasedOnName = BoxType?.findByName(params?.name)
+		
+		if(groupBasedOnName && (groupBasedOnName?.id !=  groupsInstance?.id)){
+			flash.message = message(code: 'default.not.unique.message', args: [message(code: 'groups.label', default: 'Group Name')])
+			render(view: "create", model: [groupsInstance: groupsInstance,groupsInstanceList: Groups.list(params), groupsInstanceTotal: Groups.count()])
+            return
+		}
+		
         if (version != null) {
             if (groupsInstance.version > version) {
                 groupsInstance.errors.rejectValue("version", "default.optimistic.locking.failure",

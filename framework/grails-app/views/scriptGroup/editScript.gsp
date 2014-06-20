@@ -11,6 +11,8 @@
 -->
 <%@ page import="com.comcast.rdk.PrimitiveTest"%>
 <%@ page import="com.comcast.rdk.Module"%>
+<%@ page import="org.apache.shiro.SecurityUtils"%>
+<%@ page import="com.comcast.rdk.User" %>
 
 <g:if test="${script}" >
 <g:form name="editScriptForm" action="updateScript" controller="scriptGroup" method="post">
@@ -65,17 +67,30 @@
 
 		<tr>
 			<td></td>
-			<td><g:checkBox name="skipStatus" checked="${script.skip}" />&nbsp;Skip
+			<td><g:checkBox id="skipStatus" name="skipStatus" checked="${script.skip}"  onclick="showSkipRemarks(this)" />&nbsp;Skip
 					Execution</td>
 		</tr>
+		<g:if test="${script.skip}" >	
 		<tr>
-			<td style="width: 15%;">Reason For Skipping</td>
-			<td><g:textArea name="remarks" style="width:465px;height:20px;"
+			<td style="width: 15%;">
+			
+			<span id="skipReason123">Reason For Skipping</span></td>
+			<td><span id="skipRemarks123"><g:textArea name="remarks123" style="width:465px;height:20px;"
 						value="${script.remarks}">
-				</g:textArea></td>
+				</g:textArea></span>
+				
+				</td>
+		</tr></g:if>
+		
+		<tr>
+			<td style="width: 15%;"><span id="skipReason" style="display:none;">Reason For Skipping</span></td>
+			<td><span id="skipRemarks" style="display:none;" style="display:none;"><g:textArea name="remarks" style="width:465px;height:20px;"
+					value="${script.remarks}">
+				</g:textArea></span></td>
 		</tr>
-
-			<tr>
+		
+		
+		<tr>
 			<td style="width:15%;">Synopsis</td>
 			<td>
 				<g:textArea  name="synopsis" style="width:465px;height:40px;" value="${script.synopsis}" >
@@ -92,15 +107,17 @@
 		</tr>
 		<tr id="buttons">
 			<td colspan="2" align="center">
+				<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 				<g:if test="${flag != 'STATIC'}" >				
 					<input type="submit" value="Update" id="save">&emsp;
 					<input type="reset" value="Cancel" id="cancel" onclick="makeScriptEditable('${script.id}')">				
+				</g:if>
 				</g:if>
 			</td>
 		</tr>
 	</table>
 </g:form>
-
+<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 <g:form name="downloadScriptForm" action="exportScriptContent" controller="scriptGroup" method="post">
 		<input type="hidden" name="id" id="id" value="${script.id}">
 		<table>
@@ -112,4 +129,5 @@
 			</tr>
 		</table>
 	</g:form>
+</g:if>
 </g:if>

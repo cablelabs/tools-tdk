@@ -36,7 +36,7 @@ $(document).ready(function() {
 				editScript(node.id);
 			},
 			'delete_script' : function(node) {
-				if (confirm('Are you want to delete property?')) {
+				if (confirm('Are you sure you want to delete this script?')) {
 					removeScript(node.id);
 				}
 			}
@@ -79,6 +79,8 @@ $(document).ready(function() {
 
 	$("#scriptid").addClass("changecolor");
 	
+	
+	
 });
 
 
@@ -89,6 +91,7 @@ function createScriptForm() {
 function editScript(id , flag ) {
 	hideSearchoptions();
 	$.get('editScript', {id: id , flag : flag}, function(data) { $("#responseDiv").html(data); });
+
 }
 
 function showScript(id, flag) {
@@ -198,5 +201,19 @@ function isScriptExist(scriptName){
 	});
 }
 
-
+function showSkipRemarks(me){
+	if (me.checked) {
+		$("#skipRemarks").show();
+		$("#skipReason").show();
+		$("#skipRemarks123").hide();
+		$("#skipReason123").hide();
+	} else {
+		$("#skipRemarks").hide();
+		$("#skipReason").hide();
+		$("#remarks").val('');
+		$("#skipRemarks123").hide();
+		$("#skipReason123").hide();
+	}
+	$("#skipReason").val("");
+}
 

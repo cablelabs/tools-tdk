@@ -128,9 +128,9 @@ class ExecutionService {
 	}
 	
 	
-	def getLogFileNames(final String realPath, final String executionId, final String executionDeviceId){
+	def getLogFileNames(final String realPath, final String executionId, final String executionDeviceId, final String executionResId){
 		def mapVals = [:]
-		def summaryFilePath = "${realPath}//logs//${executionId}//${executionDeviceId}"//_TestSummary"
+		def summaryFilePath = "${realPath}//logs//${executionId}//${executionDeviceId}//${executionResId}"//_TestSummary"
 		try{
 			File directory = new File(summaryFilePath);
 			List<File> foundFiles = new ArrayList<File>()
@@ -139,7 +139,7 @@ class ExecutionService {
 				if (it.isFile()) {
 					String fileName = it.getName()
 					if(fileName.startsWith( "${executionId}_TestSummary" )){
-						foundFiles << new File("${realPath}//logs//${executionId}//${executionDeviceId}//${fileName}")
+						foundFiles << new File("${realPath}//logs//${executionId}//${executionDeviceId}//${executionResId}//${fileName}")
 					}
 				}
 			}
@@ -168,7 +168,7 @@ class ExecutionService {
 			   }
 			}
 			else{
-			  String filePath = "${realPath}//logs//${executionId}//${executionDeviceId}"
+			  String filePath = "${realPath}//logs//${executionId}//${executionDeviceId}//${executionResId}"
 				def dir = new File(filePath)
 				dir.eachFile {
 					if (it.isFile()) {
@@ -191,10 +191,10 @@ class ExecutionService {
 
 	
 	
-	def getCrashLogFileNames(final String realPath, final String executionId, final String executionDeviceId){
+	def getCrashLogFileNames(final String realPath, final String executionId, final String executionDeviceId, final String executionResId){
 		def mapVals = [:]
 		try{
-			  String filePath = "${realPath}//logs//crashlogs"
+			  String filePath = "${realPath}//logs//crashlogs//${executionId}//${executionDeviceId}//${executionResId}"
 				def dir = new File(filePath)
 				dir.eachFile {
 					if (it.isFile()) {
@@ -402,7 +402,7 @@ class ExecutionService {
 		Script.withTransaction { trns ->
 			def scriptInstance1 = Script.findById(scriptInstance?.id)			
 			def deviceInstance1 = Device.findById(deviceInstance?.id)
-	        if(!(scriptInstance1.boxTypes.find { it.id == deviceInstance1.boxType.id })){   
+	        if(!(scriptInstance1?.boxTypes?.find { it?.id == deviceInstance1?.boxType?.id })){   
 	            scriptStatus = false
 	        }
 		}
@@ -422,11 +422,11 @@ class ExecutionService {
 		if(rdkVersion){
 			versionText = rdkVersion.trim()
 		}
-		if(versionText && !(versionText.equals("NOT_AVAILABLE") || versionText.equals("NOT_VALID") || versionText.equals("")) ){
+		if(versionText && !(versionText?.equals("NOT_AVAILABLE") || versionText?.equals("NOT_VALID") || versionText?.equals("")) ){
 			Script.withTransaction { trns ->
 				def scriptInstance1 = Script.findById(scriptInstance?.id)
-				if(scriptInstance1.rdkVersions.size() > 0 && !(scriptInstance1.rdkVersions.find { 
-					it.buildVersion.equals(versionText) 
+				if(scriptInstance1?.rdkVersions?.size() > 0 && !(scriptInstance1?.rdkVersions?.find { 
+					it?.buildVersion?.equals(versionText) 
 					})){
 					scriptStatus = false
 				}
@@ -926,7 +926,7 @@ class ExecutionService {
 			rdkVersion = "NOT_AVAILABLE"
 		}else if(outputData.contains("DOT")){
 			rdkVersion = outputData.replace("DOT",".")
-		}else if(!outputData.startsWith("RDK")){
+		}else if(!outputData.equals("") && !outputData.startsWith("RDK")){
 			rdkVersion = "RDK"+outputData.replace("DOT",".")
 		}else{
 			rdkVersion = outputData
@@ -1038,10 +1038,11 @@ class ExecutionService {
 	 * @param executionId
 	 * @param timeDiff
 	 */
-	public void updateExecutionResults(final String outputData, final long executionResultId, final long executionId, final long executionDeviceId, final String timeDiff){
+	public void updateExecutionResults(final String outputData, final long executionResultId, final long executionId, final long executionDeviceId, 
+		final String timeDiff, final String singleScriptExecTime){
 		ExecutionResult executionResult = ExecutionResult.findById(executionResultId)
-		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput  where c.id = :execId",
-				[newOutput: outputData, execId: executionResultId])
+		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput, c.executionTime = :newTime  where c.id = :execId",
+				[newOutput: outputData, newTime: singleScriptExecTime, execId: executionResultId])		
 		Execution.executeUpdate("update Execution c set c.outputData = :newStatus , c.executionTime = :newTime where c.id = :execId",
 				[newStatus: outputData, newTime: timeDiff, execId: executionId.toLong()])
 		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.executionTime = :newTime where c.id = :execDevId",
@@ -1084,16 +1085,20 @@ class ExecutionService {
 	 * @param executionId
 	 * @param timeDiff
 	 */
-	public void updateExecutionResults(final String outputData, final long executionResultId, final long executionId, final long executionDeviceId){
-
+	public void updateExecutionResultsTimeOut(final String outputData, final long executionResultId, final long executionId, final long executionDeviceId, 
+		final def timeDiff, final String singleScriptExecTime){
+		try{
 		ExecutionResult executionResult = ExecutionResult.findById(executionResultId)
-		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput , c.status = :newStatus  where c.id = :execId",
-				[newOutput: outputData, newStatus: "SCRIPT TIME OUT", execId: executionResultId])
-		Execution.executeUpdate("update Execution c set c.outputData = :newStatus , c.result = :newStatus where c.id = :execId",
-				[newStatus: outputData, newStatus: "FAILURE", execId: executionId.toLong()])
-		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStat where c.id = :execDevId",
-				[newStat: "FAILURE", execDevId: executionDeviceId.toLong()])
-		
+		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput , c.status = :newStatus, c.executionTime = :newTime where c.id = :execId",
+				[newOutput: outputData, newStatus: "SCRIPT TIME OUT", newTime: singleScriptExecTime, execId: executionResultId])
+		Execution.executeUpdate("update Execution c set c.outputData = :newStatus,  c.result = :newStatus, c.executionTime = :newTime where c.id = :execId",
+				[newStatus: outputData, newStatus: "FAILURE", newTime: timeDiff, execId: executionId.toLong()])
+		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStat, c.executionTime = :newTime where c.id = :execDevId",
+				[newStat: "FAILURE", newTime: timeDiff, execDevId: executionDeviceId.toLong()])
+		}
+		catch(Exception e){
+			e.printStackTrace()
+		}
 	}
 	
 	/**
@@ -1105,15 +1110,16 @@ class ExecutionService {
 	 * @param executionId
 	 * @param timeDiff
 	 */
-	public void updateExecutionResultsError(final String resultData,final long executionResultId, final long executionId, final long executionDeviceId,final String timeDiff){
+	public void updateExecutionResultsError(final String resultData,final long executionResultId, final long executionId, final long executionDeviceId,
+		final String timeDiff, final String singleScriptExecTime){
 
 		ExecutionResult executionResult = ExecutionResult.findById(executionResultId)
-		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput , c.status = :newStatus  where c.id = :execId",
-				[newOutput: resultData, newStatus: "FAILURE", execId: executionResultId])
+		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput, c.status = :newStatus, c.executionTime = :newTime where c.id = :execId",
+				[newOutput: resultData, newStatus: "FAILURE", newTime: singleScriptExecTime, execId: executionResultId])
 		Execution.executeUpdate("update Execution c set c.outputData = :newStatus , c.executionTime = :newTime, c.result = :newStatus where c.id = :execId",
 				[newStatus: resultData, newTime: timeDiff, newStatus: "FAILURE", execId: executionId.toLong()])
-		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStat where c.id = :execDevId",
-				[newStat: "FAILURE", execDevId: executionDeviceId.toLong()])
+		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStat, c.executionTime = :newTime where c.id = :execDevId",
+				[newStat: "FAILURE", newTime: timeDiff, execDevId: executionDeviceId.toLong()])
 		
 	}
 	
@@ -1317,6 +1323,7 @@ class ExecutionService {
 				executionResult.executionDevice = executionDevice
 				executionResult.script = scriptInstance.name
 				executionResult.device = deviceInstance.stbName
+				executionResult.dateOfExecution = new Date()
 				executionResult.status = SKIPPED_STATUS
 				executionResult.executionOutput = "Test skipped , Reason :"+scriptInstance.remarks
 				if(! executionResult.save(flush:true)) {
@@ -1360,6 +1367,7 @@ class ExecutionService {
 				executionResult.script = scriptInstance?.name
 				executionResult.device = deviceInstance?.stbName
 				executionResult.status = Constants.NOT_APPLICABLE_STATUS
+				executionResult.dateOfExecution = new Date()
 				executionResult.executionOutput = "Test not executed. Reason : "+reason
 				if(! executionResult.save(flush:true)) {
 					log.error "Error saving executionResult instance : ${executionResult.errors}"

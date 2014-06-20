@@ -496,6 +496,7 @@ class JobSchedulerService implements Job{
 				executionResult.device = deviceInstance.stbName
 				executionResult.status = Constants.NOT_APPLICABLE_STATUS
 				executionResult.executionOutput = "Test not executed . Reason : "+reason
+				executionResult.dateOfExecution = new Date()
 				if(! executionResult.save(flush:true)) {
 					log.error "Error saving executionResult instance : ${executionResult.errors}"
 				}
@@ -654,7 +655,7 @@ class JobSchedulerService implements Job{
 			versnNewPrintWriter.print( fileContents )
 			versnNewPrintWriter.flush()
 			versnNewPrintWriter.close()
-			executeScript( versnFile.getPath() )
+			executeScriptFile( versnFile.getPath() )
 			versnFile.delete()
 			
 			Device device			
@@ -668,6 +669,15 @@ class JobSchedulerService implements Job{
 		}
 		catch(Exception ex){
 		}
+	}
+	
+	/**
+	 * Method to call the script executor to execute the script
+	 * @param executionData
+	 * @return
+	 */
+	public String executeScriptFile(final String executionData) {
+		new ScriptExecutor().execute( getCommand( executionData ),1)
 	}
 
 	/**
@@ -709,6 +719,7 @@ class JobSchedulerService implements Job{
 				executionResult.executionDevice = executionDevice
 				executionResult.script = scriptInstance1.name
 				executionResult.device = deviceInstance1.stbName
+				executionResult.dateOfExecution = new Date()
 				if(! executionResult.save(flush:true)) {
 					log.error "Error saving executionResult instance : ${executionResult.errors}"
 				}
@@ -719,12 +730,32 @@ class JobSchedulerService implements Job{
 			}
 		}
 		def executionResultId = executionResult?.id
+		
+		def mocaDeviceList = Device.findAllByStbIpAndMacIdIsNotNull(deviceInstance1?.stbIp)
+		
+		int counter = 1
+		def mocaString = CURLY_BRACKET_OPEN
+		
+		int mocaListSize = mocaDeviceList?.size()
+		mocaDeviceList.each{ mocaDevice ->
+			
+			mocaString = mocaString + counter.toString() + COLON + SQUARE_BRACKET_OPEN + STRING_QUOTES + mocaDevice?.macId + STRING_QUOTES +
+			COMMA_SEPERATOR + mocaDevice?.stbPort + SQUARE_BRACKET_CLOSE
+			
+			if(mocaListSize != counter){
+				mocaString = mocaString + COMMA_SEPERATOR
+			}
+			counter++
+		}
+		mocaString = mocaString + CURLY_BRACKET_CLOSE
+		
 		scriptData = scriptData.replace( IP_ADDRESS , stbIp )
 		scriptData = scriptData.replace( PORT , deviceInstance?.stbPort )
+		scriptData = scriptData.replace( CLIENTLIST , mocaString )
 
 		String gatewayIp = deviceInstance1?.gatewayIp
 
-		scriptData = scriptData.replace( REPLACE_TOKEN, LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
+		scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
 				executionId  + COMMA_SEPERATOR + executionDevice?.id + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance1?.statusPort + COMMA_SEPERATOR +
 				scriptInstance?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR + SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +
 				SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR)// + gatewayIp + COMMA_SEPERATOR)
@@ -739,7 +770,7 @@ class JobSchedulerService implements Job{
 		if(isFileCreated) {
 			file.setExecutable(true, false )
 		}
-		PrintWriter fileNewPrintWriter = file.newPrintWriter();
+		PrintWriter fileNewPrintWriter = file.newPrintWriter()
 		fileNewPrintWriter.print( scriptData )
 		fileNewPrintWriter.flush()
 		fileNewPrintWriter.close()
@@ -759,12 +790,22 @@ class JobSchedulerService implements Job{
 		def execEndTime =  execEndDate.getTime()
 		def timeDifference = ( execEndTime - execStartTime  ) / 60000;
 		String timeDiff =  String.valueOf(timeDifference)
+		def resultArray = Execution.executeQuery("select a.executionTime from Execution a where a.name = :exName",[exName: executionName])
+		BigDecimal myVal1
+		if(resultArray[0]){
+			myVal1= new BigDecimal (resultArray[0]) + new BigDecimal (timeDiff)
+		}
+		else{
+			myVal1 =  new BigDecimal (timeDiff)
+		}
+						
+		timeDiff =  String.valueOf(myVal1)
 		if(htmlData.contains(TDK_ERROR)){
 			htmlData = htmlData.replaceAll(TDK_ERROR,"")
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 			}
-			updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff)
+			updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
 			Thread.sleep(4000)
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 			def absolutePath = layoutFolder.absolutePath
@@ -776,14 +817,14 @@ class JobSchedulerService implements Job{
 				"false"
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
-			def resetExecutionData = scriptExecutor.executeScript(cmd)
+			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 			Thread.sleep(4000)
 		}
 		else{
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 				String outputData = htmlData
-				updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff)
+				updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
 			}
 			else{
 				if((timeDifference >= scriptInstance.executionTime) && (scriptInstance.executionTime != 0))	{
@@ -797,10 +838,30 @@ class JobSchedulerService implements Job{
 						"true"
 					]
 					ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
-					def resetExecutionData = scriptExecutor.executeScript(cmd)
+					def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 					htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
-					updateExecutionResults(htmlData,executionResultId,executionId,executionDevice?.id)
+					updateExecutionResultsTimeOut(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
 					Thread.sleep(4000)
+				}else{
+					try {
+						updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
+						Thread.sleep(4000)
+						File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
+						def absolutePath = layoutFolder.absolutePath
+						String[] cmd = [
+							PYTHON_COMMAND,
+							absolutePath,
+							deviceInstance?.stbIp,
+							deviceInstance?.agentMonitorPort,
+							"false"
+						]
+						ScriptExecutor scriptExecutor = new ScriptExecutor()
+						def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+						Thread.sleep(4000)
+					} catch (Exception e) {
+						e.printStackTrace()
+					}
+
 				}
 			}
 		}
@@ -825,7 +886,7 @@ class JobSchedulerService implements Job{
 				performanceFilePath
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
-			htmlData += scriptExecutor.executeScript(cmd)
+			htmlData += scriptExecutor.executeScript(cmd,1)
 		}
 		if(isSystemDiagnostics.equals("true")){
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
@@ -840,7 +901,7 @@ class JobSchedulerService implements Job{
 				performanceFilePath
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
-			htmlData += scriptExecutor.executeScript(cmd)
+			htmlData += scriptExecutor.executeScript(cmd,1)
 		}
 		return htmlData
 	}
@@ -875,7 +936,7 @@ class JobSchedulerService implements Job{
 			logTransferFilePath			
 		]
 		ScriptExecutor scriptExecutor = new ScriptExecutor()
-		def resetExecutionData = scriptExecutor.executeScript(cmd)
+		def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 		
 		Thread.sleep(4000)
 	}
@@ -956,7 +1017,7 @@ class JobSchedulerService implements Job{
 			]
 
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
-			outputData = scriptExecutor.executeScript(cmd)
+			outputData = scriptExecutor.executeScript(cmd,1)
 		}
 
 		if(outputData){
@@ -970,7 +1031,7 @@ class JobSchedulerService implements Job{
 			rdkVersion = "NOT_AVAILABLE"
 		}else if(outputData.contains("DOT")){
 			rdkVersion = outputData.replace("DOT",".")
-		}else if(!outputData.startsWith("RDK")){
+		}else if(!outputData.equals("") && !outputData.startsWith("RDK")){
 			rdkVersion = "RDK"+outputData.replace("DOT",".")
 		}else{
 			rdkVersion = outputData
@@ -989,11 +1050,11 @@ class JobSchedulerService implements Job{
 		if(rdkVersion){
 			versionText = rdkVersion.trim()
 		}
-		if(versionText && !(versionText.equals("NOT_AVAILABLE") || versionText.equals("NOT_VALID") || versionText.equals("")) ){
+		if(versionText && !(versionText?.equals("NOT_AVAILABLE") || versionText?.equals("NOT_VALID") || versionText?.equals("")) ){
 			Script.withTransaction { trns ->
 				def scriptInstance1 = Script.findById(scriptInstance?.id)
-				if(scriptInstance1.rdkVersions.size() > 0 && !(scriptInstance1.rdkVersions.find {
-					it.buildVersion.equals(versionText)
+				if(scriptInstance1?.rdkVersions.size() > 0 && !(scriptInstance1?.rdkVersions?.find {
+					it?.buildVersion?.equals(versionText)
 				})){
 					scriptStatus = false
 				}
@@ -1002,10 +1063,11 @@ class JobSchedulerService implements Job{
 		return scriptStatus
 	}
 
-	public void updateExecutionResults(final String outputData, final long executionResultId, final long executionId, final long executionDeviceId, final String timeDiff){
+	public void updateExecutionResults(final String outputData, final long executionResultId, final long executionId, final long executionDeviceId, 
+		final String timeDiff, final String singleScriptExecTime){
 
-		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput  where c.id = :execId",
-				[newOutput: outputData, execId: executionResultId])
+		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput, c.executionTime = :newTime  where c.id = :execId",
+				[newOutput: outputData, newTime: singleScriptExecTime, execId: executionResultId])
 		Execution.executeUpdate("update Execution c set c.outputData = :newStatus , c.executionTime = :newTime where c.id = :execId",
 				[newStatus: outputData, newTime: timeDiff, execId: executionId.toLong()])
 		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.executionTime = :newTime where c.id = :execDevId",
@@ -1021,12 +1083,13 @@ class JobSchedulerService implements Job{
 	 * @param executionId
 	 * @param timeDiff
 	 */
-	public void updateExecutionResults(final String outputData, final long executionResultId, final long executionId, final long executionDeviceId){
+	public void updateExecutionResultsTimeOut(final String outputData, final long executionResultId, final long executionId, final long executionDeviceId, 
+		final def timeDiff, final String singleScriptExecTime){
 
-		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput , c.status = :newStatus  where c.id = :execId",
-				[newOutput: outputData, newStatus: "SCRIPT TIME OUT", execId: executionResultId])
-		Execution.executeUpdate("update Execution c set c.outputData = :newStatus , c.result = :newStatus where c.id = :execId",
-				[newStatus: outputData, newStatus: "FAILURE", execId: executionId.toLong()])
+		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput , c.status = :newStatus, c.executionTime = :newTime  where c.id = :execId",
+				[newOutput: outputData, newStatus: "SCRIPT TIME OUT", newTime: singleScriptExecTime, execId: executionResultId])
+		Execution.executeUpdate("update Execution c set c.outputData = :newStatus , c.result = :newStatus , c.executionTime = :newTime where c.id = :execId",
+				[newStatus: outputData, newStatus: "FAILURE", newTime: timeDiff,  execId: executionId.toLong()])
 		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStat where c.id = :execDevId",
 				[newStat: "FAILURE", execDevId: executionDeviceId.toLong()])
 
@@ -1041,11 +1104,11 @@ class JobSchedulerService implements Job{
 	 * @param executionId
 	 * @param timeDiff
 	 */
-	public void updateExecutionResultsError(final String resultData,final long executionResultId, final long executionId, final long executionDeviceId,final String timeDiff){
+	public void updateExecutionResultsError(final String resultData,final long executionResultId, final long executionId, final long executionDeviceId,
+		final String timeDiff, final String singleScriptExecTime){
 
-
-		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput , c.status = :newStatus  where c.id = :execId",
-				[newOutput: resultData, newStatus: "FAILURE", execId: executionResultId])
+		ExecutionResult.executeUpdate("update ExecutionResult c set c.executionOutput = :newOutput , c.status = :newStatus, c.executionTime = :newTime  where c.id = :execId",
+				[newOutput: resultData, newStatus: "FAILURE", newTime: singleScriptExecTime, execId: executionResultId])
 		Execution.executeUpdate("update Execution c set c.outputData = :newStatus , c.executionTime = :newTime, c.result = :newStatus where c.id = :execId",
 				[newStatus: resultData, newTime: timeDiff, newStatus: "FAILURE", execId: executionId.toLong()])
 		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStat where c.id = :execDevId",
@@ -1062,6 +1125,7 @@ class JobSchedulerService implements Job{
 				executionResult.script = scriptInstance.name
 				executionResult.device = deviceInstance.stbName
 				executionResult.status = SKIPPED_STATUS
+				executionResult.dateOfExecution = new Date()
 				executionResult.executionOutput = "Test skipped , Reason :"+scriptInstance.remarks
 				if(! executionResult.save(flush:true)) {
 					log.error "Error saving executionResult instance : ${executionResult.errors}"
@@ -1144,7 +1208,7 @@ class JobSchedulerService implements Job{
 			FALSE
 		]
 		ScriptExecutor scriptExecutor = new ScriptExecutor()
-		def resetExecutionData = scriptExecutor.executeScript(cmd)
+		def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 		Thread.sleep(4000)
 	}
 
@@ -1173,7 +1237,7 @@ class JobSchedulerService implements Job{
 		]
 
 	    ScriptExecutor scriptExecutor = new ScriptExecutor()
-	    def outputData = scriptExecutor.executeScript(cmd)
+	    def outputData = scriptExecutor.executeScript(cmd,1)
 		
 		parseAndSaveDeviceDetails(device, filePath)		
 	}

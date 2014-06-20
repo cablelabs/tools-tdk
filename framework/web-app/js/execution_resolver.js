@@ -9,6 +9,9 @@
  * Copyright (c) 2013 Comcast. All rights reserved.
  * ============================================================================
  */
+
+var flagMark = false
+
 $(document).ready(function() {
 	$.ajaxSetup ({cache: false});
 	timedRefresh();	
@@ -61,6 +64,8 @@ $(document).ready(function() {
 	/*
 jQuery 1.9+   $('#inputId').prop('readonly', true);
 	 */
+	
+	
 });
 
 function stopExecution(obj){
@@ -354,6 +359,9 @@ function baseScheduleTableRemove(){
  * page
  */
 function timedRefresh() {
+	if(flagMark == true){
+		$('.markAll').prop('checked', true);
+	}
 	setTimeout("loadXMLDoc();", 5 * 1000);	
 }
 
@@ -376,8 +384,13 @@ function loadXMLDoc() {
 		}
 	} 
 	if(paginateOffset != undefined){
-
-		xmlhttp.open("GET", url+"/execution/create?t=" + Math.random()+"&max=10&offset="+paginateOffset+"&devicetable=true", true);
+		if(flagMark == true){
+			$('.markAll').prop('checked', true);
+		}
+		xmlhttp.open("GET", url+"/execution/create?t=" + Math.random()+"&max=10&offset="+paginateOffset+"&devicetable=true&flagMark="+flagMark, true);
+		if(flagMark == true){
+			$('.markAll').prop('checked', true);
+		}
 	}
 	xmlhttp.send();
 }
@@ -388,7 +401,7 @@ function loadXMLDoc() {
  * page
  */
 function deviceStatusRefresh() {
-	setTimeout("loadXMLDoc1();", 10 * 1000);
+	setTimeout("loadXMLDoc1();", 5 * 1000);	
 	var selectedId = $("#selectedDevice").val();
 	var deviceInstanceTotal = $("#deviceInstanceTotal").val();
 	highlightTreeElement('deviceExecutionList_', selectedId, deviceInstanceTotal);
@@ -398,6 +411,7 @@ function deviceStatusRefresh() {
  * Ajax call to refresh only the list table when dynamic refresh is enabled
  */
 function loadXMLDoc1() {
+	
 	var xmlhttp;	
 	var url = $("#url").val();
 	if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
@@ -414,6 +428,7 @@ function loadXMLDoc1() {
 	}
 	xmlhttp.open("GET", url+"/execution/create?t=" + Math.random()+"&max=10&offset=0&devicestatustable=true", true);
 	xmlhttp.send();
+	
 }
 
 function hideSearchoptions(){
@@ -505,19 +520,21 @@ function deleteResults() {
 		}
 	});
 	if (checkedRows != null && checkedRows != "") {
-
-		$.get('deleteExecutioResults', {
-			checkedRows : checkedRows
-		}, function(data) {
-
-			alert(data);
-			$(":checkbox").each(function() {
-				$('.resultCheckbox').prop('checked', false);
-
+		
+		var result = confirm("Are you sure you want to delete?");
+		if (result==true) {
+			$.get('deleteExecutioResults', {
+				checkedRows : checkedRows
+			}, function(data) {
+	
+				$(":checkbox").each(function() {
+					$('.resultCheckbox').prop('checked', false);
+	
+				});
+				$('.markAll').prop('checked', false);
+				location.reload();
 			});
-			$('.markAll').prop('checked', false);
-			location.reload();
-		});
+		}
 	}
 }
 
@@ -528,6 +545,7 @@ function deleteResults() {
  * @param me
  */
 function clickCheckbox(me) {
+	
 
 	var $this = $(this);
 	if (me.checked) {
@@ -537,6 +555,7 @@ function clickCheckbox(me) {
 				mark(this);
 			}
 		});
+		flagMark = true
 	} else {
 		$(":checkbox").each(function() {
 			$('.resultCheckbox').prop('checked', false);
@@ -544,6 +563,7 @@ function clickCheckbox(me) {
 			mark(this);
 			}
 		});
+		flagMark = false
 	}
 }
 
@@ -574,4 +594,3 @@ function mark(me) {
 	}
 
 }
-

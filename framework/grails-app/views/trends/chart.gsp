@@ -64,26 +64,26 @@
 		</g:if>
 		<br>
 		<div>
-			<input onclick="showExecutionBased();" type="radio" name="chartOption" value="ExecutionBased" checked="checked"/>Chart Based on Execution 
-			&emsp;<input onclick="showDeviceBased();" type="radio" name="chartOption" value="DeviceBased" />Chart Based on Device and ScriptGroup	    	
+			<input onclick="showExecutionBased();" type="radio" name="chartOption" value="ExecutionBased" checked="checked"/>Compare Results by Execution Name
+			&emsp;<input onclick="showDeviceBased();" type="radio" name="chartOption" value="DeviceBased" />Compare Results by Device Details    	
 		</div>
 		<br/>
 		
 		<div id="executionbased">
 			<table class="noClass" style="border: 1; border-color: black;">
 				<tr>
-					<td style="vertical-align: top;">Executions</td>
+					<td style="vertical-align: top;">Select Execution Names</td>
 					<td>					
 						<g:select id="executionId" multiple="true" style="height:200px;width:400px" name="execution"  from="${executionList}" optionKey="id" value="" class="many-to-one selectCombo"/>								
 					</td>
 			
-					<td style="vertical-align: top;">Chart Type</td>
+					<td style="vertical-align: top;">Select Field To Compare</td>
 					<td>				
-						<g:select id="chartType1" name="chartType" from="${['ExecutionStatus', 'BenchMark', 'CPU-Memory_Utilization','Paging','Swaping','LoadAverage']}" value="${count}" required="" />
+						<g:select id="chartType1" name="chartType" from="${['ExecutionStatus', 'TimingInfo', 'CPU-Memory_Utilization','Paging','Swaping','LoadAverage']}" value="${count}" required="" />
 					</td>				
 										
 					<td>
-	          			<input type="button" value="Get Chart" onclick="showChart();" /><br>           			
+	          			<input type="button" value="Compare" onclick="showChart();" /><br>           			
 	          		</td>           		    		
 				</tr>
 			</table>		
@@ -100,13 +100,13 @@
 					<td>
 						<g:select id="scriptGrp" name="scriptGrp" noSelection="['' : 'Please Select']" from="${ScriptGroup?.list()}" required=""  optionKey="id"  class="many-to-one selectCombo"/>
 					</td>
-					<td style="vertical-align: middle;">Chart Type</td>
+					<td style="vertical-align: middle;">Select Field To Compare</td>
 					<td>				
-					<g:select id="chartType" name="chartType" from="${['ExecutionStatus', 'BenchMark', 'CPU-Memory_Utilization','Paging','Swaping','LoadAverage']}" value="${count}" required="" /></td>									
+					<g:select id="chartType" name="chartType" from="${['ExecutionStatus', 'TimingInfo', 'CPU-Memory_Utilization','Paging','Swaping','LoadAverage']}" value="${count}" required="" /></td>									
 					<td style="vertical-align: middle;">Result No's</td>
 					<td><g:select id="resultCount" name="result.count" from="${2..10}" value="${count}" style="width:45px;" required="" /></td>          		
 	          		<td>
-	          			<input type="button" value="Get Chart" onclick="showChart();" /><br>           			
+	          			<input type="button" value="Compare" onclick="showChart();" /><br>           			
 	          		</td>           		    		
 				</tr>				
 			</table>

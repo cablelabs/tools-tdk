@@ -24,23 +24,47 @@ class ScriptgroupService {
 
 	
 	/**
-	 * Method to save the device to a DeviceGroup, according to the box chosen for execution
-	 * If the device group exists then add the device to that group.
-	 * Else create a Device group and add the device to the group.
-	 * @param deviceInstance
+	 * Method to save the script to a ScriptGroup, according to the module name and box type, rdk version combination.
+	 * If the script group exists then add the script to that group.
+	 * Else create a script group and add the script to the group.
+	 * @param scriptInstance
 	 * @return
 	 */
 	def saveToScriptGroup(final Script scriptInstance){
-		String moduleName = scriptInstance.primitiveTest.module.name
-		def scriptGrpInstance = ScriptGroup.findByName(moduleName)
-		if(!scriptGrpInstance){
-			scriptGrpInstance = new ScriptGroup()
-			scriptGrpInstance.name = moduleName
-		}
-			
-		scriptGrpInstance.addToScripts(scriptInstance)
-		scriptGrpInstance.save(flush:true)
+		try {
+			String moduleName = scriptInstance.primitiveTest.module.name
+			def scriptGrpInstance = ScriptGroup.findByName(moduleName)
+			if(!scriptGrpInstance){
+				scriptGrpInstance = new ScriptGroup()
+				scriptGrpInstance.name = moduleName
+			}
 
+			scriptGrpInstance.addToScripts(scriptInstance)
+			scriptGrpInstance.save(flush:true)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+
+		try {
+			scriptInstance?.boxTypes?.each{ bType ->
+
+				scriptInstance?.rdkVersions?.each{ vers ->
+
+					String name = vers?.toString()+"_"+bType?.name
+					def scriptGrpInstance = ScriptGroup.findByName(name)
+					if(!scriptGrpInstance){
+						scriptGrpInstance = new ScriptGroup()
+						scriptGrpInstance.name = name
+					}
+					if(scriptGrpInstance && !scriptGrpInstance?.scripts?.contains(scriptInstance)){
+						scriptGrpInstance.addToScripts(scriptInstance)
+						scriptGrpInstance.save(flush:true)
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 	}
     
     /**
@@ -113,6 +137,49 @@ class ScriptgroupService {
 					scriptGrpInstance.removeFromScripts(scriptInstance)
 				}
 			}
+		}
+	}
+	
+	/**
+	 * Method to save the script to relevant script groups and remove from others.
+	 * @param scriptInstance
+	 * @return
+	 */
+	def updateScriptsFromRDKVersionBoxTypeTestSuites(final Script scriptInstance){
+
+		try {
+			def bTypeList = BoxType.findAll()
+			def rdkVersionList = RDKVersions?.findAll()
+
+			bTypeList?.each { bType ->
+				rdkVersionList.each { vers ->
+					String groupName = vers?.toString()+"_"+bType?.name
+					def scriptGrpInstance = ScriptGroup.findByName(groupName)
+					if(scriptGrpInstance && scriptGrpInstance?.scripts?.contains(scriptInstance)){
+						scriptGrpInstance.removeFromScripts(scriptInstance)
+					}
+				}
+			}
+
+			scriptInstance?.boxTypes?.each{ bType ->
+
+				scriptInstance?.rdkVersions?.each{ vers ->
+
+					String name = vers?.toString()+"_"+bType?.name
+
+					def scriptGrpInstance = ScriptGroup.findByName(name)
+					if(!scriptGrpInstance){
+						scriptGrpInstance = new ScriptGroup()
+						scriptGrpInstance.name = name
+					}
+					if(scriptGrpInstance && !scriptGrpInstance?.scripts?.contains(scriptInstance)){
+						scriptGrpInstance.addToScripts(scriptInstance)
+						scriptGrpInstance.save(flush:true)
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
 	}
 	

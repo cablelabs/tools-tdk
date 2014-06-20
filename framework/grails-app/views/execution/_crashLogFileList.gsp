@@ -10,25 +10,14 @@
   Copyright (c) 2013 Comcast. All rights reserved.
   ============================================================================
 --><%@ page import="com.comcast.rdk.Execution" %>
+<g:if test="${logFileNames}">
 <table>
-	<tr>
-		<td colspan="2">			
-			<g:if test="${logFileNames}">
-				<h1>Crash Log Files</h1>
-			</g:if>
-		</td>
-	</tr>
-	<tr><g:if test="${logFileNames}">
-		<th align="left">Log Files</th>
-		
-		</g:if>
-	</tr>
 	<g:each in="${logFileNames}" status="i"  var="fileName">				
 	<tr><%  j = i + 1 %>
 		<td>
 		<g:form controller="execution">
 		<g:link style="text-decoration:none;" action="showCrashExecutionLog" id="${execId+"_"+execDeviceId+"_"+fileName.key}" 
-		 params="[execDeviceId: "${execDeviceId}"]" >
+		 params="[execId: "${execId}", execDeviceId: "${execDeviceId}", execResultId: "${execResId}" ]" >
 		<span class="customizedLink" >${j} &nbsp;:&nbsp; ${fileName.key} </span>	
 		</g:link>
 		</g:form>			
@@ -36,3 +25,4 @@
 	</tr>				
 	</g:each>
 </table>
+</g:if>

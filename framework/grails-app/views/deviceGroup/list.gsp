@@ -25,24 +25,31 @@
 <g:javascript library="jquery.contextmenu.r2" />
 <g:javascript library="devicegrp_resolver" />
 <g:javascript library="config_resolver" />
+<g:javascript library="jquery.dataTables"/>
+<g:javascript library="jquery-ui"/>
 <g:javascript library="common" />
-
+<link rel="stylesheet" href="${resource(dir:'css',file:'demo_table.css')}" type="text/css" />
 	<script type="text/javascript">
 
 	$(document).ready(function() {
 
 		var deviceId = $("#currentDeviceId").val();
-		if(deviceId!=null || deviceId!=""){
+		if(deviceId!=null && deviceId!=""){
+			$("#responseDiv").html("");
 			showDevice(deviceId);
+		}else{
+			$("#devicetable").dataTable( {
+				"sPaginationType": "full_numbers"
+			});
 		}
 
 		var deviceGroupId = $("#currentDeviceGroupId").val();
 		if(deviceGroupId){
 			showDeviceGroup(deviceGroupId);
-			
 		}
-
+	
 	});
+
 
 	</script>
 </head>
@@ -50,7 +57,6 @@
  
 	<a href="#create-primitiveTest" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>	
 		<div id="" class="">
-			<h1>Device Groups</h1>
 			
 			<g:if test="${flash.message}">
 				<div id="messageDiv" class="message" role="status">${flash.message}</div>
@@ -76,7 +82,7 @@
 			<table class="noClass" style="border: 1; border-color: black;">
 				<tr>
 					<td style="width: 20%; vertical-align: top;" class="treeborder" >
-						<div id="deviceTreeDefault"class="" style="overflow: auto;vertical-align: top; height: 300px;">
+						<div id="deviceTreeDefault"class="" style="vertical-align: top; max-height: 300px;">
 									<% int deviceCount = 0;
 									   int totalDevices = deviceInstanceTotal * deviceGroupsInstanceTotal;
 									   int deviceGroupCount = 0;
@@ -84,6 +90,7 @@
 							<ul id="browser2" class="filetree">
 								<li id="root"><span class="folder" id="addconfId">Devices</span>
 									<ul>
+									<div id="deviceTreeDefault"class="" style="overflow: auto;vertical-align: top; max-height: 280px;">
 											<g:each in="${deviceInstanceList}" var="parentDevice">
 											<g:if test="${parentDevice.isChild == 0}">
 												<li class="closed"><span class="file" id="${parentDevice.id}"><a href="#" onclick="showDevice('${parentDevice.id}');  highlightTreeElement('deviceList_', '${deviceCount}', '${deviceInstanceTotal}'); highlightTreeElement('deviceGroupList_', '0', '${totalDevices}'); return false;">${parentDevice.stbName}</a></span>
@@ -100,22 +107,16 @@
 												</li>
 												 </g:if>
 											</g:each>
+											</div>
 									</ul>
 								</li>
 							</ul>
 						</div>
-					</td>
-					
-					<td rowspan="2" style="width: 80%;">
-						<div id="responseDiv" style="width: 97%; overflow: auto;"></div>
-					</td>					
-				</tr>
-				<tr>
-					<td style="width: 20%; vertical-align: top;" class="treeborder" >
-						<div class="" style="width: 200px; height: 400px;overflow: auto;vertical-align: top;">
+						<div class="" style="width: 200px; max-height: 400px;vertical-align: top;">
 							<ul id="browser1" class="filetree">
 								<li class="" id="root1"><span class="folder" id="addDeviceGrpId">DeviceGroup</span>
 									<ul>
+									<div class="" style="max-height: 380px;overflow: auto;vertical-align: top;">
 										<g:each in="${deviceGroupsInstanceList}" var="deviceGrp">
 											<li class="closed"><span class="hasChildren" id="${deviceGrp.id}"><a href="#" onclick="showDeviceGroup('${deviceGrp.id}'); return false;">${deviceGrp.name}</a></span>
 												<ul>
@@ -128,11 +129,70 @@
 												</ul>											
 											</li>
 										</g:each>
+										</div>
 									</ul>
 								</li>
 							</ul>
 						</div>
-					</td>									
+					</td>
+
+					<td rowspan="2" style="width: 80%; height: 610px">
+						<div id="responseDiv" style="width: 97%; overflow: auto;">
+						<div style="width: 97%; max-height: 600px" id="list-deviceDetails" class="content scaffold-list">
+									<% int deviceCount1 = 0;
+									   int totalDevices1 = deviceInstanceTotal * deviceGroupsInstanceTotal;
+									   int deviceGroupCount1 = 0;
+									 %>
+						</br></br>
+							<table id="devicetable" class="display">
+								<thead>
+									<tr>
+										<th colspan="3" align="center" style="width: 50%;"><h1>Device
+												Summary</h1></th>
+									</tr>
+									<tr>
+										<th>Device Name</th>
+										<th>Device IP</th>
+										<th>Box Type</th>
+									</tr>
+								</thead>
+								<tbody>
+									<g:each in="${deviceInstanceList}" var="parentDevice">
+								<g:if test="${parentDevice.isChild == 0}">
+										<tr>
+											<td>
+												<a href="#" onclick="showDevice('${parentDevice.id}');  highlightTreeElement('deviceList_', '${deviceCount1}', '${deviceInstanceTotal}'); highlightTreeElement('deviceGroupList_', '0', '${totalDevices1}'); return false;">${parentDevice.stbName}</a>
+											</td>
+											<td>
+												${parentDevice.stbIp}
+											</td>
+											<td>
+												${parentDevice.boxType}
+											</td>
+										</tr>
+										
+										<g:each in="${ parentDevice.childDevices}" var="childDevice">
+										
+										
+										<tr>
+											<td>
+												<a href="#" onclick="showDevice('${childDevice.id}');  highlightTreeElement('deviceList_', '${deviceCount1}', '${deviceInstanceTotal}'); highlightTreeElement('deviceGroupList_', '0', '${totalDevices1}'); return false;">${childDevice.stbName}</a>
+											</td>
+											<td>
+												${parentDevice.stbIp} (${childDevice.macId})
+											</td>
+											<td>
+												${childDevice.boxType} 
+											</td>
+										</tr>
+										</g:each>
+									</g:if>
+									</g:each>
+								</tbody>
+							</table>
+						</div>
+						</div>
+					</td>
 				</tr>
 			</table>
 			</span>

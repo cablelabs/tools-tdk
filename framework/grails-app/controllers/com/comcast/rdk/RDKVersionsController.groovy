@@ -103,7 +103,15 @@ class RDKVersionsController {
 			render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt.size()])
 			return
 		}
-
+		
+		def buildVersionOnName = com.comcast.rdk.RDKVersions.findByBuildVersion(params?.buildVersion)
+		
+		if(buildVersionOnName && (buildVersionOnName?.id !=  rdkVersionsInstance?.id)){
+			flash.message = message(code: 'default.not.unique.message', args: [message(code: 'rdkVersions.label', default: 'BuildVersion')])
+			render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt.size()])
+			return
+		}
+		
 		if (version != null) {
 			if (rdkVersionsInstance.version > version) {
 				rdkVersionsInstance.errors.rejectValue("version", "default.optimistic.locking.failure",

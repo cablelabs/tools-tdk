@@ -11,6 +11,8 @@
  */
 package com.comcast.rdk
 
+import java.util.Date;
+
 /**
  * Domain class for saving the script execution details
  * @author sreejasuma
@@ -52,6 +54,13 @@ class ExecutionResult {
 	
 	String deviceIdString
 	
+	/**
+	 * Date and time in which the script is executed
+	 */
+	Date dateOfExecution
+	
+	String executionTime
+	
     /**
      * Execution can have many execution results.
      */
@@ -65,6 +74,8 @@ class ExecutionResult {
 		executionOutput(nullable:true, blank:true)		
 		execDevice(nullable:true, blank:true)
 		deviceIdString(nullable:true, blank:true)
+		dateOfExecution(nullable:true, blank:true)
+		executionTime(nullable:true, blank:true)
     }
     
     static mapping = {

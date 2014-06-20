@@ -62,6 +62,11 @@ class ScriptexecutionService {
 
 		def executionSaveStatus = true
 		try{
+			int scriptCnt = 0
+			if(scriptGroupInstance?.scripts?.size() > 0){
+				scriptCnt = scriptGroupInstance?.scripts?.size()
+			}
+			
 			Execution execution = new Execution()
 			execution.name = execName
 			execution.script = scriptName
@@ -71,6 +76,7 @@ class ScriptexecutionService {
 			execution.executionStatus = INPROGRESS_STATUS
 			execution.dateOfExecution = new Date()
 			execution.applicationUrl = appUrl
+			execution.scriptCount = scriptCnt
 			if(! execution.save(flush:true)) {
 				log.error "Error saving Execution instance : ${execution.errors}"
 				executionSaveStatus = false
@@ -258,6 +264,7 @@ class ScriptexecutionService {
 								executionResult.execDevice = null
 								executionResult.deviceIdString = deviceInstance1?.id?.toString()
 								executionResult.status = "PENDING"
+								executionResult.dateOfExecution = new Date()
 								if(! executionResult.save(flush:true)) {
 	//								log.error "Error saving executionResult instance : ${executionResult.errors}"
 								}
@@ -284,6 +291,8 @@ class ScriptexecutionService {
 					executionInstance.isAborted = true
 					executionInstance.save(flush:true)
 				}
+				
+				executionService.resetAgent(deviceInstance, FALSE)
 			}
 			
 			if(pause && pendingScripts.size() > 0 ){
@@ -319,6 +328,10 @@ class ScriptexecutionService {
 		finally{
 			if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 				executionService.deviceAllocatedList.remove(deviceInstance?.id)
+				String devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+				Thread.start{
+					deviceStatusService.updateOnlyDeviceStatus(deviceInstance, devStatus)
+				}
 			}
 		}
 	}
@@ -628,6 +641,7 @@ class ScriptexecutionService {
 				executionResult.executionDevice = executionDeviceInstance
 				executionResult.script = scriptInstance.name
 				executionResult.device = deviceInstance.stbName
+				executionResult.dateOfExecution = new Date()
 				if(! executionResult.save(flush:true)) {
 					log.error "Error saving executionResult instance : ${executionResult.errors}"
 				}
@@ -640,11 +654,33 @@ class ScriptexecutionService {
 		
 		String gatewayIp = deviceInstance1?.gatewayIp
 		
-		def executionResultId = executionResult?.id
+		
+		def mocaDeviceList = Device.findAllByStbIpAndMacIdIsNotNull(deviceInstance?.stbIp)
+		
+		int counter = 1
+		def mocaString = CURLY_BRACKET_OPEN
+		
+		int mocaListSize = mocaDeviceList?.size()
+		mocaDeviceList.each{ mocaDevice ->
+			
+			mocaString = mocaString + counter.toString() + COLON + SQUARE_BRACKET_OPEN + STRING_QUOTES + mocaDevice?.macId + STRING_QUOTES +
+			COMMA_SEPERATOR + mocaDevice?.stbPort + SQUARE_BRACKET_CLOSE
+			
+			if(mocaListSize != counter){
+				mocaString = mocaString + COMMA_SEPERATOR
+			}
+			counter++
+		}
+		mocaString = mocaString + CURLY_BRACKET_CLOSE
+		
 		scriptData = scriptData.replace( IP_ADDRESS , stbIp )
 		scriptData = scriptData.replace( PORT , deviceInstance?.stbPort )
+		scriptData = scriptData.replace( CLIENTLIST , mocaString )
 
-		scriptData = scriptData.replace( REPLACE_TOKEN, LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
+		
+		def executionResultId = executionResult?.id
+
+		scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
 			executionId  + COMMA_SEPERATOR + execDeviceId + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance?.statusPort + COMMA_SEPERATOR +
 			scriptInstance?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR+ SINGLE_QUOTES + "false" + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + "false" + SINGLE_QUOTES + COMMA_SEPERATOR +
 			SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR )//+ gatewayIp + COMMA_SEPERATOR)
@@ -661,6 +697,10 @@ class ScriptexecutionService {
 		PrintWriter fileNewPrintWriter = file.newPrintWriter();
 		fileNewPrintWriter.print( scriptData )
 		fileNewPrintWriter.flush()
+		
+		Date executionStartDt = new Date()
+		def executionStartTime =  executionStartDt.getTime()
+		
 
 		String outData = executeScript( file.getPath(), scriptInstance.executionTime )
 		
@@ -681,9 +721,22 @@ class ScriptexecutionService {
 		Date execEndDate = new Date()
 		def execEndTime =  execEndDate.getTime()
 
-		def timeDifference = ( execEndTime - execStartTime  ) / 60000;
-		
+		def timeDifference = ( execEndTime - executionStartTime  ) / 60000;
+
 		String timeDiff =  String.valueOf(timeDifference)
+		
+		def resultArray = Execution.executeQuery("select a.executionTime from Execution a where a.name = :exName",[exName: executionName])
+		
+		BigDecimal myVal1
+		if(resultArray[0]){
+			myVal1= new BigDecimal (resultArray[0]) + new BigDecimal (timeDiff)
+		}
+		else{
+			myVal1 =  new BigDecimal (timeDiff)
+		}
+						
+		timeDiff =  String.valueOf(myVal1)
+	
 		
 	   /* if(outputData) {
 			
@@ -698,7 +751,7 @@ class ScriptexecutionService {
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 			}
-			executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString())
+			executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
 			Thread.sleep(5000)
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 			def absolutePath = layoutFolder.absolutePath
@@ -722,7 +775,7 @@ class ScriptexecutionService {
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 				String outputData1 = htmlData
-				executionService.updateExecutionResults(outputData1,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString())
+				executionService.updateExecutionResults(outputData1,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
 			}
 			else{
 				if((timeDifference >= scriptInstance.executionTime) && (scriptInstance.executionTime != 0))	{
@@ -738,8 +791,32 @@ class ScriptexecutionService {
 						ScriptExecutor scriptExecutor = new ScriptExecutor()
 						def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 						htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
-						executionService.updateExecutionResults(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id)
+						executionService.updateExecutionResultsTimeOut(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
 						Thread.sleep(6000)
+				}else{
+					try {
+						executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
+						Thread.sleep(5000)
+						File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
+						def absolutePath = layoutFolder.absolutePath
+						String[] cmd = [
+							PYTHON_COMMAND,
+							absolutePath,
+							deviceInstance?.stbIp,
+							deviceInstance?.agentMonitorPort,
+							"false"
+						]
+						def resetExecutionData
+						try {
+							ScriptExecutor scriptExecutor = new ScriptExecutor()
+							resetExecutionData = scriptExecutor.executeScript(cmd,1)
+						} catch (Exception e) {
+							e.printStackTrace()
+						}
+						Thread.sleep(6000)
+					} catch (Exception e) {
+						e.printStackTrace()
+					}
 				}
 			}
 		}

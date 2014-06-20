@@ -93,6 +93,14 @@ class BoxManufacturerController {
             return
         }
 
+		def boxManufacturerBasedOnName = BoxManufacturer?.findByName(params?.name)
+		
+		if(boxManufacturerBasedOnName && (boxManufacturerBasedOnName?.id !=  boxManufacturerInstance?.id)){
+			flash.message = message(code: 'default.not.unique.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer Name')])
+			render(view: "create", model: [boxManufacturerInstance: boxManufacturerInstance, boxManufacturerInstanceList: boxManufacturerList, boxManufacturerInstanceTotal: boxManufacturerListCnt.size()])
+            return
+		}
+		
         if (version != null) {
             if (boxManufacturerInstance.version > version) {
                 boxManufacturerInstance.errors.rejectValue("version", "default.optimistic.locking.failure",

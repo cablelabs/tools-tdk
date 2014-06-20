@@ -10,6 +10,8 @@
   ============================================================================
 -->
 <%@ page import="com.comcast.rdk.ScriptGroup" %>
+<%@ page import="org.apache.shiro.SecurityUtils"%>
+<%@ page import="com.comcast.rdk.User" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -58,7 +60,6 @@
 	<a href="#list-scriptGroup" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		
 		<div id="" class="">
-			<h1>Script Groups</h1>
 			<g:if test="${flash.message}">
 				<div class="message" role="status">${flash.message}</div>
 			</g:if>
@@ -80,15 +81,16 @@
 			<table class="noClass" style="border: 1; border-color: black;">
 				<tr>
 					<td style="width: 20%; vertical-align: top;" class="treeborder">
-						<div class="" style="vertical-align: top; width: 240px; height: 200px; overflow: auto;">
+						<div class="" style="vertical-align: top; width: 240px; max-height: 260px;">
 							<ul id="scriptbrowser" class="filetree">
-								<li id="root"><span class="folder" id="addScriptId">Scripts</span>
+								<li class="" id="root"><span class="folder" id="addScriptId" style="overflow: auto;">Scripts</span>
 								<% int scriptCount = 0;
 									   int totalScripts = scriptInstanceTotal * scriptGroupInstanceTotal;
 									 %>
 									<ul>
+									<div class="" style="max-height: 224px;overflow: auto;vertical-align: top;">
 									<g:each in="${scriptGroupMap}" var="mapEntry">
-										<li id="root"><span class="folder" id="addScriptId">${mapEntry.key}</span>
+										<li class="closed"><span class="folder" id="addScriptId">${mapEntry.key}</span>
 											<ul id ="module_">
 												<g:each in="${mapEntry.value}" var="script">
 												<% scriptCount++; %>
@@ -97,7 +99,32 @@
 											</ul>
 										</li>
 									</g:each>
+									</div>
 									</ul> 
+								</li>
+							</ul>
+						</div>
+						<div class="" style="width: 240px; max-height: 350px;vertical-align: top;">
+							<ul id="scriptgrpbrowser" class="filetree">
+								<li class="" id="root1"><span class="folder" id="addscriptGrpId">TestSuite</span>
+									<ul>
+									<div class="" style="max-height: 340px;overflow: auto;vertical-align: top;">
+									<% int scriptGroupCount = 0; %>
+									
+										<g:each in="${scriptGroupInstanceList}" var="scriptGrp">
+											<li class="closed"><span class="folder" id="${scriptGrp.id}"><a href="#" onclick="editScriptGroup('${scriptGrp.id}'); return false;">${scriptGrp.name}</a></span>
+												<ul>
+													<g:each in="${scriptGrp.scripts}" var="script">
+													<% scriptGroupCount++; %>
+													<li id="scriptGroupList_${scriptGroupCount}">
+														<span id="${script.id}"><a href="#" onclick="editScript('${script.id}'); highlightTreeElement('scriptList_', '0', '${scriptInstanceTotal}');highlightTreeElement('scriptGroupList_', '${scriptGroupCount}', '${totalScripts}'); return false;">${script.name}</a></span>
+													</li>
+													</g:each>
+												</ul>											
+											</li>
+										</g:each>
+										</div>
+									</ul>
 								</li>
 							</ul>
 						</div>
@@ -159,32 +186,6 @@
 						</div>
 					</td>					
 				</tr>
-				<tr>
-					<td style="width: 20%; vertical-align: top;" class="treeborder">
-						<div class="" style="width: 240px; height: 400px;overflow: auto;vertical-align: top;">
-							<ul id="scriptgrpbrowser" class="filetree">
-								<li class="" id="root1"><span class="folder" id="addscriptGrpId">TestSuite</span>
-									<ul>
-									<% int scriptGroupCount = 0; %>
-									
-										<g:each in="${scriptGroupInstanceList}" var="scriptGrp">
-											<li class="closed"><span class="folder" id="${scriptGrp.id}"><a href="#" onclick="editScriptGroup('${scriptGrp.id}'); return false;">${scriptGrp.name}</a></span>
-												<ul>
-													<g:each in="${scriptGrp.scripts}" var="script">
-													<% scriptGroupCount++; %>
-													<li id="scriptGroupList_${scriptGroupCount}">
-														<span id="${script.id}"><a href="#" onclick="editScript('${script.id}'); highlightTreeElement('scriptList_', '0', '${scriptInstanceTotal}');highlightTreeElement('scriptGroupList_', '${scriptGroupCount}', '${totalScripts}'); return false;">${script.name}</a></span>
-													</li>
-													</g:each>
-												</ul>											
-											</li>
-										</g:each>
-									</ul>
-								</li>
-							</ul>
-						</div>
-					</td>									
-				</tr>
 			</table>
 			<div class="contextMenu" id="script_root_menu">
 				<ul>
@@ -193,10 +194,12 @@
 	      	</div>
 	      	
 			<div class="contextMenu" id="script_childs_menu">
+				<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 				<ul>
 					<li id="edit_script"><img src="../images/edit.png" />Edit</li>
 	          		<li id="delete_script"><img src="../images/delete.png" />Delete</li>
 	        	</ul>
+	        	</g:if>
 	      	</div>
 
 	       <div class="contextMenu" id="scriptgrp_root_menu">

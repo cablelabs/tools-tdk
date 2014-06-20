@@ -23,7 +23,7 @@
 			<table>
 				<tr>					
 					<td><g:link controller="module" action="list"><span>Modules</span></g:link></td>
-					<td>Create stub Modules, Functions and Parameters</td>
+					<td>Configure Information about Component Interface Modules</td>
 				</tr>
 				<tr>					
 					<td><g:link controller="module" action="crashlog"><span>Link Crash Files</span></g:link></td>
