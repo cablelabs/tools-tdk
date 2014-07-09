@@ -89,8 +89,9 @@ function showChart(){
 			 		   	
 		});
 	}
-	else if(chartType == "BenchMark"){		
-		$.get('getStatusBenchMarkData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 	
+	else if(chartType == "TimingInfo"){		
+		$.get('getStatusBenchMarkData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) {
+			
 			plot3 = $.jqplot('chartdiv', [data.benchmark], {
 		        seriesDefaults: {
 		            renderer:$.jqplot.BarRenderer,
@@ -127,6 +128,10 @@ function showChart(){
 	else if(chartType == "CPU-Memory_Utilization"){			
 		$.get('getStatusSystemDiagnosticsData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
 			
+			if(data.systemDiag == null || data.systemDiag == ""){
+				alert("Performance data is not available with the selected script and device ");
+			}
+			else{
 			plot3 = $.jqplot('chartdiv', data.systemDiag, {
 		        seriesDefaults: {
 		            renderer:$.jqplot.BarRenderer,
@@ -159,11 +164,17 @@ function showChart(){
 		        	}
 		        }
 		    });	 
+			
+		   }
+			
 		});	
 	}
 	else if(chartType == "Paging"){	
 		$.get('getPagingData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
-			
+			if(data.systemDiag == null || data.systemDiag == ""){
+				alert("Performance data is not available with the selected script and device ");
+			}
+			else{
 			plot3 = $.jqplot('chartdiv', data.systemDiag, {
 		        seriesDefaults: {
 		            renderer:$.jqplot.BarRenderer,
@@ -196,11 +207,15 @@ function showChart(){
 		        	}
 		        }
 		    });	 
+			}
 		});	
 	}    
 	else if(chartType == "Swaping"){	
 		$.get('getSwapData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
-			
+			if(data.systemDiag == null || data.systemDiag == ""){
+				alert("Performance data is not available with the selected script and device ");
+			}
+			else{
 			plot3 = $.jqplot('chartdiv', data.systemDiag, {
 		        seriesDefaults: {
 		            renderer:$.jqplot.BarRenderer,
@@ -233,12 +248,16 @@ function showChart(){
 		        	}
 		        }
 		    });	 
+		  }
 		});	
 	}
 	else if(chartType == "LoadAverage"){	
 	
 		$.get('getLoadAverage', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
-			
+			if(data.systemDiag == null || data.systemDiag == ""){
+				alert("Performance data is not available with the selected script and device ");
+			}
+			else{
 			plot3 = $.jqplot('chartdiv', data.systemDiag, {
 		        seriesDefaults: {
 		            renderer:$.jqplot.BarRenderer,
@@ -271,6 +290,7 @@ function showChart(){
 		        	}
 		        }
 		    });	 
+			}
 		});	
 	}
 	$('#chartOptionsDiv').show();

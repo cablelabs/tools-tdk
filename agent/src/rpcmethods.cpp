@@ -91,6 +91,7 @@ ModuleMap::iterator o_gModuleMapIter;
 static int nModuleId = 0;  
 std::fstream so_DeviceFile;
 int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of device as FREE by default
+std::string RpcMethods::sm_strConsoleLogPath = "";
 
 
 /********************************************************************************************************************
@@ -632,20 +633,25 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
 
 /* Redirecting console log to a file */
 #ifdef AGENT_LOG_ENABLE
-	
-    /* Constructing path to new log file */
-    strFilePath = RpcMethods::sm_strLogFolderPath;
-    strFilePath.append(pszExecId);
-    strFilePath.append(pszDeviceId);
-    strFilePath.append(pszTestCaseId);
-    strFilePath.append(pszExecDevId);
-    strFilePath.append("_AgentConsole.log");
 
+    if (strcmp (pszExecId, "0000") != 0)
+    {
+        /* Constructing path to new log file */
+        strFilePath = RpcMethods::sm_strLogFolderPath;
+        strFilePath.append(pszExecId);
+        strFilePath.append(pszDeviceId);
+        strFilePath.append(pszTestCaseId);
+        strFilePath.append(pszExecDevId);
+        strFilePath.append("_AgentConsole.log");
+
+        RpcMethods::sm_strConsoleLogPath = strFilePath;
+    }
+	
     /* Redirecting stderr buffer to stdout */
     dup2(fileno(stdout), fileno(stderr));
 	
     /* Redirecting stdout buffer to logfile */
-    if((RpcMethods::sm_pLogStream = freopen(strFilePath.c_str(), "w", stdout)) == NULL)
+    if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "w", stdout)) == NULL)
     {
         DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
     }
@@ -946,11 +952,13 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
     strFilePath.append(pszExecDevId);
     strFilePath.append("_AgentConsole.log");
 
+    RpcMethods::sm_strConsoleLogPath = strFilePath;
+    
     /* Redirecting stderr buffer to stdout */
     dup2 (fileno(stdout), fileno(stderr));
 	
     /* Redirecting stdout buffer to log file */
-    if((RpcMethods::sm_pLogStream = freopen(strFilePath.c_str(), "a", stdout)) == NULL)
+    if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "a", stdout)) == NULL)
     {
         DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
     }
@@ -1182,10 +1190,13 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
 	
             pfnDestroyObject (pRDKTestStubInterface);
 
+/* TO DO : Segmentation fault while closing stub handle */			
+#if 0
             /* Closing Handle */
             dlclose (pvHandle);
             pvHandle = NULL;		
-			
+#endif		
+
         }
 		
         o_ModuleListFile.close();
@@ -1224,11 +1235,11 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         /* Find group id for agent process */
         nPgid = getpgid(RpcMethods::sm_nAgentPID);
 
+#if 1
         /* Ignore SIGINT signal in agent monitor process */
-        signal (SIGINT, SIG_IGN);
-        sleep(1);
+	sighandler_t sigIgnoreHandle = signal (SIGINT, SIG_IGN);
 
-        /* Send SIGINT signal to all process in the group */
+	/* Send SIGINT signal to all process in the group */
         nReturnValue = kill ( (-1 * nPgid), SIGINT);
         if (nReturnValue == RETURN_SUCCESS)
         {
@@ -1253,7 +1264,8 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         {
             DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!! Couldnot start tftp server for logfile transfer \n");
         }
-        else
+
+#endif
         {
             /* Restart Agent */
             nReturnValue = kill (RpcMethods::sm_nAgentPID, SIGKILL);
@@ -1552,6 +1564,7 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
     const char* pszAgentMonitorPort;
     const char* pszClientMAC = NULL;
     char szCommand[COMMAND_SIZE];
+    int nClientExistFlag = FLAG_NOT_SET;
 
     DEBUG_PRINT (DEBUG_TRACE, "\nRPCSetClientRoute --> Entry\n");
     //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
@@ -1589,6 +1602,24 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
         /* Constructing command */
         sprintf (szCommand, "%s %s %s %s %s %s", SHOW_DEFINE(SET_ROUTE_SCRIPT), pszClientMAC, pszAgentPort, pszStatusPort, pszLogTransferPort, pszAgentMonitorPort); 
 
+        /* Parse through Device map to find the client device already exists or not */
+        for (o_gClientDeviceMapIter = o_gClientDeviceMap.begin(); o_gClientDeviceMapIter != o_gClientDeviceMap.end(); o_gClientDeviceMapIter ++ )
+        {
+            if (o_gClientDeviceMapIter -> first == pszClientMAC)
+            {
+                nClientExistFlag = FLAG_SET;
+                break;
+            }
+        }
+
+        /* If client already exist, remove that entry from map */
+        if (nClientExistFlag == FLAG_SET)
+        {
+            /* Removing map entry */
+            o_gClientDeviceMap.erase (o_gClientDeviceMapIter);
+        }
+
+        /* Add client to map */
         o_gClientDeviceMap.insert (std::make_pair (pszClientMAC, szCommand));
 
         /* Extracting path to file */
@@ -1628,6 +1659,73 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
 	
 } /* End of RPCSetClientRoute */
 
+
+
+/********************************************************************************************************************
+ Purpose:               This function is used to get MoCA ip address of a client device.
+ Parameters:   
+                             request [IN]       - Json request to set the route to connected client device.
+                             response [OUT]  - Json response with result moca ip address
+ 
+ Return:                 bool  -      Always returning true from this function, with details in response[result].
+
+*********************************************************************************************************************/
+bool RpcMethods::RPCGetClientMocaIpAddress (const Json::Value& request, Json::Value& response)
+{
+    bool bRet = true;
+    char szBuffer[128];
+    std::string strIPaddr = "";
+    const char* pszClientMAC = NULL;
+    char szCommand[COMMAND_SIZE];
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPCGetClientMocaIpAddress --> Entry\n");
+    //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
+    cout << "Received query: \n" << request << endl;
+
+    /* Constructing JSON response */
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+
+    /* Getting MAC address and port numbers from Test Manager */
+    if (request["MACaddr"] != Json::Value::null)
+    {		
+        pszClientMAC = request["MACaddr"].asCString();
+    }
+
+    /* Constructing command to get IP address of corresponding MAC */
+    sprintf (szCommand, "arp -i eth1 -n |grep %s |cut -d'(' -f2 | cut -d')' -f1",  pszClientMAC); 
+
+    /* Creating pipe to fetch ip address */ 	
+    FILE* pipe = popen(szCommand, "r");
+    if (!pipe)
+    {
+        strIPaddr = "Error in creating pipe to fetch ip address";
+        response["result"] = strIPaddr.c_str();
+        DEBUG_PRINT (DEBUG_TRACE, "\nError in creating pipe to fetch ip address\n");
+    }
+    else
+    {
+        while(!feof(pipe)) 
+        {
+            if(fgets(szBuffer, 128, pipe) != NULL)
+            {
+                strIPaddr += szBuffer;
+            }
+        }
+	
+        pclose(pipe);
+	
+        strIPaddr.erase(std::remove(strIPaddr.begin(), strIPaddr.end(), '\n'), strIPaddr.end());
+
+        DEBUG_PRINT (DEBUG_TRACE, "\nMoca IP address of %s is %s\n", pszClientMAC, strIPaddr.c_str());
+    }
+
+    /* Sending ip address or error message with json response message */	
+    response["result"] = strIPaddr.c_str();
+
+    return bRet;
+
+}/* End of RPCGetClientMocaIpAddress */
 
 #endif /* PORT_FORWARD */
 

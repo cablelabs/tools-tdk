@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <string.h>
+#include <string>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -28,6 +29,9 @@
 #include <json/json.h>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
+
+#define TEST_SUCCESS true
+#define TEST_FAILURE false
 
 using namespace std;
 
@@ -67,17 +71,23 @@ class rmfAppTestStub : public RDKTestStubInterface
 
         bool initialize (IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
         bool cleanup (IN const char* szVersion,IN RDKTestAgent	*ptrAgentObj);
+/*
      	bool rmfAppTestStub_Execute (IN const Json::Value& req, OUT Json::Value& response);
+*/
         std::string testmodulepre_requisites();
         bool testmodulepost_requisites();
-		
+
+	/*To record the content using tdkRmfApp  */		
+	bool rmfAppTestStub_CreateRecord(IN const Json::Value& req, OUT Json::Value& response);
+
 	private:
-	
+/*	
 	sighandler_t old_signal_handler; //Holds the original signal handler to be reinstated at the end of test.
 	int child_pid; //Pid of the child that is spawned.
 	int	tunnel[2]; //This is the pipe that communicates between stub and rmfApp
 	
 	sendCommandResult sendCommand (const char * command);
+*/
 };
 
 #endif //__rmfAppTEST_STUB_H_

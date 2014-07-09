@@ -78,9 +78,11 @@ function showStreamDetails12(){
 				style="position: absolute; min-width: 500px; height: 20px; width: 947px; background-color: #E9F1F1; border-bottom-color: #0CB2DD" >
 				<div id="header" align="left">
 					<ul>
+						<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 						<li><g:link controller="primitiveTest" action="create">
 								<span><p id="primid">Primitive Test</p></span>
 							</g:link></li>
+						</g:if>
 						<li><g:link controller="scriptGroup" action="list">
 								<span><p id="scriptid">Script</p></span>
 							</g:link></li>
@@ -91,13 +93,14 @@ function showStreamDetails12(){
 								<span><p id="execid">Execution</p></span>
 							</g:link></li>
 						<li><g:link controller="trends" action="chart">
-								<span><p id="trendid">Charts</p></span>
+								<span><p id="trendid">Result Analysis</p></span>
 							</g:link></li>
+						<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 						<li><g:link controller="module" action="configuration">
 									<span><p id="admid">Configure</p></span>
-								</g:link>
+							</g:link>
 						</li>
-						
+						</g:if>
 					</ul>
 				</div>
 			</td>

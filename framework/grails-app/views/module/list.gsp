@@ -22,7 +22,7 @@
 		<div class="nav" role="navigation">
 			<ul>
 				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
-				<li><g:link class="create" action="create"><g:message code="default.new.label" args="[entityName]" /></g:link></li>
+				<li><g:link class="create" action="create"><g:message code="default.create.label" args="[entityName]" /></g:link></li>
 			</ul>
 		</div>
 		<div id="list-module" class="content scaffold-list" role="main">
@@ -37,9 +37,9 @@
 						
 						<g:sortableColumn property="testGroup" title="${message(code: 'module.testGroup.label', default: 'Test Group')}" />
 							
-						<g:sortableColumn property="rdkVersion" title="${message(code: 'module.rdkVersion.label', default: 'RDK Version')}" />
+						<%--<g:sortableColumn property="rdkVersion" title="${message(code: 'module.rdkVersion.label', default: 'RDK Version')}" />
 						
-						<g:sortableColumn property="executionTime" title="${message(code: 'module.executionTime.label', default: 'Execution TimeOut')}" />			
+						--%><g:sortableColumn property="executionTime" title="${message(code: 'module.executionTime.label', default: 'Execution TimeOut')}" />			
 					</tr>
 				</thead>
 				<tbody>
@@ -50,8 +50,8 @@
 						
 						<td>${fieldValue(bean: moduleInstance, field: "testGroup")}</td>
 					
-						<td>${fieldValue(bean: moduleInstance, field: "rdkVersion")}</td>
-						
+						<%--<td>${fieldValue(bean: moduleInstance, field: "rdkVersion")}</td>						
+						--%>
 						<td>${fieldValue(bean: moduleInstance, field: "executionTime")}</td>
 					</tr>
 				</g:each>

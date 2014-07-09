@@ -85,9 +85,9 @@ $(document).ready(function() {
 			</td>						
 		</tr>
 		<tr>
-			<td>Performance</td>
-			<td><g:checkBox id="benchmarkId" name="benchMarking" checked="false" />&nbsp;Bench Marking
-			&emsp;&emsp;<g:checkBox id="systemDiagId" name="systemDiagnostics" checked="false"  />&nbsp;System diagnostics
+			<td>Execution Options</td>
+			<td><g:checkBox id="benchmarkId" name="benchMarking" checked="false" />&nbsp;Timing Info 
+			&emsp;&emsp;<g:checkBox id="systemDiagId" name="systemDiagnostics" checked="false"  />&nbsp;Performance Data
 			</td>
 		</tr>	
 		<tr>
@@ -111,11 +111,11 @@ $(document).ready(function() {
 			<td>Execution Result</td>					
 			<td style="width:80%;">
 				<div id="resultDiv123" style="border-color: #FFAAAA;border-style: solid;
-					border-width: 1px;width: 100%;height:215px;overflow:auto;" >
+					border-width: 1px;width: 550px;height:215px;overflow:auto;" >
 					
 				</div>
 				<div id="dynamicResultDiv" style="display: none;border-color: #FFAAAA;border-style: solid;
-					border-width: 1px;width: 100%;height:215px;overflow:auto;" >
+					border-width: 1px;width: 550px;height:215px;overflow:auto;" >
 					
 				</div>
 		 	</td>

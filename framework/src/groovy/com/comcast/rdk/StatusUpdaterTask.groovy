@@ -44,6 +44,8 @@ class StatusUpdaterTask implements Runnable {
 		outData = outData.trim()
 		if(outData){
 			if(outData.equals(Status.FREE.toString())){
+				String status = Status.FREE.toString()
+				
 				def executionList = Execution.findAllByExecutionStatusAndDevice("PAUSED",device.getStbName());
 				if(executionList.size() > 0){
 				executionList.each{
@@ -51,9 +53,17 @@ class StatusUpdaterTask implements Runnable {
 					def execDevice = ExecutionDevice.findByStatusAndDeviceAndExecution("PAUSED",device.getStbName(),execution);
 					boolean paused = false
 						if(execDevice){
-								if(!ExecutionService.deviceAllocatedList.contains(device?.id)){
-									ExecutionService.deviceAllocatedList.add(device?.id)
+							
+							synchronized (ExecutionController.lock) {
+								if(ExecutionService.deviceAllocatedList.contains(device?.id)){
+									status = "BUSY"
+								}else{
+									if(!ExecutionService.deviceAllocatedList.contains(device?.id)){
+										ExecutionService.deviceAllocatedList.add(device?.id)
+									}
 								}
+							}
+							if(status.equals(Status.FREE.toString())){
 							Thread.start {
 								try{
 									deviceStatusService.updateDeviceStatus(device,"BUSY")
@@ -67,6 +77,7 @@ class StatusUpdaterTask implements Runnable {
 								if(ExecutionService.deviceAllocatedList.contains(device?.id)){
 									ExecutionService.deviceAllocatedList.remove(device?.id)
 								}
+							}
 							}
 						}
 					if(!paused){
@@ -86,13 +97,20 @@ class StatusUpdaterTask implements Runnable {
 					}
 				}
 			}
-			try{
-				deviceStatusService.updateDeviceStatus(device,outData)
-			}
-			catch(Exception e){
-			}
+			callStatusUpdater(device,outData)
+			
 		}
 	}
+	
+	def callStatusUpdater(device,outData) throws Exception{
+		try{
+			deviceStatusService.updateDeviceStatus(device,outData) 
+		}
+		catch(Exception e){
+		}
+	}
+	
+	
 	
 	/**
 	 * Method to restart a complete repeat once device is free

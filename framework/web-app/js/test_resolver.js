@@ -36,7 +36,7 @@ $(document).ready(function() {
 				makeTestEditable(node.id);
 			},
 			'delete_test' : function(node) {
-				if (confirm('Are you want to delete property?')) {
+				if (confirm('Are you sure you want to delete this primitive test?')) {
 					removeProperty(node.id);
 				}
 			}

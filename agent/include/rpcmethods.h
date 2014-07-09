@@ -58,6 +58,7 @@ class RpcMethods
         static std::string sm_strBoxIP;
         static std::string sm_strLogFolderPath;
         static std::string sm_strTDKPath;
+        static std::string sm_strConsoleLogPath;
 
         /* Constructor */
         RpcMethods (RDKTestAgent *pAgent)
@@ -82,6 +83,7 @@ class RpcMethods
 
         bool RPCGetConnectedDevices (const Json::Value& request, Json::Value& response);
         bool RPCSetClientRoute (const Json::Value& request, Json::Value& response);
+        bool RPCGetClientMocaIpAddress (const Json::Value& request, Json::Value& response);
 
         #endif /* End of PORT_FORWARD */
 

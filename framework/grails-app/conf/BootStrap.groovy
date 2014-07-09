@@ -83,6 +83,30 @@ class BootStrap {
 			scriptGrpInstance.addToScripts(scriptInstance)
 			scriptGrpInstance.save(flush:true)
 		}*/
+		
+		//Code to generate the box type & rdk version based script group. Needs to execute once.
+		
+		/*List<Script> scriptsList = Script.list()
+		 
+		scriptsList.each{ scriptInstance ->
+
+			scriptInstance?.boxTypes?.each{ bType ->
+
+				scriptInstance?.rdkVersions?.each{ vers ->
+
+					String name = vers?.toString()+"_"+bType?.name
+					def scriptGrpInstance = ScriptGroup.findByName(name)
+					if(!scriptGrpInstance){
+						scriptGrpInstance = new ScriptGroup()
+						scriptGrpInstance.name = name
+					}
+					if(scriptGrpInstance && !scriptGrpInstance?.scripts?.contains(scriptInstance)){
+						scriptGrpInstance.addToScripts(scriptInstance)
+						scriptGrpInstance.save(flush:true)
+					}
+				}
+			}
+		}*/
     }
     
     def destroy = {        
@@ -94,10 +118,11 @@ class BootStrap {
 		def permDeviceGroup = "DeviceGroup:*:*"
 		def permScriptGroup = "ScriptGroup:*:*"
 		def permExecution = "Execution:*:*"
-		def permRecorder = "Recorder:*:*"
+		def permChart = "Trends:*:*"
 		def permPrimitiveTest = "PrimitiveTest:*:*"
 		def permModule = "Module:*:*"
 		def permStreamingDetails = "StreamingDetails:*:*"
+		
 		
 		Role.withTransaction {
 		def adminRole = Role.findByName("ADMIN")
@@ -121,10 +146,10 @@ class BootStrap {
 			testerRole.addToPermissions(permDeviceGroup)
 			testerRole.addToPermissions(permScriptGroup)
 			testerRole.addToPermissions(permExecution)
-			testerRole.addToPermissions(permRecorder)
-			testerRole.addToPermissions(permPrimitiveTest)
-			testerRole.addToPermissions(permModule)
-			testerRole.addToPermissions(permStreamingDetails)
+			testerRole.addToPermissions(permChart)
+			//testerRole.addToPermissions(permPrimitiveTest)
+			//testerRole.addToPermissions(permModule)
+			//testerRole.addToPermissions(permStreamingDetails)
 			
 			testerRole.save(flush:true)
 		}else{
@@ -142,11 +167,11 @@ class BootStrap {
 					testerRole.addToPermissions(permExecution)
 				}
 				
-				if(!testerRole.permissions.contains(permRecorder)){
-					testerRole.addToPermissions(permRecorder)
+				if(!testerRole.permissions.contains(permChart)){
+					testerRole.addToPermissions(permChart)
 				}
 	
-				if(!testerRole.permissions.contains(permPrimitiveTest)){
+			/*	if(!testerRole.permissions.contains(permPrimitiveTest)){
 					testerRole.addToPermissions(permPrimitiveTest)
 				}
 				
@@ -156,7 +181,7 @@ class BootStrap {
 				
 				if(!testerRole.permissions.contains(permStreamingDetails)){
 					testerRole.addToPermissions(permStreamingDetails)
-				}
+				}*/
 				
 			
 				testerRole.save(flush:true)

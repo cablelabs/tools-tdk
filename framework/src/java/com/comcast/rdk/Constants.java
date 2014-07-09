@@ -40,6 +40,7 @@ public final class Constants
     public static final String SEARCH_DATE_FORMAT   = "yyyy-MM-dd HH:mm:ss";
     public static final String SCHEDULE_DATEFORMAT  = "EEE MMM d HH:mm:ss z yyyy";
     public static final String STRING_QUOTES        = "\"";
+    public static final String CLIENTLIST           = "<clientlist>";
     public static final String IP_ADDRESS           = "<ipaddress>";
     public static final String PORT                 = "<port>";
     public static final String LOCALFILE            = "<localfile>";
@@ -66,10 +67,15 @@ public final class Constants
     public static final String DOUBLE_FWD_SLASH     = "//";
     public static final String TEST_SUITE           = "TestSuite";
     public static final String SINGLE_SCRIPT        = "SingleScript";
-    public static final String REPLACE_TOKEN        = "(ip,port,";
+    public static final String METHOD_TOKEN         = "configureTestCase";
+    public static final String REPLACE_TOKEN        = "configureTestCase(ip,port,";
     public static final String REPLACE_BY_TOKEN     = ",ip,port,";
     public static final String LEFT_PARANTHESIS     = "(";
     public static final String RIGHT_PARANTHESIS    = ")";
+    public static final String CURLY_BRACKET_OPEN   = "{";
+    public static final String CURLY_BRACKET_CLOSE  = "}";
+    public static final String SQUARE_BRACKET_OPEN  = "[";
+    public static final String SQUARE_BRACKET_CLOSE = "]";
     public static final String KEY_GATEWAYIP        = "gatewayip";
     public static final String KEY_CHANNELTYPE      = "channeltype";
     public static final String KEY_OCAPID           = "ocapid";
@@ -94,6 +100,7 @@ public final class Constants
 	public static final String KEY_CHKBOX           = "chkbox";
 	public static final String STATUS_NONE          = "none";	
 	public static final String SEMI_COLON           = ";";
+	public static final String COLON          		= ":";
     public static final String KEY_DAILY            = "Daily";
     public static final String KEY_WEEKLY           = "Weekly";
     public static final String KEY_MONTHLY          = "Monthly";

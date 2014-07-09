@@ -46,7 +46,22 @@
 				<td align="center" nowrap>${fieldValue(bean: executionInstance, field: "dateOfExecution")}</td>											
 				<td align="center"><g:link onclick="showExecutionLog(${executionInstance.id}); return false;" id="${executionInstance.id}">
 					
-						${fieldValue(bean: executionInstance, field: "result")}
+						<g:if test="${ !(executionInstance.result) }" >FAILURE						
+							</g:if>
+							<g:else>
+							<g:if test="${(executionInstance.executionStatus)}"> 
+							
+							<g:if test="${fieldValue(bean: executionInstance, field: 'executionStatus').equals('COMPLETED')}"> 
+								${fieldValue(bean: executionInstance, field: "result")}
+							</g:if>
+							<g:else>
+								${fieldValue(bean: executionInstance, field: "executionStatus")}
+							</g:else>
+							</g:if>	
+							<g:else>
+								${fieldValue(bean: executionInstance, field: "result")}
+							</g:else>
+						</g:else>
 										
 				</g:link></td>
 			</tr>

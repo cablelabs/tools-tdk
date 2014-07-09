@@ -10,6 +10,8 @@
   ============================================================================
 -->
 <%@ page import="com.comcast.rdk.ScriptGroup" %>
+<%@ page import="org.apache.shiro.SecurityUtils"%>
+<%@ page import="com.comcast.rdk.User" %>
 
 <g:set var="entityName" value="${message(code: 'scriptGroup.label', default: 'TestSuite')}" />
 
@@ -33,11 +35,14 @@
 		<g:render template="form"/>
 	</fieldset>
 	<%--<fieldset class="buttons">--%>
+	<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 	<div style="width : 90%; text-align: center;">
 		<span class="buttons"><g:actionSubmit class="save" action="update" value="${message(code: 'default.button.update.label', default: 'Update')}" /></span>
 		<span class="buttons"><g:actionSubmit class="delete" action="deleteScriptGrp" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
 	</div>
 	<%--</fieldset>--%>
+	</g:if>
 	</g:form>
+	
 </div>
 

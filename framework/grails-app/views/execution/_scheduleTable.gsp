@@ -12,20 +12,23 @@
 <%@ page import="com.comcast.rdk.Script"%>
 <%@ page import="com.comcast.rdk.ScriptGroup"%>
 <%@ page import="com.comcast.rdk.Device"%>
+<%@ page import="java.util.Date"%>
 
 <g:if test="${jobDetailList.size() > 0}" > 
 <table id="scheduletable" >
    <thead>	
    		<tr>
-     		<th colspan="6" align="center" style="background-color: white">Scheduled Jobs</th>            
+     		<th colspan="8" align="center" style="background-color: white">Scheduled Jobs</th>            
         </tr>   		
         <tr>
      		<th width="2%"></th>
-            <th width="15%">StartDate</th>                             
+     		<th width="12%">Job Name</th>    
+            <th width="13%">StartDate</th>                             
             <th width="35%">Script/ScriptGroup</th>
-            <th width="10%">Device</th>
-            <th width="13%">Details</th>
-            <th width="15%">EndDate</th>
+            <th width="8%">Device</th>
+            <th width="15%">Details</th>
+            <th width="13%">EndDate</th>
+            <th width="2%">Delete</th>
         </tr>              
 	</thead>
 	<tbody>
@@ -51,6 +54,7 @@
                     }                    	        
 				%>			
 				<td align="center"><g:checkBox name="chkbox${count}" value="${false}"  /></td>
+				<td align="center">${fieldValue(bean: jobDetailsInstance, field: "jobName")}</td>	
 				<td align="center">${fieldValue(bean: jobDetailsInstance, field: "startDate")}</td>							
 			
 				<td align="center">${scrLst }</td>
@@ -59,7 +63,28 @@
 				
 				<td align="center">${fieldValue(bean: jobDetailsInstance, field: "queryString")}
 				<g:hiddenField id="id" name="id${count}" value="${jobDetailsInstance?.id}" /></td>	
-				<td align="center">${jobDetailsInstance?.endDate}</td>			
+				<td align="center">${jobDetailsInstance?.endDate}</td>
+								
+				<%				
+					def date = new Date()
+					def endDate = jobDetailsInstance?.endDate
+					def time
+					if(endDate){
+						time = date.getTime() - endDate.getTime()
+					}
+					else{
+						time = date.getTime() - jobDetailsInstance?.startDate?.getTime()
+					}
+				 %>
+				 <td>
+					 <g:if test="${time > 0 }">
+						<g:remoteLink class="delete" 
+							action="deleteJob" controller="execution" update="newScheduleTable"
+							onSuccess="baseScheduleTableRemove();"
+							params="[jobId : "${jobDetailsInstance?.id}"]"><img alt="Delete" style="vertical-align: middle;" src="../images/remove.gif" />
+						</g:remoteLink>	
+					 </g:if>
+				</td>			
 			</tr>
 		</g:each>
 	</tbody>		

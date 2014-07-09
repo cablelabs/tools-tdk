@@ -12,12 +12,14 @@
 package com.comcast.rdk
 
 import static com.comcast.rdk.Constants.*
+import groovy.sql.Sql
 
 import java.util.List
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 import java.util.concurrent.Executors
+
 
 /**
  * 
@@ -52,6 +54,11 @@ class ExecutescriptService {
 	def scriptexecutionService
 
 	/**
+	 * Injects dataSource.
+	 */
+	def dataSource
+	
+	/**
 	 * Sets the transactional to false as it is causing many issues
 	 * in database operations that invokes from different threads.
 	 */
@@ -65,6 +72,7 @@ class ExecutescriptService {
 	 * @param url
 	 * @return
 	 */
+	
 	def String executeScript(final String executionName, final ExecutionDevice executionDevice, final Script scriptInstance,
 			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String uniqueExecutionName,final String isMultiple, def executionResult) {
 
@@ -76,38 +84,56 @@ class ExecutescriptService {
 		def executionId = executionInstance?.id
 		Date executionDate = executionInstance?.dateOfExecution
 
-		def execStartTime = executionDate?.getTime()
-		if(executionResult == null){
-			ExecutionResult.withTransaction { resultstatus ->
-				try {
-					executionResult = new ExecutionResult()
-					executionResult.execution = executionInstance
-					executionResult.executionDevice = executionDevice
-					executionResult.script = scriptInstance.name
-					executionResult.device = deviceInstance.stbName
-					if(! executionResult.save(flush:true)) {
-						log.error "Error saving executionResult instance : ${executionResult.errors}"
-					}
-					resultstatus.flush()
-				}
-				catch(Throwable th) {
-					resultstatus.setRollbackOnly()
-				}
+		def resultArray = Execution.executeQuery("select a.executionTime from Execution a where a.name = :exName",[exName: executionName])
+				
+		def executionResultId
+		if(executionResult == null){			
+		    try {
+			   def sql = new Sql(dataSource)
+			   sql.execute("insert into execution_result(version,execution_id,execution_device_id,script,device,date_of_execution,status) values(?,?,?,?,?,?,?)", [1,executionInstance?.id, executionDevice?.id, scriptInstance.name, deviceInstance.stbName, new Date(), UNDEFINED_STATUS])
+			} catch (Exception e) {
+				e.printStackTrace()
 			}
+
+			def resultArray1 = ExecutionResult.executeQuery("select a.id from ExecutionResult a where a.execution = :exId and a.script = :scriptname and device = :devName ",[exId: executionInstance, scriptname: scriptInstance.name, devName: deviceInstance?.stbName.toString()])
+			if(resultArray1[0]){
+				executionResultId = resultArray1[0]
+			}
+		}else{
+			executionResultId = executionResult?.id
 		}
-
-		def executionResultId = executionResult?.id
+				
+		def mocaDeviceList = Device.findAllByStbIpAndMacIdIsNotNull(deviceInstance?.stbIp)
+		
+		int counter = 1
+		def mocaString = CURLY_BRACKET_OPEN
+		
+		int mocaListSize = mocaDeviceList?.size()
+		mocaDeviceList.each{ mocaDevice ->
+			
+			mocaString = mocaString + counter.toString() + COLON + SQUARE_BRACKET_OPEN + STRING_QUOTES + mocaDevice?.macId + STRING_QUOTES +
+			COMMA_SEPERATOR + mocaDevice?.stbPort + SQUARE_BRACKET_CLOSE
+			
+			if(mocaListSize != counter){
+				mocaString = mocaString + COMMA_SEPERATOR
+			}
+			counter++
+		}
+		mocaString = mocaString + CURLY_BRACKET_CLOSE
+		
 		scriptData = scriptData.replace( IP_ADDRESS , stbIp )
-		scriptData = scriptData.replace( PORT , deviceInstance?.stbPort )
-
+		scriptData = scriptData.replace( PORT , deviceInstance?.stbPort )		
+		scriptData = scriptData.replace( CLIENTLIST , mocaString )
+		
 		String gatewayIp = deviceInstance?.gatewayIp
 
-		scriptData = scriptData.replace( REPLACE_TOKEN, LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
+		scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
 				executionId  + COMMA_SEPERATOR + executionDevice?.id + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance?.statusPort + COMMA_SEPERATOR +
 				scriptInstance?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR + SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +
 				SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR)
 
 		scriptData	 = scriptData + "\nprint \"SCRIPTEND#!@~\";"
+		
 		Date date = new Date()
 		String newFile = FILE_STARTS_WITH+date.getTime().toString()+PYTHON_EXTENSION
 
@@ -120,6 +146,10 @@ class ExecutescriptService {
 		fileNewPrintWriter.print( scriptData )
 		fileNewPrintWriter.flush()
 		fileNewPrintWriter.close()
+		
+		Date executionStartDt = new Date()
+		def executionStartTime =  executionStartDt.getTime()
+		
 		String outData = executionService.executeScript( file.getPath() , scriptInstance.executionTime, uniqueExecutionName , scriptInstance.getName())
 
 		file.delete()
@@ -128,14 +158,27 @@ class ExecutescriptService {
 		}
 		Date execEndDate = new Date()
 		def execEndTime =  execEndDate.getTime()
-		def timeDifference = ( execEndTime - execStartTime  ) / 60000;
+		def timeDifference = ( execEndTime - executionStartTime  ) / 60000;
+
 		String timeDiff =  String.valueOf(timeDifference)
+		String singleScriptExecTime = String.valueOf(timeDifference)
+		
+		BigDecimal myVal1
+		if(resultArray[0]){
+			myVal1= new BigDecimal (resultArray[0]) + new BigDecimal (timeDiff)
+		}
+		else{
+			myVal1 =  new BigDecimal (timeDiff)
+		}
+						
+		timeDiff =  String.valueOf(myVal1)
+
 		if(htmlData.contains(TDK_ERROR)){
 			htmlData = htmlData.replaceAll(TDK_ERROR,"")
 			if(htmlData.contains(KEY_SCRIPTEND)){
 				htmlData = htmlData.replaceAll(KEY_SCRIPTEND,"")
 			}
-			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff)
+			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 			Thread.sleep(4000)
 			resetAgent(deviceInstance)
 		}
@@ -143,10 +186,11 @@ class ExecutescriptService {
 			if(htmlData.contains(KEY_SCRIPTEND)){
 				htmlData = htmlData.replaceAll(KEY_SCRIPTEND,"")
 				String outputData = htmlData
-				executionService.updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff)
+				executionService.updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 			}
 			else{
 				if((timeDifference >= scriptInstance.executionTime) && (scriptInstance.executionTime != 0))	{
+					
 					File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 					def absolutePath = layoutFolder.absolutePath
 					String[] cmd = [
@@ -165,8 +209,12 @@ class ExecutescriptService {
 						e.printStackTrace()
 					}
 					htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
-					executionService.updateExecutionResults(htmlData,executionResultId,executionId,executionDevice?.id)
+					executionService.updateExecutionResultsTimeOut(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
+					Thread.sleep(10000)
+				}else{
+					executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 					Thread.sleep(4000)
+					resetAgent(deviceInstance)
 				}
 			}
 		}
@@ -696,6 +744,7 @@ class ExecutescriptService {
 								executionResult.execDevice = null
 								executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
 								executionResult.status = PENDING
+								executionResult.dateOfExecution = new Date()
 								if(! executionResult.save(flush:true)) {
 								}
 								resultstatus.flush()
@@ -907,7 +956,6 @@ class ExecutescriptService {
 	 * @param grailsApplication
 	 */
 	public boolean restartExecution(ExecutionDevice execDevice, def grailsApplication){
-		
 		String htmlData = ""
 		StringBuilder output = new StringBuilder()
 		int scriptCounter = 0
@@ -928,7 +976,6 @@ class ExecutescriptService {
 						exResults = exDevice?.executionresults
 								exId = exDevice?.execution?.id
 			}
-			
 			Execution execution
 			boolean thirdParyExecution = false
 			def thirdPartyExecutionDetails
@@ -948,21 +995,18 @@ class ExecutescriptService {
 			int totalSize = exResults.size()
 			exResults.each {
 				try {
-					
-					
 					scriptCounter++
 					if(scriptCounter == totalSize){
 						isMultiple = FALSE
 					}
 					
 					def idVal = it?.id
-							ExecutionResult.withTransaction {
+					ExecutionResult.withTransaction {
 						def exResult = ExecutionResult.findById(idVal)
 								if(exResult?.status.equals(PENDING)){
 									
 											Device executionDevice = Device.findById(exResult?.deviceIdString)
 											if(executionService.validateScriptBoxType(Script.findByName(exResult?.script),executionDevice)){
-												
 												aborted = executionService.abortList.contains(exId?.toString())
 														
 														String devStatus = ""
@@ -983,9 +1027,7 @@ class ExecutescriptService {
 															catch(Exception eX){
 															}
 														}
-												
 												if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()))&& !pause){
-													
 													
 													
 													htmlData = executeScript(exResult?.execution?.name, execDevice, Script.findByName(exResult?.script) , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple,exResult)
@@ -1011,14 +1053,11 @@ class ExecutescriptService {
 								}
 					}
 				} catch (Exception e) {
-				//println " ERROR.. "+e.getMessage()
 					e.printStackTrace()
 				}
 			}
-			
-			
-			if(aborted && executionService.abortList.contains(execution?.id?.toString())){
-				
+						
+			if(aborted && executionService.abortList.contains(execution?.id?.toString())){				
 				String dat = execution?.id?.toString()+","
 						executionService.abortList.remove(execution?.id?.toString())
 			}
@@ -1058,7 +1097,6 @@ class ExecutescriptService {
 				}
 			}
 		} catch (Exception e) {
-			//println " Error "+e.getMessage()
 			e.printStackTrace()
 		}finally{
 //			if(!pause){
@@ -1132,7 +1170,6 @@ class ExecutescriptService {
 					filePath, realPath, TEST_SUITE, url, isBenchMark, isSystemDiagnostics, rerun)
 
 			} catch (Exception e) {
-		//	println "Error "+e.getMessage()
 				e.printStackTrace()
 			}
 
@@ -1335,6 +1372,7 @@ class ExecutescriptService {
 									executionResult.execDevice = null
 									executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
 									executionResult.status = PENDING
+									executionResult.dateOfExecution = new Date()
 									if(! executionResult.save(flush:true)) {
 									}
 									resultstatus.flush()

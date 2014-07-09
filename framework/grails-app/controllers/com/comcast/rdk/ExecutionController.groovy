@@ -67,6 +67,11 @@ class ExecutionController {
 	
 	def executescriptService
 	
+	/**
+	 * Injects the excelExportService
+	 */
+	def excelExportService
+	
 	public static volatile Object  lock = new Object()
 	private static int execIdCounter = 0
 	public static final String EXPORT_SCRIPT_LABEL 			= "Script"
@@ -119,6 +124,27 @@ class ExecutionController {
         }
         render(template: "scheduleTable", model: [jobDetailList : JobDetails.list()])        
     }
+	
+	
+	def deleteJob(){
+		def jobDetailsInstance = JobDetails.findById(params?.jobId)
+		if (jobDetailsInstance) {
+			
+			def date = new Date()
+			def endDate = jobDetailsInstance?.endDate
+			def time
+			if(endDate){
+				time = date.getTime() - endDate.getTime()
+			}
+			else{
+				time = date.getTime() - jobDetailsInstance?.startDate?.getTime()
+			}
+			if(time > 0 ){
+				jobDetailsInstance.delete(flush: true)
+			}
+		}
+		render(template: "scheduleTable", model: [jobDetailList : JobDetails.list()])
+	}
 
     /**
      * Method to create a cron tab based on the selection of
@@ -435,9 +461,9 @@ class ExecutionController {
      * @return
      */
     def String getRealPath(){           
-     /*  String s = request.getSession().getServletContext().getRealPath("/") 
+       /*String s = request.getSession().getServletContext().getRealPath("/") 
        s = s.replace( '\\', '/' )
-       return s */
+       return s*/
        return request.getSession().getServletContext().getRealPath(URL_SEPERATOR) 
     }     
  
@@ -505,10 +531,7 @@ class ExecutionController {
 									String status = ""
 									try {
 										status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
-										//println " STATUS "+status
-										/*Thread.start{
-										 deviceStatusService.updateDeviceStatus(deviceInstance, status)
-										 }*/
+										
 										synchronized (lock) {
 											if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 												status = "BUSY"
@@ -516,6 +539,10 @@ class ExecutionController {
 												if((status.equals( Status.FREE.toString() ))){
 													if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 														executionService.deviceAllocatedList.add(deviceInstance?.id)
+														
+														Thread.start{
+															deviceStatusService.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
+														}
 													}
 												}
 											}
@@ -533,8 +560,8 @@ class ExecutionController {
 										def deviceName
 										ExecutionDevice executionDevice
 										def execution
-
 										def executionSaveStatus = true
+										
 										/**
 										 * Even if there is multiple devices, the execution instance need to be created only once.
 										 * 'executionNameForCheck' is used to bypass the creation of execution instance
@@ -740,8 +767,7 @@ class ExecutionController {
 		}
 		else if(deviceInstance?.deviceStatus.toString().equals(Status.HANG.toString())){
 			htmlData = message(code: 'execution.device.notfree')
-		}
-		
+		}		
 		else if(repeatCount == 0){
 			htmlData = "Give a valid entry in repeat"
 		}	
@@ -835,15 +861,7 @@ class ExecutionController {
 					deviceInstance = Device.findById(device)
 					try {
 						 status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
-						 /*Thread.start{
-							 deviceStatusService.updateDeviceStatus(deviceInstance, status)
-						 }*/
-//						 if(executionService.deviceAllocatedList.contains(device)){
-//							 status = "BUSY"
-//						 }else{
-//						 	println " DEVICE IS NOT BUSY >>> "+executionService.deviceAllocatedList+" "
-//						 }
-//						 
+					 
 						 synchronized (lock) {
 							 if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 								 status = "BUSY"
@@ -852,6 +870,9 @@ class ExecutionController {
 									 if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 										 allocated = true
 										 executionService.deviceAllocatedList.add(deviceInstance?.id)
+										 Thread.start{
+											 deviceStatusService.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
+										 }
 									 }
 								 }
 							 }
@@ -1063,19 +1084,19 @@ class ExecutionController {
 	def showAgentLogFiles(){
 		def agentConsoleFileData = executionService.getAgentConsoleLogData( request.getRealPath('/'), params?.execId, params?.execDeviceId,params?.execResId)
 		if(agentConsoleFileData.isEmpty()){
-			agentConsoleFileData = "Unable to fetch Device Details due to Network Traffic error"
+			agentConsoleFileData = "Unable to fetch Agent Console Log"
 		}		
 		render(template: "agentConsoleLog", model: [agentConsoleFileData : agentConsoleFileData])
 	}
 
 	def showLogFiles(){		
-		def logFileNames = executionService.getLogFileNames(request.getRealPath('/'), params?.execId, params?.execDeviceId)
-		render(template: "logFileList", model: [execId : params?.execId, execDeviceId : params?.execDeviceId, logFileNames : logFileNames])
+		def logFileNames = executionService.getLogFileNames(request.getRealPath('/'), params?.execId, params?.execDeviceId, params?.execResId )
+		render(template: "logFileList", model: [execId : params?.execId, execDeviceId : params?.execDeviceId, execResId : params?.execResId, logFileNames : logFileNames])
 	}
 	
 	def showCrashLogFiles(){
-		def crashlogFileNames = executionService.getCrashLogFileNames(request.getRealPath('/'), params?.execId, params?.execDeviceId)
-		render(template: "crashLogFileList", model: [execId : params?.execId, execDeviceId : params?.execDeviceId, logFileNames : crashlogFileNames])
+		def crashlogFileNames = executionService.getCrashLogFileNames(request.getRealPath('/'), params?.execId, params?.execDeviceId, params?.execResId)
+		render(template: "crashLogFileList", model: [execId : params?.execId, execDeviceId : params?.execDeviceId, execResId : params?.execResId, logFileNames : crashlogFileNames])
 	}
 						
     /**
@@ -1099,7 +1120,7 @@ class ExecutionController {
 		executionDeviceList.each { executionDevice ->
 			ArrayList executionList = new ArrayList(executionDevice.executionresults);
 			executionResultMap.put(executionDevice, executionList)
-						
+					
 			listStatusCount = executedbService.getStatusList(executionInstance,executionDevice,executionList.size().toString())
 			
 			statusResultMap.put(executionDevice, listStatusCount)
@@ -1137,7 +1158,8 @@ class ExecutionController {
             String fileName = params?.id
             int index = fileName.indexOf( UNDERSCORE )
             def executionId = fileName.substring( 0, index )
-            String filePath = "${request.getRealPath('/')}//logs//${executionId}//${params?.execDeviceId}//"+params?.id
+            String filePath = "${request.getRealPath('/')}//logs//${params?.execId}//${params?.execDeviceId}//${params?.execResultId}//"+params?.id
+		
             def file = new File(filePath)
             response.setContentType("html/text")
             response.setHeader("Content-disposition", "attachment;filename=${file.getName()}")
@@ -1157,7 +1179,7 @@ class ExecutionController {
 			String fileName = params?.id
 			int index = fileName.indexOf( UNDERSCORE )
 			def executionId = fileName.substring( 0, index )
-			String filePath = "${request.getRealPath('/')}//logs//crashlogs//"+params?.id
+			String filePath = "${request.getRealPath('/')}//logs//crashlogs//${params?.execId}//${params?.execDeviceId}//${params?.execResultId}//"+params?.id
 			def file = new File(filePath)
 			response.setContentType("html/text")
 			response.setHeader("Content-disposition", "attachment;filename=${file.getName()}")
@@ -1238,59 +1260,57 @@ class ExecutionController {
 	 */
    def saveResultDetails(final String execId, final String resultData, final String execResult,
 	   final String expectedResult, final String resultStatus, final String testCaseName, final String execDevice)
-   {	   
-//	   try{   
-//		   executescriptService.saveExecutionResultStatus(execId, resultData, execResult, expectedResult, resultStatus,
-//			   testCaseName, execDevice)
-//	   }catch(Exception ex){
-//	   }
-	   
+   {	
+
 	   try{
 		   if(resultData){
 			   String actualResult = resultData
-			   if(actualResult){
+			   if(actualResult){				  
 				   ExecutionResult.withTransaction {
 					   ExecutionResult executionResult = ExecutionResult.findById(execResult)
-
-					   ExecuteMethodResult executionMethodResult = new ExecuteMethodResult()
-					   if(resultStatus.equals( STATUS_NONE ) || resultStatus == null ){
-						   executionMethodResult.status = actualResult
-					   }
-					   else{
-						   executionMethodResult.executionResult = executionResult
-						   executionMethodResult.expectedResult = expectedResult
-						   executionMethodResult.actualResult = actualResult
-						   executionMethodResult.status = resultStatus
-					   }
-					   executionMethodResult.functionName = testCaseName
-					   executionMethodResult.save(flush:true)
-
-					   executionResult.addToExecutemethodresults(executionMethodResult)
-					   executionResult.save(flush:true)
-
-					   Execution execution = Execution.findById(execId)
-					   ExecutionDevice execDeviceInstance = ExecutionDevice.findById(execDevice)
-					   if(!executionResult.status.equals( FAILURE_STATUS )){
-						   executionResult.status = resultStatus
-						   executionResult.save(flush:true)
-						   if(!execution.result.equals( FAILURE_STATUS )){
-							   execution.result = resultStatus
-							   execution.save(flush:true)
+					   if(executionResult){
+						   ExecuteMethodResult executionMethodResult = new ExecuteMethodResult()
+						   if(resultStatus?.equals( STATUS_NONE ) || resultStatus == null ){
+							   executionMethodResult.status = actualResult
 						   }
-						   if(!execDeviceInstance.status.equals( FAILURE_STATUS )){
-							   execDeviceInstance.addToExecutionresults(executionResult)
-							   execDeviceInstance.status = resultStatus
-							   execDeviceInstance.save(flush:true)
+						   else{
+							   executionMethodResult.executionResult = executionResult
+							   executionMethodResult.expectedResult = expectedResult
+							   executionMethodResult.actualResult = actualResult
+							   executionMethodResult.status = resultStatus
 						   }
-					   }
+						   executionMethodResult.functionName = testCaseName
+						   executionMethodResult.save(flush:true)
+	
+						   executionResult?.addToExecutemethodresults(executionMethodResult)
+						   executionResult?.save(flush:true)
+	
+						   Execution execution = Execution.findById(execId)
+						   ExecutionDevice execDeviceInstance = ExecutionDevice.findById(execDevice)
+						   if(!executionResult?.status.equals( FAILURE_STATUS )){
+							   executionResult?.status = resultStatus
+							   executionResult?.save(flush:true)
+							   if(!execution.result.equals( FAILURE_STATUS )){
+								   execution.result = resultStatus
+								   execution.save(flush:true)
+							   }
+							   if(!execDeviceInstance.status.equals( FAILURE_STATUS )){
+								   execDeviceInstance?.addToExecutionresults(executionResult)
+								   execDeviceInstance?.status = resultStatus
+								   execDeviceInstance?.save(flush:true)
+							   }
+						   }
+					   } 
 				   }
 			   }
 		   }
 		   else{
 			   Execution.withTransaction {
 				   Execution execution = Execution.findById(execId)
-				   execution.result = FAILURE_STATUS
-				   execution.save(flush:true)
+				   if(execution){
+					   execution.result = FAILURE_STATUS
+					   execution.save(flush:true)
+				   }				   
 			   }
 		   }
 	   }catch(Exception ex){
@@ -1393,6 +1413,37 @@ class ExecutionController {
 			exportService.export(params.format, response.outputStream,dataList, fieldLabels,fieldMap,[:], [:])
 		}
 	}
+	
+	
+	/**
+	 * Method to export the consolidated report in excel format.
+	 */
+	def exportConsolidatedToExcel = {
+				if(!params.max) params.max = 100000
+				Map dataMap = [:]
+				List fieldLabels = []
+				Map fieldMap = [:]
+				Map parameters = [:]
+				List columnWidthList = [0.08,0.4,0.15,0.4,0.15]
+		
+				Execution executionInstance = Execution.findById(params.id)
+				if(executionInstance){
+					dataMap = executedbService.getDataForConsolidatedListExcelExport(executionInstance, getRealPath())
+					fieldMap = ["C1":" Sl.No ", "C2":" Script Name ","C3":" Status ", "C4":" Log Data ","C5":" Date of Execution "]
+					parameters = [ title: EXPORT_SHEET_NAME, "column.widths": columnWidthList]
+				}
+				else{
+					log.error "Invalid excution instance......"
+				}
+		
+				params.format = EXPORT_EXCEL_FORMAT
+				params.extension = EXPORT_EXCEL_EXTENSION
+				response.contentType = grailsApplication.config.grails.mime.types[params.format]
+				response.setHeader("Content-disposition", "attachment; filename="+EXPORT_FILENAME+ executionInstance.name +".${params.extension}")
+				excelExportService.export(params.format, response.outputStream,dataMap, null,fieldMap,[:], parameters)
+				log.info "Completed excel export............. "
+		
+			}
 	
 	
 	/**
@@ -1529,6 +1580,27 @@ class ExecutionController {
 	}
 	
 	/**
+	 * REST Api : Get the detailed result based on a execution Result
+	 * @param execResId
+	 * @return
+	 */
+	
+	def getClientPort(final String deviceIP,final String agentPort){
+		JsonObject resultNode = null
+		if(deviceIP && agentPort){
+			Device device = Device.findByStbIpAndStbPort(deviceIP,agentPort)
+			if(device){
+				resultNode = new JsonObject()
+				resultNode.addProperty("logTransferPort",device?.logTransferPort.toString())
+				resultNode.addProperty("statusPort",device?.statusPort.toString())
+			}
+		}
+		render resultNode
+	}
+	
+	
+	
+	/**
 	 * method to stop the execution through ui request
 	 */
 	def stopExecution(){
@@ -1554,18 +1626,32 @@ class ExecutionController {
 	 * @return
 	 */
 	def stopThirdPartyTestExecution(final String executionName){
-		Execution execution = Execution.findByName(executionName)
 		JsonObject result = new JsonObject()
 		result.addProperty("ExecutionName", executionName)
-		if(execution?.executionStatus.equals(INPROGRESS_STATUS)){
-			executionService.abortList.add(execution?.id?.toString())
-			result.addProperty("Status", "Requested for abort")
-		}else if(execution?.executionStatus.equals("PAUSED")){
-			executionService.saveExecutionStatus(true, execution?.id)
-		} else{
-			result.addProperty("Status", "Error. No execution found in this name")
+		try {
+			Execution execution = Execution.findByName(executionName)
+			if(execution?.executionStatus.equals(INPROGRESS_STATUS)){
+				if(!executionService.abortList.contains(execution?.id?.toString())){
+					executionService.abortList.add(execution?.id?.toString())
+					result.addProperty("Status", "Requested for abort")
+				}else{
+					result.addProperty("Status", "Request to stop already in progress")
+				}
+				
+			}else if(execution?.executionStatus.equals("PAUSED")){
+				executionService.saveExecutionStatus(true, execution?.id)
+				result.addProperty("Status", "Requested for abort")
+			} else{
+				if(execution != null){
+					result.addProperty("Status", "Error. No execution found in this name in IN-PROGRESS / PAUSED state to stop")
+				}else{
+					result.addProperty("Status", "Error. No execution found in this name")
+				}
+			}
+			render result
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
-		render result
 	}
 	
 	/**
@@ -1576,9 +1662,10 @@ class ExecutionController {
 		def device = Device.get( params?.id )
 		try {
 			String status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, device)
-			deviceStatusService.updateDeviceStatus(device, status);
+			deviceStatusService.updateOnlyDeviceStatus(device, status);
+			def result1
 			def deviceInstanceList = Device.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(),[order: 'asc', sort: 'stbName'])
-			def result1 = [url: getApplicationUrl(), deviceList : deviceInstanceList, deviceInstanceTotal: deviceInstanceList?.size()]
+			result1 = [url: getApplicationUrl(), deviceList : deviceInstanceList, deviceInstanceTotal: deviceInstanceList?.size()]
 			render view:"devicelist", model:result1
 		} catch (Exception e) {
 		}

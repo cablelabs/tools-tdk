@@ -13,22 +13,22 @@
 			<table>
 				<thead>
 					<tr>
-						<th colspan="7" align="center" style="width:50%;"><h1>Executed Script Details</h1></th>
+						<th colspan="7" align="center" style="width:50%;"><h1>Execution History</h1></th>
 					</tr>
 					<tr>
 						<g:sortableColumn style="width:2%;" property="markAll" title="${message(code: 'execution.result.label', default: '        ')}" />
 						
-						<g:sortableColumn style="width:25%;" property="name" title="${message(code: 'execution.name.label', default: 'Execution Name')}" />
+						<g:sortableColumn style="width:20%;" property="name" title="${message(code: 'execution.name.label', default: 'Execution Name')}" />
 						
-						<th width="35%">Script/ScriptGroup</th>
+						<th width="30%">Script/ScriptGroup</th>
 						
 						<g:sortableColumn style="width:14%;" property="device" title="${message(code: 'execution.device.label', default: 'Device')}" />
 					
-						<g:sortableColumn style="width:15%;" property="dateOfExecution" title="${message(code: 'execution.dateOfExecution.label', default: 'Date Of Execution')}" />
+						<g:sortableColumn style="width:14%;" property="dateOfExecution" title="${message(code: 'execution.dateOfExecution.label', default: 'Date Of Execution')}" />
 					
-						<g:sortableColumn style="width:10%;" property="result" title="${message(code: 'execution.result.label', default: 'Result')}" />
-						<th width="10%"></th>
-						<g:sortableColumn style="width:10%;" property="export" title="${message(code: 'execution.result.label', default: '        ')}" />
+						<g:sortableColumn style="width:12%;" property="result" title="${message(code: 'execution.result.label', default: 'Result')}" />
+					
+						<g:sortableColumn style="width:8%;" property="export" title="${message(code: 'execution.result.label', default: '        ')}" />
 					</tr>
 				</thead>
 				<tbody>
@@ -58,11 +58,11 @@
 							</g:if>											
 						</td>
 					
-						<td align="center" width="15%">${fieldValue(bean: executionInstance, field: "device")}</td>
+						<td align="center" width="14%">${fieldValue(bean: executionInstance, field: "device")}</td>
 					
-						<td align="center" nowrap width="15%">${fieldValue(bean: executionInstance, field: "dateOfExecution")}</td>
+						<td align="center" nowrap width="14%">${fieldValue(bean: executionInstance, field: "dateOfExecution")}</td>
 						
-						<td align="center" width="15%"><g:link onclick="showExecutionLog(${executionInstance.id}); return false;" id="${executionInstance.id}">
+						<td align="center" width="12%"><g:link onclick="showExecutionLog(${executionInstance.id}); return false;" id="${executionInstance.id}">
 						
 						<g:if test="${ !(executionInstance.result) }" >FAILURE						
 							</g:if>
@@ -81,33 +81,28 @@
 							</g:else>
 							</g:else>	
 						</g:link></td>
-						<td>
-						<g:if test="${(executionInstance.executionStatus)}"> 
-							
+					
+						<td width="8%">
+							<g:if test="${(executionInstance.executionStatus)}"> 							
 							<g:if test="${fieldValue(bean: executionInstance, field: 'executionStatus').equals('IN-PROGRESS') || fieldValue(bean: executionInstance, field: 'executionStatus').equals('PAUSED')}"> 
 								<g:if test="${executionInstance?.scriptGroup}">
 									<img src="../images/execution_stop.png" onclick="stopExecution(${executionInstance.id})" id="${executionInstance.id}" />
 								</g:if>
 							</g:if>
 							</g:if>
-								
-								</td>
-						<td width="5%">
 							<g:link action="exportToExcel" id="${executionInstance.id}" ><img src="../images/excel.png" /></g:link>
-						</td>
-						
+						</td>						
 					</tr>
 				</g:each>
 				</tbody>
 			</table>
 			</div>
 			
-			<div class="pagination" style="width: 98%;">
-					<a href="#" onclick="showCleanUpPopUp();"><label> <b>Date based CleanUp </b></label></a>&emsp;&emsp;&emsp;
+			<div class="pagination" style="width: 99%;">
+					<a href="#" onclick="showCleanUpPopUp();"><label> <b>Date based CleanUp </b></label></a>
 					<input type="checkbox" name="markAll" id="markAll2" class="markAll" onclick="clickCheckbox(this)">
 					<label> <b>Mark All </b></label>	
-					<img src="../images/trash.png" onclick="deleteResults();return false;" style="cursor: pointer;" alt="Delete"/>
+					<img src="../images/trash.png" onclick="deleteResults();return false;" style="cursor: pointer;" alt="Delete" />
 					<g:paginate total="${executorInstanceTotal}" />
-			</div>
-			
+			</div>			
 			<g:hiddenField name="pageOffset" id="pageOffset" value="${params.offset}"/>

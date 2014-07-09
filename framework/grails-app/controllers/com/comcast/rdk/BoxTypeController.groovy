@@ -84,7 +84,15 @@ class BoxTypeController {
 			render(view: "create", model: [boxTypeInstance: boxTypeInstance, boxTypeInstanceList: boxTypeList, boxTypeInstanceTotal: boxTypeListCnt.size()])
 			return
 		}
-
+		
+		def boxTypeBasedOnName = BoxType?.findByName(params?.name)
+		
+		if(boxTypeBasedOnName && (boxTypeBasedOnName?.id !=  boxTypeInstance?.id)){
+			flash.message = message(code: 'default.not.unique.message', args: [message(code: 'boxType.label', default: 'BoxType Name')])
+			render(view: "create", model: [boxTypeInstance: boxTypeInstance, boxTypeInstanceList: boxTypeList, boxTypeInstanceTotal: boxTypeListCnt.size()])
+			return
+		}
+		
 		if (version != null) {
 			if (boxTypeInstance.version > version) {
 				boxTypeInstance.errors.rejectValue("version", "default.optimistic.locking.failure",

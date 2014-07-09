@@ -69,7 +69,6 @@ $(document).ready(function() {
 </head>
 <body>	
 	<div>
-		<h1>Execute Script</h1>
 		<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 		</g:if>
@@ -91,7 +90,7 @@ $(document).ready(function() {
 				   
 					<div class="" style="width: 180px; height: 400px; overflow: auto;">
 						<ul id="browser" class="filetree">
-							<li class="" id="root"><span class="folder" id="addconfId">Select Device</span>
+							<li class="" id="root"><span class="folder" id="addconfId">Device</span>
 								<ul> <% int deviceStatusCount = 0; %>
 								<span id="device_status">								
 									<g:each in="${deviceList}" var="device">

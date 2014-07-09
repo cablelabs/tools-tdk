@@ -118,9 +118,10 @@
 	</table>
 	</g:form>
 	<g:form method="post">
+	<div id="newMessage" style="width:100%; text-align : right;">Cannot delete an entry if its start/end date is after the current date</div>
 	<div id="baseScheduleTable" class="hello">
 		<g:render template="scheduleTable" ></g:render>		
-	</div>
+	</div>	
 	<div id="newScheduleTable"></div>
 </g:form>
 

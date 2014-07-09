@@ -46,16 +46,16 @@ $(function() {
 	$('#longtext').more({length: 100});
 });
 
-function showHideLink(k){
-	$('#hidelink'+k).show();
-	$('#showlink'+k).hide();
-	$('#testSucc'+k).show();
+function showHideLink(k,i){
+	$('#hidelink'+k+'_'+i).show();
+	$('#showlink'+k+'_'+i).hide();
+	$('#testSucc'+k+'_'+i).show();
 }
 
-function hideLogs(k){
-	$('#showlink'+k).show();
-	$('#testSucc'+k).hide();
-	$('#hidelink'+k).hide();
+function hideLogs(k,i){
+	$('#showlink'+k+'_'+i).show();
+	$('#testSucc'+k+'_'+i).hide();
+	$('#hidelink'+k+'_'+i).hide();
 }
 
 /*function showLogs(k){
@@ -64,16 +64,16 @@ function hideLogs(k){
 	$('#showlink'+k).hide();
 }*/
 
-function showCrashHideLink(k){
-	$('#hidecrashlink'+k).show();
-	$('#showcrashlink'+k).hide();
-	$('#testCrashSucc'+k).show();
+function showCrashHideLink(k,i){
+	$('#hidecrashlink'+k+'_'+i).show();
+	$('#showcrashlink'+k+'_'+i).hide();
+	$('#testCrashSucc'+k+'_'+i).show();
 }
 
-function hideCrashLogs(k){
-	$('#showcrashlink'+k).show();
-	$('#testCrashSucc'+k).hide();
-	$('#hidecrashlink'+k).hide();
+function hideCrashLogs(k,i){
+	$('#showcrashlink'+k+'_'+i).show();
+	$('#testCrashSucc'+k+'_'+i).hide();
+	$('#hidecrashlink'+k+'_'+i).hide();
 }
 
 /*function showCrashLogs(k){
@@ -125,6 +125,8 @@ function hideParameters(k){
 	<tr class="trborder even">
 		<td colspan="2" align="right">
 		<g:link action="writexmldata" params="[execName:"${executionInstance?.name}"]" >Download Result(xml)</g:link>	
+		<br>
+		<g:link action="exportConsolidatedToExcel" params="[id:"${executionInstance?.id}"]" >Download Consolidated Report(Excel)</g:link>	
 		</td>		
 	</tr>		
 	<tr class="trborder even">
@@ -135,9 +137,13 @@ function hideParameters(k){
 		<td class="tdhead">IP</td>
 		<td>${executionDeviceInstance?.deviceIp}</td>				
 	</tr>
+	<tr class="trborder even">
+		<td class="tdhead">Date Of Execution</td>
+		<td >${executionInstance?.dateOfExecution}</td>				
+	</tr>
 	<tr class="odd">
 		<td class="tdhead">Time taken for execution(min)</td>
-		<td>${executionDeviceInstance?.executionTime}</td>				
+		<td>${executionInstance?.executionTime}</td>				
 	</tr>
 	
 	<tr class="trborder even">
@@ -192,8 +198,7 @@ function hideParameters(k){
 						}
 					}
 				}
-		 	}catch(Exception fnf){
-           		
+		 	}catch(Exception fnf){          		
        	 	}
 		 %>	
 		<g:if test="${!(fileContents.isEmpty())}">
@@ -202,17 +207,43 @@ function hideParameters(k){
 			<span id="fulltext${k}" style="display:none;">${fileContents}&emsp; </span>
 		</g:if>		
 		<g:else>
-			<b>Unable to fetch Device Details due to Network Traffic error</b>
+			<b>Unable to fetch Device Details</b>
 		</g:else>
 		</td>				
 	</tr>
 	<tr class="odd">
-		<th>Test Group</th>
-		<th>Result : ${executionDeviceInstance?.status}</th>			
+		<th>Test Group 
+		</th>
+		<th align="left">
+		 <g:if test="${executionInstance?.script}">
+			${testGroup}		 
+		  </g:if>
+		  <g:else>
+		  	${executionInstance?.scriptGroup}
+		  </g:else> &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+		  
+		  Result : 
+		  <g:if test="${ !(executionInstance.result) }" >FAILURE						
+							</g:if>
+							<g:else>
+							<g:if test="${(executionInstance.executionStatus)}"> 
+							
+							<g:if test="${fieldValue(bean: executionInstance, field: 'executionStatus').equals('PAUSED')}"> 
+								${fieldValue(bean: executionInstance, field: "executionStatus")}
+							</g:if>
+							<g:else>
+								${fieldValue(bean: executionInstance, field: "result")}
+							</g:else>
+							</g:if>	
+							<g:else>
+								${fieldValue(bean: executionInstance, field: "result")}
+							</g:else>
+							</g:else>
+		</th>			
 	</tr>	
 	<tr class="even">
-		<td></td>
-		<td>
+		
+		<td colspan="2">
 			<table >
 			<g:if test="${(statusResults?.get(executionDeviceInstance))?.size() > 0}">
 			<tr class="scripthead" >
@@ -232,7 +263,7 @@ function hideParameters(k){
 		</td>
 	</tr>
 	<tr class="even">	
-		<td class="tdhead" style="vertical-align: middle; text-align: center;">
+		<%--<td class="tdhead" style="vertical-align: middle; text-align: center;">
 		  <g:if test="${executionInstance?.script}">
 			${testGroup}		 
 		  </g:if>
@@ -240,20 +271,23 @@ function hideParameters(k){
 		  	${executionInstance?.scriptGroup}
 		  </g:else>
 		</td>
-		<td>
-
+		--%>
+		<td colspan="2">
 		<g:each in="${executionresults.get(executionDeviceInstance)}" status="i"  var="executionResultInstance">
-		<section class="round-border">
+		
 			<table>
 				<tr class="scripthead">
 					<td class="tdhead">Test Script </td>
-					<td>${executionResultInstance?.script}</td>
+					<td>${executionResultInstance?.script}</td>					
 					<td class="tdhead">Status</td>
-					<td>${executionResultInstance?.status}</td>
-					<td>
-					<a href="#" id="expander${k}_${i}" onclick="this.innerHTML='Hide';viewOnClick(this,${k},${i}); return false;">Details</a>
+					<td>${executionResultInstance?.status}</td>					
+					<td><a href="#" id="expander${k}_${i}" onclick="this.innerHTML='Hide';viewOnClick(this,${k},${i}); return false;">Details</a></td>
 				</tr>
 				<tbody id="allmessages${k}_${i}"  style="display: none;">
+				<tr>
+					<td class="tdhead">TimeTaken(min) </td>
+					<td colspan="4">${executionResultInstance?.executionTime}</td>					
+				</tr>
 				<g:each in="${executionResultInstance.executemethodresults}"  var="executionResultMthdsInstance">
 				<tr class="fnhead">
 					<td>Function Name</td>
@@ -274,7 +308,7 @@ function hideParameters(k){
 				</g:each>
 				<tr>
 					<td>Log Data </td>
-					<td colspan="4"><div style="overflow : auto; height : 180px;">${executionResultInstance?.executionOutput}</div></td>				
+					<td colspan="6"><div style="overflow : auto; height : 180px;">${executionResultInstance?.executionOutput}</div></td>				
 				</tr>
 				
 				<tr>
@@ -287,9 +321,11 @@ function hideParameters(k){
 						</span>
 
 						<span id="hideconsolelink${k}_${i}" style="display:none;"><a style="color:#7E2217;" href="#" onclick="hideConsoleLogs(${k},${i})">Hide</a></span>
+						<br>
+						<div id="consoleLog${k}_${i}"></div>	
 					</td>					
 				</tr>
-				<tr>
+				<%--<tr>
 					<td></td>
 					<td colspan="4">
 						<div id="consoleLog${k}_${i}"></div>	
@@ -297,9 +333,47 @@ function hideParameters(k){
 					</td>	
 				</tr>
 
-				</tbody>
+
+				--%><tr>
+					<td>Log	Files</td>	
+					<td colspan="4">
+						&emsp;<span id="hidelink${k}_${i}" style="display:none;"><a  href="#" onclick="hideLogs(${k},${i})">Hide</a></span>
+						<span id="showlink${k}_${i}">
+						<g:remoteLink action="showLogFiles" id="1" update="testSucc${k}_${i}" onSuccess="showHideLink(${k},${i});" params="[execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}", execResId:"${executionResultInstance?.id}"]">Show</g:remoteLink>								
+						</span>
+						<br>
+						<div id="testSucc${k}_${i}"></div>		
+						
+					</td>					
+				</tr>
+				<%--<tr>
+					<td></td>
+					<td colspan="4">
+						<div id="testSucc${k}_${i}"></div>						
+					</td>	
+				</tr>
+				--%>
+				<tr>
+					<td>Crash Log Files</td>	
+					<td colspan="4">
+						&emsp;<span id="hidecrashlink${k}_${i}" style="display:none;"><a href="#" onclick="hideCrashLogs(${k},${i})">Hide</a></span>
+						<span id="showcrashlink${k}_${i}">			
+						<g:remoteLink action="showCrashLogFiles" id="1" update="testCrashSucc${k}_${i}" onSuccess="showCrashHideLink(${k},${i});" params="[execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}", execResId:"${executionResultInstance?.id}"]">Show</g:remoteLink>
+						</span>
+						<br>
+						<div id="testCrashSucc${k}_${i}"></div>		
+					</td>					
+				</tr>
+				<%--<tr>
+					<td></td>
+					<td colspan="4">
+						<div id="testCrashSucc${k}_${i}"></div>						
+					</td>	
+				</tr>
+
+				--%></tbody>
 			</table>
-			</section>			
+			
 			<g:if test="${executionResultInstance.performance}">
 			<table>
 						<tr class="scripthead">
@@ -318,17 +392,16 @@ function hideParameters(k){
 						<g:if test="${performance}">					
 						<tbody >
 							<tr class="fnhead">
-								<td class="tdhead">Performance Type</td>
-								<td>BenchMarking</td>
+								<td class="tdhead" colspan="2">Time Info</td>
 							</tr>
 							<tr class="fnhead1">												
 								<td class="tdhead">API Name</td>
 								<td class="tdhead">Execution Time(millisec)</td>							
 							</tr>
-							<g:each in="${performance}"  var="performanceInstance">
+							<g:each in="${performance}" var="performanceInstance">
 								<tr>																					
 									<td>${performanceInstance?.processName}</td>												
-									<td >${performanceInstance?.processValue}</td>				
+									<td>${performanceInstance?.processValue}</td>				
 								</tr>					
 							</g:each>						
 						</tbody>
@@ -340,9 +413,7 @@ function hideParameters(k){
 						%>
 						<table>	
 						<tr class="fnhead">
-								<td class="tdhead">Performance Type</td>
-								<td>System Diagnostics</td>
-								<td></td>
+								<td class="tdhead" colspan="2">Performance Data</td>														
 						</tr>				
 						<tbody>
 							<g:if test="${performance1}">
@@ -364,30 +435,9 @@ function hideParameters(k){
 			</g:if>
 		</g:each>	
 		</td>
-	</tr>
-	<tr>
-		<td colspan="2">
-			<b>Log Files</b>						
-			&emsp;<span id="hidelink${k}" style="display:none;"><a style="color:#7E2217;" href="#" onclick="hideLogs(${k})">Hide</a></span>
-			<span id="showlink${k}">
-			&emsp;<g:remoteLink style="color:#7E2217;" action="showLogFiles" id="1" update="testSucc${k}" onSuccess="showHideLink(${k});" params="[execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}"]">Show</g:remoteLink>								
-			</span>
-			<div id="testSucc${k}"></div>
-		</td>	
-	</tr>
-	<tr>
-		<td colspan="2">
-			<b>Crash Log Files</b>					
-			&emsp;<span id="hidecrashlink${k}" style="display:none;"><a style="color:#7E2217;" href="#" onclick="hideCrashLogs(${k})">Hide</a></span>
-			&emsp;<span id="showcrashlink${k}">			
-			<g:remoteLink style="color:#7E2217;" action="showCrashLogFiles" id="1" update="testCrashSucc${k}" onSuccess="showCrashHideLink(${k});" params="[execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}"]">Show</g:remoteLink>
-			</span>
-			<div id="testCrashSucc${k}"></div>
-		</td>	
-	</tr>
+	</tr>	
 </table>	
 </g:each>
-
 </g:if>
 <g:else>
 <div>
