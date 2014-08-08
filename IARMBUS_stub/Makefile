@@ -22,7 +22,7 @@ ifeq ($(RDK_VERSION),RDK2DOT0)
 COPTS     += -DRDK_BR_2DOT0
 VERSION    = br2.0
 endif
-INCLUDES  +=    -I$(RDK_BUILD_DIR)/iarmbus/core/include -I$(RDK_BUILD_DIR)/iarmbus/core -I$(RDK_BUILD_DIR)/iarmmgrs/generic/ir/include -I$(RDK_BUILD_DIR)/iarmmgrs/generic/mfr/include
+INCLUDES  +=    -I$(RDK_BUILD_DIR)/iarmbus/core/include -I$(RDK_BUILD_DIR)/iarmbus/core -I$(RDK_BUILD_DIR)/iarmmgrs/generic/ir/include -I$(RDK_BUILD_DIR)/iarmmgrs/generic/mfr/include -I$(RDK_BUILD_DIR)/iarmmgrs/generic/sysmgr/include -I$(RDK_BUILD_DIR)/iarmmgrs/generic/disk/include 
 LDOPTS    +=    -L $(IMAGE_PATH)/usr/local/lib 	
 
 #debug log level

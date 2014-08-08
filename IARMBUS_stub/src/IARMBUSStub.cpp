@@ -1,30 +1,24 @@
 /*
-
-* ============================================================================
-
-* COMCAST CONFIDENTIAL AND PROPRIETARY
-
-* ============================================================================
-
-* This file and its contents are the intellectual property of Comcast.  It may
-
-* not be used, copied, distributed or otherwise  disclosed in whole or in part
-
-* without the express written permission of Comcast.
-
-* ============================================================================
-
-* Copyright (c) 2013 Comcast. All rights reserved.
-
-* ============================================================================
-
-*/
+ * ============================================================================
+ * COMCAST C O N F I D E N T I A L AND PROPRIETARY
+ * ============================================================================
+ * This file and its contents are the intellectual property of Comcast.  It may
+ * not be used, copied, distributed or otherwise  disclosed in whole or in part
+ * without the express written permission of Comcast.
+ * ============================================================================
+ * Copyright (c) 2014 Comcast. All rights reserved.
+ * ============================================================================
+ */
 
 #include "IARMBUSAgent.h"
 
 int LastKeyType;
 int LastKeyCode;
-char LastEvent[40],g_ManagerName[20];
+char LastEvent[80],g_ManagerName[20];
+int gSysState;
+int gSysError;
+char gSysPayload[20];
+IARM_Bus_SYSMgr_SystemState_t gstateId ;
 
 /*These global variables are to check the test app with event handler and BusCall APIS*/
 int g_evtData[EVTDATA_MAX_SIZE],g_iter=0;
@@ -69,6 +63,14 @@ bool prereqcheck(char *ownerName )
         {
 		strcpy(appName,MFRMGR_EXE);
 	}
+	else if (strcmp(ownerName, "SYSMgr")  == 0)
+        {
+		strcpy(appName,SYSMGR_EXE);
+	}
+	else if (strcmp(ownerName, "DISKMgr")  == 0)
+        {
+		strcpy(appName,DISKMGR_EXE);
+	}
 	else
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"Invalid Owner Name\n");
@@ -95,6 +97,14 @@ bool prereqcheck(char *ownerName )
 			getline(Myfile,line);
 			if ((offset = line.find(appName, 0)) != std::string::npos) {
 				Myfile.close();
+				if( remove( pre_req_chk_file.c_str() ) != 0 )
+				{
+					DEBUG_PRINT(DEBUG_ERROR,"\nFailed to remove file\n");
+				}
+				else
+				{
+					DEBUG_PRINT(DEBUG_LOG,"\nFile removed\n");
+				}
 				DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites present\n");
 				return TEST_SUCCESS;
 			}
@@ -472,15 +482,14 @@ bool IARMBUSAgent::IARMBUSAgent_ReleaseResource(IN const Json::Value& req, OUT J
  *
  ***************************************************************************/
 
-
 bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n get_LastReceivedEventDetails --->Entry \n");
 	char details[200]="Event Details:";
 	const char *KeyCodedetails=" :: KeyCode : " ;
 	const char *KeyTypedetails=" :: KeyType : ";
-	char *KeyCodedetails1 =(char*)malloc(sizeof(char)*70); 
-	memset(KeyCodedetails1 , '\0', (sizeof(char)*70));
+	char *KeyCodedetails1 =(char*)malloc(sizeof(char)*200); 
+	memset(KeyCodedetails1 , '\0', (sizeof(char)*200));
 	char *KeyTypedetails1 =(char*)malloc(sizeof(char)*5);
 	memset(KeyTypedetails1 , '\0', (sizeof(char)*5));
 	strcat(details,LastEvent);
@@ -502,8 +511,11 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
 	}
 	else if((strcmp(LastEvent,"IARM_BUS_PWRMGR_EVENT_MODECHANGED")==0)||
 			(strcmp(LastEvent,"IARM_BUS_EVENT_RESOURCEAVAILABLE")==0)||
-			(strcmp(LastEvent,"IARM_BUS_EVENT_RESOLUTIONCHANGE")==0))
+			(strcmp(LastEvent,"IARM_BUS_EVENT_RESOLUTIONCHANGE")==0) ||
+			(strcmp(g_ManagerName,"DISKMgr")==0)|| 
+			(strcmp(g_ManagerName,"SYSMgr")==0) )
 	{
+		DEBUG_PRINT(DEBUG_TRACE,"\n get_LastReceivedEventDetails ****************** \n");
 		response["result"]="SUCCESS";
 	}
 	else if (strcmp(g_ManagerName,"DummyTestMgr")==0)     
@@ -528,17 +540,21 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
 		response["result"]="SUCCESS";               
 		response["details"]=Eventdetails;           
 		return true;                                
-							      
 	}                                             
+	else if((strcmp(LastEvent,"IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE")==0))
+	{
+		response["result"]="SUCCESS";               
+	}
 	else
 	{
+		DEBUG_PRINT(DEBUG_TRACE,"\n get_LastReceivedEventDetails FAIL****************** \n");
 		response["result"]="FAILURE";
-
 	}
 	strcpy(KeyCodedetails1,details);
 	response["details"]=KeyCodedetails1;
 	free(KeyCodedetails1);
 	memset(&(LastEvent) , '\0', (sizeof(char)*20));
+	memset(g_ManagerName , '\0', (sizeof(char)*20));
 	free(KeyTypedetails1);
 	free(Eventdetails);
 	free(evtName);
@@ -565,6 +581,24 @@ void fill_LastReceivedKey(int keyCode ,int keyType)
 }
 
 
+/**************************************************************************
+ * Function Name	: fillSystemStateDetails
+ * Description	: fillSystemStateDetails function is to fill the last recived  
+ *		  system state details in the global variable.
+ *
+ * @param[in]- keyCode,keyType IR key code and type.
+ ***************************************************************************/
+
+void fillSystemStateDetails(int state ,int error, char *payload)
+{
+
+	DEBUG_PRINT(DEBUG_TRACE,"\n fillSystemStateDetails --->Entry \n");
+	gSysState=state;
+	gSysError=error;
+	strcpy(gSysPayload , payload);
+	DEBUG_PRINT(DEBUG_TRACE,"\n fillSystemStateDetails --->Exit \n");
+}
+
 /***************************************************************************
  * Function Name : _evtHandler
  * Description 	: This function is the event handler call back function for handling the 
@@ -580,6 +614,7 @@ void fill_LastReceivedKey(int keyCode ,int keyType)
 void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
 {
 
+	DEBUG_PRINT(DEBUG_LOG,"\nEvent Handler - Entry\n");
 	if (strcmp(owner, IARM_BUS_PWRMGR_NAME)  == 0) 
 	{
 		switch (eventId) 
@@ -638,6 +673,71 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 		}
 
 	}
+	else if (strcmp(owner, IARM_BUS_DISKMGR_NAME) == 0) 
+	{
+		strcpy(g_ManagerName,IARM_BUS_DISKMGR_NAME);
+		switch (eventId) 
+		{
+			case IARM_BUS_DISKMGR_EVENT_HWDISK:
+			{
+				DEBUG_PRINT(DEBUG_LOG,"\nDisk Manager HW DISK event received\n");
+				strcpy(LastEvent , "IARM_BUS_DISKMGR_EVENT_HWDISK");
+				break;
+			}
+			case IARM_BUS_DISKMGR_EVENT_EXTHDD:
+			{
+				DEBUG_PRINT(DEBUG_LOG,"\nDisk Manager  EXT HDD DISK event received\n");
+				IARM_BUS_DISKMgr_EventData_t *param = (IARM_BUS_DISKMgr_EventData_t *)data;
+				if(param->eventType ==DISKMGR_EVENT_EXTHDD_ON)
+					strcpy(LastEvent , "IARM_BUS_DISKMGR_EVENT_EXTHDD - ON");
+				else if(param->eventType ==DISKMGR_EVENT_EXTHDD_OFF)
+					strcpy(LastEvent , "IARM_BUS_DISKMGR_EVENT_EXTHDD - OFF");
+				else if(param->eventType ==DISKMGR_EVENT_EXTHDD_PAIR)
+					strcpy(LastEvent , "IARM_BUS_DISKMGR_EVENT_EXTHDD - PAIR");
+				else
+					strcpy(LastEvent , "IARM_BUS_DISKMGR_EVENT_EXTHDD");	
+				break;
+			}
+		}
+	}
+	else if (strcmp(owner, IARM_BUS_SYSMGR_NAME) == 0)
+        {
+		strcpy(g_ManagerName,IARM_BUS_SYSMGR_NAME);
+                switch (eventId)
+                {
+                        case IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE:
+                        {
+                                DEBUG_PRINT(DEBUG_LOG,"\nSys Manager System State event received\n");
+                                strcpy(LastEvent , "IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE");
+				break;
+                        }
+                        case IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_REQUEST:
+                        {
+                                DEBUG_PRINT(DEBUG_LOG,"\nSys Manager XUPNP Data Request event received\n");
+                                strcpy(LastEvent , "IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_REQUEST");
+				break;
+                        }
+                        case IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_UPDATE:
+                        {
+                                DEBUG_PRINT(DEBUG_LOG,"\nSys Manager XUPNP Data Update event received\n");
+                                strcpy(LastEvent , "IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_UPDATE");
+				break;
+                        }
+                        case IARM_BUS_SYSMGR_EVENT_CARD_FWDNLD:
+                        {
+                                DEBUG_PRINT(DEBUG_LOG,"\nSys Manager Card FW Dwld event received\n");
+                                strcpy(LastEvent , "IARM_BUS_SYSMGR_EVENT_CARD_FWDNLD");
+				break;
+                        }
+                        case IARM_BUS_SYSMGR_EVENT_HDCP_PROFILE_UPDATE:
+                        {
+                                DEBUG_PRINT(DEBUG_LOG,"\nSys Manager HDCP Profile update event received\n");
+                                strcpy(LastEvent , "IARM_BUS_SYSMGR_EVENT_HDCP_PROFILE_UPDATE");
+				break;
+                        }
+                }
+        }
+
 	/*The below code block is for handling thr test app scenario*/
 	else if (strcmp(owner, IARM_BUS_DUMMYMGR_NAME) == 0) {
 		DEBUG_PRINT(DEBUG_TRACE,"\nInside DummyMgr event handler\n");
@@ -818,7 +918,7 @@ static IARM_Result_t _ReleaseOwnership(void *arg)
  *
  * @param [in] req- has "owner_name" which is input to IARM_Bus_RegisterCall
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
- ***************************************************************************/	
+ ***************************************************************************/	
 
 bool IARMBUSAgent::IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -936,10 +1036,25 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
 	}
 	else if(strcmp(ownerName,"DISKMgr")==0)
 	{
-		/*
-		   HDD events will be handled after IARMBUS code is available for XG1
-		 */
-
+		IARM_BUS_DISKMgr_EventData_t eventData;
+		eventData.eventType = (DISKMgr_HDDEvents_t)req["newState"].asInt();
+		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
+		/*Calling IARMBUS API IARM_Bus_BroadcastEvent  */
+		retval=IARM_Bus_BroadcastEvent(ownerName,(IARM_Bus_DISKMgr_EventId_t)eventId,(void*)&eventData,sizeof(eventData));
+	}
+	else if(strcmp(ownerName,"SYSMgr")==0)
+	{
+		IARM_Bus_SYSMgr_EventData_t eventData;
+		if (eventId == IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE)
+		{
+			eventData.data.systemStates.stateId = (IARM_Bus_SYSMgr_SystemState_t)req["newState"].asInt();
+			eventData.data.systemStates.state = req["state"].asInt();
+			eventData.data.systemStates.error = req["error"].asInt();
+			strcpy(eventData.data.systemStates.payload , req["payload"].asCString());
+		}
+		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
+		/*Calling IARMBUS API IARM_Bus_BroadcastEvent  */
+		retval=IARM_Bus_BroadcastEvent(ownerName,(IARM_Bus_SYSMgr_EventId_t)eventId,(void*)&eventData,sizeof(eventData));
 	}
 	/*Checking the return value of API*/
 	/*Filling json response with SUCCESS status*/
@@ -1091,30 +1206,206 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 	}
 	else if(strcmp(ownerName,"MFRLib")==0)
 	{
-		char* mfrdetails=(char*)malloc(sizeof(char)*30);
-		memset(mfrdetails , '\0', (sizeof(char)*30));
-		DEBUG_PRINT(DEBUG_LOG,"\n MFR-calling IARM_Bus_Call from IARM_Bus_Call \n");
-		/*Calling IARMBUS API IARM_Bus_Call  */
-		char *pTmpStr;
-		int len;
-		IARM_Bus_MFRLib_GetSerializedData_Param_t param;	
-		param.type = (mfrSerializedType_t)req["mfr_param_type"].asInt();
-		retval=IARM_Bus_Call(ownerName,IARM_BUS_MFRLIB_API_GetSerializedData,(void*)&param, sizeof(param));
-		len = param.bufLen + 1;
-		pTmpStr = (char *)malloc(len);
-		memset(pTmpStr,0,len);
-		memcpy(pTmpStr,param.buffer,param.bufLen);
-		DEBUG_PRINT(DEBUG_LOG,"\nValue:%s\n",pTmpStr);
-		strcpy(mfrdetails,pTmpStr);
-		free(pTmpStr);
-		/*Checking the return value of API*/
-		/*Filling json response with SUCCESS status*/
-		response["result"]=getResult(retval,resultDetails);
-		response["details"]=mfrdetails;
-
-
+		if(strcmp(methodName,"mfrGetManufacturerData")==0)
+		{
+			char* mfrdetails=(char*)malloc(sizeof(char)*30);
+			memset(mfrdetails , '\0', (sizeof(char)*30));
+			DEBUG_PRINT(DEBUG_LOG,"\n MFR-calling IARM_Bus_Call from IARM_Bus_Call \n");
+			/*Calling IARMBUS API IARM_Bus_Call  */
+			char *pTmpStr;
+			int len;
+			IARM_Bus_MFRLib_GetSerializedData_Param_t param;	
+			param.type = (mfrSerializedType_t)req["mfr_param_type"].asInt();
+			retval=IARM_Bus_Call(ownerName,IARM_BUS_MFRLIB_API_GetSerializedData,(void*)&param, sizeof(param));
+			len = param.bufLen + 1;
+			pTmpStr = (char *)malloc(len);
+			memset(pTmpStr,0,len);
+			memcpy(pTmpStr,param.buffer,param.bufLen);
+			DEBUG_PRINT(DEBUG_LOG,"\nValue:%s\n",pTmpStr);
+			strcpy(mfrdetails,pTmpStr);
+			free(pTmpStr);
+			/*Checking the return value of API*/
+			/*Filling json response with SUCCESS status*/
+			response["result"]=getResult(retval,resultDetails);
+			response["details"]=mfrdetails;
+		}
+		else
+		{
+			char param;
+			retval=IARM_Bus_Call(ownerName,methodName,(void*)&param, sizeof(param));
+			response["result"]=getResult(retval,resultDetails);
+                        response["details"]=resultDetails;
+		}	
 	}
-        /*This is for testing the test app with bus call*/
+	else if(strcmp(ownerName,"SYSMgr")==0)
+	{
+		if(strcmp(methodName,"GetSystemStates")==0)
+		{
+			IARM_Bus_SYSMgr_GetSystemStates_Param_t param;
+			retval=IARM_Bus_Call(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_API_GetSystemStates,&param,sizeof(param));
+			const char *statedetails=" :: State : ";
+			const char *errordetails=" :: Error : ";
+			const char *payloaddetails=" :: Payload : ";
+			char *statedetails1 =(char*)malloc(sizeof(char)*5); 
+			char *errordetails1 =(char*)malloc(sizeof(char)*5); 
+			char *payloaddetails1 =(char*)malloc(sizeof(char)*20); 
+			char *details =(char*)malloc(sizeof(char)*80); 
+			memset(details , '\0', (sizeof(char)*80));
+			memset(statedetails1 , '\0', (sizeof(char)*5));
+			memset(errordetails1 , '\0', (sizeof(char)*5));
+			memset(payloaddetails1 , '\0', (sizeof(char)*20));
+			response["result"]=getResult(retval,resultDetails);
+			switch(gstateId) {
+				case IARM_BUS_SYSMGR_SYSSTATE_CHANNELMAP:
+					fillSystemStateDetails(param.channel_map.state,param.channel_map.error,param.channel_map.payload);
+					break;
+				case IARM_BUS_SYSMGR_SYSSTATE_DISCONNECTMGR:
+					fillSystemStateDetails(param.disconnect_mgr_state.state,param.disconnect_mgr_state.error,param.disconnect_mgr_state.payload);
+					break;
+				case IARM_BUS_SYSMGR_SYSSTATE_TUNEREADY:
+					fillSystemStateDetails(param.TuneReadyStatus.state,param.TuneReadyStatus.error,param.TuneReadyStatus.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_EXIT_OK :
+					fillSystemStateDetails(param.exit_ok_key_sequence.state,param.exit_ok_key_sequence.error,param.exit_ok_key_sequence.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_CMAC :
+					fillSystemStateDetails(param.cmac.state,param.cmac.error,param.cmac.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_MOTO_ENTITLEMENT :
+					fillSystemStateDetails(param.card_moto_entitlements.state,param.card_moto_entitlements.error,param.card_moto_entitlements.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_MOTO_HRV_RX :
+					fillSystemStateDetails(param.card_moto_hrv_rx.state,param.card_moto_hrv_rx.error,param.card_moto_hrv_rx.payload);
+					break;
+				case IARM_BUS_SYSMGR_SYSSTATE_DAC_INIT_TIMESTAMP :
+					fillSystemStateDetails(param.dac_init_timestamp.state,param.dac_init_timestamp.error,param.dac_init_timestamp.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_CARD_CISCO_STATUS :
+					fillSystemStateDetails(param.card_cisco_status.state,param.card_cisco_status.error,param.card_cisco_status.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_VIDEO_PRESENTING :
+					fillSystemStateDetails(param.video_presenting.state,param.video_presenting.error,param.video_presenting.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_HDMI_OUT :
+					fillSystemStateDetails(param.hdmi_out.state,param.hdmi_out.error,param.hdmi_out.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_HDCP_ENABLED :
+					fillSystemStateDetails(param.hdcp_enabled.state,param.hdcp_enabled.error,param.hdcp_enabled.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_HDMI_EDID_READ :
+					fillSystemStateDetails(param.hdmi_edid_read.state,param.hdmi_edid_read.error,param.hdmi_edid_read.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_FIRMWARE_DWNLD :
+					fillSystemStateDetails(param.firmware_download.state,param.firmware_download.error,param.firmware_download.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_TIME_SOURCE :
+					fillSystemStateDetails(param.time_source.state,param.time_source.error,param.time_source.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_TIME_ZONE :
+					fillSystemStateDetails(param.time_zone_available.state,param.time_zone_available.error,param.time_zone_available.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_CA_SYSTEM :
+					fillSystemStateDetails(param.ca_system.state,param.ca_system.error,param.ca_system.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_ESTB_IP :
+					fillSystemStateDetails(param.estb_ip.state,param.estb_ip.error,param.estb_ip.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_ECM_IP :
+					fillSystemStateDetails(param.ecm_ip.state,param.ecm_ip.error,param.ecm_ip.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_LAN_IP :
+					fillSystemStateDetails(param.lan_ip.state,param.lan_ip.error,param.lan_ip.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_MOCA :
+					fillSystemStateDetails(param.moca.state,param.moca.error,param.moca.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_DOCSIS :
+					fillSystemStateDetails(param.docsis.state,param.docsis.error,param.docsis.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_DSG_BROADCAST_CHANNEL :
+					fillSystemStateDetails(param.dsg_broadcast_tunnel.state,param.dsg_broadcast_tunnel.error,param.dsg_broadcast_tunnel.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_DSG_CA_TUNNEL :
+					fillSystemStateDetails(param.dsg_ca_tunnel.state,param.dsg_ca_tunnel.error,param.dsg_ca_tunnel.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_CABLE_CARD :
+					fillSystemStateDetails(param.cable_card.state,param.cable_card.error,param.cable_card.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_CABLE_CARD_DWNLD :
+					fillSystemStateDetails(param.cable_card_download.state,param.cable_card_download.error,param.cable_card_download.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_CVR_SUBSYSTEM :
+					fillSystemStateDetails(param.cvr_subsystem.state,param.cvr_subsystem.error,param.cvr_subsystem.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_DOWNLOAD :
+					fillSystemStateDetails(param.download.state,param.download.error,param.download.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_VOD_AD :
+					fillSystemStateDetails(param.vod_ad.state,param.vod_ad.error,param.vod_ad.payload);
+					break;
+				case IARM_BUS_SYSMGR_SYSSTATE_CABLE_CARD_SERIAL_NO:
+					fillSystemStateDetails(param.card_serial_no.state,param.card_serial_no.error,param.card_serial_no.payload);
+					break;
+				case IARM_BUS_SYSMGR_SYSSTATE_ECM_MAC:
+					fillSystemStateDetails(param.ecm_mac.state,param.ecm_mac.error,param.ecm_mac.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_DAC_ID :
+					fillSystemStateDetails(param.dac_id.state,param.dac_id.error,param.dac_id.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_PLANT_ID :
+					fillSystemStateDetails(param.plant_id.state,param.plant_id.error,param.plant_id.payload);
+					break;
+				case IARM_BUS_SYSMGR_SYSSTATE_STB_SERIAL_NO:
+					fillSystemStateDetails(param.stb_serial_no.state,param.stb_serial_no.error,param.stb_serial_no.payload);
+					break;
+				case   IARM_BUS_SYSMGR_SYSSTATE_BOOTUP :
+					fillSystemStateDetails(param.bootup.state,param.bootup.error,param.bootup.payload);
+					break;
+				default:
+					response["details"]="System State received";
+					break;
+			}
+
+			sprintf(statedetails1,"%d" , gSysState);
+			sprintf(errordetails1,"%d" , gSysError);
+			sprintf(payloaddetails1,"%s" ,gSysPayload);
+			strcat(details,statedetails);
+			strcat(details,statedetails1);
+			strcat(details,errordetails);
+			strcat(details,errordetails1);
+			strcat(details,payloaddetails);
+			strcat(details,payloaddetails1);
+			response["details"]=details;
+			free(statedetails1);
+			free(errordetails1);
+			free(payloaddetails1);
+			free(details);
+			gstateId =IARM_BUS_SYSMGR_SYSSTATE_CHANNELMAP;
+		}
+		else if((strcmp(methodName,"SetHDCPProfile")==0)||(strcmp(methodName,"GetHDCPProfile")==0))
+		{
+			IARM_BUS_SYSMGR_HDCPProfileInfo_Param_t param;
+			param.HdcpProfile=req["newState"].asInt();
+			retval=IARM_Bus_Call(IARM_BUS_SYSMGR_NAME,methodName,&param,sizeof(param));	
+			response["result"]=getResult(retval,resultDetails);
+			if (retval != 0)
+				response["details"]=resultDetails;
+			else
+			{
+				char *HDCPdetails = (char*)malloc((sizeof(char*)*30));
+		                memset(HDCPdetails , '\0', (sizeof(char)*30));
+				sprintf(HDCPdetails,"%d",param.HdcpProfile);
+				response["details"]=HDCPdetails;
+			}
+		}
+		else
+		{
+			response["result"]="FAILURE";
+                        response["details"]="INVALID RPC Call";
+		}
+		
+	}
+	/*This is for testing the test app with bus call*/
         else if(strcmp(ownerName,IARM_BUS_DUMMYMGR_NAME)==0)
         {
 		char *dummydata = (char*)malloc(sizeof(char*)*15);
@@ -1182,6 +1473,7 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
                 return TEST_FAILURE;
         }
 	const char* appname=(char*)req["appname"].asCString();
+	const char* argv1=(char*)req["argv1"].asCString();
 	pid_t idChild = vfork();
 	std::string path;
 	strcpy((char*)path.c_str(),getenv("TDK_PATH"));	
@@ -1190,7 +1482,7 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
 	DEBUG_PRINT(DEBUG_ERROR,"\nAppPath:%s\n",path.c_str());
 	if(idChild == 0)
 	{
-		execl(path.c_str(),appname,(char*)NULL);
+		execl(path.c_str(),appname,argv1,(char*)NULL);
 	}
 	else if(idChild <0)
 	{

@@ -66,6 +66,11 @@ class BootStrap {
         {
            e.printStackTrace() 
         }
+		
+		
+		migrateScriptGroupContents();
+		
+		
 		if(Environment.current.name == 'production'){
 			migrationService.doMigration()
 		}
@@ -80,34 +85,83 @@ class BootStrap {
 				scriptGrpInstance.name = moduleName
 			}
 				
-			scriptGrpInstance.addToScripts(scriptInstance)
+			scriptGrpInstance.addToScriptsList(scriptInstance)
 			scriptGrpInstance.save(flush:true)
 		}*/
 		
 		//Code to generate the box type & rdk version based script group. Needs to execute once.
 		
-		/*List<Script> scriptsList = Script.list()
-		 
-		scriptsList.each{ scriptInstance ->
-
-			scriptInstance?.boxTypes?.each{ bType ->
-
-				scriptInstance?.rdkVersions?.each{ vers ->
-
+		/*try {
+			List<Script> scriptsList = Script.list()
+					
+					scriptsList.each{ scriptInstance ->
+					
+					scriptInstance?.boxTypes?.each{ bType ->
+					
+					scriptInstance?.rdkVersions?.each{ vers ->
+					
 					String name = vers?.toString()+"_"+bType?.name
-					def scriptGrpInstance = ScriptGroup.findByName(name)
-					if(!scriptGrpInstance){
-						scriptGrpInstance = new ScriptGroup()
-						scriptGrpInstance.name = name
-					}
-					if(scriptGrpInstance && !scriptGrpInstance?.scripts?.contains(scriptInstance)){
-						scriptGrpInstance.addToScripts(scriptInstance)
+							def scriptGrpInstance = ScriptGroup.findByName(name)
+							if(!scriptGrpInstance){
+								scriptGrpInstance = new ScriptGroup()
+								scriptGrpInstance.name = name
+							}
+					if(scriptGrpInstance && !scriptGrpInstance?.scriptsList?.contains(scriptInstance)){
+						scriptGrpInstance.addToScriptsList(scriptInstance)
 						scriptGrpInstance.save(flush:true)
+					}
+					}
+					}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}*/
+		
+    }
+	
+	/**
+	 * Method to migrate the scripts stored in set(scripts) in script group to list(scriptsList) in script group.
+	 * For keeping the order information.
+	 * @return
+	 */
+	def migrateScriptGroupContents(){
+		try {
+			ScriptGroup.withTransaction {
+				def sgList = ScriptGroup.findAll()
+				sgList.each { sg ->
+					if(sg?.scriptsList == null){
+						sg?.scriptsList = []
+					}
+					def toRemoveList = []
+					if(sg?.scripts?.size() > 0 ){
+						if(sg?.scriptsList?.size() > 0){
+							sg?.scripts?.each{ scrpt ->
+								if(!sg?.scriptsList?.contains(scrpt)){
+									sg?.scriptsList?.add(scrpt)
+								}
+								toRemoveList.add(scrpt?.id)
+							}
+						}else{
+							sg?.scriptsList?.addAll(sg?.scripts)
+							sg?.scripts?.clear()
+						}
+					}
+					
+					if(toRemoveList.size()>0){
+						toRemoveList.each { scrptId ->
+							Script scrpt = Script.findById(scrptId)
+							if(scrpt){
+								sg?.scripts?.removeFromScripts(scrpt)
+							}
+						}
+						
 					}
 				}
 			}
-		}*/
-    }
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
     
     def destroy = {        
 		SocketPortConnector.closeServerSocket()

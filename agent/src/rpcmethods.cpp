@@ -1,14 +1,14 @@
 /*
-* ============================================================================
-* COMCAST CONFIDENTIAL AND PROPRIETARY
-* ============================================================================
-* This file and its contents are the intellectual property of Comcast.  It may
-* not be used, copied, distributed or otherwise  disclosed in whole or in part
-* without the express written permission of Comcast.
-* ============================================================================
-* Copyright (c) 2013 Comcast. All rights reserved.
-* ============================================================================
-*/
+ * ============================================================================
+ * COMCAST C O N F I D E N T I A L AND PROPRIETARY
+ * ============================================================================
+ * This file (and its contents) are the intellectual property of Comcast.  It may
+ * not be used, copied, distributed or otherwise  disclosed in whole or in part
+ * without the express written permission of Comcast.
+ * ============================================================================
+ * Copyright (c) 2014 Comcast. All rights reserved.
+ * ============================================================================
+ */
 
 
 /* System Includes */
@@ -23,7 +23,6 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <ifaddrs.h>
-#include <stdio.h>
 #include <errno.h>
 #include <algorithm>
 
@@ -90,6 +89,7 @@ ModuleMap::iterator o_gModuleMapIter;
 /* Initializations */
 static int nModuleId = 0;  
 std::fstream so_DeviceFile;
+std::string RpcMethods::sm_strResultId = "0000";
 int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of device as FREE by default
 std::string RpcMethods::sm_strConsoleLogPath = "";
 
@@ -614,11 +614,6 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
         pszResultId = request ["resultID"].asCString();    
     }
 
-    /* Clear old log files */      
-    sprintf (szCommand, "rm -rf %s/*", RpcMethods::sm_strLogFolderPath.c_str()); //Constructing Command
-    system (szCommand);
-    sleep(1);
-
     strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
     strNullLog.append(BENCHMARKING_FILE);
     system(strNullLog.c_str());
@@ -631,30 +626,47 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
     strNullLog.append(SYSSTATAVG_FILE);
     system(strNullLog.c_str());
 
+	
 /* Redirecting console log to a file */
 #ifdef AGENT_LOG_ENABLE
 
-    if (strcmp (pszExecId, "0000") != 0)
-    {
-        /* Constructing path to new log file */
-        strFilePath = RpcMethods::sm_strLogFolderPath;
-        strFilePath.append(pszExecId);
-        strFilePath.append(pszDeviceId);
-        strFilePath.append(pszTestCaseId);
-        strFilePath.append(pszExecDevId);
-        strFilePath.append("_AgentConsole.log");
-
-        RpcMethods::sm_strConsoleLogPath = strFilePath;
-    }
-	
     /* Redirecting stderr buffer to stdout */
     dup2(fileno(stdout), fileno(stderr));
-	
-    /* Redirecting stdout buffer to logfile */
-    if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "w", stdout)) == NULL)
+
+    /* Checking if it is a new execution, If it is new clear old logfile and create a new one */
+    if (strcmp (pszResultId, RpcMethods::sm_strResultId.c_str()) != 0)
     {
-        DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
+        /* Copying result id to a static variable */
+        RpcMethods::sm_strResultId = pszResultId;
+	
+        /* Clear old log files */
+        sprintf (szCommand, "rm -rf %s/*", RpcMethods::sm_strLogFolderPath.c_str()); //Constructing Command
+        system (szCommand);
+        sleep(1);
+
+        /* Constructing path to new log file */
+        strFilePath = RpcMethods::sm_strLogFolderPath;
+        strFilePath.append("AgentConsole.log");
+
+        RpcMethods::sm_strConsoleLogPath = strFilePath;
+
+        /* Redirecting stdout buffer to logfile */
+        if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "w", stdout)) == NULL)
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
+        }
+		
     }
+    else
+    {
+         /* If it is an existing execution, Append to the existing file */
+        if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "a", stdout)) == NULL)
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
+        }
+
+    }
+
 	
 #endif /* End of AGENT_LOG_ENABLE */
 	
@@ -946,13 +958,12 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
 
     /* Extracting file to log file */
     strFilePath = RpcMethods::sm_strLogFolderPath;
-    strFilePath.append(pszExecId);
-    strFilePath.append(pszDeviceId);
-    strFilePath.append(pszTestCaseId);
-    strFilePath.append(pszExecDevId);
-    strFilePath.append("_AgentConsole.log");
+    strFilePath.append("AgentConsole.log");
 
     RpcMethods::sm_strConsoleLogPath = strFilePath;
+
+    /* After reboot, copy result id to static variable */
+    RpcMethods::sm_strResultId = pszResultId;
     
     /* Redirecting stderr buffer to stdout */
     dup2 (fileno(stdout), fileno(stderr));
@@ -1235,7 +1246,6 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         /* Find group id for agent process */
         nPgid = getpgid(RpcMethods::sm_nAgentPID);
 
-#if 1
         /* Ignore SIGINT signal in agent monitor process */
 	sighandler_t sigIgnoreHandle = signal (SIGINT, SIG_IGN);
 
@@ -1259,13 +1269,13 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         if (nPID == RETURN_SUCCESS)
         {
             system (START_TFTP_SERVER);
+            exit(0);
         }
         else if (nPID < RETURN_SUCCESS)
         {
             DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!! Couldnot start tftp server for logfile transfer \n");
         }
 
-#endif
         {
             /* Restart Agent */
             nReturnValue = kill (RpcMethods::sm_nAgentPID, SIGKILL);

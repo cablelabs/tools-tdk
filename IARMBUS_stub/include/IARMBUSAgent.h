@@ -1,24 +1,14 @@
 /*
-
-* ============================================================================
-
-* COMCAST CONFIDENTIAL AND PROPRIETARY
-
-* ============================================================================
-
-* This file and its contents are the intellectual property of Comcast.  It may
-
-* not be used, copied, distributed or otherwise  disclosed in whole or in part
-
-* without the express written permission of Comcast.
-
-* ============================================================================
-
-* Copyright (c) 2013 Comcast. All rights reserved.
-
-* ============================================================================
-
-*/
+ * ============================================================================
+ * COMCAST C O N F I D E N T I A L AND PROPRIETARY
+ * ============================================================================
+ * This file (and its contents) are the intellectual property of Comcast.  It may
+ * not be used, copied, distributed or otherwise  disclosed in whole or in part
+ * without the express written permission of Comcast.
+ * ============================================================================
+ * Copyright (c) 2014 Comcast. All rights reserved.
+ * ============================================================================
+ */
 
 #ifndef __IARM_STUB_H__
 #define __IARM_STUB_H__
@@ -35,6 +25,8 @@
 #include "libIBus.h"
 #include "irMgr.h"
 #include "pwrMgr.h"
+#include "sysMgr.h"
+#include "diskMgr.h"
 #include "mfrMgr.h"
 #include "mfrTypes.h"
 #include <sys/types.h>
@@ -53,6 +45,8 @@
 #define PWRMGR_EXE "pwrMgrMain"
 #define IRMGR_EXE "irMgrMain"
 #define MFRMGR_EXE "mfrMgrMain"
+#define SYSMGR_EXE "sysMgrMain"
+#define DISKMGR_EXE "diskMgrMain"
 
 class RDKTestAgent;
 class IARMBUSAgent : public RDKTestStubInterface

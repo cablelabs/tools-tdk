@@ -1,12 +1,12 @@
 /*
  * ============================================================================
- * COMCAST CONFIDENTIAL AND PROPRIETARY
+ * COMCAST C O N F I D E N T I A L AND PROPRIETARY
  * ============================================================================
  * This file and its contents are the intellectual property of Comcast.  It may
  * not be used, copied, distributed or otherwise  disclosed in whole or in part
  * without the express written permission of Comcast.
  * ============================================================================
- * Copyright (c) 2013 Comcast. All rights reserved.
+ * Copyright (c) 2014 Comcast. All rights reserved.
  * ============================================================================
  */
 
@@ -17,12 +17,19 @@
 #include <string.h>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
+#include "rdk_debug.h"
+#include "rdk_utils.h"
+#include <fstream>
 
 #define IN
 #define OUT
 
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
+
+#define TDK_LOG			"/opt/TDK/logs/AgentConsole.log"
+#define TDK_DEBUG_CONF_FILE 	"/opt/TDK/debug.ini"
+#define SIZE    		256
 
 using namespace std;
 
@@ -48,6 +55,14 @@ class RDKLoggerAgent : public RDKTestStubInterface
 		bool RDKLoggerAgent_EnvGetNum(IN const Json::Value& req, OUT Json::Value& response);
 		bool RDKLoggerAgent_EnvGetValueFromNum(IN const Json::Value& req, OUT Json::Value& response);
 		bool RDKLoggerAgent_EnvGetModFromNum(IN const Json::Value& req, OUT Json::Value& response);
+		bool RDKLoggerAgent_CheckMPELogEnabled(IN const Json::Value& req, OUT Json::Value& response);
+		bool RDKLoggerAgent_Log_All(IN const Json::Value& req, OUT Json::Value& response);
+		bool RDKLoggerAgent_Log_None(IN const Json::Value& req, OUT Json::Value& response);
+		bool RDKLoggerAgent_Log_Trace(IN const Json::Value& req, OUT Json::Value& response);
+		bool RDKLoggerAgent_Log_InverseTrace(IN const Json::Value& req, OUT Json::Value& response);
+		bool RDKLoggerAgent_Log_Msg(IN const Json::Value& req, OUT Json::Value& response);
+		bool RDKLoggerAgent_SetLogLevel(IN const Json::Value& req, OUT Json::Value& response);
+		bool RDKLoggerAgent_GetLogLevel(IN const Json::Value& req, OUT Json::Value& response);
 };
         extern "C" RDKLoggerAgent* CreateObject();
 

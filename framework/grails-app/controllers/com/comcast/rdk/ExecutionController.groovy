@@ -515,7 +515,7 @@ class ExecutionController {
 
 							if(scriptGroup){
 								String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-								scriptGroup?.scripts?.each{ script ->
+								scriptGroup?.scriptsList?.each{ script ->
 									/**
 									 * Checks whether atleast one script matches with the box type of device.
 									 * If so execution will proceed with that one script
@@ -830,7 +830,7 @@ class ExecutionController {
 							def scriptGroup = ScriptGroup.findById(params?.scriptGrp,[lock: true])
 
 							String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-							scriptGroup?.scripts?.each{ script ->
+							scriptGroup?.scriptsList?.each{ script ->
 								/**
 								 * Checks whether atleast one script matches with the box type of device.
 								 * If so execution will proceed with that one script

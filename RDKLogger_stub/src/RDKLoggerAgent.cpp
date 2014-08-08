@@ -1,20 +1,20 @@
 /*
-* ============================================================================
-* COMCAST CONFIDENTIAL AND PROPRIETARY
-* ============================================================================
-* This file and its contents are the intellectual property of Comcast.  It may
-* not be used, copied, distributed or otherwise  disclosed in whole or in part
-* without the express written permission of Comcast.
-* ============================================================================
-* Copyright (c) 2013 Comcast. All rights reserved.
-* ============================================================================
-*/
+ * ============================================================================
+ * COMCAST C O N F I D E N T I A L AND PROPRIETARY
+ * ============================================================================
+ * This file and its contents are the intellectual property of Comcast.  It may
+ * not be used, copied, distributed or otherwise  disclosed in whole or in part
+ * without the express written permission of Comcast.
+ * ============================================================================
+ * Copyright (c) 2014 Comcast. All rights reserved.
+ * ============================================================================
+ */
 
 #include "RDKLoggerAgent.h"
-#include "rdk_debug.h"
-#include "rdk_utils.h"
 
-using namespace std;
+bool b_rdk_logger_enabled = false;
+
+/* Helper functions */
 
 /**
  * Converts a log level name to the correspodning log level enum value.
@@ -42,45 +42,79 @@ static int logNameToEnum(const char *name)
  *
  * @param module Module in which this message belongs to.
  * @param level  Log level of the log message Log level of the log message supported for a module
- * @return     	 1 if log level is supported for a module
- *		 0 if log level is not supported for a module
- *		 -1 on error.
+ * @return     	 true if log level is supported for a module
+ *		 false if log level is not supported for a module
  */
-int dbgFinder( const char *module, const char *level)
+
+bool dbgFinder( const char *module, const char *level)
 {
-    int 	find_result = 0;
-    const int 	line_buf_len = 256;
-    char 	lineBuffer[line_buf_len];
-    FILE	*f;
+    string    line;
+    ifstream  debugFile;
 
-    /* Open the env file */
-    if ((f = fopen( DEBUG_CONF_FILE,"r")) == NULL)
+    debugFile.open(TDK_DEBUG_CONF_FILE);
+    if(debugFile.is_open())
     {
-        printf("** TDK ERROR!  Could not open configuration file!    **\n");
-        return -1;
-    }
-    printf("%s: Conf file %s open success\n", __FUNCTION__, DEBUG_CONF_FILE);    
-
-    /* Read each line of the file */
-    while (fgets(lineBuffer,line_buf_len,f) != NULL)
-    {
-        /* Ignore comment lines */
-        if (lineBuffer[0] == '#')
+        while(debugFile.good())
+        {
+            getline(debugFile,line);
+	    // Ignore commented lines
+            if (line[0] == '#')
             	continue;
-	/* Check if module name and log level is present */
-	if(((strstr(lineBuffer, module)) != NULL) && ((strstr(lineBuffer, level)) != NULL)) {
-		find_result++;
-		break;
-	}
+	    // Check if module name and log level combination is present		
+            if ((line.find(module, 0) != string::npos) && (line.find(level, 0) != string::npos))
+            {
+                debugFile.close();
+                return true;
+            }
+        }
+        debugFile.close();
     }
-	
-    if(f) {
-	fclose(f);
+    else
+    {
+	DEBUG_PRINT(DEBUG_ERROR,"\n%s: Unable to open conf file %s\n", __FUNCTION__,TDK_DEBUG_CONF_FILE);
     }
 
-    return find_result;
+    return false;
 }
 
+/**
+ * Checks if a particular log is logged by RDK_LOG command.
+ *
+ * @param search Log message logged by RDK_LOG.
+ * @return       true if log msg is found
+ *               false if log msg is not found
+ * Filename is derived from the console log file name generated 
+ * on each testcase execution.
+ * Assumption is that /opt/TDK/logs folder contains
+ * one and only one AgentConsole log file
+ **/
+
+bool CheckLog(const char* search)
+{
+    string line;
+    ifstream logFile;
+
+    logFile.open(TDK_LOG, ios::in);
+    if(logFile.is_open())
+    {
+        while(logFile.good())
+        {
+            getline(logFile,line);
+            if (line.find(search, 0) != string::npos) 
+            {
+		logFile.close();
+             	return true;
+            }
+        }
+        logFile.close();
+    }
+    else
+    {
+	DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open file %s\n", TDK_LOG);
+    }
+
+    return false;
+}
 
 /*************************************************************************
 Function name : RDKLoggerAgent::RDKLoggerAgent
@@ -113,6 +147,14 @@ bool RDKLoggerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAge
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_EnvGetNum, "TestMgr_RDKLogger_EnvGetNum");
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_EnvGetValueFromNum, "TestMgr_RDKLogger_EnvGetValueFromNum");
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_EnvGetModFromNum, "TestMgr_RDKLogger_EnvGetModFromNum");
+	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_CheckMPELogEnabled, "TestMgr_RDKLogger_CheckMPELogEnabled");
+	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_All, "TestMgr_RDKLogger_Log_All");
+	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_None, "TestMgr_RDKLogger_Log_None");
+	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_Trace, "TestMgr_RDKLogger_Log_Trace");
+	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_InverseTrace, "TestMgr_RDKLogger_Log_InverseTrace");
+	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_Msg, "TestMgr_RDKLogger_Log_Msg");
+	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_SetLogLevel, "TestMgr_RDKLogger_SetLogLevel");
+	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_GetLogLevel, "TestMgr_RDKLogger_GetLogLevel");
 
         return TEST_SUCCESS;
 }
@@ -126,8 +168,69 @@ bool RDKLoggerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAge
 
 std::string RDKLoggerAgent::testmodulepre_requisites()
 {
+	DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule pre_requisites --> Entry\n");
+
+	// Make a copy of debug.ini file for testing
+     	ifstream  src(DEBUG_CONF_FILE, ios::binary);
+     	ofstream  dst(TDK_DEBUG_CONF_FILE, ios::binary);
+     	dst << src.rdbuf();
+
+    	src.close();
+    	dst.close();
+
+	// Edit temp debug.ini file to add modules and env variables
+	// for simulating test scenarios
+	fstream debugFile;
+	string line;
+        debugFile.open (TDK_DEBUG_CONF_FILE, ios::in | ios::out | ios::app);
+        if (debugFile.is_open())
+        {
+            debugFile << "LOG.RDK.TEST1 = ALL DEBUG TRACE" << endl;
+	    debugFile << "LOG.RDK.TEST2 = NONE ALL" << endl;
+  	    debugFile << "LOG.RDK.TEST3 = ALL NONE" << endl;
+            debugFile << "LOG.RDK.TEST4 = TRACE" << endl;
+	    debugFile << "LOG.RDK.TEST5 = !TRACE" << endl;
+	    debugFile << "LOG.RDK.TEST6 = " << endl;
+
+	    //Print temp debug.ini file contents
+	    debugFile.clear();                  // clear fail and eof bits
+	    debugFile.seekg(0, ios::beg);       // back to the start!
+
+	    DEBUG_PRINT(DEBUG_TRACE, "\n==== Start %s ====================\n", TDK_DEBUG_CONF_FILE);
+	    while(debugFile.good())
+            {
+            	    getline(debugFile,line);
+            	    // Ignore commented lines
+            	    if (line[0] == '#')
+                	continue;
+		    DEBUG_PRINT(DEBUG_TRACE, "%s", line.c_str());
+            }
+	    DEBUG_PRINT(DEBUG_TRACE, "\n====== End %s ====================\n\n", TDK_DEBUG_CONF_FILE);
+	    // end of printing temp debug.ini
+
+	    debugFile.close();
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n%s: Unable to open conf file %s\n",__FUNCTION__,TDK_DEBUG_CONF_FILE);
+		return "FAILURE<DETAILS>Failed to open conf file";
+        }
+
+        // Initialize the temp conf file
+	rdk_Error ret = rdk_logger_init(TDK_DEBUG_CONF_FILE);
+        if ( RDK_SUCCESS != ret)
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger. ErrCode = %d\n", ret);
+		DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule pre_requisites --> Exit\n");
+		return "FAILURE<DETAILS>Failed to init rdk logger";
+        }
+
+	b_rdk_logger_enabled = true;
+	DEBUG_PRINT(DEBUG_TRACE, "Init rdk logger success\n");
+	DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule pre_requisites --> Exit\n");
         return "SUCCESS";
 }
+
 /***************************************************************************
  *Function name : testmodulepost_requisites
  *Descrption    : testmodulepost_requisites will be used for resetting the
@@ -137,7 +240,22 @@ std::string RDKLoggerAgent::testmodulepre_requisites()
 
 bool RDKLoggerAgent::testmodulepost_requisites()
 {
-        return TEST_SUCCESS;
+	DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule post_requisites --> Entry\n");
+
+	// Remove the local copy of debug.ini file
+	if( remove( TDK_DEBUG_CONF_FILE ) != 0 )
+	{
+		DEBUG_PRINT(DEBUG_ERROR,"\n%s: Error deleting file %s\n", __FUNCTION__,TDK_DEBUG_CONF_FILE);
+		DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule post requisites --> Exit");
+		return TEST_FAILURE;
+	}
+  	else
+	{
+		DEBUG_PRINT(DEBUG_TRACE, "%s file successfully deleted\n", TDK_DEBUG_CONF_FILE);
+		DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule post requisites --> Exit");
+	}
+
+       	return TEST_SUCCESS;
 }
 
 
@@ -153,28 +271,32 @@ bool RDKLoggerAgent::RDKLoggerAgent_Init(IN const Json::Value& req, OUT Json::Va
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Init --->Entry\n");
 
-        rdk_Error ret = rdk_logger_init(DEBUG_CONF_FILE);
-        if ( RDK_SUCCESS != ret)
+        if (true == b_rdk_logger_enabled)
+	{
+        	response["result"] = "SUCCESS";
+        	response["details"] = "rdk logger init success";
+	}
+	else
         {
-                DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger. err = %d\n", ret);
+                DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger\n");
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to init rdk logger";
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Init -->Exit\n");
                 return TEST_FAILURE;
         }
 
-      	response["result"] = "SUCCESS";
-	response["details"] = "rdk logger init success";
      	DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Init -->Exit\n");
+
        	return TEST_SUCCESS;
 }
-
 
 /**************************************************************************
 Function name : RDKLoggerAgent::RDKLoggerAgent_Log
 
 Arguments     : Input argument is "module", "level". 
-		Output argument is "SUCCESS" or "FAILURE".
+		Output argument: 
+		"SUCCESS" if logging is successful
+		"FAILURE" if logging failed.
 
 Description   : Receives the request from Test Manager to add a log message.
                 Gets the response from RDKLogger element and send it to the Test Manager.
@@ -186,30 +308,31 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log(IN const Json::Value& req, OUT Json::Val
 
         int logLevel = -1;
         char rdkMod[20] = {'\0'};
+	char testMsg[64] = {'\0'};
 
         string module = req["module"].asString();
         string level = req["level"].asString();
 
-        rdk_Error ret = rdk_logger_init(DEBUG_CONF_FILE);
-        if ( RDK_SUCCESS != ret)
+        sprintf(rdkMod, "LOG.RDK.%s", module.c_str());
+        logLevel = logNameToEnum(level.c_str());
+	sprintf(testMsg, "Test log from RDKLogger mod=%s lvl=%s", module.c_str(), level.c_str());
+
+	RDK_LOG ( (rdk_LogLevel) logLevel, rdkMod, testMsg );
+
+        if (true == CheckLog(testMsg))
         {
-                DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger. err = %d\n", ret);
+                response["result"] = "SUCCESS";
+                response["details"] = "rdk logging success";
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log -->Exit\n");
+                return TEST_SUCCESS;
+        }
+        else
+        {
                 response["result"] = "FAILURE";
-                response["details"] = "Failed to init rdk logger";
+                response["details"] = "rdk logging failed";
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log -->Exit\n");
                 return TEST_FAILURE;
         }
-
-        sprintf(rdkMod, "LOG.RDK.%s", module.c_str());
-        logLevel = logNameToEnum(level.c_str());
-
-	DEBUG_PRINT(DEBUG_TRACE, "Module: %s Level: %s Message: %s\n", rdkMod, level.c_str(), "Test Message from RDKLoggerAgent");
-	RDK_LOG ( (rdk_LogLevel) logLevel, rdkMod, "Test Message from RDKLoggerAgent\n" );
-
-	response["result"] = "SUCCESS";
-	response["details"] = "rdk logging success";
-        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log -->Exit\n");
-	return TEST_SUCCESS;
 }
 
 /**************************************************************************
@@ -232,16 +355,6 @@ bool RDKLoggerAgent::RDKLoggerAgent_Dbg_Enabled_Status(IN const Json::Value& req
 
 	string module = req["module"].asString();
 	string level = req["level"].asString();
-
-	rdk_Error ret = rdk_logger_init(DEBUG_CONF_FILE);
-        if ( RDK_SUCCESS != ret)
-        {
-		DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger. err = %d\n", ret);
-        	response["result"] = "FAILURE";
-        	response["details"] = "Failed to init rdk logger";
-		DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Dbg_Enabled_Status -->Exit\n");
-		return TEST_FAILURE;
-        }
 
         sprintf(rdkMod, "LOG.RDK.%s", module.c_str());
         logLevel = logNameToEnum(level.c_str());
@@ -267,8 +380,9 @@ bool RDKLoggerAgent::RDKLoggerAgent_Dbg_Enabled_Status(IN const Json::Value& req
 		return TEST_SUCCESS;
         }
 
-	DEBUG_PRINT(DEBUG_TRACE, "Failed to get %s %s log status\n", rdkMod, level.c_str()); 
+	DEBUG_PRINT(DEBUG_ERROR, "Failed to get %s %s log status\n", rdkMod, level.c_str()); 
 	DEBUG_PRINT(DEBUG_TRACE, "rdk_dbg_enabled result = %d dbgFinder result = %d\n", rdkStatus, dbgFindStatus);
+
 	response["result"] = "FAILURE";
 	response["details"] = "Failed to get dbg enable status";
 
@@ -290,18 +404,8 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGet(IN const Json::Value& req, OUT Json::
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGet --->Entry\n");
 
         char rdkMod[20] = {'\0'};
-        char stringDetails[256] = {'\0'};
+        char stringDetails[SIZE] = {'\0'};
         const char* envVar = NULL;
-
-        rdk_Error ret = rdk_logger_init(DEBUG_CONF_FILE);
-        if ( RDK_SUCCESS != ret)
-        {
-                DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger. err = %d\n", ret);
-                response["result"] = "FAILURE";
-                response["details"] = "Failed to init rdk logger";
-                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGet -->Exit\n");
-                return TEST_FAILURE;
-        }
 
         string module = req["module"].asString();
         sprintf(rdkMod, "LOG.RDK.%s", module.c_str());
@@ -323,7 +427,6 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGet(IN const Json::Value& req, OUT Json::
         }
 
         response["result"] = "SUCCESS";
-	response["details"] = "rdk logger env get success";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGet -->Exit\n");
         return TEST_SUCCESS;
 }
@@ -345,16 +448,6 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGetNum(IN const Json::Value& req, OUT Jso
 	char stringDetails[5] = {'\0'};
 	int modNum = -1;
 
-        rdk_Error ret = rdk_logger_init(DEBUG_CONF_FILE);
-        if ( RDK_SUCCESS != ret)
-        {
-                DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger. err = %d\n", ret);
-                response["result"] = "FAILURE";
-                response["details"] = "Failed to init rdk logger";
-                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetNum -->Exit\n");
-                return TEST_FAILURE;
-        }
-
 	string module = req["module"].asString();
         sprintf(rdkMod, "LOG.RDK.%s", module.c_str());
 
@@ -372,7 +465,6 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGetNum(IN const Json::Value& req, OUT Jso
       	response["details"] = stringDetails;
 
         response["result"] = "SUCCESS";
-	response["details"] = "rdk logger env get num success";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetNum -->Exit\n");
         return TEST_SUCCESS;
 }
@@ -390,19 +482,9 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGetValueFromNum(IN const Json::Value& req
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetValueFromNum --->Entry\n");
 
-        char stringDetails[256] = {'\0'};
+        char stringDetails[SIZE] = {'\0'};
         const char *envVarValue = NULL;
         int modNum = -1;
-
-        rdk_Error ret = rdk_logger_init(DEBUG_CONF_FILE);
-        if ( RDK_SUCCESS != ret)
-        {
-                DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger. err = %d\n", ret);
-                response["result"] = "FAILURE";
-                response["details"] = "Failed to init rdk logger";
-                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetValueFromNum -->Exit\n");
-                return TEST_FAILURE;
-        }
 
         /** Get the logging level from registered number **/
 	modNum = req["number"].asInt();
@@ -423,7 +505,6 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGetValueFromNum(IN const Json::Value& req
         }
 
         response["result"] = "SUCCESS";
-	response["details"] = "rdk logger env get value from num success";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetValueFromNum -->Exit\n");
         return TEST_SUCCESS;
 }
@@ -445,16 +526,6 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGetModFromNum(IN const Json::Value& req, 
         int modNum = -1;
 	const char *envMod = NULL;
 
-        rdk_Error ret = rdk_logger_init(DEBUG_CONF_FILE);
-        if ( RDK_SUCCESS != ret)
-        {
-                DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger. err = %d\n", ret);
-                response["result"] = "FAILURE";
-                response["details"] = "Failed to init rdk logger";
-                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetModFromNum -->Exit\n");
-                return TEST_FAILURE;
-        }
-
 	modNum = req["number"].asInt();
         envMod = rdk_logger_envGetModFromNum(modNum);
         if ((envMod != NULL) && (envMod[0] != '\0'))
@@ -473,9 +544,300 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGetModFromNum(IN const Json::Value& req, 
         }
 
         response["result"] = "SUCCESS";
-	response["details"] = "rdk logger env get mod from num success";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetModFromNum -->Exit\n");
         return TEST_SUCCESS;
+}
+
+/**************************************************************************
+Function name : RDKLoggerAgent::RDKLoggerAgent_CheckMPELogEnabled
+
+Arguments     : Input argument : None
+		Output argument : "SUCCESS" if EnableMPELog is TRUE
+			  	  "FAILURE" if EnableMPELog is FALSE
+
+Description   : Receives the request from Test Manager to check if EnableMPELog value is true or false
+                Gets the response from RDKLogger element and send it to the Test Manager.
+**************************************************************************/
+bool RDKLoggerAgent::RDKLoggerAgent_CheckMPELogEnabled(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_CheckMPELogEnabled --->Entry\n");
+
+        const char* envVar = NULL;
+
+        envVar = rdk_logger_envGet("EnableMPELog");
+        if ((envVar != NULL) && (envVar[0] != 0))
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "EnableMPELog value: %s\n", envVar);
+        	if (0 != strcmp("TRUE", envVar))
+        	{
+			response["result"] = "FAILURE";
+			response["details"] = "EnableMPELog not enabled";
+			DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_CheckMPELogEnabled -->Exit\n");
+			return TEST_FAILURE;
+        	}
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "Failed to get EnableMPELog value\n");
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to get EnableMPELog value";
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_CheckMPELogEnabled -->Exit\n");
+                return TEST_FAILURE;
+        }
+
+        response["result"] = "SUCCESS";
+	response["details"] = "EnableMPELog enabled";
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_CheckMPELogEnabled --> Exit\n");
+        return TEST_SUCCESS;
+}
+
+/**************************************************************************
+Function name : RDKLoggerAgent::RDKLoggerAgent_Log_All
+
+Arguments     : Input argument is "module"
+                Output argument:
+ 		"SUCCESS" if all 5 logs are logged 
+		"FAILURE" if any one logging fails.
+
+Description   : Receives the request from Test Manager to add 5 log messages
+		of levels INFO, NOTICE, WARNING, ERROR and FATAL for a module
+		configured with ALL threshold in conf file.
+                Gets the response from RDKLogger element and send it to the Test Manager.
+**************************************************************************/
+bool RDKLoggerAgent::RDKLoggerAgent_Log_All(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_All --->Entry\n");
+
+        char rdkMod[20] = {'\0'};
+        char testMsg[64] = {'\0'};
+	int  level = RDK_LOG_FATAL;
+
+        string module = req["module"].asString();
+        sprintf(rdkMod, "LOG.RDK.%s", module.c_str());
+
+        /** Loop through the control word and printout the enabled levels. */
+        while (level <= RDK_LOG_INFO)
+        {
+            sprintf(testMsg, "Test ALL from RDKLogger mod=%s lvl=%s", module.c_str(), rdk_logLevelStrings[level]);
+            RDK_LOG((rdk_LogLevel)level, rdkMod, testMsg);
+            if (true != CheckLog(testMsg))
+            {
+                sprintf(testMsg, "rdklogger ALL failed to log %s msg", rdk_logLevelStrings[level]);
+                response["result"] = "FAILURE";
+                response["details"] = testMsg;
+                DEBUG_PRINT(DEBUG_ERROR, "%s\n",testMsg);
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_All -->Exit\n");
+                return TEST_FAILURE;
+            }
+            level++;
+        }
+
+	response["result"] = "SUCCESS";
+     	response["details"] = "rdk logging all success";
+    	DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_All -->Exit\n");
+     	return TEST_SUCCESS;
+}
+
+/**************************************************************************
+Function name : RDKLoggerAgent::RDKLoggerAgent_Log_None
+
+Arguments     : Input argument is "module"
+                Output argument:
+		"SUCCESS" if none of 15 logs is logged
+		"FAILURE" if any one logging is successful
+
+Description   : Receives the request from Test Manager to add 15 log messages
+                of levels TRACE1..TRACE9, DEBUG, INFO, NOTICE, WARNING, ERROR, FATAL for a module
+                configured with NONE threshold in conf file.
+                Gets the response from RDKLogger element and send it to the Test Manager.
+**************************************************************************/
+bool RDKLoggerAgent::RDKLoggerAgent_Log_None(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_None --->Entry\n");
+
+        char	rdkMod[20] = {'\0'};
+        char 	testMsg[64] = {'\0'};
+	int 	level = ENUM_RDK_LOG_BEGIN;
+
+        string module = req["module"].asString();
+        sprintf(rdkMod, "LOG.RDK.%s", module.c_str());
+
+    	/** Loop through the control word and printout the enabled levels. */
+    	while (level < ENUM_RDK_LOG_COUNT)
+    	{
+	    sprintf(testMsg, "Test NONE from RDKLogger mod=%s lvl=%s", module.c_str(), rdk_logLevelStrings[level]);
+	    RDK_LOG((rdk_LogLevel)level, rdkMod, testMsg);
+            if (true == CheckLog(testMsg))
+            {
+		sprintf(testMsg, "rdklogger NONE logged %s msg", rdk_logLevelStrings[level]);
+                response["result"] = "FAILURE";
+                response["details"] = testMsg;
+                DEBUG_PRINT(DEBUG_ERROR, "%s\n",testMsg);
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_None -->Exit\n");
+                return TEST_FAILURE;
+            }
+            level++;
+    	}
+
+        response["result"] = "SUCCESS";
+        response["details"] = "No rdk logging with NONE threshold";
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_None -->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/**************************************************************************
+Function name : RDKLoggerAgent::RDKLoggerAgent_Log_Trace
+
+Arguments     : Input argument is "module"
+                Output argument: 
+		"SUCCESS" if all 9 trace logs are logged
+		"FAILURE" if any one trace log is not logged
+
+Description   : Receives the request from Test Manager to add 9 log messages
+                of levels TRACE1..TRACE9 for a module
+                configured with TRACE threshold in conf file.
+                Gets the response from RDKLogger element and send it to the Test Manager.
+**************************************************************************/
+
+bool RDKLoggerAgent::RDKLoggerAgent_Log_Trace(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Trace --->Entry\n");
+
+        char rdkMod[20] = {'\0'};
+        char testMsg[64] = {'\0'};
+	int  level = RDK_LOG_TRACE1;
+
+        string module = req["module"].asString();
+        sprintf(rdkMod, "LOG.RDK.%s", module.c_str());
+
+        /** Loop through the trace control word and printout the enabled levels. */
+        while (level < ENUM_RDK_LOG_COUNT)
+        {
+            sprintf(testMsg, "Test TRACE from RDKLogger mod=%s lvl=%s", module.c_str(), rdk_logLevelStrings[level]);
+            RDK_LOG((rdk_LogLevel)level, rdkMod, testMsg);
+            if (true != CheckLog(testMsg))
+            {
+                sprintf(testMsg, "rdklogger TRACE failed to log %s msg", rdk_logLevelStrings[level]);
+                response["result"] = "FAILURE";
+                response["details"] = testMsg;
+                DEBUG_PRINT(DEBUG_ERROR, "%s\n",testMsg);
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Trace -->Exit\n");
+                return TEST_FAILURE;
+            }
+            level++;
+        }
+
+        response["result"] = "SUCCESS";
+        response["details"] = "rdk logging trace success";
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Trace -->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/**************************************************************************
+Function name : RDKLoggerAgent::RDKLoggerAgent_Log_InverseTrace
+
+Arguments     : Input argument is "module"
+                Output argument:
+		"SUCCESS" if none of trace logs are logged
+		"FAILURE" if any one trace log is logged
+
+Description   : Receives the request from Test Manager to add 9 log messages
+                of levels TRACE1..TRACE9 for a module configured with !TRACE threshold 
+		in conf file.
+                Gets the response from RDKLogger element and send it to the Test Manager.
+**************************************************************************/
+
+bool RDKLoggerAgent::RDKLoggerAgent_Log_InverseTrace(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_InverseTrace --->Entry\n");
+
+        char rdkMod[20] = {'\0'};
+        char testMsg[64] = {'\0'};
+	int  level = RDK_LOG_TRACE1;
+
+        string module = req["module"].asString();
+        sprintf(rdkMod, "LOG.RDK.%s", module.c_str());
+
+        /** Loop through the trace control word and printout the enabled levels. */
+        while (level < ENUM_RDK_LOG_COUNT)
+        {
+            sprintf(testMsg, "Test !TRACE from RDKLogger mod=%s lvl=%s", module.c_str(), rdk_logLevelStrings[level]);
+            RDK_LOG((rdk_LogLevel)level, rdkMod, testMsg);
+            if (true == CheckLog(testMsg))
+            {
+                sprintf(testMsg, "rdklogger Inverse TRACE logged %s msg", rdk_logLevelStrings[level]);
+                response["result"] = "FAILURE";
+                response["details"] = testMsg;
+                DEBUG_PRINT(DEBUG_ERROR, "%s\n",testMsg);
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_InverseTrace -->Exit\n");
+                return TEST_FAILURE;
+            }
+            level++;
+        }
+
+        response["result"] = "SUCCESS";
+        response["details"] = "rdk logging inverse trace success";
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_InverseTrace -->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/**************************************************************************
+Function name : RDKLoggerAgent::RDKLoggerAgent_Log_Msg
+
+Arguments     : Input arguments:
+		"module": RDK module name
+		"level": Logging level
+		"msg": printf style string containing the log message
+
+                Output argument is "SUCCESS" or "FAILURE".
+
+Description   : Receives the request from Test Manager to add a log message.
+                Gets the response from RDKLogger element and send it to the Test Manager.
+**************************************************************************/
+bool RDKLoggerAgent::RDKLoggerAgent_Log_Msg(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Msg --->Entry\n");
+
+        int logLevel = -1;
+        char rdkMod[20] = {'\0'};
+
+        string module = req["module"].asString();
+        string level = req["level"].asString();
+	string msg = req["msg"].asString();
+
+        sprintf(rdkMod, "LOG.RDK.%s", module.c_str());
+        logLevel = logNameToEnum(level.c_str());
+
+        RDK_LOG ((rdk_LogLevel) logLevel, rdkMod, msg.c_str());
+
+	if (true == CheckLog(msg.c_str()))
+	{
+        	response["result"] = "SUCCESS";
+        	response["details"] = "rdk logging success";
+        	DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Msg -->Exit\n");
+        	return TEST_SUCCESS;
+	}
+	else
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "rdk logging failed";
+		DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Msg -->Exit\n");
+		return TEST_FAILURE;
+	}
+}
+
+bool RDKLoggerAgent::RDKLoggerAgent_SetLogLevel(IN const Json::Value& req, OUT Json::Value& response)
+{
+	response["result"] = "FAILURE";
+	response["details"] = "Failed to call rdk_dbg_priv_SetLogLevel";
+	return TEST_FAILURE;
+}
+
+bool RDKLoggerAgent::RDKLoggerAgent_GetLogLevel(IN const Json::Value& req, OUT Json::Value& response)
+{
+	response["result"] = "FAILURE";
+	response["details"] = "Failed to call rdk_dbg_priv_LogQueryOpSysIntf";
+	return TEST_FAILURE;
 }
 
 /**************************************************************************
@@ -513,6 +875,14 @@ bool RDKLoggerAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgent
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_EnvGetNum");
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_EnvGetValueFromNum");
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_EnvGetModFromNum");
+	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_CheckMPELogEnabled");
+	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_All");
+	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_None");
+	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_Trace");
+	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_InverseTrace");
+	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_Msg");
+	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_SetLogLevel");
+	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_GetLogLevel");
 
         return TEST_SUCCESS;
 }
@@ -528,4 +898,3 @@ extern "C" void DestroyObject(RDKLoggerAgent *stubobj)
         DEBUG_PRINT(DEBUG_LOG, "Destroying RDKLogger Agent object\n");
         delete stubobj;
 }
-

@@ -1,14 +1,14 @@
 /*
-* ============================================================================
-* COMCAST CONFIDENTIAL AND PROPRIETARY
-* ============================================================================
-* This file and its contents are the intellectual property of Comcast.  It may
-* not be used, copied, distributed or otherwise  disclosed in whole or in part
-* without the express written permission of Comcast.
-* ============================================================================
-* Copyright (c) 2013 Comcast. All rights reserved.
-* ============================================================================
-*/
+ * ============================================================================
+ * COMCAST C O N F I D E N T I A L AND PROPRIETARY
+ * ============================================================================
+ * This file (and its contents) are the intellectual property of Comcast.  It may
+ * not be used, copied, distributed or otherwise  disclosed in whole or in part
+ * without the express written permission of Comcast.
+ * ============================================================================
+ * Copyright (c) 2014 Comcast. All rights reserved.
+ * ============================================================================
+ */
 
 
 /* System Includes */
@@ -860,6 +860,7 @@ int Agent()
 	
     #endif /* End of PORT_FORWARD  */
 
+    RpcMethods::sm_strConsoleLogPath = "";
     RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;
     RpcMethods::sm_nStatusQueryFlag = FLAG_NOT_SET;
     
@@ -1058,6 +1059,7 @@ int AgentMonitor()
     if (nPID == RETURN_SUCCESS)
     {
         system (START_TFTP_SERVER);
+        exit(0);
     }
     else if (nPID < RETURN_SUCCESS)
     {
@@ -1097,10 +1099,20 @@ int AgentMonitor()
 *********************************************************************************************************************/
 int main()
 {
+    int nPgid = 0;
     char* pszPath;
     std::string strEnvPath;
     std::string strFolderPath;
     int nReturnValue = RETURN_SUCCESS;
+ 
+    /* Set Process group id as pid of parent agent process */
+    if (setpgid (0, 0) != RETURN_SUCCESS)
+    {
+        perror("\nUnable to set process group id as pid of agent process\n");
+    }
+	
+    nPgid = getpgid(0);
+    DEBUG_PRINT (DEBUG_LOG, "\nProcess Group Id : %d\n", nPgid);
 
 #ifdef AGENT_LOG_ENABLE
 

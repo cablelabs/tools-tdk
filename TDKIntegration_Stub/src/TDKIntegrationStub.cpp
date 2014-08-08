@@ -2,11 +2,11 @@
  * ============================================================================
  * COMCAST C O N F I D E N T I A L AND PROPRIETARY
  * ============================================================================
- * This file and its contents are the intellectual property of Comcast.  It may
+ * This file (and its contents) are the intellectual property of Comcast.  It may
  * not be used, copied, distributed or otherwise  disclosed in whole or in part
  * without the express written permission of Comcast.
  * ============================================================================
- * Copyright (c) 2013 Comcast. All rights reserved.
+ * Copyright (c) 2014 Comcast. All rights reserved.
  * ============================================================================
  */
 
@@ -876,6 +876,12 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 		pSink->term();
 		return TEST_FAILURE;
 	}
+	
+	/*FIX for RDKTT-124 ticket*/
+	/*Video length not known.*/
+        retHNSrcValue = pSource->setVideoLength(0);
+        cout << "\nSource_setVideoLength return value :" << retHNSrcValue <<endl;
+
 	DEBUG_PRINT(DEBUG_TRACE, "Passed MP Sink setSource\n");
 	DEBUG_PRINT(DEBUG_TRACE, "Passed %s\n",__FUNCTION__);
 	return TEST_SUCCESS;
@@ -893,6 +899,15 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
 
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 	RMFResult retMPSinkValue = RMF_RESULT_SUCCESS;
+	
+	/*FIX for RDKTT-126 ticket*/
+        double mediaTime;
+        retHNSrcValue = pSource->setMediaTime(0);
+        cout<<"Return of Set Media time "<<retHNSrcValue<<endl;
+        sleep(5);
+        retHNSrcValue = pSource->getMediaTime(mediaTime);
+        cout<<"Return of get Media time "<<retHNSrcValue<<endl;
+        cout<<" Media time Value "<<mediaTime<<endl;
 
 	retHNSrcValue = pSource->close();
 	if(RMF_RESULT_SUCCESS != retHNSrcValue)
@@ -1127,10 +1142,12 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 
 	string url = req["playUrl"].asCString();
 
+	/*The URL speed comparision part of code is commented, Based on the comment made against the ticket RDKTT-49 */
+#if 0
 	/*Check for the play_speed, from the input URL */
 	int playSpeedStrPosition = url.find("play_speed");
 	float urlSpeed = 0.0;
-
+#endif
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
@@ -1155,7 +1172,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc play\n");
-
+#if 0
 	/*Only for DVR Trick Play, Extract the trickPlay rate from the url.*/
 	if(NOT_PRESENT != playSpeedStrPosition)
 	{
@@ -1167,7 +1184,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		urlSpeed = strtof(rate.c_str(),NULL);
 		DEBUG_PRINT(DEBUG_TRACE, "URL appended Rate: %f\n",urlSpeed);
 	}
-
+#endif
 	/*Query the current speed */
 	float curSpeed = 0.0;
 	pSource->getSpeed(curSpeed);
@@ -1194,6 +1211,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		return TEST_FAILURE;
 	}
 
+#if 0
 	if(NOT_PRESENT != playSpeedStrPosition)
 	{
 		/*Compare the queried speed with requested speed */
@@ -1206,6 +1224,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 			return TEST_FAILURE;
 		}
 	}
+#endif
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Playback Successful ";
@@ -1286,12 +1305,15 @@ bool TDKIntegrationStub::E2ERMFAgent_Pause_Play(IN const Json::Value& req, OUT J
 
 	RMFState curState, pendingState;
 	retHNSrcValue = pSource->getState(&curState, &pendingState);
+	
 
-	if(RMF_STATE_CHANGE_SUCCESS != retHNSrcValue || RMF_STATE_PAUSED != curState)
+	/*Commented this part code as per comment made by the core team against the ticket RDKTT-49 */
+/*	if(RMF_STATE_CHANGE_SUCCESS != retHNSrcValue || RMF_STATE_PAUSED != curState)*/
+	if(RMF_STATE_CHANGE_SUCCESS != retHNSrcValue || RMF_STATE_PLAYING != curState)
 	{
 		response["result"] = "FAILURE";
-		response["details"] = "HNSource failed to pause.";
-		DEBUG_PRINT(DEBUG_ERROR, "HNSource failed to pause.\n");
+		response["details"] = "HNSource failed to play.";
+		DEBUG_PRINT(DEBUG_ERROR, "HNSource failed to play.\n");
 
 		close_Term_HNSrc_MPSink(response);
 

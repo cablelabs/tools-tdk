@@ -81,6 +81,148 @@ class ScriptGroupController {
 		[scriptGroupInstance: new ScriptGroup(params)]
 	}
 
+	
+	/**
+	 * Method to create script group.
+	 * @return
+	 */
+	def createScriptGrp(){
+		def errorList= []
+		def scriptGroupInstance = new ScriptGroup(params)
+		if(ScriptGroup.findByName(params?.name)){
+			flash.message = "TestSuite name is already in use. Please use a different name."
+			errorList.add("TestSuite name is already in use. Please use a different name.")
+			render errorList as JSON
+			return
+		}
+		else if(!(params?.idList)){
+			flash.message = "Select scripts to create a test suite."
+		errorList.add("Select scripts to create a test suite.")
+			render errorList as JSON
+			return
+		}
+		
+		def idList = params?.idList
+			idList = idList.replaceAll("sgscript-","")
+			idList = idList.replaceAll("end","")
+			
+			StringTokenizer st = new StringTokenizer(idList,",")
+			while(st.hasMoreTokens()){
+				String token = st.nextToken()
+				if(token && token.size()>0){
+				Script sct = Script.findById(token)
+				if(sct){
+					scriptGroupInstance.addToScriptsList(sct)
+				}
+				}
+			}
+			
+			scriptGroupInstance.groups = utilityService.getGroup()
+			if (!scriptGroupInstance.save(flush: true)) {
+				errorList.add("Error in saving script group")
+				render errorList as JSON
+				render errorList as JSON
+				return
+			}
+			flash.message = message(code: 'default.created.message', args: [
+				message(code: 'scriptGroup.label', default: 'Test Suite'),
+				scriptGroupInstance.name
+			])
+			errorList.add(message(code: 'default.created.message', args: [
+				message(code: 'scriptGroup.label', default: 'Test Suite'),
+				scriptGroupInstance.name
+			]))
+			render errorList as JSON 
+	}
+	
+	def updateScriptGrp(){
+		def errorList= []
+		def scriptGroupInstance = ScriptGroup.get(params.id)
+		if (!scriptGroupInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [
+				message(code: 'scriptGroup.label', default: 'Test Suite'),
+				scriptGroupInstance.name
+			])
+			errorList.add(message(code: 'default.not.found.message', args: [
+				message(code: 'scriptGroup.label', default: 'Test Suite'),
+				scriptGroupInstance.name
+			]))
+			render errorList as JSON
+		}
+		try {
+			if (params.version != null) {
+				def a = scriptGroupInstance.version
+				def b = params.version
+				long vers1 = 0
+				long vers2 = 0
+				if( a instanceof String){
+					vers1 = Long.parseLong(a)
+				}
+				
+				if( b instanceof String){
+					vers2 = Long.parseLong(b)
+				}
+				
+				if (vers1 > vers2) {
+					scriptGroupInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
+							[
+							 message(code: 'scriptGroup.label', default: 'Test Suite')] as Object[],
+							"Another user has updated this ScriptGroup while you were editing")
+							render(view: "edit", model: [scriptGroupInstance: scriptGroupInstance])
+							
+							errorList.add("Another user has updated this ScriptGroup while you were editing");
+							render errorList as JSON
+							return
+				}
+			}
+		} catch (Exception e) {
+		println "eee "+e.getMessage()
+			e.printStackTrace()
+		}
+
+		
+		if(!(params?.idList)){
+			flash.message = "Select scripts to update a test suite."
+			errorList.add("Select scripts to update a test suite.");
+			render errorList as JSON
+			return
+		}
+		scriptGroupInstance.name = params.get("name")
+		scriptGroupInstance.scriptsList.clear();
+		
+		def idList = params?.idList
+			idList = idList.replaceAll("sgscript-","")
+			idList = idList.replaceAll("end","")
+			StringTokenizer st = new StringTokenizer(idList,",")
+			while(st.hasMoreTokens()){
+				String token = st.nextToken()
+				if(token && token.size()>0){
+				Script sct = Script.findById(token)
+				if(sct){
+					scriptGroupInstance.addToScriptsList(sct)
+				}
+				}
+			}
+			
+
+		if (!scriptGroupInstance.save(flush: true)) {
+			
+			flash.message = "TestSuite name is already in use. Please use a different name."
+			errorList.add("TestSuite name is already in use. Please use a different name.");
+			render errorList as JSON
+			return
+		}
+		flash.message = message(code: 'default.updated.message', args: [
+			message(code: 'scriptGroup.label', default: 'Test Suite'),
+			scriptGroupInstance.name
+		])
+		
+		errorList.add(message(code: 'default.updated.message', args: [
+			message(code: 'scriptGroup.label', default: 'Test Suite'),
+			scriptGroupInstance.name
+		]));
+		render errorList as JSON
+	}
     /**
      * Save ScriptGroup
      * @return
@@ -92,11 +234,27 @@ class ScriptGroupController {
             redirect(action: "list")
             return
         }
-        else if(!(params?.scripts)){
+        else if(!(params?.scripts) && !(params?.scriptElement)){
             flash.message = "Select scripts to create a test suite."
             redirect(action: "list")
             return
         }
+		
+		if(params?.scriptElement){
+			def list = params?.scriptElement
+			list = list.replaceAll("script-","")
+			println " listt "+list
+			
+			StringTokenizer st = new StringTokenizer(list,",")
+			while(st.hasMoreTokens()){
+				Script sct = Script.findById(st.nextToken())
+				println " scriptt "+ sct
+				if(sct){
+					scriptGroupInstance.addToScriptsList(sct)
+				}
+			}
+		}
+		
 		scriptGroupInstance.groups = utilityService.getGroup()
 		if (!scriptGroupInstance.save(flush: true)) {
 			return
@@ -140,7 +298,9 @@ class ScriptGroupController {
 			redirect(action: "list")
 			return
 		}       
-		[scriptGroupInstance: scriptGroupInstance]
+		def scripts = Script.findAll();    
+		scripts = scripts  - scriptGroupInstance.scriptsList 
+		[scripts:scripts,scriptGroupInstance: scriptGroupInstance]
 	}
 
     /**
@@ -477,9 +637,9 @@ class ScriptGroupController {
                 def scriptInstance
                 selectedScripts.each{
                     Script script = Script.findById(it.key)                    
-                    scriptInstance = scriptGroup.scripts.find { it.id == script.id }
+                    scriptInstance = scriptGroup.scriptsList.find { it.id == script.id }
                     if(!scriptInstance){
-                        scriptGroup.addToScripts(script)
+                        scriptGroup.addToScriptsList(script)
                     }                    
                 }
             }
@@ -497,7 +657,7 @@ class ScriptGroupController {
                 scriptGroupInstance.name = params?.newSuiteName
                 selectedScripts.each{
                     Script script = Script.findById(it.key)
-                    scriptGroupInstance.addToScripts(script)
+                    scriptGroupInstance.addToScriptsList(script)
                 }
             }
             if (!scriptGroupInstance.save(flush: true)) {
@@ -544,5 +704,5 @@ class ScriptGroupController {
 			redirect(action: "list")
 		}
 	}
-    
+	
 }

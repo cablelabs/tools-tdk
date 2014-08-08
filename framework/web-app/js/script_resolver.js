@@ -57,7 +57,7 @@ $(document).ready(function() {
 	$('#addscriptGrpId').contextMenu('scriptgrp_root_menu', {
 		bindings : {
 			'add_scriptgrp' : function(node) {
-				hideSearchoptions();
+				hideAllSearchoptions();
 				createScriptGrpForm();
 			}
 		}
@@ -79,11 +79,172 @@ $(document).ready(function() {
 
 	$("#scriptid").addClass("changecolor");
 	
-	
-	
 });
 
+function addScripts() {
+	var re = document.getElementById("resultElement");
+	var selectable = document.getElementById("selectable");
+	var sortable = document.getElementById("sortable");
+	var scriptElement = document.getElementById("scriptElement");
+	var scriptList = scriptElement.innerHTML;
 
+	if (re.value.length > 0) {
+		var array = re.value.split(",");
+		for (i = 0; i < array.length; i++) {
+			var firstChild = document.getElementById("sortable").firstChild;
+			scriptList = scriptList + "," + array[i]
+			var lie = document.getElementById(array[i]).innerHTML;
+			$("#sortable").append(
+					'<li id = "sg' + array[i]
+							+ 'end" class="ui-state-default">' + lie + '</li>');
+			$("#" + array[i]).remove()
+		}
+		refreshElements();
+	} else {
+		alert("Please select a script to add");
+	}
+
+}
+
+function removeScripts(){
+	var re = document.getElementById("sgResultElement");
+	var selectable = document.getElementById("selectable");
+	var sortable = document.getElementById("sortable");
+	var scriptElement = document.getElementById("scriptElement");
+	var scriptList = scriptElement.innerHTML;
+	if(re.value.length > 0){
+	var array = re.value.split(",");
+	for(i=0 ; i< array.length;i++){
+		var idd = array[i];
+		var newId = idd.replace("sg","");
+			newId = newId.replace("end","");
+		var lie = document.getElementById(idd);
+		var data = lie.innerHTML;
+		var index = data.lastIndexOf("</div>");
+		data = data.substring(index + 6, data.length);
+			$("#selectable").append('<li id = "'+newId+'" class="ui-state-default">' + data + '</li>');
+			$("#"+array[i]).remove();
+	}
+	
+		refreshElements();
+	}else{
+		alert("Please select a script to remove");
+	}
+	
+	
+}
+
+function moveUp() {
+	var re = document.getElementById("sgResultElement");
+	
+	if(re.value.length > 0){
+		
+	var array = re.value.split(",");
+	for (i = 0; i < array.length; i++) {
+		var idd = array[i];
+		var lie = document.getElementById(idd);
+		var indx = $( "li[id*='sgscript-']" ).index( lie );
+		var prevEl = $( "li[id*='sgscript-']" ).get(indx-1).id
+		if (indx == 0){
+			var prevEl = $( "li[id*='sgscript-']" ).get($( "li[id*='sgscript-']" ).length -1 ).id
+			$("li[id*='"+prevEl+"']").after($("li[id*='"+idd+"']"));
+		}else{
+			$("li[id*='"+prevEl+"']").before($("li[id*='"+idd+"']"));
+		}
+	}
+	}else{
+		alert("Please select a script to move up");
+	}
+}
+
+function moveDown() {
+	var re = document.getElementById("sgResultElement");
+	if(re.value.length > 0){
+	var array = re.value.split(",");
+	for (i = array.length -1 ; i >= 0; i --) {
+		var idd = array[i];
+		var lie = document.getElementById(idd);
+		var indx = $( "li[id*='sgscript-']" ).index( lie );
+		var nxtEl = "";
+		if ($( "li[id*='sgscript-']" ).length > (indx + 1)){
+			nxtEl = $( "li[id*='sgscript-']" ).get(indx+1).id;
+			$("li[id*='"+nxtEl+"']").after($("li[id*='"+idd+"']"));
+		}else{
+			nxtEl = $( "li[id*='sgscript-']" ).get(0).id;
+			$("li[id*='"+nxtEl+"']").before($("li[id*='"+idd+"']"));
+		}
+	}
+	}else{
+		alert("Please select a script to move down");
+	}
+
+}
+
+
+function refreshElements(){
+	
+	$( "#selectable" ).selectable({
+		 stop: function() {
+		 var result = $( "#select-result" ).empty();
+		 var data = ""
+		 var myArray = [];
+		 
+		 $( ".ui-selected", this ).each(function() {
+		 var index = $( "#selectable li" ).index( this );
+		 data = data +"," +(index +1)
+		 result.append( " #" + ( index + 1 ) );
+		 myArray.push(this.id)
+		 });
+		 document.getElementById("resultElement").value = myArray;
+		 }
+		 });
+
+	 $( "#sortable" ).selectable({
+		 stop: function() {
+		 var result = $( "#select-result" ).empty();
+		 var data = ""
+		 var myArray = [];
+		 
+		 $( ".ui-selected", this ).each(function() {
+		 var index = $( "#sortable li" ).index( this );
+		 data = data +"," +(index +1)
+		 result.append( " #" + ( index + 1 ) );
+		 myArray.push(this.id)
+		 });
+		 document.getElementById("sgResultElement").value = myArray;
+		 }
+		 });
+}
+
+//updateScriptGrp
+
+function updateSG() {
+	var sortable = document.getElementById("sortable");
+
+	var dataList = ""
+	
+	$( "li[id*='sgscript-']" ).each(function(index) {
+		dataList = dataList +","+ $(this).attr('id');
+	});
+
+	var name = document.getElementById("scriptName").value;
+	var id = document.getElementById("sgId").value;
+	var version = document.getElementById("sgVersion").value;
+	$.get('updateScriptGrp', {id: id, version:version, idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data);  });
+	
+}
+function createSG() {
+	var sortable = document.getElementById("sortable");
+
+	var dataList = ""
+	
+	$( "li[id*='sgscript-']" ).each(function(index) {
+		dataList = dataList +","+ $(this).attr('id');
+	});
+
+	var name = document.getElementById("scriptName").value;
+	$.get('createScriptGrp', {idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data); });
+}
 function createScriptForm() {
 	$.get('createScript', function(data) { $("#responseDiv").html(data); });
 }

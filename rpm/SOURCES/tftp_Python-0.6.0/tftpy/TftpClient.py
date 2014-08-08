@@ -1,3 +1,14 @@
+#
+# ============================================================================
+# COMCAST C O N F I D E N T I A L AND PROPRIETARY
+# ============================================================================
+# This file (and its contents) are the intellectual property of Comcast.  It may
+# not be used, copied, distributed or otherwise  disclosed in whole or in part
+# without the express written permission of Comcast.
+# ============================================================================
+# Copyright (c) 2013 Comcast. All rights reserved.
+# ============================================================================
+#
 """This module implements the TFTP Client functionality. Instantiate an
 instance of the client, and then use its upload or download method. Logging is
 performed via a standard logging object set in TftpShared."""

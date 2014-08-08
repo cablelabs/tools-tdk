@@ -39,7 +39,7 @@ class ScriptgroupService {
 				scriptGrpInstance.name = moduleName
 			}
 
-			scriptGrpInstance.addToScripts(scriptInstance)
+			scriptGrpInstance.addToScriptsList(scriptInstance)
 			scriptGrpInstance.save(flush:true)
 		} catch (Exception e) {
 			e.printStackTrace()
@@ -56,8 +56,8 @@ class ScriptgroupService {
 						scriptGrpInstance = new ScriptGroup()
 						scriptGrpInstance.name = name
 					}
-					if(scriptGrpInstance && !scriptGrpInstance?.scripts?.contains(scriptInstance)){
-						scriptGrpInstance.addToScripts(scriptInstance)
+					if(scriptGrpInstance && !scriptGrpInstance?.scriptsList?.contains(scriptInstance)){
+						scriptGrpInstance.addToScriptsList(scriptInstance)
 						scriptGrpInstance.save(flush:true)
 					}
 				}
@@ -105,7 +105,7 @@ class ScriptgroupService {
 			scriptGrpInstance = new ScriptGroup()
 			scriptGrpInstance.name = groupName
 		}
-		scriptGrpInstance.addToScripts(scriptInstance)
+		scriptGrpInstance.addToScriptsList(scriptInstance)
 		scriptGrpInstance.save(flush:true)
 	}
 	
@@ -134,7 +134,7 @@ class ScriptgroupService {
 
 				if(flag){
 
-					scriptGrpInstance.removeFromScripts(scriptInstance)
+					scriptGrpInstance.removeFromScriptsList(scriptInstance)
 				}
 			}
 		}
@@ -155,8 +155,8 @@ class ScriptgroupService {
 				rdkVersionList.each { vers ->
 					String groupName = vers?.toString()+"_"+bType?.name
 					def scriptGrpInstance = ScriptGroup.findByName(groupName)
-					if(scriptGrpInstance && scriptGrpInstance?.scripts?.contains(scriptInstance)){
-						scriptGrpInstance.removeFromScripts(scriptInstance)
+					if(scriptGrpInstance && scriptGrpInstance?.scriptsList?.contains(scriptInstance)){
+						scriptGrpInstance.removeFromScriptsList(scriptInstance)
 					}
 				}
 			}
@@ -172,8 +172,8 @@ class ScriptgroupService {
 						scriptGrpInstance = new ScriptGroup()
 						scriptGrpInstance.name = name
 					}
-					if(scriptGrpInstance && !scriptGrpInstance?.scripts?.contains(scriptInstance)){
-						scriptGrpInstance.addToScripts(scriptInstance)
+					if(scriptGrpInstance && !scriptGrpInstance?.scriptsList?.contains(scriptInstance)){
+						scriptGrpInstance.addToScriptsList(scriptInstance)
 						scriptGrpInstance.save(flush:true)
 					}
 				}
@@ -223,7 +223,7 @@ class ScriptgroupService {
              * In this case the script cannot be deleted. 
              */
             def scriptAllocated = ScriptGroup.where {
-                scripts { id == script.id } && status == Status.ALLOCATED.toString()
+                scriptsList { id == script.id } && status == Status.ALLOCATED.toString()
             }          
             scriptAllocated.each{
                 isAllocatedScriptGrp = true
@@ -237,13 +237,13 @@ class ScriptgroupService {
                  * Selecting ScriptGroups where the given script is present
                  */
                 def scriptGroups = ScriptGroup.where {
-                    scripts { id == script.id }
+                    scriptsList { id == script.id }
                 }
                 def scriptInstance
                 scriptGroups?.each{ scriptGrp ->
-                    scriptInstance = scriptGrp.scripts.find { it.id == script.id }
+                    scriptInstance = scriptGrp.scriptsList.find { it.id == script.id }
                     if(scriptInstance){
-                        scriptGrp.removeFromScripts(scriptInstance)
+                        scriptGrp.removeFromScriptsList(scriptInstance)
                     }
                 }
             }                       
