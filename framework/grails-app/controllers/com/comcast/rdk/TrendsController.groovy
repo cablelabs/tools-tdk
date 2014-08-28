@@ -62,7 +62,7 @@ class TrendsController {
 		if(executionList){
 			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
 			
-			scriptGrpSize = scriptGroupInstance.scripts.size()
+			scriptGrpSize = scriptGroupInstance.scriptsList.size()
 			def executionSuccessList = []
 			def executionFailureList = []
 			def executionUndefinedList = []
@@ -121,7 +121,7 @@ class TrendsController {
 		if(executionList){
 			
 			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
-			int scriptGrpSize = scriptGroupInstance?.scripts?.size()	
+			int scriptGrpSize = scriptGroupInstance?.scriptsList?.size()	
 			def performanceList = []				
 			executionList.each{ execution ->
 				

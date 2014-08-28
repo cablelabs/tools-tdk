@@ -34,6 +34,7 @@ INCLUDES  += 	-I./include \
 		-I../agent/include 
 LDOPTS	  +=	-ldshalcli \
 		-lds \
+		-lglib-2.0 \
 		-llog4c 
 LIBOPTS   := -shared
 CC	  := g++

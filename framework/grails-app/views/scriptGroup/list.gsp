@@ -114,7 +114,7 @@
 										<g:each in="${scriptGroupInstanceList}" var="scriptGrp">
 											<li class="closed"><span class="folder" id="${scriptGrp.id}"><a href="#" onclick="editScriptGroup('${scriptGrp.id}'); return false;">${scriptGrp.name}</a></span>
 												<ul>
-													<g:each in="${scriptGrp.scripts}" var="script">
+													<g:each in="${scriptGrp.scriptsList}" var="script">
 													<% scriptGroupCount++; %>
 													<li id="scriptGroupList_${scriptGroupCount}">
 														<span id="${script.id}"><a href="#" onclick="editScript('${script.id}'); highlightTreeElement('scriptList_', '0', '${scriptInstanceTotal}');highlightTreeElement('scriptGroupList_', '${scriptGroupCount}', '${totalScripts}'); return false;">${script.name}</a></span>

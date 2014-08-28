@@ -7,7 +7,7 @@
 # LIBDIR :specify the folder where libs has to copied                                                #
 # TOOLCHAIN_DIR :Specify the toolchain folder path												     #
 ######################################################################################################
-DEBUG_LEVEL=
+DEBUG_LEVEL=TRACE
 #RDK_BUILD_DIR=
 #TOOLCHAIN_DIR=
 #COMPILER=

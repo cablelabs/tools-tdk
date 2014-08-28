@@ -37,6 +37,35 @@ class StatusUpdaterTask implements Runnable {
 		String outData = ""
 		
 		try {
+
+			def resultArray = Device.executeQuery("select a.stbIp, a.stbName,a.statusPort from Device a where a.id = :devId",[devId: device?.id])
+
+			if(resultArray && resultArray?.size() == 1){
+				def subArray = resultArray[0]
+				if(subArray && subArray?.size() == 3){
+					String devIp = subArray[0]
+					String devName = subArray[1]
+					int port = Integer.parseInt(subArray[2])
+					Device.withTransaction {
+						device = Device.findByIdAndStbName(device?.id,devName)
+					}
+
+					String [] cmdArray = [
+						cmd[0],
+						cmd[1],
+						devIp,
+						port,
+						cmd[3],
+						devName
+					]
+					cmd = cmdArray
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		
+		try {
 			outData = new ScriptExecutor().executeScript(cmd,1)
 		} catch (Exception e) {
 			e.printStackTrace()

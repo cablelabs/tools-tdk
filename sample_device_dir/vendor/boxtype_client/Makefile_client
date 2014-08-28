@@ -1,0 +1,102 @@
+#
+# Master Makefile : To build all the binaries and component libraries
+# Usage : make all
+#         make <COMPONENT NAME>
+#         make clean 
+#         make clean-<COMPONENT NAME>
+#
+
+DEF_PATH   := ../
+include $(DEF_PATH)/def.inc
+
+#Exporting SCRIPT_PATH to copy the scripts to target directory.
+CURRENT_PATH	:=$(PWD)
+export SCRIPTS_PATH =$(CURRENT_PATH)/OpenSourceComponent_Stub/script
+export PLAYER_SRC_PATH=$(CURRENT_PATH)/TDKIntegration_Stub/
+export IMAGE_PATH=$(RDK_BUILD_DIR)/work/rootfs/
+export SCRIPTS :=  $(CURRENT_PATH)/agent/scripts/StartTDK.sh $(CURRENT_PATH)/agent/scripts/StopTDK.sh $(CURRENT_PATH)/agent/scripts/sysDataDetails.sh scripts/runSysStat.sh
+PLAYER_EXE:= mplayer
+SUBDIRS =  agent DS_stub IARMBUS_stub SM_stub OpenSourceComponent_Stub ClosedCaption_stub RDKLogger_stub TDKIntegration_Stub TR069_stub 
+
+AGENT_LDOPTS    += -lrdklogger
+#platform specific libraries need to be added if needed in SM_LDOPTS
+SM_LDOPTS       += -lQt5WebKitWidgets -l:libudev.so.0 -l:libgstpbutils-0.10.so.0 -l:libgstvideo-0.10.so.0 -l:libgstbase-0.10.so.0 -l:libgthread-2.0.so.0 -l:libglib-2.0.so.0 -l:libintl.so.8 -lQt5Sql -lQt5OpenGL -lQt5WebKit -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -l:libz.so.1 -l:libssl.so.1.0.0 -l:libcrypto.so.1.0.0 -l:libjpeg.so.8 -l:libpng15.so.15 -l:libicui18n.so.43 -l:libicuuc.so.43 -l:libicudata.so.43
+
+IARMBUS_LDOPTS  += -ldirect -lfusion -ldbus-1 -l:libintl.so.8
+DS_LDOPTS        += -lIARMBus -ldirect -lfusion -ldbus-1
+
+
+CLEANDIRS = $(SUBDIRS:%=clean-%)
+	
+all: $(SUBDIRS)
+	@echo "BUILD SUCCESS"
+
+$(SUBDIRS): 
+	@echo "BUILDING" $@
+	$(MAKE) -C $(DEF_PATH)/$@
+	@echo "BUILD SUCCESS :" $@
+
+#added flag for performance system diagnostics  ENABLE_PERFORMANCE_DIAG. This may vary for different plaforms
+agent:
+	@$(eval COPTS= -UPORT_FORWARD -DENABLE_PERFORMANCE_DIAG)
+	#platform specific libraries need to be added if needed in eval_LDOPTS
+	@$(eval LDOPTS= -l:libcurl.so.4 -l:libssl.so.1.0.0 -l:libcrypto.so.1.0.0 -lrdkCCGfx -lrdkCCReader -lrdkCCManager -l:libintl.so.8  -llog4c -lbcc -ldirectfb -l:libz.so -ldirect -lfusion )	
+	@echo "BUILDING AGENT"
+	$(MAKE) -C $(DEF_PATH)/$@
+	@echo "BUILDING AGENT SUCCESS"
+
+SM_stub:
+	@$(eval LDOPTS= $(SM_LDOPTS))
+	$(MAKE) -C $(DEF_PATH)/$@
+	@echo "BUILD SUCCESS :" $@
+
+
+DS_stub:
+	@$(eval LDOPTS= $(DS_LDOPTS))
+	$(MAKE) -C $(DEF_PATH)/$@
+	@echo "BUILD SUCCESS :" $@
+
+IARMBUS_stub:
+	@$(eval LDOPTS=$(IARMBUS_LDOPTS))
+	@$(eval INCLUDES= -I$(RDK_BUILD_DIR)/iarmmgrs/generic/hal/include/)
+	$(MAKE) -C $(DEF_PATH)/$@
+	@echo "BUILD SUCCESS :" $@
+
+
+ClosedCaption_stub:
+	@$(eval INCLUDES= -I $(RDK_BUILD_DIR)/work/Refsw/AppLibs/opensource/directfb/bin/DirectFB-1.7.0_release_build.97428B0/usr/local/include/directfb)
+	@$(eval LDOPTS= -lrdkCCGfx -lrdkCCReader -lrdkCCManager -ldirectfb -l:libcurl.so.4 -lbcc -llog4c -l:libz.so -l:libz.so.1)
+	$(MAKE) -C $(DEF_PATH)/$@
+	@echo "BUILD SUCCESS :" $@
+
+RDKLogger_stub:
+	$(MAKE) -C $(DEF_PATH)/$@
+	@echo "BUILD SUCCESS :" $@
+
+TDKIntegration_Stub:
+	@$(eval COPTS= -DGCC4_XXX -DIPCLIENT -DRMFAGENT -DRMF_OSAL_LITTLE_ENDIAN)
+	@$(eval INCLUDES  += -I$(RDK_BUILD_DIR)/sdk/toolchain/staging_dir/include/gstreamer-0.10/ -I$(RDK_BUILD_DIR)/sdk/toolchain/staging_dir/include/glib-2.0/ -I$(RDK_BUILD_DIR)/sdk/toolchain/staging_dir/include/gstreamer-0.10/ -I$(RDK_BUILD_DIR)/sdk/toolchain/staging_dir/lib/glib-2.0/include/ -I$(RDK_BUILD_DIR)/mediaframework/core/ -I$(RDK_BUILD_DIR)/mediaframework/mediaplayersink/ -I$(RDK_BUILD_DIR)/mediaframework/hnsource/ -I$(RDK_BUILD_DIR)/mediaframework/qamsource/main/ -I$(RDK_BUILD_DIR)/mediaframework/init/ -I$(RDK_BUILD_DIR)/mediaframework/osal/include/ -I$(PLATFORM_SDK)/lib/glib-2.0/include -I$(PLATFORM_SDK)/include/glib-2.0 -I$(PLATFORM_SDK)/include/gstreamer-0.10 -I$(PLATFORM_SDK)/usr/local/include  -I$(PLATFORM_SDK)/usr/include -I$(PLATFORM_SDK)/include/linux_user -I$(PLATFORM_SDK)/include/libxml2 -I$(RDK_BUILD_DIR)/mediaframework/core/)
+	@$(eval LDOPTS =  -L $(IMAGE_PATH)/mnt/nfs/lib -L $(IMAGE_PATH)/mnt/nfs/bin/ -L $(IMAGE_PATH)/mnt/nfs/bin/target-snmp/lib -ltinyxml -lgstapp-0.10 -lgobject-2.0 -lgstbase-0.10 -llog4c -lgmodule-2.0 -lgthread-2.0 -lglib-2.0 -lgstreamer-0.10 -luuid -ldvrmgr -l:libz.so -l:libz.so.1 -l:libintl.so.8)
+	@$(eval SOURCES= $(RDK_BUILD_DIR)/mediaframework/core/rmfbase.cpp $(RDK_BUILD_DIR)/mediaframework/hnsource/hnsource.cpp $(RDK_BUILD_DIR)/mediaframework/mediaplayersink/mediaplayersink.cpp)
+	$(MAKE) -C $(PLAYER_SRC_PATH)
+	cp -r ../platform/TDKIntegration_Stub/scripts/* $(TDK_BIN_PATH)
+	@echo "BUILDING TDKIntegration_Stub"
+	$(MAKE) -C $(DEF_PATH)/$@
+	@echo "BUILD SUCCESS :" $@
+
+#	@$(eval SOURCES= $(RDK_BUILD_DIR)/mediaframework/core/rmfbase.cpp $(RDK_BUILD_DIR)/mediaframework/mediaplayersink/mediaplayersink.cpp)
+
+export INCLUDES:=$(INCLUDES)
+export PLAYER_SRC_PATH:=$(PLAYER_SRC_PATH)
+export LDOPTS:=$(LDOPTS)
+export COPTS:=$(COPTS)
+export SOURCES:=$(SOURCES)
+
+clean: $(CLEANDIRS)
+
+$(CLEANDIRS):
+	@echo "CLEANING" $(@:clean-%=%)
+	$(MAKE) -C $(DEF_PATH)/$(@:clean-%=%) clean
+
+.PHONY: $(SUBDIRS)
+.PHONY: $(CLEANDIRS)

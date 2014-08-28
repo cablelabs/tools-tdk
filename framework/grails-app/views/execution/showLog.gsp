@@ -142,7 +142,7 @@ function hideParameters(k){
 		<td >${executionInstance?.dateOfExecution}</td>				
 	</tr>
 	<tr class="odd">
-		<td class="tdhead">Time taken for execution(min)</td>
+		<td class="tdhead">Time taken for script execution(min)</td>
 		<td>${executionInstance?.executionTime}</td>				
 	</tr>
 	
@@ -412,11 +412,11 @@ function hideParameters(k){
 							def performance1 = Performance.findAllByExecutionResultAndPerformanceType(executionResultInstance,"SYSTEMDIAGNOSTICS")													
 						%>
 						<table>	
-						<tr class="fnhead">
+						<g:if test="${performance1}">		
+						<tbody>							
+							<tr class="fnhead">
 								<td class="tdhead" colspan="2">Performance Data</td>														
-						</tr>				
-						<tbody>
-							<g:if test="${performance1}">
+							</tr>		
 							<tr class="fnhead1">					
 								<td class="tdhead">Diagnostic Type</td>
 								<td class="tdhead">Value</td>									
@@ -426,9 +426,9 @@ function hideParameters(k){
 									<td>${performanceInstance1?.processName}</td>
 									<td>${performanceInstance1?.processValue}</td>							
 								</tr>					
-							</g:each>
-							</g:if>					
+							</g:each>										
 						</tbody>
+						</g:if>		
 						</table>
 				</section>		
 				</span>		

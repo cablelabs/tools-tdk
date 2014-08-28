@@ -312,7 +312,7 @@ class ExecutescriptService {
 				deviceInstance?.stbIp,
 				deviceInstance?.agentMonitorPort,
 				deviceInstance?.logTransferPort,
-				"${logTransferFileName}_AgentConsole.log",
+				"AgentConsole.log",
 				logTransferFilePath			
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
@@ -609,7 +609,7 @@ class ExecutescriptService {
 
 			ScriptGroup.withTransaction { trans ->
 				scriptGroupInstance = ScriptGroup.findById(scriptGrp)
-				scriptGroupInstance.scripts.each { script ->
+				scriptGroupInstance?.scriptsList?.each { script ->
 					if(executionService.validateScriptBoxType(script,deviceInstance)){
 						if(executionService.validateScriptRDKVersion(script,rdkVersion)){
 						if(script.skip){
@@ -823,8 +823,11 @@ class ExecutescriptService {
 
 							String deviceBoxType = ""
 
-							Device.withTransaction { deviceBoxType = deviceInstance?.boxType }
-
+							Device.withTransaction {
+								Device dev = Device.findById(deviceInstance?.id)
+								deviceBoxType = dev?.boxType
+							}
+							
 							Script.withTransaction {
 								def scriptInstance1 = Script.findById(scriptInstance?.id)
 								boxTypeData = scriptInstance1?.boxTypes
@@ -844,7 +847,6 @@ class ExecutescriptService {
 					executionService.updateExecutionDeviceSkipStatusWithTransaction(FAILURE_STATUS, executionDevice?.id)
 				}
 				validScripts.each{ script ->
-					
 					
 					scriptCounter++
 					if(scriptCounter == scriptGrpSize){
@@ -1248,7 +1250,7 @@ class ExecutescriptService {
 			}
 			ScriptGroup.withTransaction { trans ->
 				scriptGroupInstance = ScriptGroup.findById(scriptGrp)
-				scriptGroupInstance.scripts.each { script ->
+				scriptGroupInstance.scriptsList.each { script ->
 					if(executionService.validateScriptBoxType(script,deviceInstance)){
 						if(executionService.validateScriptRDKVersion(script,rdkVersion)){
 							if(script.skip){

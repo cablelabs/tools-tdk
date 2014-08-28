@@ -146,9 +146,17 @@ class MocaDeviceService {
 										executionService.executeSetRoute(device, deviceObj)
 										DeviceStatusService.deviceResetList.remove(deviceObj?.id)
 										Thread.sleep(5000)
+										
 										String stat = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceObj)
+											if(stat.equals(Status.NOT_FOUND.toString())){
+												for(int i = 0 ; i < 10 && (stat.equals(Status.NOT_FOUND.toString())) ; i++){
+													stat = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceObj)
+													Thread.sleep(2000)
+												}
+											}
 										if(stat.equals(Status.BUSY.toString())){
 											executionService.resetAgent(deviceObj)
+											Thread.sleep(5000)
 										}
 									} catch (Exception e) {
 										e.printStackTrace()

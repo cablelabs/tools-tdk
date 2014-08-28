@@ -1,24 +1,14 @@
 /*
-
-* ============================================================================
-
-* COMCAST CONFIDENTIAL AND PROPRIETARY
-
-* ============================================================================
-
-* This file and its contents are the intellectual property of Comcast.  It may
-
-* not be used, copied, distributed or otherwise  disclosed in whole or in part
-
-* without the express written permission of Comcast.
-
-* ============================================================================
-
-* Copyright (c) 2013 Comcast. All rights reserved.
-
-* ============================================================================
-
-*/
+ * ============================================================================
+ * COMCAST C O N F I D E N T I A L AND PROPRIETARY
+ * ============================================================================
+ * This file and its contents are the intellectual property of Comcast.  It may
+ * not be used, copied, distributed or otherwise  disclosed in whole or in part
+ * without the express written permission of Comcast.
+ * ============================================================================
+ * Copyright (c) 2014 Comcast. All rights reserved.
+ * ============================================================================
+ */
 
 #include "DeviceSettingsAgent.h"
 
@@ -191,6 +181,7 @@ bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling setBrightness\n");
 		device::FrontPanelIndicator::getInstance(indicator_name).setBrightness(brightness);
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getBrightness\n");
+		device::FrontPanelIndicator::getInstance(indicator_name).setState(1);
 		brightness1= device::FrontPanelIndicator::getInstance(indicator_name).getBrightness();
 		DEBUG_PRINT(DEBUG_LOG,"\nBrightness:%d\n",brightness1);
 		sprintf(brightnessDetails,"%d",brightness1);
@@ -692,33 +683,24 @@ bool DeviceSettingsAgent::AOP_setStereoMode(IN const Json::Value& req, OUT Json:
 bool DeviceSettingsAgent::HOST_setPowerMode(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setPowerMode ---->Entry\n");
-	char powerDetails1[30] ="Power State:";
-	int power_mode;
 	if(&req["new_power_state"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
 	int power_state=req["new_power_state"].asInt();
-	char *powerDetails = (char*)malloc(sizeof(char)*20);
-	memset(powerDetails,'\0', (sizeof(char)*20));
 	try
 	{
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling setPowerMode\n");
 		device::Host::getInstance().setPowerMode(power_state);
-		DEBUG_PRINT(DEBUG_LOG,"\nCalling getPowerMode\n");
-		power_mode=device::Host::getInstance().getPowerMode();
-		sprintf(powerDetails,"%d",power_mode);
-		strcat(powerDetails1,powerDetails);
-		response["details"]= powerDetails1; 
+		response["details"]= "Power Mode Set"; 
 		response["result"]= "SUCCESS"; 
 	}
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_setPowerMode\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in HOST_setPowerMode";
 		response["result"]= "FAILURE";
 	}
-	free(powerDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setPowerMode ---->Exit\n");
 	return TEST_SUCCESS;
 }
@@ -776,7 +758,7 @@ bool DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json:
 bool DeviceSettingsAgent::FP_getIndicators(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nFP_getIndicators  ---->Entry\n");
-	/*get list of Indicators supported in the FrontPanel*/
+	/*get list of Indicators supported in the FrontPanel*/
 	char *indicatorDetails = (char*)malloc(sizeof(char)*100);
 	memset(indicatorDetails,'\0', (sizeof(char)*100));
 	char *indicator = (char*)malloc(sizeof(char)*200);
@@ -1820,6 +1802,7 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 		DEBUG_PRINT(DEBUG_ERROR,"\n Application failed to Disconnect from IARMBUS \n");
 		return TEST_FAILURE;
 	}
+	//IARM_Bus_Term(); //Commented for RDKTT-152
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_managerInitialize");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_managerDeinitialize");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_setBrightness");

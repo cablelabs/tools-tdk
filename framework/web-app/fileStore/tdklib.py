@@ -1,14 +1,15 @@
 #!/usr/bin/python
-
-#============================================================================
-#COMCAST CONFIDENTIAL AND PROPRIETARY
-#============================================================================
-#This file and its contents are the intellectual property of Comcast.  It may
-#not be used, copied, distributed or otherwise  disclosed in whole or in part
-#without the express written permission of Comcast.
-#============================================================================
-#Copyright (c) 2013 Comcast. All rights reserved.
-#============================================================================
+#
+# ============================================================================
+# COMCAST C O N F I D E N T I A L AND PROPRIETARY
+# ============================================================================
+# This file (and its contents) are the intellectual property of Comcast.  It may
+# not be used, copied, distributed or otherwise  disclosed in whole or in part
+# without the express written permission of Comcast.
+# ============================================================================
+# Copyright (c) 2014 Comcast. All rights reserved.
+# ============================================================================
+#
 
 #------------------------------------------------------------------------------
 # module imports
@@ -33,6 +34,7 @@ from devicestatus import getStatus
 from recorderlib import startRecorderApp
 import MySQLdb
 import shutil
+import logging
 #import _mysql
 
 #------------------------------------------------------------------------------
@@ -42,24 +44,34 @@ class RecordList:
 	"""
 	Class to fetch the recording details from gateway box
 
-    	Syntax       : OBJ = RecordList (ipaddress, portnumber, path, url)
+    	Syntax       : OBJ = RecordList (ipaddress, portnumber, path, url, execId, execDevId, execResId, testCaseId, deviceId)
         
         Parameters   : ipaddress - IP address of device
 		       portnumber - port number 
 		       path - Path to save log files
                        url  - url from test manager
+		       execId - Execution Id
+		       execDevId - Device Id for that execution
+		       execResId - Result Id
+		       testCaseId - Test case Id
+		       deviceId - Device Id
 
 	"""	
 
 	#------------------------------------------------------------------------------
 	# __init__ and __del__ block
 	#------------------------------------------------------------------------------
-	def __init__(self, ipaddress, portnumber, path, url):
+	def __init__(self, ipaddress, portnumber, path, url, execId, execDevId, execResId, testCaseId, deviceId):
 		try:
 			self.ipaddress = ipaddress
 			self.portnumber = portnumber
 			self.path = path
 			self.url = url
+			self.execId = execId
+			self.execDevId = execDevId
+			self.execResId = execResId
+			self.testCaseId = testCaseId
+			self.deviceId = deviceId
 			self.logpath = ""
 			self.numOfRecordings = 0
 		except:
@@ -86,7 +98,7 @@ class RecordList:
         # Return Value : 0 on success and 1 on failure
 
     		obj = TDKScriptingLibrary("rmfapp","2.0");
-    		obj.configureTestCase(self.url,self.path,0000,00,00,self.ipaddress,self.portnumber,69,8088,00,00,"false","false","false",'TdkRmfApp_CreateRecord');
+    		obj.configureTestCase(self.url,self.path,self.execId,self.execDevId,self.execResId,self.ipaddress,self.portnumber,69,8088,self.testCaseId,self.deviceId,"false","false","false",'TdkRmfApp_CreateRecord');
 
     		#Get the result of connection with test component and STB
     		result =obj.getLoadModuleResult();
@@ -163,7 +175,7 @@ class RecordList:
         # Return Value : 0 on success and 1 on failure
 
      		obj = TDKScriptingLibrary("mediaframework","2.0");
-     		obj.configureTestCase(self.url,self.path,0000,00,00,self.ipaddress,self.portnumber,69,8088,00,00,"false","false","false",'RMF_DVR_Get_Recording_List');
+    		obj.configureTestCase(self.url,self.path,self.execId,self.execDevId,self.execResId,self.ipaddress,self.portnumber,69,8088,self.testCaseId,self.deviceId,"false","false","false",'RMF_DVR_Get_Recording_List');
 
      		#Get the result of connection with test component and STB
      		result =obj.getLoadModuleResult();
@@ -251,7 +263,7 @@ class PrimitiveTestCase:
 	"""
 	Class to hold a TestCase in TDK
 
-    	Syntax       : OBJ = PrimitiveTestCase (name, url, execId, execDeviceId, execResId, ipAddr, realpath, tcpClient, logTransferPort)
+    	Syntax       : OBJ = PrimitiveTestCase (name, url, execId, execDeviceId, execResId, ipAddr, realpath, tcpClient, logTransferPort, testcaseId, deviceId)
         
         Parameters   : name - Name of testcase
                        url  - url from test manager
@@ -262,19 +274,23 @@ class PrimitiveTestCase:
                        realpath     - Path to save log files
                        tcpClient    - instance of tcp socket client
                        logTransferPort - Port for transfering log files 
+		       testcaseId   - test case Id
+		       deviceId     - device Id
 
     	Description  : This class stores the information about a testcase.
 	"""	
     	#------------------------------------------------------------------------------
     	# __init__ and __del__ block
     	#------------------------------------------------------------------------------
-	def __init__(self, name, url, execId, execDeviceId, execResId, ipAddr, realPath, tcpClient, logTransferPort):
+	def __init__(self, name, url, execId, execDeviceId, execResId, ipAddr, realPath, tcpClient, logTransferPort, testcaseId, deviceId):
 		try:
 			self.url = url
 			self.execID = execId
 			self.ip = ipAddr
 			self.resultId = execResId
 			self.execDevId = execDeviceId
+			self.testcaseId = testcaseId
+			self.deviceId = deviceId
 			self.realpath = realPath
 			self.tcpClient = tcpClient
 			self.testCaseName = name
@@ -568,12 +584,16 @@ class PrimitiveTestCase:
                 	client = tftpy.TftpClient(IP, PORT)
                 	client.download(RemoteFile, LocalFile)
                 	status = 1
+			print "Remote Path from box:",RemoteFile
+			print "Local Path:",LocalFile
 			sys.stdout.flush()
 
        		except TypeError:
                 	print "Connection Error : Transfer of " + RemoteFile + " Failed.."
 			sys.stdout.flush()
        		except IOError:
+			print "Remote Path from box:",RemoteFile
+                        print "Local Path:",LocalFile
                 	print "IO Error : Transfer of " + RemoteFile + " Failed.."
 			print "Failed to find destination file path or permission denied"
 			sys.stdout.flush()
@@ -697,10 +717,10 @@ class PrimitiveTestCase:
 			returnvalue = 1
 			obj = self.getStreamDetails(01)
 			gatewayip = obj.getGatewayIp()
-			recobj = RecordList(str(gatewayip),8087,self.realpath,self.url)
+			recobj = RecordList(str(gatewayip),8087,self.realpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
 			returnvalue = recobj.getList()
 			if(returnvalue == 0):
-				destinationLogPath = self.realpath + "fileStore/recordDetails.txt"
+				destinationLogPath = self.realpath + "/fileStore/recordDetails.txt"
                         	recordingObj = recordinglib.RecordingDetails (destinationLogPath)
 			else:
 				print "#TDK_@error-ERROR : Failed to fetch recording details from gateway box ( " + str(gatewayip) + " ) !!! "
@@ -711,7 +731,7 @@ class PrimitiveTestCase:
 
                 	recordedUrlLogPath = infoFileName
 
-                	destinationLogPath = self.realpath + "fileStore/"
+                	destinationLogPath = self.realpath + "/fileStore/"
                 	destinationLogPath = destinationLogPath + "recordDetails.txt"
                 	if self.downloadFile(ipAddress, port, recordedUrlLogPath, destinationLogPath) == 0:
                 	        print "#TDK_@error-ERROR : Unable to fetch recording details !!! "
@@ -835,7 +855,7 @@ class TDKScriptingLibrary:
 			self.execID = execId
 			self.resultId = execResId
 			self.execDevId = execDeviceId
-			self.testcaseID = testcaseID
+			self.testcaseId = testcaseID
 			self.deviceId = deviceId
 			self.tcpClient = socket.socket()
 			self.IP = deviceIp
@@ -844,6 +864,8 @@ class TDKScriptingLibrary:
 			self.performanceBenchMarkingEnabled = performanceBenchMarkingEnabled  
 			self.performanceSystemDiagnosisEnabled = performanceSystemDiagnosisEnabled 
 			self.scriptSuiteEnabled = scriptSuiteEnabled
+			
+			print "The real path:",self.realpath
 
 			# Querry Test Manager to get status port and log transfer port
                         url = self.url + "/execution/getClientPort?deviceIP=" + str(self.IP) + "&agentPort=" + str(self.portValue)
@@ -885,7 +907,7 @@ class TDKScriptingLibrary:
        			sys.stdout.flush()         	
 	
 			final = {'jsonrpc':'2.0','id':'2','method':'LoadModule','param1':self.componentName,'version':self.rdkversion,\
-				 'execID':str(self.execID),'deviceID':str(self.deviceId),'testcaseID':str(self.testcaseID),\
+				 'execID':str(self.execID),'deviceID':str(self.deviceId),'testcaseID':str(self.testcaseId),\
 				 'execDevID':str(self.execDevId),'resultID':str(self.resultId),\
 				 'performanceBenchMarkingEnabled':str(self.performanceBenchMarkingEnabled), \
 				 'performanceSystemDiagnosisEnabled': str(self.performanceSystemDiagnosisEnabled) }
@@ -981,7 +1003,7 @@ class TDKScriptingLibrary:
 	# Return Value: An instance of PrimitiveTestCase 
     	
 		sys.stdout.flush()
-		testObj = PrimitiveTestCase(testCaseName, self.url, self.execID, self.execDevId, self.resultId, self.IP, self.realpath, self.tcpClient, self.logTransferPort)
+		testObj = PrimitiveTestCase(testCaseName, self.url, self.execID, self.execDevId, self.resultId, self.IP, self.realpath, self.tcpClient, self.logTransferPort, self.testcaseId, self.deviceId)
 		return testObj
  
 	########## End of Function ##########
@@ -1092,7 +1114,7 @@ class TDKScriptingLibrary:
 		# Invoking RPC 'RestorePreviousState' to restore the state before reboot
 		try:
 			message = {'jsonrpc':'2.0','id':'2','method':'RestorePreviousState','version':self.rdkversion,\
-				   'execID':str(self.execID),'deviceID':str(self.deviceId),'testcaseID':str(self.testcaseID),\
+				   'execID':str(self.execID),'deviceID':str(self.deviceId),'testcaseID':str(self.testcaseId),\
 				   'execDevID':str(self.execDevId),'resultID':str(self.resultId)}
 			query = json.dumps(message)
 

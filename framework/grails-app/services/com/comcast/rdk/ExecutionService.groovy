@@ -114,7 +114,7 @@ class ExecutionService {
 			directory.eachFile { file ->
 				if (file.isFile()) {
 					String fileName = file.getName()
-					if(fileName.startsWith( "${executionId}" )){
+					if(fileName.startsWith( "AgentConsole" )){
 						file.eachLine { line ->
 							fileContents = fileContents + "<br>"+ line
 						}						
@@ -1141,8 +1141,8 @@ class ExecutionService {
 	 ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun){
 		def executionSaveStatus = true
 		int scriptCnt = 0
-		if(scriptGroupInstance?.scripts?.size() > 0){
-			scriptCnt = scriptGroupInstance?.scripts?.size()
+		if(scriptGroupInstance?.scriptsList?.size() > 0){
+			scriptCnt = scriptGroupInstance?.scriptsList?.size()
 		}
 		
 		try {

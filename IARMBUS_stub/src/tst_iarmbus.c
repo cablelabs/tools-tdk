@@ -1,24 +1,14 @@
 /*
-
-* ============================================================================
-
-* COMCAST CONFIDENTIAL AND PROPRIETARY
-
-* ============================================================================
-
-* This file and its contents are the intellectual property of Comcast.  It may
-
-* not be used, copied, distributed or otherwise  disclosed in whole or in part
-
-* without the express written permission of Comcast.
-
-* ============================================================================
-
-* Copyright (c) 2013 Comcast. All rights reserved.
-
-* ============================================================================
-
-*/
+ * ============================================================================
+ * COMCAST C O N F I D E N T I A L AND PROPRIETARY
+ * ============================================================================
+ * This file (and its contents) are the intellectual property of Comcast.  It may
+ * not be used, copied, distributed or otherwise  disclosed in whole or in part
+ * without the express written permission of Comcast.
+ * ============================================================================
+ * Copyright (c) 2014 Comcast. All rights reserved.
+ * ============================================================================
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +18,8 @@
 #include "libIBusDaemon.h"
 #include "pwrMgr.h"
 #include "irMgr.h"
+#include "diskMgr.h"
+#include "sysMgr.h"
 #include "rdktestagentintf.h"
 
 /********************************************************
@@ -100,9 +92,8 @@ static void _eventHandler(const char *owner, IARM_EventId_t eventId, void *data,
 
 }
 
-int main()
+int main(int argc, char *argv[] )
 {
-
 
         DEBUG_PRINT(DEBUG_TRACE,"\n<-----------SECOND APPLICATION---Entry-------------->\n");
 	IARM_Result_t retCode = IARM_RESULT_SUCCESS;
@@ -116,6 +107,8 @@ int main()
 	IARM_Bus_EventData_t eventData_bus;
 	IARM_Bus_IRMgr_EventData_t eventData_ir;
 	IARM_Bus_PWRMgr_EventData_t eventData_pwr;
+	IARM_BUS_DISKMgr_EventData_t eventData_disk;
+	IARM_Bus_SYSMgr_EventData_t eventData_sys;
         /*Hard coded values*/
 	DEBUG_PRINT(DEBUG_LOG,"\nBroadcasting ResourceAvailable event\n");
 	/*Braodcasting Bus event-ResourceAvailable*/
@@ -138,6 +131,27 @@ int main()
 	eventData_pwr.data.state.newState = (IARM_Bus_PWRMgr_PowerState_t)0;
 	DEBUG_PRINT(DEBUG_LOG,"\nBroadcasting PWR event\n");
 	IARM_Bus_BroadcastEvent(IARM_BUS_PWRMGR_NAME,IARM_BUS_PWRMGR_EVENT_MODECHANGED,(void*)&eventData_pwr, sizeof(eventData_pwr));
+
+	/*Braodcasting DISKMGR event*/
+	DEBUG_PRINT(DEBUG_LOG,"\n Broadcasting DISk Mgr HWDISK Event \n");
+	IARM_Bus_BroadcastEvent(IARM_BUS_DISKMGR_NAME,IARM_BUS_DISKMGR_EVENT_HWDISK,(void*)&eventData_disk,sizeof(eventData_disk));
+
+	if(strcmp(argv[1],"ON")==0)
+		eventData_disk.eventType = DISKMGR_EVENT_EXTHDD_ON;
+	else if(strcmp(argv[1],"OFF")==0)
+		eventData_disk.eventType =DISKMGR_EVENT_EXTHDD_OFF;
+	else if(strcmp(argv[1],"PAIR")==0)
+		eventData_disk.eventType =DISKMGR_EVENT_EXTHDD_PAIR;
+	DEBUG_PRINT(DEBUG_LOG,"\n Broadcasting DISk Mgr HDDDISK Event \n");
+	IARM_Bus_BroadcastEvent(IARM_BUS_DISKMGR_NAME,IARM_BUS_DISKMGR_EVENT_EXTHDD,(void*)&eventData_disk,sizeof(eventData_disk));
+
+	/*Braodcasting SYSMGR event*/
+	DEBUG_PRINT(DEBUG_LOG,"\n Broadcasting SYS Mgr Event \n");
+	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_REQUEST,(void*)&eventData_sys,sizeof(eventData_sys));
+	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_UPDATE,(void*)&eventData_sys,sizeof(eventData_sys));
+	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_CARD_FWDNLD,(void*)&eventData_sys,sizeof(eventData_sys));
+	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_HDCP_PROFILE_UPDATE,(void*)&eventData_sys,sizeof(eventData_sys));
+	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE,(void*)&eventData_sys,sizeof(eventData_sys));
 
 	DEBUG_PRINT(DEBUG_LOG,"\nApplication sleep for 5 seconds\n");
 	sleep(5);

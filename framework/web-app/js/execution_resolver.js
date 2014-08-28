@@ -313,8 +313,10 @@ function showSpinner(){
 	$("#delspinnr").show();
 }
 
-function hideSpinner(){
+function hideSpinnerForDelete(){
 	$("#delspinnr").hide();
+	 $( "#cleanFromDate" ).datepicker();
+	 $( "#cleanToDate" ).datepicker();
 }
 
 function updateLog(){

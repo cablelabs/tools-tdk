@@ -63,8 +63,8 @@ class ScriptexecutionService {
 		def executionSaveStatus = true
 		try{
 			int scriptCnt = 0
-			if(scriptGroupInstance?.scripts?.size() > 0){
-				scriptCnt = scriptGroupInstance?.scripts?.size()
+			if(scriptGroupInstance?.scriptsList?.size() > 0){
+				scriptCnt = scriptGroupInstance?.scriptsList?.size()
 			}
 			
 			Execution execution = new Execution()
@@ -145,7 +145,7 @@ class ScriptexecutionService {
 			boolean notApplicable = false
 			String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
 			
-			scriptGroup.scripts.each { script ->
+			scriptGroup.scriptsList.each { script ->
 				if(validateBoxTypeOfScript(script,boxType)){
 					if(executionService.validateScriptRDKVersion(script, rdkVersion)){
 						if(script.skip){

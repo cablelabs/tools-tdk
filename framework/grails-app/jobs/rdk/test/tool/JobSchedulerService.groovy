@@ -257,7 +257,7 @@ class JobSchedulerService implements Job{
 								boolean notApplicable = false
 
 								String rdkVersion = getRDKBuildVersion(deviceInstance);
-								scriptGroupInstance.scripts.each { script ->
+								scriptGroupInstance.scriptsList.each { script ->
 
 									if(validateScriptBoxType(script,deviceInstance)){
 										if(validateScriptRDKVersion(script,rdkVersion)){

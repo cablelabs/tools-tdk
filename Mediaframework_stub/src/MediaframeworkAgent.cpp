@@ -1,24 +1,14 @@
 /*
-
-* ============================================================================
-
-* COMCAST CONFIDENTIAL AND PROPRIETARY
-
-* ============================================================================
-
-* This file and its contents are the intellectual property of Comcast.  It may
-
-* not be used, copied, distributed or otherwise  disclosed in whole or in part
-
-* without the express written permission of Comcast.
-
-* ============================================================================
-
-* Copyright (c) 2013 Comcast. All rights reserved.
-
-* ============================================================================
-
-*/
+ * ============================================================================
+ * COMCAST C O N F I D E N T I A L AND PROPRIETARY
+ * ============================================================================
+ * This file and its contents are the intellectual property of Comcast.  It may
+ * not be used, copied, distributed or otherwise  disclosed in whole or in part
+ * without the express written permission of Comcast.
+ * ============================================================================
+ * Copyright (c) 2014 Comcast. All rights reserved.
+ * ============================================================================
+ */
 
 #include "MediaframeworkAgent.h"
 
@@ -1000,17 +990,45 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 		}
                 response["details"] = "DVRSrc play() successful";
 	}
+	int retValue;
+	double mediaTime;
 	if(rmfComponent == "HNSrc")
 	{
+
+		//Video length unknown.So, passing zero.
+	        retResult = hnSource->setVideoLength(0);
+		cout<<"HNSrc setVideoLength() return value "<<retResult<<endl;
+
 		if(0 == playArgs)
                 {
                         retResult = hnSource->play();
+
+/*
+			sleep(5);
+        		retValue=hnSource->setMediaTime(0);
+        		cout<<"Return of Set Media time "<<retValue<<endl;
+        		sleep(5);
+        		retValue = hnSource->getMediaTime(mediaTime);
+        		cout<<"Return of get Media time "<<retValue<<endl;
+        		cout<<"get Media time value"<<mediaTime<<endl;
+*/
+	
                 }
                 else
                 {
+
                         float speed = req["playSpeed"].asFloat();
                         double time = req["playTime"].asDouble();
                         retResult = hnSource->play(speed,time);
+/*
+			sleep(5);	
+        		retValue = hnSource->setMediaTime(0);
+        		cout<<"Return of Set Media time "<<retValue<<endl;
+        		sleep(5);
+        		retValue = hnSource->getMediaTime(mediaTime);
+        		cout<<"Return of get Media time "<<retValue<<endl;
+        		cout<<"get Media time value"<<mediaTime<<endl;
+*/
 			DEBUG_PRINT(DEBUG_ERROR, "HNSrc play() with speed and time\n");
                 }
 		if(RMF_RESULT_SUCCESS != retResult)
@@ -2316,53 +2334,213 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
 {
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrc_Getbufferrange --->Entry\n");
 
-	int res_HNSrcTerm, res_HNSrcInit, res_HNSrcGetbuffrange;
+#ifdef ENABLE_DVRSRC_MPSINK
 
-	HNSource* pSource = new HNSource();
-	range_list_t ranges;
+        int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcClose, res_HNSrcPlay;
+        int res_HNSrcGetState, res_MPSinksetrect, res_MPSinksetsrc, res_MPSinkInit, res_MPSinkTerm;
+        unsigned x, y, height, width;
+        bool applyNow;
+        int applynow;
+        string streamingip;
+        MediaPlayerSink* pSink = new MediaPlayerSink();
+        HNSource* pSource = new HNSource();
+        RMFState cur_state;
 
-	res_HNSrcInit = pSource->init();
-	DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Initialize is %d\n",res_HNSrcInit);
+        x = req["X"].asInt();
+        y = req["Y"].asInt();
+        height = req["H"].asInt();
+        width = req["W"].asInt();
+        applynow = req["apply"].asInt();
 
-	if(0 == res_HNSrcInit)
-	{
-		res_HNSrcGetbuffrange = pSource->getBufferedRanges(ranges);
-		DEBUG_PRINT(DEBUG_LOG, "Result of Get buffered ranges is %d\n", res_HNSrcGetbuffrange);
+        if(0 == applynow)
+        {
+                applyNow = false;
+        }
+        else if(1 == applynow)
+        {
+                applyNow = true;
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "Invald boolean Value\n");
+        }
 
-		res_HNSrcTerm = pSource->term();
-		DEBUG_PRINT(DEBUG_LOG, "Result of Hnsource termination is %d\n", res_HNSrcTerm);
+        res_HNSrcInit = pSource->init();
+        DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Initialize is %d\n", res_HNSrcInit);
 
-		if(0 == res_HNSrcGetbuffrange)
-		{
-			if(0 == res_HNSrcTerm)
-			{
-				response["result"] = "SUCCESS";
-				DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrc_Getbufferrange --->Exit\n");
-				return TEST_SUCCESS;
-			}
-			else
-			{
-				response["result"] = "FAILURE";
-				response["details"] = "Getting buffer range is success, but failed to terminate Hnsource";
-				DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrc_Getbufferrange --->Exit\n");
-				return TEST_FAILURE;
-			}	
-		}
-		else
-		{
-			response["details"] = "Getting buffer range is failure";
-			response["result"] = "FAILURE";               
-			DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrc_Getbufferrange --->Exit\n");
-			return TEST_FAILURE;
-		}	
-	}
-	else
-	{
-		response["result"] = "FAILURE";
-		response["details"] = "Failed to Initialize Hnsource";
-		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrc_Getbufferrange --->Exit\n");
-		return TEST_FAILURE;
-	}
+        if(0 != res_HNSrcInit)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to Initialize hnsource";
+                return TEST_FAILURE;
+        }
+        streamingip=GetHostIP("eth1");
+        string urlIn = req["playuri"].asCString();
+        string http = "http://";
+        http.append(streamingip);
+        cout<<"IP:"<<streamingip;
+
+        size_t pos = 0;
+        pos = urlIn.find(":8080");
+        if (pos!=std::string::npos)
+        {
+                urlIn = urlIn.replace(0,pos,http);
+        }
+
+        cout<<"Final URL passed to Open(): "<<urlIn<<endl;
+
+        res_HNSrcOpen = pSource->open(urlIn.c_str(), 0);
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of HNSrc open is %d\n", res_HNSrcOpen);
+
+        if(0 != res_HNSrcOpen)
+        {
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to open hnsource";
+                return TEST_FAILURE;
+        }
+
+        res_MPSinkInit = pSink->init();
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Initialize is %d\n", res_MPSinkInit);
+
+        if(0 != res_MPSinkInit)
+        {
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to Initialize MPSink";
+                return TEST_FAILURE;
+        }
+
+        res_MPSinksetrect = pSink->setVideoRectangle(x, y, height, width, applyNow);
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of setting Video resolution is %d\n", res_MPSinksetrect);
+
+        if(0 != res_MPSinksetrect)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to set video resolution";
+                return TEST_FAILURE;
+        }
+
+        res_MPSinksetsrc = pSink->setSource(pSource);
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of setting source is %d\n", res_MPSinksetsrc);
+
+        if(0 != res_MPSinksetsrc)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to set source";
+                return TEST_FAILURE;
+        }
+
+        res_HNSrcPlay = pSource->play();
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of Play is %d\n", res_HNSrcPlay);
+
+        if(0 != res_HNSrcPlay)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to play hnsource";
+                return TEST_FAILURE;
+        }
+
+        sleep(10);
+
+        res_HNSrcGetState = pSource->getState(&cur_state, NULL);
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of GstState is %d\n", res_HNSrcGetState);
+
+        if(1 != res_HNSrcGetState)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to Get Video State";
+                return TEST_FAILURE;
+        }
+
+        if (cur_state != RMF_STATE_PLAYING)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                DEBUG_PRINT(DEBUG_ERROR, "Get State API is returning Success, but current state is not RMF_STATE_PLAYING");
+                response["result"] = "FAILURE";
+                response["details"] = "Get State API is returning Success, but current state is not RMF_STATE_PLAYING";
+                return TEST_FAILURE;
+        }
+
+        DEBUG_PRINT(DEBUG_LOG, "Get Video state is success. Video is playing and showing state as RMF_STATE_PLAYING\n");
+        int res_HNSrcGetbuffrange;
+        range_list_t ranges;
+        res_HNSrcGetbuffrange = pSource->getBufferedRanges(ranges);
+        if(1 != res_HNSrcGetbuffrange)
+        {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to Get Video State";
+                return TEST_FAILURE;
+         }
+        DEBUG_PRINT(DEBUG_LOG, "Result of Get buffered ranges is %d\n", res_HNSrcGetbuffrange);
+/*
+        int retValue;
+        double mediaTime;
+        retValue=pSource->setMediaTime(0);
+        cout<<"Return of Set Media time "<<retValue<<endl;
+        sleep(5);
+        retValue = pSource->getMediaTime(mediaTime);
+        cout<<"Return of get Media time "<<retValue<<endl;
+        cout<<"get Media time value"<<mediaTime<<endl;
+*/
+
+        res_MPSinkTerm = pSink->term();
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);
+
+        res_HNSrcClose = pSource->close();
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of hnsrc close is %d\n", res_HNSrcClose);
+
+        res_HNSrcTerm = pSource->term();
+        DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Termination is %d\n", res_HNSrcTerm);
+
+        if(0 != res_MPSinkTerm)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "Get Video state is success, but failed to Terminate MPSink";
+                return TEST_FAILURE;
+        }
+
+        if(0 != res_HNSrcClose)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "Get Video state is success, but failed to close hnsource";
+                return TEST_FAILURE;
+        }
+
+        if(0 != res_HNSrcTerm)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "Get Video state is success, but failed to Terminate hnsource";
+                return TEST_FAILURE;
+        }
+        response["result"] = "SUCCESS";
+        response["details"] = "Bufferranges is success";
+        return TEST_SUCCESS;
+#else
+        response["result"] = "FAILURE";
+        response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
+        DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
+        return TEST_FAILURE;
+#endif
+
 }
 
 /**************************************************************************
@@ -2529,6 +2707,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 	}
 
 	DEBUG_PRINT(DEBUG_LOG, "Get Video state is success. Video is playing and showing state as RMF_STATE_PLAYING\n");
+/*	
+int retValue;
+        double mediaTime;
+        retValue=pSource->setMediaTime(0);
+        cout<<"Return of Set Media time "<<retValue<<endl;
+        sleep(5);
+        retValue = pSource->getMediaTime(mediaTime);
+        cout<<"Return of get Media time "<<retValue<<endl;
+        cout<<"get Media time value"<<mediaTime<<endl;
+*/
 
 	res_MPSinkTerm = pSink->term();
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);
@@ -2754,6 +2942,17 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 	}
 
 	DEBUG_PRINT(DEBUG_LOG, "Mute Unmute is success\n");
+
+/*
+	int retValue;
+        double mediaTime;
+        retValue=pSource->setMediaTime(0);
+        cout<<"Return of Set Media time "<<retValue<<endl;
+        sleep(5);
+        retValue = pSource->getMediaTime(mediaTime);
+        cout<<"Return of get Media time "<<retValue<<endl;
+        cout<<"Media time value "<<mediaTime<<endl;
+*/
 
 	res_MPSinkTerm = pSink->term();
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);
@@ -2983,6 +3182,17 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 	}
 
 	DEBUG_PRINT(DEBUG_LOG, "Set Get Volume is Success\n");
+
+/*	
+	int retValue;
+        double mediaTime;
+        retValue=pSource->setMediaTime(0);        
+        cout<<"Return of Set Media time "<<retValue<<endl;
+        sleep(5);
+        retValue = pSource->getMediaTime(mediaTime);
+        cout<<"Return of get Media time "<<retValue<<endl;
+        cout<<"Media time Value"<<mediaTime<<endl;
+*/
 
 	res_MPSinkTerm = pSink->term();
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);

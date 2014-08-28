@@ -27,6 +27,8 @@ class ScriptGroup {
      * Set of Scripts to the ScriptGroup
      */    
     Set scripts
+	
+	List scriptsList
 
     /**
      * Status of the scriptgroup
@@ -42,7 +44,7 @@ class ScriptGroup {
     /**
      * ScriptGroup can have many scripts.
      */
-    static hasMany = [ scripts : Script ]
+    static hasMany = [ scripts : Script , scriptsList : Script]
 
     static constraints = {
         name(nullable:false, blank:false, unique:true)

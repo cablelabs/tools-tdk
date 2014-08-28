@@ -530,11 +530,12 @@ class MigrationService {
 					def sproperties = migrateObj.getProperties()
 					newObject  = new ScriptGroup(sproperties)
 					newObject.scripts =  []
+					newObject.scriptsList =  []
 					newObject.save(flush:true)
 				}catch(Exception e ){
 				}
 			}
-			def scriptsList = migrateObj?.scripts
+			def scriptsList = migrateObj?.scriptsList
 			scriptsList.each { script ->
 				def scrpt
 				Script.withSession{
@@ -542,12 +543,26 @@ class MigrationService {
 				}
 				ScriptGroup.withSession {
 					if(scrpt){
-						newObject.addToScripts(scrpt)
+						newObject.addToScriptsList(scrpt)
 					}
 				}
 			}
+			
+			def scripts = migrateObj?.scripts
+			scripts.each { script ->
+				def scrpt
+				if(!migrateObj?.scriptsList?.contains(script)){
+				Script.withSession{
+					scrpt = Script.findByName(script?.name)
+				}
+				ScriptGroup.withSession {
+					if(scrpt){
+						newObject.addToScriptsList(scrpt)
+					}
+				}
+				}
+			}
 		}
-
 
 	}
 
@@ -556,6 +571,7 @@ class MigrationService {
 	 * @return
 	 */
 	private boolean cleanDB(){
+		clearScriptGroups()
 		cleanScripts()
 		cleanPrimitiveTests()
 		cleanParameters()
@@ -917,6 +933,22 @@ class MigrationService {
 		}
 	}
 
+	
+	private void clearScriptGroups(){
+		
+		try {
+			ScriptGroup.temp.withSession{
+				def sgList = ScriptGroup.temp.findAll()
+						sgList.each { sg ->
+						sg?.scriptsList?.clear()
+								sg?.scripts?.clear()
+										sg?.temp.save()
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
 	/**
 	 * Removing Scripts that are migrated or available in the existing DB
 	 */
@@ -930,11 +962,15 @@ class MigrationService {
 		scriptTempList.each {scriptEntry ->
 			Script.withSession {
 				def script = Script.findByName(scriptEntry?.name)
+				
 				if(script){
 					migrationList.add(scriptEntry)
 				}
 			}
 		}
+		
+		
+		
 		migrationList.each{ mObject -> deleteScripts(mObject) }
 	}
 
@@ -972,10 +1008,9 @@ class MigrationService {
 	 * @return
 	 */
 	def deleteScripts(def mObject){
-
 		try {
 
-			boolean flag = removeFromScriptSuite(mObject)
+			boolean flag = true //removeFromScriptSuite(mObject)
 			if(flag){
 				if(mObject.temp.delete()){
 				//	println "Error saving function instance : ${mObject.errors}"
@@ -1008,8 +1043,7 @@ class MigrationService {
 	 * @return
 	 */
 	private boolean removeFromScriptSuite(def script){
-
-
+		def timee = System.currentTimeMillis()
 		/**
 		 * Selecting ScriptGroups where the given script is present
 		 *
@@ -1020,25 +1054,20 @@ class MigrationService {
 			idList.add(script.id)
 			def scriptGroups = ScriptGroup.temp.createCriteria().list {
 				ScriptGroup.temp.withSession{
-					scripts{
+					scriptsList{
 						Script.temp.withSession{ 'in'('id',idList) }
 					}
 				}
 			}
-
-			def sgList = ScriptGroup.temp.findAll()
-			def sInstance
-			sgList.each{ sGrp ->
-				sInstance = sGrp.scripts.find { it.id == script.id }
-				if(sInstance){
-					sGrp.removeFromScripts(sInstance)
-				}
-			}
+			
+			
+			
 			def scriptInstance
+			def time2 = System.currentTimeMillis()
 			scriptGroups?.each{ scriptGrp ->
-				scriptInstance = scriptGrp.scripts.find { it.id == script.id }
+				scriptInstance = scriptGrp.scriptsList.find { it.id == script.id }
 				if(scriptInstance){
-					scriptGrp.removeFromScripts(scriptInstance)
+					scriptGrp.removeFromScriptsList(scriptInstance)
 				}
 			}
 		}

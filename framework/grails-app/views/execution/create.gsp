@@ -233,7 +233,7 @@ $(document).ready(function() {
 				<td></td>
 				<td valign="middle">
 				<span class="buttons">
-					<g:submitToRemote before="showSpinner();" class="delete" action="deleteExecutions" update="searchDelResultDiv" value="Delete" onSuccess="hideSpinner();" />
+					<g:submitToRemote before="showSpinner();" class="delete" action="deleteExecutions" update="searchDelResultDiv" value="Delete" onSuccess="hideSpinnerForDelete();" />
 					
 					<span id="delspinnr" style="display: none;">											
 						<img id="ss" src="${resource(dir:'images',file:'spinner.gif')}" />
