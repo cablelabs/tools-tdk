@@ -2,7 +2,7 @@
  * ============================================================================
  * COMCAST C O N F I D E N T I A L AND PROPRIETARY
  * ============================================================================
- * This file (and its contents) are the intellectual property of Comcast.  It may
+ * This file and its contents are the intellectual property of Comcast.  It may
  * not be used, copied, distributed or otherwise  disclosed in whole or in part
  * without the express written permission of Comcast.
  * ============================================================================
@@ -785,12 +785,16 @@ Description   : Receives the RequestURL  from Test Manager and makes to play RMF
 bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RMFStreamerAgent_Player ---> Entry\n");
-//#ifdef ENABLE_DVRSRC_MPSINK	
+	
 	int res_HNSrcGetState;
 	int sleep_time = request["play_time"].asInt();
 	int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcPlay, res_MPSinksetrect;
         int res_MPSinksetsrc, res_MPSinkInit, res_MPSinkTerm, res_HNSrcClose;
 	char* playuri = (char*)request["VideostreamURL"].asCString();	
+        
+	string streamingip;
+        streamingip=GetHostIP("eth1");
+        string urlIn = playuri;
 
 	MediaPlayerSink* pSink = new MediaPlayerSink();
 	HNSource* pSource = new HNSource();
@@ -806,10 +810,24 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
                 DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
                 return TEST_FAILURE;
         }
+        string http = "http://";
 
-        res_HNSrcOpen = pSource->open(playuri, 0);
-        DEBUG_PRINT(DEBUG_LOG, "RMF Result of HNSrc open is %d\n", res_HNSrcOpen);
-	        if(0 != res_HNSrcOpen)
+        http.append(streamingip);
+
+        DEBUG_PRINT(DEBUG_TRACE, "Incoming URL: %s\n",playuri);
+        DEBUG_PRINT(DEBUG_TRACE, "After appending streaming IP to http: %s\n",http.c_str());
+        DEBUG_PRINT(DEBUG_TRACE, "IP : %s\n",streamingip.c_str());
+
+        size_t pos = 0;
+        pos = urlIn.find(":8080");
+        urlIn = urlIn.replace(0,pos,http);
+
+        DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to Open(): %s\n",urlIn.c_str());
+
+        res_HNSrcOpen = pSource->open(urlIn.c_str(), 0);
+        
+	DEBUG_PRINT(DEBUG_LOG, "RMF Result of HNSrc open is %d\n", res_HNSrcOpen);
+        if(0 != res_HNSrcOpen)
         {
                 pSource->term();
                 response["result"] = "FAILURE";
@@ -879,14 +897,13 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
 
         if (curstate != RMF_STATE_PLAYING)
         {
-                DEBUG_PRINT(DEBUG_ERROR, "Play API call is Success, but Video is not playing");
+                DEBUG_PRINT(DEBUG_ERROR, "HNSource Current State is not in RMF_STATE_PLAYING");
                 response["result"] = "FAILURE";
-                response["details"] = "Play API call is Success, but Video is not playing";
+                response["details"] = "HNSource Current State is not in RMF_STATE_PLAYING";
                 DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
                 return TEST_FAILURE;
         }
 
-        DEBUG_PRINT(DEBUG_LOG, "Video is playing\n");
 
         res_MPSinkTerm = pSink->term();
         DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPsink termination is %d\n", res_MPSinkTerm);
@@ -921,14 +938,10 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
         }
 
         response["result"] = "SUCCESS";
+        response["details"] = "Video played successfully";
+        DEBUG_PRINT(DEBUG_LOG, "Video played successfully\n");
         DEBUG_PRINT(DEBUG_TRACE, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
         return TEST_SUCCESS;
-/*#else
-        response["result"] = "FAILURE";
-        response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
-        DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
-        return TEST_FAILURE;
-#endif*/
 }
 #endif
 #ifdef RDK_BR_1DOT3

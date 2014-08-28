@@ -842,15 +842,6 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementClose(IN const Json::Val
 	}
 	if(rmfComponent == "HNSrc")
 	{
-		int retValue;
-		double mediaTime;	
-                retValue=hnSource->setMediaTime(0);
-		cout<<"Return of Set Media time "<<retValue<<endl;
-                sleep(5);
-		retValue = hnSource->getMediaTime(mediaTime);
-		cout<<"Return of get Media time "<<retValue<<endl;
-		cout<<" Media time Value "<<mediaTime<<endl;
-
 		retResult = hnSource->close();	
 		if(RMF_RESULT_SUCCESS != retResult)
 	        {
@@ -1011,6 +1002,8 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 		if(0 == playArgs)
                 {
                         retResult = hnSource->play();
+
+/*
 			sleep(5);
         		retValue=hnSource->setMediaTime(0);
         		cout<<"Return of Set Media time "<<retValue<<endl;
@@ -1018,13 +1011,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
         		retValue = hnSource->getMediaTime(mediaTime);
         		cout<<"Return of get Media time "<<retValue<<endl;
         		cout<<"get Media time value"<<mediaTime<<endl;
+*/
 	
                 }
                 else
                 {
+
                         float speed = req["playSpeed"].asFloat();
                         double time = req["playTime"].asDouble();
                         retResult = hnSource->play(speed,time);
+/*
 			sleep(5);	
         		retValue = hnSource->setMediaTime(0);
         		cout<<"Return of Set Media time "<<retValue<<endl;
@@ -1032,6 +1028,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
         		retValue = hnSource->getMediaTime(mediaTime);
         		cout<<"Return of get Media time "<<retValue<<endl;
         		cout<<"get Media time value"<<mediaTime<<endl;
+*/
 			DEBUG_PRINT(DEBUG_ERROR, "HNSrc play() with speed and time\n");
                 }
 		if(RMF_RESULT_SUCCESS != retResult)
@@ -2494,7 +2491,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 return TEST_FAILURE;
          }
         DEBUG_PRINT(DEBUG_LOG, "Result of Get buffered ranges is %d\n", res_HNSrcGetbuffrange);
-
+/*
         int retValue;
         double mediaTime;
         retValue=pSource->setMediaTime(0);
@@ -2503,7 +2500,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
         retValue = pSource->getMediaTime(mediaTime);
         cout<<"Return of get Media time "<<retValue<<endl;
         cout<<"get Media time value"<<mediaTime<<endl;
-
+*/
 
         res_MPSinkTerm = pSink->term();
         DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);
@@ -2710,7 +2707,8 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 	}
 
 	DEBUG_PRINT(DEBUG_LOG, "Get Video state is success. Video is playing and showing state as RMF_STATE_PLAYING\n");
-	int retValue;
+/*	
+int retValue;
         double mediaTime;
         retValue=pSource->setMediaTime(0);
         cout<<"Return of Set Media time "<<retValue<<endl;
@@ -2718,7 +2716,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
         retValue = pSource->getMediaTime(mediaTime);
         cout<<"Return of get Media time "<<retValue<<endl;
         cout<<"get Media time value"<<mediaTime<<endl;
-
+*/
 
 	res_MPSinkTerm = pSink->term();
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);
@@ -2945,7 +2943,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 
 	DEBUG_PRINT(DEBUG_LOG, "Mute Unmute is success\n");
 
-
+/*
 	int retValue;
         double mediaTime;
         retValue=pSource->setMediaTime(0);
@@ -2954,7 +2952,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
         retValue = pSource->getMediaTime(mediaTime);
         cout<<"Return of get Media time "<<retValue<<endl;
         cout<<"Media time value "<<mediaTime<<endl;
-
+*/
 
 	res_MPSinkTerm = pSink->term();
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);
@@ -3184,7 +3182,8 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 	}
 
 	DEBUG_PRINT(DEBUG_LOG, "Set Get Volume is Success\n");
-	
+
+/*	
 	int retValue;
         double mediaTime;
         retValue=pSource->setMediaTime(0);        
@@ -3193,7 +3192,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
         retValue = pSource->getMediaTime(mediaTime);
         cout<<"Return of get Media time "<<retValue<<endl;
         cout<<"Media time Value"<<mediaTime<<endl;
-
+*/
 
 	res_MPSinkTerm = pSink->term();
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);

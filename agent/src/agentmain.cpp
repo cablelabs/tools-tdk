@@ -296,6 +296,7 @@ static void SignalHandler (int nCode)
 			
         case SIGABRT :
             DEBUG_PRINT (DEBUG_LOG, "\nAlert!!! Agent caught an Abort signal! Attempting recovery..\n");
+            s_bAgentRun = false;
             longjmp (g_JumpBuffer,0);
             break;
 			

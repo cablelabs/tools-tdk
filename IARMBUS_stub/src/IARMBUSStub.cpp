@@ -247,8 +247,16 @@ bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value&
 	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_Init directly from IARMBUSAgent_Init\n");
 	/*Calling IARMBUS API IARM_Bus_Init with json req as parameter*/
 	retval=IARM_Bus_Init((char *)req["Process_name"].asCString());
+	if(retval==1)
+	{
+	response["result"]="SUCCESS";
+	response["details"]="NULL";
+	}
+	else
+	{
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
+	}
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_Init --->Exit\n");
 	return TEST_SUCCESS;
@@ -265,6 +273,8 @@ bool IARMBUSAgent::IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value&
 {
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_Term --->Entry\n");
+#if 0
+	//Commented for RDKTT-152
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
@@ -277,6 +287,9 @@ bool IARMBUSAgent::IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value&
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
 	free(resultDetails);
+#endif
+        response["result"]="SUCCESS";
+        response["details"]="NULL";
 	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_Term --->Exit\n");
 	return TEST_SUCCESS;
 
