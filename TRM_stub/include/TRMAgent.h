@@ -28,6 +28,9 @@
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
 
+#define TOTAL_DEVICE_NUMBER 5   // For HYBRID_GW TRM_NUMBER_OF_TUNERS = 5
+#define TOTAL_LOCATOR_NUMBER 7
+
 using namespace std;
 
 class RDKTestAgent;
@@ -52,6 +55,13 @@ public:
     bool TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Json::Value& response);
     bool TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json::Value& response);
     bool TRMAgent_TunerReserveForHybrid(IN const Json::Value& req, OUT Json::Value& response);
+    bool TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT Json::Value& response);
+    bool TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT Json::Value& response);
+    bool TRMAgent_CancelLive(IN const Json::Value& req, OUT Json::Value& response);
+    bool TRMAgent_CancelRecording(IN const Json::Value& req, OUT Json::Value& response);
+    bool TRMAgent_TunerReserveAllForRecord(IN const Json::Value& req, OUT Json::Value& response);
+    bool TRMAgent_TunerReserveAllForLive(IN const Json::Value& req, OUT Json::Value& response);
+
 };
 extern "C" TRMAgent* CreateObject();
 
