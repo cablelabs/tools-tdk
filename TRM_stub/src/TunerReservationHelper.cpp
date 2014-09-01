@@ -42,14 +42,14 @@ static int connect_to_trm()
     }
     if (is_connected == 0)
     {
-        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "%s:%d : Connecting to remote\n" , __FUNCTION__, __LINE__);
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s:%d : Connecting to remote\n" , __FUNCTION__, __LINE__);
         while(1)
         {
             int retry_count = 10;
             socket_error = connect(socket_fd, (struct sockaddr *) &trm_address, sizeof(struct sockaddr_in));
             if (socket_error == ECONNREFUSED  && retry_count > 0)
             {
-                RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TRH", "%s:%d : TRM Server is not started...retry to connect\n" , __FUNCTION__, __LINE__);
+                RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s:%d : TRM Server is not started...retry to connect\n" , __FUNCTION__, __LINE__);
                 sleep(2);
                 retry_count--;
             }
@@ -61,7 +61,7 @@ static int connect_to_trm()
 
         if (socket_error == 0)
         {
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "%s:%d : Connected\n" , __FUNCTION__, __LINE__);
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s:%d : Connected\n" , __FUNCTION__, __LINE__);
 
             int current_flags = fcntl(socket_fd, F_GETFL, 0);
             current_flags &= (~O_NONBLOCK);
@@ -71,13 +71,13 @@ static int connect_to_trm()
         }
         else
         {
-            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TRH", "%s:%d : socket_error %d, closing socket\n" , __FUNCTION__, __LINE__, socket_error);
+            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s:%d : socket_error %d, closing socket\n" , __FUNCTION__, __LINE__, socket_error);
             close(socket_fd);
             trm_socket_fd = -1;
         }
     }
     rmf_osal_mutexRelease( g_mutex);
-    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "%s:%d : returning %d\n",__FUNCTION__, __LINE__, socket_error);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s:%d : Disconnecting %d\n",__FUNCTION__, __LINE__, socket_error);
     return socket_error;
 }
 
@@ -86,7 +86,7 @@ static bool url_request_post( const char *payload, int payload_length)
     unsigned char *buf = NULL;
     bool ret = false;
     connect_to_trm();
-    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "Connection status to TRM  %d\n", is_connected);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s: Connection status to TRM  %d\n", __FUNCTION__, is_connected);
 
     if (is_connected )
     {
@@ -109,9 +109,10 @@ static bool url_request_post( const char *payload, int payload_length)
             buf[idx++] = (UNKNOWN & 0x000000FF) >> 0;
             /* Message id */
             ++message_id;
-            static unsigned int recorder_connection_id = 0XFFFFFF00;
-            //static unsigned int recorder_connection_id = 0XFFFFF001;
-            //recorder_connection_id += 1;
+            static unsigned int recorder_connection_id = 0XFFFFF000;
+            //++recorder_connection_id;
+
+	    printf( "\nconnection id: %02x\n", recorder_connection_id);
 
             buf[idx++] = (recorder_connection_id & 0xFF000000) >> 24;
             buf[idx++] = (recorder_connection_id & 0x00FF0000) >> 16;
@@ -125,7 +126,7 @@ static bool url_request_post( const char *payload, int payload_length)
 
             for (int i =0; i< payload_length; i++)
                 buf[idx+i] = payload[i];
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "======== REQUEST MSG ========\n[");
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "======== REQUEST MSG ========\n[");
             for (idx = 0; idx < (header_length); idx++) {
                 printf( "%02x", buf[idx]);
             }
@@ -138,14 +139,14 @@ static bool url_request_post( const char *payload, int payload_length)
 
             /* Write payload from fastcgi to TRM */
             int write_trm_count = write(trm_socket_fd, buf, payload_length + header_length);
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "Send to TRM  %d vs expected %d\n", write_trm_count, payload_length + header_length);
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Send to TRM  %d vs expected %d\n", write_trm_count, payload_length + header_length);
             free(buf);
             buf = NULL;
 
             if (write_trm_count == 0)
             {
                 is_connected = 0;
-                RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TRH", "%s:%d : write_trm_count 0\n", __FUNCTION__, __LINE__);
+                RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s:%d : write_trm_count 0\n", __FUNCTION__, __LINE__);
                 /* retry connect after write failure*/
             }
             else
@@ -161,7 +162,7 @@ void processBuffer( const char* buf, int len)
 {
     if (buf != NULL)
     {
-        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH","Response: \n%s\n", buf);
+	printf("Response: \n%s\n", buf);
         std::vector<uint8_t> response;
         response.insert( response.begin(), buf, buf+len);
         RecorderMessageProcessor recProc;
@@ -177,7 +178,7 @@ static void get_response (void* arg)
     const int header_length = 16;
     int idx = 0;
     int payload_length = 0;
-    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     while (1)
     {
         connect_to_trm();
@@ -186,13 +187,13 @@ static void get_response (void* arg)
             buf = (char *) malloc(header_length);
             if (buf == NULL)
             {
-                RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TRH", "%s:%d :  Malloc failed for %d bytes \n", __FUNCTION__, __LINE__, header_length);
+                RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s:%d :  Malloc failed for %d bytes \n", __FUNCTION__, __LINE__, header_length);
                 continue;
             }
             /* Read Response from TRM, read header first, then payload */
             read_trm_count = read(trm_socket_fd, buf, header_length);
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "Read Header from TRM %d vs expected %d\n", read_trm_count, header_length);
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "===== RESPONSE HEADER ======\n[");
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Read Header from TRM %d vs expected %d\n", read_trm_count, header_length);
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "===== RESPONSE HEADER ======\n[");
 
             for (idx = 0; idx < (header_length); idx++) {
                 printf( "%02x", buf[idx]);
@@ -210,12 +211,12 @@ static void get_response (void* arg)
                 {
                     free( buf);
                     buf = NULL;
-                    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "TRM Response payloads is %d and header %d\n", payload_length, header_length);
+                    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TRM Response payloads is %d and header %d\n", payload_length, header_length);
                     fflush(stderr);
 
                     buf = (char *) malloc(payload_length+1);
                     read_trm_count = read(trm_socket_fd, buf, payload_length);
-                    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "Read Payload from TRM %d vs expected %d\n", read_trm_count, payload_length);
+                    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Read Payload from TRM %d vs expected %d\n", read_trm_count, payload_length);
 
                     if (read_trm_count != 0)
                     {
@@ -230,7 +231,7 @@ static void get_response (void* arg)
                         is_connected = 0;
                         free(buf);
                         buf = NULL;
-                        RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TRH", "%s:%d : read_trm_count 0\n", __FUNCTION__, __LINE__);
+                        RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s:%d : read_trm_count 0\n", __FUNCTION__, __LINE__);
                     }
                 }
                 else
@@ -239,27 +240,27 @@ static void get_response (void* arg)
                     is_connected = 0;
                     free(buf);
                     buf = NULL;
-                    RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TRH", "%s:%d : read_trm_count 0\n", __FUNCTION__, __LINE__);
+                    RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s:%d : read_trm_count 0\n", __FUNCTION__, __LINE__);
 
                 }
             }
             else
             {
-                RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TRH", "%s:%d : read_trm_count %d\n", __FUNCTION__, __LINE__, read_trm_count);
+                RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s:%d : read_trm_count %d\n", __FUNCTION__, __LINE__, read_trm_count);
                 free(buf);
                 buf = NULL;
                 /* retry connect after header-read failure */
                 is_connected = 0;
             }
-
         }
         else
         {
-            RDK_LOG( RDK_LOG_WARN, "LOG.RDK.TRH", "%s - Not connected- Sleep and retry\n", __FUNCTION__);
+            RDK_LOG( RDK_LOG_WARN, "LOG.RDK.TEST", "%s - Not connected- Sleep and retry\n", __FUNCTION__);
             sleep(1);
         }
     }
-    RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
 }
 
 bool  TunerReservationHelperImpl::inited = false;
@@ -268,7 +269,7 @@ void TunerReservationHelperImpl::init()
 {
     rmf_osal_ThreadId threadId;
     rmf_Error ret;
-    RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
 
     if ( false == inited )
     {
@@ -276,14 +277,14 @@ void TunerReservationHelperImpl::init()
         ret = rmf_osal_mutexNew( &g_mutex);
         if (RMF_SUCCESS != ret )
         {
-            RDK_LOG( RDK_LOG_ERROR, "LOG.RDK.TRH", "%s - rmf_osal_mutexNew failed.\n", __FUNCTION__);
+            RDK_LOG( RDK_LOG_ERROR, "LOG.RDK.TEST", "%s - rmf_osal_mutexNew failed.\n", __FUNCTION__);
             return;
         }
 
         rmf_osal_threadCreate( get_response, NULL,
                                RMF_OSAL_THREAD_PRIOR_DFLT, RMF_OSAL_THREAD_STACK_SIZE,
                                &threadId,"TunerRes" );
-        RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
     }
 }
 
@@ -301,7 +302,7 @@ TunerReservationHelperImpl::TunerReservationHelperImpl(TunerReservationEventList
 
 TunerReservationHelperImpl::~TunerReservationHelperImpl()
 {
-    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TRH", "Enter %s:%d this = %p\n",__FUNCTION__,__LINE__,this);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s:%d this = %p\n",__FUNCTION__,__LINE__,this);
     mRunning = false;
     rmf_osal_mutexAcquire( g_mutex);
     gTrhList.remove(this);
@@ -398,7 +399,6 @@ bool TunerReservationHelperImpl::getAllReservations(void)
     } while ((ret == false) && (retry_count >0));
 
     return ret;
-
 }
 
 bool TunerReservationHelperImpl::getVersion(void)
@@ -424,12 +424,37 @@ bool TunerReservationHelperImpl::getVersion(void)
     return ret;
 }
 
+bool TunerReservationHelperImpl::validateTunerReservation(const char* device)
+{
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
+    bool ret = false;
+    std::vector<uint8_t> out;
+    uuid_t value;
+    uuid_generate(value);
+    uuid_unparse(value, guid);
+
+    TRM::ValidateTunerReservation msg( guid, device, token);
+    JsonEncode(msg, out);
+    out.push_back(0);
+    int len = strlen((const char*)&out[0]);
+    int retry_count = 10;
+
+    do
+    {
+        ret = url_request_post( (char *) &out[0], len);
+        retry_count --;
+    } while ((ret == false) && (retry_count >0));
+
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+    return ret;
+}
+
 //startTime: start time of the reservation in milliseconds from the epoch.
 //duration: reservation period measured from the start in milliseconds.
-bool TunerReservationHelperImpl::reserveTunerForRecord( string recordingId, const char* locator,
+bool TunerReservationHelperImpl::reserveTunerForRecord( const char* device, string recordingId, const char* locator,
         uint64_t startTime, uint64_t duration)
 {
-    RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     bool ret = false;
     std::vector<uint8_t> out;
     uuid_t value;
@@ -438,8 +463,8 @@ bool TunerReservationHelperImpl::reserveTunerForRecord( string recordingId, cons
     TRM::Activity activity(TRM::Activity::kRecord);
     activity.addDetail("recordingId", recordingId);
 
-    TRM::TunerReservation resrv( "xg1", locator, startTime, duration, activity);
-    TRM::ReserveTuner msg(guid, "xg1", resrv);
+    TRM::TunerReservation resrv( device, locator, startTime, duration, activity);
+    TRM::ReserveTuner msg(guid, device, resrv);
 
     JsonEncode(msg, out);
     out.push_back(0);
@@ -459,17 +484,16 @@ bool TunerReservationHelperImpl::reserveTunerForRecord( string recordingId, cons
         ret = waitForResrvResponse();
     }
 
-    RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
     return ret;
 }
 
-
 //startTime: start time of the reservation in milliseconds from the epoch.
 //duration: reservation period measured from the start in milliseconds.
-bool TunerReservationHelperImpl::reserveTunerForLive( const char* locator,
+bool TunerReservationHelperImpl::reserveTunerForLive( const char* device, const char* locator,
         uint64_t startTime, uint64_t duration)
 {
-    RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     bool ret = false;
     std::vector<uint8_t> out;
     uuid_t value;
@@ -477,8 +501,8 @@ bool TunerReservationHelperImpl::reserveTunerForLive( const char* locator,
     uuid_unparse(value, guid);
     TRM::Activity activity(TRM::Activity::kLive);
 
-    TRM::TunerReservation resrv( "xg1", locator, startTime, duration, activity);
-    TRM::ReserveTuner msg(guid, "xg1", resrv);
+    TRM::TunerReservation resrv( device, locator, startTime, duration, activity);
+    TRM::ReserveTuner msg(guid, device, resrv);
     JsonEncode(msg, out);
     out.push_back(0);
     int len = strlen((const char*)&out[0]);
@@ -496,20 +520,20 @@ bool TunerReservationHelperImpl::reserveTunerForLive( const char* locator,
         ret = waitForResrvResponse();
     }
 
-    RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
     return ret;
 }
 
-bool TunerReservationHelperImpl::releaseTunerReservation( )
+bool TunerReservationHelperImpl::releaseTunerReservation(const char* device)
 {
-    RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     bool ret = false;
     std::vector<uint8_t> out;
     uuid_t value;
     uuid_generate(value);
     uuid_unparse(value, guid);
 
-    TRM::ReleaseTunerReservation msg( guid, "xg1", token);
+    TRM::ReleaseTunerReservation msg( guid, device, token);
     JsonEncode(msg, out);
     out.push_back(0);
     int len = strlen((const char*)&out[0]);
@@ -521,14 +545,13 @@ bool TunerReservationHelperImpl::releaseTunerReservation( )
         retry_count --;
     } while ((ret == false) && (retry_count >0));
 
-    RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
     return ret;
 }
 
-
-bool TunerReservationHelperImpl::canceledRecording()
+bool TunerReservationHelperImpl::cancelledRecording()
 {
-    RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     bool ret = false;
     std::vector<uint8_t> out;
     uuid_t value;
@@ -547,7 +570,32 @@ bool TunerReservationHelperImpl::canceledRecording()
         retry_count --;
     } while ((ret == false) && (retry_count >0));
 
-    RDK_LOG(RDK_LOG_TRACE1, "LOG.RDK.TRH", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+    return ret;
+}
+
+bool TunerReservationHelperImpl::cancelledLive(const char* locator)
+{
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
+    bool ret = false;
+    std::vector<uint8_t> out;
+    uuid_t value;
+    uuid_generate(value);
+    uuid_unparse(value, guid);
+
+    TRM::CancelLiveResponse msg(guid, TRM::ResponseStatus::kOk ,token, locator, true);
+    TRM::JsonEncode(msg, out);
+    out.push_back(0);
+    int len = strlen((const char*)&out[0]);
+    int retry_count = 10;
+
+    do
+    {
+        ret = url_request_post( (char *) &out[0], len);
+        retry_count --;
+    } while ((ret == false) && (retry_count >0));
+
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
     return ret;
 }
 
@@ -661,19 +709,42 @@ void RecorderMessageProcessor::operator() (const TRM::CancelRecording &msg)
     trh =  getTRH(token);
     if ( NULL == trh )
     {
-        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TRH", "%s -Matching TRH couldnot be found\n", __FUNCTION__);
+        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s -Matching TRH could not be found\n", __FUNCTION__);
     }
     else
     {
         el = trh->getEventListener();
         if ( el )
         {
-            el->cancelRecording();
+            el->cancelledRecording();
         }
     }
     rmf_osal_mutexRelease( g_mutex);
 }
 
+void RecorderMessageProcessor::operator() (const TRM::CancelLive &msg)
+{
+    TunerReservationHelperImpl* trh;
+    TunerReservationEventListener* el;
+
+    const string token = msg.getReservationToken();
+
+    rmf_osal_mutexAcquire( g_mutex);
+    trh =  getTRH(token);
+    if ( NULL == trh )
+    {
+        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s -Matching TRH could not be found\n", __FUNCTION__);
+    }
+    else
+    {
+        el = trh->getEventListener();
+        if ( el )
+        {
+            el->cancelledLive();
+        }
+    }
+    rmf_osal_mutexRelease( g_mutex);
+}
 
 void RecorderMessageProcessor::operator() (const TRM::NotifyTunerReservationRelease &msg)
 {
@@ -685,13 +756,13 @@ void RecorderMessageProcessor::operator() (const TRM::NotifyTunerReservationRele
     trh =  getTRH(token);
     if ( NULL == trh )
     {
-        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TRH", "NotifyTunerReservationRelease -Matching TRH couldnot be found\n", __FUNCTION__);
+        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "NotifyTunerReservationRelease -Matching TRH could not be found\n", __FUNCTION__);
     }
     else
     {
         string reason  = msg.getReason();
 
-        RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TRH", "NotifyTunerReservationRelease -reason:  %s\n",  reason.c_str());
+        RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "NotifyTunerReservationRelease -reason:  %s\n",  reason.c_str());
         el = trh->getEventListener();
         if ( el )
         {
@@ -712,7 +783,7 @@ void RecorderMessageProcessor::operator() (const TRM::ReleaseTunerReservationRes
     trh =  getTRH(token);
     if ( NULL == trh )
     {
-        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TRH", "NotifyTunerReservationRelease -Matching TRH couldnot be found\n", __FUNCTION__);
+        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "NotifyTunerReservationRelease -Matching TRH could not be found\n", __FUNCTION__);
     }
     else
     {
@@ -720,20 +791,19 @@ void RecorderMessageProcessor::operator() (const TRM::ReleaseTunerReservationRes
         el = trh->getEventListener();
         if ( true == isReleased )
         {
-            RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TRH", "ReleaseTunerReservationResponse -Tuner released\n", __FUNCTION__);
+            RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "ReleaseTunerReservationResponse -Tuner released\n", __FUNCTION__);
             if(el)
                 el->releaseReservationSuccess();
         }
         else
         {
-            RDK_LOG( RDK_LOG_WARN, "LOG.RDK.TRH", "ReleaseTunerReservationResponse -Tuner release failed\n", __FUNCTION__);
+            RDK_LOG( RDK_LOG_WARN, "LOG.RDK.TEST", "ReleaseTunerReservationResponse -Tuner release failed\n", __FUNCTION__);
             if(el)
                 el->releaseReservationFailed();
         }
     }
     rmf_osal_mutexRelease( g_mutex);
 }
-
 
 void TunerReservationHelper::init()
 {
@@ -770,43 +840,47 @@ bool TunerReservationHelper::getVersion()
     return impl->getVersion();
 }
 
-//startTime: start time of the reservation in milliseconds from the epoch.
-//duration: reservation period measured from the start in milliseconds.
-bool TunerReservationHelper::reserveTunerForRecord( string recordingId, const char* locator,
-        uint64_t startTime, uint64_t duration)
+bool TunerReservationHelper::validateTunerReservation(const char* device)
 {
-    return impl->reserveTunerForRecord( recordingId.c_str(), locator,
-                                        startTime, duration);
+    return impl->validateTunerReservation(device);
 }
 
 //startTime: start time of the reservation in milliseconds from the epoch.
 //duration: reservation period measured from the start in milliseconds.
-bool TunerReservationHelper::reserveTunerForLive( const char* locator,
+bool TunerReservationHelper::reserveTunerForRecord( const char* device, string recordingId, const char* locator,
         uint64_t startTime, uint64_t duration)
 {
-    return impl->reserveTunerForLive( locator, startTime, duration);
+    return impl->reserveTunerForRecord( device, recordingId.c_str(), locator,
+                                        startTime, duration );
 }
 
-bool TunerReservationHelper::releaseTunerReservation( )
+//startTime: start time of the reservation in milliseconds from the epoch.
+//duration: reservation period measured from the start in milliseconds.
+bool TunerReservationHelper::reserveTunerForLive( const char* device, const char* locator,
+        uint64_t startTime, uint64_t duration)
 {
-    return impl->releaseTunerReservation();
+    return impl->reserveTunerForLive( device, locator, startTime, duration );
 }
 
-bool TunerReservationHelper::canceledRecording()
+bool TunerReservationHelper::releaseTunerReservation(const char* device )
 {
-    return impl->canceledRecording();
+    return impl->releaseTunerReservation(device);
 }
 
+bool TunerReservationHelper::cancelledRecording()
+{
+    return impl->cancelledRecording();
+}
+
+bool TunerReservationHelper::cancelledLive(const char* locator)
+{
+    return impl->cancelledLive(locator);
+}
+
+// Implementation of TRHListenerImpl methods
 void TRHListenerImpl::reserveSuccess()
 {
         RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s:%d this = %p\n",__FUNCTION__,__LINE__,this);
-/*
-        if (this == &tRHListenerLiveImpl)
-        {
-                RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s:%d this = %p Cancelling live reservation\n",__FUNCTION__,__LINE__,this);
-                trhLive->releaseTunerReservation();
-        }
-*/
 }
 
 void TRHListenerImpl::reserveFailed()
@@ -819,7 +893,12 @@ void TRHListenerImpl::tunerReleased()
         RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s:%d this = %p\n",__FUNCTION__,__LINE__,this);
 }
 
-void TRHListenerImpl::cancelRecording()
+void TRHListenerImpl::cancelledRecording()
+{
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s:%d this = %p\n",__FUNCTION__,__LINE__,this);
+}
+
+void TRHListenerImpl::cancelledLive()
 {
         RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s:%d this = %p\n",__FUNCTION__,__LINE__,this);
 }

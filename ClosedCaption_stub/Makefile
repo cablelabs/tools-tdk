@@ -10,7 +10,7 @@ COPTS     := -c
 
 CFLAGS    := -g -Wall -DGCC4_XXX
 
-LDOPTS    := -L $(IMAGE_PATH)/usr/local/lib
+LDOPTS    += -L $(IMAGE_PATH)/usr/local/lib
 
 ifeq ($(RDK_VERSION),RDK1DOT2)
 LDOPTS    += -llogger
@@ -66,6 +66,7 @@ $(OBJS): $(SOURCES)
 # Build the library from intermediate files
 #
 $(LIB): $(OBJS)
+	mkdir -p $(LIBDIR)
 	$(CROSSCOMPILE)$(CC) $(OBJS) -fPIC -shared -o $(LIBCC) $(LDOPTS)
 	rm -rf $(OBJDIR)
 	mv $(LIBCC) $(LIBDIR)
