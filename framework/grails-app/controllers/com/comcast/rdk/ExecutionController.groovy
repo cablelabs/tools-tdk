@@ -1424,12 +1424,12 @@ class ExecutionController {
 				List fieldLabels = []
 				Map fieldMap = [:]
 				Map parameters = [:]
-				List columnWidthList = [0.08,0.4,0.15,0.4,0.15]
+				List columnWidthList = [0.08,0.4,0.15,0.4,0.15,0.4]
 		
 				Execution executionInstance = Execution.findById(params.id)
 				if(executionInstance){
-					dataMap = executedbService.getDataForConsolidatedListExcelExport(executionInstance, getRealPath())
-					fieldMap = ["C1":" Sl.No ", "C2":" Script Name ","C3":" Status ", "C4":" Log Data ","C5":" Date of Execution "]
+					dataMap = executedbService.getDataForConsolidatedListExcelExport(executionInstance, getRealPath(),getApplicationUrl())
+					fieldMap = ["C1":" Sl.No ", "C2":" Script Name ","C3":" Status ", "C4":" Log Data ","C5":"AgentConsole log","C6":" Date of Execution "]
 					parameters = [ title: EXPORT_SHEET_NAME, "column.widths": columnWidthList]
 				}
 				else{
@@ -1577,6 +1577,33 @@ class ExecutionController {
 			resultNode.addProperty("LogData",executionResult?.executionOutput.toString())			
 		}	
 		render resultNode
+	}
+	
+	def getAgentConsoleLog(final String execResId){
+
+		ExecutionResult executionResult = ExecutionResult.findById(execResId)
+
+		def agentConsoleFileData = "No AgentConsoleLog available"
+
+		if(executionResult){
+
+			try {
+				agentConsoleFileData = executionService.getAgentConsoleLogData( request.getRealPath('/'), executionResult?.execution?.id?.toString(), executionResult?.executionDevice?.id?.toString(),executionResult?.id?.toString())
+				if(agentConsoleFileData){
+					agentConsoleFileData =agentConsoleFileData.trim()
+					if(agentConsoleFileData.length() == 0){
+						agentConsoleFileData = "No AgentConsoleLog available"
+					}
+				}else{
+					agentConsoleFileData = "No AgentConsoleLog available"
+				}
+				} catch (Exception e) {
+				e.printStackTrace()
+			}
+		}else{
+			agentConsoleFileData = "No execution result available with the given execResId"
+		}
+		render agentConsoleFileData
 	}
 	
 	/**

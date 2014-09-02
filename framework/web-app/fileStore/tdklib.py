@@ -1022,6 +1022,7 @@ class TDKScriptingLibrary:
                                  'ScriptSuiteEnabled':self.scriptSuiteEnabled}
 			query = json.dumps(final)
 			self.tcpClient.send(query)
+			unloadmoduleresult = self.tcpClient.recv(1048)
 
 		except socket.error:
 			print "******************************************************************************************" 
@@ -1029,15 +1030,16 @@ class TDKScriptingLibrary:
 			print " Please ensure the Box " + self.IP + " is up and Test Agent is running..."
 			print "******************************************************************************************" 
 			sys.stdout.flush()
+			self.tcpClient.close()
 			exit()
 		except:
 			print "#TDK_@error-ERROR : Unable to connect.. Please check box is up and agent is running.....\n"
 			print "Details : "
 			logging.exception('')
 			sys.stdout.flush()
+			self.tcpClient.close()
 			exit()
 		else:
-			unloadmoduleresult = self.tcpClient.recv(1048)
 			if unloadmoduleresult:
 				if "SUCCESS" in unloadmoduleresult.upper():
 					print "Unload Module Status  : Success"
@@ -1049,6 +1051,11 @@ class TDKScriptingLibrary:
 					message = unloadmoduleresult[resultIndex:]
 					message = message[:(message.find("\""))]
 					print "Unload Module Details : " + message
+			else:
+				print "#TDK_@error-ERROR : Unload Module failed\n"	
+				sys.stdout.flush()
+				self.tcpClient.close()
+				exit()
 
 		sys.stdout.flush()
 		self.tcpClient.close()

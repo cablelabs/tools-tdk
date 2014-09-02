@@ -760,7 +760,7 @@ class ScriptexecutionService {
 				absolutePath,
 				deviceInstance?.stbIp,
 				deviceInstance?.agentMonitorPort,
-				"false"
+				"true"
 			]
 			def resetExecutionData
 			try {
