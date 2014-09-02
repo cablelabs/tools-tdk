@@ -814,7 +814,7 @@ class JobSchedulerService implements Job{
 				absolutePath,
 				deviceInstance?.stbIp,
 				deviceInstance?.agentMonitorPort,
-				"false"
+				"true"
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)

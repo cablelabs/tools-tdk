@@ -222,16 +222,18 @@ function updateSG() {
 	var sortable = document.getElementById("sortable");
 
 	var dataList = ""
-	
 	$( "li[id*='sgscript-']" ).each(function(index) {
-		dataList = dataList +","+ $(this).attr('id');
+		
+		var elmnt = $(this).attr('id');
+		elmnt = elmnt.replace("sgscript-","");
+		elmnt = elmnt.replace("end","");
+		dataList = dataList +","+ elmnt;
 	});
 
 	var name = document.getElementById("scriptName").value;
 	var id = document.getElementById("sgId").value;
 	var version = document.getElementById("sgVersion").value;
 	$.get('updateScriptGrp', {id: id, version:version, idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data);  });
-	
 }
 function createSG() {
 	var sortable = document.getElementById("sortable");
@@ -239,7 +241,10 @@ function createSG() {
 	var dataList = ""
 	
 	$( "li[id*='sgscript-']" ).each(function(index) {
-		dataList = dataList +","+ $(this).attr('id');
+		var elmnt = $(this).attr('id');
+		elmnt = elmnt.replace("sgscript-","");
+		elmnt = elmnt.replace("end","");
+		dataList = dataList +","+ elmnt;
 	});
 
 	var name = document.getElementById("scriptName").value;

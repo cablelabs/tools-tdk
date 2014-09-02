@@ -55,7 +55,7 @@ class StatusUpdaterTask implements Runnable {
 						cmd[1],
 						devIp,
 						port,
-						cmd[3],
+						cmd[4],
 						devName
 					]
 					cmd = cmdArray

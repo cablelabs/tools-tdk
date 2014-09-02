@@ -398,7 +398,7 @@ class ExecutedbService {
 	/**
 	 * Method to get the data for creating the consolidated report in excel format.
 	 */
-	def getDataForConsolidatedListExcelExport(Execution executionInstance, String realPath) {
+	def getDataForConsolidatedListExcelExport(Execution executionInstance, String realPath,String appUrl) {
 		List executionDeviceList = []
 		List executionResultInstanceList = []
 		List columnWidthList = []
@@ -416,7 +416,7 @@ class ExecutedbService {
 
 		Map summaryHead = [:]
 		Map statusValue = [:]
-		List fieldList = ["C1", "C2", "C3", "C4", "C5"]
+		List fieldList = ["C1", "C2", "C3", "C4", "C5","C6"]
 
 
 		executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
@@ -519,7 +519,7 @@ class ExecutedbService {
 							}
 
 							
-							Map dataMap 	= ["C1":counter,"C2":scriptName,"C3":status,"C4":executionOutput,"C5":parseTime(executionInstance?.dateOfExecution)]
+							Map dataMap 	= ["C1":counter,"C2":scriptName,"C3":status,"C4":executionOutput,"C5":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id,,"C6":parseTime(executionInstance?.dateOfExecution)]
 							dataList.add(dataMap)
 							counter ++
 							dataMapList.put("counter",counter)

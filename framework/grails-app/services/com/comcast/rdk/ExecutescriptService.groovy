@@ -180,7 +180,7 @@ class ExecutescriptService {
 			}
 			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 			Thread.sleep(4000)
-			resetAgent(deviceInstance)
+			hardResetAgent(deviceInstance)
 		}
 		else{
 			if(htmlData.contains(KEY_SCRIPTEND)){
@@ -363,6 +363,30 @@ class ExecutescriptService {
 				deviceInstance?.stbIp,
 				deviceInstance?.agentMonitorPort,
 				FALSE
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor()
+			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			Thread.sleep(4000)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+	
+	/**
+	 * Refreshes the status in agent as it is called with flag false
+	 * @param deviceInstance
+	 * @return
+	 */
+	def hardResetAgent(def deviceInstance){
+		try {
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.agentMonitorPort,
+				TRUE
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
