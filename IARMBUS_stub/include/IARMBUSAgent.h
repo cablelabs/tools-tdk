@@ -33,7 +33,7 @@
 #include <sys/wait.h>
 #include "dummytestmgr.h"
 #include <fstream>
-
+#include <sstream>
 #define IN
 #define OUT
 

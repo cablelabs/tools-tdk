@@ -12,6 +12,8 @@
 
 #include "IARMBUSAgent.h"
 
+std::ostringstream gsysMgrdata;
+std::ostringstream gEventdata;
 int LastKeyType;
 int LastKeyCode;
 char LastEvent[80],g_ManagerName[20];
@@ -100,10 +102,6 @@ bool prereqcheck(char *ownerName )
 				if( remove( pre_req_chk_file.c_str() ) != 0 )
 				{
 					DEBUG_PRINT(DEBUG_ERROR,"\nFailed to remove file\n");
-				}
-				else
-				{
-					DEBUG_PRINT(DEBUG_LOG,"\nFile removed\n");
 				}
 				DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites present\n");
 				return TEST_SUCCESS;
@@ -247,7 +245,7 @@ bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value&
 	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_Init directly from IARMBUSAgent_Init\n");
 	/*Calling IARMBUS API IARM_Bus_Init with json req as parameter*/
 	retval=IARM_Bus_Init((char *)req["Process_name"].asCString());
-	if(retval==1)
+	if(retval ==1)
 	{
 	response["result"]="SUCCESS";
 	response["details"]="NULL";
@@ -499,28 +497,15 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n get_LastReceivedEventDetails --->Entry \n");
 	char details[200]="Event Details:";
-	const char *KeyCodedetails=" :: KeyCode : " ;
-	const char *KeyTypedetails=" :: KeyType : ";
 	char *KeyCodedetails1 =(char*)malloc(sizeof(char)*200); 
 	memset(KeyCodedetails1 , '\0', (sizeof(char)*200));
-	char *KeyTypedetails1 =(char*)malloc(sizeof(char)*5);
-	memset(KeyTypedetails1 , '\0', (sizeof(char)*5));
-	strcat(details,LastEvent);
-	char *Eventdetails =(char*)malloc(sizeof(char)*20);
-	memset(Eventdetails , '\0', (sizeof(char)*20));  
-	char *evtdata =(char*)malloc(sizeof(char)*4);     
-	memset(evtdata,'\0', (sizeof(char)*4));           
-	char *evtName =(char*)malloc(sizeof(char)*1);     
-	memset(evtName,'\0', (sizeof(char)*1));  
 	if(strcmp(LastEvent,"IARM_BUS_IRMGR_EVENT_IRKEY")==0)
 	{
-		sprintf(KeyCodedetails1,"%x" , LastKeyCode);
-		sprintf(KeyTypedetails1,"%x" , LastKeyType);
-		strcat(details,KeyCodedetails);
-		strcat(details,KeyCodedetails1);
-		strcat(details,KeyTypedetails);
-		strcat(details,KeyTypedetails1);
+		gEventdata << "Event Details:" << ":: KeyCode :" << LastKeyCode << " :: KeyType : " <<LastKeyType ;
+		response["details"]=gEventdata.str().c_str();
+		gEventdata.str("");
 		response["result"]="SUCCESS";
+		return true;
 	}
 	else if((strcmp(LastEvent,"IARM_BUS_PWRMGR_EVENT_MODECHANGED")==0)||
 			(strcmp(LastEvent,"IARM_BUS_EVENT_RESOURCEAVAILABLE")==0)||
@@ -535,23 +520,13 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
 	{                                                   
 		for(int i=0;i<EVTDATA_MAX_SIZE;i++)         
 		{                                           
-			sprintf(evtdata,"%d",g_evtData[i]); 
+			gEventdata << g_evtData[i] << ":" << g_evtName[i] << ",";
 			g_evtData[i]=0;                     
-			sprintf(evtName,"%c",g_evtName[i]); 
 			g_evtName[i]='\0';                  
-			strcat(Eventdetails,evtName);       
-			strcat(Eventdetails,":");           
-			strcat(Eventdetails,evtdata);       
-			DEBUG_PRINT(DEBUG_LOG,"\nevtName:%s\n",evtName);
-			DEBUG_PRINT(DEBUG_LOG,"\nevtData:%s\n",evtdata);
-			if(i<EVTDATA_MAX_SIZE-1)            
-			{                                   
-				strcat(Eventdetails,",");   
-			}                                   
-
 		}                                           
+		response["details"]=gEventdata.str().c_str();
+		gEventdata.str("");
 		response["result"]="SUCCESS";               
-		response["details"]=Eventdetails;           
 		return true;                                
 	}                                             
 	else if((strcmp(LastEvent,"IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE")==0))
@@ -568,10 +543,6 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
 	free(KeyCodedetails1);
 	memset(&(LastEvent) , '\0', (sizeof(char)*20));
 	memset(g_ManagerName , '\0', (sizeof(char)*20));
-	free(KeyTypedetails1);
-	free(Eventdetails);
-	free(evtName);
-	free(evtdata);
 	DEBUG_PRINT(DEBUG_TRACE,"\n get_LastReceivedEventDetails --->Exit \n");
 	return true;
 }
@@ -609,6 +580,8 @@ void fillSystemStateDetails(int state ,int error, char *payload)
 	gSysState=state;
 	gSysError=error;
 	strcpy(gSysPayload , payload);
+	gsysMgrdata << "State:" << state << "::Error:" << error << "::Payload:"	<< payload;
+	printf("\ngsysMgrdata=%s\n",gsysMgrdata.str().c_str());
 	DEBUG_PRINT(DEBUG_TRACE,"\n fillSystemStateDetails --->Exit \n");
 }
 
@@ -1060,6 +1033,7 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
 		IARM_Bus_SYSMgr_EventData_t eventData;
 		if (eventId == IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE)
 		{
+			gstateId=(IARM_Bus_SYSMgr_SystemState_t)req["newState"].asInt();
 			eventData.data.systemStates.stateId = (IARM_Bus_SYSMgr_SystemState_t)req["newState"].asInt();
 			eventData.data.systemStates.state = req["state"].asInt();
 			eventData.data.systemStates.error = req["error"].asInt();
@@ -1256,17 +1230,6 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 		{
 			IARM_Bus_SYSMgr_GetSystemStates_Param_t param;
 			retval=IARM_Bus_Call(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_API_GetSystemStates,&param,sizeof(param));
-			const char *statedetails=" :: State : ";
-			const char *errordetails=" :: Error : ";
-			const char *payloaddetails=" :: Payload : ";
-			char *statedetails1 =(char*)malloc(sizeof(char)*5); 
-			char *errordetails1 =(char*)malloc(sizeof(char)*5); 
-			char *payloaddetails1 =(char*)malloc(sizeof(char)*20); 
-			char *details =(char*)malloc(sizeof(char)*80); 
-			memset(details , '\0', (sizeof(char)*80));
-			memset(statedetails1 , '\0', (sizeof(char)*5));
-			memset(errordetails1 , '\0', (sizeof(char)*5));
-			memset(payloaddetails1 , '\0', (sizeof(char)*20));
 			response["result"]=getResult(retval,resultDetails);
 			switch(gstateId) {
 				case IARM_BUS_SYSMGR_SYSSTATE_CHANNELMAP:
@@ -1378,21 +1341,8 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 					response["details"]="System State received";
 					break;
 			}
-
-			sprintf(statedetails1,"%d" , gSysState);
-			sprintf(errordetails1,"%d" , gSysError);
-			sprintf(payloaddetails1,"%s" ,gSysPayload);
-			strcat(details,statedetails);
-			strcat(details,statedetails1);
-			strcat(details,errordetails);
-			strcat(details,errordetails1);
-			strcat(details,payloaddetails);
-			strcat(details,payloaddetails1);
-			response["details"]=details;
-			free(statedetails1);
-			free(errordetails1);
-			free(payloaddetails1);
-			free(details);
+			response["details"]=gsysMgrdata.str().c_str();
+			gsysMgrdata.str("");
 			gstateId =IARM_BUS_SYSMGR_SYSSTATE_CHANNELMAP;
 		}
 		else if((strcmp(methodName,"SetHDCPProfile")==0)||(strcmp(methodName,"GetHDCPProfile")==0))
