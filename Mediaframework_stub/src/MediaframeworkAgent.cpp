@@ -990,8 +990,8 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 		}
                 response["details"] = "DVRSrc play() successful";
 	}
-	int retValue;
-	double mediaTime;
+	//int retValue;
+	//double mediaTime;
 	if(rmfComponent == "HNSrc")
 	{
 
@@ -1795,7 +1795,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetTSID(IN const
 bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID -->Entry\n");
-	unsigned int ltsID;
+	unsigned char ltsID;
 	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
 
         retResultQAMSource = qamSource->getLTSID(ltsID);
@@ -1810,7 +1810,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID(IN cons
                 return TEST_FAILURE;
         }
 
-	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getLTSID value is %u\n",ltsID);
+	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getLTSID value is %u\n",(unsigned) ltsID);
 
         response["result"] = "SUCCESS";
         response["details"] = "QAMSrc getLTSID success";
@@ -4861,12 +4861,13 @@ Description   : Receives the request from Test Manager to get the segment info b
 bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex --->Entry\n");
-        int index = req["index"].asInt();
+        unsigned int index = req["index"].asInt();
 
         DVRManager *dvm= DVRManager::getInstance();
         if (dvm)
         {
                 char stringDetails[50] = {'\0'};
+                unsigned int count = 0;
 
                 RecordingSegmentInfo *pSegInfo= dvm->getRecordingSegmentInfoByIndex( index );
                 if ( pSegInfo )
@@ -4881,11 +4882,107 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
                 }
                 else
                 {
-                        DEBUG_PRINT(DEBUG_TRACE, "Failed to get RecordingSegmentInfoByIndex.\n");
-                        response["result"] = "FAILURE";
-                        response["details"] = "Failed to get RecordingSegmentInfo by given index";
+                        count = dvm->getRecordingCount();
+                        if (0 == count)
+                        {
+                            DEBUG_PRINT(DEBUG_ERROR, "Found no recordings on device\n");
+                        }
+                        else if (index >= count )
+                        {
+                            DEBUG_PRINT(DEBUG_ERROR, "No recording found with index: %d\n", index);
+
+                            sprintf(stringDetails, "Check index value. No recording found with index: %d\n", index);
+                            response["result"] = "FAILURE";
+                            response["details"] = stringDetails;
+                            DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
+                            return TEST_FAILURE;
+                        }
+                        else
+                        {
+                            DEBUG_PRINT(DEBUG_ERROR, "Invalid recording segment for index: %d\n", index);
+                            RecordingInfo *pRecInfo= dvm->getRecordingInfoByIndex(index);
+                            if (pRecInfo)
+                            {
+                                sprintf(stringDetails, "Index:%d Id:%s Duration:%lld segmentCount:%d",
+                                index, pRecInfo->recordingId.c_str(), dvm->getRecordingDuration(pRecInfo->recordingId), pRecInfo->segmentCount);
+                            }
+                            else
+                            {
+                                sprintf(stringDetails, "DVR mgr failed to get recording info by index");
+                            }
+
+                            response["result"] = "FAILURE";
+                            response["details"] = stringDetails;
+                            DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
+                            return TEST_FAILURE;
+                        }
+
+                        // Pre-condition: Create test recording
+                        RecordingSpec spec;
+                        int dvrres = DVRResult_ok;
+                        string playUrl = req["playUrl"].asString();
+                        index = 0;
+
+                        char sRecId[25] = {'\0'};
+                        int iRecId = rand() % 10000 + 2000;
+
+                        sprintf(sRecId, "%d", iRecId);
+                        std::string randRecId(sRecId);
+                        spec.setRecordingId(randRecId);
+
+                        createTestRecordingSpec (randRecId, playUrl, spec);
+                        DEBUG_PRINT(DEBUG_TRACE, "Creating new recording:%s\n", randRecId.c_str());
+                        dvrres = dvm->createRecording( spec );
+
+                        if (( DVRResult_ok != dvrres ) && ( DVRResult_alreadyExists != dvrres ))
+                        {
+                            response["result"] = "FAILURE";
+                            response["details"] = "Failed to create recording for GetRecordingSegmentInfoByIndex";
+                            DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
+                            return TEST_FAILURE;
+                        }
+
+                        RecordingInfo *pRecInfo= dvm->getRecordingInfoByIndex(index);
+                        if (pRecInfo)
+                        {
+                            sprintf(stringDetails, "Index:%d Id:%s Duration:%lld segmentCount:%d",
+                            index, pRecInfo->recordingId.c_str(), dvm->getRecordingDuration(pRecInfo->recordingId), pRecInfo->segmentCount);
+                        }
+                        else
+                        {
+                            sprintf(stringDetails, "DVR Mgr failed to get recording info by index");
+                        }
+
+                        pSegInfo = dvm->getRecordingSegmentInfoByIndex( index );
+                        if ( !pSegInfo )
+                        {
+                            DEBUG_PRINT(DEBUG_TRACE, "Failed to get RecordingSegmentInfoByIndex\n");
+                            response["result"] = "FAILURE";
+                            response["details"] = stringDetails;
+                            DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
+                            return TEST_FAILURE;
+                        }
+
+                        long long segmentName = pSegInfo->segmentName;
+                        DEBUG_PRINT(DEBUG_TRACE, "Segment Name: %lld\n", segmentName);
+                        sprintf(stringDetails, "Index: %d SegmentName:%lld", index, segmentName);
+                        response["result"] = "SUCCESS";
+                        response["details"] = stringDetails;
+
+                        // Post-condition: Delete test recording
+                        DEBUG_PRINT(DEBUG_TRACE, "Deleting recording:%s\n", randRecId.c_str());
+                        int res_DVR = dvm->deleteRecording ( randRecId );
+                        DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
+                        if ( DVRResult_ok != res_DVR )
+                        {
+                            response["result"] = "FAILURE";
+                            response["details"] = "Failed to delete recording for GetRecordingSegmentInfoByIndex";
+                            DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex --> Exit\n");
+                            return TEST_FAILURE;
+                        }
+
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
-                        return TEST_FAILURE;
+                        return TEST_SUCCESS;
                 }
         }
 
