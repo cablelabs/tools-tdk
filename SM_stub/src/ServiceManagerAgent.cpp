@@ -32,18 +32,34 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 {
 	DEBUG_PRINT(DEBUG_TRACE,"ServiceManagerAgent Initialize");
 	/*Register stub function for callback*/
+	// ServiceManager APIs
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_RegisterService,"TestMgr_SM_RegisterService");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_UnRegisterService,"TestMgr_SM_UnRegisterService");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DoesServiceExist,"TestMgr_SM_DoesServiceExist");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_GetRegisteredServices,"TestMgr_SM_GetRegisteredServices");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_GetGlobalService,"TestMgr_SM_GetGlobalService");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_GetSetting,"TestMgr_SM_GetSetting");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_CreateService,"TestMgr_SM_CreateService");
+	// Services common APIs
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_Services_GetName,"TestMgr_Services_GetName");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_Services_SetAPIVersion,"TestMgr_SM_SetAPIVersion");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_Services_RegisterForEvents,"TestMgr_SM_RegisterForEvents");
+	// HomeNetworking Service callMethod APIs
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_EnableMDVR,"TestMgr_SM_HN_EnableMDVR");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_EnableVPOP,"TestMgr_SM_HN_EnableVPOP");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_SetDeviceName,"TestMgr_SM_HN_SetDeviceName");
+	// DisplaySettings Service callMethod APIs
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings,"TestMgr_SM_DisplaySetting_SetZoomSettings");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution,"TestMgr_SM_DisplaySetting_SetCurrentResolution");
-	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_SetDeviceName,"TestMgr_SM_HN_SetDeviceName");
-	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_SetAPIVersion,"TestMgr_SM_SetAPIVersion");
-	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_RegisterForEvents,"TestMgr_SM_RegisterForEvents");
+	// DeviceSettingService callMethod APIs
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo,"TestMgr_SM_DeviceSetting_GetDeviceInfo");
+	// ScreenCaptureService callMethod APIs
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_ScreenCapture_Upload,"TestMgr_SM_ScreenCapture_Upload");
+	// WebSocketService callMethod APIs
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_WebSocket_GetUrl,"TestMgr_SM_WebSocket_GetUrl");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_WebSocket_GetReadyState,"TestMgr_SM_WebSocket_GetReadyState");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_WebSocket_GetBufferedAmount,"TestMgr_SM_WebSocket_GetBufferedAmount");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_WebSocket_GetProtocol,"TestMgr_SM_WebSocket_GetProtocol");
 
 	return TEST_SUCCESS;
 }
@@ -77,11 +93,128 @@ bool ServiceManagerAgent::testmodulepost_requisites()
  *Descrption    : This function will register the given service with the serviceManger component
  *parameter [in]: req-  service_name-Name of the service.
  *****************************************************************************/ 
+bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
+{
+	bool registerStatus = false;
+/*
+        if(serviceName == MemoryInfoService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createMemoryInfoService;
+        }
+#ifdef HAS_FRONT_PANEL
+        else if (serviceName == FrontPanelService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createFrontPanelService;
+        }
+#endif
+#ifdef HAS_API_SYSTEM
+        else if (serviceName == SYSTEM_SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createSystemService;
+        }
+#endif
+#ifdef HAS_STATE_OBSERVER
+        else if (serviceName == StateObserverService::STATE_OBSERVER_SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createStateObserverService;
+        }
+#endif
+#ifdef MSO_PAIRING
+        else if (serviceName == CMSOPairingService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createMSOPairingService;
+        }
+#endif
+#ifdef HAS_API_AVINPUT
+        else if (serviceName == AVInputService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createAVInputService;
+        }
+#endif
+#ifdef USE_DISPLAY_SETTINGS
+        else if (serviceName == DISPLAY_SETTINGS_SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createDisplaySettingsService;
+        }
+#endif
+#ifdef WAREHOUSE_API
+        else if(serviceName == WarehouseService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createWarehouseService;
+        }
+#endif
+#ifdef USE_STORAGE_MANAGER_API
+        else if(serviceName == StorageManagerService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createStorageManagerService;
+        }
+#endif
+#ifdef ENABLE_VREX_SERVICE
+        else if(serviceName == VREXManagerService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createVREXManagerService;
+        }
+#endif
+#ifdef USE_TSB_SETTINGS
+        else if(serviceName == TSB_SETTINGS_SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createTsbSettingsService;
+        }
+#endif
+#ifdef BROWSER_SETTINGS
+        else if (serviceName == BrowserSettingsService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createBrowserSettingsService;
+        }
+#endif
+#ifdef HAS_API_HOME_NETWORKING
+        else if(serviceName == HOME_NETWORKING_SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createHomeNetworkingService;
+        }
+#endif
+#ifdef HAS_API_RFREMOTE
+        else if (serviceName == CRFRemoteService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createRFRemoteService;
+        }
+#endif
+*/
+#ifdef SCREEN_CAPTURE
+        if(serviceName == ScreenCaptureService::NAME)
+        {
+                serviceStruct.createFunction = &ScreenCaptureService::create;
+        }
+#endif
+#ifdef USE_DEVICE_SETTINGS_SERVICE
+        else if(serviceName == DEVICE_SETTING_SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createDeviceSettingService;
+        }
+#endif
+#ifdef ENABLE_WEBSOCKET_SERVICE
+        else if (serviceName == WebSocketService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createWebSocketService;
+        }
+#endif
+	else
+	{
+		DEBUG_PRINT(DEBUG_ERROR,"\nUnsupported service %s\n", serviceName.toUtf8().constData());
+		return registerStatus;
+	}
+
+        serviceStruct.serviceName = serviceName;
+        registerStatus = ServiceManager::getInstance()->registerService(serviceName, serviceStruct);
+        DEBUG_PRINT(DEBUG_LOG,"\n%s registered\n", serviceName.toUtf8().constData());
+
+        return registerStatus;
+}
 
 bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_RegisterService ---->Entry\n");
-       	ServiceStruct hnServiceStruct;
+	char stringDetails[50] = {'\0'};
 	bool register_service=false;
         if(&req["service_name"]==NULL)
         {
@@ -90,56 +223,28 @@ bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json
         }
 	/*Name of the service to be registered with service manager*/
 	std::string serviceName=req["service_name"].asCString();
-	/*Regsitering HomeNetworking service*/
-#if 0
-	if(strcmp(serviceName.c_str(),HOME_NETWORKING_SERVICE_NAME.toUtf8().constData())==0)
-	{
-		ServiceStruct hnServiceStruct;
-		hnServiceStruct.createFunction = &createHomeNetworkingService;
-		hnServiceStruct.serviceName = HOME_NETWORKING_SERVICE_NAME;
-		register_service=ServiceManager::getInstance()->registerService(HOME_NETWORKING_SERVICE_NAME, hnServiceStruct);
-		DEBUG_PRINT(DEBUG_LOG,"\nHomeNetworking service registered\n");
-	}
-#endif
-	/*Registering ScreenCapture service*/
-	if(strcmp(serviceName.c_str(),ScreenCaptureService::NAME.toUtf8().constData())==0)
-	{
-		ServiceStruct scrCapServiceStruct;
-		scrCapServiceStruct.createFunction = &ScreenCaptureService::create;
-		scrCapServiceStruct.serviceName = ScreenCaptureService::NAME;
-		register_service=ServiceManager::getInstance()->registerService(ScreenCaptureService::NAME, scrCapServiceStruct);
-		DEBUG_PRINT(DEBUG_LOG,"\nScreenCapture service registered\n");
-	}
-	/*Registering DeviceSettings service*/
-	else if(strcmp(serviceName.c_str(),DEVICE_SETTING_SERVICE_NAME.toUtf8().constData())==0)
-	{
-		ServiceStruct devServiceStruct;
-		devServiceStruct.createFunction = &createDeviceSettingService;
-		devServiceStruct.serviceName = DEVICE_SETTING_SERVICE_NAME;
-		register_service=ServiceManager::getInstance()->registerService(DEVICE_SETTING_SERVICE_NAME, devServiceStruct);
-		DEBUG_PRINT(DEBUG_LOG,"\nDeviceSettings service registered\n");
-	}
-	else
-	{
-		register_service = 0;
-		DEBUG_PRINT(DEBUG_ERROR,"\nUnKnown service\n");
-		response["result"]="FAILURE";
-	}
+
+	ServiceStruct serviceStruct;
+	register_service = registerServices(QString::fromStdString(serviceName), serviceStruct);
+
 	/*Checking the return value*/
 	if(register_service==1)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\nRegister service Success\n");
 		response["result"]="SUCCESS";
+		sprintf(stringDetails,"%s registration success", serviceName.c_str());
 	}
 	else if(register_service==0)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\nRegister service Failed\n");
+		DEBUG_PRINT(DEBUG_ERROR,"Register service Failed for Unknown service\n");
 		response["result"]="FAILURE";
+		sprintf(stringDetails,"%s registration failed", serviceName.c_str());
 	}
+	response["details"]=stringDetails;
+
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_RegisterService ---->Exit\n");
 	return TEST_SUCCESS;	
 }
-
 
 /***************************************************************************
  *Function name : SM_UnRegisterService 
@@ -150,6 +255,7 @@ bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json
 bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_UnRegisterService ---->Entry\n");
+	char stringDetails[50] = {'\0'};
 	bool unregister_service=false;
         if(&req["service_name"]==NULL)
         {
@@ -163,12 +269,16 @@ bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Js
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\nUnRegister service Success\n");
 		response["result"]="SUCCESS";
+		sprintf(stringDetails,"%s unregistration success", serviceName.c_str());
 	}
 	else if(unregister_service==0)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\nUnRegister service failed\n");
 		response["result"]="FAILURE";
+		sprintf(stringDetails,"%s registration failed", serviceName.c_str());
 	}
+	response["details"]=stringDetails;
+
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_UnRegisterService ---->Exit\n");
 	return TEST_SUCCESS;	
 }
@@ -277,7 +387,92 @@ bool ServiceManagerAgent::SM_GetGlobalService(IN const Json::Value& req, OUT Jso
 	return TEST_SUCCESS;	
 }
 
+bool ServiceManagerAgent::SM_GetSetting(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_GetSetting ---->Entry\n");
+        if(&req["service_name"]==NULL)
+        {
+                response["result"]="FAILURE";
+		response["details"]="service name is NULL";
+                return TEST_FAILURE;
+        }
+        std::string serviceName=req["service_name"].asCString();
 
+	QString returnValue;
+	QString setting;
+	char stringDetails[50] = {'\0'};
+
+        returnValue = ServiceManager::getInstance()->getSetting(QString::fromStdString(serviceName), setting);
+
+    	if (returnValue.isEmpty() || returnValue.isNull()) 
+	{
+		sprintf(stringDetails,"%s getSetting is null", serviceName.c_str());
+		response["result"]="FAILURE";
+		DEBUG_PRINT(DEBUG_ERROR,"\n SM getSetting failed\n");
+	}
+        else if(setting.isEmpty() || setting.isNull())
+        {
+		sprintf(stringDetails,"%s setting is null", serviceName.c_str());
+		response["result"]="FAILURE";
+		DEBUG_PRINT(DEBUG_ERROR,"\n SM getSetting failed\n");
+        }
+        else
+        {
+		sprintf(stringDetails,"%s getSetting=%s",serviceName.c_str(),returnValue.toStdString().c_str());
+                response["result"]="SUCCESS";
+                DEBUG_PRINT(DEBUG_LOG,"\n SM getSetting success\n");
+		
+        }
+	response["details"]=stringDetails;
+
+        DEBUG_PRINT(DEBUG_TRACE,"\n SM_GetSetting ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool ServiceManagerAgent::SM_CreateService(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_CreateService ---->Entry\n");
+        if(&req["service_name"]==NULL)
+        {
+                response["result"]="FAILURE";
+                response["details"]="service name is NULL";
+                return TEST_FAILURE;
+        }
+        std::string serviceName=req["service_name"].asCString();
+
+	Service* ptrService = NULL;
+    	if (ServiceManager::getInstance()->doesServiceExist(QString::fromStdString(serviceName)))
+    	{
+        	ptrService = ServiceManager::getInstance()->createService(QString::fromStdString(serviceName));
+		char stringDetails[50] = {'\0'};
+        	if (ptrService != NULL)
+        	{
+			sprintf(stringDetails,"GetName from created service: %s", ptrService->getName().toUtf8().constData());
+			response["result"]="SUCCESS";
+			DEBUG_PRINT(DEBUG_LOG,"\nService created successfully\n");
+			// Delete the created service
+        		delete ptrService;
+        		ptrService = NULL;
+			DEBUG_PRINT(DEBUG_LOG,"\nService deleted successfully\n");
+        	}
+		else
+		{
+			sprintf(stringDetails,"Failed to create service: %s", serviceName.c_str());
+			response["result"]="FAILURE";
+			DEBUG_PRINT(DEBUG_ERROR,"\nSM_CreateService failed");
+		}
+		response["details"]=stringDetails;
+    	}
+	else
+	{
+                response["result"]="FAILURE";
+                response["details"]="Service does not exist";
+                DEBUG_PRINT(DEBUG_ERROR,"\nSM_CreateService failed. Service does not exist\n");
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_CreateService ---->Exit\n");
+        return TEST_SUCCESS;
+}
 
 /***************************************************************************
  *Function name : SM_HN_EnableMDVR 
@@ -289,6 +484,8 @@ bool ServiceManagerAgent::SM_GetGlobalService(IN const Json::Value& req, OUT Jso
 bool ServiceManagerAgent::SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableMDVR ---->Entry\n");
+
+#ifdef HAS_API_HOME_NETWORKING
         if(&req["enable"]==NULL)
         {
 		response["result"]="FAILURE";
@@ -315,6 +512,7 @@ bool ServiceManagerAgent::SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::
 		response["details"]="Enter 'enable' field correctly";
 		return TEST_FAILURE;
 	}
+
 	/*Calling getGlobalService API to get the service instance*/
 	ptr_service = ServiceManager::getInstance()->getGlobalService(HOME_NETWORKING_SERVICE_NAME);
 	if(ptr_service != NULL)
@@ -339,6 +537,10 @@ bool ServiceManagerAgent::SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::
 		response["result"]="FAILURE";
 		DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
 	}
+#else
+	response["result"]="FAILURE";
+	response["details"]="Home Networking Service unsupported";
+#endif
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableMDVR ---->Exit\n");
 	return TEST_SUCCESS;	
 }
@@ -354,6 +556,8 @@ bool ServiceManagerAgent::SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::
 bool ServiceManagerAgent::SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableVPOP ---->Entry\n");
+
+#ifdef HAS_API_HOME_NETWORKING
         if(&req["enable"]==NULL)
         {
 		response["result"]="FAILURE";
@@ -404,6 +608,10 @@ bool ServiceManagerAgent::SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::
 		response["result"]="FAILURE";
 		DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
 	}
+#else
+	response["result"]="FAILURE";
+        response["details"]="Home Networking Service unsupported";
+#endif
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableVPOP ---->Exit\n");
 	return TEST_SUCCESS;	
 }
@@ -420,6 +628,8 @@ bool ServiceManagerAgent::SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::
 bool ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetZoomSettings ---->Entry\n");
+
+#ifdef USE_DISPLAY_SETTINGS
         if(&req["videoDisplay"]==NULL || &req["zoomLevel"]==NULL)
         {
 		response["result"]="FAILURE";
@@ -462,6 +672,11 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings(IN const Json::Value
 		DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
 	}
 	free(zoomDetails);
+#else
+	response["result"]="FAILURE";
+	response["details"]="DisplaySettings Service unsupported";
+#endif
+
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetZoomSettings ---->Exit\n");
 	return TEST_SUCCESS;	
 }
@@ -478,6 +693,8 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings(IN const Json::Value
 bool ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetCurrentResolution ---->Entry\n");
+
+#ifdef USE_DISPLAY_SETTINGS
         if(&req["videoDisplay"]==NULL || &req["resolution"]==NULL)
         {
 		response["result"]="FAILURE";
@@ -520,6 +737,11 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution(IN const Json::
 		DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
 	}
 	free(resolutionDetails);
+#else
+	response["result"]="FAILURE";
+	response["details"]="DisplaySettingsService unsupported";
+#endif
+
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetCurrentResolution ---->Exit\n");
 	return TEST_SUCCESS;	
 }
@@ -535,6 +757,8 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution(IN const Json::
 bool ServiceManagerAgent::SM_HN_SetDeviceName(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_SetDeviceName ---->Entry\n");
+
+#ifdef HAS_API_HOME_NETWORKING
         if(&req["device_name"]==NULL )
         {
 		response["result"]="FAILURE";
@@ -569,20 +793,65 @@ bool ServiceManagerAgent::SM_HN_SetDeviceName(IN const Json::Value& req, OUT Jso
 		DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
 	}
 	free(nameDetails);
+#else
+        response["result"]="FAILURE";
+        response["details"]="Home Networking Service unsupported";
+#endif
+
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_SetDeviceName ---->Exit\n");
 	return TEST_SUCCESS;	
 }
 
+bool ServiceManagerAgent::SM_Services_GetName(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_GetName ---->Entry\n");
+
+        if(&req["service_name"]==NULL)
+        {
+                response["result"]="FAILURE";
+                return TEST_FAILURE;
+        }
+        std::string serviceName=req["service_name"].asCString();
+
+	/*Calling getGlobalService API to get the service instance*/
+        Service* ptr_service=NULL;
+        ptr_service = ServiceManager::getInstance()->getGlobalService(QString::fromStdString(serviceName));
+        if(ptr_service != NULL)
+        {
+		if(QString::fromStdString(serviceName) == ptr_service->getName())
+		{
+                	DEBUG_PRINT(DEBUG_LOG,"GetName: %s", ptr_service->getName().toUtf8().constData());
+                	response["result"]="SUCCESS";
+                	response["details"]="GetName value from service name succesfull";
+		}
+		else
+		{
+			DEBUG_PRINT(DEBUG_ERROR,"GetName: %s", ptr_service->getName().toUtf8().constData());
+			response["result"]="FAILURE";
+			response["details"]="GetName value not matching service name";
+		}
+        }
+        else
+        {
+                response["result"]="FAILURE";
+		response["details"]="Failed to get GlobalService pointer from service name";
+                DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
+        }
+
+	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_GetName ---->Exit\n");
+	return TEST_SUCCESS;
+}
+
 /***************************************************************************
- *Function name : SM_SetAPIVersion 
+ *Function name : SM_Services_SetAPIVersion
  *Descrption    : This will check the functionality of getApiVersionNumber and 
 		  setApiVersionNumber APIs.
  *parameter [in]: req-  service_name-Name of the service.
 			apiVersion - Parameter to be passed to callMethod API.
  *****************************************************************************/ 
-bool ServiceManagerAgent::SM_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response)
+bool ServiceManagerAgent::SM_Services_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nSM_SetAPIVersion ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_SetAPIVersion ---->Entry\n");
         if(&req["service_name"]==NULL || &req["apiVersion"] == NULL)
         {
 		response["result"]="FAILURE";
@@ -590,7 +859,7 @@ bool ServiceManagerAgent::SM_SetAPIVersion(IN const Json::Value& req, OUT Json::
         }
 	std::string serviceName=req["service_name"].asCString();
 	int setApiVersion=req["apiVersion"].asInt();
-	ServiceParams params;
+	//ServiceParams params;
 	int getApiVersion=0;
 	char apiVersion[20]= "API_VERSION:";
 	char *versionDetails = (char*)malloc(sizeof(char)*20);
@@ -623,21 +892,21 @@ bool ServiceManagerAgent::SM_SetAPIVersion(IN const Json::Value& req, OUT Json::
 		DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
 	}
 	free(versionDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nSM_SetAPIVersion ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_SetAPIVersion ---->Exit\n");
 	return TEST_SUCCESS;	
 }
 
 
 /***************************************************************************
- *Function name : SM_RegisterForEvents
+ *Function name : SM_Services_RegisterForEvents
  *Descrption    : This function will check the functionality of registerForEvents
                   and unregisterEvents APIs.
  *parameter [in]: service_name - Name of the service.
 		  event_name - event to be registered.
  *****************************************************************************/ 
-bool ServiceManagerAgent::SM_RegisterForEvents(IN const Json::Value& req, OUT Json::Value& response)
+bool ServiceManagerAgent::SM_Services_RegisterForEvents(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nSM_RegisterForEvents ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_RegisterForEvents ---->Entry\n");
         if(&req["service_name"]==NULL || &req["event_name"]==NULL)
         {
 		response["result"]="FAILURE";
@@ -647,7 +916,7 @@ bool ServiceManagerAgent::SM_RegisterForEvents(IN const Json::Value& req, OUT Js
 	std::string eventName=req["event_name"].asCString();
 	QList<QString> event_list;
 	event_list.append(QString::fromStdString(eventName));
-	ServiceParams params;
+	//ServiceParams params;
 	ServiceListener *listener=NULL;
 	bool register_flag=false,unregister_flag=false;
 	Service* ptr_service=NULL;
@@ -677,8 +946,286 @@ bool ServiceManagerAgent::SM_RegisterForEvents(IN const Json::Value& req, OUT Js
 		response["result"]="FAILURE";
 		DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
 	}
-	DEBUG_PRINT(DEBUG_TRACE,"\nSM_RegisterForEvents ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_RegisterForEvents ---->Exit\n");
 	return TEST_SUCCESS;	
+}
+
+bool ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE,"SM_DeviceSetting_GetDeviceInfo ---->Entry\n");
+
+#ifdef USE_DEVICE_SETTINGS_SERVICE
+        Service* ptrService = NULL;
+        if (ServiceManager::getInstance()->doesServiceExist(DEVICE_SETTING_SERVICE_NAME))
+        {
+	    ptrService = ServiceManager::getInstance()->getGlobalService(DEVICE_SETTING_SERVICE_NAME);
+            if (ptrService != NULL)
+            {
+		QVariantList paramList;
+                ServiceParams inParams;
+		ServiceParams outResult;
+  		QString methodType = "ecm_mac";
+		//QString methodType = "estb_mac";
+		char stringDetails[50] = {'\0'};
+
+		paramList.append(methodType);
+		inParams["params"] = paramList;
+                outResult = ptrService->callMethod(DeviceSettingService::METHOD_DEVICE_GET_DEVICE_INFO, inParams);
+
+		QString data;
+                foreach (QVariant value, outResult)
+                {
+		    if (!(value.toString().isNull() || value.toString().isEmpty()))
+		    {
+                        data += value.toString();
+                        data += "  ";
+		    }
+                }
+
+		if (data.isEmpty())
+		{
+		    response["result"]="FAILURE";
+		}
+		else
+		{
+              	    response["result"]="SUCCESS";
+		}
+
+		sprintf(stringDetails,"%s: %s", methodType.toUtf8().constData(), data.toUtf8().constData());
+		response["details"]=stringDetails;
+            }
+	    else
+	    {
+		response["result"]="FAILURE";
+		response["details"]="Failed to get serviceManager instance using getGlobalService";
+            }
+        }
+	else
+	{
+		response["result"]="FAILURE";
+		response["details"]="Service does not exists";
+	}
+#else
+	response["result"]="FAILURE";
+	response["details"]="DeviceSetting Service unsupported";
+#endif
+	DEBUG_PRINT(DEBUG_TRACE,"SM_DeviceSetting_GetDeviceInfo ---->Exit\n");
+	return TEST_SUCCESS;
+}
+
+bool ServiceManagerAgent::SM_ScreenCapture_Upload(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE,"SM_ScreenCapture_Upload ---->Entry\n");
+
+#ifdef SCREEN_CAPTURE
+        Service* ptrService = NULL;
+     	ptrService = ServiceManager::getInstance()->getGlobalService(ScreenCaptureService::NAME);
+        if (ptrService != NULL)
+        {
+		char stringDetails[50] = {'\0'};	
+		QVariantList paramList;
+                ServiceParams inParams;
+
+		std::string urlString = req["url"].asCString();
+                paramList.append(QString::fromStdString(urlString));
+                inParams["params"] = paramList;
+
+		DEBUG_PRINT(DEBUG_TRACE,"Attempting to load the following web page: %s\n", urlString.c_str());
+                ServiceParams outResult = ptrService->callMethod(ScreenCaptureService::METHOD_UPLOAD, inParams);
+
+       		//bool ok = outResult[ScreenCaptureService::PARAM_STATUS].toBool();
+        	//QString errorMsg = outResult[ScreenCaptureService::PARAM_MESSGAGE].toString();
+        	//QString callGUID = outResult[ScreenCaptureService::PARAM_CALL_GUID].toString();
+		bool status = outResult["success"].toBool();
+                if (false == status)
+                {
+                    response["result"]="FAILURE";
+                }
+                else
+                {
+                    response["result"]="SUCCESS";
+                }
+
+                QString data;
+                foreach (QVariant value, outResult)
+                {
+                    if (!(value.toString().isNull() || value.toString().isEmpty()))
+                    {
+                        data += value.toString();
+                        data += "  ";
+                    }
+                }
+		sprintf(stringDetails,"status = %s", data.toUtf8().constData());
+		response["details"]=stringDetails;
+        }
+        else
+        {
+                response["result"]="FAILURE";
+                response["details"]="Failed to get serviceManager instance using getGlobalService";
+        }
+#else
+	response["result"]="FAILURE";
+	response["details"]="ScreenCapture Service unsupported";
+#endif
+	DEBUG_PRINT(DEBUG_TRACE,"SM_ScreenCapture_Upload ---->Exit\n");
+	return TEST_SUCCESS;
+}
+
+
+                
+bool ServiceManagerAgent::SM_WebSocket_GetUrl(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetUrl ---->Entry\n");
+
+#ifdef ENABLE_WEBSOCKET_SERVICE
+        Service* ptrService = NULL;
+        ptrService = ServiceManager::getInstance()->getGlobalService(WebSocketService::SERVICE_NAME);
+        if (ptrService != NULL)
+        {
+                QUrl url = dynamic_cast<WebSocketService *>(ptrService)->requestUrl();
+		if (url.isEmpty())
+		{
+			DEBUG_PRINT(DEBUG_ERROR,"Failed to get request url\n");
+			response["result"]="FAILURE";
+			response["details"]="Failed to get request url";
+		}
+		else
+		{
+			DEBUG_PRINT(DEBUG_LOG,"Url: %s\n", url.toString().toUtf8().constData());
+                	response["result"]="SUCCESS";
+			response["details"]=url.toString().toUtf8().constData();
+		}
+        }
+	else
+	{
+		response["result"]="FAILURE";
+		response["details"]="Failed to get serviceManager instance using getGlobalService";
+	}
+
+#else
+        response["result"]="FAILURE";
+        response["details"]="WebSocket Service unsupported";
+#endif
+
+	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetUrl ---->Exit\n");
+		
+	return TEST_SUCCESS;
+}
+              
+bool ServiceManagerAgent::SM_WebSocket_GetReadyState(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetReadyState ---->Entry\n");
+
+#ifdef ENABLE_WEBSOCKET_SERVICE
+	Service* ptrService = NULL;
+	ptrService = ServiceManager::getInstance()->getGlobalService(WebSocketService::SERVICE_NAME);
+	
+        if (ptrService != NULL)
+        {
+                WebSocketService::ReadyState state = WebSocketService::ReadyStateUnknown;
+		state = dynamic_cast<WebSocketService *>(ptrService)->readyState();
+                if (WebSocketService::ReadyStateUnknown == state)
+                {
+                        DEBUG_PRINT(DEBUG_ERROR,"Failed to get ready state\n");
+                        response["result"]="FAILURE";
+                        response["details"]="ReadyStateUnknown";
+                }
+                else
+                {
+                        char stringDetails[10] = {'\0'};
+                        sprintf(stringDetails,"State=%d", state);
+                        DEBUG_PRINT(DEBUG_LOG,"ReadyState: %d\n", state);
+                        response["result"]="SUCCESS";
+                        response["details"]=stringDetails;
+                }
+        }
+        else
+        {
+                response["result"]="FAILURE";
+                response["details"]="Failed to get serviceManager instance using getGlobalService";
+        }
+
+#else
+        response["result"]="FAILURE";
+        response["details"]="WebSocket Service unsupported";
+#endif
+
+	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetReadyState ---->Exit\n");
+
+	return TEST_SUCCESS;
+}
+                
+bool ServiceManagerAgent::SM_WebSocket_GetBufferedAmount(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetBufferedAmount ---->Entry\n");
+
+#ifdef ENABLE_WEBSOCKET_SERVICE
+        Service* ptrService = NULL;
+        ptrService = ServiceManager::getInstance()->getGlobalService(WebSocketService::SERVICE_NAME);
+
+        if (ptrService != NULL)
+        {
+                qint64 buffAmt = 0;
+                buffAmt = dynamic_cast<WebSocketService *>(ptrService)->bufferedAmount();
+		char stringDetails[50] = {'\0'};
+		sprintf(stringDetails,"BufferedAmount=%lld", buffAmt);
+		response["result"]="SUCCESS";
+		response["details"]=stringDetails;
+		DEBUG_PRINT(DEBUG_LOG,"BufferedAmount: %lld\n", buffAmt);		
+        }
+        else
+        {
+                response["result"]="FAILURE";
+                response["details"]="Failed to get serviceManager instance using getGlobalService";
+        }
+
+#else
+        response["result"]="FAILURE";
+        response["details"]="WebSocket Service unsupported";
+#endif
+
+	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetBufferedAmount ---->Exit\n");
+
+	return TEST_SUCCESS;
+}
+
+bool ServiceManagerAgent::SM_WebSocket_GetProtocol(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetProtocol ---->Entry\n");
+
+#ifdef ENABLE_WEBSOCKET_SERVICE
+        Service* ptrService = NULL;
+        ptrService = ServiceManager::getInstance()->getGlobalService(WebSocketService::SERVICE_NAME);
+        if (ptrService != NULL)
+        {
+                QString protocol = dynamic_cast<WebSocketService *>(ptrService)->protocol();
+                if (protocol.isEmpty())
+                {
+                        DEBUG_PRINT(DEBUG_ERROR,"Failed to get protocol\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Failed to get protocol";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_LOG,"Protocol: %s\n", protocol.toUtf8().constData());
+                        response["result"]="SUCCESS";
+                        response["details"]=protocol.toUtf8().constData();
+                }
+        }
+        else
+        {
+                response["result"]="FAILURE";
+                response["details"]="Failed to get serviceManager instance using getGlobalService";
+        }
+
+#else
+        response["result"]="FAILURE";
+        response["details"]="WebSocket Service unsupported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetProtocol ---->Exit\n");
+
+	return TEST_SUCCESS;
 }
 
 /**************************************************************************
@@ -710,22 +1257,38 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
                 return TEST_FAILURE;
         }
 
+	// ServiceManager APIs
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_RegisterService");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_UnRegisterService");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_DoesServiceExist");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_GetRegisteredServices");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_GetGlobalService");
-	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_EnableMDVR");
-	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_EnableVPOP");
-	ptrAgentObj->UnregisterMethod("TestMgr_SM_DisplaySetting_SetZoomSettings");
-	ptrAgentObj->UnregisterMethod("TestMgr_SM_DisplaySetting_SetCurrentResolution");
-	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_SetDeviceName");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_GetSetting");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_CreateService");
+	// Services common APIs
+	ptrAgentObj->UnregisterMethod("TestMgr_Services_GetName");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_SetAPIVersion");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_RegisterForEvents");
+	// HomeNetworking Service callMethod APIs
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_EnableMDVR");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_EnableVPOP");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_SetDeviceName");
+	// DisplaySettings Service callMethod APIs
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_DisplaySetting_SetZoomSettings");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_DisplaySetting_SetCurrentResolution");
+        // DeviceSettingService callMethod APIs
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_DeviceSetting_GetDeviceInfo");
+	// ScreenCaptureService callMethod APIs
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_ScreenCapture_Upload");
+	// WebSocketService callMethod APIs
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_WebSocket_GetUrl");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_WebSocket_GetReadyState");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_WebSocket_GetBufferedAmount");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_WebSocket_GetProtocol");
+
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;
 }
-
 
 /**************************************************************************
  * Function Name : DestroyObject

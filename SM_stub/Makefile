@@ -5,7 +5,7 @@ default: build
 #
 SRC_DIR   := ./src/
 OBJDIR	  := obj
-COPTS     := -c -DQT_WEBKIT_LIB
+COPTS     += -c
 
 ifeq ($(RDK_VERSION),RDK1DOT3)
 VERSION    = br1.3
@@ -18,9 +18,10 @@ VERSION    = br2.0
 endif
 
 LDOPTS    += -L $(IMAGE_PATH)/usr/local/lib  \
-		-L $(IMAGE_PATH)/usr/local/Qt/lib
-#LIBDIR    := ../../$(VERSION)/libs
-#TARGETDIR := ../../$(VERSION)/bin
+	     -L $(IMAGE_PATH)/usr/lib \
+	     -L $(IMAGE_PATH)/lib \
+	     -L $(IMAGE_PATH)/usr/local/Qt/lib
+
 #debug log level
 ifeq ($(DEBUG_LEVEL),TRACE)
 COPTS     += -DDEBUG_LEVEL_TRACE
@@ -41,16 +42,11 @@ INCLUDES  +=    -I include \
                 -I $(RDK_BUILD_DIR)/servicemanager/include \
                 -I $(RDK_BUILD_DIR)/servicemanager/include/services \
                 -I $(RDK_BUILD_DIR)/servicemanager/include/helpers \
-		-I $(IMAGE_PATH)/usr/local/Qt/include/QtWidgets\
+		-I $(IMAGE_PATH)/usr/local/Qt/include/QtWidgets \
                 -I $(IMAGE_PATH)/usr/local/Qt/include/\
                 -I $(IMAGE_PATH)/usr/local/Qt/include/QtCore/\
-                -I $(IMAGE_PATH)/usr/local/Qt/include/QtGui/\
-		-I $(IMAGE_PATH)/usr/local/Qt/include/QtWebKitWidgets\
-                -I $(RDK_BUILD_DIR)/opensource/qt/stage/usr/local/Qt/include/QtWidgets\
                 -I $(RDK_BUILD_DIR)/opensource/qt/stage//usr/local/Qt/include/\
-                -I $(RDK_BUILD_DIR)/opensource/qt/stage//usr/local/Qt/include/QtCore/\
-                -I $(RDK_BUILD_DIR)/opensource/qt/stage//usr/local/Qt/include/QtGui/\
-                -I $(RDK_BUILD_DIR)/opensource/qt/stage//usr/local/Qt/include/QtWebKitWidgets
+                -I $(RDK_BUILD_DIR)/opensource/qt/stage//usr/local/Qt/include/QtCore
 
 
 #LIBs common for Both CLIENT and GATEWAY
