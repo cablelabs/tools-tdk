@@ -39,6 +39,7 @@ bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::DSmanagerInitialize, "TestMgr_DS_managerInitialize");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::DSmanagerDeinitialize, "TestMgr_DS_managerDeinitialize");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setBrightness, "TestMgr_DS_FP_setBrightness");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setState, "TestMgr_DS_FP_setState");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setColor, "TestMgr_DS_FP_setColor");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setBlink, "TestMgr_DS_FP_setBlink");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setScroll, "TestMgr_DS_FP_setScroll");
@@ -73,6 +74,7 @@ bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getAspectRatio, "TestMgr_DS_VOP_getAspectRatio");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getDisplayDetails, "TestMgr_DS_VOP_getDisplayDetails");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_isContentProtected, "TestMgr_DS_VOP_isContentProtected");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_setEnable, "TestMgr_DS_VOP_setEnable");
 
 	/*initializing IARMBUS library */
 	IARM_Result_t retval;
@@ -127,11 +129,13 @@ bool DeviceSettingsAgent::DSmanagerInitialize(IN const Json::Value& req, OUT Jso
 	{
 		device::Manager::Initialize();
 		response["result"]= "SUCCESS"; 
+		response["details"]="device::Manager::Initialize SUCCESS";
 	}
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in DSmanagerinitialize\n");
 		response["result"]= "FAILURE";
+		response["details"]="device::Manager::Initialize FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n managerInitialize ---->Exit\n");
 	return TEST_SUCCESS;
@@ -147,11 +151,13 @@ bool DeviceSettingsAgent::DSmanagerDeinitialize(IN const Json::Value& req, OUT J
 	{
 		device::Manager::DeInitialize();
 		response["result"]= "SUCCESS"; 
+		response["details"]="device::Manager::DeInitialize SUCCESS";
 	}
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in DSmanagerDeinitialize\n");
 		response["result"]= "FAILURE";
+		response["details"]="device::Manager::DeInitialize FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n managerDeinitialize ---->Exit\n");
 	return TEST_SUCCESS;
@@ -166,28 +172,43 @@ bool DeviceSettingsAgent::DSmanagerDeinitialize(IN const Json::Value& req, OUT J
 bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setBrightness ---->Entry\n");
-	char *brightnessDetails = (char*)malloc(sizeof(char)*10);
-	memset(brightnessDetails , '\0', (sizeof(char)*10));
-	char brightnessDetails1[30] = "Brightness:";
-	if(&req["indicator_name"]==NULL)
-	{
-		return TEST_FAILURE;
-	}
-	std::string indicator_name=req["indicator_name"].asCString();
-	int brightness = req["brightness"].asInt();
-	int brightness1;
+	char brightnessDetails[30] = {'\0'};
+	int setVal = req["brightness"].asInt();
+	bool getOnly = req["get_only"].asInt();
+	std::string message = req["text"].asCString();
+	int getVal;
+
 	try
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\nCalling setBrightness\n");
-		device::FrontPanelIndicator::getInstance(indicator_name).setBrightness(brightness);
+            if(message.empty()) // frontPanelConfig
+            {
+		std::string indicator_name=req["indicator_name"].asCString();
+                if (false == getOnly) {
+                    DEBUG_PRINT(DEBUG_LOG,"\nCalling setBrightness\n");
+                    device::FrontPanelIndicator::getInstance(indicator_name).setBrightness(setVal);
+                }
+
+                DEBUG_PRINT(DEBUG_LOG,"\nCalling getBrightness\n");
+                device::FrontPanelIndicator::getInstance(indicator_name).setState(true);
+                getVal = device::FrontPanelIndicator::getInstance(indicator_name).getBrightness();
+            }
+	    else // frontPanelTextDisplay
+	    {
+		if (false == getOnly) {
+		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setText\n");
+		    device::FrontPanelConfig::getInstance().getTextDisplay("Text").setText(message);
+		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setBrightness\n");
+		    device::FrontPanelConfig::getInstance().getTextDisplay("Text").setTextBrightness(setVal);
+		}
+
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getBrightness\n");
-		device::FrontPanelIndicator::getInstance(indicator_name).setState(1);
-		brightness1= device::FrontPanelIndicator::getInstance(indicator_name).getBrightness();
-		DEBUG_PRINT(DEBUG_LOG,"\nBrightness:%d\n",brightness1);
-		sprintf(brightnessDetails,"%d",brightness1);
-		strcat(brightnessDetails1,brightnessDetails);
-		response["details"]= brightnessDetails1; 
-		response["result"]= "SUCCESS"; 
+		getVal = device::FrontPanelTextDisplay::getInstance("Text").getTextBrightness();
+	    }
+
+	    DEBUG_PRINT(DEBUG_LOG,"\nBrightness:%d\n",getVal);
+	    sprintf(brightnessDetails,"Brightness:%d",getVal);
+	    response["details"]= brightnessDetails;
+	    response["result"]= "SUCCESS";
 	}
 	catch(...)
 	{
@@ -195,11 +216,35 @@ bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::
 		response["details"]= "No Details";
 		response["result"]= "FAILURE";
 	}
-	free(brightnessDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setBrightness ---->Exit\n");
 	return TEST_SUCCESS;	
 }
 
+bool DeviceSettingsAgent::FP_setState(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FP_setState ---->Entry\n");
+        char details[30] = {'\0'};
+        bool state = req["state"].asInt();
+	std::string indicator_name = req["indicator_name"].asCString();
+
+        try
+        {
+            device::FrontPanelIndicator::getInstance(indicator_name).setState(state);
+            DEBUG_PRINT(DEBUG_LOG,"\nState set to %d\n", state);
+            sprintf(details,"State set to %d",state);
+            response["details"]= details;
+            response["result"]= "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setState\n");
+                response["details"]= "No Details";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"FP_setState ---->Exit\n");
+        return TEST_SUCCESS;
+}
 /***************************************************************************
  *Function name	: FP_setColor
  *Descrption	: This function is to check the functionality of setColor and getColor APIs
@@ -725,12 +770,16 @@ bool DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json:
 	}
 	std::string portName=req["port_name"].asCString();
 	char *resolution = (char*)req["resolution"].asCString();
+	bool getOnly = req["get_only"].asInt();
+
 	try
 	{	/*getting video port instance*/
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
-		/*setting VOP resoultion*/
-		DEBUG_PRINT(DEBUG_LOG,"\nCalling setResolution\n");
-		vPort.setResolution(resolution);
+		if (false == getOnly) {
+		    /*setting VOP resoultion*/
+		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setResolution\n");
+		    vPort.setResolution(resolution);
+		}
 		/*getting VOP resoultion*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getResolution\n");
 		/*Need to check the return string value with test apps*/
@@ -901,11 +950,13 @@ bool DeviceSettingsAgent::FP_setText(IN const Json::Value& req, OUT Json::Value&
 		/*setting text in the Device front panel text display area*/
 		device::FrontPanelConfig::getInstance().getTextDisplay(text).setText(textDisplay);
 		response["result"]= "SUCCESS"; 
+		response["details"]=".setText SUCCESS";
 	}
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setText\n");
 		response["result"]= "FAILURE";
+		response["details"]=".setText FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nFP_setText ---->Exit\n");
 	return TEST_SUCCESS;
@@ -975,11 +1026,13 @@ bool DeviceSettingsAgent::FP_setTime(IN const Json::Value& req, OUT Json::Value&
 		/*setting the time in HRS:MINS format*/
 		device::FrontPanelConfig::getInstance().getTextDisplay(text).setTime(time_hrs,time_mins);
 		response["result"]= "SUCCESS"; 
+		response["details"]=".setTime SUCCESS";
 	}
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setTime \n");
 		response["result"]= "FAILURE";
+		response["details"]=".setTime FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setTime ---->Exit\n");
 	return TEST_SUCCESS;
@@ -1256,6 +1309,7 @@ bool DeviceSettingsAgent::AOP_getSupportedStereoModes(IN const Json::Value& req,
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_getSupportedStereoModes\n");
 		response["details"]= "No Details";
 		response["result"]= "FAILURE";
+		return TEST_FAILURE;
 	}
 	free(supportedStereoModesDetails);
 	free(supportedStereoModes);
@@ -1278,9 +1332,12 @@ bool DeviceSettingsAgent::HOST_addPowerModeListener(IN const Json::Value& req, O
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_addPowerModeListener\n");
 		response["result"]= "FAILURE";
+		response["details"]="HOST_removePowerModeListener - FAILURE";
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_addPowerModeListener ---->Exit\n");
 	response["result"]="SUCCESS";
+	response["details"]="HOST_removePowerModeListener - SUCCESS";
 	return TEST_SUCCESS;
 }
 /***************************************************************************
@@ -1298,9 +1355,12 @@ bool DeviceSettingsAgent::HOST_removePowerModeListener(IN const Json::Value& req
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_removePowerModeListener\n");
 		response["result"]= "FAILURE";
+		response["details"]="HOST_removePowerModeListener - FAILURE";
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_removePowerModeListener ---->Exit\n");
 	response["result"]="SUCCESS";
+	response["details"]="HOST_removePowerModeListener - SUCCESS";
 	return TEST_SUCCESS;
 }
 
@@ -1369,9 +1429,12 @@ bool DeviceSettingsAgent::HOST_addDisplayConnectionListener(IN const Json::Value
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_addDisplayConnectionListener \n");
 		response["result"]= "FAILURE";
+		response["details"]= "HOST_addDisplayConnectionListener - FAILURE";
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_addDisplayConnectionListener ---->Exit\n");
 	response["result"]="SUCCESS";
+	response["details"]= "HOST_addDisplayConnectionListener - SUCCESS";
 	return TEST_SUCCESS;
 }
 /***************************************************************************
@@ -1389,9 +1452,12 @@ bool DeviceSettingsAgent::HOST_removeDisplayConnectionListener(IN const Json::Va
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_removeDisplayConnectionListener \n");
 		response["result"]= "FAILURE";
+		response["details"]= "HOST_removeDisplayConnectionListener - FAILURE";
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_removeDisplayConnectionListener ---->Exit\n");
 	response["result"]="SUCCESS";
+	response["details"]= "HOST_removeDisplayConnectionListener - SUCCESS";
 	return TEST_SUCCESS;
 }
 
@@ -1762,6 +1828,51 @@ bool DeviceSettingsAgent::VOP_getDisplayDetails(IN const Json::Value& req, OUT J
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_getDisplayDetails ---->Exit\n");
 	return TEST_SUCCESS;
 }
+
+bool DeviceSettingsAgent::VOP_setEnable(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_setEnable  ---->Entry\n");
+        char details[30] = {'\0'};
+        std::string portName=req["port_name"].asCString();
+        bool enable = req["enable"].asInt();
+
+        try
+        {       /*getting video port instance*/
+                device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
+                if (true == enable)
+		{
+                    /*setting VOP to enable*/
+                    DEBUG_PRINT(DEBUG_LOG,"\nCalling VideoOutputPort enable\n");
+		    vPort.enable();
+                }
+		else
+		{
+		    /*setting VOP to disable*/
+		    DEBUG_PRINT(DEBUG_LOG,"\nCalling VideoOutputPort disable\n");
+		    vPort.disable();
+		}
+
+		if (vPort.isEnabled() == enable)
+		{
+		    response["result"]="SUCCESS";
+		}
+		else
+		{
+		    response["result"]="FAILURE";
+		}
+		sprintf(details,"Port enable status:%d", vPort.isEnabled());
+		response["details"]=details;
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in setEnable\n");
+                response["details"]= "No Details";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_setEnable ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
 /**************************************************************************
  * Function Name: CreateObject
  * Description	: This function will be used to create a new object for the
@@ -1806,6 +1917,7 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_managerInitialize");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_managerDeinitialize");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_setBrightness");
+	ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_setState");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_setColor");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_setBlink");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_setScroll");
@@ -1840,6 +1952,8 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_getAspectRatio");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_getDisplayDetails");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_isContentProtected");
+	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_setEnable");
+
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;
 }

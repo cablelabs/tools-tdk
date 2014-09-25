@@ -333,6 +333,8 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource,"TestMgr_RmfElement_Sink_SetSource");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_MpSinkSetVideoRectangle,"TestMgr_RmfElement_MpSink_SetVideoRectangle");
+
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_CheckForSPTSRead_QAMSrc_Error,"TestMgr_RmfElement_CheckForSPTSRead_QAMSrc_Error");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init,"TestMgr_RmfElement_QAMSrc_RmfPlatform_Init");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Uninit,"TestMgr_RmfElement_QAMSrc_RmfPlatform_Uninit");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform,"TestMgr_RmfElement_QAMSrc_InitPlatform");
@@ -358,10 +360,12 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 #if 1
 
 static RMFQAMSrc* qamSource=NULL;
+static RMFQAMSrc* new_qamsrc = NULL;
 static DVRSource* dvrSource=NULL;
 static HNSource* hnSource=NULL;
 static MediaPlayerSink* mpSink=NULL;
 static HNSink* hnSink=NULL;
+static RMFQAMSrc *qamSrcs[7];
 
 /*QAMSrc rmf platform instance */
 static rmfPlatform *mPlatform = NULL;
@@ -375,16 +379,50 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const 
 	string rmfInstance = req["rmfElement"].asCString();	
 	string factoryFlag = req["factoryEnable"].asCString();
 	const char *qamUrl = req["qamSrcUrl"].asCString();
+	string newQamInsFlag = req["newQamSrc"].asCString();
+	const char *newQamUrl = req["newQamSrcUrl"].asCString();
+	int numberOfTimeChannelChange = req["numOfTimeChannelChange"].asInt();
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Insatnce: %s\n",rmfInstance.c_str());
 
 	if(rmfInstance == "QAMSrc")
 	{	
-		RMFQAMSrc::disableCaching();
+		//RMFQAMSrc::disableCaching();
+		cout<<"inside qamsrc"<<endl;
 		if(factoryFlag == "true")
-		{
-			qamSource = RMFQAMSrc::getQAMSourceInstance(qamUrl); 
-        		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc instance created by using getQAMSourceInstance() \n");
+		{	
+			cout<<"inside qamsrc factory method true"<<endl;
+			if(newQamInsFlag == "false")
+			{
+				cout<<"inside qamsrc new flag false"<<endl;
+				qamSource = RMFQAMSrc::getQAMSourceInstance(qamUrl);
+				cout<<"inside qamsrc new flag false after"<<endl;
+        			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc instance created by using getQAMSourceInstance() \n");
+			}
+			else
+			{
+				switch(numberOfTimeChannelChange)
+				{
+				case 0:
+					cout<<"inside qamsrc new flag true"<<endl;
+					new_qamsrc = RMFQAMSrc::getQAMSourceInstance(newQamUrl);
+					cout<<"inside qamsrc new flag true after"<<endl;
+					DEBUG_PRINT(DEBUG_TRACE, "QAMSrc new %d instance created by using getQAMSourceInstance() \n",numberOfTimeChannelChange);
+					break;
+				case 1: 
+				case 2: 
+				case 3: 
+				case 4: 
+				case 5: 
+				case 6: 
+					qamSrcs[numberOfTimeChannelChange - 1] = RMFQAMSrc::getQAMSourceInstance(newQamUrl);
+					DEBUG_PRINT(DEBUG_TRACE, "QAMSrc new %d instance created by using getQAMSourceInstance() \n",numberOfTimeChannelChange);
+					break;
+				default:
+					break;
+				}
+				DEBUG_PRINT(DEBUG_TRACE, "QAMSrc switch exit\n");
+			}
 		}
 		else
 		{	
@@ -481,6 +519,8 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const 
 
 	string rmfInstance = req["rmfElement"].asCString();	
 	string factoryFlag = req["factoryEnable"].asCString();
+	string newQamInsFlag = req["newQamSrc"].asCString();
+	int numberOfTimeChannelChange = req["numOfTimeChannelChange"].asInt();
 	
         DEBUG_PRINT(DEBUG_TRACE, "RMF Insatnce: %s\n",rmfInstance.c_str());
 
@@ -488,8 +528,33 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const 
 	{
 		if(factoryFlag == "true")		
 		{
-			RMFQAMSrc::freeQAMSourceInstance(qamSource);
-        		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc instance freed using freeQAMSourceInsatnce() \n");
+			if (newQamInsFlag == "false")
+			{
+				RMFQAMSrc::freeQAMSourceInstance(qamSource);
+        			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc instance freed using freeQAMSourceInsatnce() \n");
+			}
+			else
+			{
+				cout<<"inside qamsrc new flag true"<<endl;
+				switch(numberOfTimeChannelChange)
+				{
+				case 0:
+					RMFQAMSrc::freeQAMSourceInstance(new_qamsrc);
+                	                DEBUG_PRINT(DEBUG_TRACE, "QAMSrc new %d instance freed using freeQAMSourceInsatnce() \n",numberOfTimeChannelChange);
+					break;
+				case 1:
+				case 2:
+				case 3:
+				case 4:
+				case 5:
+				case 6:
+					RMFQAMSrc::freeQAMSourceInstance(qamSrcs[numberOfTimeChannelChange - 1]);
+                	                DEBUG_PRINT(DEBUG_TRACE, "QAMSrc new %d instance freed using freeQAMSourceInsatnce() \n",numberOfTimeChannelChange);
+					break;
+				default: break;
+				}
+			}
+			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc switch exit\n");
 		}
 		else
 		{
@@ -874,12 +939,43 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Val
 
 	RMFResult retResult = RMF_RESULT_SUCCESS;	
 	string rmfComponent = req["rmfElement"].asCString();		
+	string newQamInsFlag = req["newQamSrc"].asCString();	
+	int numberOfTimeChannelChange = req["numOfTimeChannelChange"].asInt();
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
 	
 	if(rmfComponent == "QAMSrc")
 	{
-		retResult = qamSource->pause();	
+		if(newQamInsFlag == "false")
+		{
+			retResult = qamSource->pause();	
+			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc old pause()\n");
+		}
+		else
+		{
+			switch(numberOfTimeChannelChange)
+			{
+			case 0:
+				retResult = new_qamsrc->pause();
+				DEBUG_PRINT(DEBUG_TRACE, "QAMSrc new pause()\n");
+				DEBUG_PRINT(DEBUG_TRACE, "QAMSrc %d instance pause called \n",numberOfTimeChannelChange);
+				break;
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+				retResult = qamSrcs[numberOfTimeChannelChange - 1]->pause();
+				DEBUG_PRINT(DEBUG_TRACE, "QAMSrc new pause()\n");
+				DEBUG_PRINT(DEBUG_TRACE, "QAMSrc %d instance pause called \n",numberOfTimeChannelChange);
+				break;
+			default:
+				break;
+			}
+			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc switch exit\n");
+		}
+
 		if(RMF_RESULT_SUCCESS != retResult)
 	        {
 			response["result"] = "FAILURE";
@@ -939,6 +1035,8 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 
 	RMFResult retResult = RMF_RESULT_SUCCESS;	
 	string rmfComponent = req["rmfElement"].asCString();	
+	string newQamInsFlag = req["newQamSrc"].asCString();	
+	int numberOfTimeChannelChange = req["numOfTimeChannelChange"].asInt();
 	
 	/* 0 - default, play without passing speed and mediaTime arguments.
            1 - play with passing speed and mediaTime arguments */
@@ -952,9 +1050,35 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 		{
 			float speed = req["playSpeed"].asFloat();
 		        double time = req["playTime"].asDouble();
-			retResult = qamSource->play(speed,time);	
-			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc play() with speed and time\n");
-			
+			if(newQamInsFlag == "false")
+			{
+				retResult = qamSource->play(speed,time);	
+				DEBUG_PRINT(DEBUG_TRACE, "QAMSrc play() with speed and time\n");
+			}
+			else
+			{
+				switch(numberOfTimeChannelChange)
+				{
+				case 0:	
+					retResult = new_qamsrc->play(speed,time);	
+					DEBUG_PRINT(DEBUG_TRACE, "QAMSrc new play() with speed and time\n");	
+					DEBUG_PRINT(DEBUG_TRACE, "QAMSrc %d instance play called \n",numberOfTimeChannelChange);
+					break;	
+				case 1:
+				case 2:	
+				case 3:	
+				case 4:	
+				case 5:	
+				case 6:	
+					retResult = qamSrcs[numberOfTimeChannelChange - 1]->play(speed,time);	
+					DEBUG_PRINT(DEBUG_TRACE, "QAMSrc new play() with speed and time\n");	
+					DEBUG_PRINT(DEBUG_TRACE, "QAMSrc %d instance play called \n",numberOfTimeChannelChange);
+					break;
+				default:
+					break;	
+				}
+				DEBUG_PRINT(DEBUG_TRACE, "QAMSrc switch exit\n");
+			}
 		}
 		if(RMF_RESULT_SUCCESS != retResult)
 	        {
@@ -1165,7 +1289,9 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
 
 	RMFResult retResult = RMF_RESULT_SUCCESS;	
 	string rmfSrcComponent = req["rmfSourceElement"].asCString();	
-	string rmfSinkComponent = req["rmfSinkElement"].asCString();	
+	string rmfSinkComponent = req["rmfSinkElement"].asCString();
+	string newQamInsFlag = req["newQamSrc"].asCString();
+	int numberOfTimeChannelChange = req["numOfTimeChannelChange"].asInt();
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Src Component: %s\n",rmfSrcComponent.c_str());
         DEBUG_PRINT(DEBUG_TRACE, "RMF Sink Component: %s\n",rmfSinkComponent.c_str());
@@ -1228,7 +1354,52 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                         return TEST_FAILURE;
 
                 }
-                retResult = mpSink->setSource(qamSource);
+		if(newQamInsFlag == "false")
+		{
+	                retResult = mpSink->setSource(qamSource);
+		}
+		else
+		{
+			switch(numberOfTimeChannelChange)
+			{
+			case 0:
+		                retResult = mpSink->setSource(new_qamsrc);
+				DEBUG_PRINT(DEBUG_TRACE, "QAMSrc %d instance setSource set \n",numberOfTimeChannelChange);
+				break;
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+		                retResult = mpSink->setSource(qamSrcs[numberOfTimeChannelChange - 1]);
+				DEBUG_PRINT(DEBUG_TRACE, "QAMSrc %d instance setSource set \n",numberOfTimeChannelChange);
+				break;
+			default:
+				break;	
+			}
+			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc switch exit\n");
+		}
+
+                if(RMF_RESULT_SUCCESS != retResult)
+                {
+                        response["result"] = "FAILURE";
+                        response["details"] = "mpSink setSource() FAILURE";
+
+                        DEBUG_PRINT(DEBUG_ERROR, "mpSink setSource() FAILURE\n");
+                        return TEST_FAILURE;
+                }
+                response["details"] = "mpSink setSource() successful";
+		DEBUG_PRINT(DEBUG_TRACE, "mpSink setSource() successful\n");
+	}
+	if(rmfSrcComponent == "QAMSrc" && rmfSinkComponent == "HNSink")
+	{
+		if(qamSource == NULL || hnSink == NULL)
+                {
+				
+				
+		}
+
                 if(RMF_RESULT_SUCCESS != retResult)
                 {
                         response["result"] = "FAILURE";
@@ -1584,6 +1755,32 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::
 }
 
 #if 1
+bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_CheckForSPTSRead_QAMSrc_Error(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_CheckForSPTSRead_QAMSrc_Error -->Entry\n");
+	string logPath = req["logPath"].asCString();
+	
+	string cmd = "cat " + logPath + " | grep -i \"SPTSRead: Event time\"";
+	//cout<<"Cmd:"<<cmd<<endl;
+
+	if(system(cmd.c_str()) == 0)
+	{
+		cout<<"SUCCESS: Pattern matched!!!!"<<endl;
+		response["result"] = "SUCCESS";
+		response["details"] = "Pattern matched";
+	}
+	else
+	{
+		cout<<"FAILURE: Pattern not found!!!!"<<endl;
+		response["result"] = "FAILURE";
+		response["details"] = "Pattern not found";
+	}
+	
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_CheckForSPTSRead_QAMSrc_Error -->Exit\n");
+	return TEST_SUCCESS;
+}
+
 bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPatform_Init -->Entry\n");
@@ -1863,16 +2060,42 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI(IN con
 	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
 	const char *new_ocaplocator = req["url"].asCString();
 	bool newInstance;
-        RMFQAMSrc *new_qamsrc = new RMFQAMSrc();
+	int numberOfTimeChannelChange = req["numOfTimeChannelChange"].asInt();
+        //RMFQAMSrc *new_qamsrc = new RMFQAMSrc();
 	
-	retResultQAMSource = RMFQAMSrc::changeURI(new_ocaplocator,qamSource,&new_qamsrc,newInstance);
-        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc changeURI is %ld\n",retResultQAMSource);
+	switch(numberOfTimeChannelChange)
+	{
+	case 0:
+		retResultQAMSource = RMFQAMSrc::changeURI(new_ocaplocator,qamSource,&new_qamsrc,newInstance);
+	        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc changeURI is %ld\n",retResultQAMSource);
+		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc %d instance changeURI called \n",numberOfTimeChannelChange);
+		break;
+	case 1: 		
+		retResultQAMSource = RMFQAMSrc::changeURI(new_ocaplocator,new_qamsrc,&qamSrcs[numberOfTimeChannelChange - 1],newInstance);
+	        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc changeURI is %ld\n",retResultQAMSource);
+		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc %d instance changeURI called \n",numberOfTimeChannelChange);
+		break;
+	case 2: 		
+	case 3: 		
+	case 4: 		
+	case 5: 		
+	case 6: 		
+		retResultQAMSource = RMFQAMSrc::changeURI(new_ocaplocator,qamSrcs[numberOfTimeChannelChange - 2],&qamSrcs[numberOfTimeChannelChange - 1],newInstance);
+	        DEBUG_PRINT(DEBUG_TRACE, "Result of QAMSrc changeURI is %ld\n",retResultQAMSource);
+		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc %d instance changeURI called \n",numberOfTimeChannelChange);
+		break;
+	default: break;
+	}
 	
-	 if(RMF_RESULT_SUCCESS != retResultQAMSource)
+	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc switch exit\n");
+	
+	if(RMF_RESULT_SUCCESS != retResultQAMSource)
         {
-        	response["result"] = "SUCCESS";
-	        response["details"] = "QAMSrc changeURI() success";
-	        DEBUG_PRINT(DEBUG_ERROR, "QAMSrc changeURI() success and result is %ld\n",retResultQAMSource);
+        	response["result"] = "FAILURE";
+	        response["details"] = "QAMSrc changeURI() failed";
+	        DEBUG_PRINT(DEBUG_ERROR, "QAMSrc changeURI() failed and result is %ld\n",retResultQAMSource);
+		
+		return TEST_FAILURE;
 	}
 	
         response["result"] = "SUCCESS";
@@ -5131,6 +5354,7 @@ bool MediaframeworkAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptr
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_Sink_SetSource");
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_MpSink_SetVideoRectangle");
 
+	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_CheckForSPTSRead_QAMSrc_Error");
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_RmfPlatform_Init");
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_RmfPlatform_Uninit");
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_QAMSrc_InitPlatform");

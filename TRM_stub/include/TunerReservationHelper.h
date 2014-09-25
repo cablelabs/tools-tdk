@@ -23,6 +23,7 @@
 #include <map>
 #include <glib.h>
 #include <string>
+#include <unistd.h>
 
 #include "rmf_osal_thread.h"
 #include "rmf_osal_util.h"

@@ -112,6 +112,7 @@ class MediaframeworkAgent : public RDKTestStubInterface
 		bool MediaframeworkAgent_RmfElementGetMediaInfo(IN const Json::Value& req, OUT Json::Value& response);	
 		bool MediaframeworkAgent_RmfElementGetState(IN const Json::Value& req, OUT Json::Value& response);
 
+		bool MediaframeworkAgent_RmfElement_CheckForSPTSRead_QAMSrc_Error(IN const Json::Value& req, OUT Json::Value& response);
 		bool MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init(IN const Json::Value& req, OUT Json::Value& response);
 		bool MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Uninit(IN const Json::Value& req, OUT Json::Value& response);
 		bool MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform(IN const Json::Value& req, OUT Json::Value& response);

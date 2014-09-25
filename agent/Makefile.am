@@ -2,7 +2,7 @@
 
 SUBDIRS =
 
-AM_CXXFLAGS = -DAGENT_LOG_ENABLE $(GST_CFLAGS) $(GST_LIBS)  \
+AM_CXXFLAGS = -DDEBUG_LEVEL_TRACE $(GST_CFLAGS) $(GST_LIBS)  \
               -I./include -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)
 
 bin_PROGRAMS = agent
