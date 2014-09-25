@@ -13,6 +13,6 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
 
 lib_LTLIBRARIES = libccstub.la
 libccstub_la_SOURCES = src/CCStub.cpp
-libccstub_la_LIBADD = -lrdkloggers
+libccstub_la_LIBADD = -lrdkloggers -lrdkCCGfx -lrdkCCManager -ldirectfb -lcurl -llog4c -lz -l:libz.so.1
 libccstub_la_includedir = ${includedir}
 libccstub_la_include_HEADERS = ./include/CCAgent.h

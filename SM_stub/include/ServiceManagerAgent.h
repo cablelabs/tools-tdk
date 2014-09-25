@@ -19,7 +19,9 @@
 #include "servicemanager.h"
 
 // Includes for services
+#ifdef HAS_MEMORY_INFO
 #include "memoryinfoservice.h"
+#endif
 #ifdef SCREEN_CAPTURE
 #include "screencaptureservice.h"
 #endif
@@ -75,6 +77,12 @@
 
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
+
+#define STR_DETAILS_20  20
+#define STR_DETAILS_30  30
+#define STR_DETAILS_50  50
+#define STR_DETAILS_100 100
+#define STR_DETAILS_200 200
 
 class RDKTestAgent;
 class ServiceManagerAgent : public RDKTestStubInterface

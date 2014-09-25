@@ -41,7 +41,7 @@
 #define OUT
 
 #define TEST_SUCCESS true
-#define TEST_FAILURE false 
+#define TEST_FAILURE false
 
 class PowerChangeNotify: public device::PowerModeChangeListener
 {
@@ -78,6 +78,7 @@ class DeviceSettingsAgent : public RDKTestStubInterface
 		bool DSmanagerInitialize(IN const Json::Value& req, OUT Json::Value& response);
 		bool DSmanagerDeinitialize(IN const Json::Value& req, OUT Json::Value& response);
 		bool FP_setBrightness(IN const Json::Value& req, OUT Json::Value& response);
+		bool FP_setState(IN const Json::Value& req, OUT Json::Value& response);
 		bool FP_setColor(IN const Json::Value& req, OUT Json::Value& response);
 		bool FP_setBlink(IN const Json::Value& req, OUT Json::Value& response);
 		bool FP_setScroll(IN const Json::Value& req, OUT Json::Value& response);
@@ -112,10 +113,10 @@ class DeviceSettingsAgent : public RDKTestStubInterface
 		bool VOP_getAspectRatio(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOP_getDisplayDetails(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOP_isContentProtected(IN const Json::Value& req, OUT Json::Value& response);
+		bool VOP_setEnable(IN const Json::Value& req, OUT Json::Value& response);
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
 
 		/*DeviceSettingsAgent Wrapper functions*/
-		
 };
 #endif //__DEVICESETTINGS_AGENT_H__

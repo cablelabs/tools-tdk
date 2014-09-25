@@ -616,7 +616,8 @@ bool TR069Agent::TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT 
 
 		DEBUG_PRINT(DEBUG_TRACE, "Value: %d and upTime: %d\n",value,time);
 
-		if(time == value)
+		/*if(time == value)*/
+		if(time >= value)
 		{
 			response["result"] = "SUCCESS";
 			response["details"] = "Verification Success";

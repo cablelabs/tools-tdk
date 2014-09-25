@@ -45,6 +45,7 @@ AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset strdup strerror])
 
 COPTS="-DDEBUG_LEVEL_TRACE"
+AM_CXXFLAGS="$AM_CXXFLAGS -DDEBUG_LEVEL_TRACE"
 DVRMGR_FLAGS=" "
 QAM_LIBS=" "
 SF_LIBS=" "
@@ -119,5 +120,10 @@ AC_CONFIG_FILES([Makefile
          RDKLogger_stub/Makefile
          TDKIntegration_Stub/Makefile
          gstPluginsRdk_check/Makefile
-         gstPluginsRdk_stub/Makefile])
+         gstPluginsRdk_stub/Makefile
+         Recorder_stub/Makefile
+         Mediaframework_stub/Makefile
+         MediaStreamer_stub/Makefile
+         OpenSourceComponent_Stub/Makefile
+         TR069_stub/Makefile])
 AC_OUTPUT
