@@ -197,11 +197,11 @@ bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::
 		if (false == getOnly) {
 		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setText\n");
 		    device::FrontPanelConfig::getInstance().getTextDisplay("Text").setText(message);
-		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setBrightness\n");
+		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setTextBrightness\n");
 		    device::FrontPanelConfig::getInstance().getTextDisplay("Text").setTextBrightness(setVal);
 		}
 
-		DEBUG_PRINT(DEBUG_LOG,"\nCalling getBrightness\n");
+		DEBUG_PRINT(DEBUG_LOG,"\nCalling getTextBrightness\n");
 		getVal = device::FrontPanelTextDisplay::getInstance("Text").getTextBrightness();
 	    }
 
@@ -220,6 +220,12 @@ bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::
 	return TEST_SUCCESS;	
 }
 
+/***************************************************************************
+ *Function name : FP_setState
+ *Descrption    : This function is to check the functionality of FrontPanel setState API
+ *@param  [in]  : indicator_name: indicator name for which the state will be set.
+                  state: 0 (OFF) / 1 (ON)
+ *****************************************************************************/
 bool DeviceSettingsAgent::FP_setState(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FP_setState ---->Entry\n");
@@ -245,6 +251,7 @@ bool DeviceSettingsAgent::FP_setState(IN const Json::Value& req, OUT Json::Value
         DEBUG_PRINT(DEBUG_TRACE,"FP_setState ---->Exit\n");
         return TEST_SUCCESS;
 }
+
 /***************************************************************************
  *Function name	: FP_setColor
  *Descrption	: This function is to check the functionality of setColor and getColor APIs
@@ -724,6 +731,7 @@ bool DeviceSettingsAgent::AOP_setStereoMode(IN const Json::Value& req, OUT Json:
  *Descrption	: This function is to check the functionality of setPowerMode and 
                   getPowerMode APIs.
  *@param [in]	: req- 	new_power_state: new power state to be set for decoder.
+		  POWER_ON=1, POWER_STANDBY=2, POWER_OFF=3
  ***************************************************************************/
 bool DeviceSettingsAgent::HOST_setPowerMode(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -1829,6 +1837,12 @@ bool DeviceSettingsAgent::VOP_getDisplayDetails(IN const Json::Value& req, OUT J
 	return TEST_SUCCESS;
 }
 
+/***************************************************************************
+ *Function name : VOP_setEnable
+ *Descrption    : This function enables or disables the specified video port.
+ *parameter [in]: port_name: video port name
+		  enable: true to enable, false to disable
+ *****************************************************************************/
 bool DeviceSettingsAgent::VOP_setEnable(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOP_setEnable  ---->Entry\n");
