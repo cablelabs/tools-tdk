@@ -115,6 +115,7 @@ AC_CONFIG_FILES([Makefile
          cfg/Makefile
          agent/Makefile
          SM_stub/Makefile
+         IARMBUS_stub/Makefile
          DS_stub/Makefile
          ClosedCaption_stub/Makefile
          RDKLogger_stub/Makefile

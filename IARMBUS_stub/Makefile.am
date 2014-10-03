@@ -1,0 +1,48 @@
+## Copyright (c) 2013 Comcast. All rights reserved.
+
+ACLOCAL_AMFLAGS = -Im4 --install
+
+AM_CPPFLAGS = ${COPTS} -fPIC -DDEBUG_LEVEL_TRACE
+
+INCLUDES = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
+           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmbus/ \
+           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/power/ \
+           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/ir \
+           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/mfr \
+           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs-hal/ \
+           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/sysmgr/ \
+           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/disk/ \
+           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
+           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
+           -I./include -I${top_srcdir}/agent/include
+
+
+AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmbus/ \
+              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/ir \
+              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/mfr \
+              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs-hal/ \
+              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/power \
+              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/sysmgr/ \
+              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/disk/ \
+              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
+              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
+              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/curl \
+              -I./include -I${top_srcdir}/agent/include
+
+
+lib_LTLIBRARIES = libiarmbusstub.la
+libiarmbusstub_la_SOURCES = src/IARMBUSStub.cpp
+libiarmbusstub_la_LIBADD = -lglib-2.0 -lIARMBus -ldirect -lfusion -ldbus-1 -lz
+libiarmbusstub_la_includedir = ${includedir}
+libiarmbusstub_la_include_HEADERS = ./include/IARMBUSAgent.h
+
+bin_PROGRAMS = tst_iarmbus Test_Event_Mgr
+tst_iarmbusdir = ${bindir}
+tst_iarmbus_SOURCES = src/tst_iarmbus.c
+tst_iarmbus_LDADD = -lIARMBus -lz -lglib-2.0
+tst_iarmbus_includedir = ${includedir}
+
+Test_Event_Mgrdir = ${bindir}
+Test_Event_Mgr_SOURCES = src/Test_Event_Mgr.c
+Test_Event_Mgr_LDADD = -lIARMBus -lz -lglib-2.0
+Test_Event_Mgr_includedir = ${includedir}
