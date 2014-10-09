@@ -325,10 +325,10 @@ bool DeviceSettingsAgent::FP_setBlink(IN const Json::Value& req, OUT Json::Value
 	char *blinkIteration = (char*)malloc(sizeof(char)*20);
 	memset(blinkIteration,'\0', (sizeof(char)*20));
 	/*Creating object for blink*/
-	device::FrontPanelIndicator::Blink p(interval,iteration);
 	try
 	{
 		/*calling setBlink*/
+		device::FrontPanelIndicator::Blink p(interval,iteration);
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling setBlink\n");
 		device::FrontPanelConfig::getInstance().getIndicator(indicator_name).setBlink(p);
 		/*calling getBlink*/
@@ -1546,7 +1546,7 @@ bool DeviceSettingsAgent::VOPTYPE_HDCPSupport(IN const Json::Value& req, OUT Jso
 		/*getting instance for video ports*/	
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portID);
 		/*Enable HDCP support */
-		vPort.getType().getInstance(portID).enabledHDCP();	
+		vPort.getType().getInstance(dsVIDEOPORT_TYPE_HDMI).enabledHDCP();	
 		/*checking HDCP status*/
 		HDCPEnable=vPort.getType().isHDTPSupported();
 		if(HDCPEnable==true)

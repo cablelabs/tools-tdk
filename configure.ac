@@ -126,5 +126,7 @@ AC_CONFIG_FILES([Makefile
          Mediaframework_stub/Makefile
          MediaStreamer_stub/Makefile
          OpenSourceComponent_Stub/Makefile
-         TR069_stub/Makefile])
+         TR069_stub/Makefile
+         TRM_stub/Makefile
+         tdkRmfApp/Makefile])
 AC_OUTPUT
