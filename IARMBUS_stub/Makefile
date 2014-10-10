@@ -6,7 +6,7 @@ default: build
 #
 SRC_DIR   := ./src/
 OBJDIR	  := obj
-COPTS     := -c 
+COPTS     := -c -g -Wall -DGCC4_XXX -Wno-format -Wunused
 APP_EXE   := tst_iarmbus
 DUMMY_TESTAPP_EXE   := Test_Event_Mgr 
 
@@ -71,7 +71,7 @@ OBJS       =$(OBJDIR)/*.o
 #
 $(OBJS): $(SOURCES) 
 	mkdir -p $(OBJDIR)
-	$(CROSSCOMPILE)$(CC) -Wall $(INCLUDES) -fPIC $(COPTS) $^
+	$(CROSSCOMPILE)$(CC) $(INCLUDES) -fPIC $(COPTS) $^
 	mv *.o $(OBJDIR)
 #
 # Build the library from intermediate files

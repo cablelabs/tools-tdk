@@ -6,7 +6,7 @@ default: build
 #
 SRC_DIR   := ./src/
 OBJDIR	  := obj
-COPTS     += -c 
+COPTS     += -c -g -Wall -DGCC4_XXX -Wno-format -Wunused
 
 
 LDOPTS    +=    -L $(IMAGE_PATH)/usr/local/lib \

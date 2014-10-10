@@ -13,8 +13,8 @@
 <%@ page import="com.comcast.rdk.Execution" %>
 	<g:if test="${executionInstanceList}">
 		<div id="list-executor" class="content scaffold-list" role="main">		
-			<div id="historytable" style="width:99%; overflow: auto;">		
-			<table>
+			<div id="historytable" style="width:98%; overflow: auto;">		
+			<table style="table-layout: auto; overflow: scroll;">
 				<thead>
 					<tr>
 						<th colspan="7" align="center" style="width:50%;" ><h1>Execution History</h1></th>
@@ -24,7 +24,7 @@
 						
 						<g:sortableColumn style="width:20%;" property="name" title="${message(code: 'execution.name.label', default: 'Execution Name')}" />
 						
-						<th width="30%">Script/ScriptGroup</th>
+						<th width="30%" style="max-width: 330px;">Script/ScriptGroup</th>
 						
 						<g:sortableColumn style="width:14%;" property="device" title="${message(code: 'execution.device.label', default: 'Device')}" />
 					
@@ -50,7 +50,15 @@
 						</g:else>
 						 </td>
 						<td align="center" width="20%">${fieldValue(bean: executionInstance, field: "name")}</td>
-						<td align="center" width="30%">
+							 <g:if test="${executionInstance?.script}">
+								 <g:set var="titlevar" value="${fieldValue(bean: executionInstance, field: "script")}"/>
+								
+							</g:if>
+							<g:else>
+								 <g:set var="titlevar" value="${fieldValue(bean: executionInstance, field: "scriptGroup")}"/>
+							</g:else>	
+							
+						<td align="center" width="30%" style="max-width: 330px;overflow: hidden;"title="${titlevar}" >
 							<g:if test="${executionInstance?.script}">
 								${fieldValue(bean: executionInstance, field: "script")}
 							</g:if>

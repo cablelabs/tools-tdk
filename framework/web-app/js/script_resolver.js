@@ -96,7 +96,7 @@ function addScripts() {
 			var lie = document.getElementById(array[i]).innerHTML;
 			$("#sortable").append(
 					'<li id = "sg' + array[i]
-							+ 'end" class="ui-state-default">' + lie + '</li>');
+							+ 'end" title = '+lie+'class="ui-state-default">' + lie + '</li>');
 			$("#" + array[i]).remove()
 		}
 		refreshElements();
@@ -122,7 +122,7 @@ function removeScripts(){
 		var data = lie.innerHTML;
 		var index = data.lastIndexOf("</div>");
 		data = data.substring(index + 6, data.length);
-			$("#selectable").append('<li id = "'+newId+'" class="ui-state-default">' + data + '</li>');
+			$("#selectable").append('<li id = "'+newId+'" title = '+data+'class="ui-state-default">' + data + '</li>');
 			$("#"+array[i]).remove();
 	}
 	
@@ -219,6 +219,7 @@ function refreshElements(){
 //updateScriptGrp
 
 function updateSG() {
+	
 	var sortable = document.getElementById("sortable");
 
 	var dataList = ""
@@ -227,7 +228,9 @@ function updateSG() {
 		var elmnt = $(this).attr('id');
 		elmnt = elmnt.replace("sgscript-","");
 		elmnt = elmnt.replace("end","");
-		dataList = dataList +","+ elmnt;
+		if(!dataList.contains(","+elmnt+",")){
+			dataList = dataList +","+ elmnt;
+		}
 	});
 
 	var name = document.getElementById("scriptName").value;
@@ -369,17 +372,21 @@ function isScriptExist(scriptName){
 
 function showSkipRemarks(me){
 	if (me.checked) {
-		$("#skipRemarks").show();
-		$("#skipReason").show();
-		$("#skipRemarks123").hide();
-		$("#skipReason123").hide();
+		$("#skipRemarks123").show();
+		$("#skipReason123").show();
+		$("#remarks").show();
 	} else {
-		$("#skipRemarks").hide();
-		$("#skipReason").hide();
 		$("#remarks").val('');
+		$("#remarks").hide();
 		$("#skipRemarks123").hide();
 		$("#skipReason123").hide();
 	}
 	$("#skipReason").val("");
+}
+
+function showSkipRemarksLabel(){
+	
+	$("#skipRemarks123").hide();
+	$("#skipReason123").hide();
 }
 
