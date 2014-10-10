@@ -105,7 +105,10 @@ class ScriptgroupService {
 			scriptGrpInstance = new ScriptGroup()
 			scriptGrpInstance.name = groupName
 		}
-		scriptGrpInstance.addToScriptsList(scriptInstance)
+		if(!scriptGrpInstance?.scriptsList?.contains(scriptInstance)){
+			scriptGrpInstance.addToScriptsList(scriptInstance)
+		}
+		
 		scriptGrpInstance.save(flush:true)
 	}
 	
@@ -209,11 +212,16 @@ class ScriptgroupService {
      * or the script is present in a script group which is selected to execute
      */
    
-    public boolean checkScriptStatus(final Script script){
+    public boolean checkScriptStatus(final Script scriptOrig){
+		Script script
+		Script.withTransaction {
+			script = Script.findById(scriptOrig?.id)
+		}
         
         boolean scriptInUse = false
         boolean isAllocatedScriptGrp = false
-        if(script.status.equals( Status.ALLOCATED.toString() )){
+        try {
+			 if(script.status.equals( Status.ALLOCATED.toString() )){
             scriptInUse = true
         }
         else{           
@@ -240,14 +248,24 @@ class ScriptgroupService {
                     scriptsList { id == script.id }
                 }
                 def scriptInstance
-                scriptGroups?.each{ scriptGrp ->
-                    scriptInstance = scriptGrp.scriptsList.find { it.id == script.id }
-                    if(scriptInstance){
-                        scriptGrp.removeFromScriptsList(scriptInstance)
-                    }
-                }
+					scriptGroups?.each{ scriptGrp ->
+						ScriptGroup.withTransaction {
+							scriptInstance = scriptGrp?.scriptsList?.find { it.id == script.id }
+							if(scriptInstance){
+								scriptGrp.removeFromScriptsList(scriptInstance)
+							}
+							def scriptInstanceList = scriptGrp?.scriptsList?.findAll { it.id == script.id }
+							if(scriptInstanceList?.size() > 0){
+								if(scriptInstance){
+									scriptGrp?.scriptsList?.removeAll(scriptInstance);
+								}
+							}
+						}
+					}
             }                       
         }
+		} catch (Exception e) {
+		}
         return scriptInUse
     }
  

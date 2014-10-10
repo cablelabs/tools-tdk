@@ -70,24 +70,32 @@
 			<td><g:checkBox id="skipStatus" name="skipStatus" checked="${script.skip}"  onclick="showSkipRemarks(this)" />&nbsp;Skip
 					Execution</td>
 		</tr>
+		
+		
 		<g:if test="${script.skip}" >	
-		<tr>
+		<tr >
 			<td style="width: 15%;">
 			
 			<span id="skipReason123">Reason For Skipping</span></td>
-			<td><span id="skipRemarks123"><g:textArea name="remarks123" style="width:465px;height:20px;"
+			<td><span id="skipRemarks123"><g:textArea name="remarks" style="width:465px;height:20px;"
 						value="${script.remarks}">
 				</g:textArea></span>
 				
 				</td>
-		</tr></g:if>
-		
-		<tr>
-			<td style="width: 15%;"><span id="skipReason" style="display:none;">Reason For Skipping</span></td>
-			<td><span id="skipRemarks" style="display:none;" style="display:none;"><g:textArea name="remarks" style="width:465px;height:20px;"
-					value="${script.remarks}">
-				</g:textArea></span></td>
 		</tr>
+		</g:if>
+		<g:else>
+			<tr >
+			<td style="width: 15%;">
+			
+			<span id="skipReason123" style="display: none">Reason For Skipping</span></td>
+			<td><span id="skipRemarks123" tyle="display: none"><g:textArea name="remarks" style="width:465px;height:20px; display: none"
+						value="${script.remarks}">
+				</g:textArea></span>
+				
+				</td>
+		</tr>
+		</g:else>
 		
 		
 		<tr>

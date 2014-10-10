@@ -198,7 +198,8 @@ class ScriptGroupController {
 				String token = st.nextToken()
 				if(token && token.size()>0){
 				Script sct = Script.findById(token)
-				if(sct){
+				
+				if(sct && !scriptGroupInstance.scriptsList.contains(sct)){
 					scriptGroupInstance.addToScriptsList(sct)
 				}
 				}
@@ -453,9 +454,12 @@ class ScriptGroupController {
         }
         else{    		
     		try {
+				Script.withTransaction {
+				script = Script.findById(params?.id)
     			script.delete(flush: true)
     			flash.message = "Deleted the script '${script.name}'"
     			render("success")
+				}
     		}
     		catch (DataIntegrityViolationException e) {
     			flash.message = "Can't Delete. Scripts may be used in Script Group"
