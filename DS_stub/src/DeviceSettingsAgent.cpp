@@ -184,7 +184,7 @@ bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::
             {
 		std::string indicator_name=req["indicator_name"].asCString();
                 if (false == getOnly) {
-                    DEBUG_PRINT(DEBUG_LOG,"\nCalling setBrightness\n");
+                    DEBUG_PRINT(DEBUG_LOG,"\nCalling setBrightness with value(%d)\n", setVal);
                     device::FrontPanelIndicator::getInstance(indicator_name).setBrightness(setVal);
                 }
 
@@ -195,9 +195,9 @@ bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::
 	    else // frontPanelTextDisplay
 	    {
 		if (false == getOnly) {
-		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setText\n");
+		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setText with value (%s)\n", message.c_str());
 		    device::FrontPanelConfig::getInstance().getTextDisplay("Text").setText(message);
-		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setTextBrightness\n");
+		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setTextBrightness with value(%d)\n", setVal);
 		    device::FrontPanelConfig::getInstance().getTextDisplay("Text").setTextBrightness(setVal);
 		}
 
@@ -205,10 +205,18 @@ bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::
 		getVal = device::FrontPanelTextDisplay::getInstance("Text").getTextBrightness();
 	    }
 
-	    DEBUG_PRINT(DEBUG_LOG,"\nBrightness:%d\n",getVal);
-	    sprintf(brightnessDetails,"Brightness:%d",getVal);
+	    DEBUG_PRINT(DEBUG_LOG,"\nBrightness: get value(%d)\n", getVal);
+	    sprintf(brightnessDetails,"%d",getVal);
 	    response["details"]= brightnessDetails;
-	    response["result"]= "SUCCESS";
+
+            if ((false == getOnly) && (setVal != getVal))
+	    {
+                response["result"]= "FAILURE";
+            }
+	    else
+            {
+		response["result"]= "SUCCESS";
+	    }
 	}
 	catch(...)
 	{
@@ -769,15 +777,13 @@ bool DeviceSettingsAgent::HOST_setPowerMode(IN const Json::Value& req, OUT Json:
 bool DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n VOP_setResolution  ---->Entry\n");
-	char resolutionDetails1[30] ="Resolution:";
-	char *resolutionDetails = (char*)malloc(sizeof(char)*20);
-	memset(resolutionDetails,'\0', (sizeof(char)*20));
+	char getValue[30] = {'\0'};
 	if(&req["port_name"]==NULL || &req["resolution"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
 	std::string portName=req["port_name"].asCString();
-	char *resolution = (char*)req["resolution"].asCString();
+	std::string setValue=req["resolution"].asCString();
 	bool getOnly = req["get_only"].asInt();
 
 	try
@@ -785,17 +791,23 @@ bool DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json:
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
 		if (false == getOnly) {
 		    /*setting VOP resoultion*/
-		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setResolution\n");
-		    vPort.setResolution(resolution);
+		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setResolution with value (%s)\n", setValue.c_str());
+		    vPort.setResolution(setValue.c_str());
 		}
 		/*getting VOP resoultion*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getResolution\n");
 		/*Need to check the return string value with test apps*/
-		strcpy(resolution ,(char*)vPort.getResolution().getName().c_str());
-		sprintf(resolutionDetails,"%s",resolution);
-		strcat(resolutionDetails1,resolutionDetails);
-		response["details"]= resolutionDetails1; 
-		response["result"]= "SUCCESS"; 
+		sprintf(getValue,"%s",(char*)vPort.getResolution().getName().c_str());
+		response["details"]= getValue;
+		DEBUG_PRINT(DEBUG_LOG,"\nResolution get value(%s)\n", getValue);
+		if ((false == getOnly) && strncmp(setValue.c_str(), getValue, strlen(setValue.c_str())) != 0)
+		{
+			response["result"]= "FAILURE";
+		}
+		else
+		{
+			response["result"]= "SUCCESS";
+		}
 	}
 	catch(...)
 	{
@@ -803,7 +815,6 @@ bool DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json:
 		response["details"]= "No Details";
 		response["result"]= "FAILURE";
 	}
-	free(resolutionDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\n setResolution ---->Exit\n");
 	return TEST_SUCCESS;
 }
