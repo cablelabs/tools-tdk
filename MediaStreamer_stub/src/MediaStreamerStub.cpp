@@ -744,30 +744,63 @@ bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value&
 	}
 	curl_easy_cleanup(curl);
 
-	std::ifstream file("rmf.json");
-	file>>root;
-	errorResponse=root["errorCode"].asInt();
-
-	response["details"] = root["videoStreamingURL"].asString();
-
-	DEBUG_PRINT(DEBUG_LOG,"\nJSON Response from MediaStreamer :-\n");
-	DEBUG_PRINT(DEBUG_LOG,"\nErrorCode         : %d\n",root["errorCode"].asInt());
-	DEBUG_PRINT(DEBUG_LOG,"\nErrorDescription  : %s \n",root["errorDescription"].asCString());
-	DEBUG_PRINT(DEBUG_LOG,"\nVideoStreamingURL : %s\n",root["videoStreamingURL"].asCString());
-
-	if(!errorResponse)
+	std::ifstream file;
+	file.open("rmf.json");
+	std::string temp;
+	while(!file.eof()) 
 	{
-		response["result"] = "SUCCESS";
-		response["details"] = root["videoStreamingURL"].asCString();
-	}
-	else
-	{
-		//Filling json response with FAILURE status and error message
-		response["result"] = "FAILURE";
-		response["details"] = "Failed to do Curl Request";
+		getline(file,temp);
+		printf("\ntemp = %s\n",temp.c_str());
+		if(temp.find("NOT FOUND",0)!= string::npos)
+		{
+			response["result"] = "FAILURE";
+			response["details"] = temp;
+			break;
+		}	
+		else if(temp.find("General Error",0)!= string::npos)
+		{
+			file.close();
+			stringstream strStream;
+			file.open("rmf.json");
+			strStream << file.rdbuf();
+			temp = strStream.str();
+			response["result"] = "FAILURE";
+			response["details"] = temp;
+			break;
+		}
+		else if(temp.find("videoStreamingURL",0)!= string::npos)
+		{
+			file.close();
+			file.open("rmf.json");
+			file>>root;
+			errorResponse=root["errorCode"].asInt();
 
-	}
+			response["details"] = root["videoStreamingURL"].asString();
 
+			DEBUG_PRINT(DEBUG_LOG,"\nJSON Response from MediaStreamer :-\n");
+			DEBUG_PRINT(DEBUG_LOG,"\nErrorCode         : %d\n",root["errorCode"].asInt());
+			DEBUG_PRINT(DEBUG_LOG,"\nErrorDescription  : %s \n",root["errorDescription"].asCString());
+			DEBUG_PRINT(DEBUG_LOG,"\nVideoStreamingURL : %s\n",root["videoStreamingURL"].asCString());
+
+			if(!errorResponse)
+			{
+				response["result"] = "SUCCESS";
+				response["details"] = root["videoStreamingURL"].asCString();
+			}
+			else
+			{
+				//Filling json response with FAILURE status and error message
+				response["result"] = "FAILURE";
+				response["details"] = "Failed to do Curl Request";
+			}
+			break;
+		}
+		else
+		{
+			continue;
+		}
+	}
+	file.close();
 	return true;
 	DEBUG_PRINT(DEBUG_TRACE, "RMFStreamerAgent_InterfaceTesting ---> Exit\n");
 	return TEST_SUCCESS;

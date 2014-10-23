@@ -916,6 +916,7 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
     std::string strLoadLibraryDetails;
     std::fstream o_RebootConfigFile;
     char szLibName [LIB_NAME_SIZE];
+    int nReturnValue = RETURN_SUCCESS;
 
     const char* pszExecId = NULL;
     const char* pszResultId = NULL;
@@ -1010,15 +1011,8 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
     /* Setting the crash status after reboot */
     SetCrashStatus (pszExecId, pszDeviceId, pszTestCaseId, pszExecDevId, pszResultId);
 
-    /* Delete the configuration file */
-    if (remove (strFilePath.c_str()) != 0 )
-    {
-        DEBUG_PRINT (DEBUG_ERROR, "\n\nAlert : Error in deleting %s \n", SHOW_DEFINE(REBOOT_CONFIG_FILE) );
-    }
-    else
-    {
-        DEBUG_PRINT (DEBUG_TRACE, "\n %s successfully deleted\n\n\n" SHOW_DEFINE(REBOOT_CONFIG_FILE) ); 
-    }
+    /* Deleting configuration file */
+    nReturnValue = remove (strFilePath.c_str());
 		
     return bRet;
 	

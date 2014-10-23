@@ -93,6 +93,8 @@ class MediaframeworkAgent : public RDKTestStubInterface
 		
 		/*Optimised Code */
 #if 1
+		bool MediaframeworkAgent_CheckAudioVideoStatus(IN const Json::Value& req, OUT Json::Value& response);
+
 		bool MediaframeworkAgent_RmfElementCreateInstance(IN const Json::Value& req, OUT Json::Value& response);
 		bool MediaframeworkAgent_RmfElementRemoveInstance(IN const Json::Value& req, OUT Json::Value& response);
 		bool MediaframeworkAgent_RmfElementInit(IN const Json::Value& req, OUT Json::Value& response);

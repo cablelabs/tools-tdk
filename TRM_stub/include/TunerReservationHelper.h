@@ -16,14 +16,13 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
-
 #include <uuid/uuid.h>
+#include <glib.h>
+
 #include <list>
 #include <vector>
 #include <map>
-#include <glib.h>
 #include <string>
-#include <unistd.h>
 
 #include "rmf_osal_thread.h"
 #include "rmf_osal_util.h"
@@ -46,20 +45,6 @@ enum Type {
     UNKNOWN,
 };
 
-/*Application shall extend required methods to get events from TRH*/
-class TunerReservationEventListener
-{
-public:
-    virtual void reserveSuccess() {};
-    virtual void reserveFailed() {};
-    virtual void releaseReservationSuccess() {};
-    virtual void releaseReservationFailed() {};
-    virtual void tunerReleased() {};
-    virtual void cancelledRecording() {};
-    virtual void cancelledLive() {};
-    virtual ~TunerReservationEventListener() {};
-};
-
 class TunerReservationHelperImpl
 {
 public:
@@ -68,26 +53,28 @@ public:
     bool getAllReservations(void);
     bool getVersion(void);
     bool validateTunerReservation(const char* device);
-    bool reserveTunerForRecord( const char* device, string recordingId, const char* locator, uint64_t startTime=0, uint64_t duration=0);
+    bool reserveTunerForRecord( const char* device, string recordingId, const char* locator, uint64_t startTime=0, uint64_t duration=0, bool hot=false);
     bool reserveTunerForLive( const char* device, const char* locator, uint64_t startTime=0, uint64_t duration=0);
     bool releaseTunerReservation(const char* device);
-    bool cancelledRecording(); /*This function shall be called by the application once cancelRecording event is handled*/
-    bool cancelledLive(const char* locator);
+    bool cancelledRecording(string reservationToken); /*This function shall be called by the application once cancelRecording event is handled*/
+    bool cancelRecording(string locator);
+    bool cancelledLive(string reservationToken, string locator); /*This function shall be called by the application once cancelRecording event is handled*/
+    bool cancelLive(string locator);
 
     static void init();
 
-    TunerReservationHelperImpl(TunerReservationEventListener* listener);
+    TunerReservationHelperImpl();
     ~TunerReservationHelperImpl();
     const char* getId();
     const std::string& getToken();
     void setToken( const std::string& token);
-    TunerReservationEventListener* getEventListener();
     void notifyResrvResponse(bool success);
+
+    static void addToReservationDb(TRM::TunerReservation resv);
+    static void removeFromReservationDb(const string token);
 
 private:
     TunerReservationHelperImpl* impl;
-    bool mRunning;
-    TunerReservationEventListener* eventListener;
     static bool inited;
     char guid[64];
     std::string token;
@@ -95,7 +82,8 @@ private:
     GCond* tunerStopCond;
     GMutex* tunerStopMutex;
     bool reservationSuccess;
-    bool resrvResponseRecieved;
+    bool resrvResponseReceived;
+    static std::map<int,TRM::TunerReservation> tunerReservationDb;
 };
 
 class RecorderMessageProcessor : public TRM::MessageProcessor
@@ -107,12 +95,22 @@ public :
     void operator() (const TRM::CancelLive &msg);
     void operator() (const TRM::NotifyTunerReservationRelease &msg);
     void operator() (const TRM::ReleaseTunerReservationResponse &msg);
+    void operator() (const TRM::ValidateTunerReservationResponse &msg);
+    void operator() (const TRM::CancelRecordingResponse &msg);
+    void operator() (const TRM::CancelLiveResponse &msg);
+    void operator() (const TRM::GetAllTunerIdsResponse &msg);
+    void operator() (const TRM::GetAllTunerStatesResponse &msg);
+    void operator() (const TRM::GetAllReservationsResponse &msg);
+    void operator() (const TRM::GetVersionResponse &msg);
+    void operator() (const TRM::NotifyTunerReservationUpdate &msg);
+    void operator() (const TRM::NotifyTunerReservationConflicts &msg);
+    void operator() (const TRM::NotifyTunerStatesUpdate &msg);
+    void operator() (const TRM::NotifyTunerPretune &msg);
 
     TunerReservationHelperImpl* getTRH( const TRM::MessageBase &msg);
     TunerReservationHelperImpl* getTRH( const string &token);
 };
 
-/*Application shall extend required methods to get events from TRH*/
 class TunerReservationHelper
 {
 public:
@@ -121,31 +119,17 @@ public:
     bool getAllReservations();
     bool getVersion();
     bool validateTunerReservation(const char* device);
-
-    bool reserveTunerForRecord( const char* device, string recordingId, const char* locator, uint64_t startTime=0, uint64_t duration=0);
+    bool reserveTunerForRecord( const char* device, string recordingId, const char* locator, uint64_t startTime=0, uint64_t duration=0, bool hot=false);
     bool reserveTunerForLive( const char* device, const char* locator, uint64_t startTime=0, uint64_t duration=0);
     bool releaseTunerReservation(const char* device);
-    /*This function shall be called by the application once cancelRecording event is handled*/
-    bool cancelledRecording();
-    bool cancelledLive(const char* locator);
+    bool cancelRecording(string locator);
+    bool cancelLive(string locator);
 
     static void init();
 
-    TunerReservationHelper(TunerReservationEventListener* listener);
+    TunerReservationHelper();
     ~TunerReservationHelper();
 private:
     TunerReservationHelperImpl* impl;
-};
-
-class TRHListenerImpl : public TunerReservationEventListener
-{
-public:
-    void reserveSuccess();
-    void reserveFailed();
-    void tunerReleased();
-    void cancelledRecording();
-    void cancelledLive();
-    void releaseReservationSuccess();
-    void releaseReservationFailed();
 };
 #endif

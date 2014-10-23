@@ -315,6 +315,10 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 
 #if 1
 /*Optimised Code*/	
+
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus,"TestMgr_CheckAudioVideoStatus");
+
+
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance,"TestMgr_RmfElementCreateInstance");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance,"TestMgr_RmfElementRemoveInstance");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElementInit,"TestMgr_RmfElementInit");
@@ -371,6 +375,53 @@ static RMFQAMSrc *qamSrcs[7];
 static rmfPlatform *mPlatform = NULL;
 static void* lowSrcElement = NULL;
 
+
+bool MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckAudioVideoStatus -->Entry\n");
+        char buffer[128];
+	string script = req["audioVideoStatus"].asCString();	
+        string result = "";
+	FILE* pipe = NULL;
+
+	cout<<"Checking for "<<script<<endl;
+	pipe = popen(script.c_str(), "r");
+
+        if (!pipe)
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "Error in opening pipe \n");
+        	response["result"] = "FAILURE";
+               	response["details"] = "Error in opening pipe";
+
+                return TEST_FAILURE;
+        }
+        while(!feof(pipe)) {
+                if(fgets(buffer, 128, pipe) != NULL)
+                        result += buffer;
+        }
+        pclose(pipe);
+        DEBUG_PRINT(DEBUG_TRACE, "Script Output: %s \n", script.c_str());
+        DEBUG_PRINT(DEBUG_TRACE, "Script Result: %s\n", result.c_str());
+        std::cout << "Status: "<<result <<std::endl;
+
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckAudoVideoStatus -->Exit\n");
+
+        if (result.find("SUCCESS") != string::npos)
+	{
+        	response["result"] = "SUCCESS";
+               	response["details"] = "Audio/Video playing SUCCESS";
+
+                return TEST_SUCCESS;
+	}
+        else
+	{
+        	response["result"] = "FAILURE";
+               	response["details"] = "Audio/Video playing FAILURE";
+
+                return TEST_FAILURE;	
+	}
+}
 
 bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -5336,6 +5387,8 @@ bool MediaframeworkAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptr
 
 /*Optimised Code*/
 #if 1
+	ptrAgentObj->UnregisterMethod("TestMgr_CheckAudioVideoStatus");
+
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElementCreateInstance");
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElementRemoveInstance");
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElementInit");
