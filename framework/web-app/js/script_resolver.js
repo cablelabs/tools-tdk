@@ -42,7 +42,7 @@ $(document).ready(function() {
 			}
 		}
 	});
-		
+	
 	var decider_id = $("#decider").val();
 	
 	$("#scriptgrpbrowser").treeview({
@@ -254,33 +254,53 @@ function createSG() {
 	$.get('createScriptGrp', {idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data); });
 }
 function createScriptForm() {
+	checkAnyEditingScript();
 	$.get('createScript', function(data) { $("#responseDiv").html(data); });
 }
 
 function editScript(id , flag ) {
 	hideSearchoptions();
+	checkAnyEditingScript();
 	$.get('editScript', {id: id , flag : flag}, function(data) { $("#responseDiv").html(data); });
 
 }
 
-function showScript(id, flag) {
-	$.get('editScript', {id: id , flag : flag}, function(data) { $("#responseDiv").html(data); });
+function checkAnyEditingScript(){
+	var scriptName = $("#scriptName").val();
+	if(scriptName && scriptName != "undefined"){
+		clearLock(scriptName);
+	}
 }
 
-function removeScript(id){		
+
+function showScript(idVal, flag) {
+	checkAnyEditingScript();
+	$.get('editScript', {id: idVal , flag : flag}, function(data) { $("#responseDiv").html(data); });
+}
+
+function removeScript(id){	
+	checkAnyEditingScript();
+	$("#currentScriptId").val("");
 	$.get('deleteScript', {id: id}, function(data) { document.location.reload();  });
 }
 
 function createScriptGrpForm() {	
+	checkAnyEditingScript();
 	$.get('create', function(data) { $("#responseDiv").html(data); });
 }
 
 function editScriptGroup(id) {
 	hideAllSearchoptions();
+	checkAnyEditingScript();
 	$.get('edit', {id: id}, function(data) { $("#responseDiv").html(data); });
 }
 
+function exportScripts() {
+	$.get('exportScriptAsXML', function(data) { alert("Script exporting is done.");});
+}
+
 function removeScriptGroup(id){	
+	
 	$.get('deleteScriptGrp', {id: id}, function(data) { document.location.reload();  });
 }
 
@@ -357,6 +377,19 @@ function updateScriptList(scriptName){
 	});
 }
 
+
+function updateScriptListWithScriptName(scriptName){
+	$.get('fetchScriptWithScriptName', {scriptName: scriptName}, function(data) {
+		if(data!=""){
+			if($("#isScriptExist").val()==""){
+				$("#currentScriptId").val(data);
+				setTimeout(function(){location.reload();editScript()},1000);
+			}
+			$("#isScriptExist").val("");
+		}
+		$("#scriptMessageDiv").show();
+	});
+}
 /**
  * Function to check whether script with same name exist or not.
  * @param scriptName
@@ -382,6 +415,35 @@ function showSkipRemarks(me){
 		$("#skipReason123").hide();
 	}
 	$("#skipReason").val("");
+}
+
+function enableEdit(me,scriptName,session){
+	
+	$("#scriptName").val(scriptName);
+	
+	$.get('addEditLock', {scriptName: scriptName,session:session}, function(data) {
+		if(data){
+			if(data == "false"){
+				alert("Script is already modifying by another user !!!");
+				$("#warningMsg").html("Script is already modifying by another user !!!");
+			}
+		}
+	});
+	
+	$("#save").show();
+	$("#cancel").show();
+	$("#editButton").hide();
+}
+
+function disableEdit(me,scriptName){
+	$.get('removeEditLock', {scriptName: scriptName}, function(data) {
+	});
+	
+}
+
+function clearLock(scriptName){
+	$.get('removeEditLock', {scriptName: scriptName}, function(data) {
+	});
 }
 
 function showSkipRemarksLabel(){

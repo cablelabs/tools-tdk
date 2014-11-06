@@ -175,9 +175,9 @@
 					<br>
 					<label>All Scripts</label> <br>
 					<ul class= "selectable" id="selectable" name ="selectable"  title="selectable" style="max-height : 454px; max-width : 250px; overflow: auto; ">
-						<g:each in='${com.comcast.rdk.Script.list()}' var="script">
-							<li id = "script-${script.id}" class="ui-state-default">
-								${script.name} 
+						<g:each in='${scriptInstanceList}' var="script">
+							<li id = "script-${script}" class="ui-state-default">
+								${script} 
 							</li>
 						</g:each>
 					</ul>
@@ -193,9 +193,9 @@
 				<br>
 					<ul name ="sortable" id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 250px; overflow: auto;">
 						<g:if test="${scriptGroupInstance}">
-						<g:each in='${scriptGroupInstance.scriptsList}' var="script">
-							<li class="ui-state-default">
-								${script.name}
+						<g:each in='${scriptGroupInstance.scriptList}' var="script">
+							<li class="ui-state-default" title="${script.scriptName}">
+								${script.scriptName}
 							</li>
 						</g:each>
 						</g:if>

@@ -123,12 +123,11 @@ function makeTestEditable(id) {
 
 function makeConfEditable(id) {	
 	$.get('getEditableTest', {id: id}, function(data) { 
-		alert("callin ..... makeConfEditable");
 		$("#responseDiv").html(data); });
 }
 
 function removeProperty(id){
-	$.get('deleteTest', {id: id}, function(data) { document.location.reload(); });
+	$.get('deleteTest', {id: id}, function(data) {document.location.reload(); });
 }
 
 

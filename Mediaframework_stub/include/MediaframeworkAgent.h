@@ -73,7 +73,7 @@
 #define POST_REQUISITE_FILE "scripts/mediaframework_test_module_post-script.sh"
 #define QAM_PRE_REQUISITE_FILE "scripts/mediaframework_qamsrc_test_module_pre-script.sh"
 #define QAM_PRE_REQUISITE_LOG_PATH "logs/Mediaframework_qamsrc_testmodule_postreq_details.log"
-
+#define FETCH_STREAMING_INT_NAME "streaming_interface_file"
 using namespace std;
 
 string g_tdkPath = getenv("TDK_PATH");
@@ -94,7 +94,9 @@ class MediaframeworkAgent : public RDKTestStubInterface
 		/*Optimised Code */
 #if 1
 		bool MediaframeworkAgent_CheckAudioVideoStatus(IN const Json::Value& req, OUT Json::Value& response);
-
+		bool MediaframeworkAgent_CheckRmfStreamerCrash(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_ClearLogFile(IN const Json::Value& req, OUT Json::Value& response);
+		
 		bool MediaframeworkAgent_RmfElementCreateInstance(IN const Json::Value& req, OUT Json::Value& response);
 		bool MediaframeworkAgent_RmfElementRemoveInstance(IN const Json::Value& req, OUT Json::Value& response);
 		bool MediaframeworkAgent_RmfElementInit(IN const Json::Value& req, OUT Json::Value& response);

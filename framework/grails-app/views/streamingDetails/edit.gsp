@@ -10,6 +10,7 @@
   ============================================================================
 -->
 <%@ page import="com.comcast.rdk.StreamingDetails" %>
+<%@ page import="com.comcast.rdk.RadioStreamingDetails" %>
 				
 <div id="edit-streamingDetails" class="content scaffold-edit" role="main">
 	<g:set var="entityName" value="${message(code: 'streamingDetails.label', default: 'StreamingDetails')}" />

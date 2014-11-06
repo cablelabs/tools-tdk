@@ -42,7 +42,7 @@
 				<g:each in="${primitiveTestInstanceList}" status="i" var="primitiveTestInstance">
 					<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
 					
-						<td><g:link action="show" id="${primitiveTestInstance.id}">${fieldValue(bean: primitiveTestInstance, field: "module")}</g:link></td>
+						<td><g:link action="show" id="${primitiveTestInstance.name}">${fieldValue(bean: primitiveTestInstance, field: "module")}</g:link></td>
 					
 					</tr>
 				</g:each>

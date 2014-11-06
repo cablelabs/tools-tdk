@@ -94,7 +94,7 @@
 											<ul id ="module_">
 												<g:each in="${mapEntry.value}" var="script">
 												<% scriptCount++; %>
-    												<li id="scriptList_${scriptCount}"><span class="file" id="${script.id}"><a href="#" onclick="editScript('${script.id}'); highlightTreeElement('scriptList_', '${scriptCount}', '${scriptInstanceTotal}'); highlightTreeElement('scriptGroupList_', '0', '${totalScripts}'); return false;">${script.name}</a></span></li>
+    												<li id="scriptList_${scriptCount}"><span class="file" id="${mapEntry.key}@${script}"><a href="#"  onclick="editScript('${mapEntry.key}@${script}'); highlightTreeElement('scriptList_', '${scriptCount}', '${scriptInstanceTotal}'); highlightTreeElement('scriptGroupList_', '0', '${totalScripts}'); return false;">${script}</a></span></li>
 												</g:each>
 											</ul>
 										</li>
@@ -114,10 +114,10 @@
 										<g:each in="${scriptGroupInstanceList}" var="scriptGrp">
 											<li class="closed"><span class="folder" id="${scriptGrp.id}"><a href="#" onclick="editScriptGroup('${scriptGrp.id}'); return false;">${scriptGrp.name}</a></span>
 												<ul>
-													<g:each in="${scriptGrp.scriptsList}" var="script">
+													<g:each in="${scriptGrp.scriptList}" var="script">
 													<% scriptGroupCount++; %>
 													<li id="scriptGroupList_${scriptGroupCount}">
-														<span id="${script.id}"><a href="#" onclick="editScript('${script.id}'); highlightTreeElement('scriptList_', '0', '${scriptInstanceTotal}');highlightTreeElement('scriptGroupList_', '${scriptGroupCount}', '${totalScripts}'); return false;">${script.name}</a></span>
+														<span id="${script.moduleName}@${script.scriptName}"><a href="#" onclick="editScript('${script.moduleName}@${script.scriptName}'); highlightTreeElement('scriptList_', '0', '${scriptInstanceTotal}');highlightTreeElement('scriptGroupList_', '${scriptGroupCount}', '${totalScripts}'); return false;">${script.scriptName}</a></span>
 													</li>
 													</g:each>
 												</ul>											
@@ -136,7 +136,7 @@
 						    	<g:form controller="scriptGroup" >
 						    	 <g:textField name="searchName" id="searchId" value=""/>
 						    	 <span class="buttons"><g:submitToRemote class="find" action="searchScript" update="searchResultDiv" value="Search" /></span>
-						    	 <img src="../images/more.png" title="Advanced Search" onclick="displayAdvancedSearch();"></img>						    	
+						    	 <img src="../images/more.png" title="Advanced Search" onclick="displayAdvancedSearch();" style="display:none;"></img>						    	
 						    	</g:form>						
 							</div>
 							<div id="advancedSearch" style="display:none;width: 100%; overflow: auto;">

@@ -32,6 +32,7 @@ class DeviceGroupController {
 	def utilityService
 	
 	private static final String DEVICESTREAM_QUERY = "delete DeviceStream d where d.device = :instance1"
+	private static final String DEVICERADIOSTREAM_QUERY = "delete DeviceRadioStream d where d.device = :instance1"
 	private static final String GATEWAY = "Gateway"
 	
     static ExecutorService executorService = Executors.newCachedThreadPool()
@@ -52,8 +53,8 @@ class DeviceGroupController {
 		 * Invoked from 
 		 */
         if(params?.streamtable) {
-            def result = [url: getApplicationUrl(), streamingDetailsInstanceList: StreamingDetails.list(), streamingDetailsInstanceTotal: StreamingDetails.count()]
-            render view:"streamlist", model:result
+            def result = [url: getApplicationUrl(), streamingDetailsInstanceList: StreamingDetails.list(),radioStreamingDetails : RadioStreamingDetails.findAll(), streamingDetailsInstanceTotal: StreamingDetails.count(), streamingDetailsInstanceTotal: RadioStreamingDetails.count()]
+			 render view:"streamlist", model:result
             return
         }		
 		def groupsInstance = utilityService.getGroup()
@@ -257,7 +258,6 @@ class DeviceGroupController {
      * @return
      */
     def saveDevice() {
-
         if(Device.findByStbName(params?.stbName)){
             flash.message = message(code: 'stbname.already.exists')
 			render(flash.message)
@@ -325,10 +325,18 @@ class DeviceGroupController {
         if (!deviceInstance) {           
             return
         }
-		
+		def blankList = []
         def deviceStream = DeviceStream.findAllByDevice(deviceInstance)
+		def radiodeviceStream = DeviceRadioStream.findAllByDevice(deviceInstance)
+		boolean showBlankRadio = (radiodeviceStream ==null || radiodeviceStream?.size() == 0)
+		if(showBlankRadio){
+			def all = RadioStreamingDetails.findAll()
+			all.each {
+				blankList.add(it)
+			}
+		}
 
-        [url : getApplicationUrl(),deviceInstance: deviceInstance, flag : flag, gateways : devices, deviceStreams : deviceStream, editPage : true, uploadBinaryStatus: deviceInstance.uploadBinaryStatus, id: id]
+        [url : getApplicationUrl(),deviceInstance: deviceInstance, flag : flag, showBlankRadio:showBlankRadio,blankList:blankList,gateways : devices, deviceStreams : deviceStream,radiodeviceStreams:radiodeviceStream, editPage : true, uploadBinaryStatus: deviceInstance.uploadBinaryStatus, id: id]
     }
 
     /**
@@ -379,6 +387,8 @@ class DeviceGroupController {
                     deviceInstance.gatewayIp = params?.gatewayIp
                     deviceInstance.recorderId = ""
                     DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+					DeviceRadioStream.executeUpdate("delete DeviceRadioStream d where d.device = :instance1",[instance1:deviceInstance])
+					
                 }
                 else{
                     deviceInstance.gatewayIp = ""
@@ -391,6 +401,7 @@ class DeviceGroupController {
                         deviceInstance.gatewayIp = params?.gatewayIpedit
                         deviceInstance.recorderId = ""
                         DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+						DeviceRadioStream.executeUpdate("delete DeviceRadioStream d where d.device = :instance1",[instance1:deviceInstance])
                     }
                     else{
                         deviceInstance.gatewayIp = ""
@@ -474,25 +485,40 @@ class DeviceGroupController {
      * @return
      */
     def saveDeviceStream(final def streamIdList, final def ocapIdList, final Device deviceInstance){
-		
 		def deviceStreamList = DeviceStream.findAllByDevice(deviceInstance)		
 		if(deviceStreamList?.size() > 0){
 			DeviceStream.executeUpdate("delete DeviceStream d where d.device = :instance1",[instance1:deviceInstance])
+		}
+		
+		def deviceRadioStreamList = DeviceRadioStream.findAllByDevice(deviceInstance)
+		if(deviceRadioStreamList?.size() > 0){
+			DeviceRadioStream.executeUpdate("delete DeviceRadioStream d where d.device = :instance1",[instance1:deviceInstance])
 		}
 				
         DeviceStream deviceStream
         StreamingDetails streamingDetails
 
-        for(int i = 0; i < streamIdList?.size() ; i++){
-			
-            streamingDetails = StreamingDetails.findByStreamId(streamIdList[i].toString())
-            deviceStream = new DeviceStream()
-            deviceStream.device = deviceInstance
-            deviceStream.stream = streamingDetails
-            deviceStream.ocapId = ocapIdList[i]
-            if(!(deviceStream.save(flush:true))){							
+		for(int i = 0; i < streamIdList?.size() ; i++){
+
+			def streamIdListIToString = streamIdList[i].toString()
+			if(streamIdListIToString.startsWith("R")){
+				def rStreamingDetails = RadioStreamingDetails.findByStreamId(streamIdListIToString)
+				def rDeviceStream = new DeviceRadioStream()
+				rDeviceStream.device = deviceInstance
+				rDeviceStream.stream = rStreamingDetails
+				rDeviceStream.ocapId = ocapIdList[i]
+				if(!(rDeviceStream.save(flush:true))){
+				}
+			}else{
+				streamingDetails = StreamingDetails.findByStreamId(streamIdListIToString)
+				deviceStream = new DeviceStream()
+				deviceStream.device = deviceInstance
+				deviceStream.stream = streamingDetails
+				deviceStream.ocapId = ocapIdList[i]
+				if(!(deviceStream.save(flush:true))){
+				}
 			}
-        }
+		}
     }
 	
     /**
@@ -527,6 +553,10 @@ class DeviceGroupController {
 				}
 
 				DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+				def list1 = DeviceRadioStream.findAllByDevice(deviceInstance)
+				if(list1?.size()>0){
+					DeviceRadioStream.executeUpdate("delete DeviceRadioStream d where d.device = :instance1",[instance1:deviceInstance])
+				}
 				devicegroupService.updateExecDeviceReference(deviceInstance)
 				//DeviceGroup.executeUpdate("delete DeviceGroup d where d.device = :instance1",[instance1:deviceInstance])
 
@@ -639,6 +669,7 @@ class DeviceGroupController {
 				
 
 				DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+				DeviceRadioStream.executeUpdate("delete DeviceRadioStream d where d.device = :instance1",[instance1:deviceInstance])
 				devicegroupService.updateExecDeviceReference(deviceInstance)
 				
 				if(deviceInstance.isChild == 1){

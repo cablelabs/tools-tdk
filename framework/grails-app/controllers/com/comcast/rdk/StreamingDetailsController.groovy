@@ -32,8 +32,9 @@ class StreamingDetailsController {
      * @return
      */
     def list() {    
-		def streamingDetailsList = StreamingDetails.findAllByGroupsOrGroupsIsNull(utilityService.getGroup())    
-        [streamingDetailsInstanceList: streamingDetailsList, streamingDetailsInstanceTotal: streamingDetailsList.size()]
+		def streamingDetailsList = StreamingDetails.findAllByGroupsOrGroupsIsNull(utilityService.getGroup())   
+		def radioStreamingDetailsList = RadioStreamingDetails.findAllByGroupsOrGroupsIsNull(utilityService.getGroup())
+        [streamingDetailsInstanceList: streamingDetailsList,radioStreamingDetails: radioStreamingDetailsList,streamingDetailsInstanceTotal: streamingDetailsList.size(),radioStreamingDetailsInstanceTotal: radioStreamingDetailsList.size()]
     }
 
     /**
@@ -43,6 +44,10 @@ class StreamingDetailsController {
     def create() {
         [streamingDetailsInstance: new StreamingDetails(params)]
     }
+	
+	def createRadio() {
+		[streamingDetailsInstance: new RadioStreamingDetails(params)]
+	}
 
     /**
      * Save stream details
@@ -60,6 +65,24 @@ class StreamingDetailsController {
         flash.message = message(code: 'default.created.message', args: [message(code: 'streamingDetails.label', default: 'StreamingDetails'), streamingDetailsInstance.streamId])
         redirect(action: "list")
     }
+	
+	def saveRadio() {
+		def streamingDetailsInstance = new RadioStreamingDetails(params)
+		if(params?.streamId?.startsWith("R")){
+		streamingDetailsInstance.groups = utilityService.getGroup()
+		if (!streamingDetailsInstance.save(flush: true)) {
+		  // render(view: "create", model: [streamingDetailsInstance: streamingDetailsInstance])
+			redirect(action: "list")
+			return
+		}
+
+		flash.message = message(code: 'default.created.message', args: [message(code: 'streamingDetails.label', default: 'StreamingDetails'), streamingDetailsInstance.streamId])
+		}else{
+		flash.message = "Stream id should start with R"
+		
+		}
+		redirect(action: "list")
+	}
 
     /**
      * Show stream details
@@ -90,6 +113,16 @@ class StreamingDetailsController {
 
         [streamingDetailsInstance: streamingDetailsInstance]
     }
+	
+	def editRadio(Long id) {
+		def streamingDetailsInstance = RadioStreamingDetails.get(id)
+		if (!streamingDetailsInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'streamingDetails.label', default: 'StreamingDetails'), streamingDetailsInstance.streamId])
+			redirect(action: "list")
+			return
+		}
+		[streamingDetailsInstance: streamingDetailsInstance]
+	}
 
     /**
      * Update stream details
@@ -172,6 +205,26 @@ class StreamingDetailsController {
             redirect(action: "list")
         }
     }
+	
+	def deleteRadioStreamDetails() {
+		Long id = params.id as Long
+		def streamingDetailsInstance = RadioStreamingDetails.get(id)
+		  if (!streamingDetailsInstance) {
+			  flash.message = message(code: 'default.not.found.message', args: [message(code: 'streamingDetails.label', default: 'StreamingDetails'), streamingDetailsInstance.streamId])
+			  redirect(action: "list")
+			  return
+		  }
+  
+		  try {
+			  streamingDetailsInstance.delete(flush: true)
+			  flash.message = message(code: 'default.deleted.message', args: [message(code: 'streamingDetails.label', default: 'StreamingDetails'), streamingDetailsInstance.streamId])
+			  redirect(action: "list")
+		  }
+		  catch (DataIntegrityViolationException e) {
+			  flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'streamingDetails.label', default: 'StreamingDetails'), streamingDetailsInstance.streamId])
+			  redirect(action: "list")
+		  }
+	  }
     
    
 }

@@ -12,6 +12,8 @@
 
 #include "MediaframeworkAgent.h"
 
+string rdkLogPath = getenv("RDK_LOG_PATH");
+string tdkPath = getenv("TDK_PATH");
 
 /*helper functions for DVR sink*/
 /********************************************************************************************************************
@@ -98,6 +100,50 @@ void createTestRecordingSpec (string recordingId, string playUrl, RecordingSpec 
         spec.setBitRate( RecordingBitRate_high );
 }
 
+std::string fetchStreamingInterface()
+{
+	DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
+	ifstream interfacefile;
+	string Fetch_Streaming_interface_cmd, Streaming_Interface_name,line;
+	Streaming_Interface_name = g_tdkPath + "/" + FETCH_STREAMING_INT_NAME;
+/*	//Fetch_Streaming_interface_cmd = g_tdkPath + "/" + FETCH_STREAMING_INT_SCRIPT;
+	//string fetch_streaming_int_chk= "source "+Fetch_Streaming_interface_cmd;
+	//try
+	{
+		system((char*)fetch_streaming_int_chk());
+	}
+	catch(...)
+	{
+		DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of streaming ip fetch script\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                return "FAILURE<DETAILS>Exception occured execution of streaming ip fetch script";
+	
+	}
+*/
+
+	interfacefile.open(Streaming_Interface_name.c_str());
+	if(interfacefile.is_open())
+	{
+		if(getline(interfacefile,line)>0);
+                {
+                        interfacefile.close();
+                        DEBUG_PRINT(DEBUG_LOG,"\nStreaming IP fetched fetched\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function--> Exit\n");
+                        return line;
+                }
+                interfacefile.close();
+                DEBUG_PRINT(DEBUG_ERROR,"\nStreaming IP fetched not fetched\n");
+                return "FAILURE<DETAILS>Proper result is not found in the streaming interface name file";
+	}
+	else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the streaming interface file.\n");
+                return "FAILURE<DETAILS>Unable to open the streaming interface  file";
+        }
+
+
+}
+
 IRMFMediaSource* createHNSrc(const std::string& url)
 {
 	RMFResult result= RMF_RESULT_SUCCESS;
@@ -118,24 +164,44 @@ IRMFMediaSource* createHNSrc(const std::string& url)
 		else
 		{
 			string streamingip;
-			streamingip=GetHostIP("eth1");
-        		string urlIn = url;
-        		string http = "http://";
-        		http.append(streamingip);
-		        cout<<"IP: "<<streamingip<<endl;
-		       	size_t pos = 0;
-        		pos = urlIn.find(":8080");
-       	 		if (pos!=std::string::npos)
-        		{
-		                urlIn = urlIn.replace(0,pos,http);
-        		}
-
-        		cout<<"Final URL passed to Open(): "<<urlIn<<endl;
-			result= pSrc->open( urlIn.c_str(), 0 );
-			if ( result != RMF_RESULT_SUCCESS )
-			{
-				DEBUG_PRINT(DEBUG_ERROR, "HNSrc open(%s) failed with rc=0x%X", url.c_str(), (unsigned int) result );
+			string streaming_interface;
+		        size_t pos = 0;
+			size_t found;
+		        streaming_interface=fetchStreamingInterface();
+		        found=streaming_interface.find("FAILURE");
+		        if (found!=std::string::npos)
+		        {
+        			std::string delimiter = "<FAILURE>";
+		                std::string token;
+                		while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+		                	token = streaming_interface.substr(0, pos);
+                	        	std::cout << token << std::endl;
+	                        	streaming_interface.erase(0, pos + delimiter.length());
+                 	}
+				pSrc=0;
 			}
+			else
+			{
+				const char * streaming_interface_name = streaming_interface.c_str();
+				streamingip=GetHostIP(streaming_interface_name);
+        			string urlIn = url;
+        			string http = "http://";
+        			http.append(streamingip);
+		        	cout<<"IP: "<<streamingip<<endl;
+		       		size_t pos = 0;
+        			pos = urlIn.find(":8080");
+       	 			if (pos!=std::string::npos)
+        			{
+		                	urlIn = urlIn.replace(0,pos,http);
+        			}	
+
+        			cout<<"Final URL passed to Open(): "<<urlIn<<endl;
+				result= pSrc->open( urlIn.c_str(), 0 );
+				if ( result != RMF_RESULT_SUCCESS )
+				{
+					DEBUG_PRINT(DEBUG_ERROR, "HNSrc open(%s) failed with rc=0x%X", url.c_str(), (unsigned int) result );
+				}
+			}	
 		}
 	}
 
@@ -317,6 +383,8 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 /*Optimised Code*/	
 
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus,"TestMgr_CheckAudioVideoStatus");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_CheckRmfStreamerCrash,"TestMgr_CheckRmfStreamerCrash");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_ClearLogFile,"TestMgr_ClearLogFile");
 
 
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance,"TestMgr_RmfElementCreateInstance");
@@ -421,6 +489,109 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus(IN const Jso
 
                 return TEST_FAILURE;	
 	}
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_ClearLogFile(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_ClearLogFile -->Entry\n");
+	string logFileToClear = req["logFileToClear"].asCString();
+	string logFilePath = ">" + rdkLogPath + "/" + logFileToClear;
+        DEBUG_PRINT(DEBUG_LOG,"Log_deletion is %s\n", logFilePath.c_str());
+
+        /* To handle exception for system call*/
+        try
+        {
+                system((char *)logFilePath.c_str());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                response["result"] = "FAILURE";
+		response["details"] = "Clearing the log file failed!!!";
+		
+		return TEST_FAILURE;
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_ClearLogFile -->Exit\n");
+	response["details"] = "Log file cleared";
+        response["result"] = "SUCCESS";
+	
+	return TEST_SUCCESS;
+}
+
+bool MediaframeworkAgent::MediaframeworkAgent_CheckRmfStreamerCrash(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckRmfStreamerCrash -->Entry\n");
+	
+	string ocapLogFile = req["logFile"].asCString();
+	string ocapLogToTdkFolder = req["FileNameToCpTdkPath"].asCString();
+	string patternToSearch = req["patternToSearch"].asCString();
+	
+	DEBUG_PRINT(DEBUG_LOG,"TDK_PATH: %s\n", tdkPath.c_str());
+	DEBUG_PRINT(DEBUG_LOG,"RDK_LOG_PATH: %s\n", rdkLogPath.c_str());
+	
+	/*Copying the file form /opt/logs to /opt/TDK and setting the permission for the file copied. */
+	string logFileCopy = "cp -r " + rdkLogPath + "/" + ocapLogFile+ " " + tdkPath + "/" + ocapLogToTdkFolder;
+	string setPerm = "chmod 777 " + tdkPath + "/" + ocapLogToTdkFolder;
+
+	DEBUG_PRINT(DEBUG_LOG,"copying is %s\n", logFileCopy.c_str());
+        DEBUG_PRINT(DEBUG_LOG,"chmod is %s\n", setPerm.c_str());
+
+        string RecorderLogFilePath = tdkPath + "/" + ocapLogToTdkFolder;
+	string line_Recorder_Log;
+	
+
+	DEBUG_PRINT(DEBUG_LOG,"File Name: %s\n", RecorderLogFilePath.c_str());
+	if(system((char *)logFileCopy.c_str()) == 0 && system((char*)setPerm.c_str()) == 0)
+	{
+        	ifstream RecorderLogFile;
+	        RecorderLogFile.open(RecorderLogFilePath.c_str());
+	        if(RecorderLogFile.is_open())
+        	{
+			DEBUG_PRINT(DEBUG_LOG,"File %s open success \n", RecorderLogFilePath.c_str());
+                	while (!RecorderLogFile.eof())
+	                {
+        	                if(getline(RecorderLogFile,line_Recorder_Log)>0)
+                	        {
+                        	        if(line_Recorder_Log.find(patternToSearch.c_str()) != string::npos)
+                                	{
+                	                                response["result"] = "SUCCESS";
+                        	                        response["details"] = "Pattern found in Log file";
+
+							DEBUG_PRINT(DEBUG_LOG,"Pattern found in Log file.\n");
+
+							RecorderLogFile.close();
+        						DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckRmfStreamerCrash -->Exit\n");
+							return TEST_SUCCESS;
+        	                        }
+                	        }
+                        	else
+	                        {
+        	                        response["result"] = "FAILURE";
+                	                response["details"] = "Pattern not found in Log file";
+					
+					DEBUG_PRINT(DEBUG_LOG,"Pattern not found in Log file.\n");
+					
+					RecorderLogFile.close();
+        				DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckRmfStreamerCrash -->Exit\n");
+					return TEST_FAILURE;
+                        	}
+	                }
+        	}
+	}
+	else
+	{
+		cout<<"Copy of log file or setting permission failure!!!!"<<endl;
+		response["result"] = "FAILURE";
+		response["details"] = "Copy of log file or setting permission failure!!!!";
+
+        	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckRmfStreamerCrash -->Exit\n");
+		return TEST_FAILURE;
+	}
+
+        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckRmfStreamerCrash -->Exit\n");
+	return TEST_SUCCESS;
 }
 
 bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const Json::Value& req, OUT Json::Value& response)
@@ -845,7 +1016,27 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
 	
         string streamingip;
 	
-	streamingip=GetHostIP("eth1");
+	string streaming_interface;
+	size_t pos = 0;
+	size_t found;
+	streaming_interface=fetchStreamingInterface();
+	found=streaming_interface.find("FAILURE");
+	if (found!=std::string::npos)
+	{
+        	std::string delimiter = "<FAILURE>";
+		std::string token;
+                while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+		     	token = streaming_interface.substr(0, pos);
+                       	std::cout << token << std::endl;
+	              	streaming_interface.erase(0, pos + delimiter.length());
+                 }
+                 response["result"] = "FAILURE";
+                 response["details"] = token;
+                 return TEST_FAILURE;
+	}
+
+	const char * streaming_interface_name = streaming_interface.c_str();
+	streamingip=GetHostIP(streaming_interface_name);
 	string urlIn = req["url"].asCString();
 	string http = "http://";
 
@@ -858,7 +1049,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
 
-	size_t pos = 0;
+
 	pos = urlIn.find(":8080");
 	if (pos!=std::string::npos)
 	{	
@@ -2172,6 +2363,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetProperties(IN
 	string useChunk	= req["useChunkTransfer"].asCString();
 
 	string streamingIp;
+        std::size_t found;
 	
 	if( dtcpFlag == "true")
 	{
@@ -2202,20 +2394,42 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetProperties(IN
 
 	        hnProps.socketId = socketId;
 		cout<<"SocketId:"<<hnProps.socketId<<endl;
+		std::string streaming_interface;	
+		
+		streaming_interface=fetchStreamingInterface();
+		found=streaming_interface.find("FAILURE");
+ 		if (found!=std::string::npos)
+		{
+			std::string delimiter = "<FAILURE>";
+			size_t pos = 0;
+			std::string token;
+			while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+    				token = streaming_interface.substr(0, pos);
+    				std::cout << token << std::endl;
+    				streaming_interface.erase(0, pos + delimiter.length());
+			}
+			response["result"] = "FAILURE";
+        		response["details"] = token;
+			return TEST_FAILURE; 
+		}
+		else
+		{
+			 
+			const char * streaming_interface_name = streaming_interface.c_str();
+			/* Set remoteIp as eth1 interface Ip*/
+			streamingIp = GetHostIP(streaming_interface_name);
+	        	hnProps.remote_ip = convertIPStrToLong(streamingIp.c_str());
+	        	DEBUG_PRINT(DEBUG_TRACE, "HNSink setHNSinkProperties() remoteIp: %ld\n",hnProps.remote_ip);
 
-		/* Set remoteIp as eth1 interface Ip*/
-		streamingIp = GetHostIP("eth1");
-	        hnProps.remote_ip = convertIPStrToLong(streamingIp.c_str());
-	        DEBUG_PRINT(DEBUG_TRACE, "HNSink setHNSinkProperties() remoteIp: %ld\n",hnProps.remote_ip);
+			string hnUrl = "http://" + streamingIp + "/vldms/tuner?ocap_locator=" + urlIn;
+			DEBUG_PRINT(DEBUG_TRACE, "HNSink setHNSinkProperties() url: %s\n",hnUrl.c_str());
+			strncpy(hnProps.url,hnUrl.c_str(), sizeof(hnProps.url));
+			hnProps.url[sizeof(hnProps.url)-1] = 0;
 
-		string hnUrl = "http://" + streamingIp + "/vldms/tuner?ocap_locator=" + urlIn;
-		DEBUG_PRINT(DEBUG_TRACE, "HNSink setHNSinkProperties() url: %s\n",hnUrl.c_str());
-		strncpy(hnProps.url,hnUrl.c_str(), sizeof(hnProps.url));
-		hnProps.url[sizeof(hnProps.url)-1] = 0;
-
-		/* Using setSourceType to set source type */
-		strncpy(hnProps.source_type,"QAM_SRC",sizeof(hnProps.source_type));
-	        hnSink->setHNSinkProperties( hnProps );
+			/* Using setSourceType to set source type */
+			strncpy(hnProps.source_type,"QAM_SRC",sizeof(hnProps.source_type));
+	        	hnSink->setHNSinkProperties( hnProps );
+		}
 	}
 	else
 	{
@@ -2619,6 +2833,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
         MediaPlayerSink* pSink = new MediaPlayerSink();
         HNSource* pSource = new HNSource();
         RMFState cur_state;
+        std::size_t found;
 
         x = req["X"].asInt();
         y = req["Y"].asInt();
@@ -2648,13 +2863,32 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 response["details"] = "Failed to Initialize hnsource";
                 return TEST_FAILURE;
         }
-        streamingip=GetHostIP("eth1");
+		string streaming_interface;
+        	size_t pos = 0;
+	        streaming_interface=fetchStreamingInterface();
+                found=streaming_interface.find("FAILURE");
+                if (found!=std::string::npos)
+                {
+                        std::string delimiter = "<FAILURE>";
+                        std::string token;
+                        while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+                                token = streaming_interface.substr(0, pos);
+                                std::cout << token << std::endl;
+                                streaming_interface.erase(0, pos + delimiter.length());
+                        }
+                        response["result"] = "FAILURE";
+                        response["details"] = token;
+                        return TEST_FAILURE;
+                }
+
+	const char * streaming_interface_name = streaming_interface.c_str();
+        streamingip=GetHostIP(streaming_interface_name);
         string urlIn = req["playuri"].asCString();
         string http = "http://";
         http.append(streamingip);
         cout<<"IP:"<<streamingip;
 
-        size_t pos = 0;
+
         pos = urlIn.find(":8080");
         if (pos!=std::string::npos)
         {
@@ -2870,13 +3104,33 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
 		return TEST_FAILURE;
 	}
-	streamingip=GetHostIP("eth1");
+	string streaming_interface;
+        size_t pos = 0;
+	size_t found;
+        streaming_interface=fetchStreamingInterface();
+        found=streaming_interface.find("FAILURE");
+        if (found!=std::string::npos)
+        {
+        	std::string delimiter = "<FAILURE>";
+                std::string token;
+                while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+                	token = streaming_interface.substr(0, pos);
+                        std::cout << token << std::endl;
+                        streaming_interface.erase(0, pos + delimiter.length());
+                 }
+                 response["result"] = "FAILURE";
+                 response["details"] = token;
+                 return TEST_FAILURE;
+         }
+
+	const char * streaming_interface_name = streaming_interface.c_str();
+	streamingip=GetHostIP(streaming_interface_name);
 	string urlIn = req["playuri"].asCString();
 	string http = "http://";
 	http.append(streamingip);
 	cout<<"IP:"<<streamingip;
 	
-	size_t pos = 0;
+	
 	pos = urlIn.find(":8080");
         if (pos!=std::string::npos)
         {
@@ -3092,13 +3346,33 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		return TEST_FAILURE;
 	}
 	string streamingip;
- 	streamingip=GetHostIP("eth1");
+	string streaming_interface;
+        size_t pos = 0;
+	size_t found;
+        streaming_interface=fetchStreamingInterface();
+        found=streaming_interface.find("FAILURE");
+        if (found!=std::string::npos)
+        {
+        	std::string delimiter = "<FAILURE>";
+                std::string token;
+                while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+                	token = streaming_interface.substr(0, pos);
+                        std::cout << token << std::endl;
+                        streaming_interface.erase(0, pos + delimiter.length());
+                 }
+                 response["result"] = "FAILURE";
+                 response["details"] = token;
+                 return TEST_FAILURE;
+	}
+
+	const char * streaming_interface_name = streaming_interface.c_str();
+ 	streamingip=GetHostIP(streaming_interface_name);
         string urlIn = req["playuri"].asCString();
         string http = "http://";
         http.append(streamingip);
         cout<<"IP:"<<streamingip;
 
-        size_t pos = 0;
+
         pos = urlIn.find(":8080");
         if (pos!=std::string::npos)
         {
@@ -3329,13 +3603,33 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 	}
 
 	string streamingip;
-	streamingip=GetHostIP("eth1");
+	string streaming_interface;
+        size_t pos = 0;
+	size_t found;
+        streaming_interface=fetchStreamingInterface();
+        found=streaming_interface.find("FAILURE");
+        if (found!=std::string::npos)
+        {
+        	std::string delimiter = "<FAILURE>";
+                std::string token;
+                while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+                	token = streaming_interface.substr(0, pos);
+                        std::cout << token << std::endl;
+                        streaming_interface.erase(0, pos + delimiter.length());
+                 }
+                 response["result"] = "FAILURE";
+                 response["details"] = token;
+                 return TEST_FAILURE;
+	}
+
+	const char * streaming_interface_name = streaming_interface.c_str();
+	streamingip=GetHostIP(streaming_interface_name);
         string urlIn = req["playuri"].asCString();
         string http = "http://";
         http.append(streamingip);
         cout<<"IP:"<<streamingip;
 
-        size_t pos = 0;
+
         pos = urlIn.find(":8080");
         if (pos!=std::string::npos)
         {
@@ -5388,6 +5682,8 @@ bool MediaframeworkAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptr
 /*Optimised Code*/
 #if 1
 	ptrAgentObj->UnregisterMethod("TestMgr_CheckAudioVideoStatus");
+	ptrAgentObj->UnregisterMethod("TestMgr_CheckRmfStreamerCrash");
+	ptrAgentObj->UnregisterMethod("TestMgr_ClearLogFile");
 
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElementCreateInstance");
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElementRemoveInstance");

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xml>
+  <module name="closedcaption" testGroup="Component">
+    <primitiveTests>
+      <primitiveTest id="146" name="CCInit" version="1">
+        <function>TestMgr_CC_Init</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="148" name="CC_Initialization" version="1">
+        <function>TestMgr_CC_Init</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="155" name="CC_Show" version="0">
+        <function>TestMgr_CC_Show</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="157" name="CC_Hide" version="0">
+        <function>TestMgr_CC_Hide</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="165" name="IARMBUS Test" version="0">
+        <function>TestMgr_CC_Init</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="178" name="CC_Get_SupportedServiceNumberCount" version="0">
+        <function>TestMgr_CC_GetSupportedServiceNumberCount</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="179" name="CC_Get_SupportedServiceNumber" version="0">
+        <function>TestMgr_CC_GetSupportedServiceNumber</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="CC_SetGet_State" version="3">
+        <function>TestMgr_CC_SetGetState</function>
+        <parameters>
+          <parameter name="status" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="189" name="CC_OnEasStart" version="0">
+        <function>TestMgr_CC_OnEasStart</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="190" name="CC_OnEasStop" version="0">
+        <function>TestMgr_CC_OnEasStop</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="191" name="CC_ResetTrickPlayStatus" version="0">
+        <function>TestMgr_CC_ResetTrickPlayStatus</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="192" name="CC_SetTrickPlayStatus" version="1">
+        <function>TestMgr_CC_SetTrickPlayStatus</function>
+        <parameters>
+          <parameter name="trickPlayStatus" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="194" name="CC_SetGetAttribute" version="1">
+        <function>TestMgr_CC_SetGetAttribute</function>
+        <parameters>
+          <parameter name="value" value="1"/>
+          <parameter name="ccAttribute" value="2"/>
+          <parameter name="Categories" value="color"/>
+          <parameter name="ccType" value="0"/>
+          <parameter name="stylevalue" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="195" name="CC_SetGet_DigitalChannel" version="1">
+        <function>TestMgr_CC_SetGetDigitalChannel</function>
+        <parameters>
+          <parameter name="channel_num" value="1"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="196" name="CC_SetGet_AnalogChannel" version="1">
+        <function>TestMgr_CC_SetGetAnalogChannel</function>
+        <parameters>
+          <parameter name="analog_channel_num" value="1"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="490" name="Test11" version="0">
+        <function>TestMgr_CC_Init</function>
+        <parameters/>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

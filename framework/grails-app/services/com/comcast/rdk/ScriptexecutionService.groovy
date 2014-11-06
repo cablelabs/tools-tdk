@@ -17,6 +17,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.FutureTask
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -45,6 +46,8 @@ class ScriptexecutionService {
 	
 	def executionService
 	
+	def scriptService
+	
 	def deviceStatusService
 	
 	def executescriptService
@@ -63,8 +66,8 @@ class ScriptexecutionService {
 		def executionSaveStatus = true
 		try{
 			int scriptCnt = 0
-			if(scriptGroupInstance?.scriptsList?.size() > 0){
-				scriptCnt = scriptGroupInstance?.scriptsList?.size()
+			if(scriptGroupInstance?.scriptList?.size() > 0){
+				scriptCnt = scriptGroupInstance?.scriptList?.size()
 			}
 			
 			Execution execution = new Execution()
@@ -135,20 +138,20 @@ class ScriptexecutionService {
 		
 	def executeScriptGrp(ScriptGroup scriptGroup, final String boxType, final String execName, final String execDeviceId,
 		Device deviceInstance, final String url, final String filePath, final String realPath, final String callbackUrl, final String imageName){
-		
 		boolean aborted = false
 		boolean pause = false
 		try{
 		
-			List<Script> validScripts = new ArrayList<Script>()
+			List validScripts = new ArrayList()
 			boolean skipStatus = false
 			boolean notApplicable = false
 			String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-			
-			scriptGroup.scriptsList.each { script ->
-				if(validateBoxTypeOfScript(script,boxType)){
-					if(executionService.validateScriptRDKVersion(script, rdkVersion)){
-						if(script.skip){
+			scriptGroup.scriptList.each { scrpt ->
+				def script = scriptService.getScript(realPath, scrpt?.moduleName, scrpt?.scriptName)
+				if(script){
+				if(validateBoxTypeOfScripts(script,boxType)){
+					if(executionService.validateScriptRDKVersions(script, rdkVersion)){
+						if(script?.skip?.toString().equals("true")){
 							skipStatus = true
 							executionService.saveSkipStatus(Execution.findByName(execName), ExecutionDevice.findById(execDeviceId), script, deviceInstance)
 						}else{
@@ -157,13 +160,9 @@ class ScriptexecutionService {
 					}else{
 						notApplicable =true
 						String rdkVersionData = ""
-						Script.withTransaction {
-							def scriptInstance1 = Script.findById(script?.id)
-							rdkVersionData = scriptInstance1?.rdkVersions
-						}
+							rdkVersionData = script?.rdkVersions
 
 						String reason = "RDK Version mismatch.<br>Device RDK Version : "+rdkVersion+", Script supported RDK Versions :"+rdkVersionData
-
 						executionService.saveNotApplicableStatus(Execution.findByName(execName), ExecutionDevice.findById(execDeviceId), script, deviceInstance,reason)
 					}
 				}else{
@@ -177,14 +176,15 @@ class ScriptexecutionService {
 						deviceBoxType = dev?.boxType
 					}
 
-					Script.withTransaction {
-						def scriptInstance1 = Script.findById(script?.id)
-						boxTypeData = scriptInstance1?.boxTypes
-					}
+						boxTypeData = script?.boxTypes
 
 					String reason = "Box Type mismatch.<br>Device Box Type : "+deviceBoxType+", Script supported Box Types :"+boxTypeData
-
 					executionService.saveNotApplicableStatus(Execution.findByName(execName), ExecutionDevice.findById(execDeviceId), script, deviceInstance,reason)
+				}
+				}else{
+					String reason = "No script is available with name :"+scrpt?.scriptName+" in module :"+scrpt?.moduleName
+					executionService.saveNoScriptAvailableStatus(Execution.findByName(execName), ExecutionDevice.findById(execDeviceId), scrpt?.scriptName, deviceInstance,reason)
+				
 				}
 			}
 			int scriptGrpSize = validScripts?.size()
@@ -205,6 +205,7 @@ class ScriptexecutionService {
 			
 			boolean executionStarted = false
 			List pendingScripts = []
+			
 			validScripts.each{ scriptInstance ->
 				scriptCounter++
 				if(scriptCounter == scriptGrpSize){
@@ -233,14 +234,18 @@ class ScriptexecutionService {
 				}
 				
 				if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString())) && !pause){
-					executionStarted = true
-					def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple)
-					if(isMultiple.equals("false")){
-						Execution.withTransaction {
-							Execution executionInstance = Execution.findByName(execName)
-							executionInstance.executionStatus = COMPLETED_STATUS
-							executionInstance.save(flush:true)
-						}
+					try {
+						executionStarted = true
+								def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple)
+								if(isMultiple.equals("false")){
+									Execution.withTransaction {
+										Execution executionInstance = Execution.findByName(execName)
+												executionInstance.executionStatus = COMPLETED_STATUS
+												executionInstance.save(flush:true)
+									}
+								}
+					} catch (Exception e) {
+						e.printStackTrace()
 					}
 				}else{
 					if(!aborted && (devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()))){
@@ -248,10 +253,9 @@ class ScriptexecutionService {
 					}
 					
 					if(!aborted && pause) {
-						pendingScripts.add(scriptInstance.getId())
+						pendingScripts.add(scriptInstance?.name)
 						
 						def execInstance = Execution.findByName(execName,[lock: true])
-						Script scriptInstance1 = Script.findById(scriptInstance.id,[lock: true])
 						Device deviceInstance1 = Device.findById(deviceInstance.id,[lock: true])
 						def executionResult
 						ExecutionResult.withTransaction { resultstatus ->
@@ -259,7 +263,7 @@ class ScriptexecutionService {
 								executionResult = new ExecutionResult()
 								executionResult.execution = execInstance
 								executionResult.executionDevice = ExecutionDevice.findById(execDeviceId)
-								executionResult.script = scriptInstance1?.name
+								executionResult.script = scriptInstance?.name
 								executionResult.device = deviceInstance1?.stbName
 								executionResult.execDevice = null
 								executionResult.deviceIdString = deviceInstance1?.id?.toString()
@@ -312,12 +316,11 @@ class ScriptexecutionService {
 				executionService.saveExecutionStatus(aborted, executionInstance1?.id)
 			}
 			
-			
 			if(callbackUrl){
 				if(pause){
 					saveThirdPartyExecutionDetails(Execution.findByName(execName),execName,url,callbackUrl,filePath,executionStartTime,imageName,boxType)
 				}else{
-					executeCallBackUrl(execName,url,callbackUrl,filePath,executionStartTime,imageName,boxType)
+					executeCallBackUrl(execName,url,callbackUrl,filePath,executionStartTime,imageName,boxType,realPath)
 				}
 			}
 					
@@ -366,8 +369,8 @@ class ScriptexecutionService {
 	}
 			
 		def executeCallBackUrl(final def execName, final def url, final def callbackUrl, final def filePath, 
-			final def executionStartTime, final def imageName, final def boxType){
-			String curlCommand = getCurlCommand(thirdPartyJsonResult(execName,url,executionStartTime,imageName,boxType), callbackUrl)
+			final def executionStartTime, final def imageName, final def boxType,final def realPath){
+			String curlCommand = getCurlCommand(thirdPartyJsonResult(execName,url,executionStartTime,imageName,boxType,realPath), callbackUrl)
 	
 			File newFile = new File(filePath, execName+"-curlscript.sh");
 			boolean isFileCreated = newFile.createNewFile()
@@ -406,8 +409,7 @@ class ScriptexecutionService {
 		
 		
 		def String thirdPartyJsonResult(final String execName, final String appurl, final def executionStartTime,
-			final String imageName, final String boxType ){
-
+			final String imageName, final String boxType ,final def realPath){
 			JsonArray jsonArray = new JsonArray()
 			JsonObject compNode
 			JsonObject deviceNode
@@ -433,25 +435,27 @@ class ScriptexecutionService {
 						def componentMap = [:].withDefault {[]}
 						def systemMap = [:].withDefault {[]}
 						execResult.each{ execResObj ->
-							Script.withTransaction { scriptRes ->
-								Script script = Script.findByName(execResObj?.script)
-								if(script.primitiveTest.module.testGroup.groupValue.toString().equals("E2E") ){
-									List val1 = systemMap.get(script.primitiveTest.module.toString());
+							def moduleNameMap = scriptService.getScriptNameModuleNameMapping(realPath)
+							def moduleName = moduleNameMap.get(execResObj?.script)
+							def script = scriptService.getScript(realPath, moduleName, execResObj?.script) // TODO realpath
+//								Script script = Script.findByName(execResObj?.script)
+							Module module = Module.findByName(moduleName)
+								if(module?.testGroup?.groupValue?.toString()?.equals("E2E") ){
+									List val1 = systemMap.get(moduleName);
 									if(!val1){
 										val1 = []
-										systemMap.put(script.primitiveTest.module.toString(), val1)
+										systemMap.put(module.toString(), val1)
 									}
 									val1.add(execResObj?.id)
 								}
 								else{
-									List val = componentMap.get(script.primitiveTest.module.toString());
+									List val = componentMap.get(module.toString());
 									if(!val){
 										val = []
-										componentMap.put(script.primitiveTest.module.toString(), val)
+										componentMap.put(module.toString(), val)
 									}
 									val.add(execResObj?.id)
 								}
-							}
 						}
 						def statusVal
 						def newmap = [:]
@@ -600,7 +604,6 @@ class ScriptexecutionService {
 			
 			String newDataString = tdkObject.toString()
 			newDataString  = newDataString.replaceAll("\"", "\\\\\\\\\\\\\"")
-			
 			return newDataString
 			
 		}
@@ -613,10 +616,9 @@ class ScriptexecutionService {
 	 * @param url
 	 * @return
 	 */
-	def String executeScripts(String executionName, String execDeviceId, Script scriptInstance,
+	def String executeScripts(String executionName, String execDeviceId, def scriptInstance,
 			Device deviceInstance, final String url, final String filePath, final String realPath, final String isMultiple ) {
 	
-			
 		String htmlData = ""
 
 		String scriptData = convertScriptFromHTMLToPython(scriptInstance.scriptContent)
@@ -701,9 +703,19 @@ class ScriptexecutionService {
 		Date executionStartDt = new Date()
 		def executionStartTime =  executionStartDt.getTime()
 		
-
-		String outData = executeScript( file.getPath(), scriptInstance.executionTime )
+//TODO  correct time used 
+		int execTime = 0
+		try {
+			if(scriptInstance?.executionTime instanceof String){
+				execTime = Integer.parseInt(scriptInstance?.executionTime)
+			}else {
+				execTime = scriptInstance?.executionTime
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 		
+		String outData = executeScript( file.getPath(), execTime )
 		
 		def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDeviceInstance?.id.toString()}"		
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}//"
@@ -887,13 +899,13 @@ class ScriptexecutionService {
 	 * @param deviceInstance
 	 * @return
 	 */
-	public boolean validateScriptBoxType(final Script scriptInstance, final Device deviceInstance){
-		boolean scriptStatus = true
-		if(!(scriptInstance.boxTypes.find { it.id == deviceInstance.boxType.id })){
-			scriptStatus = false
-		}
-		return scriptStatus
-	}
+//	public boolean validateScriptBoxType(final Script scriptInstance, final Device deviceInstance){
+//		boolean scriptStatus = true
+//		if(!(scriptInstance.boxTypes.find { it.id == deviceInstance.boxType.id })){
+//			scriptStatus = false
+//		}
+//		return scriptStatus
+//	}
 	
 	/**
 	 * Validates whether the boxtype of device is same as that
@@ -902,15 +914,23 @@ class ScriptexecutionService {
 	 * @param deviceInstance
 	 * @return
 	 */
-	public boolean validateBoxTypeOfScript(Script scriptInstance, String boxType){
+//	public boolean validateBoxTypeOfScript(Script scriptInstance, String boxType){
+//		boolean scriptStatus = true
+//		def sId = scriptInstance?.id
+//		Script.withTransaction {
+//			def scriptInstance1 = Script.findById(sId)
+//			if(!(scriptInstance1.boxTypes.find { (it.name).equalsIgnoreCase( boxType ) })){
+//				scriptStatus = false
+//			}
+//		}
+//		return scriptStatus
+//	}
+	
+	public boolean validateBoxTypeOfScripts(final Map script, String boxType){
 		boolean scriptStatus = true
-		def sId = scriptInstance?.id
-		Script.withTransaction {
-			def scriptInstance1 = Script.findById(sId)
-			if(!(scriptInstance1.boxTypes.find { (it.name).equalsIgnoreCase( boxType ) })){
+			if(!(script?.boxTypes?.find { (it.name).equalsIgnoreCase( boxType ) })){
 				scriptStatus = false
 			}
-		}
 		return scriptStatus
 	}
 	
@@ -950,7 +970,7 @@ class ScriptexecutionService {
 		versnFile.delete()
 	}
 	
-	def String generateResultBasedOnTestRequest(final String caseId, final String callbackUrl, final String filePath, final String url, final String imageName, final String boxType){
+	def String generateResultBasedOnTestRequest(final String caseId, final String callbackUrl, final String filePath, final String url, final String imageName, final String boxType,final def realPath){
 		Execution execution
 		def status = ""
 		def execName
@@ -963,14 +983,14 @@ class ScriptexecutionService {
 		if(execution){
 			execName = execution?.name
 			def executionStartTime = System.currentTimeMillis()
-			executeCallBackUrl(execName,url,callbackUrl,filePath,executionStartTime,imageName,boxType)
+			executeCallBackUrl(execName,url,callbackUrl,filePath,executionStartTime,imageName,boxType,realPath)
 			status = "Done"
 		}
 		return status		
 	}
 		
 
-	def thirdPartyJsonResultFromController(final String execName, final String appurl ){
+	def thirdPartyJsonResultFromController(final String execName, final String appurl,def realPath ){
 		JsonArray jsonArray = new JsonArray()
 		JsonObject compNode
 		JsonObject deviceNode
@@ -996,25 +1016,28 @@ class ScriptexecutionService {
 					def componentMap = [:].withDefault {[]}
 					def systemMap = [:].withDefault {[]}
 					execResult.each{ execResObj ->
-						Script.withTransaction { scriptRes ->
-							Script script = Script.findByName(execResObj?.script)
-							if(script.primitiveTest.module.testGroup.groupValue.toString().equals("E2E") ){
-								List val1 = systemMap.get(script.primitiveTest.module.toString());
+//						Script.withTransaction { scriptRes ->
+						def scriptMap = scriptService.getScriptNameModuleNameMapping(realPath)
+						def moduleName =scriptMap.get(execResObj?.script)
+						Module module= Module.findByName(moduleName)
+						def script = scriptService.getScript(realPath,moduleName, execResObj?.script)
+							if(module?.testGroup?.groupValue?.toString()?.equals("E2E") ){
+								List val1 = systemMap.get(module.toString());
 								if(!val1){
 									val1 = []
-									systemMap.put(script.primitiveTest.module.toString(), val1)
+									systemMap.put(module.toString(), val1)
 								}
 								val1.add(execResObj?.id)
 							}
 							else{
-								List val = componentMap.get(script.primitiveTest.module.toString());
+								List val = componentMap.get(module.toString());
 								if(!val){
 									val = []
-									componentMap.put(script.primitiveTest.module.toString(), val)
+									componentMap.put(module.toString(), val)
 								}
 								val.add(execResObj?.id)
 							}
-						}
+//						}
 					}
 					def statusVal
 					def newmap = [:]

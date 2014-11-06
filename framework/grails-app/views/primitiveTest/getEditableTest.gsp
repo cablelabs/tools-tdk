@@ -17,7 +17,9 @@
 	<g:set var="ids" value="${paramTypes?.id?.toString()}"/>
 	<%--<g:set var="ids" value="${primitiveTest.parameters?.parameterType?.id?.toString()}"/>--%>
 	<input type="hidden" name="parameterTypeIds" id="parameterTypeIds" value="${ids?.substring(1, ids?.lastIndexOf(']'))}">
-	<input type="hidden" name="id" id="id" value="${primitiveTest.id}">
+	<input type="hidden" name="id" id="id" value="${primitiveTest?.name}">
+	<input type="hidden" name="ptVersion" id="ptVersion" value="${primitiveTest?.version}">
+	<input type="hidden" name="functionValue" id="functionValue" value="${primitiveTest?.function?.id}">
 	
 	<table>
 		<tr>
@@ -90,7 +92,7 @@
 		<tr id="buttons">
 			<td colspan="2" align="center">
 				<input type="submit" value="Update" id="save">&emsp;
-				<input type="reset" value="Cancel" id="cancel" onclick="makeTestEditable('${primitiveTest.id}')">
+				<input type="reset" value="Cancel" id="cancel" onclick="makeTestEditable('${primitiveTest?.name}')">
 			</td>
 		</tr>
 	</table>

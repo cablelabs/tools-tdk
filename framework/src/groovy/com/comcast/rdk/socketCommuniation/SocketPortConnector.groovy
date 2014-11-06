@@ -13,9 +13,12 @@ package com.comcast.rdk.socketCommuniation
 
 import static com.comcast.rdk.Constants.COMMA_SEPERATOR
 import static com.comcast.rdk.Constants.UNDERSCORE
+
 import com.comcast.rdk.Device
-import com.comcast.rdk.Script
+import com.comcast.rdk.ExecutionResult;
+import com.comcast.rdk.Module
 import com.comcast.rdk.ScriptExecutor
+import com.comcast.rdk.ScriptFile
 
 public class SocketPortConnector extends Thread {
 
@@ -64,12 +67,18 @@ public class SocketPortConnector extends Thread {
 							devStbIp = device?.stbIp
 							devLogTransferPort = device?.logTransferPort
 						}
-						Script.withTransaction {
-							Script script = Script.findById(scriptId)
+						ScriptFile.withTransaction {
+							ScriptFile script = ScriptFile.findById(scriptId)
+							if(script == null){
+								def er = ExecutionResult.findById(execResultId)
+//								er.s
+							}
+							def moduleName = script?.getModuleName()
+							def module = Module.findByName(moduleName)
 							String filePath = ""
 							String directoryPath = ""
 							int cnt = 0
-							script?.primitiveTest?.module?.logFileNames?.each{ logfilename ->
+							module?.logFileNames?.each{ logfilename ->
 
 								String logFileName  = logfilename.toString()
 								int lastIndex = logFileName.lastIndexOf('/')

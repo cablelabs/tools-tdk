@@ -41,6 +41,8 @@ class ExecutionService {
 	public static volatile List abortList = []
 	
 	public static volatile List deviceAllocatedList = []
+	
+	
     
     /**
      * Get the name of the day from the number used in cronschedule
@@ -397,17 +399,26 @@ class ExecutionService {
      * @param deviceInstance
      * @return
      */
-    public boolean validateScriptBoxType(final Script scriptInstance, final Device deviceInstance){
-        boolean scriptStatus = true
-		Script.withTransaction { trns ->
-			def scriptInstance1 = Script.findById(scriptInstance?.id)			
-			def deviceInstance1 = Device.findById(deviceInstance?.id)
-	        if(!(scriptInstance1?.boxTypes?.find { it?.id == deviceInstance1?.boxType?.id })){   
-	            scriptStatus = false
-	        }
+//    public boolean validateScriptBoxType(final Script scriptInstance, final Device deviceInstance){
+//        boolean scriptStatus = true
+//		Script.withTransaction { trns ->
+//			def scriptInstance1 = Script.findById(scriptInstance?.id)			
+//			def deviceInstance1 = Device.findById(deviceInstance?.id)
+//	        if(!(scriptInstance1?.boxTypes?.find { it?.id == deviceInstance1?.boxType?.id })){   
+//	            scriptStatus = false
+//	        }
+//		}
+//        return scriptStatus
+//    }
+	
+	public boolean validateScriptBoxTypes(final Map script, final Device deviceInstance){
+		boolean scriptStatus = true
+		def deviceInstance1 = Device.findById(deviceInstance?.id)
+		if(!(script?.boxTypes?.find { it?.id == deviceInstance1?.boxType?.id })){
+			scriptStatus = false
 		}
-        return scriptStatus
-    }
+		return scriptStatus
+	}
 	
 	/**
 	 * Validates whether the RDK version of device is same as that
@@ -416,21 +427,37 @@ class ExecutionService {
 	 * @param device rdkVersion
 	 * @return
 	 */
-	public boolean validateScriptRDKVersion(final Script scriptInstance, final String rdkVersion){
+//	public boolean validateScriptRDKVersion(final Script scriptInstance, final String rdkVersion){
+//		boolean scriptStatus = true
+//		String versionText = rdkVersion
+//		if(rdkVersion){
+//			versionText = rdkVersion.trim()
+//		}
+//		if(versionText && !(versionText?.equals("NOT_AVAILABLE") || versionText?.equals("NOT_VALID") || versionText?.equals("")) ){
+//			Script.withTransaction { trns ->
+//				def scriptInstance1 = Script.findById(scriptInstance?.id)
+//				if(scriptInstance1?.rdkVersions?.size() > 0 && !(scriptInstance1?.rdkVersions?.find { 
+//					it?.buildVersion?.equals(versionText) 
+//					})){
+//					scriptStatus = false
+//				}
+//			}
+//		}
+//		return scriptStatus
+//	}
+	
+	public boolean validateScriptRDKVersions(final Map script, final String rdkVersion){
 		boolean scriptStatus = true
 		String versionText = rdkVersion
 		if(rdkVersion){
 			versionText = rdkVersion.trim()
 		}
 		if(versionText && !(versionText?.equals("NOT_AVAILABLE") || versionText?.equals("NOT_VALID") || versionText?.equals("")) ){
-			Script.withTransaction { trns ->
-				def scriptInstance1 = Script.findById(scriptInstance?.id)
-				if(scriptInstance1?.rdkVersions?.size() > 0 && !(scriptInstance1?.rdkVersions?.find { 
-					it?.buildVersion?.equals(versionText) 
+				if(script?.rdkVersions?.size() > 0 && !(script?.rdkVersions?.find {
+					it?.buildVersion?.equals(versionText)
 					})){
 					scriptStatus = false
 				}
-			}
 		}
 		return scriptStatus
 	}
@@ -1141,8 +1168,8 @@ class ExecutionService {
 	 ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun){
 		def executionSaveStatus = true
 		int scriptCnt = 0
-		if(scriptGroupInstance?.scriptsList?.size() > 0){
-			scriptCnt = scriptGroupInstance?.scriptsList?.size()
+		if(scriptGroupInstance?.scriptList?.size() > 0){
+			scriptCnt = scriptGroupInstance?.scriptList?.size()
 		}
 		
 		try {
@@ -1382,6 +1409,31 @@ class ExecutionService {
 		}
 	}
 	
+	public void saveNoScriptAvailableStatus(def executionInstance , def executionDevice , def scriptName , def deviceInstance, String reason){
+		try{
+		ExecutionResult.withTransaction { resultstatus ->
+			try {
+				ExecutionResult executionResult = new ExecutionResult()
+				executionResult.execution = executionInstance
+				executionResult.executionDevice = executionDevice
+				executionResult.script = scriptName
+				executionResult.device = deviceInstance?.stbName
+				executionResult.status = Constants.SKIPPED_STATUS
+				executionResult.dateOfExecution = new Date()
+				executionResult.executionOutput = "Test not executed. Reason : "+reason
+				if(! executionResult.save(flush:true)) {
+					log.error "Error saving executionResult instance : ${executionResult.errors}"
+				}
+				resultstatus.flush()
+			}
+			catch(Throwable th) {
+				resultstatus.setRollbackOnly()
+			}
+		}
+		}catch(Exception ee){
+		}
+	}
+	
 	public boolean isAborted(def executionName){
 		Execution.withTransaction {
 			def ex = Execution.findByName(executionName)
@@ -1506,5 +1558,6 @@ class ExecutionService {
 			e.printStackTrace()
 		}
 	}
+	
 	
 }

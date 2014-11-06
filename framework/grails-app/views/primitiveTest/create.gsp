@@ -67,8 +67,8 @@
 												<g:each in="${mapEntry.value}" var="test">
 												<%  primitiveTestIndex++; %>
 											<li id="primitiveTestList_${primitiveTestIndex}">
-												<span class="file" id="${test.id}">
-													<a href="#" onclick="makeTestEditable('${test.id}'); highlightTreeElement('primitiveTestList_', '${primitiveTestIndex}', '${primitiveTestCount}'); return false;">${test.name}</a>
+												<span class="file" id="${test}">
+													<a href="#" onclick="makeTestEditable('${test}'); highlightTreeElement('primitiveTestList_', '${primitiveTestIndex}', '${primitiveTestCount}'); return false;">${test}</a>
 												</span>
 												</li>
 												</g:each>

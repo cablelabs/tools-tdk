@@ -13,6 +13,7 @@ package rdk.test.tool
 
 import java.text.DateFormat
 import java.text.SimpleDateFormat
+import java.util.Map;
 import java.util.regex.Matcher
 
 import org.quartz.Job
@@ -44,7 +45,7 @@ class JobSchedulerService implements Job{
 
 	def grailsApplication
 	boolean transactional = false
-
+	
 	static triggers ={}
 
 	/**
@@ -55,18 +56,22 @@ class JobSchedulerService implements Job{
 		def jobName = context.jobDetail.key.name
 		def triggerName = context.trigger.key.name
 
-		JobDetails jobDetails
-
-		JobDetails.withTransaction {
-			jobDetails = JobDetails.findByJobNameAndTriggerName(jobName,triggerName)
-		}
-
-		if(jobDetails){
-			DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT1)
-			Calendar cal = Calendar.getInstance()
-			String date = dateFormat.format(cal.getTime()).toString()
-			String executionName = KEY_JOB+UNDERSCORE+jobDetails.device+UNDERSCORE+date
-			startExecutions(executionName,jobDetails.id)
+		try {
+			JobDetails jobDetails
+			
+			JobDetails.withTransaction {
+				jobDetails = JobDetails.findByJobNameAndTriggerName(jobName,triggerName)
+			}
+			
+			if(jobDetails){
+				DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT1)
+				Calendar cal = Calendar.getInstance()
+				String date = dateFormat.format(cal.getTime()).toString()
+				String executionName = KEY_JOB+UNDERSCORE+jobDetails.device+UNDERSCORE+date
+				startExecutions(executionName,jobDetails.id)
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
 	}
 
@@ -77,6 +82,7 @@ class JobSchedulerService implements Job{
 	 * @return
 	 */
 	def startExecutions(final String executionName, final def jobId){
+		
 		def filePath
 		def scripts = null
 		def scriptGrpId = null
@@ -96,10 +102,12 @@ class JobSchedulerService implements Job{
 				filePath = jobDetails?.filePath
 				scripts = jobDetails?.script
 				scriptGrpId = jobDetails?.scriptGroup
+				
 				realpath = jobDetails?.realPath
 				url = jobDetails?.appUrl
 				devices = jobDetails?.device
 			}
+//			ScriptService.getScriptNameFileList(realpath)
 
 			def scriptInstance
 			def scriptGroupInstance
@@ -167,10 +175,14 @@ class JobSchedulerService implements Job{
 							scriptName = MULTIPLESCRIPT
 						}
 						else{
-							scriptInstance = Script.findById(scripts[0],[lock: true])
-							scriptStatus = validateScriptBoxType(scriptInstance,deviceInstance)
+							
+							def moduleName= ScriptService.scriptMapping.get(scripts[0])
+							
+							scriptInstance = getScript(realpath,moduleName, scripts[0])
+							
+							scriptStatus = validateScriptBoxTypes(scriptInstance,deviceInstance)
 							String rdkVersion = getRDKBuildVersion(deviceInstance);
-							scriptVersionStatus = validateScriptRDKVersion(scriptInstance,rdkVersion)
+							scriptVersionStatus = validateScriptRDKVersions(scriptInstance,rdkVersion)
 							scriptName = scriptInstance?.name
 						}
 					}else if(scriptGrpId){
@@ -179,11 +191,11 @@ class JobSchedulerService implements Job{
 					
 					if( devStatus.equals( Status.FREE.toString() )){
 						
+						
 						if(!ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
 							allocated = true
 							ExecutionService.deviceAllocatedList.add(deviceInstance?.id)
 						}
-					
 					if(scriptStatus && scriptVersionStatus){
 						if(!executionNameForCheck){
 							if(i > 0){
@@ -225,6 +237,7 @@ class JobSchedulerService implements Job{
 							execution = Execution.findByName(executionNameForCheck)
 							execName = executionNameForCheck
 						}
+						
 						if(executionSaveStatus){
 							ExecutionDevice.withTransaction { status ->
 								try{
@@ -252,16 +265,18 @@ class JobSchedulerService implements Job{
 							if(jobDetails?.scriptGroup){
 								scriptGroupInstance = ScriptGroup.findById(jobDetails?.scriptGroup,[lock: true])
 								scriptCounter = 0
-								List<Script> validScriptList = new ArrayList<Script>()
+								List validScriptList = new ArrayList()
 								boolean skipStatus = false
 								boolean notApplicable = false
 
 								String rdkVersion = getRDKBuildVersion(deviceInstance);
-								scriptGroupInstance.scriptsList.each { script ->
+								scriptGroupInstance.scriptList.each { scrpt ->
 
-									if(validateScriptBoxType(script,deviceInstance)){
-										if(validateScriptRDKVersion(script,rdkVersion)){
-											if(script.skip){
+									def script = getScript(realpath,scrpt?.moduleName, scrpt?.scriptName)
+									
+									if(validateScriptBoxTypes(script,deviceInstance)){
+										if(validateScriptRDKVersions(script,rdkVersion)){
+											if(script.skip.toString().equals("true")){
 												skipStatus = true
 												saveSkipStatus(Execution.findByName(execName), executionDevice, script, deviceInstance)
 											}else{
@@ -270,10 +285,7 @@ class JobSchedulerService implements Job{
 										}else{
 											notApplicable =true
 											String rdkVersionData = ""
-											Script.withTransaction {
-												def scriptInstance1 = Script.findById(script?.id)
-												rdkVersionData = scriptInstance1?.rdkVersions
-											}
+												rdkVersionData = script?.rdkVersions
 
 											String reason = "RDK Version mismatch.<br>Device RDK Version : "+rdkVersion+", Script supported RDK Versions :"+rdkVersionData
 
@@ -289,10 +301,10 @@ class JobSchedulerService implements Job{
 
 										Device.withTransaction { deviceBoxType = deviceInstance?.boxType }
 
-										Script.withTransaction {
-											def scriptInstance1 = Script.findById(script?.id)
-											boxTypeData = scriptInstance1?.boxTypes
-										}
+//										Script.withTransaction {
+//											def scriptInstance1 = Script.findById(script?.id)
+											boxTypeData = script?.boxTypes
+//										}
 
 										String reason = "Box Type mismatch.<br>Device Box Type : "+deviceBoxType+", Script supported Box Types :"+boxTypeData
 										saveNotApplicableStatus(Execution.findByName(execName), executionDevice, script, deviceInstance, reason)
@@ -331,8 +343,11 @@ class JobSchedulerService implements Job{
 							else if(scripts){
 								
 								if(scripts instanceof String){
-									scriptInstance = Script.findById(scripts,[lock: true])
-									scriptId = scriptInstance?.id
+//									scriptInstance = Script.findById(scripts,[lock: true])
+//									scriptId = scriptInstance?.id
+									def moduleName= ScriptService.scriptMapping.get(scripts)
+									scriptInstance = getScript(realpath,moduleName, scripts)
+									
 									isMultiple = "false"
 									htmlData = executeScript(execName, executionDevice, scriptInstance , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,executionName,isMultiple)
 									output.append(htmlData)
@@ -344,10 +359,14 @@ class JobSchedulerService implements Job{
 									boolean skipStatus =false
 									boolean notApplicable =false
 									scripts.each { script ->
-										scriptInstance = Script.findById(script,[lock: true])
-										if(validateScriptBoxType(scriptInstance,deviceInstance)){
-											if(validateScriptRDKVersion(scriptInstance,rdkVersion)){
-												if(scriptInstance.skip){
+										
+									def moduleName= ScriptService.scriptMapping.get(script)
+									scriptInstance = getScript(realpath,moduleName, script)
+									
+//										scriptInstance = Script.findById(script,[lock: true])
+										if(validateScriptBoxTypes(scriptInstance,deviceInstance)){
+											if(validateScriptRDKVersions(scriptInstance,rdkVersion)){
+												if(scriptInstance.skip.toString().equals("true")){
 													skipStatus = true
 													saveSkipStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance)
 												}else{
@@ -356,10 +375,10 @@ class JobSchedulerService implements Job{
 											}else{
 												notApplicable =true
 												String rdkVersionData = ""
-												Script.withTransaction {
-													def scriptInstance1 = Script.findById(scriptInstance?.id)
-													rdkVersionData = scriptInstance1?.rdkVersions
-												}
+//												Script.withTransaction {
+//													def scriptInstance1 = Script.findById(scriptInstance?.id)
+													rdkVersionData = scriptInstance?.rdkVersions
+//												}
 	
 												String reason = "RDK Version mismatch.<br>Device RDK Version : "+rdkVersion+", Script supported RDK Versions :"+rdkVersionData
 	
@@ -375,10 +394,10 @@ class JobSchedulerService implements Job{
 	
 											Device.withTransaction { deviceBoxType = deviceInstance?.boxType }
 	
-											Script.withTransaction {
-												def scriptInstance1 = Script.findById(scriptInstance?.id)
-												boxTypeData = scriptInstance1?.boxTypes
-											}
+//											Script.withTransaction {
+//												def scriptInstance1 = Script.findById(scriptInstance?.id)
+												boxTypeData = scriptInstance?.boxTypes
+//											}
 	
 											String reason = "Box Type mismatch.<br>Device Box Type : "+deviceBoxType+", Script supported Box Types :"+boxTypeData
 											saveNotApplicableStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance, reason)
@@ -593,7 +612,7 @@ class JobSchedulerService implements Job{
 								isMultiple = "false"
 							}
 
-							if(validateScriptBoxType(scriptInstance,deviceInstance)){
+							if(validateScriptBoxTypes(scriptInstance,deviceInstance)){
 								Execution exec = Execution.findByName(newExecName)
 								aborted = ExecutionService.abortList.contains(exec?.id?.toString())
 								if(!aborted){
@@ -689,7 +708,7 @@ class JobSchedulerService implements Job{
 	 * @return
 	 */
 
-	def String executeScript(final String executionName, final ExecutionDevice executionDevice, final Script scriptInstance,
+	def String executeScript(final String executionName, final ExecutionDevice executionDevice, final def scriptInstance,
 			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String uniqueExecutionName,final String isMultiple) {
 
 		String htmlData = ""
@@ -698,9 +717,9 @@ class JobSchedulerService implements Job{
 
 		String stbIp = STRING_QUOTES + deviceInstance.stbIp + STRING_QUOTES
 
-		Script scriptInstance1 = Script.findById(scriptInstance.id,[lock: true])
-		scriptInstance1.status = Status.ALLOCATED
-		scriptInstance1.save(flush:true)
+//		Script scriptInstance1 = Script.findById(scriptInstance.id,[lock: true])
+//		scriptInstance1.status = Status.ALLOCATED
+//		scriptInstance1.save(flush:true)
 
 		Device deviceInstance1 = Device.findById(deviceInstance.id,[lock: true])
 
@@ -717,7 +736,7 @@ class JobSchedulerService implements Job{
 				executionResult = new ExecutionResult()
 				executionResult.execution = executionInstance
 				executionResult.executionDevice = executionDevice
-				executionResult.script = scriptInstance1.name
+				executionResult.script = scriptInstance.name
 				executionResult.device = deviceInstance1.stbName
 				executionResult.dateOfExecution = new Date()
 				if(! executionResult.save(flush:true)) {
@@ -732,6 +751,20 @@ class JobSchedulerService implements Job{
 		def executionResultId = executionResult?.id
 		
 		def mocaDeviceList = Device.findAllByStbIpAndMacIdIsNotNull(deviceInstance1?.stbIp)
+		
+		
+		int execTime = 0
+		try {
+			if(scriptInstance?.executionTime instanceof String){
+				execTime = Integer.parseInt(scriptInstance?.executionTime)
+			}else if(scriptInstance?.executionTime instanceof Integer){
+				execTime = scriptInstance?.executionTime?.intValue()
+			}else {
+				execTime = scriptInstance?.executionTime
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 		
 		int counter = 1
 		def mocaString = CURLY_BRACKET_OPEN
@@ -754,10 +787,10 @@ class JobSchedulerService implements Job{
 		scriptData = scriptData.replace( CLIENTLIST , mocaString )
 
 		String gatewayIp = deviceInstance1?.gatewayIp
-
+		def sFile = ScriptFile.findByScriptNameAndModuleName(scriptInstance?.name,scriptInstance?.primitiveTest?.module?.name)
 		scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
 				executionId  + COMMA_SEPERATOR + executionDevice?.id + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance1?.statusPort + COMMA_SEPERATOR +
-				scriptInstance?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR + SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +
+				sFile?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR + SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +
 				SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR)// + gatewayIp + COMMA_SEPERATOR)
 
 		scriptData	 = scriptData + "\nprint \"SCRIPTEND#!@~\";"
@@ -774,7 +807,7 @@ class JobSchedulerService implements Job{
 		fileNewPrintWriter.print( scriptData )
 		fileNewPrintWriter.flush()
 		fileNewPrintWriter.close()
-		String outData = executeScripts( file.getPath() , scriptInstance.executionTime)
+		String outData = executeScripts( file.getPath() , execTime)
 		
 		def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
@@ -827,7 +860,7 @@ class JobSchedulerService implements Job{
 				updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
 			}
 			else{
-				if((timeDifference >= scriptInstance.executionTime) && (scriptInstance.executionTime != 0))	{
+				if((timeDifference >= execTime) && (execTime != 0))	{
 					File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 					def absolutePath = layoutFolder.absolutePath
 					String[] cmd = [
@@ -1386,4 +1419,148 @@ class JobSchedulerService implements Job{
 
 	}
 	
+	public boolean validateScriptRDKVersions(final Map script, final String rdkVersion){
+		boolean scriptStatus = true
+		String versionText = rdkVersion
+		if(rdkVersion){
+			versionText = rdkVersion.trim()
+		}
+		if(versionText && !(versionText?.equals("NOT_AVAILABLE") || versionText?.equals("NOT_VALID") || versionText?.equals("")) ){
+			Script.withTransaction { trns ->
+				if(script?.rdkVersions?.size() > 0 && !(script?.rdkVersions?.find {
+					it?.buildVersion?.equals(versionText)
+					})){
+					scriptStatus = false
+				}
+			}
+		}
+		return scriptStatus
+	}
+	
+	public boolean validateScriptBoxTypes(final Map script, final Device deviceInstance){
+		boolean scriptStatus = true
+		Script.withTransaction { trns ->
+			def deviceInstance1 = Device.findById(deviceInstance?.id)
+			if(!(script?.boxTypes?.find { it?.id == deviceInstance1?.boxType?.id })){
+				scriptStatus = false
+			}
+		}
+		return scriptStatus
+	}
+	
+	
+	
+	def getScript(realPath,dirName,fileName){
+		dirName = dirName?.trim()
+		fileName = fileName?.trim()
+		
+		def moduleObj = Module.findByName(dirName)
+		def scriptDirName = Constants.COMPONENT
+		if(moduleObj){
+			if(moduleObj?.testGroup?.groupValue.equals(TestGroup.E2E.groupValue)){
+				scriptDirName = Constants.INTEGRATION
+			}
+		}
+		
+		File file = new File( "${realPath}//fileStore//testscripts//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
+		Map script = [:]
+		if(file.exists()){
+			String s = ""
+			List line = file.readLines()
+			int indx = 0
+			String scriptContent = ""
+			if(line.get(indx).startsWith("'''"))	{
+					indx++
+					while(indx < line.size() &&  !line.get(indx).startsWith("'''")){
+					s = s + line.get(indx)+"\n"
+					indx++
+				}
+				indx ++
+				while(indx < line.size()){
+					scriptContent = scriptContent + line.get(indx)+"\n"
+					indx++
+				}
+			}
+			
+			
+			String xml = s
+			XmlParser parser = new XmlParser();
+			def node = parser.parseText(xml)
+			script.put("id", node.id.text())
+			script.put("version", node.version.text())
+			script.put("name", node.name.text())
+			script.put("skip", node.skip.text())
+			def nodePrimitiveTestName = node.primitive_test_name.text()
+			def primitiveMap = PrimitiveService.primitiveModuleMap
+			def moduleName1 = primitiveMap.get(nodePrimitiveTestName)
+			
+			def moduleObj1 = Module.findByName(dirName)
+			def scriptDirName1 = Constants.COMPONENT
+			if(moduleObj1){
+				if(moduleObj1?.testGroup?.groupValue.equals(TestGroup.E2E.groupValue)){
+					scriptDirName1 = Constants.INTEGRATION
+				}
+			}
+			
+			def primitiveTest = getPrimitiveTest(realPath+"//fileStore//testscripts//"+scriptDirName1+"//"+moduleName1+"//"+moduleName1+".xml",nodePrimitiveTestName)
+			
+			script.put("primitiveTest",primitiveTest)
+			def versList = []
+			def btList = []
+			Set btSet = node?.box_types?.box_type?.collect{ it.text() }
+			Set versionSet = node?.rdk_versions?.rdk_version?.collect{ it.text() }
+			btSet.each { bt ->
+				btList.add(BoxType.findByName(bt))
+			}
+			versionSet.each { ver ->
+				versList.add(RDKVersions.findByBuildVersion(ver))
+			}
+			script.put("rdkVersions", versList)
+			script.put("boxTypes", btList)
+			script.put("status", node?.status?.text())
+			script.put("synopsis", node?.synopsis?.text())
+			script.put("scriptContent", scriptContent)
+			script.put("executionTime", node.execution_time.text())
+		}
+		return script
+	}
+	
+	def getPrimitiveTest(def filePath,def primitiveTestName){
+		File primitiveXml = new File(filePath)
+		def node = new XmlParser().parse(primitiveXml)
+		
+		Map primitiveMap = [:]
+		node.each{
+			it.primitiveTests.each{
+			 it.primitiveTest.each {
+				 if("${it.attribute('name')}" == primitiveTestName){
+				 primitiveMap.put("name", "${it.attribute('name')}")
+				  primitiveMap.put("version",  "${it.attribute('version')}")
+				  primitiveMap.put("id","${it.attribute('id')}")
+				 Set paramList = []
+				 def moduleName = PrimitiveService.primitiveModuleMap.get(primitiveTestName)
+				 primitiveMap.put("module",Module.findByName(moduleName))
+				 def fun = Function.findByModuleAndName(Module.findByName(moduleName),it.function.text())
+				 primitiveMap.put("function",fun)
+				 it.parameters.each {
+					 it.parameter.each{
+					 def pType = ParameterType.findByNameAndFunction("${it.attribute('name')}",fun)
+					 Map param = [:]
+					 param.put("parameterType",pType)
+					 param.put("value", "${it.attribute('value')}")
+					 paramList.add(param)
+					 }
+					 primitiveMap.put("parameters",paramList)
+				 }
+//				 return primitiveMap
+			 }else{
+			 def ss = "${it.attribute('name')}"
+			 if(ss == primitiveTestName){
+			 }
+			 }
+			 }
+			}
+		   }
+		return primitiveMap
+	}
 }

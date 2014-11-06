@@ -60,7 +60,7 @@ private ConfigObject getDataSourcesConfig() {
 			}
 			production {
 				resourceStream = new PathMatchingResourcePatternResolver().getResource('classpath:mailConfig.properties').inputStream
-			}
+				}
 		}
 	   dataSourcesProps.load(resourceStream)
 	}

@@ -71,7 +71,7 @@ $(document).ready(function() {
 				<g:select id="scriptGrp" onchange="showDateTime();" name="scriptGrp" noSelection="['' : 'Please Select']" from="${scriptGrpList}" optionKey="id" required="" value="" class="many-to-one selectCombo"/>
 				</div>
 				<div id="singletest" >
-				<g:select id="scripts" multiple="true" style="height:200px;width:400px" onchange="showDateTime();" name="scripts"  from="${scriptList}" optionKey="id" value="" class="many-to-one selectCombo"/>
+				<g:select id="scripts" multiple="true" style="height:200px;width:400px" onchange="showDateTime();" name="scripts"  from="${scriptList}" value="" class="many-to-one selectCombo"/>
 				</div>							
 			</td>						
 		</tr>	

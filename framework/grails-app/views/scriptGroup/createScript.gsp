@@ -70,8 +70,8 @@
 			<td><select name="ptest" id="ptest" style="width: 250px">
 					<option value="default">--Please Select--</option>
 					<g:each in="${primitiveTestList}" var="primList">
-						<option value="${primList.id}">
-							${primList.name}
+						<option value="${primList}">
+							${primList}
 						</option>
 					</g:each>
 			</select>&emsp;&emsp;&emsp;&emsp; <span id="linkId"></span></td>
@@ -92,7 +92,10 @@
 				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.list()}" optionKey="id" required="" value="" class="many-to-one selectCombo" multiple="true"/>
 			</td>
 		</tr>
-
+		<tr>
+			<td></td>
+			<td><g:checkBox id="longDuration" name="longDuration" checked="false" title ="long duration test will be included only in default module/Box type test suites with name ending with LD" />&nbsp;Long duration test</td>
+		</tr>
 		<tr>
 			<td></td>
 			<td><g:checkBox name="skipStatus" checked="false" onclick="showSkipRemarks(this)" />&nbsp;Skip
@@ -124,7 +127,7 @@
 					<span id="saveScript" >
 						<g:submitToRemote action="saveScript" controller="scriptGroup" update="scriptMessageDiv" 
 							value="Save"  before= "isScriptExist(document.getElementById('name').value);" 
-							onSuccess = "updateScriptList(document.getElementById('name').value);" >
+							onSuccess = "updateScriptListWithScriptName(document.getElementById('name').value);" >
 						</g:submitToRemote>	
 					</span>
 				 <input type="reset" value="Reset" id="cancel" onclick="clearScriptArea();"/>&emsp;

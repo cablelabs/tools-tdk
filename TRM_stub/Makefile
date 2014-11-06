@@ -53,11 +53,11 @@ all: clean library install
 
 library: $(OBJS)
 	@echo "Building $(TRM_LIB) ...."
-	$(CROSSCOMPILE)$(CC) $(OBJS) $(CFLAGS) $(COPTS) $(LDOPTS) -shared -Wl,-rpath -o $(TRM_LIB)
+	$(CROSSCOMPILE)$(CC) $(OBJS) $(CFLAGS) -fPIC $(COPTS) $(LDOPTS) -shared -Wl,-rpath -o $(TRM_LIB)
 	rm -rf $(OBJS)
 
 $(OBJ_DIR)/%.o:$(SRC_DIR)/%.cpp
-	$(CROSSCOMPILE)$(CC) -c $< $(CFLAGS) $(COPTS) -o $@
+	$(CROSSCOMPILE)$(CC) -c $< $(CFLAGS) -fPIC $(COPTS) -o $@
 
 install:
 	mv $(TRM_LIB) $(LIBDIR)
