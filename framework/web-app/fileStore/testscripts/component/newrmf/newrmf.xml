@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='newrmf' testGroup='Component'>
+    <primitiveTests>
+      <primitiveTest name='Test_newrmf_play' id='207' version='1'>
+        <function>TestMgr_newrmf_Appplay</function>
+        <parameters>
+          <parameter name='ocapid' value='ocap://0x1' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

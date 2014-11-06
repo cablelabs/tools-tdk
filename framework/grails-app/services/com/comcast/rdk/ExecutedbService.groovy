@@ -33,6 +33,8 @@ class ExecutedbService {
 	 * Injects the executionService.
 	 */
 	def executionService
+	
+	def scriptService
 
 	public static final String SI_NO_LABEL 					= "SI NO:"
 	public static final String EXPORT_SCRIPT_LABEL 			= "Script"
@@ -486,11 +488,14 @@ class ExecutedbService {
 				String output = executionResultInstance?.executionOutput
 				String executionOutput
 				String moduleName = ""
-				Script.withTransaction {
-					Script scrpt = Script.findByName(scriptName)
-					moduleName = scrpt?.primitiveTest?.module?.name
-				}
-
+//				Script.withTransaction {
+//					Script scrpt = Script.findByName(scriptName)
+//					moduleName = scrpt?.primitiveTest?.module?.name
+//				}
+				
+				def sMap = scriptService.getScriptNameModuleNameMapping(realPath)
+				moduleName = sMap.get(scriptName)
+				
 				if(!moduleName.equals("")){
 					def dataList
 					Map dataMapList = detailDataMap.get(moduleName)

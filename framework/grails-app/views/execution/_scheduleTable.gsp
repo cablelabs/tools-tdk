@@ -9,9 +9,9 @@
   Copyright (c) 2013 Comcast. All rights reserved.
   ============================================================================
 -->
-<%@ page import="com.comcast.rdk.Script"%>
 <%@ page import="com.comcast.rdk.ScriptGroup"%>
 <%@ page import="com.comcast.rdk.Device"%>
+<%@ page import="com.comcast.rdk.ScriptService"%>
 <%@ page import="java.util.Date"%>
 
 <g:if test="${jobDetailList.size() > 0}" > 
@@ -44,8 +44,8 @@
                     if(!(scriptList?.isEmpty())){  	
 	                    def scripts	                   
 	                    scriptList?.each{ scr ->
-	                        scripts = Script.findById(scr)
-	                        scrLst = scrLst + scripts + ","
+	                      //  scripts = Script.findById(scr)
+	                        scrLst = scrLst + scr + ","
 	                    }	
                     }
                     else{

@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='trm' testGroup='Component'>
+    <primitiveTests>
+      <primitiveTest name='TRM_GetAllTunerStates' id='598' version='0'>
+        <function>TestMgr_TRM_GetAllTunerStates</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TRM_GetAllTunerIds' id='599' version='0'>
+        <function>TestMgr_TRM_GetAllTunerIds</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TRM_GetAllReservations' id='600' version='0'>
+        <function>TestMgr_TRM_GetAllReservations</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TRM_GetVersion' id='601' version='0'>
+        <function>TestMgr_TRM_GetVersion</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TRM_TunerReserveForRecord' id='613' version='1'>
+        <function>TestMgr_TRM_TunerReserveForRecord</function>
+        <parameters>
+          <parameter name='hot' value='0' />
+          <parameter name='deviceNo' value='0' />
+          <parameter name='locator' value='ocap://0xCNN' />
+          <parameter name='recordingId' value='CNN' />
+          <parameter name='duration' value='0' />
+          <parameter name='startTime' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TRM_TunerReserveForLive' id='620' version='1'>
+        <function>TestMgr_TRM_TunerReserveForLive</function>
+        <parameters>
+          <parameter name='locator' value='ocap://0xCNN' />
+          <parameter name='deviceNo' value='0' />
+          <parameter name='startTime' value='0' />
+          <parameter name='duration' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TRM_ReleaseTunerReservation' id='634' version='1'>
+        <function>TestMgr_TRM_ReleaseTunerReservation</function>
+        <parameters>
+          <parameter name='locator' value='' />
+          <parameter name='duration' value='0' />
+          <parameter name='deviceNo' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TRM_ValidateTunerReservation' id='635' version='1'>
+        <function>TestMgr_TRM_ValidateTunerReservation</function>
+        <parameters>
+          <parameter name='deviceNo' value='0' />
+          <parameter name='locator' value='' />
+          <parameter name='duration' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TRM_CancelRecording' id='636' version='1'>
+        <function>TestMgr_TRM_CancelRecording</function>
+        <parameters>
+          <parameter name='duration' value='0' />
+          <parameter name='recordingId' value='' />
+          <parameter name='locator' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TRM_CancelLive' id='637' version='1'>
+        <function>TestMgr_TRM_CancelLive</function>
+        <parameters>
+          <parameter name='locator' value='' />
+          <parameter name='duration' value='0' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

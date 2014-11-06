@@ -1,0 +1,227 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='tdk_integration' testGroup='E2E'>
+    <primitiveTests>
+      <primitiveTest name='TDKE2E_LinearTV_Play_URL' id='528' version='1'>
+        <function>TestMgr_E2ELinearTV_PlayURL</function>
+        <parameters>
+          <parameter name='videoStreamURL' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_LinearTV_URL' id='529' version='1'>
+        <function>TestMgr_E2ELinearTV_GetURL</function>
+        <parameters>
+          <parameter name='Validurl' value='http;//' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Get_Record_URLS' id='530' version='1'>
+        <function>TestMgr_E2EStub_GetRecURLS</function>
+        <parameters>
+          <parameter name='RecordURL' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Play_URL' id='531' version='1'>
+        <function>TestMgr_E2EStub_PlayURL</function>
+        <parameters>
+          <parameter name='videoStreamURL' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_FF_FR_SF_SB' id='534' version='1'>
+        <function>TestMgr_Dvr_Play_FF_FR_SF_SB</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+          <parameter name='sbSeconds' value='10' />
+          <parameter name='forwardSpeed' value='4' />
+          <parameter name='rCount' value='5' />
+          <parameter name='rewindSpeed' value='-4' />
+          <parameter name='sfSeconds' value='10' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_Forward_Rewind' id='535' version='1'>
+        <function>TestMgr_Dvr_Play_Forward_Rewind</function>
+        <parameters>
+          <parameter name='playUrl' value='http' />
+          <parameter name='forwardSpeed' value='4' />
+          <parameter name='rewindSpeed' value='-4' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_Pause' id='536' version='1'>
+        <function>TestMgr_Dvr_Play_Pause</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_Pause_FF_FR' id='537' version='1'>
+        <function>TestMgr_Dvr_Play_Pause_FF_FR</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+          <parameter name='trickPlayRate' value='4' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_Pause_Pause' id='538' version='1'>
+        <function>TestMgr_Dvr_Play_Pause_Pause</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_Pause_Play' id='539' version='1'>
+        <function>TestMgr_Dvr_Play_Pause_Play</function>
+        <parameters>
+          <parameter name='playUrl' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_RMFLinearTV_GetURL' id='541' version='1'>
+        <function>TestMgr_LiveTune_GETURL</function>
+        <parameters>
+          <parameter name='Validurl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Pause_Play' id='542' version='1'>
+        <function>TestMgr_Dvr_Pause_Play</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_FF_FR_Pause_Play' id='543' version='1'>
+        <function>TestMgr_Dvr_Play_FF_FR_Pause_Play</function>
+        <parameters>
+          <parameter name='trickPlayRate' value='4' />
+          <parameter name='playUrl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_Pause_Play_Repeat' id='544' version='1'>
+        <function>TestMgr_Dvr_Play_Pause_Play_Repeat</function>
+        <parameters>
+          <parameter name='rCount' value='10' />
+          <parameter name='playUrl' value='htt' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_Pause_Play_SF_SB' id='545' version='1'>
+        <function>TestMgr_Dvr_Play_Pause_Play_SF_SB</function>
+        <parameters>
+          <parameter name='sbSeconds' value='10' />
+          <parameter name='sfSeconds' value='10' />
+          <parameter name='playUrl' value='http://' />
+          <parameter name='rCount' value='5' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_Play' id='546' version='1'>
+        <function>TestMgr_Dvr_Play_Play</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_Rewind_Forward' id='547' version='1'>
+        <function>TestMgr_Dvr_Play_Rewind_Forward</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+          <parameter name='rewindSpeed' value='-4' />
+          <parameter name='forwardSpeed' value='4' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_TrickPlay_FF_FR' id='548' version='1'>
+        <function>TestMgr_Dvr_Play_TrickPlay_FF_FR</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+          <parameter name='speed' value='4' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Play_TrickPlay_RewindFromEndPoint' id='549' version='1'>
+        <function>TestMgr_Dvr_Play_TrickPlay_RewindFromEndPoint</function>
+        <parameters>
+          <parameter name='rewindSpeed' value='-4.00' />
+          <parameter name='playUrl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Skip_Backward_From_End' id='550' version='1'>
+        <function>TestMgr_Dvr_Skip_Backward_From_End</function>
+        <parameters>
+          <parameter name='seconds' value='10' />
+          <parameter name='rCount' value='1' />
+          <parameter name='playUrl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Skip_Backward_From_Middle' id='551' version='1'>
+        <function>TestMgr_Dvr_Skip_Backward_From_Middle</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+          <parameter name='seconds' value='10' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Skip_Backward_From_Starting' id='552' version='1'>
+        <function>TestMgr_Dvr_Skip_Backward_From_Starting</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+          <parameter name='seconds' value='10' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Skip_Forward_From_End' id='553' version='1'>
+        <function>TestMgr_Dvr_Skip_Forward_From_End</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+          <parameter name='seconds' value='10' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Skip_Forward_From_Middle' id='554' version='1'>
+        <function>TestMgr_Dvr_Skip_Forward_From_Middle</function>
+        <parameters>
+          <parameter name='rCount' value='1' />
+          <parameter name='playUrl' value='http://' />
+          <parameter name='seconds' value='10' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_Dvr_Skip_Forward_Play' id='555' version='1'>
+        <function>TestMgr_Dvr_Skip_Forward_Play</function>
+        <parameters>
+          <parameter name='rCount' value='1' />
+          <parameter name='playUrl' value='http://' />
+          <parameter name='seconds' value='10' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_Rmf_LinearTv_Dvr_Play' id='556' version='1'>
+        <function>TestMgr_LinearTv_Dvr_Play</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_RMF_Linear_simultuning' id='557' version='1'>
+        <function>TestMgr_RF_Video_ChannelChange</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_RMF_Linear_Simultaneous_ChannelChange' id='558' version='1'>
+        <function>TestMgr_LinearTv_Dvr_Play</function>
+        <parameters>
+          <parameter name='playUrl' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_LinearTV_T2p_TrickMode' id='574' version='1'>
+        <function>TestMgr_HybridE2E_T2pTrickMode</function>
+        <parameters>
+          <parameter name='VideostreamURL' value='http://' />
+          <parameter name='trickPlayRate' value='0.5' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_LinearTV_T2p_Tuning' id='575' version='1'>
+        <function>TestMgr_HybridE2E_T2pTuning</function>
+        <parameters>
+          <parameter name='ValidocapId' value='0x1234' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_RMF_TSB_Play' id='577' version='1'>
+        <function>TestMgr_TSB_Play</function>
+        <parameters>
+          <parameter name='SpeedRate' value='1.0' />
+          <parameter name='VideostreamURL' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TDKE2E_MDVR_GetResult' id='583' version='1'>
+        <function>TestMgr_MDVR_GetResult</function>
+        <parameters>
+          <parameter name='resultList' value='SUCCESS' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

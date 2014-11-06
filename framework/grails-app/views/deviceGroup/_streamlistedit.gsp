@@ -10,13 +10,14 @@
   ============================================================================
 -->
 <%@ page import="com.comcast.rdk.StreamingDetails" %>
+<%@ page import="com.comcast.rdk.RadioStreamingDetails" %>
 	<g:if  test="${deviceStreams?.size() > 0 }" >
 	
 	<div>
 		<table>		
 			<thead>
 				<tr>
-				<td colspan="5" align="right" style="color: brown;">Duplicate Ocap Id's are not allowed</td>
+				<td colspan="5" align="right" style="color: brown;">Duplicate Ocap Id's are not allowed </td>
 				</tr>
 				<tr>
 				
@@ -49,6 +50,42 @@
 					<g:textField name="ocapId"  style="width:55px;" required="" value="${deviceStream?.ocapId}"/></td>
 				</tr>
 			</g:each>
+			<g:if test="${showBlankRadio}">
+			<g:each in="${blankList}" status="i" var="streamingDetailsInstance">
+			<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
+				
+					<td align="center">${fieldValue(bean: streamingDetailsInstance, field: "streamId")}</td>										
+				
+					<td align="center">Radio</td>
+					
+					<td align="center">N/A</td>
+					
+					<td align="center">N/A</td>
+				
+					<td align="center"><g:hiddenField name="streamid" value="${streamingDetailsInstance.streamId}" />
+					
+						<g:textField name="ocapId"  style="width:55px;" required="" value=""/></td>
+				</tr>
+			</g:each>
+			</g:if>
+			<g:else>
+			<g:each in="${radiodeviceStreams}" status="i" var="streamingDetailsInstance">
+				<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
+				
+					<td align="center">${fieldValue(bean: streamingDetailsInstance, field: "stream.streamId")}</td>										
+				
+					<td align="center">Radio</td>
+					
+					<td align="center">N/A</td>
+					
+					<td align="center">N/A</td>
+				
+					<td align="center"><g:hiddenField name="streamid" value="${streamingDetailsInstance.stream.streamId}" />
+					
+						<g:textField name="ocapId"  style="width:55px;" required="" value="${streamingDetailsInstance?.ocapId}"/></td>
+				</tr>
+			</g:each>
+			</g:else>
 			</tbody>
 		</table>
 		

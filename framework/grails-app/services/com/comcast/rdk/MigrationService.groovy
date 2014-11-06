@@ -25,7 +25,8 @@ class MigrationService {
 	static transactional = true
 
 	static datasource = 'DEFAULT'
-
+	
+	Map moduleNameChanges = [:]  
 	/**
 	 * FUnction to start migration
 	 * @return
@@ -33,9 +34,12 @@ class MigrationService {
 	def doMigration() {
 		println " migration "
 		//		backup()
+		
+		
 		long time = System.currentTimeMillis()
 		Role.withSession{ Role.findAll() }
 		try {
+			initialiseModuleNameChanges()
 			boolean flag = false
 			Role.temp.withSession{
 				def listr = Role?.temp?.findAll()
@@ -43,63 +47,37 @@ class MigrationService {
 					flag=true
 				}
 			}
-
 			if(flag){
 				migrateToolData()
 				migrateScriptData()
 				cleanData()
 			}
 		} catch (Throwable e) {
-	//	println " Error "+e.getMessage()
 			e.printStackTrace()
 		}
 		println "MIGRATION COMPLETED" + (System.currentTimeMillis() - time )
 	}
 
+	def initialiseModuleNameChanges(){
+		moduleNameChanges.put("closedcaption","ClosedCaption")
+		moduleNameChanges.put("devicesettings","DeviceSettings")
+		moduleNameChanges.put("dtcp","dtcp")
+		moduleNameChanges.put("gst-plugins-rdk","gstpluginsrdk")
+		moduleNameChanges.put("iarmbus","IARMBUS")
+		moduleNameChanges.put("mediaframework","Mediaframework")
+		moduleNameChanges.put("mediastreamer","Mediastreamer")
+		moduleNameChanges.put("newrmf","newrmf")
+		moduleNameChanges.put("openSource_components","OpenSource_Components")
+		moduleNameChanges.put("rdk_logger","RDKLogger")
+		moduleNameChanges.put("recorder","Recorder")
+		moduleNameChanges.put("rmfapp","rmfapp")
+		moduleNameChanges.put("servicemanager","ServiceManager")
+		moduleNameChanges.put("tdk_integration","tdkintegration")
+		moduleNameChanges.put("tr69","tr069module")
+		moduleNameChanges.put("trm","TRM")
+		moduleNameChanges.put("xupnp","xupnp")
+	}
 
-	//	def backup(){
-	//		try{
-	//		def sout = new StringBuffer()
-	//		def serr = new StringBuffer()
-	//		def path = ""
-	//
-	//
-	//		String userName = "rdktesttooluser"
-	//		String password = "6dktoolus3r!"
-	//
-	//		String cmd = "mysqldump -u"+userName+" -p"+password+" --databases ";
-	//		cmd =cmd + "rdktesttoolproddb"
-	//
-	//		try{
-	//			String fileName = "";
-	//			try{
-	//
-	//				Date date = new Date();
-	//				SimpleDateFormat sdf = new SimpleDateFormat("ddMMMyyyy")
-	//				fileName = "RDK_TDK_"+sdf.format(date)+".sql"
-	//			}catch(Exception e){
-	//				fileName = "RDK_TDK_DB_Dump.sql"
-	//			}
-	//
-	//			File layoutFolder = grailsApplication.parentContext.getResource("//dbBackup//"+fileName).file
-	////			path = path + "/"+fileName
-	////			File f = new File(path)
-	//			if(!layoutFolder.exists()){
-	//				layoutFolder.createNewFile()
-	//			}
-	//			path = layoutFolder.absolutePath
-	//			cmd = cmd +" --result-file="+path
-	//			println "cmddddd "+cmd
-	//			def process = cmd.execute()
-	//			process.consumeProcessOutput(sout, serr)
-	//			process.waitForOrKill(10000)
-	//		}catch(Exception e){
-	//			e.printStackTrace();
-	//		}
-	//		}catch(Exception e){
-	//		e.printStackTrace();
-	//	}
-	//	}
 
 	def cleanData(){
 		cleanDB()
@@ -128,9 +106,10 @@ class MigrationService {
 		migrateModules()
 		migrateFunctions()
 		migrateParameterTypes()
-		migrateParameters()
-		migratePrimitiveTests()
-		migrateScripts()
+//		migrateParameters()
+//		migratePrimitiveTests()
+//		migrateScripts()
+		migrateScriptFile()
 		migrateScriptGroup()
 	}
 
@@ -413,97 +392,42 @@ class MigrationService {
 	
 	
 
-	/**
-	 * Migrate data from Script
-	 * @return
-	 */
-	def migrateScripts(){
-		def scriptTempList = []
-		Script.temp.withSession {
-			scriptTempList = Script.temp.findAll();
-		}
-
-		List migrationList = []
-
-		
-		scriptTempList.each{ mScript ->
-			try{
-
-				def module
-				Module.withSession{
-					module = Module.findByName(mScript?.primitiveTest?.module?.name)
-				}
-	
-				def function
-				Function.withSession{
-					function = Function.findByNameAndModule(mScript?.primitiveTest?.function?.name,module)
-				}
-				
-				def primitiveTest
-				PrimitiveTest.withSession {
-					primitiveTest = PrimitiveTest.findByNameAndFunctionAndModule(mScript?.primitiveTest?.name,function,module)
-				}
-				
-				
-				def groups
-				Groups.withSession {
-					groups = Groups.findByName(mScript?.groups?.name)
-				}
-				def script
-				Script.withSession {
-
-					script = Script.findByName(mScript?.name)
-					
-					if(!script){
-						script  = new Script()
-					}
-					script.properties = mScript.getProperties()
-					script.properties.put("boxTypes", [:])
-					script.properties.put("rdkVersions", [:])
-					if(groups){
-						script.groups = groups
-					}
-					if(primitiveTest){
-						script.primitiveTest = primitiveTest
-					}
-					
-					
-					if(!script.save(flush:true)){
-						// println "Error saving script instance : ${script.errors}"
-					}
-				}
-				def boxTypes = mScript?.boxTypes
-				boxTypes.each { boxType ->
-					def bType
-					BoxType.withSession{
-						bType = BoxType.findByName(boxType?.name)
-					}
-
-					Script.withSession {
-						if(bType){
-							script.addToBoxTypes(bType)
-						}
-					}
-				}
-				
-				def rdkVersions = mScript?.rdkVersions
-				rdkVersions.each { rdkVersion ->
-					def rdkVer
-					RDKVersions.withSession{
-						rdkVer = RDKVersions.findByBuildVersion(rdkVersion?.buildVersion)
-					}
-
-					Script.withSession {
-						if(rdkVer){
-							script.addToRdkVersions(rdkVer)
-						}
-					}
-				}
-			}catch(Exception e ){
+	def migrateScriptFile(){
+		try {
+			def tempList = []
+					ScriptFile.temp.withSession {
+				tempList = ScriptFile.temp.findAll();
 			}
+			println " size>> "+tempList?.size()
+			List migrationList = []
+					tempList.each {tempEntry ->
+					ScriptFile.withSession {
+						def newDbObject = ScriptFile.findByScriptNameAndModuleName(tempEntry?.scriptName,tempEntry?.moduleName)
+								if(!newDbObject){
+									migrationList.add(tempEntry)
+								}
+					}
+			}
+			
+			migrationList?.each{ migrateObj ->
+				println "  migrate "+migrateObj
+			ScriptFile.withSession {
+				try{
+					def sObject  = new ScriptFile()
+					sObject.setScriptName(migrateObj?.scriptName)
+					sObject.setModuleName(migrateObj?.moduleName)
+					sObject.save(flush:true)
+				}catch(Exception e ){
+				println "EEE "+e.getMessage()
+				}
+			}
+			}
+		} catch (Exception e) {
+		println "err "+e.getMessage() + "  eee "+e
+			e.printStackTrace()
 		}
-	}
 
+	}
 	/**
 	 * Migrate data from ScriptGroup
 	 * @return
@@ -513,55 +437,67 @@ class MigrationService {
 		ScriptGroup.temp.withSession {
 			tempList = ScriptGroup.temp.findAll();
 		}
-
-		List migrationList = []
-		tempList.each {tempEntry ->
-			ScriptGroup.withSession {
-				def newDbObject = ScriptGroup.findByName(tempEntry?.name)
-				if(!newDbObject){
-					migrationList.add(tempEntry)
-				}
-			}
-		}
+		List migrationList = tempList
+//		tempList.each {tempEntry ->
+//			ScriptGroup.withSession {
+//				def newDbObject = ScriptGroup.findByName(tempEntry?.name)
+//				if(!newDbObject){
+//					migrationList.add(tempEntry)
+//				}
+//			}
+//		}
 		migrationList.each{ migrateObj ->
-			ScriptGroup newObject
+			ScriptGroup sgObject
 			ScriptGroup.withSession {
 				try{
 					def sproperties = migrateObj.getProperties()
-					newObject  = new ScriptGroup(sproperties)
-					newObject.scripts =  []
-					newObject.scriptsList =  []
-					newObject.save(flush:true)
+					def oldModuleName = migrateObj?.name
+					if(moduleNameChanges.containsKey(oldModuleName)){
+						oldModuleName = moduleNameChanges.get(oldModuleName)
+					}
+					
+					sgObject = ScriptGroup.findByName(oldModuleName)
+					if(!sgObject){
+						sgObject  = new ScriptGroup()
+					}
+					sgObject.properties = sproperties
+					sgObject.scripts =  []
+					sgObject.scriptsList =  []
+					sgObject.scriptList =  []
+					sgObject.save(flush:true)
 				}catch(Exception e ){
 				}
 			}
-			def scriptsList = migrateObj?.scriptsList
-			scriptsList.each { script ->
+			def scriptList = migrateObj?.scriptList
+			scriptList.each { script ->
 				def scrpt
-				Script.withSession{
-					scrpt = Script.findByName(script?.name)
+				ScriptFile.withSession{
+					scrpt = ScriptFile.findByScriptNameAndModuleName(script?.scriptName,script?.moduleName)
 				}
 				ScriptGroup.withSession {
 					if(scrpt){
-						newObject.addToScriptsList(scrpt)
+						if(!sgObject?.scriptList?.contains(script)){
+							sgObject.addToScriptList(scrpt)
+						}else{
+						}
 					}
 				}
 			}
 			
-			def scripts = migrateObj?.scripts
-			scripts.each { script ->
-				def scrpt
-				if(!migrateObj?.scriptsList?.contains(script)){
-				Script.withSession{
-					scrpt = Script.findByName(script?.name)
-				}
-				ScriptGroup.withSession {
-					if(scrpt){
-						newObject.addToScriptsList(scrpt)
-					}
-				}
-				}
-			}
+//			def scripts = migrateObj?.scripts
+//			scripts.each { script ->
+//				def scrpt
+//				if(!migrateObj?.scriptsList?.contains(script)){
+//				Script.withSession{
+//					scrpt = Script.findByName(script?.name)
+//				}
+//				ScriptGroup.withSession {
+//					if(scrpt){
+//						newObject.addToScriptsList(scrpt)
+//					}
+//				}
+//				}
+//			}
 		}
 
 	}
@@ -572,9 +508,10 @@ class MigrationService {
 	 */
 	private boolean cleanDB(){
 		clearScriptGroups()
-		cleanScripts()
-		cleanPrimitiveTests()
-		cleanParameters()
+		cleanScriptFiles()
+//		cleanScripts()
+//		cleanPrimitiveTests()
+//		cleanParameters()
 		cleanParameterTypes()
 		cleanFunctions()
 		cleanModules()
@@ -939,10 +876,11 @@ class MigrationService {
 		try {
 			ScriptGroup.temp.withSession{
 				def sgList = ScriptGroup.temp.findAll()
-						sgList.each { sg ->
-						sg?.scriptsList?.clear()
-								sg?.scripts?.clear()
-										sg?.temp.save()
+				sgList.each { sg ->
+					sg?.scriptsList?.clear()
+					sg?.scripts?.clear()
+					sg?.scriptList?.clear()
+					sg?.temp.save()
 				}
 			}
 		} catch (Exception e) {
@@ -972,6 +910,34 @@ class MigrationService {
 		
 		
 		migrationList.each{ mObject -> deleteScripts(mObject) }
+	}
+	
+	/**
+	 * Removing Scripts that are migrated or available in the existing DB
+	 */
+	private void cleanScriptFiles(){
+		try {
+			def scriptTempList = []
+					ScriptFile.temp.withSession {
+				scriptTempList = ScriptFile.temp.findAll();
+			}
+			
+			List migrationList = []
+					scriptTempList.each {scriptEntry ->
+					ScriptFile.withSession {
+						def script = ScriptFile.findByScriptNameAndModuleName(scriptEntry?.scriptName,scriptEntry?.moduleName)
+								if(script){
+									migrationList.add(scriptEntry)
+								}
+					}
+			}
+			
+			
+			
+			migrationList.each{ mObject -> deleteScriptFiles(mObject) }
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 	}
 
 	/**
@@ -1011,6 +977,21 @@ class MigrationService {
 		try {
 
 			boolean flag = true //removeFromScriptSuite(mObject)
+			if(flag){
+				if(mObject.temp.delete()){
+				//	println "Error saving function instance : ${mObject.errors}"
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+	
+	
+	def deleteScriptFiles(def mObject){
+		try {
+
+			boolean flag = true 
 			if(flag){
 				if(mObject.temp.delete()){
 				//	println "Error saving function instance : ${mObject.errors}"
@@ -1336,7 +1317,12 @@ class MigrationService {
 			Module module
 			Module.withSession {
 				try{
-					module = Module.findByName(mModule?.name)
+					def oldModuleName = mModule?.name
+					if(moduleNameChanges.containsKey(oldModuleName)){
+						oldModuleName = moduleNameChanges.get(oldModuleName)
+					}
+					
+					module = Module.findByName(oldModuleName)
 					if(module == null){
 						module  = new Module()
 					}

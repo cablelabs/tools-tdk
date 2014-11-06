@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='servicemanager' testGroup='Component'>
+    <primitiveTests>
+      <primitiveTest name='SM_RegisterService' id='106' version='1'>
+        <function>TestMgr_SM_RegisterService</function>
+        <parameters>
+          <parameter name='service_name' value='homeNetworkingService' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_DoesServiceExist' id='107' version='1'>
+        <function>TestMgr_SM_DoesServiceExist</function>
+        <parameters>
+          <parameter name='service_name' value='homeNetworkingService' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_UnRegisterService' id='108' version='1'>
+        <function>TestMgr_SM_UnRegisterService</function>
+        <parameters>
+          <parameter name='service_name' value='asd' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_GetRegisteredServices' id='114' version='0'>
+        <function>TestMgr_SM_GetRegisteredServices</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='SM_GetGlobalService' id='133' version='1'>
+        <function>TestMgr_SM_GetGlobalService</function>
+        <parameters>
+          <parameter name='service_name' value='homeNetworkingService' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_SetAPIVersion' id='134' version='2'>
+        <function>TestMgr_SM_SetAPIVersion</function>
+        <parameters>
+          <parameter name='service_name' value='homeNetworkingService' />
+          <parameter name='apiVersion' value='123' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_RegisterForEvents' id='135' version='1'>
+        <function>TestMgr_SM_RegisterForEvents</function>
+        <parameters>
+          <parameter name='event_name' value='homeNetworkingService' />
+          <parameter name='service_name' value='deviceDiscoveryUpdate' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_HN_EnableVPOP' id='136' version='1'>
+        <function>TestMgr_SM_HN_EnableVPOP</function>
+        <parameters>
+          <parameter name='enable' value='1' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_HN_EnableMDVR' id='137' version='1'>
+        <function>TestMgr_SM_HN_EnableMDVR</function>
+        <parameters>
+          <parameter name='enable' value='1' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_HN_SetDeviceName' id='138' version='2'>
+        <function>TestMgr_SM_HN_SetDeviceName</function>
+        <parameters>
+          <parameter name='device_name' value='DeviceName123' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_DisplaySetting_SetCurrentResolution' id='141' version='1'>
+        <function>TestMgr_SM_DisplaySetting_SetCurrentResolution</function>
+        <parameters>
+          <parameter name='videoDisplay' value='videodisplay' />
+          <parameter name='resolution' value='resolution' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_DisplaySetting_SetZoomSettings' id='142' version='1'>
+        <function>TestMgr_SM_DisplaySetting_SetZoomSettings</function>
+        <parameters>
+          <parameter name='zoomLevel' value='zoomlevel' />
+          <parameter name='videoDisplay' value='videodisplay' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_DeviceSetting_GetDeviceInfo' id='646' version='0'>
+        <function>TestMgr_SM_DeviceSetting_GetDeviceInfo</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='SM_ScreenCapture_Upload' id='647' version='1'>
+        <function>TestMgr_SM_ScreenCapture_Upload</function>
+        <parameters>
+          <parameter name='url' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_WebSocket_GetUrl' id='648' version='0'>
+        <function>TestMgr_SM_WebSocket_GetUrl</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='SM_WebSocket_GetReadyState' id='649' version='0'>
+        <function>TestMgr_SM_WebSocket_GetReadyState</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='SM_WebSocket_GetBufferedAmount' id='650' version='0'>
+        <function>TestMgr_SM_WebSocket_GetBufferedAmount</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='SM_WebSocket_GetProtocol' id='651' version='0'>
+        <function>TestMgr_SM_WebSocket_GetProtocol</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='SM_GetSetting' id='652' version='0'>
+        <function>TestMgr_SM_GetSetting</function>
+        <parameters>
+          <parameter name='service_name' value='screenCaptureService' />
+          <parameter name='service_name' value='deviceSettingService' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_CreateService' id='653' version='0'>
+        <function>TestMgr_SM_CreateService</function>
+        <parameters>
+          <parameter name='service_name' value='screenCaptureService' />
+          <parameter name='service_name' value='deviceSettingService' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='SM_Services_GetName' id='654' version='0'>
+        <function>TestMgr_Services_GetName</function>
+        <parameters>
+          <parameter name='service_name' value='screenCaptureService' />
+          <parameter name='service_name' value='deviceSettingService' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

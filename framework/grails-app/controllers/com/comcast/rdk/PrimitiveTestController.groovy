@@ -12,19 +12,21 @@
 package com.comcast.rdk
 
 import static com.comcast.rdk.Constants.*
-
-import java.util.Map;
+import grails.converters.JSON
+import groovy.xml.MarkupBuilder
+import groovy.xml.XmlUtil
 
 import org.springframework.dao.DataIntegrityViolationException
+
 import com.google.gson.JsonObject
-import grails.converters.JSON
-import org.apache.shiro.SecurityUtils
 
 class PrimitiveTestController {
 
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
         
     def primitivetestService
+	
+	def primitiveService
 
 	def utilityService
 	
@@ -32,10 +34,9 @@ class PrimitiveTestController {
         redirect(action: "list", params: params)
     }
 
-    def list() {     
-		def primitiveTestList = PrimitiveTest.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])
-		def primitiveTestMap = createPrimitiveTestMap(primitiveTestList);
-        [primitiveTestInstanceList: primitiveTestList, primitiveTestInstanceTotal: primitiveTestList.size(),primitiveTestMap:primitiveTestMap]
+    def list() { 
+    	def primitiveTestList = primitiveService.getAllPrimitiveTest(request.getRealPath("/"))
+        [primitiveTestInstanceList: primitiveTestList, primitiveTestInstanceTotal: primitiveTestList.size()]
     }
 	
 	/**
@@ -127,12 +128,24 @@ class PrimitiveTestController {
 	 * @author subrata
 	 */
 	def create() {
-		def primitiveTestList = PrimitiveTest.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])
-		//def primitiveTestList = PrimitiveTest.list([order: 'asc', sort: 'name'])
-		def primitiveTestMap = createPrimitiveTestMap(primitiveTestList);
+		def primitiveTestList = primitiveService.getPrimitiveList(getRealPath())
+		def primitiveTestMap =  primitiveService.getAllPrimitiveTest(getRealPath())
 		[primitiveTestList : primitiveTestList, error: params.error, primitiveTestId: params.primitiveTestId, primitiveTestCount : PrimitiveTest.count(),,primitiveTestMap:primitiveTestMap]
 	}
 
+	def getRealPath(){
+		request.getRealPath("/")
+	}
+	
+	def getPrimitiveFilePath(def moduleName){
+		def scriptDirName = primitiveService.getScriptDirName(moduleName)
+		return getRealPath()+"/fileStore/testscripts/"+scriptDirName+"/"+moduleName+"/"+moduleName+".xml"
+	}
+	
+	def getPrimitiveFileDirectory(def moduleName){
+		def scriptDirName = primitiveService.getScriptDirName(moduleName)
+		return getRealPath()+"/fileStore/testscripts/"+scriptDirName+"/"+moduleName+"/"
+	}
 	
 	/**
 	 * TODO: Complete java doc
@@ -142,84 +155,157 @@ class PrimitiveTestController {
 	 */
     def save() {
 		def error = ''
-		PrimitiveTest.withTransaction { status ->
-			try {                
-                if(PrimitiveTest.findByName(params?.testName)){
+			try {      
+				def primitiveList = primitiveService.getPrimitiveList(getRealPath())   
+                if(primitiveList.contains(params?.testName)){
 					render("Duplicate PrimitiveTest Name not allowed. Try Again")
                 }
                 else{                    
-                    def primitiveTest = new PrimitiveTest()                                        
-                    primitiveTest.name = params?.testName
-                    primitiveTest.module = Module.get(params?.module as Long)
-                    primitiveTest.function = Function.get(params?.functionValue as Long)
-					primitiveTest.groups = utilityService.getGroup()
-                    if(! primitiveTest.save()) {
-                        log.error "Error saving PrimitiveTest instance : ${primitiveTest.errors}"
-						render("Error saving PrimitiveTest. Try Again.")
-                    }
-                    else{
+                    def moduleObj = Module.get(params?.module as Long)
+                    def fun = Function.get(params?.functionValue as Long)
+					
+					def primitiveFile = new File(getPrimitiveFilePath(moduleObj?.getName()))
+					
+					if(primitiveFile.exists()){
+						def data = primitiveFile.readBytes()
+					def root = new XmlSlurper().parse(primitiveFile)
+					def list1 = []
                         if(params.parameterTypeIds) {
                             params.parameterTypeIds.split(", ").each {
                                 if(it) {
                                     def value = params["value_${it}"]
                                     def parameterType = ParameterType.get(it as Long)
-                                    def parameter = new Parameter()
-                                    parameter.parameterType = parameterType
-                                    parameter.value = value ?: ''
-                                    if(parameter.save()) {
-                                        primitiveTest.addToParameters(parameter)                                        
-                                     
-										render(message(code: 'default.created.message', args: [
-                                                message(code: 'primitiveTest.label', default: 'Primitive Test'),
-                                                primitiveTest.name
-                                            ]))
-                                    }
-                                    else {
-										render("&emsp;Error creating Primitive Test. Please make sure that all the inputs are valid. \n")
-                                        log.error "Error saving Parameter : ${parameter.errors}"
-                                        throw new RuntimeException("Value not supported")
-                                    }
+									
+									def pMap = [:]
+									pMap.put("parameterType",parameterType?.name)
+									pMap.put("value",value ?: '')
+									list1.add(pMap)
                                 }
                             }
+							def funName = fun?.getName()
+							root?.module?.primitiveTests?.appendNode{
+								primitiveTest(name :params?.testName,id:" ",version: "1"){
+								function(fun?.getName())
+								parameters{
+								list1.each { p ->
+									parameter("name":p?.parameterType,"value":p?.value)
+								}
+								}
+							}
+							}
                         }
                         else{
                          
-							render(message(code: 'default.created.message', args: [
-                                message(code: 'primitiveTest.label', default: 'Primitive Test'),
-                                primitiveTest.name
-                            ]))
+							root?.module?.primitiveTests?.appendNode{
+								primitiveTest(name :params?.testName,id:'',version:'1'){
+								function(fun?.getName())
+									parameters()
+							}
+							}
+							
                         }
-                    }
+//                    }
+                    try {
+						  def writer = new FileWriter(primitiveFile)
+                    XmlUtil.serialize(root, writer)
+                    primitiveService.addToPrimitiveList(params?.testName,moduleObj.getName())
+					} catch (Exception e) {
+						primitiveFile.write(new String(data))
+						e.printStackTrace()
+					}
+//					render(message(code: 'default.created.message', args: [
+//						message(code: 'primitiveTest.label', default: 'Primitive Test'),
+//						params?.testName
+//					]))
+					}else{
+						if(moduleObj){
+							def list1 = []
+							if(params.parameterTypeIds) {
+								params.parameterTypeIds.split(", ").each {
+									if(it) {
+										def value = params["value_${it}"]
+										def parameterType = ParameterType.get(it as Long)
+										
+										def pMap = [:]
+										pMap.put("parameterType",parameterType?.name)
+										pMap.put("value",value ?: '')
+										list1.add(pMap)
+									}
+								}
+							}
+								def funName = fun?.getName()
+							try {
+								def writer = new StringWriter()
+								def xml = new MarkupBuilder(writer)
+								xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
+								xml.xml(){
+									
+									xml.module("name":moduleObj?.name, "testGroup":moduleObj.testGroup){
+										
+										
+										xml.primitiveTests(){
+											
+											xml.primitiveTest(name : params?.testName, id : '' , version :'1' ){
+												xml.function(funName)
+												if(list1.size()> 0){
+													xml.parameters(){
+														list1.each { p ->
+														xml.parameter("name":p?.parameterType,"value":p?.value)
+														}
+													}
+												}else{
+													xml.parameters()
+												}
+											}
+										}
+									}
+								}
+								String dirname = moduleObj?.name
+										dirname = dirname?.trim()
+												File dir = new File(getPrimitiveFileDirectory(dirname))
+								
+								if(!dir.exists()){
+									dir.mkdirs()
+								}
+								
+								File file = new File( getPrimitiveFilePath(dirname));
+								if(!file.exists()){
+									file.createNewFile()
+								}
+								file.write(writer.toString())
+								primitiveService.addToPrimitiveList(params?.testName,moduleObj.getName())
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+						}
+					}
                 }				
-				status.flush()
 			}
 			catch(Throwable th) {
-				status.setRollbackOnly()
 			}
-		}
+			
     }
 	
     def deleteTest() {
-        Long id = params.id as Long
-        PrimitiveTest primitiveTestInstance = PrimitiveTest.get(id)
-        if (!primitiveTestInstance) {
-            flash.message = message(code: 'default.not.found.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveTestInstance?.name])
+		def primitiveName = params?.id
+		def primitiveList = primitiveService.getPrimitiveList(getRealPath())
+		if(!primitiveList.contains(primitiveName)){
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveName])
             redirect(action: "create")
             return
         }
-		def script = Script.findByPrimitiveTest(primitiveTestInstance)	
-		if(script){
-			flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveTestInstance?.name])
-            render("success")
-			return
-		}	
+		
         try {
-          primitiveTestInstance.delete(flush: true)
-          flash.message = message(code: 'default.deleted.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveTestInstance?.name])
+			if(primitiveService.deletePrimitiveTest(getRealPath(), primitiveName)){
+          flash.message = message(code: 'default.deleted.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveName])
           render("success")
+			}else{
+			flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveName])
+            render("success")
+			}
         }
         catch (DataIntegrityViolationException e) {
-            flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveTestInstance?.name])
+            flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), primitiveName])
             render("success")
         }
     }
@@ -232,9 +318,11 @@ class PrimitiveTestController {
 	 * @author subrata
 	 */
 	def getEditableTest() {
-		def primitiveTest = PrimitiveTest.get(params.id as Long)
-		def functions = Function.findAllByModule(primitiveTest.module)
-		def parameterTypes = ParameterType.findAllByFunction(primitiveTest.function)	
+		def primitiveModuleMap = primitiveService.getPrimitiveModuleMap(getRealPath())
+		def module = primitiveModuleMap.get(""+params?.id)
+		def primitiveTest =primitiveService.getPrimitiveTest(getPrimitiveFilePath(module), params?.id)
+		def functions = Function.findAllByModule(primitiveTest?.module)
+		def parameterTypes = ParameterType.findAllByFunction(primitiveTest?.function)	
 		def ids = parameterTypes - (primitiveTest?.parameters?.parameterType)
 		[primitiveTest: primitiveTest, functions: functions, paramTypes : parameterTypes, newParams : ids]
 	}
@@ -250,53 +338,81 @@ class PrimitiveTestController {
 	 * @author subrata
 	 */
     def update(Long id, Long version) {
-		def primitiveTest = PrimitiveTest.get(id)
-		def error
-		if (version != null) {
-			if (primitiveTest.version > version) {
-				primitiveTest.errors.rejectValue("version", "default.optimistic.locking.failure",
-						  [message(code: 'primitiveTest.label', default: 'PrimitiveTest')] as Object[],
-						  "Another user has updated this PrimitiveTest while you were editing")
-				render(view: "create", model: [primitiveTest: primitiveTest])
-				return
-			}
-		}		
+		def moduleMap = primitiveService.getPrimitiveModuleMap(getRealPath())
+		def moduleName = moduleMap.get(params?.id)
+		def primitiveFilePath = getPrimitiveFilePath(moduleName)
 		
-		PrimitiveTest.withTransaction { status ->
+		File ff =new File(primitiveFilePath);
+		def data = ff.readBytes()
+		def error
+		long vers1 = 0
+		if (params?.ptVersion != null) {
 			try {
-				def parameters = primitiveTest.parameters
-				primitiveTest.parameters = null
-				parameters.each { it.delete(flush: true) }
+				def b = params?.ptVersion
+				if( b instanceof String){
+					vers1 = Long.parseLong(b)
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+		}
+		def fun = Function.get(params?.functionValue as Long)
+		def primitiveFile = new File(primitiveFilePath)
+		if(primitiveFile.exists()){
+			def root = new XmlSlurper().parse(primitiveFile)
 
-				if(params.parameterTypeIds) {
-					params.parameterTypeIds.split(", ").each {
-						if(it) {
-							def value = params["value_${it}"]
-							def parameterType = ParameterType.get(it as Long)
-							def parameter = new Parameter()
-							parameter.parameterType = parameterType
-							parameter.value = value ?: ''
-							if(parameter.save(validate: true, flush: true)) {
-								parameter.primitiveTest = primitiveTest
-                                flash.message = message(code: 'default.updated.message', args: [
-                                    message(code: 'primitiveTest.label', default: 'PrimitiveTest'),
-                                    primitiveTest.name
-                                ])
+			def list1 = []
+			if(params.parameterTypeIds) {
+				params.parameterTypeIds.split(", ").each {
+					if(it) {
+						def value = params["value_${it}"]
+						def parameterType = ParameterType.get(it as Long)
+
+						def pMap = [:]
+						pMap.put("parameterType",parameterType?.name)
+						pMap.put("value",value ?: '')
+						list1.add(pMap)
+					}
+				}
+				def funName = fun?.getName()
+				def pNode = root?.module?.primitiveTests?.primitiveTest?.find{ it.@name == params?.id }
+				long vers2 = 0
+							
+							try {
+								vers2 = Long.parseLong((""+pNode?.@version)?.trim())
+							} catch (Exception e) {
+								e.printStackTrace()
 							}
-							else {
-								error += "Error Updating Primitive Test - '${primitiveTest.name}'. Please make sure that all the inputs are valid. \n"
-								log.error "Error saving Parameter : ${parameter.errors}"
-								throw new RuntimeException("Value not supported")
-							}
+				if(vers2 == vers1){
+					vers2 ++
+				
+				pNode.replaceNode{
+					primitiveTest(name :params?.id,id:" ",version: vers2){
+						function(fun.getName())
+						parameters(){
+						list1.each { p ->
+							parameter("name":p?.parameterType,"value":p?.value)
+						}
 						}
 					}
-				}              
-				status.flush()
+				}
+				
+				try {
+					OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(primitiveFile),"UTF-8");
+					XmlUtil.serialize(root, out)
+				} catch (Exception e) {
+					File ff1 =new File(primitiveFilePath);
+					ff1.write(new String(data))
+					e.printStackTrace()
+				}
+				}else{
+					flash.message = "Another user has updated this PrimitiveTest while you were editing"
+				}
 			}
-			catch(Throwable th) {
-				status.setRollbackOnly()
-			}
-		}		
+		}else{
+			flash.message = "Error in updating the primitive test" 
+		}
+		
 		redirect(action: 'create', params: [primitiveTestId: params.id,error: error])
 		
     }
@@ -346,49 +462,80 @@ class PrimitiveTestController {
      * @return
      */
     def getJson(final String testName, final String idVal) {
-        PrimitiveTest primitiveTest = PrimitiveTest.findByName(testName)
-        render primitivetestService.getJsonData( primitiveTest, idVal )
+		def moduleMap = primitiveService.getPrimitiveModuleMap(getRealPath())
+		def mName= moduleMap.get(testName)
+		def scriptDirName = primitiveService.getScriptDirName(mName)
+		def primitiveTest = primitiveService.getPrimitiveTest(getRealPath()+"/fileStore/testscripts/"+scriptDirName+"/"+mName+"/"+mName+".xml", testName)
+		render primitivetestService.getJsonData( primitiveTest, idVal )
     }
     
-    /**
+       /**
      * Returns JSON data of stream details based on the
      * streamId received
      * @param idVal
      * @return
      */
-    def getStreamDetails(final String idVal, final String stbIp) {
-        Device device = Device.findByStbIp(stbIp.trim())    
-        JsonObject outData = new JsonObject()
-        String boxtype = device?.boxType?.type.toLowerCase()
-        if(boxtype?.equals( BOXTYPE_CLIENT ))
-        {
-            String gateway = device?.gatewayIp.toString()
-            Device gatewayDevice =  Device.findByStbName(gateway.trim())               
-            if(gateway) {
-                StreamingDetails streamingDetails = StreamingDetails.findByStreamId(idVal)
-                DeviceStream deviceStream = DeviceStream.findByDeviceAndStream( gatewayDevice, streamingDetails )            
-                outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
-                outData.addProperty(KEY_GATEWAYIP, gatewayDevice?.stbIp.toString());
-                outData.addProperty(KEY_CHANNELTYPE, streamingDetails?.channelType.toString());
-                outData.addProperty(KEY_OCAPID, deviceStream?.ocapId.toString());
-                outData.addProperty(KEY_RECORDERID, gatewayDevice?.recorderId.toString());
-                outData.addProperty(KEY_AUDIOFORMAT, streamingDetails?.audioFormat.toString());
-                outData.addProperty(KEY_VIDEOFORMAT, streamingDetails?.videoFormat.toString());
-            }  
-        } 
-        else{
-            StreamingDetails streamingDetails = StreamingDetails.findByStreamId(idVal)
-            DeviceStream deviceStream = DeviceStream.findByDeviceAndStream( device, streamingDetails )
-            outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
-            outData.addProperty(KEY_GATEWAYIP, device?.stbIp.toString());
-            outData.addProperty(KEY_CHANNELTYPE, streamingDetails?.channelType.toString());
-            outData.addProperty(KEY_OCAPID, deviceStream?.ocapId.toString());
-            outData.addProperty(KEY_RECORDERID, device?.recorderId.toString());
-            outData.addProperty(KEY_AUDIOFORMAT, streamingDetails?.audioFormat.toString());
-            outData.addProperty(KEY_VIDEOFORMAT, streamingDetails?.videoFormat.toString());
-        }  
-        render outData
-    }
+	def getStreamDetails(final String idVal, final String stbIp) {
+		
+		Device device = Device.findByStbIp(stbIp?.trim())
+		JsonObject outData = new JsonObject()
+		String boxtype = device?.boxType?.type.toLowerCase()
+
+
+		if(boxtype?.equals( BOXTYPE_CLIENT )) {
+			String gateway = device?.gatewayIp.toString()
+			Device gatewayDevice =  Device.findByStbName(gateway.trim())
+			if(gateway) {
+
+				if(idVal?.startsWith("R")){
+					RadioStreamingDetails streamingDetails = RadioStreamingDetails.findByStreamId(idVal)
+					DeviceRadioStream deviceStream = DeviceRadioStream.findByDeviceAndStream( gatewayDevice, streamingDetails )
+					outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
+					outData.addProperty(KEY_GATEWAYIP, gatewayDevice?.stbIp?.toString());
+					outData.addProperty(KEY_CHANNELTYPE, "radio");
+					outData.addProperty(KEY_OCAPID, deviceStream?.ocapId?.toString());
+					outData.addProperty(KEY_RECORDERID, gatewayDevice?.recorderId?.toString());
+					outData.addProperty(KEY_AUDIOFORMAT, "N/A");
+					outData.addProperty(KEY_VIDEOFORMAT, "N/A");
+				}else{
+					StreamingDetails streamingDetails = StreamingDetails.findByStreamId(idVal)
+					DeviceStream deviceStream = DeviceStream.findByDeviceAndStream( gatewayDevice, streamingDetails )
+					outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
+					outData.addProperty(KEY_GATEWAYIP, gatewayDevice?.stbIp?.toString());
+					outData.addProperty(KEY_CHANNELTYPE, streamingDetails?.channelType?.toString());
+					outData.addProperty(KEY_OCAPID, deviceStream?.ocapId?.toString());
+					outData.addProperty(KEY_RECORDERID, gatewayDevice?.recorderId?.toString());
+					outData.addProperty(KEY_AUDIOFORMAT, streamingDetails?.audioFormat?.toString());
+					outData.addProperty(KEY_VIDEOFORMAT, streamingDetails?.videoFormat?.toString());
+				}
+			}
+		}
+		else{
+
+			if(idVal?.startsWith("R")){
+				RadioStreamingDetails streamingDetails = RadioStreamingDetails.findByStreamId(idVal)
+				DeviceRadioStream deviceStream = DeviceRadioStream.findByDeviceAndStream( device, streamingDetails )
+				outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
+				outData.addProperty(KEY_GATEWAYIP, device?.stbIp?.toString());
+				outData.addProperty(KEY_CHANNELTYPE, "radio");
+				outData.addProperty(KEY_OCAPID, deviceStream?.ocapId?.toString());
+				outData.addProperty(KEY_RECORDERID, device?.recorderId?.toString());
+				outData.addProperty(KEY_AUDIOFORMAT, "N/A");
+				outData.addProperty(KEY_VIDEOFORMAT, "N/A");
+			}else{
+				StreamingDetails streamingDetails = StreamingDetails.findByStreamId(idVal)
+				DeviceStream deviceStream = DeviceStream.findByDeviceAndStream( device, streamingDetails )
+				outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
+				outData.addProperty(KEY_GATEWAYIP, device?.stbIp?.toString());
+				outData.addProperty(KEY_CHANNELTYPE, streamingDetails?.channelType?.toString());
+				outData.addProperty(KEY_OCAPID, deviceStream?.ocapId?.toString());
+				outData.addProperty(KEY_RECORDERID, device?.recorderId?.toString());
+				outData.addProperty(KEY_AUDIOFORMAT, streamingDetails?.audioFormat?.toString());
+				outData.addProperty(KEY_VIDEOFORMAT, streamingDetails?.videoFormat?.toString());
+			}
+		}
+		render outData
+	}
 	
 	
 	/**
@@ -398,10 +545,14 @@ class PrimitiveTestController {
 	def fetchPrimitiveTest(){
 
 		List primitiveTestInstanceList = []
-		PrimitiveTest primitiveTestInstance = PrimitiveTest.findByName(params.testName)
+		
+		def primitiveMap = primitiveService.getPrimitiveModuleMap(getRealPath())
+		def moduleName = primitiveMap.get(params?.testName)
+		if(moduleName){
+		def primitiveTestInstance = primitiveService.getPrimitiveTest(getPrimitiveFilePath(moduleName), params?.testName)
 		if(primitiveTestInstance){
-
-			primitiveTestInstanceList.add(primitiveTestInstance.id)
+			primitiveTestInstanceList.add(primitiveTestInstance.name)
+		}
 		}
 		render primitiveTestInstanceList as JSON
 	}

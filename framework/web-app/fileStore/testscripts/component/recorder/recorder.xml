@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='recorder' testGroup='Component'>
+    <primitiveTests>
+      <primitiveTest name='Recorder_checkRecording_status' id='514' version='1'>
+        <function>TestMgr_Recorder_checkRecording_status</function>
+        <parameters>
+          <parameter name='Recording_Id' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='Recorder_ScheduleRecording' id='540' version='0'>
+        <function>TestMgr_Recorder_ScheduleRecording</function>
+        <parameters>
+          <parameter name='Start_time' value='' />
+          <parameter name='UTCTime' value='' />
+          <parameter name='Source_id' value='' />
+          <parameter name='Recording_Id' value='' />
+          <parameter name='Duration' value='' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

@@ -90,18 +90,18 @@ class ModuleController {
     }
 	
 	def setExecutionWaitTime(final int executiontime, final String moduleName){
-		def c = Script.createCriteria()
-		def scriptList = c.list {
-			primitiveTest{
-				module{
-					eq("name", moduleName)
-				}
-			}
-		}
-		scriptList.each{script ->
-			script.executionTime = executiontime
-			script.save(flush:true)
-		}		
+//		def c = Script.createCriteria()
+//		def scriptList = c.list {
+//			primitiveTest{
+//				module{
+//					eq("name", moduleName)
+//				}
+//			}
+//		}
+//		scriptList.each{script ->
+//			script.executionTime = executiontime
+//			script.save(flush:true)
+//		}		
 	}
 	
     /**

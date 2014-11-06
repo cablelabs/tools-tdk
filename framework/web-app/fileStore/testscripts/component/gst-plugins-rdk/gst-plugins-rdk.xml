@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='gst-plugins-rdk' testGroup='Component'>
+    <primitiveTests>
+      <primitiveTest name='Gst_Aesdecrypt_DecryptEnable_Property' id='596' version='1'>
+        <function>TestMgr_Aesdecrypt_DecryptEnable_Prop</function>
+        <parameters>
+          <parameter name='propValue' value='1' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='Gst_Aesdecrypt_DecryptEnable_Get_Prop' id='603' version='0'>
+        <function>TestMgr_Aesdecrypt_DecryptEnable_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Aesencrypt_EncryptEnable_Set_Prop' id='612' version='1'>
+        <function>TestMgr_Aesencrypt_EncryptEnable_Set_Prop</function>
+        <parameters>
+          <parameter name='propValue' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='Gst_Aesencrypt_EncryptEnable_Get_Prop' id='614' version='0'>
+        <function>TestMgr_Aesencrypt_EncryptEnable_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_RecordId_Set_Prop' id='615' version='1'>
+        <function>TestMgr_Dvrsrc_RecordId_Set_Prop</function>
+        <parameters>
+          <parameter name='propValue' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_SegmentName_Get_Prop' id='618' version='0'>
+        <function>TestMgr_Dvrsrc_SegmentName_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_Ccivalue_Get_Prop' id='619' version='0'>
+        <function>TestMgr_Dvrsrc_Ccivalue_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_Rate_Set_Prop' id='622' version='1'>
+        <function>TestMgr_Dvrsrc_Rate_Set_Prop</function>
+        <parameters>
+          <parameter name='propValue' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_Rate_Get_Prop' id='623' version='0'>
+        <function>TestMgr_Dvrsrc_Rate_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_StartTime_Get_Prop' id='624' version='0'>
+        <function>TestMgr_Dvrsrc_StartTime_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_Duration_Get_Prop' id='625' version='0'>
+        <function>TestMgr_Dvrsrc_Duration_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_PlayStartPosition_Set_Prop' id='626' version='1'>
+        <function>TestMgr_Dvrsrc_PlayStartPosition_Set_Prop</function>
+        <parameters>
+          <parameter name='propValue' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_PlayStartPosition_Get_Prop' id='627' version='0'>
+        <function>TestMgr_Dvrsrc_PlayStartPosition_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsink_RecordId_Set_Prop' id='628' version='1'>
+        <function>TestMgr_Dvrsink_RecordId_Set_Prop</function>
+        <parameters>
+          <parameter name='propValue' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsink_RecordId_Get_Prop' id='629' version='0'>
+        <function>TestMgr_Dvrsink_RecordId_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsink_Ccivalue_Get_Prop' id='630' version='0'>
+        <function>TestMgr_Dvrsink_Ccivalue_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_RecordId_Get_Prop' id='631' version='0'>
+        <function>TestMgr_Dvrsrc_RecordId_Get_Prop</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='Gst_Dvrsrc_SegmentName_Set_Prop' id='632' version='1'>
+        <function>TestMgr_Dvrsrc_SegmentName_Set_Prop</function>
+        <parameters>
+          <parameter name='propValue' value='0' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

@@ -31,11 +31,14 @@
 #include "rmf_osal_init.h"
 #include "rmfqamsrc.h"
 #include "rmf_platform.h"
+#define FETCH_STREAMING_INT_NAME "streaming_interface_file"
+
 using namespace std;
 
 #define SUCCESS 0
 #define FAILURE 1
 
+string g_tdkPath = getenv("TDK_PATH");
 
 int usage()
 {
@@ -115,12 +118,69 @@ static long long getCurrentTime()
         return currentTime;
 }
 
+std::string fetchStreamingInterface()
+{
+        ifstream interfacefile;
+        string Fetch_Streaming_interface_cmd, Streaming_Interface_name,line;
+        Streaming_Interface_name = g_tdkPath + "/" + FETCH_STREAMING_INT_NAME;
+/*      //Fetch_Streaming_interface_cmd = g_tdkPath + "/" + FETCH_STREAMING_INT_SCRIPT;
+        //string fetch_streaming_int_chk= "source "+Fetch_Streaming_interface_cmd;
+        //try
+        {
+                system((char*)fetch_streaming_int_chk());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of streaming ip fetch script\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                return "FAILURE<DETAILS>Exception occured execution of streaming ip fetch script";
+
+        }
+*/
+
+        interfacefile.open(Streaming_Interface_name.c_str());
+        if(interfacefile.is_open())
+        {
+                if(getline(interfacefile,line)>0);
+                {
+                        interfacefile.close();
+                        return line;
+                }
+                interfacefile.close();
+                return "FAILURE<DETAILS>Proper result is not found in the streaming interface name file";
+        }
+        else
+        {
+                return "FAILURE<DETAILS>Unable to open the streaming interface  file";
+        }
+
+
+}
+
 int rmfHnSourceInitialize(string ocapId)
 {
 	RMFResult retResult = RMF_RESULT_SUCCESS;
 
 	/*Get the Streaming Ip Address */
-        string streamingIp = GetHostIP("eth1");
+	string streaming_interface;
+	size_t pos = 0;
+	size_t found;
+	streaming_interface=fetchStreamingInterface();
+	found=streaming_interface.find("FAILURE");
+	if (found!=std::string::npos)
+	{
+        	std::string delimiter = "<FAILURE>";
+		std::string token;
+                while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+		     	token = streaming_interface.substr(0, pos);
+                       	std::cout << token << std::endl;
+	              	streaming_interface.erase(0, pos + delimiter.length());
+                 }
+		 cout<<token<<endl;
+                 return FAILURE;
+	}
+	const char * streaming_interface_name = streaming_interface.c_str();
+        string streamingIp = GetHostIP(streaming_interface_name);
         string url;
 	
 	hnSource = new HNSource();
@@ -295,7 +355,26 @@ int rmfDvrSinkInitialize(string dvrRecordId,int duration,string title,string oca
 {
 	RMFResult retResult = RMF_RESULT_SUCCESS;
 	/*Get the Streaming Ip Address */
-        string streamingIp = GetHostIP("eth1");
+
+	string streaming_interface;
+	size_t pos = 0;
+	size_t found;
+	streaming_interface=fetchStreamingInterface();
+	found=streaming_interface.find("FAILURE");
+	if (found!=std::string::npos)
+	{
+        	std::string delimiter = "<FAILURE>";
+		std::string token;
+                while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+		     	token = streaming_interface.substr(0, pos);
+                       	std::cout << token << std::endl;
+	              	streaming_interface.erase(0, pos + delimiter.length());
+                 }
+		 cout<<token<<endl;
+                 return FAILURE;
+	}
+	const char * streaming_interface_name = streaming_interface.c_str();
+        string streamingIp = GetHostIP(streaming_interface_name);
 	/* Make an entry of recording in the DVR Manager.*/
         string recordId = dvrRecordId;
 	

@@ -63,6 +63,8 @@ class ScriptExecutor {
 			outputData = errorReaderTask.get()
 		}
 		process.destroy()
+		
+		
 	    return outputData
     }
 	

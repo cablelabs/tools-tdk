@@ -10,6 +10,7 @@
   ============================================================================
 -->
 <%@ page import="com.comcast.rdk.StreamingDetails" %>
+<%@ page import="com.comcast.rdk.RadioStreamingDetails" %>
 <!DOCTYPE html>
 <html>
 	<head>
@@ -35,10 +36,17 @@
 					<td>
 						<div class="" style="width: 200px; height: 400px; overflow: auto;">
 							<ul id="streambrowser" class="filetree">
-								<li class="" id="root"><span class="folder">Streaming Details</span>
+								<li class="" id="root"><span id= "video" class="folder">Streaming Details</span>
 									<ul>
 										<g:each in="${streamingDetailsInstanceList}" var="stream">
-											<li><span class="file" id="${stream.id}"><a href="#" onclick="showStreamDetails('${stream.id}'); return false;">${stream.streamId}</a></span></li>
+											<li><span  id="video" class="file" id="${stream.id}"><a href="#" onclick="showStreamDetails('${stream.id}'); return false;">${stream.streamId}</a></span></li>
+										</g:each>
+									</ul>
+								</li>
+								<li class="" id="root1"><span id ="radio" class="folder">Radio Streaming Details</span>
+									<ul>
+										<g:each in="${radioStreamingDetails}" var="stream">
+											<li><span id="radio" class="file" id="${stream.id}"><a href="#" onclick="showRadioStreamDetails('${stream.id}'); return false;">${stream.streamId}</a></span></li>
 										</g:each>
 									</ul>
 								</li>

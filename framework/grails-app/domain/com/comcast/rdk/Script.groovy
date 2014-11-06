@@ -73,6 +73,11 @@ class Script {
 	 */
 	String remarks = ""
 	
+	/**
+	 * true if script is a long duration script 
+	 */
+	boolean longDuration = false
+	
 	
 	static hasMany = [boxTypes: BoxType , rdkVersions : RDKVersions]
 

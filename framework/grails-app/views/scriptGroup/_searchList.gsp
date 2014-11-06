@@ -8,7 +8,7 @@
   ============================================================================
   Copyright (c) 2013 Comcast. All rights reserved.
   ============================================================================
---><%@ page import="com.comcast.rdk.Script"%>
+-->
 <%@ page import="com.comcast.rdk.ScriptGroup"%>
 <script type="text/javascript">
 	$(document).ready(function() {
@@ -39,19 +39,19 @@
 					<tbody>
 						<g:each in="${scriptList}" status="i" var="scriptListInstance">
 							<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
-								<td><g:checkBox name="${scriptListInstance?.id}"
+								<td><g:checkBox name="${scriptListInstance?.name}"
 										value="${false}" /></td>
-								<td><g:link id="${scriptListInstance?.id}"
-										onclick="showScript('${scriptListInstance?.id}','');return false;">
-										${fieldValue(bean: scriptListInstance, field: "name")}
+								<td><g:link id="${scriptListInstance?.primitiveTest?.module?.name}@${scriptListInstance?.name}"
+										onclick="showScript('${scriptListInstance?.primitiveTest?.module?.name}@${scriptListInstance?.name}','');return false;">
+										${scriptListInstance?.name}
 									</g:link></td>
 
 								<td>
-									${fieldValue(bean: scriptListInstance, field: "primitiveTest")}
+									${scriptListInstance?.primitiveTest?.name}
 								</td>
 
 								<td>
-									${fieldValue(bean: scriptListInstance, field: "boxTypes")}
+									${scriptListInstance?.boxTypes}
 								</td>
 							</tr>
 						</g:each>

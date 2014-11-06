@@ -165,4 +165,9 @@ public final class Constants
     public static final String SKIPPED = "SKIPPED";
     public static final String KEY_PERFORMANCE_BM = "PerformanceBenchMarking";
     public static final String KEY_PERFORMANCE_SD ="PerformanceSystemDiagnostics";
+    
+    public static final String COMPONENT ="component";
+    public static final String INTEGRATION ="integration";
+    
+    
 }

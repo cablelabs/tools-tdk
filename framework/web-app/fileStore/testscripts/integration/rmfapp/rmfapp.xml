@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='rmfapp' testGroup='E2E'>
+    <primitiveTests>
+      <primitiveTest name='E2E_rmfapp_help' id='126' version='5'>
+        <function>TestMgr_rmfapp_Test_Execute</function>
+        <parameters>
+          <parameter name='rmfapp_command' value='help' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='E2E_rmfapp_quit' id='127' version='4'>
+        <function>TestMgr_rmfapp_Test_Execute</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='E2E_rmfApp_play_url' id='140' version='2'>
+        <function>TestMgr_rmfapp_Test_Execute</function>
+        <parameters>
+          <parameter name='rmfapp_command' value='play http://192.168.30.65:8080/vldms/tuner?ocap_locator=ocap://0xa1' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='Emulator_rmfapp_qamplay' id='398' version='1'>
+        <function>TestMgr_rmfapp_Test_Execute</function>
+        <parameters>
+          <parameter name='rmfapp_command' value='launch -source qamsource -sink mediaplayersink ocap://0xA2' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='E2E_rmfApp_ls' id='492' version='1'>
+        <function>TestMgr_rmfapp_Test_Execute</function>
+        <parameters>
+          <parameter name='rmfapp_command' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='E2E_rmfapp_record_url' id='512' version='1'>
+        <function>TestMgr_rmfapp_Test_Execute</function>
+        <parameters>
+          <parameter name='rmfapp_command' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='TdkRmfApp_CreateRecording' id='582' version='1'>
+        <function>TestMgr_CreateRecord</function>
+        <parameters>
+          <parameter name='recordId' value='' />
+          <parameter name='recordDuration' value='' />
+          <parameter name='ocapId' value='' />
+          <parameter name='recordTitle' value='' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

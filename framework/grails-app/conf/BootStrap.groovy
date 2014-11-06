@@ -13,8 +13,8 @@
 import grails.util.Environment;
 
 import java.io.IOException
+import com.comcast.rdk.ScriptFile
 import com.comcast.rdk.ScriptGroup
-import com.comcast.rdk.Script
 import com.comcast.rdk.User
 import com.comcast.rdk.Role
 import com.comcast.rdk.Module
@@ -30,6 +30,8 @@ class BootStrap {
 
     def primitivetestService
 	def migrationService
+	def scriptService
+	def primitiveService
      
 	def mailService
 	
@@ -67,14 +69,37 @@ class BootStrap {
            e.printStackTrace() 
         }
 		
-		
-		migrateScriptGroupContents();
+//		migrateScriptGroupContents();
 		
 		
 		if(Environment.current.name == 'production'){
 			migrationService.doMigration()
 		}
 		
+		
+		/*def sgList = ScriptGroup.list();
+		sgList.each { sg ->
+			sg.scriptsList.each { script ->
+				def mm
+				ScriptFile.withTransaction {
+					mm = ScriptFile.findByScriptNameAndModuleName(script?.name,script?.primitiveTest?.module?.name)
+					if(mm == null){
+						mm = new ScriptFile()
+						mm.setScriptName(script?.name)
+						mm.setModuleName(script?.primitiveTest?.module?.name)
+						mm.save()
+					}
+				}
+				if(mm && !sg.scriptList.contains(mm)){
+					sg.addToScriptList(mm)
+				}
+
+			}
+		}*/
+		
+		def rootFile = grailsApplication.parentContext.getResource("/")
+		scriptService.initializeScriptsData(rootFile.file.getAbsolutePath())
+		primitiveService.initializePrimitiveTests(rootFile.file.getAbsolutePath())
 		/*List<Script> scriptList = Script.list()
 		
 		scriptList.each{ scriptInstance ->
@@ -119,49 +144,6 @@ class BootStrap {
 		
     }
 	
-	/**
-	 * Method to migrate the scripts stored in set(scripts) in script group to list(scriptsList) in script group.
-	 * For keeping the order information.
-	 * @return
-	 */
-	def migrateScriptGroupContents(){
-		try {
-			ScriptGroup.withTransaction {
-				def sgList = ScriptGroup.findAll()
-				sgList.each { sg ->
-					if(sg?.scriptsList == null){
-						sg?.scriptsList = []
-					}
-					def toRemoveList = []
-					if(sg?.scripts?.size() > 0 ){
-						if(sg?.scriptsList?.size() > 0){
-							sg?.scripts?.each{ scrpt ->
-								if(!sg?.scriptsList?.contains(scrpt)){
-									sg?.scriptsList?.add(scrpt)
-								}
-								toRemoveList.add(scrpt?.id)
-							}
-						}else{
-							sg?.scriptsList?.addAll(sg?.scripts)
-							sg?.scripts?.clear()
-						}
-					}
-					
-					if(toRemoveList.size()>0){
-						toRemoveList.each { scrptId ->
-							Script scrpt = Script.findById(scrptId)
-							if(scrpt){
-								sg?.scripts?.removeFromScripts(scrpt)
-							}
-						}
-						
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace()
-		}
-	}
     
     def destroy = {        
 		SocketPortConnector.closeServerSocket()

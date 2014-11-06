@@ -107,8 +107,7 @@ public :
     void operator() (const TRM::NotifyTunerStatesUpdate &msg);
     void operator() (const TRM::NotifyTunerPretune &msg);
 
-    TunerReservationHelperImpl* getTRH( const TRM::MessageBase &msg);
-    TunerReservationHelperImpl* getTRH( const string &token);
+    TunerReservationHelperImpl* getTRH();
 };
 
 class TunerReservationHelper

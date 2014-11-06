@@ -48,7 +48,7 @@ class PrimitivetestService {
      * @return
      * @author ajith
      */
-    public JsonObject getJsonData(final PrimitiveTest primitiveTest, String idValue) {
+    public JsonObject getJsonData(final def primitiveTest, String idValue) {
 		
 		if(idValue == null){
 			idValue = ID_DEFAULT
@@ -60,8 +60,8 @@ class PrimitivetestService {
             outData.addProperty(KEY_ID, idValue);
             outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
             outData.addProperty(KEY_METHOD, primitiveTest?.function?.name.trim());            
-            Set<Parameter> parameters = primitiveTest?.getParameters();
-            for ( Parameter parameter : parameters ) {
+            Set parameters = primitiveTest?.parameters;
+            for ( Map parameter : parameters ) {
                 if(parameter?.parameterType?.parameterTypeEnum.getTypeValue().equals("integer") ){
                     try{
                         int val = Integer.parseInt(parameter?.value);
@@ -92,7 +92,7 @@ class PrimitivetestService {
                     outData.addProperty( parameter?.parameterType.name, parameter?.value.trim() );
                 }
             }
-        }      
+        }
         return outData
     }
 

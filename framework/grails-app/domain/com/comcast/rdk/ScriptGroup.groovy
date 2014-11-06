@@ -29,6 +29,8 @@ class ScriptGroup {
     Set scripts
 	
 	List scriptsList
+	
+	List scriptList
 
     /**
      * Status of the scriptgroup
@@ -44,12 +46,13 @@ class ScriptGroup {
     /**
      * ScriptGroup can have many scripts.
      */
-    static hasMany = [ scripts : Script , scriptsList : Script]
+    static hasMany = [ scripts : Script , scriptsList : Script, scriptList: ScriptFile]
 
     static constraints = {
         name(nullable:false, blank:false, unique:true)
         status(nullable:true, blank:true)
 		groups(nullable:true, blank:true)
+		scriptList(nullable:true,blank:true)
     }
     
     static mapping = {

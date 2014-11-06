@@ -102,7 +102,7 @@ if [ "x"$RDK_PLATFORM_SOC == "xintel" ]; then
 	elif [ "x"$BUILD_CONFIG == "xhybrid" ]; then
 	  export RDK_VERSION=RDK2DOT0
 	fi
-       # export PLATFORM_SDK=$RDK_PROJECT_ROOT_PATH/opensource/src/curl
+        export PLATFORM_SDK=$RDK_BUILD_DIR/sdk/toolchain/staging_dir/
 	export JSONRPC_PATH=$RDK_PROJECT_ROOT_PATH/opensource/src/jsonrpc
         export JSONCPP_PATH=$RDK_PROJECT_ROOT_PATH/opensource/src/jsoncpp
         export CURL_PATH=$RDK_PROJECT_ROOT_PATH/opensource/src/curl/include
@@ -117,10 +117,17 @@ elif [ "x"$RDK_PLATFORM_SOC = "xbroadcom" ]; then
 	COMPILER=mipsel-linux-
 	export JSONRPC_PATH=$RDK_PROJECT_ROOT_PATH/opensource/jsonrpc/
 	export JSONCPP_PATH=$RDK_PROJECT_ROOT_PATH/opensource/jsoncpp/
-	export CURL_PATH=$PLATFORM_SDK/include/curl
 	export CROSS_TOOLCHAIN=$TOOLCHAIN_DIR
 	export CROSS_COMPILE=$COMPILER
 	export ROOTFS_INCLUDE=$PLATFORM_SDK/include/
+	if [ "x"$BUILD_CONFIG == "xhybrid" ]; then
+                export WORK_DIR=${RDK_PROJECT_ROOT_PATH}/work${RDK_PLATFORM_DEVICE^^}
+                export IMAGE_PATH=${RDK_PROJECT_ROOT_PATH}/work${RDK_PLATFORM_DEVICE^^}/rootfs/
+                export CURL_PATH=$RDK_PROJECT_ROOT_PATH/opensource/include
+		export TOOLCHAIN_DIR=$BCM_TOOLCHAIN/bin/
+        else
+                export CURL_PATH=$PLATFORM_SDK/include/curl
+        fi
 fi
 #export PLATFORM_SOC=$TDK_PLATFORM
 #export TOOLCHAIN_DIR=$RDK_BUILD_PATH/sdk/toolchain/staging_dir

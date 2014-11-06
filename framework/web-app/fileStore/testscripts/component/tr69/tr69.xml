@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='tr69' testGroup='Component'>
+    <primitiveTests>
+      <primitiveTest name='Tr069_Get_Profile_Parameter_Values' id='585' version='1'>
+        <function>TestMgr_GetParameterValue</function>
+        <parameters>
+          <parameter name='path' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='Tr069_Verify_Profile_Parameter_Values' id='592' version='1'>
+        <function>TestMgr_VerifyParameterValue</function>
+        <parameters>
+          <parameter name='path' value='' />
+          <parameter name='paramValue' value='' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

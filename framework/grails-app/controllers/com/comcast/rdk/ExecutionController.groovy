@@ -21,6 +21,7 @@ import grails.converters.JSON
 
 import java.text.DateFormat
 import java.text.SimpleDateFormat
+import java.util.Map;
 import java.util.date.*
 
 import org.codehaus.groovy.grails.web.json.JSONObject
@@ -46,14 +47,18 @@ class ExecutionController {
      * Injects quartz scheduler
      */
     def quartzScheduler
-    /**
-     * Injects the executionService.
-     */
-    def executionService             
-    /**
-     * Injects the grailsApplication.
-     */
-    def grailsApplication 
+	/**
+	 * Injects the executionService.
+	 */
+	def executionService
+	/**
+	 * Injects the scriptService.
+	 */
+	def scriptService
+	/**
+	 * Injects the grailsApplication.
+	 */
+	def grailsApplication
 	
 	def utilityService
 	
@@ -412,16 +417,52 @@ class ExecutionController {
      */
     def showDevices(){
         def device = Device.get( params?.id )
-        // def scripts = Script.list([order: 'asc', sort: 'name'])
-        // def scriptGrp = ScriptGroup.list([order: 'asc', sort: 'name'])
 		
-		def scripts = Script.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(),[order: 'asc', sort: 'name'])
+		def scripts = scriptService.getScriptNameFileList(getRealPath())
+		def sList = scripts.clone()
+		sList.sort{a,b -> a?.scriptName <=> b?.scriptName}
+		
 		def scriptGrp = ScriptGroup.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(),[order: 'asc', sort: 'name'])
 		
 		DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT1)		
         Calendar cal = Calendar.getInstance()
-        [datetime :  dateFormat.format(cal.getTime()).toString(), device : device, scriptGrpList : scriptGrp, scriptList : scripts]
+        [datetime :  dateFormat.format(cal.getTime()).toString(), device : device, scriptGrpList : scriptGrp, scriptList : sList]
     }
+	
+	def getScriptList(){
+		List scriptList = []
+		Map scriptGroupMap = [:]
+		List dirList = [
+			Constants.COMPONENT,
+			Constants.INTEGRATION
+		]
+		dirList.each{ directory ->
+			File scriptsDir = new File( "${request.getRealPath('/')}//fileStore//testscripts//"+directory+"//")
+			if(scriptsDir.exists()){
+				def modules = scriptsDir.listFiles()
+				modules.each { module ->
+
+					File [] files = module.listFiles(new FilenameFilter() {
+								@Override
+								public boolean accept(File dir, String name) {
+									return name.endsWith(".py");
+								}
+							});
+
+
+					files.each { file ->
+						String name = file?.name?.replace(".py", "")
+						scriptList.add(name)
+					}
+
+				}
+			}
+		}
+
+		scriptList.sort();
+
+		return scriptList
+	}
 
     /**
      * Method to get the current date and time from server
@@ -461,9 +502,9 @@ class ExecutionController {
      * @return
      */
     def String getRealPath(){           
-       /*String s = request.getSession().getServletContext().getRealPath("/") 
-       s = s.replace( '\\', '/' )
-       return s*/
+//       String s = request.getSession().getServletContext().getRealPath("/") 
+//       s = s.replace( '\\', '/' )
+//       return s
        return request.getSession().getServletContext().getRealPath(URL_SEPERATOR) 
     }     
  
@@ -477,6 +518,7 @@ class ExecutionController {
 	 */
 	def thirdPartyTest(final String stbName, final String boxType, final String imageName, final String suiteName, final String test_request, final String callbackUrl ){
 		JsonObject jsonOutData = new JsonObject()
+		
 		try {
 			String htmlData = ""
 			String outData = ""
@@ -485,7 +527,7 @@ class ExecutionController {
 			String filePath = "${request.getRealPath('/')}//fileStore"
 
 			if(test_request){
-				String status = scriptexecutionService.generateResultBasedOnTestRequest(test_request,callbackUrl,filePath, url, imageName, boxType)
+				String status = scriptexecutionService.generateResultBasedOnTestRequest(test_request,callbackUrl,filePath, url, imageName, boxType,getRealPath())
 				if(status){
 					jsonOutData.addProperty("status", "SUCCESS");
 					jsonOutData.addProperty("result", "Result will be send with callback url");
@@ -515,16 +557,21 @@ class ExecutionController {
 
 							if(scriptGroup){
 								String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-								scriptGroup?.scriptsList?.each{ script ->
+								scriptGroup?.scriptList?.each{ scrpt ->
+									
+									def script = scriptService.getScript(getRealPath(), scrpt?.moduleName, scrpt?.scriptName)
+									
+									if(script){
 									/**
 									 * Checks whether atleast one script matches with the box type of device.
 									 * If so execution will proceed with that one script
 									 */
-									if(executionService.validateScriptBoxType(script,deviceInstance)){
+									if(executionService.validateScriptBoxTypes(script,deviceInstance)){
 										scriptStatusFlag = true
-										if(executionService.validateScriptRDKVersion(script,rdkVersion)){
+										if(executionService.validateScriptRDKVersions(script,rdkVersion)){
 											scriptVesrionFlag = true
 										}
+									}
 									}
 								}
 								if(scriptStatusFlag && scriptVesrionFlag){
@@ -696,7 +743,7 @@ class ExecutionController {
 	}
 	
 	def thirdPartyJsonResult(final String execName, final String appurl ){		
-		JsonObject executionNode = scriptexecutionService.thirdPartyJsonResultFromController(execName, getApplicationUrl() )
+		JsonObject executionNode = scriptexecutionService.thirdPartyJsonResultFromController(execName, getApplicationUrl() ,getRealPath())
 		render executionNode
 	}
 		
@@ -708,7 +755,6 @@ class ExecutionController {
     def executeScriptMethod() {		
 		boolean aborted = false
 		def exId
-        Script scriptInstance
         def scriptGroupInstance
         def scriptStatus = true
 		def scriptVersionStatus = true
@@ -721,6 +767,7 @@ class ExecutionController {
 		def deviceName
 		boolean allocated = false
 		boolean singleScript = false
+		
 		ExecutionDevice executionDevice = new ExecutionDevice()
 		if(params?.devices instanceof String){
 			deviceList << params?.devices
@@ -803,10 +850,13 @@ class ExecutionController {
 							def scripts = params?.scripts
 							if(scripts instanceof String){
 								singleScript = true
-								def scriptInstance1 = Script.findById(params?.scripts,[lock: true])
-								if(executionService.validateScriptBoxType(scriptInstance1,deviceInstance)){
+								def moduleName= scriptService.scriptMapping.get(params?.scripts)
+								if(moduleName){
+								def scriptInstance1 = scriptService.getScript(getRealPath(),moduleName, params?.scripts)
+								if(scriptInstance1){
+								if(executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
 									String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-									if(executionService.validateScriptRDKVersion(scriptInstance1,rdkVersion)){
+									if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
 										validScript = true
 									}else{
 										htmlData = "RDK Version supported by the script is not matching with the RDK Version of selected Device "+deviceInstance?.stbName+"<br>"
@@ -814,31 +864,53 @@ class ExecutionController {
 								}else{
 									htmlData = message(code: 'execution.boxtype.nomatch')
 								}
+								}else{
+									htmlData = "No Script is available with name ${params?.scripts} in module ${moduleName}"
+								}
+								}else{
+									htmlData = "No module associated with script ${params?.scripts}"
+								}
 							}
 							else{
 								scripts.each { script ->
-									def scriptInstance1 = Script.findById(script,[lock: true])
-									if(executionService.validateScriptBoxType(scriptInstance1,deviceInstance)){
-										String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-										if(executionService.validateScriptRDKVersion(scriptInstance1,rdkVersion)){
-											validScript = true
+									def moduleName= scriptService.scriptMapping.get(script)
+									def scriptInstance1 = scriptService.getScript(getRealPath(),moduleName, script)
+									if(scriptInstance1){
+										if(executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
+											String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
+											if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
+												validScript = true
+											}
 										}
 									}
 								}
+								
 							}
 						}else{
 							def scriptGroup = ScriptGroup.findById(params?.scriptGrp,[lock: true])
 
 							String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-							scriptGroup?.scriptsList?.each{ script ->
+							
+							try{
+							scriptGroup?.scriptList?.each{ script ->
+								
+								def scriptInstance1 = scriptService.getMinimalScript(getRealPath(),script?.moduleName, script?.scriptName)
 								/**
 								 * Checks whether atleast one script matches with the box type of device.
 								 * If so execution will proceed with that one script
 								 */
-								if(executionService.validateScriptBoxType(script,deviceInstance)){
-									if(executionService.validateScriptRDKVersion(script,rdkVersion)){
+								if(scriptInstance1 && executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
+									if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
 										validScript = true
+										throw new Exception("return from closure") 
 									}
+								}
+							}
+							}catch(Exception e ){
+								if(e.getMessage() == "return from closure" ){
+									
+								}else{
+									validScript = false
 								}
 							}
 
@@ -896,11 +968,14 @@ class ExecutionController {
 					if(scriptType == SINGLE_SCRIPT){
 						scripts = params?.scripts
 						if(scripts instanceof String){
-							scriptInstance = Script.findById(params?.scripts,[lock: true])
-							scriptStatus = executionService.validateScriptBoxType(scriptInstance,deviceInstance)
+//							scriptInstance = Script.findById(params?.scripts,[lock: true])
+							def moduleName= scriptService.scriptMapping.get(params?.scripts)
+							def scriptInstance1 = scriptService.getScript(getRealPath(),moduleName, params?.scripts)
+//							def scriptInstance1 = executionService.getScript(getRealPath(),"ClosedCaption", scripts)
+							scriptStatus = executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)
 							String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-							scriptVersionStatus = executionService.validateScriptRDKVersion(scriptInstance,rdkVersion)
-							scriptName = scriptInstance?.name
+							scriptVersionStatus = executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)
+							scriptName = scripts
 						}
 						else{
 							scriptName = MULTIPLESCRIPT
@@ -943,7 +1018,6 @@ class ExecutionController {
 							catch(Exception e){
 								e.printStackTrace()
 							}
-
 							def scriptId
 							if((!(params?.scriptGrp)) && (!(params?.scripts))){
 								render ""
@@ -1386,13 +1460,18 @@ class ExecutionController {
 		List columnWidthList =  [0.35, 0.5]
 
 		Execution executionInstance = Execution.findById(params.id)
-		if(executionInstance){			
-			dataList = executedbService.getDataForExcelExport(executionInstance, getRealPath())
-			fieldMap = ["C1":"     ", "C2":"     "]
-			parameters = [ title: EXPORT_SHEET_NAME, "column.widths": columnWidthList ]
-		}
-		else{
-			log.error "Invalid excution instance......"
+		try {
+			if(executionInstance){			
+				dataList = executedbService.getDataForExcelExport(executionInstance, getRealPath())
+						fieldMap = ["C1":"     ", "C2":"     "]
+								parameters = [ title: EXPORT_SHEET_NAME, "column.widths": columnWidthList ]
+			}
+			else{
+				log.error "Invalid excution instance......"
+			}
+		} catch (Exception e) {
+		println "ee "+e.getMessage()
+			e.printStackTrace()
 		}
 
 		params.format = EXPORT_EXCEL_FORMAT

@@ -45,6 +45,19 @@
 			
 			</tr>
 		</g:each>
+		<g:each in="${radioStreamingDetails}" status="i" var="radioStreamingInstance">
+			<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
+			
+				<td class="center">${fieldValue(bean: radioStreamingInstance, field: "streamId")}</td>							
+			
+				<td class="center">Radio</td>
+			
+				<td class="center">N/A</td>
+				
+				<td class="center">N/A</td>
+			
+			</tr>
+		</g:each>
 		</tbody>
 	</table>
 	

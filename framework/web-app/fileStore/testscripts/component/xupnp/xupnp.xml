@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='xupnp' testGroup='Component'>
+    <primitiveTests>
+      <primitiveTest name='TestMgr_XUPNPAgent_checkjson' id='662' version='0'>
+        <function>TestMgr_XUPNPAgent_checkjson</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TestMgr_XUPNPAgent_checkSTRurl' id='663' version='0'>
+        <function>TestMgr_XUPNPAgent_checkSTRurl</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TestMgr_XUPNPAgent_checkSerialNo' id='664' version='0'>
+        <function>TestMgr_XUPNPAgent_checkSerialNo</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TestMgr_XUPNPAgent_checkPBurl' id='665' version='0'>
+        <function>TestMgr_XUPNPAgent_checkPBurl</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TestMgr_XUPNPAgent_recordId' id='666' version='0'>
+        <function>TestMgr_XUPNPAgent_recordId</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TestMgr_XUPNPAgent_ModBasicDevice' id='667' version='0'>
+        <function>TestMgr_XUPNPAgent_ModBasicDevice</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TestMgr_XUPNPAgent_removeXmls' id='668' version='0'>
+        <function>TestMgr_XUPNPAgent_removeXmls</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='TestMgr_XUPNPAgent_evtCheck' id='669' version='1'>
+        <function>TestMgr_XUPNPAgent_evtCheck</function>
+        <parameters>
+          <parameter name='evtName' value='serialNo' />
+          <parameter name='evtValue' value='PAP' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

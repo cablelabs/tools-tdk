@@ -10,6 +10,7 @@
   ============================================================================
 -->
 <%@ page import="com.comcast.rdk.StreamingDetails" %>
+<%@ page import="com.comcast.rdk.RadioStreamingDetails" %>
 	<div >
 		<table>	
 			
@@ -48,7 +49,25 @@
 						<g:textField name="ocapId"  style="width:55px;" required="" value=""/></td>
 				</tr>
 			</g:each>
+			
+			<g:each in="${radioStreamingDetails}" status="i" var="streamingDetailsInstance">
+				<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
+				
+					<td align="center">${fieldValue(bean: streamingDetailsInstance, field: "streamId")}</td>										
+				
+					<td align="center">Radio</td>
+					
+					<td align="center">N/A</td>
+					
+					<td align="center">N/A</td>
+				
+					<td align="center"><g:hiddenField name="streamid" value="${streamingDetailsInstance.streamId}" />
+					
+						<g:textField name="ocapId"  style="width:55px;" required="" value=""/></td>
+				</tr>
+			</g:each>
 			</tbody>
 		</table>		
+				
 	</div>
 	

@@ -16,6 +16,8 @@ import groovy.xml.MarkupBuilder
 import org.custommonkey.xmlunit.*
 class UtilityService {
 	static datasource = 'DEFAULT'
+	
+	def scriptService
 
 	def Groups getGroup(){
 		def user = User.findByUsername(SecurityUtils.subject.principal)
@@ -28,11 +30,7 @@ class UtilityService {
 		Execution executionInstance = Execution.findByName(execName)
 		def executionDevice = ExecutionDevice.findAllByExecution(executionInstance)
 		def device = Device.findByStbName(executionInstance?.device)
-		def testGroup
-		if(executionInstance?.script){
-			def script = Script.findByName(executionInstance?.script)
-			testGroup = script?.primitiveTest?.module?.testGroup
-		}
+		
 		def writer = new StringWriter()
 		def xml = new MarkupBuilder(writer)
 		

@@ -21,7 +21,7 @@ $(document).ready(function() {
 		e.preventDefault();
 	});
 
-	$('.folder').contextMenu('root_menu', {
+	$('#video').contextMenu('root_menu', {
 		bindings : {
 			'add_property' : function(node) {
 				createStreamDetailsForm();
@@ -29,8 +29,16 @@ $(document).ready(function() {
 		}
 	});
 	
+	$('#radio').contextMenu('root_menu', {
+		bindings : {
+			'add_property' : function(node) {
+				createRadioStreamDetailsForm();
+			}
+		}
+	});
 	
-	$('.file').contextMenu('childs_menu', {
+	
+	$('.videofile').contextMenu('childs_menu', {
 		bindings : {
 			'edit_test' : function(node) {
 				showStreamDetails(node.id);
@@ -38,6 +46,19 @@ $(document).ready(function() {
 			'delete_test' : function(node) {
 				if (confirm('Are you want to delete property?')) {
 					removeProperty(node.id);
+				}
+			}
+		}
+	});
+	
+	$('.radiofile').contextMenu('childs_menu', {
+		bindings : {
+			'edit_test' : function(node) {
+				showRadioStreamDetails(node.id);
+			},
+			'delete_test' : function(node) {
+				if (confirm('Are you want to delete property?')) {
+					removeRadioProperty(node.id);
 				}
 			}
 		}
@@ -51,6 +72,11 @@ function createStreamDetailsForm() {
 }
 
 
+function createRadioStreamDetailsForm() {
+	$.get('createRadio', function(data) { $("#responseDiv").html(data); });
+}
+
+
 function showStreamDetails(id) {
 	$.get('edit', {id: id}, function(data) { $("#responseDiv").html(data); });
 }
@@ -58,6 +84,15 @@ function showStreamDetails(id) {
 
 function removeProperty(id){
 	$.get('deleteStreamDetails', {id: id}, function(data) { document.location.reload(); });
+}
+
+function showRadioStreamDetails(id) {
+	$.get('editRadio', {id: id}, function(data) { $("#responseDiv").html(data); });
+}
+
+
+function removeRadioProperty(id){
+	$.get('deleteRadioStreamDetails', {id: id}, function(data) { document.location.reload(); });
 }
 
 

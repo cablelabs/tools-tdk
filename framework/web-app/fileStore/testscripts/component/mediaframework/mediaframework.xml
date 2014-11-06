@@ -1,0 +1,472 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='mediaframework' testGroup='Component'>
+    <primitiveTests>
+      <primitiveTest name='RMF_MPSink_SetGetMute' id='241' version='0'>
+        <function>TestMgr_MPSink_SetGetMute</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RMF_HNSrc_GetBufferedRanges' id='247' version='0'>
+        <function>TestMgr_HNSrc_GetBufferedRanges</function>
+        <parameters>
+          <parameter name='W' value='720' />
+          <parameter name='apply' value='0' />
+          <parameter name='playuri' value='http://192.168.30.80:8080/vldms/tuner?ocap_locator=ocap://0xa3&amp;tsb=1' />
+          <parameter name='H' value='1280' />
+          <parameter name='X' value='0' />
+          <parameter name='Y' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_MPSink_SetGetVolume' id='279' version='1'>
+        <function>TestMgr_MPSink_SetGetVolume</function>
+        <parameters>
+          <parameter name='Volume' value='4.0000' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_HNSrcMPSink_Video_MuteUnmute' id='287' version='1'>
+        <function>TestMgr_HNSrcMPSink_Video_MuteUnmute</function>
+        <parameters>
+          <parameter name='W' value='720' />
+          <parameter name='playuri' value='http://192.168.30.80:8080/vldms/tuner?ocap_locator=ocap://0xa3&amp;tsb=1' />
+          <parameter name='apply' value='0' />
+          <parameter name='X' value='0' />
+          <parameter name='Y' value='0' />
+          <parameter name='H' value='1280' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_HNSrcMPSink_Video_State' id='288' version='1'>
+        <function>TestMgr_HNSrcMPSink_Video_State</function>
+        <parameters>
+          <parameter name='X' value='0' />
+          <parameter name='H' value='1280' />
+          <parameter name='playuri' value='http://192.168.30.80:8080/vldms/tuner?ocap_locator=ocap://0xa3&amp;tsb=1' />
+          <parameter name='apply' value='0' />
+          <parameter name='Y' value='0' />
+          <parameter name='W' value='720' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_HNSrcMPSink_Video_Volume' id='289' version='1'>
+        <function>TestMgr_HNSrcMPSink_Video_Volume</function>
+        <parameters>
+          <parameter name='apply' value='0' />
+          <parameter name='W' value='720' />
+          <parameter name='Y' value='0' />
+          <parameter name='Volume' value='4.0000' />
+          <parameter name='H' value='1280' />
+          <parameter name='X' value='0' />
+          <parameter name='playuri' value='http://192.168.30.80:8080/vldms/tuner?ocap_locator=ocap://0xa3&amp;tsb=1' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRSink_Init_Term' id='375' version='1'>
+        <function>TestMgr_DVRSink_init_term</function>
+        <parameters>
+          <parameter name='playUrl' value='http://169.254.17.105:8080/vldms/tuner?ocap_locator=ocap://0xa1' />
+          <parameter name='recordingId' value='15648613' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_Play' id='419' version='1'>
+        <function>TestMgr_QAMSource_Play</function>
+        <parameters>
+          <parameter name='ocaplocator' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_InitTerm' id='420' version='0'>
+        <function>TestMgr_QAMSource_InitTerm</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_OpenClose' id='421' version='1'>
+        <function>TestMgr_QAMSource_OpenClose</function>
+        <parameters>
+          <parameter name='ocaplocator' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_Pause' id='422' version='1'>
+        <function>TestMgr_QAMSource_Pause</function>
+        <parameters>
+          <parameter name='ocaplocator' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_GetTsId' id='423' version='1'>
+        <function> TestMgr_QAMSource_GetTsId</function>
+        <parameters>
+          <parameter name='ocaplocator' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_GetLtsId' id='424' version='1'>
+        <function>TestMgr_QAMSource_GetLtsId</function>
+        <parameters>
+          <parameter name='ocaplocator' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_GetQAMSourceInstance' id='425' version='1'>
+        <function>TestMgr_QAMSource_GetQAMSourceInstance</function>
+        <parameters>
+          <parameter name='ocaplocator' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_Init_Uninit_Platform' id='426' version='0'>
+        <function>TestMgr_QAMSource_Init_Uninit_Platform</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_GetUseFactoryMethods' id='427' version='0'>
+        <function>TestMgr_QAMSource_GetUseFactoryMethods</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_Get_Free_LowLevelElement' id='429' version='1'>
+        <function>TestMgr_QAMSource_Get_Free_LowLevelElement</function>
+        <parameters>
+          <parameter name='ocaplocator' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_QAMSource_ChangeURI' id='430' version='1'>
+        <function>TestMgr_QAMSource_ChangeURI</function>
+        <parameters>
+          <parameter name='newocaplocator' value='' />
+          <parameter name='ocaplocator' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetSpace' id='431' version='0'>
+        <function>TestMgr_DVRManager_GetSpace</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetRecordingCount' id='432' version='0'>
+        <function>TestMgr_DVRManager_GetRecordingCount</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetRecordingInfoByIndex' id='434' version='1'>
+        <function>TestMgr_DVRManager_GetRecordingInfoByIndex</function>
+        <parameters>
+          <parameter name='playUrl' value='' />
+          <parameter name='index' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetRecordingInfoById' id='435' version='1'>
+        <function>TestMgr_DVRManager_GetRecordingInfoById</function>
+        <parameters>
+          <parameter name='playUrl' value='' />
+          <parameter name='recordingId' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetIsRecordingInProgress' id='436' version='1'>
+        <function>TestMgr_DVRManager_GetIsRecordingInProgress</function>
+        <parameters>
+          <parameter name='recordingId' value='' />
+          <parameter name='playUrl' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetRecordingSize' id='437' version='1'>
+        <function>TestMgr_DVRManager_GetRecordingSize</function>
+        <parameters>
+          <parameter name='playUrl' value='' />
+          <parameter name='recordingId' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetRecordingDuration' id='438' version='1'>
+        <function>TestMgr_DVRManager_GetRecordingDuration</function>
+        <parameters>
+          <parameter name='recordingId' value='' />
+          <parameter name='playUrl' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetRecordingStartTime' id='439' version='1'>
+        <function>TestMgr_DVRManager_GetRecordingStartTime</function>
+        <parameters>
+          <parameter name='recordingId' value='' />
+          <parameter name='playUrl' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetDefaultTSBMaxDuration' id='440' version='0'>
+        <function>TestMgr_DVRManager_GetDefaultTSBMaxDuration</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_CreateTSB' id='442' version='1'>
+        <function>TestMgr_DVRManager_CreateTSB</function>
+        <parameters>
+          <parameter name='duration' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_ConvertTSBToRecording' id='443' version='1'>
+        <function>TestMgr_DVRManager_ConvertTSBToRecording</function>
+        <parameters>
+          <parameter name='tsbId' value='' />
+          <parameter name='playUrl' value='' />
+          <parameter name='recordingId' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_CreateRecording' id='444' version='1'>
+        <function>TestMgr_DVRManager_CreateRecording</function>
+        <parameters>
+          <parameter name='qamLocator' value='' />
+          <parameter name='recordDuration' value='0' />
+          <parameter name='recordingTitle' value='' />
+          <parameter name='recordingId' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_UpdateRecording' id='445' version='1'>
+        <function>TestMgr_DVRManager_UpdateRecording</function>
+        <parameters>
+          <parameter name='playUrl' value='' />
+          <parameter name='recordingId' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_DeleteRecording' id='446' version='1'>
+        <function>TestMgr_DVRManager_DeleteRecording</function>
+        <parameters>
+          <parameter name='recordingId' value='' />
+          <parameter name='playUrl' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetSegmentsCount' id='447' version='0'>
+        <function>TestMgr_DVRManager_GetSegmentsCount</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_GetRecordingSegmentInfoByIndex' id='449' version='1'>
+        <function>TestMgr_DVRManager_GetRecordingSegmentInfoByIndex</function>
+        <parameters>
+          <parameter name='index' value='0' />
+          <parameter name='playUrl' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_GetDvr_Recording_List' id='488' version='0'>
+        <function>TestMgr_DVR_Rec_List</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Create_Instance' id='494' version='1'>
+        <function>TestMgr_RmfElementCreateInstance</function>
+        <parameters>
+          <parameter name='rmfElement' value='HNSrc' />
+          <parameter name='dvrSinkRecordId' value='00000' />
+          <parameter name='numOfTimeChannelChange' value='0' />
+          <parameter name='newQamSrc' value='false' />
+          <parameter name='factoryEnable' value='true' />
+          <parameter name='qamSrcUrl' value='ocap://0xa1' />
+          <parameter name='newQamSrcUrl' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Init' id='495' version='1'>
+        <function>TestMgr_RmfElementInit</function>
+        <parameters>
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Term' id='496' version='1'>
+        <function>TestMgr_RmfElementTerm</function>
+        <parameters>
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Open' id='497' version='2'>
+        <function>TestMgr_RmfElementOpen</function>
+        <parameters>
+          <parameter name='rmfElement' value='' />
+          <parameter name='url' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Close' id='498' version='1'>
+        <function>TestMgr_RmfElementClose</function>
+        <parameters>
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Remove_Instance' id='499' version='1'>
+        <function>TestMgr_RmfElementRemoveInstance</function>
+        <parameters>
+          <parameter name='newQamSrc' value='false' />
+          <parameter name='numOfTimeChannelChange' value='0' />
+          <parameter name='factoryEnable' value='true' />
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Play' id='500' version='4'>
+        <function>TestMgr_RmfElementPlay</function>
+        <parameters>
+          <parameter name='numOfTimeChannelChange' value='0' />
+          <parameter name='newQamSrc' value='false' />
+          <parameter name='playTime' value='0.0' />
+          <parameter name='defaultPlay' value='0' />
+          <parameter name='playSpeed' value='1.0' />
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Sink_SetSource' id='501' version='2'>
+        <function>TestMgr_RmfElement_Sink_SetSource</function>
+        <parameters>
+          <parameter name='newQamSrc' value='false' />
+          <parameter name='numOfTimeChannelChange' value='0' />
+          <parameter name='rmfSinkElement' value='' />
+          <parameter name='rmfSourceElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_MpSink_SetVideoRectangle' id='502' version='5'>
+        <function>TestMgr_RmfElement_MpSink_SetVideoRectangle</function>
+        <parameters>
+          <parameter name='height' value='1280' />
+          <parameter name='X' value='0' />
+          <parameter name='Y' value='0' />
+          <parameter name='width' value='720' />
+          <parameter name='apply' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Setspeed' id='503' version='2'>
+        <function>TestMgr_RmfElementSetSpeed</function>
+        <parameters>
+          <parameter name='rmfElement' value='' />
+          <parameter name='playSpeed' value='1.0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Getspeed' id='504' version='1'>
+        <function>TestMgr_RmfElementGetSpeed</function>
+        <parameters>
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Getmediatime' id='505' version='1'>
+        <function>TestMgr_RmfElementGetMediaTime</function>
+        <parameters>
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_GetState' id='506' version='1'>
+        <function>TestMgr_RmfElementGetState</function>
+        <parameters>
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Pause' id='507' version='1'>
+        <function>TestMgr_RmfElementPause</function>
+        <parameters>
+          <parameter name='numOfTimeChannelChange' value='0' />
+          <parameter name='newQamSrc' value='false' />
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_Setmediatime' id='508' version='2'>
+        <function>TestMgr_RmfElementSetMediaTime</function>
+        <parameters>
+          <parameter name='mediaTime' value='5' />
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_GetMediaInfo' id='509' version='1'>
+        <function>TestMgr_RmfElementGetMediaInfo</function>
+        <parameters>
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_CheckRecordingInfoByIndex' id='522' version='1'>
+        <function>TestMgr_DVRManager_CheckRecordingInfoByIndex</function>
+        <parameters>
+          <parameter name='index' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_DVRManager_CheckRecordingInfoById' id='523' version='1'>
+        <function>TestMgr_DVRManager_CheckRecordingInfoById</function>
+        <parameters>
+          <parameter name='recordingId' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RMF_Element_DVRManager_CreateRecording' id='532' version='1'>
+        <function>TestMgr_RmfElement_DVRManagerCreateRecording</function>
+        <parameters>
+          <parameter name='recDuration' value='3' />
+          <parameter name='recordingId' value='' />
+          <parameter name='url' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RmfElement_QAMSrc_RmfPlatform_Init' id='559' version='0'>
+        <function>TestMgr_RmfElement_QAMSrc_RmfPlatform_Init</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_QAMSrc_RmfPlatform_Uninit' id='560' version='0'>
+        <function>TestMgr_RmfElement_QAMSrc_RmfPlatform_Uninit</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_QAMSrc_InitPlatform' id='561' version='0'>
+        <function>TestMgr_RmfElement_QAMSrc_InitPlatform</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_QAMSrc_UninitPlatform' id='562' version='0'>
+        <function>TestMgr_RmfElement_QAMSrc_UninitPlatform</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_QAMSrc_UseFactoryMethods' id='563' version='0'>
+        <function>TestMgr_RmfElement_QAMSrc_UseFactoryMethods</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_QAMSrc_GetTSID' id='564' version='0'>
+        <function>TestMgr_RmfElement_QAMSrc_GetTSID</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_QAMSrc_GetLTSID' id='565' version='0'>
+        <function>TestMgr_RmfElement_QAMSrc_GetLTSID</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_QAMSrc_GetLowLevelElement' id='566' version='0'>
+        <function>TestMgr_RmfElement_QAMSrc_GetLowLevelElement</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_QAMSrc_FreeLowLevelElement' id='567' version='0'>
+        <function>TestMgr_RmfElement_QAMSrc_FreeLowLevelElement</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_QAMSrc_ChangeURI' id='568' version='1'>
+        <function>TestMgr_RmfElement_QAMSrc_ChangeURI</function>
+        <parameters>
+          <parameter name='numOfTimeChannelChange' value='0' />
+          <parameter name='url' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RmfElement_HNSink_InitPlatform' id='569' version='0'>
+        <function>TestMgr_RmfElement_HNSink_InitPlatform</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_HNSink_UninitPlatform' id='570' version='0'>
+        <function>TestMgr_RmfElement_HNSink_UninitPlatform</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='RmfElement_HNSink_SetProperties' id='572' version='1'>
+        <function>TestMgr_RmfElement_HNSink_SetProperties</function>
+        <parameters>
+          <parameter name='useChunkTransfer' value='true' />
+          <parameter name='dctpEnable' value='false' />
+          <parameter name='typeFlag' value='0' />
+          <parameter name='url' value='ocap://0x' />
+          <parameter name='streamIp' value='' />
+          <parameter name='socketId' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RmfElement_HNSink_SetSourceType' id='573' version='1'>
+        <function>TestMgr_RmfElement_HNSink_SetSourceType</function>
+        <parameters>
+          <parameter name='rmfElement' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='RmfElement_CheckFor_SPTSReadError' id='655' version='0'>
+        <function>TestMgr_RmfElement_CheckForSPTSRead_QAMSrc_Error</function>
+        <parameters>
+          <parameter name='logPath' value='/opt/TDK/logs/AgentConsole.log' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='CheckAudioVideoStatus' id='659' version='1'>
+        <function>TestMgr_CheckAudioVideoStatus</function>
+        <parameters>
+          <parameter name='audioVideoStatus' value='/opt/TDK/CheckVideoStatus.sh' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='ClearLogFile' id='671' version='1'>
+        <function>TestMgr_ClearLogFile</function>
+        <parameters>
+          <parameter name='logFileToClear' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='CheckLogForCrash' id='672' version='1'>
+        <function>TestMgr_CheckRmfStreamerCrash</function>
+        <parameters>
+          <parameter name='logFile' value='' />
+          <parameter name='patternToSearch' value='' />
+          <parameter name='FileNameToCpTdkPath' value='' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

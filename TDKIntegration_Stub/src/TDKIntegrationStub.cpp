@@ -13,13 +13,96 @@
 #include "TDKIntegrationStub.h"
 
 string g_tdkPath = getenv("TDK_PATH");
-
+#define FETCH_STREAMING_INT_NAME "streaming_interface_file"
 using namespace std;
 #ifdef RMFAGENT
 static float totalTuningTime;
 static MediaPlayerSink *pSink = NULL;
 static HNSource *pSource = NULL;
 #endif
+#define VIDEO_STATUS "/CheckVideoStatus.sh"
+#define AUDIO_STATUS "/CheckAudioStatus.sh"
+
+/********************************************************************************************************************
+Purpose:               To get the current status of the AV running
+
+Parameters:
+scriptname [IN]       - The input scriptname
+
+Return:               - bool SUCCESS/FAILURE
+
+ *********************************************************************************************************************/
+
+bool getstreamingstatus(string scriptname)
+{
+        char buffer[128];
+        std::string script = g_tdkPath;
+        std::string result = "";
+        script.append(scriptname);
+
+        FILE* pipe = popen(script.c_str(), "r");
+        if (!pipe)
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "Error in opening pipe \n");
+                return TEST_FAILURE;
+        }
+        while(!feof(pipe)) {
+                if(fgets(buffer, 128, pipe) != NULL)
+                        result += buffer;
+        }
+        pclose(pipe);
+        DEBUG_PRINT(DEBUG_TRACE, "Script Output: %s %s\n", script.c_str(), result.c_str());
+        if (result.find("SUCCESS") != string::npos)
+                return TEST_SUCCESS;
+        else
+                return TEST_FAILURE;
+
+}
+
+std::string fetchStreamingInterface()
+{
+        DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
+        ifstream interfacefile;
+        string Fetch_Streaming_interface_cmd, Streaming_Interface_name,line;
+        Streaming_Interface_name = g_tdkPath + "/" + FETCH_STREAMING_INT_NAME;
+/*      //Fetch_Streaming_interface_cmd = g_tdkPath + "/" + FETCH_STREAMING_INT_SCRIPT;
+        //string fetch_streaming_int_chk= "source "+Fetch_Streaming_interface_cmd;
+        //try
+        {
+                system((char*)fetch_streaming_int_chk());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of streaming ip fetch script\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                return "FAILURE<DETAILS>Exception occured execution of streaming ip fetch script";
+
+        }
+*/
+
+        interfacefile.open(Streaming_Interface_name.c_str());
+        if(interfacefile.is_open())
+        {
+                if(getline(interfacefile,line)>0);
+                {
+                        interfacefile.close();
+                        DEBUG_PRINT(DEBUG_LOG,"\nStreaming IP fetched fetched\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function--> Exit\n");
+                        return line;
+                }
+                interfacefile.close();
+                DEBUG_PRINT(DEBUG_ERROR,"\nStreaming IP fetched not fetched\n");
+                return "FAILURE<DETAILS>Proper result is not found in the streaming interface name file";
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the streaming interface file.\n");
+                return "FAILURE<DETAILS>Unable to open the streaming interface  file";
+        }
+
+
+}
+
 /*************************************************************************
   Function name : E2ELinearTVStub constructor
 
@@ -753,7 +836,27 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 #ifdef ENABLE_HYBRID_CODECOMPILE
 	/*Fetching the streming interface IP: eth1 */
 	string streamingip;
-	streamingip=GetHostIP("eth1");
+	string streaming_interface;
+	size_t pos = 0;
+	size_t found;
+	streaming_interface=fetchStreamingInterface();
+	found=streaming_interface.find("FAILURE");
+	if (found!=std::string::npos)
+	{
+        	std::string delimiter = "<FAILURE>";
+		std::string token;
+                while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+		     	token = streaming_interface.substr(0, pos);
+                       	std::cout << token << std::endl;
+	              	streaming_interface.erase(0, pos + delimiter.length());
+                 }
+                 response["result"] = "FAILURE";
+                 response["details"] = token;
+                 return TEST_FAILURE;
+	}
+
+	const char * streaming_interface_name = streaming_interface.c_str();
+	streamingip=GetHostIP(streaming_interface_name);
 	string urlIn = url;
 	string http = "http://";
 
@@ -763,7 +866,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 	DEBUG_PRINT(DEBUG_TRACE, "After appending streaming IP to http: %s\n",http.c_str());
 	DEBUG_PRINT(DEBUG_TRACE, "IP : %s\n",streamingip.c_str());
 
-	size_t pos = 0;
+
 	pos = urlIn.find(":8080");
 	urlIn = urlIn.replace(0,pos,http);
 
@@ -1200,6 +1303,23 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		response["details"] = "HNSource play failed current state not playing.\n";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed current state not playing.\n");
 
+		close_Term_HNSrc_MPSink(response);
+		return TEST_FAILURE;
+	}
+	sleep(5);
+
+	/* additional check with scripts */
+	if(TEST_FAILURE == getstreamingstatus(VIDEO_STATUS))
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "Video playback have encountered an error.";
+		close_Term_HNSrc_MPSink(response);
+		return TEST_FAILURE;
+	}
+	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS))
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "Audio playback have encountered an error.";
 		close_Term_HNSrc_MPSink(response);
 		return TEST_FAILURE;
 	}
@@ -2954,6 +3074,22 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Play(IN const Json::Value& req, OUT Js
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "HNSource getState() passed.\n");
+	/* Additional checkpoint for video and audio status */
+	if(TEST_FAILURE == getstreamingstatus(VIDEO_STATUS))
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "Video playback have encountered an error.";
+		close_Term_HNSrc_MPSink(response);
+		return TEST_FAILURE;
+	}
+	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS))
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "Audio playback have encountered an error.";
+		close_Term_HNSrc_MPSink(response);
+		return TEST_FAILURE;
+	}
+	sleep(5);
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
@@ -3059,7 +3195,26 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 #ifdef ENABLE_HYBRID_CODECOMPILE
         /*Fetching the streming interface IP: eth1 */
         string streamingip;
-	streamingip=GetHostIP("eth1");
+	string streaming_interface;
+	size_t pos = 0;
+	size_t found;
+	streaming_interface=fetchStreamingInterface();
+	found=streaming_interface.find("FAILURE");
+	if (found!=std::string::npos)
+	{
+        	std::string delimiter = "<FAILURE>";
+		std::string token;
+                while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+		     	token = streaming_interface.substr(0, pos);
+                       	std::cout << token << std::endl;
+	              	streaming_interface.erase(0, pos + delimiter.length());
+                 }
+                 response["result"] = "FAILURE";
+                 response["details"] = token;
+                 return TEST_FAILURE;
+	}
+	const char * streaming_interface_name = streaming_interface.c_str();
+	streamingip=GetHostIP(streaming_interface_name);
         string urlIn = url;
         string http = "http://";
 
@@ -3069,7 +3224,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
         DEBUG_PRINT(DEBUG_TRACE, "After appending streaming IP to http: %s\n",http.c_str());
         DEBUG_PRINT(DEBUG_TRACE, "IP : %s\n",streamingip.c_str());
 
-        size_t pos = 0;
+
         pos = urlIn.find(":8080");
         urlIn = urlIn.replace(0,pos,http);
 
@@ -3246,6 +3401,26 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 
         res_HNSrcPlay = pSource->play();
         DEBUG_PRINT(DEBUG_LOG, "RMF Result of Play is %d\n", res_HNSrcPlay);
+	sleep(5);
+	/* Additional checkpoint for video and audio status */
+	if(TEST_FAILURE == getstreamingstatus(VIDEO_STATUS))
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "Video playback have encountered an error.";
+		pSink->term();
+		pSource->close();
+		pSource->term();
+		return TEST_FAILURE;
+	}
+	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS))
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "Audio playback have encountered an error.";
+		pSink->term();
+		pSource->close();
+		pSource->term();
+		return TEST_FAILURE;
+	}
         sleep(30);
         DEBUG_PRINT(DEBUG_LOG, "Playing the Video for 30 seconds\n");
         if(0 != res_HNSrcPlay)

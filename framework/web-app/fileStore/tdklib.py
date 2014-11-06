@@ -865,6 +865,7 @@ class TDKScriptingLibrary:
 			self.performanceSystemDiagnosisEnabled = performanceSystemDiagnosisEnabled 
 			self.scriptSuiteEnabled = scriptSuiteEnabled
 			
+			self.realpath = self.realpath + "/"
 			print "The real path:",self.realpath
 
 			# Querry Test Manager to get status port and log transfer port
@@ -1007,6 +1008,44 @@ class TDKScriptingLibrary:
 		return testObj
  
 	########## End of Function ##########
+	
+	def readConfigFile(self,configFile):
+
+	# Reads config file and returns list of steps to be performed in script.
+
+	# Syntax      : OBJ.readConfigFile()
+	# Description : Reads config file and returns list of steps to be performed in script.
+	# Parameters  : configFile - Name of config file.
+	# Return Value: List of steps to be performed in script.
+
+		itemList = []
+		# TODO : configFile = str(sys.argv[0]).replace(".py",".config")
+		configFile = self.realpath + "fileStore/" + configFile
+		print "Configuration File Found : ", configFile
+		sys.stdout.flush()
+
+		# Checking if file exists
+		fileCheck = os.path.isfile(configFile)
+		if (fileCheck):
+			configFileObj = open(configFile,'r')
+			
+			# Parsing through config file and appending list
+			line = configFileObj.readline()
+			while(line != ''):
+				line = line.rstrip('\n')
+				itemList.append(line)
+				line = configFileObj.readline()
+
+			configFileObj.close()
+		else:
+			print "#TDK_@error-ERROR : Configuration File does not exist."
+			sys.stdout.flush()
+			exit()
+
+		return itemList
+
+	########## End of Function ##########
+
 
 	def unloadModule(self, cName):
 
@@ -1471,6 +1510,63 @@ class ClientList:
 
 
 ########## End of Class  ##########
+
+
+
+# To initiate a Create and Execute test cases in all the modules
+#
+# Syntax       : Create_ExecuteTestcase(obj,primitivetest,expectedresult,verifyList, **kwargs)
+#
+# Parameters   : obj,primitivetest,expectedresult,verifyList, **kwargs
+#
+# Return Value : 0 on success and 1 on failure
+
+def Create_ExecuteTestcase(obj,primitivetest,expectedresult,verifyList, **kwargs):
+    print kwargs
+    details = "NULL";
+ 
+    #calling primitive test case    
+    tdkTestObj = obj.createTestStep(primitivetest);
+    for name, value in kwargs.iteritems():
+      
+        print "Name: %s"%str(name);
+        tdkTestObj.addParameter(str(name),value);                                   
+       
+    Expectedresult=expectedresult;
+    tdkTestObj.executeTestCase(Expectedresult); 
+    actualresult = tdkTestObj.getResult();
+    print "Actual Result: %s"%actualresult;
+    
+    try: 
+        details = tdkTestObj.getResultDetails();
+        print "Details:%s"%details;
+    except:                
+        pass;
+    
+    #Check for SUCCESS/FAILURE return value 
+    if Expectedresult in actualresult:
+        count = 0;
+        if verifyList:
+            print "Verify List not empty"
+            for name,value in verifyList.items():	
+                print "Name:%s,Value:%s to be verified in the details"%(name,value);
+                if value in details:
+            	    print details;	    
+                    print "SUCCESS : %s sucess"%primitivetest;
+                    #count+=1;
+                    #if count > 0:
+                    tdkTestObj.setResultStatus("SUCCESS");
+                    #    print "SUCCESS:%s"%(primitivetest);
+                else:                    
+                    tdkTestObj.setResultStatus("FAILURE");
+                    print "FAILURE:Value not in details %s" %details;
+        else:            
+            tdkTestObj.setResultStatus("SUCCESS");
+    else:
+        tdkTestObj.setResultStatus("FAILURE");            
+    
+    return (actualresult,tdkTestObj,details);
+
 
 
 ########## End of tdklib ##########

@@ -14,10 +14,41 @@
 <%@ page import="org.apache.shiro.SecurityUtils"%>
 <%@ page import="com.comcast.rdk.User" %>
 
+<script>
+var needToConfirm = false;
+
+window.onbeforeunload = confirmExit;
+
+function confirmExit()
+{
+  if (needToConfirm){
+	checkAnyEditingScripts();
+    return "If you navigate away from this page, any unsaved changes will be lost !!!";
+  }
+}
+
+
+function checkAnyEditingScripts(){
+	var scriptName = $("#scriptName").val();
+	if(scriptName && scriptName != "undefined"){
+		clearLocks(scriptName);
+	}
+}
+
+function clearLocks(scriptName){
+	$.get('removeEditLock', {scriptName: scriptName}, function(data) {
+	});
+}
+
+</script>
+
+
 <g:if test="${script}" >
 <g:form name="editScriptForm" action="updateScript" controller="scriptGroup" method="post">
-	<input type="hidden" name="id" id="id" value="${script.id}">
-	
+	<input type="hidden" name="id" id="id" value="${script?.primitiveTest?.module?.name?.trim()}@${script.name}">
+	<input type="hidden" name="scriptVersion" id="scriptVersion" value="${script.version}">
+	<input type="hidden" name="prevScriptName" id ="prevScriptName" value="${script.name}">
+	<input type="hidden" name="scriptName" id ="scriptName" value="">
 	<table>
 		<tr>
 			<th colspan="4" align="center">Edit Script</th>
@@ -36,11 +67,11 @@
 			<td style="width:15%;">Primitive Test</td>
 			<td><select name="ptest" id="ptest" style="width: 250px"><%--
 					<option value="default">--Please Select--</option>
-					--%><g:each in="${script}" var="primList">
-						<option value="${script.primitiveTest.id}">
+					--%>
+						<option value="${script.primitiveTest.name}">
 							${script.primitiveTest.name}
 						</option>
-					</g:each>
+				
 			</select>&emsp;&emsp;&emsp;&emsp;		
 			
 			<g:if test="${script?.primitiveTest?.module?.testGroup.toString() != "OpenSource"  }"  >
@@ -65,6 +96,11 @@
 			</td>
 		</tr>
 
+		<tr>
+			<td></td>
+			<td><g:checkBox id="longDuration" name="longDuration" checked="${script.longDuration}" title ="long duration test will be included only in default module/Box type test suites with name ending with LD" />&nbsp;Long duration test</td>
+		</tr>
+		
 		<tr>
 			<td></td>
 			<td><g:checkBox id="skipStatus" name="skipStatus" checked="${script.skip}"  onclick="showSkipRemarks(this)" />&nbsp;Skip
@@ -113,12 +149,23 @@
 				 <g:textArea id="scriptArea" name="scriptArea" class="scriptArea" style="color:RGB(130,15,15);font-size:12px">${script.scriptContent}</g:textArea>
 			</td>		
 		</tr>
+		<tr>
+		<td></td>
+		<td>
+		<label id="warningMsg" style="color: red;"></label>
+		</td>
+		</tr>
 		<tr id="buttons">
 			<td colspan="2" align="center">
 				<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
-				<g:if test="${flag != 'STATIC'}" >				
-					<input type="submit" value="Update" id="save">&emsp;
-					<input type="reset" value="Cancel" id="cancel" onclick="makeScriptEditable('${script.id}')">				
+				<g:if test="${flag != 'STATIC'}" >	
+					<div id = "editDiv">
+						<input id ="editButton" type="button" onclick="needToConfirm= true;enableEdit(this,'${script.name}','${SecurityUtils.getSubject().getSession(false)}')" value="Edit Script">
+					</div>
+					<div id ="updateDiv">			
+						<input type="submit"  style="display: none"  onclick="needToConfirm= false;" value="Update" id="save">&emsp;
+						<input type="reset" style="display: none" value="Cancel" id="cancel" onclick="makeScriptEditable('${script.name}')">		
+					</div>		
 				</g:if>
 				</g:if>
 			</td>
@@ -127,7 +174,7 @@
 </g:form>
 <g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 <g:form name="downloadScriptForm" action="exportScriptContent" controller="scriptGroup" method="post">
-		<input type="hidden" name="id" id="id" value="${script.id}">
+		<input type="hidden" name="id" id="id" value="${script?.name}">
 		<table>
 		<tr></tr>
 			<tr>

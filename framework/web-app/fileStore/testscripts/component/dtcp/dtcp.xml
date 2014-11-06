@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='dtcp' testGroup='Component'>
+    <primitiveTests>
+      <primitiveTest name='TestMgr_DTCPAgent_Init' id='661' version='1'>
+        <function>TestMgr_DTCPAgent_Init</function>
+        <parameters>
+          <parameter name='param3' value='1' />
+          <parameter name='param1' value='192.168.30.80' />
+          <parameter name='param4' value='1' />
+          <parameter name='param2' value='1' />
+          <parameter name='funcName' value='DTCPMgrInitialize' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

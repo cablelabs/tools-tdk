@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='mediastreamer' testGroup='Component'>
+    <primitiveTests>
+      <primitiveTest name='MediaStreamer_LiveTune_Request' id='88' version='2'>
+        <function>TestMgr_MediaStreamer_LiveTune_Request</function>
+        <parameters>
+          <parameter name='ocapId' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='MediaStreamer_Recorded_Urls' id='90' version='0'>
+        <function>TestMgr_MediaStreamer_Recorded_Urls</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='MediaStreamer_Recorded_Metadata' id='91' version='0'>
+        <function>TestMgr_MediaStreamer_Recorded_Metadata</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='MediaStreamer_Live_Playback' id='92' version='2'>
+        <function>TestMgr_MediaStreamer_Live_Playback</function>
+        <parameters>
+          <parameter name='ocapId' value='' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='MediaStreamer_Recording_Playback' id='93' version='0'>
+        <function>TestMgr_MediaStreamer_Recording_Playback</function>
+        <parameters />
+      </primitiveTest>
+      <primitiveTest name='MediaStreamer_DVR_Trickplay' id='95' version='1'>
+        <function>TestMgr_MediaStreamer_DVR_Trickplay</function>
+        <parameters>
+          <parameter name='PlaySpeed' value='0' />
+          <parameter name='timePosition' value='8000' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='MediaStreamer_Recording_Request' id='111' version='3'>
+        <function>TestMgr_MediaStreamer_Recording_Request</function>
+        <parameters>
+          <parameter name='recordingId' value='validId' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='MS_RMFStreamer_InterfaceTesting' id='491' version='1'>
+        <function>TestMgr_RMFStreamer_InterfaceTesting</function>
+        <parameters>
+          <parameter name='URL' value='http://' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name='MS_RMFStreamer_Player' id='493' version='3'>
+        <function>TestMgr_RMFStreamer_Player</function>
+        <parameters>
+          <parameter name='play_time' value='3' />
+          <parameter name='SkipTime' value='30' />
+          <parameter name='VideostreamURL' value='http://' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>
