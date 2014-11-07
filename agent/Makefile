@@ -4,6 +4,7 @@ include ../def.inc
 
 default: build
 
+COPTS     += -rdynamic
 
 #debug log level
 ifeq ($(DEBUG_LEVEL),TRACE)

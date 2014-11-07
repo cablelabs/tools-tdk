@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <jsonrpc/jsonrpc.h>
+#include <execinfo.h>
 
 /* Application Includes */
 #include "rpcmethods.h"
@@ -48,6 +49,7 @@
 
 #define INFO_STRING_SIZE 100
 #define STATUS_QUERY_TIMEOUT 120
+#define BT_BUFFER_SIZE 255
 
 #define CRASH_STATUS_FILE "crashStatus.ini"
 #define FLUSH_IP_TABLE "sh $TDK_PATH/flush_iptables.sh"
@@ -283,6 +285,15 @@ int SendInfo (char* strStringToSend, int nStringSize)
                                     SendInfo()
 
 *********************************************************************************************************************/
+static void printBackTrace(void)
+{
+    DEBUG_PRINT (DEBUG_LOG, "%s() --> Entry\n",__FUNCTION__);
+    void * buffer[BT_BUFFER_SIZE];
+    int calls = backtrace(buffer, BT_BUFFER_SIZE);
+    backtrace_symbols_fd(buffer, calls, STDOUT_FILENO);
+    DEBUG_PRINT (DEBUG_LOG, "%s() --> Exit\n",__FUNCTION__);
+}
+
 static void SignalHandler (int nCode)
 {
     switch(nCode)
@@ -296,12 +307,14 @@ static void SignalHandler (int nCode)
 			
         case SIGABRT :
             DEBUG_PRINT (DEBUG_LOG, "\nAlert!!! Agent caught an Abort signal! Attempting recovery..\n");
+            printBackTrace();
             s_bAgentRun = false;
             longjmp (g_JumpBuffer,0);
             break;
 			
         case SIGSEGV :
             DEBUG_PRINT (DEBUG_LOG, "\nAlert!!! Segmentation fault signal caught! Attempting recovery..\n");
+            printBackTrace();
             s_bAgentRun = false;
             longjmp (g_JumpBuffer,0);
             break;
