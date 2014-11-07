@@ -715,7 +715,7 @@ class PrimitiveTestCase:
 
 		if (infoFileName == "client"):
 			returnvalue = 1
-			obj = self.getStreamDetails(01)
+			obj = self.getStreamDetails('01')
 			gatewayip = obj.getGatewayIp()
 			recobj = RecordList(str(gatewayip),8087,self.realpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
 			returnvalue = recobj.getList()
