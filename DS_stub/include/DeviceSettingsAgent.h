@@ -94,7 +94,7 @@ class DeviceSettingsAgent : public RDKTestStubInterface
 		bool FP_getSupportedColors(IN const Json::Value& req, OUT Json::Value& response);
 		bool FP_getTextDisplays(IN const Json::Value& req, OUT Json::Value& response);
 		bool FP_setText(IN const Json::Value& req, OUT Json::Value& response);
-		bool FP_setTimeForamt(IN const Json::Value& req, OUT Json::Value& response);
+		bool FP_setTimeFormat(IN const Json::Value& req, OUT Json::Value& response);
 		bool FP_setTime(IN const Json::Value& req, OUT Json::Value& response);
 		bool AOP_loopThru(IN const Json::Value& req, OUT Json::Value& response);
 		bool AOP_mutedStatus(IN const Json::Value& req, OUT Json::Value& response);

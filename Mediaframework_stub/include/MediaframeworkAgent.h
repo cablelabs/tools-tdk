@@ -145,6 +145,7 @@ class MediaframeworkAgent : public RDKTestStubInterface
 	
 		/*DVR Recording List*/
 		bool MediaframeworkAgent_DVR_Rec_List(IN const Json::Value& req, OUT Json::Value& response);
+		bool MediaframeworkAgent_DVR_CreateNewRecording(IN const Json::Value& req, OUT Json::Value& response);
 		
 		/*DVR sink*/
         	bool MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Value& req, OUT Json::Value& response);

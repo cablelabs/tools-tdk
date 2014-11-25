@@ -758,7 +758,7 @@ bool XUPNPAgent::XUPNPAgent_evtCheck(IN const Json::Value& req, OUT Json::Value&
                 return TEST_FAILURE;
         }
 //verification in output.json
-
+/*
         sprintf(testMsg, "%s", evtValue.c_str());
 // Sleep is required to update the output json 
 	usleep(550000);
@@ -779,7 +779,7 @@ bool XUPNPAgent::XUPNPAgent_evtCheck(IN const Json::Value& req, OUT Json::Value&
                 response["details"] = "Failed:IARM_BUS_SYSMGR_SYSSTATE__EVT is received but not updated in the output.json\n ";
                 return TEST_FAILURE;
         }
-
+*/
 	system("rm /opt/TDK/tdkXupnpEvtChkLog");
         DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_evtCheck --> Exit\n");
         return TEST_SUCCESS;

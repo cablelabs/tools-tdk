@@ -107,6 +107,7 @@ bool CheckLog(const char* search)
             }
         }
         logFile.close();
+        DEBUG_PRINT(DEBUG_ERROR,"Error! No Log found\n");
     }
     else
     {

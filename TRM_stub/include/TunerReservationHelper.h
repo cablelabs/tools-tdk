@@ -36,8 +36,6 @@
 #include "trm/JsonEncoder.h"
 #include "trm/JsonDecoder.h"
 
-using namespace std;
-
 enum Type {
     REQUEST = 0x1234,
     RESPONSE = 0x1800,
@@ -50,16 +48,16 @@ class TunerReservationHelperImpl
 public:
     bool getAllTunerStates(void);
     bool getAllTunerIds(void);
-    bool getAllReservations(void);
+    bool getAllReservations(std::string filterDevice);
     bool getVersion(void);
-    bool validateTunerReservation(const char* device);
-    bool reserveTunerForRecord( const char* device, string recordingId, const char* locator, uint64_t startTime=0, uint64_t duration=0, bool hot=false);
-    bool reserveTunerForLive( const char* device, const char* locator, uint64_t startTime=0, uint64_t duration=0);
-    bool releaseTunerReservation(const char* device);
-    bool cancelledRecording(string reservationToken); /*This function shall be called by the application once cancelRecording event is handled*/
-    bool cancelRecording(string locator);
-    bool cancelledLive(string reservationToken, string locator); /*This function shall be called by the application once cancelRecording event is handled*/
-    bool cancelLive(string locator);
+    bool validateTunerReservation(std::string device, std::string locator, int activityType);
+    bool reserveTunerForRecord( std::string device, std::string recordingId, std::string locator, uint64_t startTime=0, uint64_t duration=0, bool hot=false);
+    bool reserveTunerForLive( std::string device, std::string locator, uint64_t startTime=0, uint64_t duration=0);
+    bool releaseTunerReservation(std::string device, std::string locator, int activityType);
+    bool cancelledRecording(std::string reservationToken); /*This function shall be called by the application once cancelRecording event is handled*/
+    bool cancelRecording(std::string locator);
+    bool cancelledLive(std::string reservationToken, std::string locator); /*This function shall be called by the application once cancelRecording event is handled*/
+    bool cancelLive(std::string locator);
 
     static void init();
 
@@ -71,7 +69,7 @@ public:
     void notifyResrvResponse(bool success);
 
     static void addToReservationDb(TRM::TunerReservation resv);
-    static void removeFromReservationDb(const string token);
+    static void removeFromReservationDb(const std::string token);
 
 private:
     TunerReservationHelperImpl* impl;
@@ -115,14 +113,14 @@ class TunerReservationHelper
 public:
     bool getAllTunerStates();
     bool getAllTunerIds();
-    bool getAllReservations();
+    bool getAllReservations(std::string filterDevice);
     bool getVersion();
-    bool validateTunerReservation(const char* device);
-    bool reserveTunerForRecord( const char* device, string recordingId, const char* locator, uint64_t startTime=0, uint64_t duration=0, bool hot=false);
-    bool reserveTunerForLive( const char* device, const char* locator, uint64_t startTime=0, uint64_t duration=0);
-    bool releaseTunerReservation(const char* device);
-    bool cancelRecording(string locator);
-    bool cancelLive(string locator);
+    bool validateTunerReservation(std::string device, std::string locator, int activityType);
+    bool reserveTunerForRecord( std::string device, std::string recordingId, std::string locator, uint64_t startTime=0, uint64_t duration=0, bool hot=false);
+    bool reserveTunerForLive( std::string device, std::string locator, uint64_t startTime=0, uint64_t duration=0);
+    bool releaseTunerReservation(std::string device, std::string locator, int activityType);
+    bool cancelRecording(std::string locator);
+    bool cancelLive(std::string locator);
 
     static void init();
 

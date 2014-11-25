@@ -357,6 +357,8 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 
 	/*DVR Recording List*/
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List, "TestMgr_DVR_Rec_List");
+	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVR_CreateNewRecording, "TestMgr_DVR_CreateNewRecording");
+
 	/*DVR sink*/
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm, "TestMgr_DVRSink_init_term");
 	/*DVR Manager*/
@@ -2639,6 +2641,53 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List(IN const Json::Value&
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVR_Rec_List -->Exit\n");
 	return TEST_SUCCESS;
+}
+
+
+bool MediaframeworkAgent::MediaframeworkAgent_DVR_CreateNewRecording(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVR_CreateNewRecording -->Entry\n");	
+
+	#if 1
+	string completeCmd = "/opt/TDK/tdkRmfApp ";
+	string recordCmd = "record";
+	string recordId = req["recordId"].asCString();
+	string duration = req["recordDuration"].asCString();
+	string title = req["recordTitle"].asCString();
+	string ocap = "ocap://";
+	string ocapId = req["ocapId"].asCString();
+	ocap.append(ocapId);
+	
+	/*Framing the command to record using tdkRmfApp*/
+	completeCmd.append(recordCmd);
+	completeCmd.append(" ");
+	completeCmd.append(recordId);
+	completeCmd.append(" ");
+	completeCmd.append(duration);
+	completeCmd.append(" ");
+	completeCmd.append(title);
+	completeCmd.append(" ");
+	completeCmd.append(ocap);
+	
+	#endif
+	
+        DEBUG_PRINT(DEBUG_TRACE, "The Complete Command: %s \n",completeCmd.c_str());
+
+	if(-1 == (system(completeCmd.c_str())))
+	{
+                DEBUG_PRINT(DEBUG_ERROR, "Error: tdkRmfApp failed to record.\n");
+                response["result"] = "FAILURE";
+                response["details"] = "Error: tdkRmfApp failed to record.";
+                return TEST_FAILURE;
+	}
+
+
+        DEBUG_PRINT(DEBUG_TRACE, "tdkRmfApp recorded successfully.\n");
+        response["result"] = "SUCCESS";
+        response["details"] = "tdkRmfApp recorded successfully. \n";
+
+	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVR_CreateNewRecording -->Exit\n");	
+        return TEST_SUCCESS;
 }
 
 /**************************************************************************
@@ -5657,6 +5706,7 @@ bool MediaframeworkAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptr
 
 	/*DVR Recording List*/
 	ptrAgentObj->UnregisterMethod("TestMgr_DVR_Rec_List");
+	ptrAgentObj->UnregisterMethod("TestMgr_DVR_CreateNewRecording");
 
 	/*DVR sink*/
 	ptrAgentObj->UnregisterMethod("TestMgr_DVRSink_init_term");

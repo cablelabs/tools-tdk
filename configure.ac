@@ -50,18 +50,33 @@ DVRMGR_FLAGS=" "
 QAM_LIBS=" "
 SF_LIBS=" "
 HEADLESS=" "
-AC_ARG_ENABLE([headless],
-        AS_HELP_STRING([--enable-headless],[enable headless build]),
+SUBDIR_HYBRID=" "
+SUBDIR_CLIENT=" "
+AC_ARG_ENABLE([hybrid],
+        AS_HELP_STRING([--enable-hybrid],[enable hybrid build]),
         [
           case "${enableval}" in
-             yes) HEADLESS=true ;;
-           no) HEADLESS=false ;;
+             yes) HYBRID=true
+                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp" ;;
+           no) HYBRID=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-headless ]) ;;
            esac
            ],
          [echo "headless build is enable"])
-AM_CONDITIONAL([HEADLESS], [test x$HEADLESS = xtrue])
+AM_CONDITIONAL([HYBRID], [test x$HYBRID = xtrue])
 
+AC_ARG_ENABLE([client],
+        AS_HELP_STRING([--enable-client],[enable client build]),
+        [
+          case "${enableval}" in
+             yes) CLIENT=true
+                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub" ;;
+           no) CLIENT=false ;;
+          *) AC_MSG_ERROR([bad value ${enableval} for --enable-headless ]) ;;
+           esac
+           ],
+         [echo "headless build is enable"])
+AM_CONDITIONAL([CLIENT], [test x$CLIENT = xtrue])
 
 AC_ARG_ENABLE([trace],
               AS_HELP_STRING([--enable-trace],[enable trace (default is no)]),
@@ -111,6 +126,8 @@ AC_SUBST(COPTS)
 AC_SUBST(DVRMGR_FLAGS)
 AC_SUBST(QAM_LIBS)
 AC_SUBST(SF_LIBS)
+AC_SUBST(SUBDIR_HYBRID)
+AC_SUBST(SUBDIR_CLIENT)
 AC_CONFIG_FILES([Makefile
          cfg/Makefile
          agent/Makefile

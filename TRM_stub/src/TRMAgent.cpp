@@ -199,7 +199,9 @@ bool TRMAgent::TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::V
 /**************************************************************************
 Function name : TRMAgent::TRMAgent_GetAllReservations
 
-Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE".
+Arguments     : Input argument is deviceNo. If deviceNo is default value(-1) send NULL filter value
+                to get reservations for all tuners.
+                Output argument is "SUCCESS" or "FAILURE".
 
 Description   : Receives the request from Test Manager to fetch reservation for all tuners.
                 Gets the response from TRM server and sent to the Test Manager.
@@ -207,10 +209,16 @@ Description   : Receives the request from Test Manager to fetch reservation for 
 bool TRMAgent::TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllReservations --->Entry\n");
+    int deviceNo = req["deviceNo"].asInt();
+    string filter = "";
+    if ((0 <= deviceNo) && (deviceNo <= TOTAL_DEVICE_NUMBER))
+    {
+	filter = deviceNames[deviceNo];
+    }
 
     try
     {
-        if (!pTrh->getAllReservations())
+        if (!pTrh->getAllReservations(filter))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to get all tuners reservations";
@@ -310,7 +318,7 @@ bool TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Jso
 
     try
     {
-        if (!pTrh->reserveTunerForRecord(deviceNames[deviceNo], recordingId, locator.c_str(), startTime, duration, hot))
+        if (!pTrh->reserveTunerForRecord(deviceNames[deviceNo], recordingId, locator, startTime, duration, hot))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to reserve tuner for record";
@@ -362,7 +370,7 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
         response["result"] = "FAILURE";
         response["details"] = "Device Number out of range.";
         DEBUG_PRINT(DEBUG_ERROR,"Device Number out of range.\n");
-        DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForRecord --->Exit\n");
+        DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForLive --->Exit\n");
         return TEST_FAILURE;
     }
 
@@ -371,7 +379,7 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
 
     try
     {
-        if (!pTrh->reserveTunerForLive(deviceNames[deviceNo], locator.c_str(), startTime, duration))
+        if (!pTrh->reserveTunerForLive(deviceNames[deviceNo], locator, startTime, duration))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to reserve tuner for live";
@@ -400,7 +408,8 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
 /**************************************************************************
 Function name : TRMAgent::TRMAgent_ReleaseTunerReservation
 
-Arguments     : Input argument is deviceNo. Output argument is "SUCCESS" or "FAILURE".
+Arguments     : Input argument is deviceNo, locator and activityType(Live:1/Record:2).
+                Output argument is "SUCCESS" or "FAILURE".
 
 Description   : Receives the request from Test Manager to release a reservation.
                 Gets the response from TRM server and sent to the Test Manager.
@@ -409,19 +418,21 @@ bool TRMAgent::TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT J
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ReleaseTunerReservation --->Entry\n");
 
+    int activityType = req["activity"].asInt();
+    string locator = req["locator"].asString();
     int deviceNo = req["deviceNo"].asInt();
     if (TOTAL_DEVICE_NUMBER < deviceNo)
     {
         response["result"] = "FAILURE";
         response["details"] = "Device Number out of range.";
         DEBUG_PRINT(DEBUG_ERROR,"Device Number out of range.\n");
-        DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForRecord --->Exit\n");
+        DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ReleaseTunerReservation --->Exit\n");
         return TEST_FAILURE;
     }
 
     try
     {
-        if (!pTrh->releaseTunerReservation(deviceNames[deviceNo]))
+        if (!pTrh->releaseTunerReservation(deviceNames[deviceNo], locator, activityType))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to release tuner reservation";
@@ -448,7 +459,8 @@ bool TRMAgent::TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT J
 /**************************************************************************
 Function name : TRMAgent::TRMAgent_ValidateTunerReservation
 
-Arguments     : Input argument is deviceNo. Output argument is "SUCCESS" or "FAILURE".
+Arguments     : Input argument is deviceNo, locator and activityType(Live:1/Record:2).
+                Output argument is "SUCCESS" or "FAILURE".
 
 Description   : Receives the request from Test Manager to validate a reservation.
                 Gets the response from TRM server and sent to the Test Manager.
@@ -457,19 +469,21 @@ bool TRMAgent::TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT 
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ValidateTunerReservation --->Entry\n");
 
+    int activityType = req["activity"].asInt();
+    string locator = req["locator"].asString();
     int deviceNo = req["deviceNo"].asInt();
     if (TOTAL_DEVICE_NUMBER < deviceNo)
     {
         response["result"] = "FAILURE";
         response["details"] = "Device Number out of range.";
         DEBUG_PRINT(DEBUG_ERROR,"Device Number out of range.\n");
-        DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForRecord --->Exit\n");
+        DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ValidateTunerReservation --->Exit\n");
         return TEST_FAILURE;
     }
 
     try
     {
-        if (!pTrh->validateTunerReservation(deviceNames[deviceNo]))
+        if (!pTrh->validateTunerReservation(deviceNames[deviceNo], locator, activityType))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to validate tuner reservation";

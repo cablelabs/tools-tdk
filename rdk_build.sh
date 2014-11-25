@@ -110,6 +110,7 @@ if [ "x"$RDK_PLATFORM_SOC == "xintel" ]; then
 	export CROSS_TOOLCHAIN=$TOOLCHAIN_DIR
 	export CROSS_COMPILE=$CROSS_TOOLCHAIN/$COMPILER
 elif [ "x"$RDK_PLATFORM_SOC = "xbroadcom" ]; then
+	export WORK_DIR=$RDK_PROJECT_ROOT_PATH/work${RDK_PLATFORM_DEVICE^^}
 	source ${RDK_PROJECT_ROOT_PATH}/build_scripts/setBCMenv.sh
         echo $BCMAPP 
 	export PLATFORM_SDK=$BCMAPP

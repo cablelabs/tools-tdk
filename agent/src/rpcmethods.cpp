@@ -89,6 +89,7 @@ ModuleMap::iterator o_gModuleMapIter;
 /* Initializations */
 static int nModuleId = 0;  
 std::fstream so_DeviceFile;
+int RpcMethods::sm_nModuleCount = 0;                                  // Setting Module count to 0 
 std::string RpcMethods::sm_strResultId = "0000";
 int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of device as FREE by default
 std::string RpcMethods::sm_strConsoleLogPath = "";
@@ -331,10 +332,12 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
 		
         }
 
+        RpcMethods::sm_nModuleCount = RpcMethods::sm_nModuleCount + 1;    // Incrementing module count
+
         /* Extracting path to file */
         strFilePath = RpcMethods::sm_strTDKPath;
         strFilePath.append(MODULE_LIST_FILE);
-    
+ 
         o_ModuleListFile.open (strFilePath.c_str(), ios::out | ios::app);
 
         /* Adding the module names into file */
@@ -412,6 +415,8 @@ std::string RpcMethods::UnloadLibrary (char* pszLibName)
             break;               // Return with error details when module name is not found in module map.
 
         }
+
+        RpcMethods::sm_nModuleCount = RpcMethods::sm_nModuleCount - 1;    // Decrementing module count
 
         /* Get the handle of library */
         pvHandle = dlopen (pszLibName, RTLD_LAZY | RTLD_GLOBAL);
@@ -804,8 +809,11 @@ bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& respo
 /* Closing console log output file */
 #ifdef AGENT_LOG_ENABLE
 
-    fclose(RpcMethods::sm_pLogStream);
-    RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
+    if(RpcMethods::sm_nModuleCount == 0)  // Checking if all loaded modules are unloaded
+    {
+        fclose(RpcMethods::sm_pLogStream);
+        RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
+    }
 
 #endif /* End of AGENT_LOG_ENABLE */
 	

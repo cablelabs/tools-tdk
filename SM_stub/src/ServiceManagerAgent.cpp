@@ -212,7 +212,7 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
 
         serviceStruct.serviceName = serviceName;
         registerStatus = ServiceManager::getInstance()->registerService(serviceName, serviceStruct);
-        DEBUG_PRINT(DEBUG_LOG,"\n%s registered\n", serviceName.toUtf8().constData());
+        DEBUG_PRINT(DEBUG_LOG,"\n%s registration status = %d\n", serviceName.toUtf8().constData(), registerStatus);
 
         return registerStatus;
 }
@@ -235,15 +235,15 @@ bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json
 	register_service = registerServices(QString::fromStdString(serviceName), serviceStruct);
 
 	/*Checking the return value*/
-	if(register_service==1)
+	if(true == register_service)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\nRegister service Success\n");
+		DEBUG_PRINT(DEBUG_LOG,"\n%s Registration Success\n", serviceName.c_str());
 		response["result"]="SUCCESS";
 		sprintf(stringDetails,"%s registration success", serviceName.c_str());
 	}
-	else if(register_service==0)
+	else
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"Register service Failed for Unknown service\n");
+		DEBUG_PRINT(DEBUG_ERROR,"%s registration failed\n", serviceName.c_str());
 		response["result"]="FAILURE";
 		sprintf(stringDetails,"%s registration failed", serviceName.c_str());
 	}
@@ -273,17 +273,17 @@ bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Js
 	std::string serviceName=req["service_name"].asCString();
 	/*calling unregisterService API for DeRegistering the service*/
 	unregister_service=ServiceManager::getInstance()->unregisterService(QString::fromStdString(serviceName));
-	if(unregister_service==1)
+	if(true == unregister_service)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\nUnRegister service Success\n");
+		DEBUG_PRINT(DEBUG_LOG,"\n%s UnRegistration Success\n", serviceName.c_str());
 		response["result"]="SUCCESS";
 		sprintf(stringDetails,"%s unregistration success", serviceName.c_str());
 	}
-	else if(unregister_service==0)
+	else
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\nUnRegister service failed\n");
+		DEBUG_PRINT(DEBUG_ERROR,"\n%s UnRegistration failed\n", serviceName.c_str());
 		response["result"]="FAILURE";
-		sprintf(stringDetails,"%s registration failed", serviceName.c_str());
+		sprintf(stringDetails,"%s unregistration failed", serviceName.c_str());
 	}
 	response["details"]=stringDetails;
 
@@ -311,7 +311,7 @@ bool ServiceManagerAgent::SM_DoesServiceExist(IN const Json::Value& req, OUT Jso
 	std::string serviceName=req["service_name"].asCString();
 	/*Checking the service existence in service manager component*/
 	exist=ServiceManager::getInstance()->doesServiceExist(QString::fromStdString(serviceName));
-        if(exist==0)
+        if(false == exist)
 	{
 		DEBUG_PRINT(DEBUG_LOG,"%s does not exists\n", serviceName.c_str());
 		response["result"]="SUCCESS";
@@ -455,16 +455,16 @@ bool ServiceManagerAgent::SM_CreateService(IN const Json::Value& req, OUT Json::
     	if (ServiceManager::getInstance()->doesServiceExist(QString::fromStdString(serviceName)))
     	{
         	ptrService = ServiceManager::getInstance()->createService(QString::fromStdString(serviceName));
-		char stringDetails[STR_DETAILS_50] = {'\0'};
+		char stringDetails[STR_DETAILS_100] = {'\0'};
         	if (ptrService != NULL)
         	{
 			sprintf(stringDetails,"GetName from created service: %s", ptrService->getName().toUtf8().constData());
 			response["result"]="SUCCESS";
-			DEBUG_PRINT(DEBUG_LOG,"\nService created successfully\n");
+			DEBUG_PRINT(DEBUG_LOG,"\nCreated %s successfully\n", serviceName.c_str());
 			// Delete the created service
         		delete ptrService;
         		ptrService = NULL;
-			DEBUG_PRINT(DEBUG_LOG,"\nService deleted successfully\n");
+			DEBUG_PRINT(DEBUG_LOG,"\nDeleted %s successfully\n", serviceName.c_str());
         	}
 		else
 		{

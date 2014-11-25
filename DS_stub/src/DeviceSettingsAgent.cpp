@@ -55,7 +55,7 @@ bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_getSupportedColors, "TestMgr_DS_FP_FP_getSupportedColors");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_getTextDisplays, "TestMgr_DS_FP_getTextDisplays");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setText, "TestMgr_DS_FP_setText");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setTimeForamt, "TestMgr_DS_FP_setTimeForamt");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setTimeFormat, "TestMgr_DS_FP_setTimeForamt");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setTime, "TestMgr_DS_FP_setTime");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_loopThru, "TestMgr_DS_AOP_loopThru");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_mutedStatus, "TestMgr_DS_AOP_mutedStatus");
@@ -196,9 +196,9 @@ bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::
 	    {
 		if (false == getOnly) {
 		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setText with value (%s)\n", message.c_str());
-		    device::FrontPanelConfig::getInstance().getTextDisplay("Text").setText(message);
+		    device::FrontPanelTextDisplay::getInstance("Text").setText(message);
 		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setTextBrightness with value(%d)\n", setVal);
-		    device::FrontPanelConfig::getInstance().getTextDisplay("Text").setTextBrightness(setVal);
+		    device::FrontPanelTextDisplay::getInstance("Text").setTextBrightness(setVal);
 		}
 
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getTextBrightness\n");
@@ -221,7 +221,7 @@ bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setBrightness\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in FP_setBrightness";
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setBrightness ---->Exit\n");
@@ -252,7 +252,7 @@ bool DeviceSettingsAgent::FP_setState(IN const Json::Value& req, OUT Json::Value
         catch(...)
         {
                 DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setState\n");
-                response["details"]= "No Details";
+                response["details"]= "Exception Caught in FP_setState";
                 response["result"]= "FAILURE";
         }
 
@@ -301,7 +301,7 @@ bool DeviceSettingsAgent::FP_setColor(IN const Json::Value& req, OUT Json::Value
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setColor\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in FP_setColor";
 		response["result"]= "FAILURE";
 	}
 	free(colorDetails);
@@ -355,7 +355,7 @@ bool DeviceSettingsAgent::FP_setBlink(IN const Json::Value& req, OUT Json::Value
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setBlink\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in FP_setBlink";
 		response["result"]= "FAILURE";
 	}
 	free(blinkInterval);
@@ -393,11 +393,11 @@ bool DeviceSettingsAgent::FP_setScroll(IN const Json::Value& req, OUT Json::Valu
 	memset(hIterationsDetails,'\0', (sizeof(char)*20));
 	char *holdDurationDetails = (char*)malloc(sizeof(char)*20);
 	memset(holdDurationDetails,'\0', (sizeof(char)*20));
-	/*Creating object for Scroll*/
-	device::FrontPanelTextDisplay::Scroll s(viteraion,hiteraion,holdDuration);
-	device::FrontPanelTextDisplay::Scroll s_obj;
 	try
 	{
+		/*Creating object for Scroll*/
+		device::FrontPanelTextDisplay::Scroll s(viteraion,hiteraion,holdDuration);
+		device::FrontPanelTextDisplay::Scroll s_obj;
 		/*calling setScroll info*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling setScroll\n");
 		device::FrontPanelConfig::getInstance().getTextDisplay(text_display).setScroll(s);
@@ -418,7 +418,7 @@ bool DeviceSettingsAgent::FP_setScroll(IN const Json::Value& req, OUT Json::Valu
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setScroll\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in FP_setScroll";
 		response["result"]= "FAILURE";
 	}
 	free(viterationDetails);
@@ -468,7 +468,7 @@ bool DeviceSettingsAgent::AOP_setLevel(IN const Json::Value& req, OUT Json::Valu
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_setLevel\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in AOP_setLevel";
 		response["result"]= "FAILURE";
 	}
 	free(levelDetails);
@@ -536,7 +536,7 @@ bool DeviceSettingsAgent::AOP_setDB(IN const Json::Value& req, OUT Json::Value& 
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_setDB\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in AOP_setDB";
 		response["result"]= "FAILURE";
 	}
 	free(dBDetails);
@@ -587,7 +587,7 @@ bool DeviceSettingsAgent::VD_setDFC(IN const Json::Value& req, OUT Json::Value& 
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VD_setDFC\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in VD_setDFC";
 		response["result"]= "FAILURE";
 	}
 	free(zoomDetails);
@@ -632,7 +632,7 @@ bool DeviceSettingsAgent::AOP_setEncoding(IN const Json::Value& req, OUT Json::V
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_setEncoding\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in AOP_setEncoding";
 		response["result"]= "FAILURE";
 	}
 	free(encodingDetails);
@@ -679,7 +679,7 @@ bool DeviceSettingsAgent::AOP_setCompression(IN const Json::Value& req, OUT Json
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_setCompression\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in AOP_setCompression";
 		response["result"]= "FAILURE";
 	}
 
@@ -724,7 +724,7 @@ bool DeviceSettingsAgent::AOP_setStereoMode(IN const Json::Value& req, OUT Json:
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_setStreoeMode\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in AOP_setStreoeMode";
 		response["result"]= "FAILURE";
 	}
 	free(stereoModeDetails);
@@ -812,7 +812,7 @@ bool DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json:
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in setResolution\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in setResolution";
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n setResolution ---->Exit\n");
@@ -851,7 +851,7 @@ bool DeviceSettingsAgent::FP_getIndicators(IN const Json::Value& req, OUT Json::
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_getIndicators\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in FP_getIndicators";
 		response["result"]= "FAILURE";
 	}
 	free(indicatorDetails);
@@ -898,7 +898,7 @@ bool DeviceSettingsAgent::FP_getSupportedColors(IN const Json::Value& req, OUT J
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_getSupportedColors\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in FP_getSupportedColors";
 		response["result"]= "FAILURE";
 	}
 	free(colorDetails);
@@ -937,7 +937,7 @@ bool DeviceSettingsAgent::FP_getTextDisplays(IN const Json::Value& req, OUT Json
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_getTextDisplays \n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in FP_getTextDisplays";
 		response["result"]= "FAILURE";
 	}
 	free(textDisplayDetails);
@@ -969,20 +969,20 @@ bool DeviceSettingsAgent::FP_setText(IN const Json::Value& req, OUT Json::Value&
 		/*setting text in the Device front panel text display area*/
 		device::FrontPanelConfig::getInstance().getTextDisplay(text).setText(textDisplay);
 		response["result"]= "SUCCESS"; 
-		response["details"]=".setText SUCCESS";
+		response["details"]="setText SUCCESS";
 	}
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setText\n");
 		response["result"]= "FAILURE";
-		response["details"]=".setText FAILURE";
+		response["details"]="Exception Caught in FP_setText";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nFP_setText ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
 /***************************************************************************
- *Function name	: FP_setTimeForamt 
+ *Function name	: FP_setTimeFormat
  *Descrption	: This function will check the functionality of setTimeFormat and
                   currentTimeFormat APIs.
  *@param [in]   : req-	time_format : time format (12Hrs or 24Hrs or string type)
@@ -990,9 +990,9 @@ bool DeviceSettingsAgent::FP_setText(IN const Json::Value& req, OUT Json::Value&
  *****************************************************************************/ 
 
 
-bool DeviceSettingsAgent::FP_setTimeForamt(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FP_setTimeFormat(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_setTimeForamt ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nFP_setTimeFormat ---->Entry\n");
 	if(&req["text"]==NULL || &req["time_format"]==NULL)
 	{
 		return TEST_FAILURE;
@@ -1013,12 +1013,12 @@ bool DeviceSettingsAgent::FP_setTimeForamt(IN const Json::Value& req, OUT Json::
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setTimeForamt\n");
-		response["details"]= "No Details";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setTimeFormat\n");
+		response["details"]= "Exception Caught in FP_setTimeFormat";
 		response["result"]= "FAILURE";
 	}
 	free(timeDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_setTimeForamt ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nFP_setTimeFormat ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
@@ -1033,25 +1033,24 @@ bool DeviceSettingsAgent::FP_setTimeForamt(IN const Json::Value& req, OUT Json::
 bool DeviceSettingsAgent::FP_setTime(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setTime ---->Entry\n");
-	if(&req["text"]==NULL || &req["time_hrs"]==NULL || &req["time_mins"]==NULL)
+	if(&req["time_hrs"]==NULL || &req["time_mins"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
-	std::string text=req["text"].asCString();
 	int time_hrs=req["time_hrs"].asInt();
 	int time_mins=req["time_mins"].asInt();
 	try
 	{
 		/*setting the time in HRS:MINS format*/
-		device::FrontPanelConfig::getInstance().getTextDisplay(text).setTime(time_hrs,time_mins);
+		device::FrontPanelTextDisplay::getInstance("Text").setTime(time_hrs,time_mins);
 		response["result"]= "SUCCESS"; 
-		response["details"]=".setTime SUCCESS";
+		response["details"]="setTime SUCCESS";
 	}
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setTime \n");
 		response["result"]= "FAILURE";
-		response["details"]=".setTime FAILURE";
+		response["details"]="Exception Caught in FP_setTime";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setTime ---->Exit\n");
 	return TEST_SUCCESS;
@@ -1115,7 +1114,7 @@ bool DeviceSettingsAgent::AOP_loopThru(IN const Json::Value& req, OUT Json::Valu
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_loopThru\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in AOP_loopThru";
 		response["result"]= "FAILURE";
 	}
 	free(loopThruDetails);
@@ -1182,7 +1181,7 @@ bool DeviceSettingsAgent::AOP_mutedStatus(IN const Json::Value& req, OUT Json::V
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_mutedStatus\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in AOP_mutedStatus";
 		response["result"]= "FAILURE";
 	}
 	free(muteDetails);
@@ -1230,7 +1229,7 @@ bool DeviceSettingsAgent::AOP_getSupportedEncodings(IN const Json::Value& req, O
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_getSupportedEncodings\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in AOP_getSupportedEncodings";
 		response["result"]= "FAILURE";
 	}
 	free(supportedEncodingDetails);
@@ -1279,7 +1278,7 @@ bool DeviceSettingsAgent::AOP_getSupportedCompressions(IN const Json::Value& req
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_getSupportedCompression\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in AOP_getSupportedCompression";
 		response["result"]= "FAILURE";
 	}
 	free(supportedCompressionDetails);
@@ -1326,7 +1325,7 @@ bool DeviceSettingsAgent::AOP_getSupportedStereoModes(IN const Json::Value& req,
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_getSupportedStereoModes\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in AOP_getSupportedStereoModes";
 		response["result"]= "FAILURE";
 		return TEST_FAILURE;
 	}
@@ -1351,12 +1350,12 @@ bool DeviceSettingsAgent::HOST_addPowerModeListener(IN const Json::Value& req, O
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_addPowerModeListener\n");
 		response["result"]= "FAILURE";
-		response["details"]="HOST_removePowerModeListener - FAILURE";
+		response["details"]="Exception Caught in HOST_addPowerModeListener";
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_addPowerModeListener ---->Exit\n");
 	response["result"]="SUCCESS";
-	response["details"]="HOST_removePowerModeListener - SUCCESS";
+	response["details"]="HOST_addPowerModeListener - SUCCESS";
 	return TEST_SUCCESS;
 }
 /***************************************************************************
@@ -1374,7 +1373,7 @@ bool DeviceSettingsAgent::HOST_removePowerModeListener(IN const Json::Value& req
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_removePowerModeListener\n");
 		response["result"]= "FAILURE";
-		response["details"]="HOST_removePowerModeListener - FAILURE";
+		response["details"]="Exception Caught in HOST_removePowerModeListener";
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_removePowerModeListener ---->Exit\n");
@@ -1426,7 +1425,7 @@ bool DeviceSettingsAgent::VOP_isDisplayConnected(IN const Json::Value& req, OUT 
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOP_isDisplayConnected\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in VOP_isDisplayConnected";
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_isDisplayConnected ---->Exit\n");
@@ -1448,7 +1447,7 @@ bool DeviceSettingsAgent::HOST_addDisplayConnectionListener(IN const Json::Value
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_addDisplayConnectionListener \n");
 		response["result"]= "FAILURE";
-		response["details"]= "HOST_addDisplayConnectionListener - FAILURE";
+		response["details"]= "Exception Caught in HOST_addDisplayConnectionListener";
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_addDisplayConnectionListener ---->Exit\n");
@@ -1471,7 +1470,7 @@ bool DeviceSettingsAgent::HOST_removeDisplayConnectionListener(IN const Json::Va
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_removeDisplayConnectionListener \n");
 		response["result"]= "FAILURE";
-		response["details"]= "HOST_removeDisplayConnectionListener - FAILURE";
+		response["details"]= "Exception Caught in HOST_removeDisplayConnectionListener";
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_removeDisplayConnectionListener ---->Exit\n");
@@ -1524,7 +1523,7 @@ bool DeviceSettingsAgent::HOST_Resolutions(IN const Json::Value& req, OUT Json::
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_Resolutions\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in HOST_Resolutions";
 		response["result"]= "FAILURE";
 	}
 	free(supportedResolutionsDetails);
@@ -1579,7 +1578,7 @@ bool DeviceSettingsAgent::VOPTYPE_HDCPSupport(IN const Json::Value& req, OUT Jso
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPTYPE_HDCPSupport\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in VOPTYPE_HDCPSupport";
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_HDCPSupport ---->Exit\n");
@@ -1629,7 +1628,7 @@ bool DeviceSettingsAgent::VOPTYPE_DTCPSupport(IN const Json::Value& req, OUT Jso
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPTYPE_DTCPSupport\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in VOPTYPE_DTCPSupport";
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_DTCPSupport ---->Exit\n");
@@ -1679,7 +1678,7 @@ bool DeviceSettingsAgent::VOPTYPE_isDynamicResolutionSupported(IN const Json::Va
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPTYPE_isDynamicResolutionSupported\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in VOPTYPE_isDynamicResolutionSupported";
 		response["result"]= "FAILURE";
 	}
 	free(dynamicResolutionSupportDetails);
@@ -1731,7 +1730,7 @@ bool DeviceSettingsAgent::VOP_isContentProtected(IN const Json::Value& req, OUT 
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOP_isContentProtected\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in VOP_isContentProtected";
 		response["result"]= "FAILURE";
 	}
 	free(cpDetails);
@@ -1771,7 +1770,7 @@ bool DeviceSettingsAgent::VOP_getAspectRatio(IN const Json::Value& req, OUT Json
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOP_getAspectRatio\n");
-		response["details"]= "No Details";
+		response["details"]= "Exception Caught in VOP_getAspectRatio";
 		response["result"]= "FAILURE";
 	}
 	free(aspectRatioDetails);
@@ -1834,8 +1833,8 @@ bool DeviceSettingsAgent::VOP_getDisplayDetails(IN const Json::Value& req, OUT J
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in \n");
-		response["details"]= "No Details";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOP_getDisplayDetails\n");
+		response["details"]= "Exception Caught in VOP_getDisplayDetails";
 		response["result"]= "FAILURE";
 	}
 	free(displayDetails);
@@ -1891,7 +1890,7 @@ bool DeviceSettingsAgent::VOP_setEnable(IN const Json::Value& req, OUT Json::Val
         catch(...)
         {
                 DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in setEnable\n");
-                response["details"]= "No Details";
+                response["details"]= "Exception Caught in setEnable";
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"VOP_setEnable ---->Exit\n");
