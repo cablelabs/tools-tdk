@@ -1,6 +1,6 @@
 ## Copyright (c) 2013 Comcast. All rights reserved.
 
-AM_CXXFLAGS = -DQT_WEBKIT_LIB -DUSE_DEVICE_SETTINGS_SERVICE -DSCREEN_CAPTURE -DENABLE_WEBSOCKET_SERVICE $(GST_CFLAGS) ${COPTS} \
+AM_CXXFLAGS = -DQT_WEBKIT_LIB -DUSE_DEVICE_SETTINGS_SERVICE -DSCREEN_CAPTURE $(SM_STUB_CFLAG_HYBRID) $(GST_CFLAGS) ${COPTS} \
            -fPIC -I./include -I${top_srcdir}/agent/include \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/servicemanager \

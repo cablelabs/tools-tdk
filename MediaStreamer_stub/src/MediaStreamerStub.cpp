@@ -33,6 +33,7 @@
 #define SUCCESS_PATTERN "Current Position="
 #define FRAME_SEARCH_PATTERN "next_predicted_frame = "
 #define TRASPORT_CMD_PATTERN "IpStreamOut::transport_command"
+#define FETCH_STREAMING_INT_NAME "streaming_interface_file"
 
 
 using namespace std;
@@ -115,6 +116,50 @@ std::string GetHostIP (const char* szInterface)
 
 } /* End of GetHostIP */
 
+
+std::string fetchStreamingInterface()
+{
+        DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
+        ifstream interfacefile;
+        string Fetch_Streaming_interface_cmd, Streaming_Interface_name,line;
+        Streaming_Interface_name = g_tdkPath + "/" + FETCH_STREAMING_INT_NAME;
+/*      //Fetch_Streaming_interface_cmd = g_tdkPath + "/" + FETCH_STREAMING_INT_SCRIPT;
+        //string fetch_streaming_int_chk= "source "+Fetch_Streaming_interface_cmd;
+        //try
+        {
+                system((char*)fetch_streaming_int_chk());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of streaming ip fetch script\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                return "FAILURE<DETAILS>Exception occured execution of streaming ip fetch script";
+
+        }
+*/
+
+        interfacefile.open(Streaming_Interface_name.c_str());
+        if(interfacefile.is_open())
+        {
+                if(getline(interfacefile,line)>0);
+                {
+                        interfacefile.close();
+                        DEBUG_PRINT(DEBUG_LOG,"\nStreaming IP fetched fetched\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function--> Exit\n");
+                        return line;
+                }
+                interfacefile.close();
+                DEBUG_PRINT(DEBUG_ERROR,"\nStreaming IP fetched not fetched\n");
+                return "FAILURE<DETAILS>Proper result is not found in the streaming interface name file";
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the streaming interface file.\n");
+                return "FAILURE<DETAILS>Unable to open the streaming interface  file";
+        }
+
+
+}
 
 /**************************************************************************
 Function name : MediaStreamerAgent::initialize
@@ -704,7 +749,28 @@ bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value&
 	DEBUG_PRINT(DEBUG_LOG,"\nURL from TestFramework : %s\n",request["URL"].asCString());
         /*Fetching the streming interface IP: eth1 */
         string streamingip;
-        streamingip=GetHostIP("eth1");
+        string streaming_interface;
+        size_t pos = 0;
+        size_t found;
+        streaming_interface=fetchStreamingInterface();
+        found=streaming_interface.find("FAILURE");
+        if (found!=std::string::npos)
+        {
+            std::string delimiter = "<FAILURE>";
+            std::string token;
+            while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+            token = streaming_interface.substr(0, pos);
+            std::cout << token << std::endl;
+            streaming_interface.erase(0, pos + delimiter.length());
+            }
+	    response["result"]="FAILURE";
+            response["details"]=token;
+            return false;
+        }
+	else
+	{
+
+        streamingip=GetHostIP(streaming_interface.c_str());
         string urlIn = url;
         string http = "http://";
 
@@ -714,7 +780,6 @@ bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value&
         DEBUG_PRINT(DEBUG_TRACE, "After appending streaming IP to http: %s\n",http.c_str());
         DEBUG_PRINT(DEBUG_TRACE, "IP : %s\n",streamingip.c_str());
 
-        size_t pos = 0;
         pos = urlIn.find(":8080");
         urlIn = urlIn.replace(0,pos,http);
 
@@ -804,7 +869,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value&
 	return true;
 	DEBUG_PRINT(DEBUG_TRACE, "RMFStreamerAgent_InterfaceTesting ---> Exit\n");
 	return TEST_SUCCESS;
-
+	}
 }
 
 /**************************************************************************
@@ -826,155 +891,176 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
 	char* playuri = (char*)request["VideostreamURL"].asCString();	
         
 	string streamingip;
-        streamingip=GetHostIP("eth1");
-        string urlIn = playuri;
-
-	MediaPlayerSink* pSink = new MediaPlayerSink();
-	HNSource* pSource = new HNSource();
-	RMFState curstate;
-
-        res_HNSrcInit = pSource->init();
-        DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Initialize is %d\n", res_HNSrcInit);
-
-        if(0 != res_HNSrcInit)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "Failed to Initialize hnsource";
-                DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-                return TEST_FAILURE;
-        }
-        string http = "http://";
-
-        http.append(streamingip);
-
-        DEBUG_PRINT(DEBUG_TRACE, "Incoming URL: %s\n",playuri);
-        DEBUG_PRINT(DEBUG_TRACE, "After appending streaming IP to http: %s\n",http.c_str());
-        DEBUG_PRINT(DEBUG_TRACE, "IP : %s\n",streamingip.c_str());
-
+	string streaming_interface;
         size_t pos = 0;
-        pos = urlIn.find(":8080");
-        urlIn = urlIn.replace(0,pos,http);
+        size_t found;
+        streaming_interface=fetchStreamingInterface();
+        found=streaming_interface.find("FAILURE");
+        if (found!=std::string::npos)
+        {
+            std::string delimiter = "<FAILURE>";
+            std::string token;
+            while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+            token = streaming_interface.substr(0, pos);
+            std::cout << token << std::endl;
+            streaming_interface.erase(0, pos + delimiter.length());
+            }
+            response["result"]="FAILURE";
+            response["details"]=token;
+            return false;
+        }
+	else
+	{
 
-        DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to Open(): %s\n",urlIn.c_str());
+        	streamingip=GetHostIP(streaming_interface.c_str());
+        	string urlIn = playuri;
 
-        res_HNSrcOpen = pSource->open(urlIn.c_str(), 0);
+		MediaPlayerSink* pSink = new MediaPlayerSink();
+		HNSource* pSource = new HNSource();
+		RMFState curstate;
+
+        	res_HNSrcInit = pSource->init();
+        	DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Initialize is %d\n", res_HNSrcInit);
+
+        	if(0 != res_HNSrcInit)
+        	{
+                	response["result"] = "FAILURE";
+                	response["details"] = "Failed to Initialize hnsource";
+                	DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+                	return TEST_FAILURE;
+        	}
+        	string http = "http://";
+
+        	http.append(streamingip);
+
+        	DEBUG_PRINT(DEBUG_TRACE, "Incoming URL: %s\n",playuri);
+        	DEBUG_PRINT(DEBUG_TRACE, "After appending streaming IP to http: %s\n",http.c_str());
+        	DEBUG_PRINT(DEBUG_TRACE, "IP : %s\n",streamingip.c_str());
+
+        	pos = urlIn.find(":8080");
+        	urlIn = urlIn.replace(0,pos,http);
+
+        	DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to Open(): %s\n",urlIn.c_str());
+
+        	res_HNSrcOpen = pSource->open(urlIn.c_str(), 0);
         
-	DEBUG_PRINT(DEBUG_LOG, "RMF Result of HNSrc open is %d\n", res_HNSrcOpen);
-        if(0 != res_HNSrcOpen)
-        {
-                pSource->term();
-                response["result"] = "FAILURE";
-                response["details"] = "Failed to Open hnsource";
-                DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-                return TEST_FAILURE;
-        }
+		DEBUG_PRINT(DEBUG_LOG, "RMF Result of HNSrc open is %d\n", res_HNSrcOpen);
+        	if(0 != res_HNSrcOpen)
+        	{
+                	pSource->term();
+                	response["result"] = "FAILURE";
+                	response["details"] = "Failed to Open hnsource";
+                	DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+                	return TEST_FAILURE;
+        	}	
 
-        res_MPSinkInit = pSink->init();
-        DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Initialize is %d\n", res_MPSinkInit);
+        	res_MPSinkInit = pSink->init();
+        	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Initialize is %d\n", res_MPSinkInit);
 
-        if(0 != res_MPSinkInit)
-        {
-                pSource->close();
-                pSource->term();
-                response["result"] = "FAILURE";
-                response["details"] = "Failed to Initialze Mpsink";
-                DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-                return TEST_FAILURE;
-        }
+        	if(0 != res_MPSinkInit)
+        	{
+                	pSource->close();
+                	pSource->term();
+                	response["result"] = "FAILURE";
+                	response["details"] = "Failed to Initialze Mpsink";
+                	DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+                	return TEST_FAILURE;
+        	}
 
-        res_MPSinksetrect = pSink->setVideoRectangle(0, 0, 1280, 720, true);
-        DEBUG_PRINT(DEBUG_LOG, "RMF Result of setting Video resolution is %d\n", res_MPSinksetrect);
+        	res_MPSinksetrect = pSink->setVideoRectangle(0, 0, 1280, 720, true);
+        	DEBUG_PRINT(DEBUG_LOG, "RMF Result of setting Video resolution is %d\n", res_MPSinksetrect);
 
-        if(0 != res_MPSinksetrect)
-        {
-                pSink->term();
-                pSource->close();
-                pSource->term();
-                response["result"] = "FAILURE";
-                response["details"] = "Failed to set Video resolution";
-                DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-                return TEST_FAILURE;
-        }
+        	if(0 != res_MPSinksetrect)
+        	{
+                	pSink->term();
+                	pSource->close();
+                	pSource->term();
+                	response["result"] = "FAILURE";
+                	response["details"] = "Failed to set Video resolution";
+                	DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+                	return TEST_FAILURE;
+        	}
 
-        res_MPSinksetsrc = pSink->setSource(pSource);
-        DEBUG_PRINT(DEBUG_LOG, "RMF Result of setting source is %d\n", res_MPSinksetsrc);
+        	res_MPSinksetsrc = pSink->setSource(pSource);
+        	DEBUG_PRINT(DEBUG_LOG, "RMF Result of setting source is %d\n", res_MPSinksetsrc);
 
-        if(0 != res_MPSinksetsrc)
-        {
-                pSink->term();
-	        pSource->close();
-                pSource->term();
-                response["result"] = "FAILURE";
-                response["details"] = "Failed to do set source";
-                DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-                return TEST_FAILURE;
-        }
+        	if(0 != res_MPSinksetsrc)
+        	{
+                	pSink->term();
+	        	pSource->close();
+                	pSource->term();
+                	response["result"] = "FAILURE";
+                	response["details"] = "Failed to do set source";
+                	DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+                	return TEST_FAILURE;
+        	}
 
-        res_HNSrcPlay = pSource->play();
-        DEBUG_PRINT(DEBUG_LOG, "RMF Result of Play is %d\n", res_HNSrcPlay);
-        sleep(sleep_time);
+        	res_HNSrcPlay = pSource->play();
+        	DEBUG_PRINT(DEBUG_LOG, "RMF Result of Play is %d\n", res_HNSrcPlay);
+        	sleep(sleep_time);
 
-        if(0 != res_HNSrcPlay)
-        {
-                pSink->term();
-                pSource->close();
-                pSource->term();
-                response["result"] = "FAILURE";
-                response["details"] = "Failed to play video using Hnsource and Mpsink pipeline";
-                DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-                return TEST_FAILURE;
-        }
+        	if(0 != res_HNSrcPlay)
+        	{
+                	pSink->term();
+                	pSource->close();
+                	pSource->term();
+                	response["result"] = "FAILURE";
+                	response["details"] = "Failed to play video using Hnsource and Mpsink pipeline";
+                	DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+                	return TEST_FAILURE;
+        	}	
 
-        res_HNSrcGetState = pSource->getState(&curstate, NULL);
-        DEBUG_PRINT(DEBUG_LOG, "RMF Result of getState is %d\n", res_HNSrcGetState);
+        	res_HNSrcGetState = pSource->getState(&curstate, NULL);
+        	DEBUG_PRINT(DEBUG_LOG, "RMF Result of getState is %d\n", res_HNSrcGetState);
 
-        if (curstate != RMF_STATE_PLAYING)
-        {
-                DEBUG_PRINT(DEBUG_ERROR, "HNSource Current State is not in RMF_STATE_PLAYING");
-                response["result"] = "FAILURE";
-                response["details"] = "HNSource Current State is not in RMF_STATE_PLAYING";
-                DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-                return TEST_FAILURE;
-        }
+        	if (curstate != RMF_STATE_PLAYING)
+        	{
+                	DEBUG_PRINT(DEBUG_ERROR, "HNSource Current State is not in RMF_STATE_PLAYING");
+                	response["result"] = "FAILURE";
+                	response["details"] = "HNSource Current State is not in RMF_STATE_PLAYING";
+                	DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+                	return TEST_FAILURE;
+        	}
 
 
-        res_MPSinkTerm = pSink->term();
-        DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPsink termination is %d\n", res_MPSinkTerm);
+        	res_MPSinkTerm = pSink->term();
+        	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPsink termination is %d\n", res_MPSinkTerm);
 
-        res_HNSrcClose = pSource->close();
-        DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource close is %d\n", res_HNSrcClose);
-        res_HNSrcTerm = pSource->term();
-        DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource termination is %d\n", res_HNSrcTerm);
+        	res_HNSrcClose = pSource->close();
+        	DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource close is %d\n", res_HNSrcClose);
+        	res_HNSrcTerm = pSource->term();
+        	DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource termination is %d\n", res_HNSrcTerm);
 
-        if(0 != res_MPSinkTerm)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "Video played successfully, but failed to terminate MPSink";
-                DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-                return TEST_FAILURE;
-        }
+        	if(0 != res_MPSinkTerm)
+        	{	
+                	response["result"] = "FAILURE";
+                	response["details"] = "Video played successfully, but failed to terminate MPSink";
+                	DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+                	return TEST_FAILURE;
+        	}
 
-        if(0 != res_HNSrcClose)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "Video played successfully, but failed to close Hnsource";
-                DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-                return TEST_FAILURE;
-        }
+        	if(0 != res_HNSrcClose)
+        	{
+                	response["result"] = "FAILURE";
+                	response["details"] = "Video played successfully, but failed to close Hnsource";
+                	DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+                	return TEST_FAILURE;
+        	}
 
-        if(0 != res_HNSrcTerm)
-        {
-                response["result"] = "FAILURE";
-                response["details"] = "Video played successfully, but failed to terminate Hnsource";
-                DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-                return TEST_FAILURE;
-        }
+        	if(0 != res_HNSrcTerm)
+        	{
+                	response["result"] = "FAILURE";
+                	response["details"] = "Video played successfully, but failed to terminate Hnsource";
+                	DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+                	return TEST_FAILURE;
+        	}
 
-        response["result"] = "SUCCESS";
-        response["details"] = "Video played successfully";
-        DEBUG_PRINT(DEBUG_LOG, "Video played successfully\n");
-        DEBUG_PRINT(DEBUG_TRACE, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-        return TEST_SUCCESS;
+        	response["result"] = "SUCCESS";
+        	response["details"] = "Video played successfully";
+       	 	DEBUG_PRINT(DEBUG_LOG, "Video played successfully\n");
+        	DEBUG_PRINT(DEBUG_TRACE, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
+        	return TEST_SUCCESS;
+	}
 }
 #endif
 #ifdef RDK_BR_1DOT3
@@ -1443,21 +1529,40 @@ string MediaStreamerAgent::frameURL(Mode mode, string Id)
 	DEBUG_PRINT(DEBUG_TRACE, "frameURL with mode and id ---> Entry\n");
 	string validurl;
         string streamingip;
-        streamingip=GetHostIP("eth1");		
-	switch(mode)
+	string streaming_interface;
+        size_t pos = 0;
+        size_t found;
+        streaming_interface=fetchStreamingInterface();
+        found=streaming_interface.find("FAILURE");
+        if (found!=std::string::npos)
+        {
+            std::string delimiter = "<FAILURE>";
+            std::string token;
+            while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+            token = streaming_interface.substr(0, pos);
+            std::cout << token << std::endl;
+            streaming_interface.erase(0, pos + delimiter.length());
+            }
+	    validurl=token;	
+        }
+	else
 	{
-		case LIVE_TUNE_REQUEST: 
-			validurl = "http://"+streamingip+":8080/videoStreamInit?recorderId="+getRecorderId()+"live="+Id;
-			break;
-		case RECORDING_REQUEST: 
-			validurl = "http://"+streamingip+":8080/videoStreamInit?recorderId="+getRecorderId()+"recordingId="+Id;
-                	//validurl = "http://127.0.0.1:8080/videoStreamInit?recordingId="+Id;
-			break;        
-                default :
-                	break;
+
+        	streamingip=GetHostIP(streaming_interface);		
+		switch(mode)
+		{
+			case LIVE_TUNE_REQUEST: 
+				validurl = "http://"+streamingip+":8080/videoStreamInit?recorderId="+getRecorderId()+"live="+Id;
+				break;
+			case RECORDING_REQUEST: 
+				validurl = "http://"+streamingip+":8080/videoStreamInit?recorderId="+getRecorderId()+"recordingId="+Id;
+				break;        
+                	default :
+                		break;
+		}
+		DEBUG_PRINT(DEBUG_LOG,"framedURL is: %s\n",  validurl.c_str());
+		DEBUG_PRINT(DEBUG_TRACE, "frameURL with mode and id ---> Exit\n");
 	}
-	DEBUG_PRINT(DEBUG_LOG,"framedURL is: %s\n",  validurl.c_str());
-	DEBUG_PRINT(DEBUG_TRACE, "frameURL with mode and id ---> Exit\n");
 	return validurl;
 }
 
@@ -1501,20 +1606,40 @@ string MediaStreamerAgent::frameURL(Mode mode)
 	DEBUG_PRINT(DEBUG_TRACE, "frameURL with mode ---> Entry\n");
 	string validUrl_Info;
         string streamingip;
-        streamingip = GetHostIP("eth1");	
-	switch(mode)
-	{      
-		case RECORDING_URL_LIST:
+        string streaming_interface;
+        size_t pos = 0;
+        size_t found;
+	streaming_interface=fetchStreamingInterface();
+        found=streaming_interface.find("FAILURE");
+       	if (found!=std::string::npos)
+        {
+            std::string delimiter = "<FAILURE>";
+            std::string token;
+            while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+            token = streaming_interface.substr(0, pos);
+            std::cout << token << std::endl;
+            streaming_interface.erase(0, pos + delimiter.length());
+            }
+	    validUrl_Info=token;
+        }
+	else
+	{
+        	streamingip = GetHostIP(streaming_interface);	
+		switch(mode)
+		{      
+			case RECORDING_URL_LIST:
 		
-			validUrl_Info = "http://"+streamingip+":8080/vldms/info/recordingurls";
-			break;
-		case RECORDING_URL_METADATA:
-			validUrl_Info = "http://"+streamingip+":8080/vldms/info/recordings";
-			break;      
-                default :
-                        break;
+				validUrl_Info = "http://"+streamingip+":8080/vldms/info/recordingurls";
+				break;
+			case RECORDING_URL_METADATA:
+				validUrl_Info = "http://"+streamingip+":8080/vldms/info/recordings";
+				break;      
+                	default :
+                        	break;
 
-	}
+		}
+	}	
+
 	DEBUG_PRINT(DEBUG_LOG,"framedURL is: %s\n", validUrl_Info.c_str());
 	DEBUG_PRINT(DEBUG_TRACE, "frameURL with mode ---> Exit\n");
 	return validUrl_Info;

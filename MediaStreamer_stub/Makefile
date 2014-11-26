@@ -48,7 +48,7 @@ LDOPTS    +=    -L $(IMAGE_PATH)/mnt/nfs/bin/target-snmp/lib      \
                 -L$(IMAGE_PATH)/usr/lib \
                 -L $(IMAGE_PATH)/mnt/nfs/lib \
                 -L $(IMAGE_PATH)/mnt/nfs/bin \
-		-ldvrmgr -ltinyxml -l:libcrypto.so.0.9.8 -lTasseograph -l:libnetsnmp.so.15 -l:libnetsnmpagent.so.15 -l:libnetsnmphelpers.so.15 -lpodmgr -lsysResource -lsectionfilter -linbsimanager -linbsectionfilter -lqamsrc  -l:libgstreamer-0.10.so.0 -l:libgio-2.0.so.0 -lglib-2.0 -llog4c -l:libgobject-2.0.so.0  -linit   -lhnsource -lrdkloggers -l:libhnsource.so.0 -ltrm
+		-ldvrmgr -ltinyxml -lTasseograph -l:libnetsnmp.so.15 -l:libnetsnmpagent.so.15 -l:libnetsnmphelpers.so.15 -lpodmgr -lsysResource -lsectionfilter -linbsimanager -linbsectionfilter -lqamsrc  -l:libgstreamer-0.10.so.0 -l:libgio-2.0.so.0 -lglib-2.0 -llog4c -l:libgobject-2.0.so.0  -linit   -lhnsource -lrdkloggers -l:libhnsource.so.0 -ltrm
 
 SOURCES   := $(RDK_BUILD_DIR)/mediaframework/core/rmfbase.cpp \
 	     $(RDK_BUILD_DIR)/mediaframework/mediaplayersink/mediaplayersink.cpp \

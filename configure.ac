@@ -52,12 +52,14 @@ SF_LIBS=" "
 HEADLESS=" "
 SUBDIR_HYBRID=" "
 SUBDIR_CLIENT=" "
+SM_STUB_CFLAG_HYBRID=" "
 AC_ARG_ENABLE([hybrid],
         AS_HELP_STRING([--enable-hybrid],[enable hybrid build]),
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp" ;;
+                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp"
+                  SM_STUB_CFLAG_HYBRID="-DENABLE_WEBSOCKET_SERVICE" ;;
            no) HYBRID=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-headless ]) ;;
            esac
@@ -128,6 +130,7 @@ AC_SUBST(QAM_LIBS)
 AC_SUBST(SF_LIBS)
 AC_SUBST(SUBDIR_HYBRID)
 AC_SUBST(SUBDIR_CLIENT)
+AC_SUBST(SM_STUB_CFLAG_HYBRID)
 AC_CONFIG_FILES([Makefile
          cfg/Makefile
          agent/Makefile
