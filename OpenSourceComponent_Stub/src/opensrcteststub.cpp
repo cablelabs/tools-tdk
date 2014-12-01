@@ -116,6 +116,12 @@ bool OpensourceTestStub::OpensourceTestStub_Execute(IN const Json::Value& req, O
 					DEBUG_PRINT(DEBUG_TRACE,"\n Invoke SuiteExecuter script to execute the Gst-plugin-base tests");
 					execlp(executerPath.c_str(),"SuiteExecuter.sh","-c","gst_plugin_base",NULL);       
 				}
+				else if(strcmp(component_option,"gst-plugin-custom") == 0)
+				{
+					/*Executing the suite executer script to invoke all Gst-Plugin-base test suites*/
+					DEBUG_PRINT(DEBUG_TRACE,"\n Invoke SuiteExecuter script to execute the Gst-plugin-custom tests");
+					execlp(executerPath.c_str(),"SuiteExecuter.sh","-c","gst_plugin_custom",NULL);       
+				}
 				else if(strcmp(component_option,"gst-plugin-good") == 0)
 				{
 					/*Executing the suite executer script to invoke all Gst-Plugin-good test suites*/

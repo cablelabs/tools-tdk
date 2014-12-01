@@ -58,8 +58,7 @@ AC_ARG_ENABLE([hybrid],
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp"
-                  SM_STUB_CFLAG_HYBRID="-DENABLE_WEBSOCKET_SERVICE" ;;
+                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub"
            no) HYBRID=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-headless ]) ;;
            esac
@@ -148,5 +147,6 @@ AC_CONFIG_FILES([Makefile
          OpenSourceComponent_Stub/Makefile
          TR069_stub/Makefile
          TRM_stub/Makefile
+         rmfApp_stub/Makefile
          tdkRmfApp/Makefile])
 AC_OUTPUT
