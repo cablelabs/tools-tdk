@@ -13,7 +13,7 @@
 <%@ page import="com.comcast.rdk.Execution" %>
 	<g:if test="${executionInstanceList}">
 		<div id="list-executor" class="content scaffold-list" role="main">		
-			<div id="historytable" style="width:98%; overflow: auto;">		
+			<div id="historytable" style="width:99%; overflow: auto;">		
 			<table style="table-layout: auto; overflow: scroll;">
 				<thead>
 					<tr>
@@ -24,7 +24,7 @@
 						
 						<g:sortableColumn style="width:20%;" property="name" title="${message(code: 'execution.name.label', default: 'Execution Name')}" />
 						
-						<th width="30%" style="max-width: 330px;">Script/ScriptGroup</th>
+						<th width="30%" style="max-width: 330px;text-align: center;">Script/ScriptGroup</th>
 						
 						<g:sortableColumn style="width:14%;" property="device" title="${message(code: 'execution.device.label', default: 'Device')}" />
 					
@@ -60,7 +60,13 @@
 							
 						<td align="center" width="30%" style="max-width: 330px;overflow: hidden;"title="${titlevar}" >
 							<g:if test="${executionInstance?.script}">
-								${fieldValue(bean: executionInstance, field: "script")}
+								 <%
+						 String scriptName = executionInstance?.script;
+						 if(scriptName.length() > 40){
+							 scriptName = scriptName?.substring(0, 37) + "...";
+						 }
+						  %>
+								${scriptName}
 							</g:if>
 							<g:else>
 								${fieldValue(bean: executionInstance, field: "scriptGroup")}

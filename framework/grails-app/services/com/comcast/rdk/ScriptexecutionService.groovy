@@ -101,6 +101,7 @@ class ScriptexecutionService {
 	}
 		
 	def String getCurlCommand(final String jsonString, final String callbackUrl){
+		
 		String curlCommand
 		try{
 			File jenkFile = grailsApplication.parentContext.getResource("//fileStore//jenkinscredential.txt").file
@@ -424,20 +425,18 @@ class ScriptexecutionService {
 				def scriptStatus = null
 				def executionDevice = ExecutionDevice.findAllByExecution(executionInstance)
 				def executionResult //= ExecutionResult.findAllByExecution(executionInstance)
-
 				executionDevice.each{ execDevice ->
 					url = ""
 					compNode = new JsonObject()
 					deviceNode = new JsonObject()
 					executionResult = ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance, execDevice)
-			
 						List<ExecutionResult> execResult = ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance, execDevice)
 						def componentMap = [:].withDefault {[]}
 						def systemMap = [:].withDefault {[]}
 						execResult.each{ execResObj ->
 							def moduleNameMap = scriptService.getScriptNameModuleNameMapping(realPath)
 							def moduleName = moduleNameMap.get(execResObj?.script)
-							def script = scriptService.getScript(realPath, moduleName, execResObj?.script) // TODO realpath
+//							def script = scriptService.getScript(realPath, moduleName, execResObj?.script) // TODO realpath
 //								Script script = Script.findByName(execResObj?.script)
 							Module module = Module.findByName(moduleName)
 								if(module?.testGroup?.groupValue?.toString()?.equals("E2E") ){
@@ -493,7 +492,6 @@ class ScriptexecutionService {
 								scriptStatusArray.add(scriptStatusNode)
 								
 							}
-							
 							newmap[k] = statusVal
 							compObject.addProperty("ModuleStatus", statusVal.toString())
 							compObject.add("ScriptDetails", scriptStatusArray)
@@ -539,6 +537,7 @@ class ScriptexecutionService {
 							sysObject.add("ScriptDetails", scriptStatusArray)
 							systemArray.add(sysObject)
 						}
+						
 						def imgName = ""
 						if(imageName){
 							imgName = imageName
@@ -556,7 +555,6 @@ class ScriptexecutionService {
 					executionNode.addProperty("ExecutionName",execName)
 					executionNode.add("DEVICES", jsonArray)
 				}
-			
 			
 			JsonObject paramObject = new JsonObject();
 			
@@ -593,6 +591,7 @@ class ScriptexecutionService {
 
 			} catch (Exception e) {
 			}
+			
 
 			JsonObject tdkObject = new JsonObject();
 			tdkObject.addProperty("service", "TDK" )
@@ -601,7 +600,6 @@ class ScriptexecutionService {
 			tdkObject.addProperty("started_by", "RDKPortal/Jenkins" )
 			tdkObject.addProperty("duration", execTme.toString())
 			tdkObject.add("result", dataArray )
-			
 			String newDataString = tdkObject.toString()
 			newDataString  = newDataString.replaceAll("\"", "\\\\\\\\\\\\\"")
 			return newDataString

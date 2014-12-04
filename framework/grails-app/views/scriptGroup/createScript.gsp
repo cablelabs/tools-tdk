@@ -67,7 +67,7 @@
 
 		<tr>
 			<td>Primitive Test</td>
-			<td><select name="ptest" id="ptest" style="width: 250px">
+			<td><select name="ptest" id="ptest" style="width: 250px" >
 					<option value="default">--Please Select--</option>
 					<g:each in="${primitiveTestList}" var="primList">
 						<option value="${primList}">

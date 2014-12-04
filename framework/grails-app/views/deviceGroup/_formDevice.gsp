@@ -33,7 +33,7 @@
 				<g:message code="device.Source Username.label" default="Source Username" /> 
 				<span class="required-indicator">*</span>
 		    </label>
-			<g:textField name="username" id="username" autocomplete="on"/>
+			<g:textField name="usernamedata" id="usernamedata" autocomplete="on"/>
 			</div>
 			<div class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'Password', 'error')} required">
 			<label for="Source Password"> 
@@ -62,7 +62,7 @@
 			<div align= "center" class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'Buttons', 'error')} required">
 			
 						<span class="buttons" id="uploadBtnSpan"><input type="button" id="upload" value="Upload" 
-					    	onclick="uploadBinary(document.getElementById('boxType').value, document.getElementById('stbIp').value, document.getElementById('username').value, document.getElementById('password').value, document.getElementById('systemPath').value,  document.getElementById('systemIP').value, document.getElementById('boxpath').value, ${id});">
+					    	onclick="uploadBinary(document.getElementById('boxType').value, document.getElementById('stbIp').value, document.getElementById('usernamedata').value, document.getElementById('password').value, document.getElementById('systemPath').value,  document.getElementById('systemIP').value, document.getElementById('boxpath').value, ${id});">
 						</span>
 			</div>
 		

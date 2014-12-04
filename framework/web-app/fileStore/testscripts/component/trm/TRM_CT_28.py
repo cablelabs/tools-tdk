@@ -3,15 +3,15 @@
 <xml>
   <id>1730</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TRM_CT_28</name>
-  <!-- If you are adding a new script you can specify the script name. -->
-  <primitive_test_id>635</primitive_test_id>
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
+  <primitive_test_id> </primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TRM_ValidateTunerReservation</primitive_test_name>
   <!--  -->
-  <primitive_test_version>1</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -34,9 +34,9 @@ Test Type: Positive</synopsis>
     <!--  -->
   </box_types>
   <rdk_versions>
-    <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
+    <!--  -->
+    <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
 </xml>
@@ -104,9 +104,11 @@ if "SUCCESS" in result.upper():
     #Validate recording reservation
     tdkTestObj = obj.createTestStep('TRM_ValidateTunerReservation');
 
-    print "Validate recording reservation on deviceNo:%d"%(deviceNo)
+    print "Validate recording reservation on deviceNo:%d Locator:%s"%(deviceNo,locator)
 
     tdkTestObj.addParameter("deviceNo",deviceNo);
+    tdkTestObj.addParameter("activity",2);
+    tdkTestObj.addParameter("locator",locator);
 
     expectedRes = "SUCCESS"
 

@@ -41,7 +41,7 @@ class ExecutedbService {
 	public static final String EXPORT_STATUS_LABEL 			= "Status"
 	public static final String EXPORT_TIMETAKEN 			= "Time Taken(min)"
 	public static final String EXPORT_DEVICE_LABEL 			= "Device"
-	public static final String EXPORT_DEVICE_DETAILS_LABEL 	= "Device Details"
+	public static final String EXPORT_DEVICE_DETAILS_LABEL 	= "Image Details"
 	public static final String EXPORT_LOGDATA_LABEL			= "Log Data"
 	public static final String EXPORT_FUNCTION_LABEL 		= "Function: "
 	public static final String EXPORT_FUNCTION_STATUS_LABEL = "Function Status: "
@@ -279,12 +279,29 @@ class ExecutedbService {
 			else{
 				log.error "Invalid file path"
 			}
+			
+			String image = "Not Available"
+			try {
+				if(deviceDetails != null && deviceDetails.contains("imagename:")){
+					String imagename = "imagename:"
+					int indx = deviceDetails.indexOf(imagename)
+					int endIndx = deviceDetails.indexOf("\n",indx)
+					if(indx >0 && endIndx > 0){
+						indx = indx + imagename.length()
+						image = deviceDetails.substring(indx, endIndx)
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
 
 			mapDevice 			= ["C1":EXPORT_DEVICE_LABEL,"C2":deviceName]
 			mapIpAddress 		= ["C1":EXPORT_IPADDRESS_LABEL, "C2": deviceIp]
 			mapExecutionTime 	= ["C1":EXPORT_EXECUTION_TIME_LABEL,"C2":executionTime]
-			deviceDetailsMap    = ["C1":EXPORT_DEVICE_DETAILS_LABEL,"C2":deviceDetails]
+			deviceDetailsMap    = ["C1":EXPORT_DEVICE_DETAILS_LABEL,"C2":image]
 			blankRowMap 		= ["C1":"     ","C2":"     "]
+			
+			
 
 			dataList.add(blankRowMap)
 			dataList.add(mapDevice)

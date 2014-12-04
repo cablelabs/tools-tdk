@@ -3,15 +3,15 @@
 <xml>
   <id>1456</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TRM_GetAllReservations</name>
-  <!-- If you are adding a new script you can specify the script name. -->
-  <primitive_test_id>600</primitive_test_id>
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
+  <primitive_test_id> </primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TRM_GetAllReservations</primitive_test_name>
   <!--  -->
-  <primitive_test_version>0</primitive_test_version>
+  <primitive_test_version>2</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -34,15 +34,16 @@ Test Type: Positive</synopsis>
     <!--  -->
   </box_types>
   <rdk_versions>
-    <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
+    <!--  -->
+    <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import time;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("trm","2.0");
@@ -62,8 +63,20 @@ if "SUCCESS" in result.upper():
     #Set the module loading status
     obj.setLoadModuleStatus("SUCCESS");
 
-    #Primitive test case which associated to this Script
-    tdkTestObj = obj.createTestStep('TRM_GetAllReservations');
+    #start live reservation on device 2 channel 7
+    tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
+
+    deviceNo = 1
+    duration = 10000
+    startTime = 0
+    locator = tdkTestObj.getStreamDetails('07').getOCAPID()
+
+    print "DeviceNo:%d Locator:%s duration:%d startTime:%d"%(deviceNo,locator,duration,startTime)
+
+    tdkTestObj.addParameter("deviceNo",deviceNo);
+    tdkTestObj.addParameter("duration",duration);
+    tdkTestObj.addParameter("locator",locator);
+    tdkTestObj.addParameter("startTime", startTime);
 
     expectedRes = "SUCCESS"
 
@@ -81,6 +94,34 @@ if "SUCCESS" in result.upper():
         tdkTestObj.setResultStatus("SUCCESS");
     else:
         tdkTestObj.setResultStatus("FAILURE");
+    #start live reservation
+
+    #Check reservation on device 2
+    tdkTestObj = obj.createTestStep('TRM_GetAllReservations');
+
+    print "Check Reservation on DeviceNo:%d"%(deviceNo)
+
+    #tdkTestObj.addParameter("deviceNo",deviceNo);
+
+    expectedRes = "SUCCESS"
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedRes);
+
+    #Get the result of execution
+    result = tdkTestObj.getResult();
+    print "[TEST EXECUTION RESULT] : %s" %result;
+    details = tdkTestObj.getResultDetails();
+    print "[TEST EXECUTION DETAILS] : %s" %details;
+
+    if "SUCCESS" in result.upper():
+        #Set the result status of execution
+        tdkTestObj.setResultStatus("SUCCESS");
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+
+    # Add wait to get reservation output
+    time.sleep(2)
 
     #unloading trm module
     obj.unloadModule("trm");

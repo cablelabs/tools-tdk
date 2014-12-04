@@ -3,17 +3,17 @@
 <xml>
   <id>506</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrcMPSink_SkipToEnd_05</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>494</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Create_Instance</primitive_test_name>
   <!--  -->
   <primitive_test_version>1</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>This script tests the RDK Mediaframework DVRSrc element to skip to the end of the play.
 Test Case ID: CT_RMF_DVRSrc_MPSink_05.	
@@ -69,11 +69,10 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     tdkTestObj =testobject.createTestStep(teststep);
 
     if teststep == 'RMF_Element_Open':
-        recordingObj = tdkTestObj.getRecordingDetails();
-        num = recordingObj.getTotalRecordings();
-        print "Number of recordings: %d"%num
-        recordID = recordingObj.getRecordingId(num - 1);
-        parametername.append("url");
+              
+	#fetch recording id from list matchList.
+        recordID = matchList[1]
+	parametername.append("url");
         dvrLocator = "dvr://local/" + recordID[:-1] + "#0"
         print dvrLocator
         parametervalue.append(dvrLocator);
@@ -118,6 +117,26 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
+
+#Pre-requisite to Check and verify required recording is present or not.
+#---------Start-----------------
+matchList = []
+if expected_Result in loadModuleStatus.upper():
+        #Get DVR pre req done.
+        matchList = obj.checkAndVerifyDvrRecording(4);
+        if len(matchList) == 0:
+                print "DVR required Recording Not Found!!! Status: FAILURE"
+                print "DVR Test case execution skipped!!!."
+                obj.unloadModule("mediaframework");
+                exit()
+        else:
+                print "DVR required Recording Found. Proceeding to excute Test Case."
+                print "Record Details: ",matchList
+else:
+        print "Loading Module Failed."
+        print "Exiting the script without running the TC"
+        exit();
+#--------End-----------------------
 
 if expected_Result in loadModuleStatus.upper():
         #Prmitive test case which associated to this Script

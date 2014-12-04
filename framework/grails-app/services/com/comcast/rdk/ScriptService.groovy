@@ -34,6 +34,8 @@ class ScriptService {
 	
 	def primitiveService
 	
+	def scriptgroupService
+	
 	def updateScript(def script){
 		scriptsList.add(script)
 		scriptNameList.add(script?.scriptName)
@@ -71,7 +73,7 @@ class ScriptService {
 		scriptMapping.remove(script?.scriptName?.toString().trim())
 	}
 
-  public static initializeScriptsData(def realPath){
+  def initializeScriptsData(def realPath){
 		def list1 = scriptsList.collect()
 		scriptsList.clear()
 		List scriptList = []
@@ -113,15 +115,45 @@ class ScriptService {
 					if(!scriptNameList.contains(name)){
 						scriptNameList.add(name)
 					}
+				updateDefaultScriptGroups(realPath,name,module?.getName())
 			}
+			
 			sLst?.sort()
 			scriptGroupMap.put(module?.getName(), sLst)
 			}
 		}
 		}
-		
 		return scriptsList
 	}
+  
+	def updateDefaultScriptGroups(def realPath, def name , def moduleName){
+		try {
+			def sFile
+			ScriptFile.withTransaction{
+				sFile= ScriptFile.findByScriptNameAndModuleName(name,moduleName)
+			}
+			if(sFile){
+				def script = getMinimalScript(realPath,moduleName, name)
+				if(script){
+					def sObject = new ScriptObject()
+					sObject.setBoxTypes(script?.boxTypes?.toSet())
+					sObject.setRdkVersions(script?.rdkVersions.toSet())
+					sObject.setName(name)
+					sObject.setModule(moduleName)
+					sObject.setScriptFile(sFile)
+					sObject.setLongDuration(script?.longDuration)
+
+					ScriptGroup.withTransaction{
+						scriptgroupService.saveToScriptGroups(sFile,sObject)
+						scriptgroupService.saveToDefaultGroups(sFile,sObject, script?.boxTypes)
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+			
   
   def getScriptNameFileList(def realPath){
 	  if(scriptsList == null || scriptsList.size() == 0){
@@ -202,6 +234,7 @@ class ScriptService {
 				}
 				script.put("groups",grpObj)
 				script.put("skip", getBooleanValue(node.skip.text()))
+				script.put("remarks",node?.remarks?.text())
 				script.put("longDuration", getBooleanValue(node.long_duration.text()))
 				def nodePrimitiveTestName = node.primitive_test_name.text()
 				def primitiveMap = primitiveService.getPrimitiveModuleMap(realPath)
@@ -284,6 +317,7 @@ class ScriptService {
 			 script.put("version", getIntegerValue(node.version.text()))
 			 script.put("name", node.name.text())
 			 script.put("skip", getBooleanValue(node.skip.text()))
+			 script.put("longDuration", getBooleanValue(node.long_duration.text()))
 			 def versList = []
 			 def btList = []
 			 Set btSet = node?.box_types?.box_type?.collect{ it.text() }
@@ -329,7 +363,7 @@ class ScriptService {
 	
 	def getBooleanValue(String bText){
 		if(bText){
-			if(bText?.trim() == true){
+			if(bText?.trim() == "true"){
 				return true
 			}
 		}

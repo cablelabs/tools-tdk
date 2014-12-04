@@ -3,10 +3,10 @@
 <xml>
   <id>1607</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TR069_Get_DeviceSevicesSTBServiceComponentsVideoDecoderName_Neg_86</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>585</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>Tr069_Get_Profile_Parameter_Values</primitive_test_name>
@@ -60,24 +60,11 @@ if loadStatusExpected not in loadStatusResult.upper():
         print "[Exiting the Script]"
         exit();
 
-#Prmitive test case which associated to this Script
-tdkTestObj = obj.createTestStep('Tr069_Get_Profile_Parameter_Values');
-
-expectedResult = "SUCCESS"
-
 #Parameter is the profile path to be queried
 profilePath = "Device.Services.STBService.1.Components.VideoDecoderNumberOfEntries"
 
-tdkTestObj.addParameter("path",profilePath)
+actualresult,tdkTestObj,details = tdklib.Create_ExecuteTestcase(obj,'Tr069_Get_Profile_Parameter_Values', 'SUCCESS',verifyList ={},path = profilePath);
 
-#Execute the test case in STB
-tdkTestObj.executeTestCase(expectedResult);
-
-print "Requested Parameter: ",profilePath
-#Get the result of execution
-result = tdkTestObj.getResult();
-print "[TEST EXECUTION RESULT] : %s" %result;
-details = tdkTestObj.getResultDetails();
 if "\"" in details:
         details = details[2:-1]
 print "[TEST EXCEUTION DETAILS] : %s"%details;
@@ -96,7 +83,7 @@ else:
         tdkTestObj.addParameter("path",profilePath)
 
         #Execute the test case in STB
-        tdkTestObj.executeTestCase(expectedResult);
+        tdkTestObj.executeTestCase(actualresult);
 
         print "Requested Parameter: ",profilePath
         #Get the result of execution

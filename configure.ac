@@ -46,6 +46,7 @@ AC_CHECK_FUNCS([memset strdup strerror])
 
 COPTS="-DDEBUG_LEVEL_TRACE"
 AM_CXXFLAGS="$AM_CXXFLAGS -DDEBUG_LEVEL_TRACE"
+CONFIG_PREFIX="/etc/"
 DVRMGR_FLAGS=" "
 QAM_LIBS=" "
 SF_LIBS=" "
@@ -58,7 +59,7 @@ AC_ARG_ENABLE([hybrid],
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub"
+                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub" ;;
            no) HYBRID=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-headless ]) ;;
            esac
@@ -125,6 +126,7 @@ PKG_CHECK_MODULES([JANSON],[jansson >= 2.4])
 
 AC_SUBST(COPTS)
 AC_SUBST(DVRMGR_FLAGS)
+AC_SUBST(CONFIG_PREFIX)
 AC_SUBST(QAM_LIBS)
 AC_SUBST(SF_LIBS)
 AC_SUBST(SUBDIR_HYBRID)

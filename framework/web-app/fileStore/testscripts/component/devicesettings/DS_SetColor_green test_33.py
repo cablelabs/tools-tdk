@@ -3,17 +3,17 @@
 <xml>
   <id>583</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_SetColor_green test_33</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>77</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DS_setColor</primitive_test_name>
   <!--  -->
   <primitive_test_version>6</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>This test script Sets and gets the Green Color for the Front panel Indicator
 Test Case ID : CT_DS_33</synopsis>
@@ -24,20 +24,20 @@ Test Case ID : CT_DS_33</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>This test is skipped as the GetColor API has been modified (DELIA-4408 )</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
-    <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
+    <!--  -->
+    <box_type>Hybrid-1</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
-    <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
+    <!--  -->
+    <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
 </xml>
@@ -97,11 +97,13 @@ if "SUCCESS" in loadmodulestatus.upper():
                 actualresult = tdkTestObj.getResult();
                 colordetails = tdkTestObj.getResultDetails();
                 setColor = "%s" %color;
+                list = ['255','65280','16711680','1677184','16747520']
                 if expectedresult in actualresult:
                         print "SUCCESS :Application successfully gets and sets the color as green";
                         print "getColor %s" %colordetails;
+                        print "Color to be verified: %s"%list[int(setColor)];
                         #comparing the color before and after setting
-                        if setColor in colordetails :
+                        if list[int(setColor)] in colordetails :
                                 tdkTestObj.setResultStatus("SUCCESS");
                                 print "SUCCESS: Both the colors are same";
                         else:

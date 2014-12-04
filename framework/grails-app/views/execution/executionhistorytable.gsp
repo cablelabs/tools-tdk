@@ -9,7 +9,7 @@
   Copyright (c) 2013 Comcast. All rights reserved.
   ============================================================================
 -->		
-		<div id="historytable2" style="width:98%; overflow: scroll;">			
+			<div id="historytable" style="width:99%; overflow: auto;">		
 			<table style="table-layout: auto; overflow: scroll;">
 				<thead>
 					<tr>
@@ -47,7 +47,6 @@
 						<td align="center" width="20%">${fieldValue(bean: executionInstance, field: "name")}</td>
 						 <g:if test="${executionInstance?.script}">
 								 <g:set var="titlevar" value="${fieldValue(bean: executionInstance, field: "script")}"/>
-								
 							</g:if>
 							<g:else>
 								 <g:set var="titlevar" value="${fieldValue(bean: executionInstance, field: "scriptGroup")}"/>
@@ -55,7 +54,13 @@
 						
 						<td align="center" width="30%" style="max-width: 330px;overflow: hidden;" title="${ titlevar}">
 							<g:if test="${executionInstance?.script}">
-								${fieldValue(bean: executionInstance, field: "script")}
+							 <%
+						 String scriptName = executionInstance?.script;
+						 if(scriptName.length() > 40){
+							 scriptName = scriptName?.substring(0, 37) + "...";
+						 }
+						  %>
+								${scriptName}
 							</g:if>
 							<g:else>
 								${fieldValue(bean: executionInstance, field: "scriptGroup")}

@@ -3,17 +3,17 @@
 <xml>
   <id>950</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>7</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_LivetsbReset_19</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>495</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Init</primitive_test_name>
   <!--  -->
   <primitive_test_version>1</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>These Script tests the RDK Mediaframework to clearing the lib buffer by watching it for 75 mins . Test Case ID: CT_RMF_HNSrc_MPSink_19.</synopsis>
   <!--  -->
@@ -51,7 +51,7 @@ mediatime_parameter_value=[2000,"HNSrc"]
 play_parameter_name=["rmfElement","defaultPlay","playTime","playSpeed"]
 play_parameter_value=["HNSrc",0,0.0,1.0]
 videorec_parameter_name=["X","Y","width","apply","height"]
-videorec_parameter_value=[0,0,720,0,1280]
+videorec_parameter_value=[0,0,1280,0,720]
 setsource_parameter_name=["rmfSourceElement","rmfSinkElement"]
 setsource_parameter_value=["HNSrc","MPSink"]
 ip = <ipaddress>

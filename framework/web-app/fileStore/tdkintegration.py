@@ -247,7 +247,54 @@ def dvr_playback(tdkTestObj,recording_id,**kwargs):
         
     return retValue;
 
+# Description  : To play url of the video. URL can be Linear TV or DVR URL
+#
+# Input Params : obj (instance of tdkintegration component library)
+#                kwargs={'trickplay','STREAMID'} for LinearTv
+#                kwargs={'STREAMID','ID'} for DVR playback
+#
+# Return Value : "SUCCESS"/"FAILURE"
+#
+def dvrPlayUrl(obj, kwargs={}):
 
+    tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
+
+    print "Kwargs value %s"%kwargs
+
+    streamId = str(kwargs["STREAMID"])
+    streamDetails = tdkTestObj.getStreamDetails(streamId)
+
+    if 'trickplay' in kwargs.values():
+        url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID()
+        print "URL for trickplay : %s"%url
+    else:
+        recordId = str(kwargs["ID"])
+        url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordId + '&0'
+        print "URL for DVR playback : %s"%url
+
+    tdkTestObj.addParameter("playUrl",url);
+
+    #Execute the test case in STB
+    expectedresult="SUCCESS";
+
+    tdkTestObj.executeTestCase(expectedresult);
+
+    #Get the result of execution
+    actualresult = tdkTestObj.getResult();
+    details =  tdkTestObj.getResultDetails();
+    print "Result: [%s], Details: [%s]"%(actualresult,details);
+
+    #Set the result status of execution
+    if expectedresult in actualresult:
+        tdkTestObj.setResultStatus("SUCCESS");
+        retValue = "SUCCESS"
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+        retValue = "FAILURE"
+
+    return retValue;
+
+############# End of dvrPlayUrl Function ##################
 
 # To initiate a live playback in the Gateway box using tdk
 #
@@ -474,4 +521,47 @@ def TSB_play(obj,streamId):
                 
     return retValue
 
+    
+def deleteRecording(obj, streamId,recordingId):
 
+    obj.setLoadModuleStatus("SUCCESS");
+    #Prmitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('RMF_DVRManager_DeleteRecording');
+
+    expectedRes = "SUCCESS"
+    recording_id = recordingId;
+
+    print "Recording ID %s"%recordingId
+    if recordingId is 'NONE':    
+        print "Get the recording Id"
+	recordingObj = tdkTestObj.getRecordingDetails();
+        num = recordingObj.getTotalRecordings();
+        print "Number of recordings: %d"%num    
+        recording_id = recordingObj.getRecordingId(num - 1);
+
+    print "Requested record ID: %s"%recording_id
+    tdkTestObj.addParameter("recordingId",recording_id);
+
+    streamDetails = tdkTestObj.getStreamDetails(streamId);
+    playUrl = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+    print "Requested play url : %s" %playUrl;
+    tdkTestObj.addParameter("playUrl",playUrl);
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedRes);
+
+    #Get the result of execution
+    result = tdkTestObj.getResult();
+    print "[TEST EXECUTION RESULT] : %s" %result;
+    details = tdkTestObj.getResultDetails();
+    if "SUCCESS" in result.upper():
+        #Set the result status of execution
+        tdkTestObj.setResultStatus("SUCCESS");
+        retValue = "SUCCESS";
+        print "DVRManager DeleteRecording Successful";
+    else:
+         tdkTestObj.setResultStatus("FAILURE");
+         retValue = "FAILURE";
+         print "DVRManager DeleteRecording Failed: [%s]"%details;
+
+    return retValue

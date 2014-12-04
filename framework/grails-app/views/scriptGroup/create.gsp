@@ -176,7 +176,15 @@
 					<label>All Scripts</label> <br>
 					<ul class= "selectable" id="selectable" name ="selectable"  title="selectable" style="max-height : 454px; max-width : 250px; overflow: auto; ">
 						<g:each in='${scriptInstanceList}' var="script">
-							<li id = "script-${script}" class="ui-state-default">
+						<% 
+							String idScript = script;
+							if(idScript != null){
+   								idScript = idScript.replace(" ", "sp_sp" );
+								idScript = idScript.replace(".", "dot_dot" );
+								idScript = idScript.replace("&", "amp_amp" );
+							}
+ 					     %>
+							<li id = "script-${idScript}" class="ui-state-default">
 								${script} 
 							</li>
 						</g:each>

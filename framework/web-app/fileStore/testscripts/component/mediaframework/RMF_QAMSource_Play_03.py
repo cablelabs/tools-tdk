@@ -3,10 +3,10 @@
 <xml>
   <id>1123</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSource_Play_03</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>494</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Create_Instance</primitive_test_name>
@@ -89,11 +89,20 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
 
-
 if expected_Result in loadModuleStatus.upper():
 
         #Pre-requsite to kill the rmfStreamer Gthread instance and to start new gthread instance.
-        obj.initiateReboot();
+
+        src_parameter=[];
+        src_element=[];
+        result=Create_and_ExecuteTestStep('RMF_CommentScirptForQam',obj,expected_Result,src_parameter,src_element);
+        if expected_Result in result.upper():
+                print "rmf-streamer script commented and initiating reboot"
+                obj.initiateReboot();
+        else:
+                print "rmf-streamer script commenting failed."
+                print "Pre-requisite failure: Exiting script"
+                exit()
 
         #Prmitive test case which associated to this Script
         #Change the List according to Prmitive test case
@@ -138,7 +147,7 @@ if expected_Result in loadModuleStatus.upper():
                                                                                 src_element=["QAMSrc",1,1.0,0.0]
                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,expected_Result,src_parameter,src_element);
                                                                                 if expected_Result in result.upper():
-                                                                                        time.sleep(30);
+                                                                                        time.sleep(10);
                                                                                         src_parameter=["rmfElement"]
                                                                                         src_element=["QAMSrc"]
                                                                                         result=Create_and_ExecuteTestStep('RMF_Element_GetState',obj,expected_Result,src_parameter,src_element);
@@ -153,6 +162,7 @@ if expected_Result in loadModuleStatus.upper():
                                                                                 src_parameter=["rmfElement"]
                                                                                 src_element=["QAMSrc"]
                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,expected_Result,src_parameter,src_element);
+
                                                                 src_parameter=["rmfElement"]
                                                                 src_element=["MPSink"]
                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);
@@ -177,8 +187,17 @@ if expected_Result in loadModuleStatus.upper():
         else:
                 print "Status of RmfElement_QAMSrc_RmfPlatform_Init:  %s" %loadModuleStatus;
 
+        src_parameter=[];
+        src_element=[];
+        result=Create_and_ExecuteTestStep('RMF_UnCommentScirptForQam',obj,expected_Result,src_parameter,src_element);
+        if expected_Result in result.upper():
+                print "rmf-streamer script uncommented and initiating reboot"
+        else:
+                print "rmf-streamer script uncommenting failed."
+                print "Post-requisite failure."
+
         obj.initiateReboot();
-        time.sleep(10)
+        time.sleep(5)
         obj.unloadModule("mediaframework");
 else:
         print "Load Module Failed"

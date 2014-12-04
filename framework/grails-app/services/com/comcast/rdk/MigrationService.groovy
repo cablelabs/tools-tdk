@@ -450,23 +450,26 @@ class MigrationService {
 			ScriptGroup sgObject
 			ScriptGroup.withSession {
 				try{
-					def sproperties = migrateObj.getProperties()
-					def oldModuleName = migrateObj?.name
-					if(moduleNameChanges.containsKey(oldModuleName)){
-						oldModuleName = moduleNameChanges.get(oldModuleName)
+					if(migrateObj?.scriptList?.size() > 0){
+						def sproperties = migrateObj.getProperties()
+						def oldModuleName = migrateObj?.name
+						if(moduleNameChanges.containsKey(oldModuleName)){
+							oldModuleName = moduleNameChanges.get(oldModuleName)
+						}
+
+						sgObject = ScriptGroup.findByName(oldModuleName)
+						if(!sgObject){
+							sgObject  = new ScriptGroup()
+						}
+						sgObject.properties = sproperties
+						sgObject.scripts =  []
+						sgObject.scriptsList =  []
+						sgObject.scriptList =  []
+						sgObject.save(flush:true)
 					}
-					
-					sgObject = ScriptGroup.findByName(oldModuleName)
-					if(!sgObject){
-						sgObject  = new ScriptGroup()
-					}
-					sgObject.properties = sproperties
-					sgObject.scripts =  []
-					sgObject.scriptsList =  []
-					sgObject.scriptList =  []
-					sgObject.save(flush:true)
 				}catch(Exception e ){
 				}
+
 			}
 			def scriptList = migrateObj?.scriptList
 			scriptList.each { script ->

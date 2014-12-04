@@ -3,17 +3,17 @@
 <xml>
   <id>1596</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LinearTV_Tune_SameChannel</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>541</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
   <!--  -->
   <primitive_test_version>1</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>LinearTV-Try to tune the same watching channel  eg: ch12 -tune Ch12.
 E2E_LinearTV_09</synopsis>
@@ -29,9 +29,9 @@ E2E_LinearTV_09</synopsis>
   <skip>false</skip>
   <!--  -->
   <box_types>
-    <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
+    <!--  -->
+    <box_type>Hybrid-1</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -43,6 +43,7 @@ E2E_LinearTV_09</synopsis>
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 import time;
+from tdkintegration import getURL_PlayURL;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
@@ -52,63 +53,6 @@ obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
 ip = <ipaddress>
 port = <port>
 
-def getURL_PlayURL(obj,streamId):
-    
-    #Prmitive test case which associated to this Script
-    tdkTestObj = obj.createTestStep('TDKE2E_RMFLinearTV_GetURL');  
-        
-    #set the dvr play url for first channel
-    streamDetails = tdkTestObj.getStreamDetails(streamId);        
-    url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()
-
-    print "Request URL : %s" %url;
-    tdkTestObj.addParameter("Validurl",url);        
-
-    #Execute the test case in STB
-    expectedresult="SUCCESS";
-    tdkTestObj.executeTestCase(expectedresult);
-
-    #Get the result of execution
-    actualresult = tdkTestObj.getResult();
-    
-    #compare the actual result with expected result
-    if expectedresult in actualresult:
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
-        details =  tdkTestObj.getResultDetails();
-        
-        #Remove unwanted part from URL
-        PLAYURL = details.split("[RESULTDETAILS]");
-        ValidURL = PLAYURL[-1];        
-
-        expectedresult="SUCCESS";
-        
-        #Prmitive test case which associated to this Script
-        tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
-
-        print "Play Url Requested: %s"%(ValidURL);
-        tdkTestObj.addParameter("playUrl",ValidURL);
-
-        #Execute the test case in STB
-        tdkTestObj.executeTestCase(expectedresult);
-
-        #Get the result of execution
-        actualresult = tdkTestObj.getResult();        
-        print "The E2E LinearTv Play : %s" %actualresult;
-
-        #Set the result status of execution
-        if "SUCCESS" in actualresult.upper():
-            tdkTestObj.setResultStatus("SUCCESS");
-            details = tdkTestObj.getResultDetails();
-            print "E2E LinearTv Playback Successful: [%s]"%details;
-            retValue = "SUCCESS"
-            
-        else:
-            tdkTestObj.setResultStatus("FAILURE");
-            details =  tdkTestObj.getResultDetails();            
-            print "Execution Failed: [%s]"%(details);
-    
-    return retValue
                                         
 obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_Tune_SameChannel');
 

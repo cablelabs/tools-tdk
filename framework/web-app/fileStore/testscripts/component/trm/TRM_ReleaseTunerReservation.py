@@ -6,12 +6,12 @@
   <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TRM_ReleaseTunerReservation</name>
-  <!-- If you are adding a new script you can specify the script name. -->
-  <primitive_test_id>634</primitive_test_id>
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
+  <primitive_test_id> </primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TRM_ReleaseTunerReservation</primitive_test_name>
   <!--  -->
-  <primitive_test_version>1</primitive_test_version>
+  <primitive_test_version>2</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -35,8 +35,6 @@ Test Type: Positive</synopsis>
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
-    <rdk_version>RDK1.3</rdk_version>
     <!--  -->
   </rdk_versions>
 </xml>
@@ -100,9 +98,11 @@ if "SUCCESS" in result.upper():
     #Release live reservation
     tdkTestObj = obj.createTestStep('TRM_ReleaseTunerReservation');
 
-    print "Release live reservation on deviceNo:%d"%(deviceNo)
+    print "Release live reservation on deviceNo:%d Locator:%s"%(deviceNo,locator)
 
     tdkTestObj.addParameter("deviceNo",deviceNo);
+    tdkTestObj.addParameter("activity",1);
+    tdkTestObj.addParameter("locator",locator);
 
     expectedRes = "SUCCESS"
 

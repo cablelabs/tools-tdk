@@ -34,16 +34,19 @@ class ScriptgroupService {
 	def saveToScriptGroups(final ScriptFile scriptInstance,final ScriptObject sObject){
 		try {
 			def moduleName = scriptInstance?.moduleName
-			def scriptGrpInstance = ScriptGroup.findByName(moduleName)
+			
 			
 			if(sObject.getLongDuration()){
 				moduleName = moduleName + "_LD"
 			}
 			
+			def scriptGrpInstance = ScriptGroup.findByName(moduleName)
+			
 			if(!scriptGrpInstance){
 				scriptGrpInstance = new ScriptGroup()
 				scriptGrpInstance.name = moduleName
-				scriptGrpInstance.save(flush:true)
+				scriptGrpInstance.scriptList = []
+				scriptGrpInstance.save()
 			}
 			if(!scriptGrpInstance?.scriptList?.contains(scriptInstance)){
 				scriptGrpInstance.addToScriptList(scriptInstance)
@@ -68,6 +71,7 @@ class ScriptgroupService {
 					if(!scriptGrpInstance){
 						scriptGrpInstance = new ScriptGroup()
 						scriptGrpInstance.name = name
+						scriptGrpInstance.scriptList = []
 						scriptGrpInstance.save(flush:true)
 					}
 					if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptInstance)){
@@ -135,9 +139,9 @@ class ScriptgroupService {
 		 
 		 if(scriptObject.getLongDuration()){
 			 groupName = groupName + "_LD"
-			 removeScriptsFromSuites(scriptInstance, module.testGroup.toString() + KEY_GROUP)
+			 removeScriptsFromSuites(scriptInstance, module?.testGroup?.toString() + KEY_GROUP)
 		 }else{
-			 removeScriptsFromSuites(scriptInstance, module.testGroup.toString() + KEY_GROUP+"_LD")
+			 removeScriptsFromSuites(scriptInstance, module?.testGroup?.toString() + KEY_GROUP+"_LD")
 		 }
 		 
 		 
@@ -150,9 +154,9 @@ class ScriptgroupService {
  
 			 if(scriptObject.getLongDuration()){
 				 groupName = groupName + "_LD"
-				 removeScriptsFromSuites(scriptInstance, box.name + KEY_GROUP)
+				 removeScriptsFromSuites(scriptInstance, box?.name + KEY_GROUP)
 			 }else{
-				 removeScriptsFromSuites(scriptInstance, box.name + KEY_GROUP+"_LD")
+				 removeScriptsFromSuites(scriptInstance, box?.name + KEY_GROUP+"_LD")
 			 }
  
 			 createOrUpdateScriptGroups(scriptInstance, groupName)
@@ -170,18 +174,18 @@ class ScriptgroupService {
 	 * @return
 	 */
 	def createOrUpdateScriptGroups(final def scriptInstance, final String groupName){
-		
-				def scriptGrpInstance = ScriptGroup.findByName(groupName)
-				if(!scriptGrpInstance){
-					scriptGrpInstance = new ScriptGroup()
-					scriptGrpInstance.name = groupName
-					scriptGrpInstance.save(flush:true)
-				}
-				if(!scriptGrpInstance?.scriptList?.contains(scriptInstance)){
-					scriptGrpInstance.addToScriptList(scriptInstance)
-				}
-				
-			}
+
+		def scriptGrpInstance = ScriptGroup.findByName(groupName)
+		if(!scriptGrpInstance){
+			scriptGrpInstance = new ScriptGroup()
+			scriptGrpInstance.name = groupName
+			scriptGrpInstance.save(flush:true)
+		}
+		if(!scriptGrpInstance?.scriptList?.contains(scriptInstance)){
+			scriptGrpInstance.addToScriptList(scriptInstance)
+		}
+
+	}
 	
 	
 	/**

@@ -214,6 +214,9 @@ function refreshElements(){
 		 document.getElementById("sgResultElement").value = myArray;
 		 }
 		 });
+	 
+	 document.getElementById("resultElement").value = [];
+	 document.getElementById("sgResultElement").value = [];
 }
 
 //updateScriptGrp
@@ -227,6 +230,11 @@ function updateSG() {
 		
 		var elmnt = $(this).attr('id');
 		elmnt = elmnt.replace("sgscript-","");
+		
+		elmnt = elmnt.replace(/sp_sp/g, ' ');
+		elmnt = elmnt.replace(/dot_dot/g, '.');
+		elmnt = elmnt.replace(/amp_amp/g, '&');
+		
 		elmnt = elmnt.replace("end","");
 		if(!dataList.contains(","+elmnt+",")){
 			dataList = dataList +","+ elmnt;
@@ -246,6 +254,9 @@ function createSG() {
 	$( "li[id*='sgscript-']" ).each(function(index) {
 		var elmnt = $(this).attr('id');
 		elmnt = elmnt.replace("sgscript-","");
+		elmnt = elmnt.replace(/sp_sp/g, ' ');
+		elmnt = elmnt.replace(/dot_dot/g, '.');
+		elmnt = elmnt.replace(/amp_amp/g, '&');
 		elmnt = elmnt.replace("end","");
 		dataList = dataList +","+ elmnt;
 	});

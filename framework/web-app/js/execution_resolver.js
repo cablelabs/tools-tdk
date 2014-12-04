@@ -240,12 +240,13 @@ function showCleanUpPopUp(){
 }
 
 function showDateTime(){
-	
 	$('#defexecName').val(" ");
 	checkDeviceList();
 	var stbName
 	var deviceList = $("#devices").val();
-	 if(deviceList.length > 1){	
+	 if(deviceList == null){
+		 stbName = ""
+	 }else if(deviceList.length > 1){	
 		 stbName = "multiple"
 	 }else{
 		 stbName = $('#stbname').val();
@@ -259,7 +260,7 @@ function showDateTime(){
 
 function checkDeviceList(){
 	 var deviceList = $("#devices").val();
-	 if(deviceList.length > 1){		
+	 if(deviceList != null && deviceList.length > 1){		
 		 $("#repeatId").val(1);
 		// document.getElementById("repeatId").disabled = true;
 		 $('#repeatId').attr('readonly', true);
@@ -330,7 +331,6 @@ function updateLog(){
 	{  
 		execName = $('#newexecName').val();       
 	}
-	
 	$.get('readOutputFileData', {executionName: execName}, function(data) {
 		$("#dynamicResultDiv").html(data); 
 	});

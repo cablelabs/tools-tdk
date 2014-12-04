@@ -3,10 +3,10 @@
 <xml>
   <id>1694</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>CT_XUPNP_05</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>666</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TestMgr_XUPNPAgent_recordId</primitive_test_name>
@@ -67,7 +67,6 @@ if "Success" in loadmodulestatus:
   actualresult = tdkTestObj.getResult();
   details=tdkTestObj.getResultDetails();
   print "XUPNPAgent_recordId_actualresult  :%s" %actualresult; 
-  print "XUPNPAgent_recordId_result details :%s" %details; 
   #Check for SUCCESS return value of XUPNPAgent_recordId
   if "SUCCESS" in actualresult.upper():
     tdkTestObj.setResultStatus("SUCCESS");

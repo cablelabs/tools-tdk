@@ -3,10 +3,10 @@
 <xml>
   <id>1706</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>CT_XUPNP_11</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>669</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TestMgr_XUPNPAgent_evtCheck</primitive_test_name>
@@ -41,7 +41,7 @@
 import tdklib;
 import time;
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
+obj = tdklib.TDKScriptingLibrary("iarmbus","2.0");
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
@@ -184,7 +184,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "FAILURE: IARM_Bus_Init failed. %s " %details;
 
         print "[TEST EXECUTION RESULT] : %s" %actualresult;
-        #Unload the iarmbus module
+
 else:
         print"Load module failed";
         #Set the module loading status
@@ -194,8 +194,6 @@ obj1 = tdklib.TDKScriptingLibrary("xupnp","2.0");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
-ip = <ipaddress>
-port = <port>
 obj1.configureTestCase(ip,port,'CT_XUPNP_11');
 
 #Get the result of connection with test component and STB
@@ -225,7 +223,7 @@ if "Success" in loadmodulestatus:
     tdkTestObj1.setResultStatus("FAILURE");
     print "FAILURE:  XUPNPAgent_evtCheck %s " %details;   
 
-  #Unload the xupnp module
+  #Unload the modules
   obj.unloadModule("iarmbus");
   obj1.unloadModule("xupnp");
 

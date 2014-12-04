@@ -680,6 +680,8 @@ class ScriptGroupController {
 		def scriptList = scriptService.getScriptNameList()
         if(scriptList?.contains(params?.name?.trim())){
 			render("Duplicate Script Name not allowed. Try Again.")
+        }else if((!params?.ptest) || params?.ptest == "default" ){
+			render("Please select a valid primitive test !!!")
         }
         else{
 			boolean saveScript = false
@@ -747,7 +749,7 @@ class ScriptGroupController {
 					xml.synopsis(params.synopsis?.trim())
 					mkp.yield "\r\n  "
 					mkp.comment ""
-					xml.groupsid(utilityService.getGroup()?.id)
+					xml.groups_id(utilityService.getGroup()?.id)
 					mkp.yield "\r\n  "
 					mkp.comment ""
 					xml.execution_time(time)
@@ -762,8 +764,14 @@ class ScriptGroupController {
 					xml.skip(skipStatus?.toString())
 					mkp.yield "\r\n  "
 					mkp.comment ""
+					
+					def bTypeList = params?.boxTypes
+					if(bTypeList instanceof List){
+						bTypeList = bTypeList?.sort()
+					}
+					
 					xml.box_types(){
-						params?.boxTypes?.each { bt ->
+						bTypeList?.each { bt ->
 							def boxType = BoxType.findById(bt)
 							boxTypes.add(boxType)
 							xml.box_type(boxType?.name)
@@ -771,8 +779,14 @@ class ScriptGroupController {
 							mkp.comment ""
 						}
 					}
+					
+					def rdkVersList = params?.rdkVersions
+					if(rdkVersList instanceof List){
+					rdkVersList = rdkVersList?.sort()
+					}
+					
 					xml.rdk_versions(){
-						params?.rdkVersions?.each { vers ->
+						rdkVersList?.each { vers ->
 
 							def rdkVers = RDKVersions.findById(vers)
 							rdkVersions.add(rdkVers)
@@ -930,7 +944,7 @@ class ScriptGroupController {
 			
 			xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
 			xml.xml(){
-				xml.id(params?.id)
+				xml.id(scrpt?.id)
 				mkp.yield "\r\n  "
 				mkp.comment "Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty"
 				xml.version(vers2)
@@ -954,7 +968,7 @@ class ScriptGroupController {
 				xml.synopsis(params.synopsis?.trim())
 				mkp.yield "\r\n  "
 				mkp.comment ""
-				xml.groupsid(utilityService.getGroup()?.id)
+				xml.groups_id(utilityService.getGroup()?.id)
 				mkp.yield "\r\n  "
 				mkp.comment ""
 				xml.execution_time(time)
@@ -970,9 +984,13 @@ class ScriptGroupController {
 				mkp.yield "\r\n  "
 				mkp.comment ""
 				
+				def bTypeList = params?.boxTypes
+				if(bTypeList instanceof List){
+					bTypeList = bTypeList?.sort()
+				}
 				
 				xml.box_types(){
-					params?.boxTypes?.each { bt ->
+					bTypeList?.each { bt ->
 						def btype = BoxType.findById(bt)
 						bTypes.add(btype)
 						xml.box_type(btype?.name)
@@ -980,8 +998,13 @@ class ScriptGroupController {
 						mkp.comment ""
 					}
 				}
+				
+				def rdkVersList = params?.rdkVersions
+				if(rdkVersList instanceof List){
+				rdkVersList = rdkVersList?.sort()
+				}
 				xml.rdk_versions(){
-					params?.rdkVersions?.each { vers ->
+					rdkVersList?.each { vers ->
 					def rdkVer = RDKVersions.findById(vers)
 					rdkVers.add(rdkVer)
 					xml.rdk_version(rdkVer?.buildVersion)
@@ -1386,7 +1409,7 @@ class ScriptGroupController {
 				mkp.comment "Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1"
 				xml.name(script?.name)
 				mkp.yield "\r\n  "
-				mkp.comment "If you are adding a new script you can specify the script name."
+				mkp.comment "If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension "
 				xml.primitive_test_id(script?.primitiveTest?.id)
 				mkp.yield "\r\n  "
 				mkp.comment "Do not change primitive_test_id if you are editing an existing script."

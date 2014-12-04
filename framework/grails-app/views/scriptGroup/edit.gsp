@@ -208,7 +208,15 @@
 					<label>All Scripts</label> <br>
 					<ul class= "selectable" id="selectable" name ="selectable"  title="selectable" style="max-height : 454px; max-width : 250px; overflow: auto; ">
 						<g:each in='${scripts}' var="script">
-							<li id = "script-${script.scriptName}" title="${script.scriptName}" class="ui-state-default">
+						<% 
+							String idScript = script.scriptName;
+							if(idScript != null){
+   								idScript = idScript.replace(" ", "sp_sp" );
+								idScript = idScript.replace(".", "dot_dot" );
+								idScript = idScript.replace("&", "amp_amp" );
+							}
+ 					     %>
+							<li id = "script-${idScript}" title="${script.scriptName}" class="ui-state-default">
 								${script.scriptName}
 							</li>
 						</g:each>
@@ -226,7 +234,15 @@
 					<ul id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 250px; overflow: auto;">
 						<g:if test="${scriptGroupInstance}">
 						<g:each in='${scriptGroupInstance.scriptList}' var="script">
-							<li id = "sgscript-${script.scriptName}end"  title="${script.scriptName}" class="ui-state-default">
+						<% 
+							String idSgScript = script.scriptName;
+						if(idSgScript != null){
+   							idSgScript = idSgScript.replace(" ", "sp_sp" );
+							idSgScript = idSgScript.replace(".", "dot_dot" );
+							idSgScript = idSgScript.replace("&", "amp_amp" );
+						}
+ 					     %>
+							<li id = "sgscript-${idSgScript}end"  title="${script.scriptName}" class="ui-state-default">
 								${script.scriptName}
 							</li>
 						</g:each>

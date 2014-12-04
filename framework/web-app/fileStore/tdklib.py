@@ -35,6 +35,7 @@ from recorderlib import startRecorderApp
 import MySQLdb
 import shutil
 import logging
+import random
 #import _mysql
 
 #------------------------------------------------------------------------------
@@ -1379,9 +1380,145 @@ class TDKScriptingLibrary:
                 else:
                         print "Unload module Success\n"
     ########## End of Function ##########	
+	
+	def checkAndVerifyDvrRecording(self,duration=4):
+        # Checks to see sepcified duration or greater duration recording is present or not.
+        # If not, records with specidifed duration.
+
+        # Syntax       : OBJ.checkAndVerifyDvrRecording(duration)
+        # eg           : OBJ.checkAndVerifyDvrRecording(3)
+        # Description  : Checks to see sepcified duration or greater duration recording is present or not.
+        # If not, records with specidifed duration.
+        # Parameters   : duration - duration of the recording to check for in mins.
+        # Return Value : result will be list with recording details found, else empty list if not found.
+        # eg           : list = [0,'1111111','test_dvr',299,2121443214321423]
+        #                       [index,recordingId,recordingName,durationInSecs,sgementName] - if found.
+        #               else, Empty list.
+                print "In checkAndVerifyDvrRecording"
+                numOfRecordings,recordingObj = fetchTotalRecording(self)
+                list1 = []
+
+                if recordingObj == "NULL":
+                        print "Failed to fetch Recording list."
+                        return list1
+
+                print "Done Fetching list1"
+
+                list1 = findRecordMatchingDuration(numOfRecordings,recordingObj,duration)
+                if (len(list1) == 0):
+                        print "Matching Recording not found. So, Recording initiated with the duration required"
+                        #Increasing the duration by 1 minute. To make sure sufficient recording will be done.
+                        result = initiateDvrRecording(self,duration + 1)
+                        if result == 1:
+                                print "Initiated recording for ",duration," failed!!!."
+                                list2 = []
+                                return list2
+                        print "Recording Successful!!!."
+                        numOfRecordings,recordingObj = fetchTotalRecording(self)
+                        if recordingObj == "NULL":
+                                print "Failed to fetch Recording list. After initiating recording."
+                                return list1
+
+                        print "Done Fetching"
+                        list1 = findRecordMatchingDuration(numOfRecordings,recordingObj,duration)
+                        print "List:",list1
+                        return list1
+
+                print "Match found!!!. Recording details: ",list1
+
+                return list1;
+    ########## End of Function ##########	
 ########## End of Class  ##########
 
+#Helper function to return a list (containing matching Record details else empty)
+def findRecordMatchingDuration(numOfRecordings,recordingObj,duration):
+        print "In findRecordMatchingDuration"
+        list1 = []
+        if numOfRecordings > 0:
+                i = 0
+                while i< numOfRecordings:
+                        du = recordingObj.getDuration(i);
+                        print "Duration: ",du
+                        #converting the duration into seconds and comparing it with avaliable recordings duration.
+                        if int(du) >= (duration * 60):
+                                list1 = [i];
+                                list1.append(recordingObj.getRecordingId(i))
+                                list1.append(recordingObj.getRecordingTitle(i))
+                                list1.append(recordingObj.getDuration(i))
+                                list1.append(recordingObj.getSegmentName(i))
+                                print "Matching recording found with duration found."
+                                print list1
+                                return list1
+                        i = i + 1
 
+        print "Matching recording not found."
+        return list1
+		
+#Helper function to return Number of Recordings.
+def fetchTotalRecording(testObj):
+        print "In FetchTotalRecording"
+        primitiveObj = testObj.createTestStep("RMF_GetDvr_Recording_List");
+
+        recordingObj = primitiveObj.getRecordingDetails();
+        print "Call done for reading the file"
+        numOfRecordings = recordingObj.getTotalRecordings();
+        print "Total Rec: ",numOfRecordings
+
+        return numOfRecordings,recordingObj
+
+		
+#Helper funtion to InitiateRecording
+def initiateDvrRecording(testObj,duration):
+        primitiveObj = testObj.createTestStep("RMF_Dvr_CreateNew_Recording");
+        RECORD_ERROR = 1
+        SUCCESS = 0
+		
+        streamDetails = primitiveObj.getStreamDetails('01');
+
+        recordtitle = "test_dvr"
+        #Generating the random recordid of 10 digits.
+        recordidInt = random.randrange(10**9, 10**10)
+        recordid = str(recordidInt)
+        recordduration = str(duration)
+        ocapid = streamDetails.getOCAPID();
+
+        print recordid
+        print recordduration
+        print recordtitle
+        print ocapid
+
+        primitiveObj.addParameter("recordId",recordid);
+        primitiveObj.addParameter("recordDuration",recordduration);
+        primitiveObj.addParameter("recordTitle",recordtitle);
+        primitiveObj.addParameter("ocapId",ocapid);
+
+        expectedresult="SUCCESS"
+
+        print "Before executing the Test case"
+        #Execute the test case in STB
+        primitiveObj.executeTestCase(expectedresult);
+
+        print "After execu done"
+        #Get the result of execution
+        result = primitiveObj.getResult();
+        print "Result of recording: ",result
+
+        #Check any failure, During the recording.
+        if expectedresult not in result.upper():
+                print "Failed to record"
+                primitiveObj.setResultStatus(result);
+                return RECORD_ERROR
+
+        print "Initiating Reboot";
+        testObj.initiateReboot();
+
+        primitiveObj.setResultStatus(result);
+
+        time.sleep(5)
+        print "Reboot Done"
+
+        return SUCCESS
+		
 #------------------------------------------------------------------------------
 # module class
 #------------------------------------------------------------------------------

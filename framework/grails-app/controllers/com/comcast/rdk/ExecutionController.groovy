@@ -800,12 +800,13 @@ class ExecutionController {
         else if(executionInstance){
             htmlData = message(code: 'execution.name.duplicate')
         }
-		else if(!params?.scriptGrp && !params?.scripts){
-			htmlData = message(code: 'execution.noscript.selected')
-		}
 		else if(!(params?.devices)){
 			htmlData = message(code: 'execution.nodevice.selected')
 		}
+		else if(!params?.scriptGrp && !params?.scripts){
+			htmlData = message(code: 'execution.noscript.selected')
+		}
+		
         else if(deviceInstance?.deviceStatus.toString().equals(Status.BUSY.toString())){
             htmlData = message(code: 'execution.device.notfree')
         }
@@ -1477,7 +1478,10 @@ class ExecutionController {
 		params.format = EXPORT_EXCEL_FORMAT
 		params.extension = EXPORT_EXCEL_EXTENSION
 		response.contentType = grailsApplication.config.grails.mime.types[params.format]
-		response.setHeader("Content-disposition", "attachment; filename="+EXPORT_FILENAME+ executionInstance.name +".${params.extension}")
+		
+		def fileName = executionInstance.name
+		fileName = fileName?.replaceAll(" ","_")
+		response.setHeader("Content-disposition", "attachment; filename="+EXPORT_FILENAME+ fileName +".${params.extension}")
 		exportService.export(params.format, response.outputStream,dataList, null,fieldMap,[:], parameters)
 		log.info "Completed excel export............. "
 
@@ -1518,7 +1522,9 @@ class ExecutionController {
 				params.format = EXPORT_EXCEL_FORMAT
 				params.extension = EXPORT_EXCEL_EXTENSION
 				response.contentType = grailsApplication.config.grails.mime.types[params.format]
-				response.setHeader("Content-disposition", "attachment; filename="+EXPORT_FILENAME+ executionInstance.name +".${params.extension}")
+				def fileName = executionInstance.name
+				fileName = fileName?.replaceAll(" ","_")
+				response.setHeader("Content-disposition", "attachment; filename="+EXPORT_FILENAME+ fileName +".${params.extension}")
 				excelExportService.export(params.format, response.outputStream,dataMap, null,fieldMap,[:], parameters)
 				log.info "Completed excel export............. "
 		
