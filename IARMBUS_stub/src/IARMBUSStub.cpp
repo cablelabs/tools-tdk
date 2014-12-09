@@ -1437,22 +1437,19 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
         }
 	const char* appname=(char*)req["appname"].asCString();
 	const char* argv1=(char*)req["argv1"].asCString();
-	pid_t idChild = vfork();
 	std::string path;
-	strcpy((char*)path.c_str(),getenv("TDK_PATH"));	
-	strcat((char*)path.c_str(),"/");
-	strcat((char*)path.c_str(),appname);
-	DEBUG_PRINT(DEBUG_ERROR,"\nAppPath:%s\n",path.c_str());
-	if(idChild == 0)
-	{
-		execl(path.c_str(),appname,argv1,(char*)NULL);
-	}
-	else if(idChild <0)
-	{
-		DEBUG_PRINT(DEBUG_LOG,"failed fork\n");
-		response["result"]="second application Execution failed";
-		return TEST_FAILURE;
-	}
+        path = g_tdkPath + "/" + appname +" " + argv1;
+        try
+        {
+                system((char *)path.c_str());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured during system call\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+		response["result"]="FAILURE";
+                return TEST_FAILURE;
+        }
 	DEBUG_PRINT(DEBUG_TRACE,"\n InvokeSecondApplication --->Exit \n");
 	response["result"]="SUCCESS";
 	return TEST_SUCCESS;
