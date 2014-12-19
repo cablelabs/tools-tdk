@@ -19,7 +19,6 @@
 #include <uuid/uuid.h>
 #include <glib.h>
 
-#include <list>
 #include <vector>
 #include <map>
 #include <string>
@@ -43,7 +42,7 @@ enum Type {
     UNKNOWN,
 };
 
-class TunerReservationHelperImpl
+class TunerReservationHelper
 {
 public:
     bool getAllTunerStates(void);
@@ -61,18 +60,16 @@ public:
 
     static void init();
 
-    TunerReservationHelperImpl();
-    ~TunerReservationHelperImpl();
-    const char* getId();
-    const std::string& getToken();
+    TunerReservationHelper();
+    ~TunerReservationHelper();
     void setToken( const std::string& token);
     void notifyResrvResponse(bool success);
 
-    static void addToReservationDb(TRM::TunerReservation resv);
-    static void removeFromReservationDb(const std::string token);
+    static bool addToReservationDb(TRM::TunerReservation resv);
+    static bool removeFromReservationDb(const std::string token);
 
 private:
-    TunerReservationHelperImpl* impl;
+    TunerReservationHelper* impl;
     static bool inited;
     char guid[64];
     std::string token;
@@ -104,29 +101,5 @@ public :
     void operator() (const TRM::NotifyTunerReservationConflicts &msg);
     void operator() (const TRM::NotifyTunerStatesUpdate &msg);
     void operator() (const TRM::NotifyTunerPretune &msg);
-
-    TunerReservationHelperImpl* getTRH();
-};
-
-class TunerReservationHelper
-{
-public:
-    bool getAllTunerStates();
-    bool getAllTunerIds();
-    bool getAllReservations(std::string filterDevice);
-    bool getVersion();
-    bool validateTunerReservation(std::string device, std::string locator, int activityType);
-    bool reserveTunerForRecord( std::string device, std::string recordingId, std::string locator, uint64_t startTime=0, uint64_t duration=0, bool hot=false);
-    bool reserveTunerForLive( std::string device, std::string locator, uint64_t startTime=0, uint64_t duration=0);
-    bool releaseTunerReservation(std::string device, std::string locator, int activityType);
-    bool cancelRecording(std::string locator);
-    bool cancelLive(std::string locator);
-
-    static void init();
-
-    TunerReservationHelper();
-    ~TunerReservationHelper();
-private:
-    TunerReservationHelperImpl* impl;
 };
 #endif

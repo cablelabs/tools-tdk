@@ -12,8 +12,12 @@
 
 #include "MediaframeworkAgent.h"
 
-string rdkLogPath = getenv("RDK_LOG_PATH");
-string tdkPath = getenv("TDK_PATH");
+char *rdkLogP = getenv("RDK_LOG_PATH");
+char *tdkP = getenv("TDK_PATH");
+
+string rdkLogPath = "NULL";
+string tdkPath = "NULL";
+
 
 /*helper functions for DVR sink*/
 /********************************************************************************************************************
@@ -223,7 +227,8 @@ static void getGthreadInstance()
 {
 	if(false == gThreadFlag)
 	{
-		g_thread_init(NULL);
+		if( ! g_thread_supported() )
+			g_thread_init(NULL);
 		gThreadFlag = true;
 		DEBUG_PRINT(DEBUG_TRACE, "g_thread_init called and gThreadFlag is set to true\n");
 	}
@@ -290,6 +295,31 @@ std::string MediaframeworkAgent::testmodulepre_requisites()
         MF_testmodule_PR_cmd= g_tdkPath + "/" + PRE_REQUISITE_FILE;
         MF_testmodule_PR_log= g_tdkPath + "/" + PRE_REQUISITE_LOG_PATH;
         string pre_req_chk= "source "+MF_testmodule_PR_cmd;
+
+	/*Check for the environment variable set or not */
+	if(rdkLogP == NULL)
+	{
+		DEBUG_PRINT(DEBUG_ERROR,"\nEnvironment variable not set for RDK_LOG_PATH\n");
+		return "FAILURE<DETAILS>Environment variable not set for \"RDK_LOG_PATH\"";
+	}
+	else
+	{
+		rdkLogPath.assign(rdkLogP);		
+		DEBUG_PRINT(DEBUG_TRACE,"\n RDK_LOG_PATH=%s\n",rdkLogPath.c_str());
+	}
+	
+	if(tdkP == NULL)
+	{
+		DEBUG_PRINT(DEBUG_ERROR,"\nEnvironment variable not set for TDK_PATH\n");
+		return "FAILURE<DETAILS>Environment variable not set for \"TDK_PATH\"";
+	}
+	else
+	{
+		tdkPath.assign(tdkP);		
+		DEBUG_PRINT(DEBUG_TRACE,"\n TDK_PATH=%s\n",tdkPath.c_str());
+	}
+	
+
         try
         {
                 system((char *)pre_req_chk.c_str());
@@ -319,6 +349,8 @@ std::string MediaframeworkAgent::testmodulepre_requisites()
                 DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the log file.\n");
                 return "FAILURE<DETAILS>Unable to open the log file";
         }
+	
+	return "SUCCESS<DETAILS>SUCCESS";
 }
 
 
@@ -5010,7 +5042,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                         }
    		}
 
-                if ( (pTSBRecInfo->shadowedById == recordingId))
+                if ( (pTSBRecInfo->shadowedById[0] == recordingId))
                 {
                 	response["result"] = "SUCCESS";
                         response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";
@@ -5046,7 +5078,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                                 return TEST_FAILURE;
                         }
 
-			if ( (pTSBRecInfo->shadowedById == recordingId) && (pRecInfo->shadowingId == tsbId) )
+			if ( (pTSBRecInfo->shadowedById[0] == recordingId) && (pRecInfo->shadowingId == tsbId) )
 			{
 				response["result"] = "SUCCESS";
 				response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";
@@ -5089,7 +5121,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                         }
                 }
 
-		if ( (pTSBRecInfo->shadowedById == recordingId) && (pRecInfo->shadowingId == tsbId) )
+		if ( (pTSBRecInfo->shadowedById[0] == recordingId) && (pRecInfo->shadowingId == tsbId) )
                 {
                 	response["result"] = "SUCCESS";
                         response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";

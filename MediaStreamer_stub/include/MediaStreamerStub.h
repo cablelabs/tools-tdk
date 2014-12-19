@@ -22,6 +22,7 @@
 #include <string.h>
 #include <ifaddrs.h>
 #include <arpa/inet.h>
+#include <curl/curl.h>
 
 #ifdef RDK_BR_2DOT0
 #include "mediaplayersink.h"

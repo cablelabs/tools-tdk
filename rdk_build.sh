@@ -109,6 +109,7 @@ if [ "x"$RDK_PLATFORM_SOC == "xintel" ]; then
         COMPILER=i686-cm-linux-
 	export CROSS_TOOLCHAIN=$TOOLCHAIN_DIR
 	export CROSS_COMPILE=$CROSS_TOOLCHAIN/$COMPILER
+	export JSONRPC_LIB=jsonrpc
 elif [ "x"$RDK_PLATFORM_SOC = "xbroadcom" ]; then
 	export WORK_DIR=$RDK_PROJECT_ROOT_PATH/work${RDK_PLATFORM_DEVICE^^}
 	source ${RDK_PROJECT_ROOT_PATH}/build_scripts/setBCMenv.sh
@@ -118,7 +119,7 @@ elif [ "x"$RDK_PLATFORM_SOC = "xbroadcom" ]; then
 	COMPILER=mipsel-linux-
 	export JSONRPC_PATH=$RDK_PROJECT_ROOT_PATH/opensource/jsonrpc/
 	export JSONCPP_PATH=$RDK_PROJECT_ROOT_PATH/opensource/jsoncpp/
-	export CROSS_TOOLCHAIN=$TOOLCHAIN_DIR
+        export CROSS_TOOLCHAIN=$TOOLCHAIN_DIR
 	export CROSS_COMPILE=$COMPILER
 	export ROOTFS_INCLUDE=$PLATFORM_SDK/include/
 	if [ "x"$BUILD_CONFIG == "xhybrid" ]; then
@@ -129,6 +130,18 @@ elif [ "x"$RDK_PLATFORM_SOC = "xbroadcom" ]; then
         else
                 export CURL_PATH=$PLATFORM_SDK/include/curl
         fi
+	export JSONRPC_LIB=jsonrpc
+elif [ "x"$RDK_PLATFORM_SOC = "xstm" ]; then
+        export RDK_VERSION=RDK2DOT0
+        COMPILER=arm-oe-linux-gnueabi-
+        export JSONRPC_PATH=$RDK_PROJECT_ROOT_PATH/opensource/src/jsonrpc/
+        export JSONCPP_PATH=$RDK_PROJECT_ROOT_PATH/opensource/src/jsoncpp/
+	export CROSS_TOOLCHAIN=$RDK_PROJECT_ROOT_PATH/sdk/toolchain/staging_dir/sysroots/x86_64-oesdk-linux/usr/bin/arm-oe-linux-gnueabi/
+        export CROSS_COMPILE=$CROSS_TOOLCHAIN/$COMPILER
+        export PLATFORM_SDK=$RDK_PROJECT_ROOT_PATH/sdk/toolchain/staging_dir/sysroots/cortexa9t2hf-vfp-neon-oe-linux-gnueabi/usr/
+        export CURL_PATH=$PLATFORM_SDK/include/curl
+	export JSONRPC_LIB=jsonrpc-cpp
+
 fi
 #export PLATFORM_SOC=$TDK_PLATFORM
 #export TOOLCHAIN_DIR=$RDK_BUILD_PATH/sdk/toolchain/staging_dir

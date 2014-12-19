@@ -24,7 +24,8 @@ else
 COPTS     += -DRDKVERSION="\"$(RDK_VERSION)\""
 endif
 
-COPTS += -DAGENT_LOG_ENABLE
+#COPTS += -DAGENT_LOG_ENABLE
+COPTS += 
 
 #
 # Source files
@@ -39,7 +40,7 @@ INCLUDES  += -I ./include \
              -I$(CURL_PATH)
 
 LDOPTS	  += -ljsoncpp \
-	     -ljsonrpc \
+	     -l$(JSONRPC_LIB)\
 	     -ldl \
 	     -lpthread 
 

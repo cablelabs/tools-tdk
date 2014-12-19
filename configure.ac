@@ -48,6 +48,9 @@ COPTS="-DDEBUG_LEVEL_TRACE"
 AM_CXXFLAGS="$AM_CXXFLAGS -DDEBUG_LEVEL_TRACE"
 CONFIG_PREFIX="/etc/"
 DVRMGR_FLAGS=" "
+RDK_VERSION="RDK2DOT0"
+TDKINTEGRATION_FLAGS=" "
+TDKINTEGRATION_HYBRID_LIBS=" "
 QAM_LIBS=" "
 SF_LIBS=" "
 HEADLESS=" "
@@ -59,12 +62,14 @@ AC_ARG_ENABLE([hybrid],
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub" ;;
+                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub XUPNP_stub DTCP_stub"
+                  TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc"
+                  TDKINTEGRATION_FLAGS="-DENABLE_HYBRID_CODECOMPILE -DHYBRID" ;;
            no) HYBRID=false ;;
-          *) AC_MSG_ERROR([bad value ${enableval} for --enable-headless ]) ;;
+          *) AC_MSG_ERROR([bad value ${enableval} for --enable-hybrid ]) ;;
            esac
            ],
-         [echo "headless build is enable"])
+         [echo "hybrid build is enable"])
 AM_CONDITIONAL([HYBRID], [test x$HYBRID = xtrue])
 
 AC_ARG_ENABLE([client],
@@ -72,12 +77,13 @@ AC_ARG_ENABLE([client],
         [
           case "${enableval}" in
              yes) CLIENT=true
-                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub" ;;
+                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub"
+                  TDKINTEGRATION_FLAGS="-DIPCLIENT -DSTAND_ALONE_CLIENT" ;;
            no) CLIENT=false ;;
-          *) AC_MSG_ERROR([bad value ${enableval} for --enable-headless ]) ;;
+          *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
            esac
            ],
-         [echo "headless build is enable"])
+         [echo "client build is enable"])
 AM_CONDITIONAL([CLIENT], [test x$CLIENT = xtrue])
 
 AC_ARG_ENABLE([trace],
@@ -127,6 +133,9 @@ PKG_CHECK_MODULES([JANSON],[jansson >= 2.4])
 AC_SUBST(COPTS)
 AC_SUBST(DVRMGR_FLAGS)
 AC_SUBST(CONFIG_PREFIX)
+AC_SUBST(RDK_VERSION)
+AC_SUBST(TDKINTEGRATION_FLAGS)
+AC_SUBST(TDKINTEGRATION_HYBRID_LIBS)
 AC_SUBST(QAM_LIBS)
 AC_SUBST(SF_LIBS)
 AC_SUBST(SUBDIR_HYBRID)
@@ -150,5 +159,7 @@ AC_CONFIG_FILES([Makefile
          TR069_stub/Makefile
          TRM_stub/Makefile
          rmfApp_stub/Makefile
+         XUPNP_stub/Makefile
+         DTCP_stub/Makefile
          tdkRmfApp/Makefile])
 AC_OUTPUT

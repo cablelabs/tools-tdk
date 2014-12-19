@@ -11,10 +11,9 @@
  */
 
 #include "TRMAgent.h"
+#include "TunerReservationHelper.h"
 
-static bool agentInited = false;
-
-TunerReservationHelper *pTrh = NULL;
+static TunerReservationHelper *pTrh = NULL;
 
 const char *deviceNames[TOTAL_DEVICE_NUMBER+1] = {
     "Xi3 Family Room",
@@ -86,12 +85,6 @@ bool TRMAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
 string TRMAgent::testmodulepre_requisites()
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRM testmodule pre_requisites --> Entry\n");
-    if (false == agentInited) {
-        g_thread_init(NULL);
-	rdk_logger_init(DEBUG_CONF_FILE);
-        rmf_osal_init( NULL, NULL );
-        agentInited = true;
-    }
 
     pTrh = new TunerReservationHelper();
     if (NULL == pTrh)

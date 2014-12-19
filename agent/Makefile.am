@@ -1,8 +1,6 @@
 ## Copyright (c) 2013 Comcast. All rights reserved.
 
-SUBDIRS =
-
-AM_CXXFLAGS = -DDEBUG_LEVEL_TRACE -DAGENT_LOG_ENABLE $(GST_CFLAGS) $(GST_LIBS)  \
+AM_CXXFLAGS = -DDEBUG_LEVEL_TRACE -DAGENT_LOG_ENABLE -DRDKVERSION="\"${RDK_VERSION}\"" $(GST_CFLAGS) $(GST_LIBS)  \
               -I./include -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)
 
 bin_PROGRAMS = agent

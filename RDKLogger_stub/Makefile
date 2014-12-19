@@ -48,7 +48,7 @@ COPTS     += -DDEBUG_LEVEL_ERROR
 endif
 
 
-INCLUDES  :=    -I./include \
+INCLUDES  +=    -I./include \
                 -I../agent/include \
                 -I$(JSONRPC_PATH)/include \
                 -I$(JSONCPP_PATH)/include \
@@ -56,7 +56,7 @@ INCLUDES  :=    -I./include \
 		-I$(CURL_PATH)/../ \
 		-I$(RDK_BUILD_DIR)/rdklogger/include
 		
-LDOPTS    := 	-L $(IMAGE_PATH)/usr/lib -lrdkloggers
+LDOPTS    +=   -L $(IMAGE_PATH)/usr/lib -L $(IMAGE_PATH)/usr/local/lib -lrdkloggers
 
 CC        := 	g++
 TARGETLIB := 	librdkloggerstub.so
@@ -83,7 +83,7 @@ $(OBJS): $(SOURCES)
 # Build the library from intermediate files
 #
 $(LIB): $(OBJS)
-	$(CROSSCOMPILE)$(CC) $(OBJS) -fPIC $(LIBOPTS) -shared -o $(TARGETLIB) $(LDOPTS) 
+	$(CROSSCOMPILE)$(CC) $(OBJS) -fPIC $(LIBOPTS) $(LDOPTS) -shared -o $(TARGETLIB)
 	rm -rf $(OBJDIR)
 	mv $(TARGETLIB) $(LIBDIR)
 #

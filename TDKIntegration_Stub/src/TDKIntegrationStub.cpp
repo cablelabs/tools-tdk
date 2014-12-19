@@ -22,6 +22,12 @@ static HNSource *pSource = NULL;
 #endif
 #define VIDEO_STATUS "/CheckVideoStatus.sh"
 #define AUDIO_STATUS "/CheckAudioStatus.sh"
+ 
+#ifdef XI4
+#define CLIENT_MOCA_INTERFACE "eth0"
+#else
+#define CLIENT_MOCA_INTERFACE "eth1"
+#endif
 
 /********************************************************************************************************************
 Purpose:               To get the current status of the AV running
@@ -208,6 +214,7 @@ std::string GetHostIP (const char* szInterface)
         void* pvTmpAddrPtr = NULL;
         char szAddressBuffer [INET_ADDRSTRLEN];
         getifaddrs (&pIfAddrStruct);
+
 
         for (pIfAddrIterator = pIfAddrStruct; pIfAddrIterator != NULL; pIfAddrIterator = pIfAddrIterator->ifa_next)
         {
@@ -417,9 +424,9 @@ bool TDKIntegrationStub::E2EStubGetRecURLS(IN const Json::Value& request, OUT Js
 	FILE *ErrorCheck;
 	int sysRetValCurl, sysRetValScript;
 	string recordedurl = request["RecordURL"].asString();
-	char cmd[128] = "arp -n -i eth1|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'"; 
-        FILE* pipe = popen(cmd, "r");
-
+	//char cmd[128] = "arp -n -i CLIENT_MOCA_INTERFACE|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'"; 
+	string cmd = "arp -n -i "+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'"; 
+        FILE* pipe = popen(cmd.c_str(), "r");
         if (!pipe)
         {
                 response["result"] = "FAILURE";
@@ -612,9 +619,9 @@ bool TDKIntegrationStub::E2ELinearTVstubGetURL(IN const Json::Value& request, OU
 
 	DEBUG_PRINT(DEBUG_LOG,"\nValidurl form TestFramework : %s\n",request["Validurl"].asCString());
 
-        char cmd[128] = "arp -n -i eth1|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
-        FILE* pipe = popen(cmd, "r");
-
+        //char cmd[128] = "arp -n -i CLIENT_MOCA_INTERFACE|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+        string cmd = "arp -n -i"+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+        FILE* pipe = popen(cmd.c_str(), "r");
         if (!pipe)
         {
                 response["result"] = "FAILURE";
@@ -877,10 +884,14 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 	eTime = tuneTime.getTime(&endTime);
 
 	DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Passed Open() with streamingIP URL\n");
-#else
-	char cmd[128] = "arp -n -i eth1|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
-	FILE* pipe = popen(cmd, "r");
 
+#else
+
+    #ifndef STAND_ALONE_CLIENT
+
+	//char cmd[128] = "arp -n -i CLIENT_MOCA_INTERFACE|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+	string  cmd= "arp -n -i "+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+	FILE* pipe = popen(cmd.c_str(), "r");
 	if (!pipe)
 	{
 		response["result"] = "FAILURE";
@@ -926,6 +937,12 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 	retHNSrcValue = pSource->open(urlIn.c_str(),mime);
 	eTime = tuneTime.getTime(&endTime);
 	DEBUG_PRINT(DEBUG_TRACE, "XI3:Passed Open() with streamingIP URL\n");
+
+    #else
+        string urlIn = url;
+        DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed to CURL: %s\n",urlIn.c_str());
+    #endif
+
 #endif
 	if(RMF_RESULT_SUCCESS != retHNSrcValue)
 	{
@@ -3230,9 +3247,11 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 
         DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to CURL(): %s\n",urlIn.c_str());
 #else
-        char cmd[128] = "arp -n -i eth1|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
-        FILE* pipe = popen(cmd, "r");
 
+   #ifndef STAND_ALONE_CLIENT
+
+        string cmd = "arp -n -i "+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+        FILE* pipe = popen(cmd.c_str(), "r");
         if (!pipe)
         {
                 response["result"] = "FAILURE";
@@ -3273,6 +3292,12 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
         urlIn = urlIn.replace(0,pos,http);
 
         DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed to CURL: %s\n",urlIn.c_str());
+
+    #else
+        string urlIn = url;
+        DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed to CURL: %s\n",urlIn.c_str());
+    #endif
+
 #endif
 	curl = curl_easy_init();
 	if(curl)

@@ -41,8 +41,8 @@ LDFLAGS = -L$(TDKENV_RDK_ROOTFS_USRPATH)/lib -L$(TDKENV_TDK_ROOT)/stub/$(PLATFOR
 
 
 #Intermediate object file and source file to generate shared library
-PLATFORM_SRC = $(TDK_ROOT)/twc_tdkcommon/src/platform.c
-PLATFORM_OBJDIR	  := $(TDK_ROOT)/twc_tdkcommon/obj
+NETWORK_SRC =common/networkInfo.c
+NETWORK_OBJDIR          :=common/obj
 SOURCES   := common/gstplayback.c
 OBJDIR	  := ./obj
 COPTS     := -c
@@ -79,7 +79,7 @@ LIB        = $(LIBDIR)/$(LIBGSTREAMER)
 # Intermediate files
 #
 OBJS       =$(OBJDIR)/*.o
-PLATFORM_OBJS       =$(PLATFORM_OBJDIR)/*.o
+NETWORK_OBJS       =$(NETWORK_OBJDIR)/*.o
 
 #
 # Compile source files into intermediate files
@@ -91,10 +91,10 @@ $(OBJS): $(SOURCES)
 	$(CC) -Wall $(INCLUDES) -fPIC $(COPTS) $^
 	mv *.o $(OBJDIR)
 
-$(PLATFORM_OBJS): $(PLATFORM_SRC) 
-	mkdir -p $(PLATFORM_OBJDIR)
-	$(CC) -Wall $(INCLUDES) -fPIC $(COPTS) $(PLATFORM_SRC)
-	mv *.o $(PLATFORM_OBJDIR)
+$(NETWORK_OBJS): $(NETWORK_SRC) 
+	mkdir -p $(NETWORK_OBJDIR)
+	$(CC) -Wall $(INCLUDES) -fPIC $(COPTS) $(NETWORK_SRC)
+	mv *.o $(NETWORK_OBJDIR)
 
 #
 # Build the library from intermediate files
@@ -109,9 +109,9 @@ commonlib: $(OBJS)
 all: commonlib tests install
 
 # Compile tests 
-tests: $(PLATFORM_OBJS) $(patsubst %.c, %, $(HOSTED_TEST_SRCS)) 
+tests: $(NETWORK_OBJS) $(patsubst %.c, %, $(HOSTED_TEST_SRCS)) 
 %: %.c Makefile
-	-$(CC) $(INCLUDES) $(PLATFORM_OBJS) -DSERVER_PATH='"${PUBLISHER_IP}"' $(LDOPTS) $(LDFLAGS) $< -o $@ -lm  
+	-$(CC) $(INCLUDES) $(NETWORK_OBJS) -DSERVER_PATH='"${PUBLISHER_IP}"' $(LDOPTS) $(LDFLAGS) $< -o $@ -lm  
 
 install:
 	$(shell find . -type f ! -name "*.*" -perm -og+rx -exec mv -f {} $(TARGETDIR)/opensourcecomptest/gst-plugin-custom-test/. \;)
@@ -129,7 +129,7 @@ build: all
 clean:
 	@echo "Cleaning"
 	@rm -rf $(OBJDIR)        
-	@rm -rf $(PLATFORM_OBJDIR)      
+	@rm -rf $(NETWORK_OBJDIR)      
 	@rm -rf $(LIBDIR)/$(LIBGSTREAMER)
 	@rm -rf *.so            
 	@rm -rf *~

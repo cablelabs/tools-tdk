@@ -41,8 +41,9 @@ INCLUDES  +=    -I./include \
 	        -I$(JSONCPP_PATH)/include \
              	-I$(CURL_PATH)
 
+LDOPTS += -L $(IMAGE_PATH)/usr/lib -L $(IMAGE_PATH)/usr/local/lib
 
-LIBOPTS   := -shared
+LIBOPTS   += -shared
 CC	  := g++
 TARGETLIB	:= libgstpluginsrdkstub.so	
 #
@@ -70,7 +71,7 @@ $(OBJS): $(SOURCES)
 #
 $(LIB): $(OBJS)
 	mkdir -p $(LIBDIR)
-	$(CROSSCOMPILE)$(CC) $(OBJS) -fPIC $(LIBOPTS) -o $(TARGETLIB)
+	$(CROSSCOMPILE)$(CC) $(OBJS) -fPIC $(LIBOPTS) $(LDOPTS) -o $(TARGETLIB)
 	rm -rf $(OBJDIR)
 	mv $(TARGETLIB) $(LIBDIR)
 #

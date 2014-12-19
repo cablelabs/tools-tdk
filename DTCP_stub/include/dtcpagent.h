@@ -19,7 +19,7 @@
 #include "rdktestagentintf.h"
 #include "dtcpmgr.h"
 #include <fstream>
-
+#include <cstdlib>
 #define IN
 #define OUT
 
@@ -44,7 +44,7 @@ class DTCPAgent : public RDKTestStubInterface
                 bool testmodulepost_requisites();
 
                 //DTCPAgent Wrapper functions
-		bool DTCPAgent_Init(IN const Json::Value& req, OUT Json::Value& response);
+		bool DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Value& response);
 };
         extern "C" DTCPAgent* CreateObject();
 

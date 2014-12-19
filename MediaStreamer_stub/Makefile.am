@@ -2,7 +2,7 @@
 
 ACLOCAL_AMFLAGS = -Im4 --install
 
-AM_CPPFLAGS = ${COPTS} -DRMF_OSAL_LITTLE_ENDIAN -g -Wall -Wno-format -Wunused -DUSE_CC_GETTIMEOFDAY -DRMF_OSAL_FEATURE_IPV6 -DXONE_STB -DUSE_HW_DEMUX -DUSE_QAMSRC -DUSE_TRANSCODEFILTER -DUSE_FRONTPANEL -DUSE_DTCP -DUSE_HNSINK -DUSE_HNSRC -DUSE_DVR -DUSE_VODSRC -DUSE_MEDIAPLAYERSINK -DSRC_INIT_IN_CONSTRUCTOR -DRMF_STREAMER -DENABLE_AUTODISCOVERY_FOR_VOD -DQAMSRC_FACTORY -DQAMSRC_PMTBUFFER_PROPERTY -DRECORDER_SUPPORT -DTEST_WITH_PODMGR -DIPPV_CLIENT_ENABLED -DUSE_POD_IPC -DOOBSI_SUPPORT -DDEBUG_CONF_FILE="\"debug.ini\"" -DENV_CONF_FILE="\"rmfconfig.ini\""
+AM_CPPFLAGS = ${COPTS} -DRMF_OSAL_LITTLE_ENDIAN -g -Wall -Wno-format -Wunused -DUSE_CC_GETTIMEOFDAY -DRMF_OSAL_FEATURE_IPV6 -DXONE_STB -DUSE_HW_DEMUX -DUSE_QAMSRC -DUSE_TRANSCODEFILTER -DUSE_FRONTPANEL -DUSE_DTCP -DUSE_HNSINK -DUSE_HNSRC -DUSE_DVR -DUSE_VODSRC -DUSE_MEDIAPLAYERSINK -DSRC_INIT_IN_CONSTRUCTOR -DRMF_STREAMER -DENABLE_AUTODISCOVERY_FOR_VOD -DQAMSRC_FACTORY -DQAMSRC_PMTBUFFER_PROPERTY -DRECORDER_SUPPORT -DTEST_WITH_PODMGR -DIPPV_CLIENT_ENABLED -DUSE_POD_IPC -DOOBSI_SUPPORT -DDEBUG_CONF_FILE="\"debug.ini\"" -DENV_CONF_FILE="\"rmfconfig.ini\"" -DRDK_BR_2DOT0
 
 INCLUDES = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)
 
@@ -38,7 +38,7 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/mediaframework/core/ \
 
 lib_LTLIBRARIES = libmediastreamerstub.la
 libmediastreamerstub_la_SOURCES = src/MediaStreamerStub.cpp
-libmediastreamerstub_la_LIBADD = -ldvrmgr -ltinyxml -luuid -lcrypto -lTasseograph -lssl -lreadline -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lsectionfilter -linbsimanager -linbsectionfilter -lqamsrc -lhistory -lgstreamer-0.10 -lgio-2.0 -lglib-2.0 -llog4c -lgobject-2.0 -linit  -lncurses -lhnsource -lrdkloggers -ltrm
+libmediastreamerstub_la_LIBADD = -ldvrmgr -ltinyxml -luuid -lcrypto -lTasseograph -lssl -lreadline -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lsectionfilter -linbsimanager -linbsectionfilter -lqamsrc -lhistory -lgstreamer-0.10 -lgio-2.0 -lglib-2.0 -llog4c -lgobject-2.0 -linit  -lncurses -lhnsource -lrdkloggers -ltrm -lcurl -lmediaplayersink
 
 libmediastreamerstub_la_includedir = ${includedir}
 libmediastreamerstub_la_include_HEADERS = ./include/MediaStreamerStub.h

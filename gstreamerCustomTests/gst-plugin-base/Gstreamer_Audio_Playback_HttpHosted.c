@@ -13,7 +13,7 @@ Testcase for media playback using different audio streams
 #include <unistd.h>
 #include <sys/wait.h>
 #include <stdio.h>
-#include "platform.h"
+#include "common/networkInfo.h"
 #include "common/gstplayback.h"
 
 #define SZ_TCNAME 50

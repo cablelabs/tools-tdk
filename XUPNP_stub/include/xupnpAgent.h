@@ -18,7 +18,7 @@
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 #include <fstream>
-
+#include <cstdlib>
 #define IN
 #define OUT
 

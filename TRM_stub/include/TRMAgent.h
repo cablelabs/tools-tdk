@@ -14,13 +14,9 @@
 #define __TRM_STUB_H__
 
 #include <json/json.h>
-#include <string.h>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 #include "rdk_utils.h"
-#include <fstream>
-#include <stdlib.h>
-#include "TunerReservationHelper.h"
 
 #define IN
 #define OUT

@@ -11,7 +11,6 @@
 */
 
 #include "TunerReservationHelper.h"
-#include <unistd.h>
 
 using namespace std;
 
@@ -330,55 +329,57 @@ bool waitForTRMResponse()
     return responseSuccess;
 }
 
-bool TunerReservationHelperImpl::inited = false;
-static list<TunerReservationHelperImpl*> gTrhList;
-std::map<int,TRM::TunerReservation> TunerReservationHelperImpl::tunerReservationDb;
+bool TunerReservationHelper::inited = false;
+static TunerReservationHelper* trh = NULL;
+std::map<int,TRM::TunerReservation> TunerReservationHelper::tunerReservationDb;
 static int j = 0;
 
-void TunerReservationHelperImpl::init()
+void TunerReservationHelper::init()
 {
-    rmf_osal_ThreadId threadId;
-    rmf_Error ret;
-
     if ( false == inited )
     {
+        if( ! g_thread_supported() )
+            g_thread_init( NULL );
+        rdk_logger_init(DEBUG_CONF_FILE);
+        rmf_osal_init( NULL, NULL );
         inited = true;
-        ret = rmf_osal_mutexNew( &g_mutex);
-        if (RMF_SUCCESS != ret )
-        {
-            RDK_LOG( RDK_LOG_ERROR, "LOG.RDK.TEST", "%s() - rmf_osal_mutexNew failed. Error = %d\n", __FUNCTION__, ret);
-            return;
-        }
+        rmf_Error ret = rmf_osal_mutexNew( &g_mutex);
 
-        rmf_osal_threadCreate( get_response, NULL,
+        if (RMF_SUCCESS != ret ) {
+            RDK_LOG( RDK_LOG_ERROR, "LOG.RDK.TEST", "%s() - rmf_osal_mutexNew failed. Error = %d\n", __FUNCTION__, ret);
+        } 
+        else {
+            rmf_osal_ThreadId threadId;
+            rmf_osal_threadCreate( get_response, NULL,
                                RMF_OSAL_THREAD_PRIOR_DFLT, RMF_OSAL_THREAD_STACK_SIZE,
                                &threadId,"TunerRes" );
 
-        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s():%d Created thread to get response from TRM\n" , __FUNCTION__, __LINE__);
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s():%d Created thread to get response from TRM\n" , __FUNCTION__, __LINE__);
+        }
     }
 }
 
-TunerReservationHelperImpl::TunerReservationHelperImpl()
+TunerReservationHelper::TunerReservationHelper()
 {
     init();
 
     tunerStopCond = g_cond_new();
     tunerStopMutex = g_mutex_new ();
     rmf_osal_mutexAcquire( g_mutex);
-    gTrhList.push_back(this);
+    trh = this;
     rmf_osal_mutexRelease( g_mutex);
 }
 
-TunerReservationHelperImpl::~TunerReservationHelperImpl()
+TunerReservationHelper::~TunerReservationHelper()
 {
     rmf_osal_mutexAcquire( g_mutex);
-    gTrhList.remove(this);
+    trh = NULL;
     rmf_osal_mutexRelease( g_mutex);
     g_cond_free(tunerStopCond);
     g_mutex_free( tunerStopMutex);
 }
 
-bool TunerReservationHelperImpl::waitForResrvResponse()
+bool TunerReservationHelper::waitForResrvResponse()
 {
     g_mutex_lock ( tunerStopMutex );
     while (false == resrvResponseReceived )
@@ -389,7 +390,7 @@ bool TunerReservationHelperImpl::waitForResrvResponse()
     return reservationSuccess;
 }
 
-void TunerReservationHelperImpl::notifyResrvResponse(bool success)
+void TunerReservationHelper::notifyResrvResponse(bool success)
 {
     g_mutex_lock ( tunerStopMutex );
     resrvResponseReceived = true;
@@ -398,7 +399,7 @@ void TunerReservationHelperImpl::notifyResrvResponse(bool success)
     g_mutex_unlock (tunerStopMutex);
 }
 
-bool TunerReservationHelperImpl::getAllTunerStates(void)
+bool TunerReservationHelper::getAllTunerStates(void)
 {
     bool ret = false;
     std::vector<uint8_t> out;
@@ -428,7 +429,7 @@ bool TunerReservationHelperImpl::getAllTunerStates(void)
     return ret;
 }
 
-bool TunerReservationHelperImpl::getAllTunerIds(void)
+bool TunerReservationHelper::getAllTunerIds(void)
 {
     bool ret = false;
     std::vector<uint8_t> out;
@@ -458,7 +459,7 @@ bool TunerReservationHelperImpl::getAllTunerIds(void)
     return ret;
 }
 
-bool TunerReservationHelperImpl::getAllReservations(string filterDevice)
+bool TunerReservationHelper::getAllReservations(string filterDevice)
 {
     bool ret = false;
     std::vector<uint8_t> out;
@@ -488,7 +489,7 @@ bool TunerReservationHelperImpl::getAllReservations(string filterDevice)
     return ret;
 }
 
-bool TunerReservationHelperImpl::getVersion(void)
+bool TunerReservationHelper::getVersion(void)
 {
     bool ret = false;
     std::vector<uint8_t> out;
@@ -518,7 +519,7 @@ bool TunerReservationHelperImpl::getVersion(void)
     return ret;
 }
 
-bool TunerReservationHelperImpl::validateTunerReservation(string device, string locator, int activityType)
+bool TunerReservationHelper::validateTunerReservation(string device, string locator, int activityType)
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     bool ret = false;
@@ -567,7 +568,7 @@ bool TunerReservationHelperImpl::validateTunerReservation(string device, string 
 
 //startTime: start time of the reservation in milliseconds from the epoch.
 //duration: reservation period measured from the start in milliseconds.
-bool TunerReservationHelperImpl::reserveTunerForRecord( const string device, const string recordingId, const string locator,
+bool TunerReservationHelper::reserveTunerForRecord( const string device, const string recordingId, const string locator,
         uint64_t startTime, uint64_t duration, bool hot)
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
@@ -610,7 +611,7 @@ bool TunerReservationHelperImpl::reserveTunerForRecord( const string device, con
 
 //startTime: start time of the reservation in milliseconds from the epoch.
 //duration: reservation period measured from the start in milliseconds.
-bool TunerReservationHelperImpl::reserveTunerForLive( const string device, const string locator,
+bool TunerReservationHelper::reserveTunerForLive( const string device, const string locator,
         uint64_t startTime, uint64_t duration)
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
@@ -644,7 +645,7 @@ bool TunerReservationHelperImpl::reserveTunerForLive( const string device, const
     return ret;
 }
 
-bool TunerReservationHelperImpl::releaseTunerReservation(string device, string locator, int activityType)
+bool TunerReservationHelper::releaseTunerReservation(string device, string locator, int activityType)
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     bool ret = false;
@@ -692,7 +693,7 @@ bool TunerReservationHelperImpl::releaseTunerReservation(string device, string l
     return ret;
 }
 
-bool TunerReservationHelperImpl::cancelledRecording(string reservationToken)
+bool TunerReservationHelper::cancelledRecording(string reservationToken)
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     bool ret = false;
@@ -718,7 +719,7 @@ bool TunerReservationHelperImpl::cancelledRecording(string reservationToken)
     return ret;
 }
 
-bool TunerReservationHelperImpl::cancelRecording(string locator)
+bool TunerReservationHelper::cancelRecording(string locator)
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
 
@@ -737,14 +738,6 @@ bool TunerReservationHelperImpl::cancelRecording(string locator)
             reservationToken = (*it).second.getReservationToken();
             RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Cancel Recording Token: %s\n" ,reservationToken.c_str());
         }
-    }
-
-    //Workaround for RDKTT-190
-    if (reservationToken.empty())
-    {
-        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s() - Matching reservation token for given locator could not be found\n", __FUNCTION__);
-        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
-        return ret;
     }
 
     TRM::CancelRecording msg(guid, reservationToken);
@@ -771,7 +764,7 @@ bool TunerReservationHelperImpl::cancelRecording(string locator)
     return ret;
 }
 
-bool TunerReservationHelperImpl::cancelledLive(string reservationToken, string locator)
+bool TunerReservationHelper::cancelledLive(string reservationToken, string locator)
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     bool ret = false;
@@ -797,7 +790,7 @@ bool TunerReservationHelperImpl::cancelledLive(string reservationToken, string l
     return ret;
 }
 
-bool TunerReservationHelperImpl::cancelLive(string locator)
+bool TunerReservationHelper::cancelLive(string locator)
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
 
@@ -816,14 +809,6 @@ bool TunerReservationHelperImpl::cancelLive(string locator)
             reservationToken = (*it).second.getReservationToken();
             RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Cancel Live Token: %s\n" ,reservationToken.c_str());
         }
-    }
-
-    //Workaround for RDKTT-190
-    if (reservationToken.empty())
-    {
-        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s() - Matching reservation token for given locator could not be found\n", __FUNCTION__);
-        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
-        return ret;
     }
 
     TRM::CancelLive msg(guid, locator, reservationToken);
@@ -850,28 +835,18 @@ bool TunerReservationHelperImpl::cancelLive(string locator)
     return ret;
 }
 
-const char* TunerReservationHelperImpl::getId()
-{
-    return guid;
-}
-
-const string& TunerReservationHelperImpl::getToken()
-{
-    return token;
-}
-
-void TunerReservationHelperImpl::setToken( const string& token)
+void TunerReservationHelper::setToken( const string& token)
 {
     this->token = token;
 }
 
-void TunerReservationHelperImpl::addToReservationDb(TRM::TunerReservation resv)
+bool TunerReservationHelper::addToReservationDb(TRM::TunerReservation resv)
 {
 	//Workaround for RDKTT-162
 	if (resv.getReservationToken().empty())
 	{
 	    RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s() - Invalid reservation token. Skipping DB update\n",__FUNCTION__);
-	    return;
+	    return false;
 	}
 
         TRM::TunerReservation *copyReservation = new TRM::TunerReservation();
@@ -889,10 +864,12 @@ void TunerReservationHelperImpl::addToReservationDb(TRM::TunerReservation resv)
 				(*it).second.getServiceLocator().c_str(),
 				(*it).second.getReservationToken().c_str());
 	}
+	return true;
 }
 
-void TunerReservationHelperImpl::removeFromReservationDb(const string reservationToken)
+bool TunerReservationHelper::removeFromReservationDb(const string reservationToken)
 {
+        bool bRetValue = false;
         std::map<int, TRM::TunerReservation >::iterator it = tunerReservationDb.begin();
         while(it != tunerReservationDb.end())
         {
@@ -901,6 +878,7 @@ void TunerReservationHelperImpl::removeFromReservationDb(const string reservatio
 		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Releasing token: [%s]\n", __FUNCTION__, reservationToken.c_str());
                 tunerReservationDb.erase(it++);
                 j--;
+                bRetValue = true;
             }
             else
             {
@@ -924,57 +902,39 @@ void TunerReservationHelperImpl::removeFromReservationDb(const string reservatio
 				(*it).second.getReservationToken().c_str());
             }
         }
+        return bRetValue;
 }
 
 RecorderMessageProcessor::RecorderMessageProcessor()
 {
 }
 
-/*
-TRH has only one instance so at anytime gTrhList will have only one member.
-*/
-TunerReservationHelperImpl* RecorderMessageProcessor::getTRH()
-{
-    TunerReservationHelperImpl* trh = NULL;
-    list<TunerReservationHelperImpl*>::iterator i;
-    for(i=gTrhList.begin(); i != gTrhList.end(); ++i)
-    {
-        trh = *i;
-    }
-    return trh;
-}
-
 void RecorderMessageProcessor::operator() (const TRM::ReserveTunerResponse &msg)
 {
     rmf_osal_mutexAcquire( g_mutex);
-    TunerReservationHelperImpl* trh = NULL;
-    trh =  getTRH();
     if ( NULL == trh )
     {
 	RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Matching TRH could not be found\n", __FUNCTION__);
     }
     else
     {
-        bool success;
+        bool success = false;
         TRM::TunerReservation resv = msg.getTunerReservation();
         trh->setToken( resv.getReservationToken());
         TRM::ResponseStatus status  = msg.getStatus();
         if ( status == TRM::ResponseStatus::kOk )
         {
 	    RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s(ReserveTunerResponse) - OK response detected\n", __FUNCTION__);
-            success = true;
-	    TunerReservationHelperImpl::addToReservationDb(resv);
+            success = TunerReservationHelper::addToReservationDb(resv);
         }
         else if ( status == TRM::ResponseStatus::kUserCancellation )
         {
             RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s(ReserveTunerResponse) - NOK. UserCancelled\n", __FUNCTION__);
-            success = false;
         }
         else
         {
             int statusCode = status.getStatusCode();
 	    RDK_LOG( RDK_LOG_WARN , "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Response NOT OK. statusCode = %d\n", __FUNCTION__, statusCode);
-            success = false;
         }
         trh->notifyResrvResponse( success );
     }
@@ -984,8 +944,6 @@ void RecorderMessageProcessor::operator() (const TRM::ReserveTunerResponse &msg)
 void RecorderMessageProcessor::operator() (const TRM::CancelRecording &msg)
 {
     rmf_osal_mutexAcquire( g_mutex);
-    TunerReservationHelperImpl* trh = NULL;
-    trh =  getTRH();
     if ( NULL == trh )
     {
         RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(CancelRecording) - Matching TRH could not be found\n", __FUNCTION__);
@@ -1001,8 +959,6 @@ void RecorderMessageProcessor::operator() (const TRM::CancelRecording &msg)
 void RecorderMessageProcessor::operator() (const TRM::CancelLive &msg)
 {
     rmf_osal_mutexAcquire( g_mutex);
-    TunerReservationHelperImpl* trh = NULL;
-    trh =  getTRH();
     if ( NULL == trh )
     {
         RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(CancelLive) - Matching TRH could not be found\n", __FUNCTION__);
@@ -1020,7 +976,7 @@ void RecorderMessageProcessor::operator() (const TRM::NotifyTunerReservationRele
     rmf_osal_mutexAcquire( g_mutex);
     string reason = msg.getReason();
     //Remove reservations which get released due to expiration
-    TunerReservationHelperImpl::removeFromReservationDb(msg.getReservationToken());
+    TunerReservationHelper::removeFromReservationDb(msg.getReservationToken());
     RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(NotifyTunerReservationRelease) - reason:  %s\n",  __FUNCTION__, reason.c_str());
     rmf_osal_mutexRelease( g_mutex);
 }
@@ -1035,7 +991,7 @@ void RecorderMessageProcessor::operator() (const TRM::ReleaseTunerReservationRes
 
     if ( true == isReleased )
     {
-	TunerReservationHelperImpl::removeFromReservationDb(msg.getReservationToken());
+        responseSuccess = TunerReservationHelper::removeFromReservationDb(msg.getReservationToken());
         RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(ReleaseTunerReservationResponse) - Tuner released\n", __FUNCTION__);
     }
     else
@@ -1076,7 +1032,7 @@ void RecorderMessageProcessor::operator() (const TRM::CancelRecordingResponse &m
 
     if ( true == isCanceled )
     {
-	TunerReservationHelperImpl::removeFromReservationDb(msg.getReservationToken());
+        responseSuccess = TunerReservationHelper::removeFromReservationDb(msg.getReservationToken());
         RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(CancelRecordingResponse) - Recording Canceled\n", __FUNCTION__);
     }
     else
@@ -1097,7 +1053,7 @@ void RecorderMessageProcessor::operator() (const TRM::CancelLiveResponse &msg)
 
     if ( true == isCanceled )
     {
-	TunerReservationHelperImpl::removeFromReservationDb(msg.getReservationToken());
+        responseSuccess = TunerReservationHelper::removeFromReservationDb(msg.getReservationToken());
         RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(CancelLiveResponse) - Live Canceled\n", __FUNCTION__);
     }
     else
@@ -1199,7 +1155,7 @@ void RecorderMessageProcessor::operator() (const TRM::NotifyTunerReservationConf
                                                  (*it).getReservationToken().c_str());
 
             // Update Reservation DB
-            TunerReservationHelperImpl::addToReservationDb(*it);
+            TunerReservationHelper::addToReservationDb(*it);
 
             /*TODO: Select reservation to cancel between conflict
               Workaround: For now cancel the requested reservation causing conflict
@@ -1211,9 +1167,7 @@ void RecorderMessageProcessor::operator() (const TRM::NotifyTunerReservationConf
 
             string cancelLoc = (*it).getServiceLocator();
             int cancelActivity = (*it).getActivity().getActivity();
-
-            TunerReservationHelperImpl* trh = NULL;
-            trh =  getTRH();
+            string cancelDevice = (*it).getDevice();
             if ( NULL == trh )
             {
                 RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Matching TRH could not be found\n", __FUNCTION__);
@@ -1221,7 +1175,7 @@ void RecorderMessageProcessor::operator() (const TRM::NotifyTunerReservationConf
             else if (cancelActivity == TRM::Activity::kLive)
             {
                 RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Cancel live request causing conflict\n", __FUNCTION__);
-                trh->cancelLive(cancelLoc);
+                trh->releaseTunerReservation(cancelDevice, cancelLoc, cancelActivity);
             }
             else if (cancelActivity == TRM::Activity::kRecord)
             {
@@ -1244,73 +1198,4 @@ void RecorderMessageProcessor::operator() (const TRM::NotifyTunerStatesUpdate &m
 void RecorderMessageProcessor::operator() (const TRM::NotifyTunerPretune &msg)
 {
     RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(NotifyTunerStatesUpdate called)\n", __FUNCTION__);
-}
-
-// Implementation of TunerReservationHelper methods
-void TunerReservationHelper::init()
-{
-    TunerReservationHelperImpl::init();
-}
-
-TunerReservationHelper::TunerReservationHelper()
-{
-    impl = new TunerReservationHelperImpl();
-}
-
-TunerReservationHelper::~TunerReservationHelper()
-{
-    delete impl;
-}
-
-bool TunerReservationHelper::getAllTunerStates( )
-{
-    return impl->getAllTunerStates();
-}
-
-bool TunerReservationHelper::getAllTunerIds ()
-{
-    return impl->getAllTunerIds();
-}
-
-bool TunerReservationHelper::getAllReservations(string filterDevice)
-{
-    return impl->getAllReservations(filterDevice);
-}
-
-bool TunerReservationHelper::getVersion()
-{
-    return impl->getVersion();
-}
-
-bool TunerReservationHelper::validateTunerReservation(string device, string locator, int activityType)
-{
-    return impl->validateTunerReservation(device, locator, activityType);
-}
-
-bool TunerReservationHelper::reserveTunerForRecord( string device, string recordingId, string locator,
-        uint64_t startTime, uint64_t duration, bool hot)
-{
-    return impl->reserveTunerForRecord( device, recordingId, locator,
-                                        startTime, duration, hot);
-}
-
-bool TunerReservationHelper::reserveTunerForLive( string device, string locator,
-        uint64_t startTime, uint64_t duration)
-{
-    return impl->reserveTunerForLive( device, locator, startTime, duration );
-}
-
-bool TunerReservationHelper::releaseTunerReservation(string device, string locator, int activityType)
-{
-    return impl->releaseTunerReservation(device, locator, activityType);
-}
-
-bool TunerReservationHelper::cancelRecording(string locator)
-{
-    return impl->cancelRecording(locator);
-}
-
-bool TunerReservationHelper::cancelLive(string locator)
-{
-    return impl->cancelLive(locator);
 }

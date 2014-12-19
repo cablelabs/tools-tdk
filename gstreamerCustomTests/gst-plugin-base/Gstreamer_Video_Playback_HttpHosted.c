@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include "common/gstplayback.h"
-#include "platform.h"
+#include "common/networkInfo.h"
 
 #define SZ_TCNAME 50
 #define SZ_RESOURCE_PATH 200
