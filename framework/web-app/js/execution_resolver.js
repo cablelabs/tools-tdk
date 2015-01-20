@@ -304,7 +304,9 @@ var repeatTask;
 function showWaitSpinner(){	
 	$("#popup").show();
 	$("#executeBtn").hide();
-	$('#resultDiv123').hide();
+	
+	var execId = $('#exId').val();
+	$('#resultDiv'+execId).hide();
 	$('#dynamicResultDiv').show();
 	$('#dynamicResultDiv').html('Starting the script execution...');
 	repeatTask = setInterval("updateLog()",5000);
@@ -336,14 +338,17 @@ function updateLog(){
 	});
 }
 
-function completed(){
-	if(repeatTask){
+function completed(id) {
+	if (repeatTask) {
 		clearInterval(repeatTask);
 	}
 	showDateTime();
-	$('#resultDiv123').show();
-	$('#dynamicResultDiv').hide();
-	
+	var execId = $('#exId').val();
+	if (id == execId) {
+		$('#resultDiv' + execId).show();
+		$('#dynamicResultDiv').hide();
+	}
+
 }
 function changeStyles(){
 	showDateTime();

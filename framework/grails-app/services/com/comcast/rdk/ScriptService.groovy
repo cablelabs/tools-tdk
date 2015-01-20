@@ -95,7 +95,7 @@ class ScriptService {
 			def start2 = System.currentTimeMillis()
 			def sLst = []
 			files.each { file ->
-				String name = ""+file?.name?.replace(".py", "")?.trim()
+				String name = ""+file?.name?.trim()?.replace(".py", "")
 				def sFile
 				ScriptFile.withTransaction {
 				sFile = ScriptFile.findByScriptNameAndModuleName(name,module.getName())

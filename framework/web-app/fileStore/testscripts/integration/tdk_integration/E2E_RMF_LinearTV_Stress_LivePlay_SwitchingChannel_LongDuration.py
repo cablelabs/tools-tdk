@@ -3,7 +3,7 @@
 <xml>
   <id>1575</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LinearTV_Stress_LivePlay_SwitchingChannel_LongDuration</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -60,7 +60,6 @@ result =obj.getLoadModuleResult();
 print "TDKIntegration module loading status : %s" %result;
 
 if "SUCCESS" in result.upper():
-    s
     obj.setLoadModuleStatus("SUCCESS");
     print "TDKIntegration module load successful";
     

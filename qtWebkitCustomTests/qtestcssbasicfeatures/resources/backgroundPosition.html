@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body
+{ 
+background-image:url('http://www.w3schools.com/cssref/smiley.gif');
+background-repeat:no-repeat;
+background-attachment:fixed;
+background-position:center; 
+}
+</style>
+</head>
+
+<body id ="b1">
+<p><b>Note:</b> For this to work in Firefox and Opera, the background-attachment property must be set to "fixed".</p>
+</body>
+<script>
+function backgndPos()
+{
+    var elem = document.getElementById('b1');
+    var style = window.getComputedStyle(elem,null);
+    var pos = style.getPropertyValue("background-position");
+
+    return pos;
+}
+</script>
+</html>
+

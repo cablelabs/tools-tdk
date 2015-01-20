@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#p1 {background-color:hsl(120,100%,50%);}
+#p2 {background-color:hsl(120,100%,75%);}
+#p3 {background-color:hsl(120,100%,25%);}
+</style>
+</head>
+
+<body>
+<p>HSL colors:</p>
+<p id="p1">Green</p>
+<p id="p2">Light green</p>
+<p id="p3">Dark green</p>
+<p id="p4">Pastel green</p>
+<p id="p5">Violet</p>
+<p id="p6">Pastel violet</p>
+</body>
+<script>
+function isTranslated()
+{
+    var el1 = document.getElementById("p1");
+    var st1 = window.getComputedStyle(el1, null);
+    var tr1 = st1.getPropertyValue("background-color")
+
+    var el2 = document.getElementById("p2");
+    var st2 = window.getComputedStyle(el2, null);
+    var tr2 = st2.getPropertyValue("background-color")
+
+    var el3 = document.getElementById("p3");
+    var st3 = window.getComputedStyle(el3, null);
+    var tr3 = st3.getPropertyValue("background-color")
+
+    if(tr1  == "rgb(0, 255, 0)" && tr2 == ("rgb(127, 255, 127)") && tr3 == ("rgb(0, 127, 0)"))
+    {
+        return true
+    }
+    else
+    {
+        return false
+    }
+}
+</script>
+</html>

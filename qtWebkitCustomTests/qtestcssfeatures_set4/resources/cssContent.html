@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+a:after {content: " (" attr(href) ")";}
+</style>
+</head>
+
+<body>
+<p id="myParagraph"><a href="http://www.w3schools.com">W3Schools</a> contains free tutorials and references.</p>
+<p><b>Note:</b> IE8 supports the content property only if a !DOCTYPE is specified.</p>
+</body>
+<script>
+function verifyContent()
+{
+  var flag=false;
+  var textinpara = document.getElementById("myParagraph").innerHTML;
+
+  var n = textinpara.indexOf("http://www.w3schools.com");
+  if(n > 0)
+  {
+    flag = true;
+  }
+  return flag;
+}
+</script>
+</html>

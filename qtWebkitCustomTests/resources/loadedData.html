@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>HTML5 Video</title>
+</head>
+<body>
+
+<h1> Video test</h1>
+<div id="logs">
+log1
+</div>
+<video id="video1" onloadeddata="getLoadedDataEvnt()" preload controls>
+<source src="big_buck_bunny.mp4" type="video/mp4">
+</video>
+
+<script>
+var getLoadedDataEvent=false;
+function doLog(logtxt)
+{
+        var div = document.getElementById('logs')
+        div.innerHTML = div.innerHTML + "*"+logtxt
+}
+
+doLog("log2");
+
+function getLoadedDataEvnt()
+{
+    doLog("loaded the current frame");
+    getLoadedDataEvent = true    
+}
+doLog("logEnd");
+
+function getLoadedEvent()
+{
+    return getLoadedDataEvent
+}
+
+</script> 
+</body> 
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p:first-of-type
+{
+background-color:#ff0000;
+}
+</style>
+</head>
+<body>
+
+<p>The first paragraph.</p>
+
+<p>The second paragraph.</p>
+
+<div>
+<p>The third paragraph.</p>
+
+<p>The third child paragraph.</p>
+</div>
+
+<p>The fourth paragraph.</p>
+
+</body>
+<script>
+function getBackground()
+{
+    var el1 = document.body.children;
+    var pFlag = false;
+    var result = false;
+    for(var index = 0 ; index < el1.length ; index++)
+    {
+        var st1 = window.getComputedStyle(el1[index], null);
+
+        if(el1[index].nodeName == "P" )
+        {
+            var tr1 = st1.getPropertyValue("background-color");
+            pFlag = true;
+            if(tr1 == "rgb(255, 0, 0)" && pFlag == true)
+            {
+                result = true;
+            }
+            pFlag = false;
+            if(tr1 == "rgba(0, 0, 0, 0)" && pFlag == false)
+            {
+                result = true;
+            }
+        }
+
+        var child = el1[index].children;
+
+        for(var index1 = 0 ; index1 < child.length ; index1++)
+        {
+            var st2 = window.getComputedStyle(child[index1], null);
+            if(child[index1].nodeName == "P" )
+            {
+                var tr2 = st2.getPropertyValue("background-color");
+                pFlag = true;
+                if(tr2 == "rgb(255, 0, 0)" && pFlag == true)
+                {
+                    result = true;
+                }
+                pFlag = false;
+                if(tr2 == "rgba(0, 0, 0, 0)" && pFlag == false)
+                {
+                    result = true;
+                }
+            }
+        }
+
+    }
+    return result;
+
+}
+</script>
+
+</html>

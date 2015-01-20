@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/cssLetterSpacing.html</file>
+        <file>resources/cssOverflowX.html</file>
+        <file>resources/cssDirection.html</file>
+        <file>resources/cssBorderStyle.html</file>
+        <file>resources/cssBorderColor.html</file>
+        <file>resources/cssOrder.html</file>
+        <file>resources/cssFirstChild.html</file>
+        <file>resources/cssCaption.html</file>
+        <file>resources/cssListStyle.html</file>
+        <file>resources/cssLineHeight.html</file>
+        <file>resources/cssOutlineColor.html</file>
+        <file>resources/cssOverflowY.html</file>
+        <file>resources/cssResize.html</file>
+        <file>resources/cssScale.html</file>
+        <file>resources/cssTableLayout.html</file>
+    </qresource>
+</RCC>

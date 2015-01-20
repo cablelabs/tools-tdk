@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div
+{
+width:100px;
+height:75px;
+background-color:red;
+border:1px solid black;
+}
+div#div2
+{
+margin:100px;
+-webkit-transform:scaleX(2); /* Safari and Chrome */
+}
+</style>
+</head>
+<body>
+
+<div>Hello. This is a DIV element.</div>
+
+<div id="div2">Hello. This is a DIV element.</div>
+
+
+<script>
+
+function ScaledX()
+{
+
+var el = document.getElementById("div2");
+var st = window.getComputedStyle(el, null);
+var tr = st.getPropertyValue("-webkit-transform")
+
+var values = tr.split('(')[1].split(')')[0].split(',');
+var a = values[0];
+var b = values[1];
+var c = values[2];
+var d = values[3];
+
+var scaleX = Math.sqrt(a*a + b*b);
+return scaleX
+}
+
+</script>
+
+</body>
+</html>

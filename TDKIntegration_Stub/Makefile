@@ -54,7 +54,7 @@ LIBTDKINTEGRATION  := libtdkintegrationstub.so
 # Library built by this makefile
 #
 LIB        = $(LIBDIR)/$(LIBTDKINTEGRATION)
-SOURCES   +=	$(SRC_DIR)*.cpp	
+SOURCES   +=	$(SRC_DIR)*.cpp $(BENCHMARK_SRC)
 
 #
 # Intermediate files

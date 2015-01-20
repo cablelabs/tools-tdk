@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#navlist{position:relative;}
+#navlist li{margin:0;padding:0;list-style:none;position:absolute;top:0;}
+#navlist li, #navlist a{height:44px;display:block;}
+
+#home{left:0px;width:46px;}
+#home{background:url('http://www.w3schools.com/css/img_navsprites.gif') 0 0;}
+
+#prev{left:63px;width:43px;}
+#prev{background:url('http://www.w3schools.com/css/img_navsprites.gif') -47px 0;}
+
+#next{left:129px;width:43px;}
+#next{background:url('http://www.w3schools.com/css/img_navsprites.gif') -91px 0;}
+</style>
+</head>
+
+<body>
+<ul id="navlist">
+  <li id="home" onclick="checkUrl(this)"><a href="http://www.w3schools.com/css/default.asp"></a></li>
+  <li id="prev" onclick="checkUrl(this)"><a href="http://www.w3schools.com/css/css_intro.asp"></a></li>
+  <li id="next" onclick="checkUrl(this)"><a href="http://www.w3schools.com/css/css_syntax.asp"></a></li>
+</ul>
+</body>
+<script>
+
+var selectedLink;
+function checkUrl(obj)
+{
+    var id = obj.id;
+    switch (id)
+    {
+        case "home":
+        {
+            var url = document.getElementsByTagName('a')[0].href;
+            if(url == "http://www.w3schools.com/css/default.asp")
+            {
+                selectedLink = url;
+            }
+
+            break;
+        }
+        case "prev":
+        {
+            var url = document.getElementsByTagName('a')[1].href;
+            if(url == "http://www.w3schools.com/css/css_intro.asp")
+            {
+                selectedLink = url;
+            }
+
+            break;
+        }
+        case "next":
+        {
+            var url = document.getElementsByTagName('a')[2].href;
+            if(url == "http://www.w3schools.com/css/css_syntax.asp")
+            {
+                selectedLink = url;
+            }
+
+            break;
+        }
+        default:
+          break;
+    }
+}
+
+function imgSpriteHome()
+{
+    var elem = document.getElementById('home');
+    elem.onclick();
+    return selectedLink;
+}
+
+function imgSpritePrev()
+{
+    var elem = document.getElementById('prev');
+    elem.onclick();
+    return selectedLink;
+}
+
+function imgSpriteNext()
+{
+    var elem = document.getElementById('next');
+    elem.onclick();
+    return selectedLink;
+}
+</script>
+</html>
+

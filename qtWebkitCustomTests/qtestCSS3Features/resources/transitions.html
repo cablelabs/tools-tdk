@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div
+{
+width:100px;
+height:100px;
+background:red;
+transition-property: width;
+transition-duration: 2s;
+-webkit-transition-property: width; /* Safari */
+-webkit-transition-duration: 2s; /* Safari */
+-webkit-transition-timing-function:linear;/* Safari */
+-webkit-transition-delay: 2s; /* Safari */
+
+}
+</style>
+</head>
+<body>
+
+<p><b>Note:</b> This example does not work in Internet Explorer 9 and earlier versions.</p>
+
+<div id="div1" onmouseover="myOnhover()"></div>
+
+<p>Hover over the div element above, to see the transition effect.</p>
+
+</body>
+<script>
+
+function myOnhover()
+{
+
+    var elem = document.getElementById("div1");
+    elem.style.width = "500px";
+    var style = window.getComputedStyle(elem, null);
+    var back = style.getPropertyValue("width");
+}
+
+function transRunning()
+{
+    var element = document.getElementById('div1');
+    element.onmouseover();
+}
+
+function isTransRunning()
+{
+    var elem = document.getElementById("div1");
+    var style = window.getComputedStyle(elem, null);
+    var width = style.getPropertyValue("width");
+    var result=width.substr(0,3);
+    return result;
+}
+
+function transProp()
+{
+    var elem = document.getElementById("div1");
+    var style = window.getComputedStyle(elem, null);
+    var trans = style.getPropertyValue("-webkit-transition-property");
+
+    return trans;
+}
+function transDur()
+{
+    var elem = document.getElementById("div1");
+    var style = window.getComputedStyle(elem, null);
+    var duration = style.getPropertyValue("-webkit-transition-duration");
+
+    return duration;
+}
+function transTiming()
+{
+    var elem = document.getElementById("div1");
+    var style = window.getComputedStyle(elem, null);
+    var transtime = style.getPropertyValue("-webkit-transition-timing-function");
+
+    return transtime;
+}
+function transDelay()
+{
+    var elem = document.getElementById("div1");
+    var style = window.getComputedStyle(elem, null);
+    var transdelay = style.getPropertyValue("-webkit-transition-delay");
+
+    return transdelay;
+}
+</script>
+
+</html>

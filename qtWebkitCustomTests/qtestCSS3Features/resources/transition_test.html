@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div
+{
+width:100px;
+height:100px;
+background:red;
+transition-property: width;
+transition-duration: 2s;
+-webkit-transition-property: width; /* Safari */
+-webkit-transition-duration: 2s; /* Safari */
+-webkit-transition-timing-function:linear;/* Safari */
+
+}
+div:hover
+{
+width:300px;
+}
+</style>
+</head>
+<body>
+
+<p><b>Note:</b> This example does not work in Internet Explorer 9 and earlier versions.</p>
+
+<div id="div1"
+onmouseover="onhover()"
+onmouseout="hoverOff()" >
+</div>
+
+<p>Hover over the div element above, to see the transition effect.</p>
+
+</body>
+<script>
+
+
+
+function onhover()
+{
+    alert("Hover");
+
+    document.getElementById("div1").style.width = "500px";
+
+    var elem = document.getElementById("div1");
+    var style = window.getComputedStyle(elem, null);
+    var back = style.getPropertyValue("width");
+    timeout();
+    return;
+
+}
+function timeout()
+{
+    var i, count=0;
+    alert("timeout");
+    for(i=0; i<100; i++)
+    {
+        count++;
+    }
+    return;
+
+}
+
+function transRunning()
+{
+    var element = document.getElementById('div1');
+
+    element.onmouseover();
+    var elem = document.getElementById("div1");
+    var style = window.getComputedStyle(elem, null);
+    var width = style.getPropertyValue("width");
+
+    alert("after mouseover"+width);
+
+    return (width);
+}
+</script>
+
+</html>

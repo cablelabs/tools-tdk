@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>HTML5 Video</title>
+</head>
+<body>
+
+<h1> Video test</h1>
+<div id="logs">
+log1
+</div>
+<video id="videoMp4" onplaying="changeTime()" ontimeupdate="getUpdatedTime()" preload controls>
+<source src="big_buck_bunny.mp4" type="video/mp4">
+</video>
+<script type="text/javascript">
+var videoMp4=document.getElementById('videoMp4')
+var timeUpdated=false
+
+function doLog(logtxt)
+{
+        var div = document.getElementById('logs')
+        div.innerHTML = div.innerHTML + "*"+logtxt
+}
+
+function changeTime()
+{
+    doLog("Change current time")
+    videoMp4.currentTime=2; 
+}
+
+function getUpdatedTime()
+{
+        doLog("Video time is udpated")
+        timeUpdated=true;
+}
+
+doLog("log2");
+videoMp4.play()
+doLog("logEnd");
+
+function updatedTime()
+{
+    return timeUpdated
+}
+</script>
+</body>
+</html>
+

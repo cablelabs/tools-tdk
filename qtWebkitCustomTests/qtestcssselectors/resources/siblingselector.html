@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div+p
+{
+background-color:yellow;
+color:red
+}
+</style>
+</head>
+<body>
+
+<h1>Welcome to My WebPage</h1>
+
+<div id= "div1">
+<p>This is first paragraph.</p>
+</div>
+<p id ="p1">My best friend is Mickey.</p>
+<h3>My name is Donald</h2>
+
+
+<p>Style will not be applied on this paragraph</p>
+
+</body>
+<script>
+function textBackground()
+{
+    var el1 = document.getElementById("div1");
+    var sib = el1.nextSibling;
+    var mySibling = el1.nextSibling.nodeName;
+    if(mySibling == "#text")
+    {
+        var el2 = document.getElementById("p1");
+        var st1 = window.getComputedStyle(el2, null);
+        var tr1 = st1.getPropertyValue("background-color");
+        return tr1;
+    }
+}
+</script>
+</html>

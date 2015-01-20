@@ -35,6 +35,7 @@ class StatusUpdaterTask implements Runnable {
 	@Override
 	public void run() {
 		String outData = ""
+		boolean devExist = true
 		
 		try {
 
@@ -60,17 +61,20 @@ class StatusUpdaterTask implements Runnable {
 					]
 					cmd = cmdArray
 				}
+			}else{
+				devExist = false
 			}
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
 		
-		try {
-			outData = new ScriptExecutor().executeScript(cmd,1)
-		} catch (Exception e) {
-			e.printStackTrace()
-		}
-		outData = outData.trim()
+		if(devExist){
+			try {
+				outData = new ScriptExecutor().executeScript(cmd,1)
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+		outData = outData?.trim()
 		if(outData){
 			if(outData.equals(Status.FREE.toString())){
 				String status = Status.FREE.toString()
@@ -126,9 +130,12 @@ class StatusUpdaterTask implements Runnable {
 					}
 				}
 			}
-			callStatusUpdater(device,outData)
+			if(devExist){
+				callStatusUpdater(device,outData)
+			}
 			
 		}
+	}
 	}
 	
 	def callStatusUpdater(device,outData) throws Exception{

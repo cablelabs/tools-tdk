@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@font-face
+{
+font-family: myFirstFont1;
+src: url(sansation_light.woff);
+}
+@font-face
+{
+font-family: myFirstFont2;
+src: url(sansation_bold.woff);
+}
+
+div
+{
+font-family:myFirstFont1;
+}
+</style>
+</head>
+<body>
+
+<div id="div1">
+With CSS3, websites can finally use <b>fonts</b> other than the pre-selected "web-safe" fonts.
+</div>
+
+<p><b>Note:</b> Internet Explorer 8 and earlier, do not support the @font-face rule.</p>
+
+</body>
+<script>
+function fontFam()
+{
+    var elem = document.getElementById("div1");
+    var style = window.getComputedStyle(elem, null);
+    var fontfam = style.getPropertyValue("font-family");
+
+    return fontfam;
+}
+</script>
+</html>

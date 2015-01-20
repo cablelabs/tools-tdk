@@ -1868,5 +1868,14 @@ class ExecutionController {
 		render deleteCount.toString()+" execution entries deleted"
 	}
 	
+	def pushData(String exName,String moduleType){
+		def realPath = getRealPath()
+		ThirdPartyExecutionDetails.withTransaction {
+			ThirdPartyExecutionDetails  thirdPartyExecutionDetails = ThirdPartyExecutionDetails.findByExecName(exName)
+			if(thirdPartyExecutionDetails){
+				scriptexecutionService.executeCustomCallBackUrl(thirdPartyExecutionDetails.execName,thirdPartyExecutionDetails.url,thirdPartyExecutionDetails.callbackUrl,thirdPartyExecutionDetails.filePath,thirdPartyExecutionDetails.executionStartTime,thirdPartyExecutionDetails.imageName,thirdPartyExecutionDetails.boxType,realPath,moduleType)
+			}
+		}
+	}
 
 }

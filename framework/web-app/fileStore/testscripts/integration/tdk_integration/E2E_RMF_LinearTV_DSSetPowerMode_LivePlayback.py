@@ -3,7 +3,7 @@
 <xml>
   <id>1583</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LinearTV_DSSetPowerMode_LivePlayback</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -42,10 +42,11 @@
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 from tdkintegration import getURL_PlayURL;
+from iarmbus import change_powermode
 
 #Test component to be tested
 tdk_obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
-dev_obj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
+iarm_obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 
 
 #Ip address of the selected STB for testing
@@ -53,17 +54,17 @@ ip = <ipaddress>
 port = <port>
 
 tdk_obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_DSSetPowerMode_LivePlayback');
-dev_obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_DSSetPowerMode_LivePlayback');
+iarm_obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_DSSetPowerMode_LivePlayback');
 
 loadmodulestatus = tdk_obj.getLoadModuleResult();
-loadmodulestatus1 = dev_obj.getLoadModuleResult();
+loadmodulestatus1 = iarm_obj.getLoadModuleResult();
 
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus1 ;
 
 if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.upper()):
     #Set the module loading status
-    dev_obj.setLoadModuleStatus("SUCCESS");
+    iarm_obj.setLoadModuleStatus("SUCCESS");
     tdk_obj.setLoadModuleStatus("SUCCESS");        
 
     #calling getURL_PlayURL to get and play the URL
@@ -71,35 +72,41 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
         
     if "SUCCESS" in result:     
                 
-        #calling DS_ManagerInitialize to Intialize API.
-        actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_ManagerInitialize', 'SUCCESS',verifyList ={});
-                
-        powermode=0;
-        print "Power Mode value set to:%s" %powermode;                               
+        actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Init', 'SUCCESS',verifyList ={});
+            
+        #Check for SUCCESS/FAILURE return value of IARMBUS_Init
+        if ("SUCCESS" in actualresult):               
+            print "SUCCESS :Application successfully initialized with IARMBUS library";
+            #calling IARMBUS API "IARM_Bus_Connect"
+            actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Connect', 'SUCCESS',verifyList ={});    
+            
+            expectedresult="SUCCESS";
+            #Check for SUCCESS/FAILURE return value of IARMBUS_Connect
+            if expectedresult in actualresult:                    
+                print "SUCCESS: Querying STB power state -RPC method invoked successfully";
+                result1 = change_powermode(iarm_obj,2);
            
-        #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
-        if "SUCCESS" in actualresult:
-                    
-            #calling DS_SetPowerMode to set the power mode of STB
-            actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_SetPowerMode', 'SUCCESS', verifyList ={'new_power_state': str(powermode)},new_power_state = powermode);
-                   
-            #calling DS_ManagerDeInitialize to DeInitialize API
-            actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_ManagerDeInitialize', 'SUCCESS',verifyList ={});
-                
+                # Calling IARM_Bus_DisConnect API
+                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});                                 
+            
+            else:
+                print "FAILURE: IARM_Bus_Connect failed. %s" %details;
+            #calling IARMBUS API "IARM_Bus_Term"
+            actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={});            
+            
         else:
-            tdkTestObj_dev.setResultStatus("FAILURE");
-            print "FAILURE :DS Manager Intialize";         
+            print "FAILURE: IARM_Bus_Init failed. %s " %details;             
               
     else:                
         print "FAILURE: getURL_PlayURL function"; 
         
     #Unload the deviceSettings module
-    dev_obj.unloadModule("devicesettings");
+    iarm_obj.unloadModule("iarmbus");
     tdk_obj.unloadModule("tdkintegration");
 else:
     print"Load module failed";
     #Set the module loading status
-    dev_obj.setLoadModuleStatus("FAILURE");
+    iarm_obj.setLoadModuleStatus("FAILURE");
     tdk_obj.setLoadModuleStatus("FAILURE");
 
 

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body 
+{
+background-image:url('http://www.w3schools.com/cssref/w3css.gif');
+background-repeat:no-repeat;
+background-attachment:fixed;
+}
+</style>
+</head>
+
+<body id="b1">
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>The background-image is fixed. Try to scroll down the page.</p>
+<p>If you do not see any scrollbars, try to resize the browser window.</p>
+</body>
+<script>
+function backgndAttach()
+{
+    var elem = document.getElementById('b1');
+    var style = window.getComputedStyle(elem,null);
+    var attach = style.getPropertyValue("background-attachment");
+
+    return attach;
+}
+
+</script>
+</html>
+

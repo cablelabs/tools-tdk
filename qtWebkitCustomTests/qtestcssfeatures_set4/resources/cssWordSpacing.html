@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p
+{ 
+word-spacing:30px;
+}
+</style>
+</head>
+<body>
+
+<p id="p1">
+This is some text. This is some text.
+</p>
+
+</body>
+<script>
+function wordSpacing()
+{
+
+    var elem = document.getElementById("p1");
+    var style = window.getComputedStyle(elem, null);
+    var wordSpace = style.getPropertyValue("word-spacing");
+    return wordSpace;
+
+}
+</script>
+</html>
+

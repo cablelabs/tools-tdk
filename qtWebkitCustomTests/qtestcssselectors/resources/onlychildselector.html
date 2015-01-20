@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p:only-child
+{
+background:#ff0000;
+}
+</style>
+</head>
+<body>
+
+<div><p>This is a paragraph.</p></div>
+
+<div><span>This is a span.</span><p>This is a paragraph.</p></div>
+
+<p><b>Note:</b> Internet Explorer 8 and earlier versions do not support the :only-child selector.</p>
+
+</body>
+
+<script>
+function getBackground()
+{
+    var elem = document.getElementsByTagName("P");
+
+    for(var index = 0 ; index < elem.length ; index++)
+    {
+        var nextSibl = elem[index].nextSibling;
+        var prevSibl = elem[index].previousSibling;
+
+        var st1 = window.getComputedStyle(elem[index], null);
+        var tr1 = st1.getPropertyValue("background-color");
+
+        if((nextSibl == null) &&  (prevSibl == null))
+        {
+            if(tr1 == "rgb(255, 0, 0)")
+            {
+                flag = true;
+            }
+        }
+        if(tr1 == "rgba(0, 0, 0, 0)")
+        {
+            flag = true;
+        }
+    }
+    return flag;
+}
+</script>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>HTML5 Video</title>
+</head>
+<body>
+
+<div id="log">
+</div>
+<img src= "images1.jpeg">
+<video id="videoWebm" src="big_buck_bunny.mp4" type="video/mp4" autoplay="true">
+</video>
+</body>
+<script>
+var elem=document.getElementById("videoWebm");
+var resultvideoWebmPlayed = false;
+
+videoWebm.addEventListener("playing", function(event) {
+            alert("Video Webm Playing....");
+            resultvideoWebmPlayed=true;
+        });
+
+function playingMp4() {
+return resultvideoWebmPlayed;
+}
+
+function pauseMp4() {
+elem.pause();
+alert("Pause");
+return elem.paused;
+}
+</script>
+</html>

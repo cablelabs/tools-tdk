@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function getBackground()
+{
+    var elem = document.body.children;
+    var numChild = elem.length;
+    var flag = false;
+
+    for(var index = 0 ; index < numChild ; index++)
+    {
+        var st1 = window.getComputedStyle(elem[index], null);
+        var tr1 = st1.getPropertyValue("background-color");
+        if((index != (numChild-1)) && (tr1 == "rgba(0, 0, 0, 0)"))
+        {
+            flag = true;
+        }
+        if((index == (numChild-1)) && (elem[index].nodeName == "P") && (tr1 == "rgb(255, 0, 0)"))
+        {
+            flag = true;
+        }
+        if((index == (numChild-1)) && (elem[index].nodeName != "P") && (tr1 == "rgba(0, 0, 0, 0)"))
+        {
+            flag = true;
+        }
+
+        var child = elem[index].children;
+        var numChild1 = child.length;
+        for(var index1 = 0 ; index1 < numChild1 ; index1++)
+        {
+            var st2 = window.getComputedStyle(child[index1], null);
+            var tr2 = st2.getPropertyValue("background-color");
+            if((index1 != (numChild1-1)) && (tr2 == "rgba(0, 0, 0, 0)"))
+            {
+                flag = true;
+            }
+            if((index1 == (numChild1-1)) && (child[index1].nodeName == "P") && (tr2 == "rgb(255, 0, 0)"))
+            {
+                flag = true;
+            }
+            if((index1 == (numChild1-1)) && (child[index1].nodeName != "P") && (tr2 == "rgba(0, 0, 0, 0)"))
+            {
+                flag = true;
+            }
+        }
+
+    }
+    return flag;
+}
+
+</script>
+<style>
+p:last-child
+{
+background:#ff0000;
+}
+</style>
+</head>
+<body>
+
+<p>The first paragraph.</p>
+
+<div>
+<p>The second paragraph.</p>
+<p>The third paragraph.</p>
+</div>
+
+<p>The fourth paragraph.</p>
+
+</body>
+
+</html>

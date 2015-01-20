@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1> Video test</h1>
+<div id="logs">
+log1
+</div>
+
+<iframe onload="myFunction()" src="test.html" >
+<p>Your browser does not support iframes.</p>
+</iframe>
+
+<script>
+
+var iframeLoaded = false;
+function doLog(logtxt)
+{
+        var div = document.getElementById('logs')
+        div.innerHTML = div.innerHTML + "*"+logtxt
+}
+function myFunction()
+{
+    doLog("onload Frame ");
+    iframeLoaded = true;
+}
+
+function frameOnload()
+{
+    doLog("Frame loaded")
+    return iframeLoaded;
+}
+</script>
+</body>
+</html>

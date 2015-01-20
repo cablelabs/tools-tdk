@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#firstname
+{
+background-color:yellow;
+}
+</style>
+</head>
+<body>
+
+<h1>Welcome to My Homepage</h1>
+
+<div class="intro">
+<p id="firstname">My name is Donald.</p>
+<p id="hometown">I live in Duckburg.</p>
+</div>
+
+<p>My best friend is Mickey.</p>
+
+</body>
+
+<script>
+
+function textColor()
+{
+    var el1 = document.getElementById("firstname");
+    var st1 = window.getComputedStyle(el1, null);
+    var tr1 = st1.getPropertyValue("background-color");
+    if(tr1 == "rgb(255, 255, 0)")
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+
+}
+</script>
+</html>

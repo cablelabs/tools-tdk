@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p.ex1 {padding:10px;}
+p.ex2 {padding:10px 5px 10px 5px;}
+</style>
+</head>
+
+<body>
+<p class="ex1">This text has equal padding on each side. The padding on each side is 10px.</p>
+<p class="ex2">This text has a top and bottom padding of 10px and a left and right padding of 5px.</p>
+</body>
+<script>
+function padding()
+{
+    var elem = document.getElementsByClassName("ex1")[0];
+    var style = window.getComputedStyle(elem, null);
+    var pad = style.getPropertyValue("padding");
+    return pad;
+
+}
+
+</script>
+</html>
+

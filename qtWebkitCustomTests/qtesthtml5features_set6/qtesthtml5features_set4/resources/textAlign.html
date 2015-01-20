@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+h1 {text-align:center}
+h2 {text-align:left}
+h3 {text-align:right}
+</style>
+</head>
+
+<body>
+<h1 id="h1">This is heading 1</h1>
+<h2 id="h2">This is heading 2</h2>
+<h3>This is heading 3</h3>
+</body>
+<script>
+function txtAlign()
+{
+    var elem = document.getElementById("h1");
+    var style = window.getComputedStyle(elem, null);
+    var align= style.getPropertyValue("text-align");
+ 
+    return align;
+}
+
+</script>
+</html>

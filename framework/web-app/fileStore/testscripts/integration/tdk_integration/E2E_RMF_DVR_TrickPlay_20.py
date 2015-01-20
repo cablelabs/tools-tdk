@@ -1,53 +1,12 @@
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>sample_E2E_RMF_DVR_TrickPlay_20</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id>546</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
-  <primitive_test_name>TDKE2E_Rmf_Dvr_Play_Play</primitive_test_name>
-  <!--  -->
-  <primitive_test_version>1</primitive_test_version>
-  <!--  -->
-  <status>FREE</status>
-  <!--  -->
-  <synopsis></synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
-  <execution_time>5</execution_time>
-  <!--  -->
-  <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
-  <!--  -->
-  <box_types>
-    <box_type>IPClient-3</box_type>
-    <!--  -->
-    <box_type>Hybrid-1</box_type>
-    <!--  -->
-  </box_types>
-  <rdk_versions>
-    <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
-  </rdk_versions>
-</xml>
-'''
-'''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
   <id>1015</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_TrickPlay_20</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>549</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_Rmf_Dvr_Play_TrickPlay_RewindFromEndPoint</primitive_test_name>
@@ -69,9 +28,9 @@
   <skip>false</skip>
   <!--  -->
   <box_types>
-    <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
+    <!--  -->
+    <box_type>Hybrid-1</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -92,11 +51,46 @@ obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
 ip = <ipaddress>
 port = <port>
 
-
-obj.configureTestCase(ip,port,'E2E_RMF_DVR_TrickPlay_19');
+obj.configureTestCase(ip,port,'E2E_RMF_DVR_TrickPlay_20');
+expected_Result="SUCCESS"
 
 #Get the result of connection with test component and STB
 result =obj.getLoadModuleResult();
+
+#Acquiring the instance of TDKScriptingLibrary for checking and verifying the DVR content.
+if "SUCCESS" in result.upper():
+         obj.setLoadModuleStatus("SUCCESS");
+         print "TDKIntegration module load successful";
+
+         #Pre-requisite to Check and verify required recording is present or not.
+         #---------Start-----------------
+         matchList = []
+         if expected_Result in result.upper():
+                  #Get DVR pre req done.
+                  matchList = obj.checkAndVerifyDvrRecording(3);
+                  if len(matchList) == 0:
+                           print "DVR required Recording Not Found!!! Status: FAILURE"
+                           print "DVR Test case execution skipped!!!."
+                           exit()
+                  else:
+                           print "DVR required Recording Found. Proceeding to excute Test Case."
+                           print "Record Details: ",matchList
+         else:
+                  print "Loading Module Failed."
+                  print "Exiting the script without running the TC"
+                  exit();
+        #--------End-----------------------
+
+time.sleep(10)
+
+#The Pre-requisite success. Proceed to execute the test case.
+obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+
+obj.configureTestCase(ip,port,'E2E_RMF_DVR_TrickPlay_20');
+
+#Get the result of connection with test component and STB
+result = obj.getLoadModuleResult();
+print "tdkintegration module loaded: %s" %result;
 
 if "SUCCESS" in result.upper():
          obj.setLoadModuleStatus("SUCCESS");
@@ -108,31 +102,8 @@ if "SUCCESS" in result.upper():
          #set the dvr play url
          streamDetails = tdkTestObj.getStreamDetails("01");
 
-         expected_Result="SUCCESS"
-	 loadModuleStatus = obj.getLoadModuleResult();
-	 #Pre-requisite to Check and verify required recording is present or not.
-		 
-	 #---------Start-----------------
-	 matchList = []
-	 if expected_Result in loadModuleStatus.upper():
-	          #Get DVR pre req done.
-		  matchList = obj.checkAndVerifyDvrRecording(3);
-		  if len(matchList) == 0:
-		           print "DVR required Recording Not Found!!! Status: FAILURE"
-			   print "DVR Test case execution skipped!!!."
-			   obj.unloadModule("TDKIntegration");
-			   exit()
-		  else:
-		           print "DVR required Recording Found. Proceeding to excute Test Case."
-			   print "Record Details: ",matchList
-	 else:
-	          print "Loading Module Failed."
-		  print "Exiting the script without running the TC"
-		  exit();
-	 #--------End-----------------------
-			
-	 #fetch recording id from list matchList.
-	 recordID = matchList[1]
+         #fetch recording id from list matchList.
+         recordID = matchList[1]
 
          url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
 
@@ -140,7 +111,7 @@ if "SUCCESS" in result.upper():
          tdkTestObj.addParameter("playUrl",url);
 
          #Rewind speed
-         rSpeed = -8.00
+         rSpeed = -16.00
          print "The Rewind Speed Requested: %f"%rSpeed;
          tdkTestObj.addParameter("rewindSpeed",rSpeed);
 

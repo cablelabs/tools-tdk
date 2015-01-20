@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+a:link    {color:green;}
+a:visited {color:red;}
+p:first-line
+{
+    color : yellow;
+}
+</style>
+</head>
+<body>
+
+<p>Mouse over and click the link: <a id="link1" href="http://www.w3schools.com" onclick="linkClicked()">w3schools.com</a></p>
+
+</body>
+
+<script>
+function linkBackground()
+{
+    var elem = document.getElementsByTagName("p")[0];
+
+alert("My style :: " +elem.firstLine)
+    var st1 = window.getComputedStyle(elem, null);
+    var tr1 = st1.getPropertyValue("color");
+    alert("Before mouse click " +tr1);
+
+    elem.onclick();
+
+}
+
+function linkClicked()
+{
+    alert("In function link clicked");
+    var elem = document.getElementsByTagName("a")[0];
+    var st2 = window.getComputedStyle(elem, null);
+    var tr2 = st2.getPropertyValue("color");
+    alert("After mouse click " +tr2);
+}
+</script>
+
+</html>

@@ -209,12 +209,7 @@
 					<ul class= "selectable" id="selectable" name ="selectable"  title="selectable" style="max-height : 454px; max-width : 250px; overflow: auto; ">
 						<g:each in='${scripts}' var="script">
 						<% 
-							String idScript = script.scriptName;
-							if(idScript != null){
-   								idScript = idScript.replace(" ", "sp_sp" );
-								idScript = idScript.replace(".", "dot_dot" );
-								idScript = idScript.replace("&", "amp_amp" );
-							}
+							String idScript = script?.id;
  					     %>
 							<li id = "script-${idScript}" title="${script.scriptName}" class="ui-state-default">
 								${script.scriptName}
@@ -235,12 +230,7 @@
 						<g:if test="${scriptGroupInstance}">
 						<g:each in='${scriptGroupInstance.scriptList}' var="script">
 						<% 
-							String idSgScript = script.scriptName;
-						if(idSgScript != null){
-   							idSgScript = idSgScript.replace(" ", "sp_sp" );
-							idSgScript = idSgScript.replace(".", "dot_dot" );
-							idSgScript = idSgScript.replace("&", "amp_amp" );
-						}
+							String idSgScript = script?.id;
  					     %>
 							<li id = "sgscript-${idSgScript}end"  title="${script.scriptName}" class="ui-state-default">
 								${script.scriptName}

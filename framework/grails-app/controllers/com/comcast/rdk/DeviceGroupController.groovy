@@ -374,11 +374,11 @@ class DeviceGroupController {
         }
         else{
 			
-			String currentBoxType = deviceInstance?.boxType?.type.toLowerCase()
+			String currentBoxType = deviceInstance?.boxType?.type?.toLowerCase()
 			
 			BoxType boxType = BoxType.findById(params?.boxType?.id)
 			
-			String newBoxType = boxType.type.toLowerCase()
+			String newBoxType = boxType?.type?.toLowerCase()
 
             deviceInstance.properties = params
 

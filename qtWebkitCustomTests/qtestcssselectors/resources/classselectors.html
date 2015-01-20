@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p.hometown
+{
+text-align:right;
+}
+</style>
+</head>
+
+<body>
+<p>My name is Donald.</p>
+<p class="hometown">I live in Ducksburg.</p>
+
+<p>My name is Dolly.</p>
+<p class="hometown">I also live in Ducksburg.</p>
+
+</body>
+<script>
+var flag = false
+function textColor()
+{
+    var el1 = document.getElementsByClassName("hometown");
+    for(var index = 0 ; index < el1.length ; index++)
+    {
+        var st1 = window.getComputedStyle(el1[index], null);
+        var tr1 = st1.getPropertyValue("text-align");
+        if(tr1 == "right")
+        {
+            flag = true;
+        }
+        else
+        {
+            flag = false;
+        }
+    }
+
+return flag
+
+}
+</script>
+</html>

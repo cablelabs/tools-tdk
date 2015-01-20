@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p
+{
+border:1px solid red;
+outline-style:dotted;
+outline-color:green;
+outline-width:5px;
+}
+</style>
+</head>
+
+<body>
+<p id="p1"><b>Note:</b> IE8 supports the outline properties only if a !DOCTYPE is
+specified.</p>
+</body>
+
+<script>
+
+function setDottedOutline()
+{
+    var el1 = document.getElementById("p1");
+    var st1 = window.getComputedStyle(el1, null);
+    var tr1 = st1.getPropertyValue("outline-width");
+    var tr2 = st1.getPropertyValue("outline-style");
+    var tr3 = st1.getPropertyValue("outline-color");
+    
+    if(tr1 == "5px" && tr2 == "dotted" && tr3 == "rgb(0, 128, 0)")
+    {
+        return true
+    }
+    else
+    {
+        return false
+    }
+}
+</script>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<p>loop through a block of as long as <em>i</em> is less than 1000.</p>
+
+<p id="demo"></p>
+
+<script>
+function myFunction()
+{
+
+var x="",i=0;
+while (i<1000)
+  {
+  x=x + "The number is " + i + "<br>";
+  i++;
+  }
+document.getElementById("demo").innerHTML=x;
+
+var context=document.getElementById("canvasDemo").getContext("2d");
+context.strokeStyle="green";
+context.fillStyle="red";
+context.strokeRect(70,70,80,80);
+context.fillRect(80,80,60,60);
+context.clearRect(95,95,30,30);
+}
+</script>
+<canvas id="canvasDemo" height="400" width="300">
+Sorry, your browser does not support canvas.
+</canvas>
+</body>
+</html>

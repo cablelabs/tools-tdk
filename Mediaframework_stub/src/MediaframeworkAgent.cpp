@@ -5042,7 +5042,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                         }
    		}
 
-                if ( (pTSBRecInfo->shadowedById[0] == recordingId))
+                if ( pTSBRecInfo->isShadowedById( recordingId ) )
                 {
                 	response["result"] = "SUCCESS";
                         response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";
@@ -5078,7 +5078,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                                 return TEST_FAILURE;
                         }
 
-			if ( (pTSBRecInfo->shadowedById[0] == recordingId) && (pRecInfo->shadowingId == tsbId) )
+                        if ( (pTSBRecInfo->isShadowedById(recordingId)) && (pRecInfo->shadowingId.size() != 0) )
 			{
 				response["result"] = "SUCCESS";
 				response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";
@@ -5102,6 +5102,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
 
                         // Post-condition: Delete test recording and clear tsb
 			tsbId.clear();
+                        pRecInfo->shadowingId.clear();
 
                         int res_DVR = dvm->deleteRecording ( recordingId );
                         DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
@@ -5121,7 +5122,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                         }
                 }
 
-		if ( (pTSBRecInfo->shadowedById[0] == recordingId) && (pRecInfo->shadowingId == tsbId) )
+                if ( (pTSBRecInfo->isShadowedById(recordingId)) && (pRecInfo->shadowingId.size() != 0) )
                 {
                 	response["result"] = "SUCCESS";
                         response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";

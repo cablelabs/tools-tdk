@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/background.html</file>
+        <file>resources/backgroundColor.html</file>
+        <file>resources/backgroundAttach.html</file>
+        <file>resources/backgroundImage.html</file>
+        <file>resources/backgroundPosition.html</file>
+        <file>resources/backgroundRepeat.html</file>
+        <file>resources/font.html</file>
+        <file>resources/fontFamily.html</file>
+        <file>resources/fontSize.html</file>
+        <file>resources/fontVariant.html</file>
+        <file>resources/cssLinks.html</file>
+    </qresource>
+</RCC>

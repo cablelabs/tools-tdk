@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style> 
+div.test
+{
+white-space:nowrap; 
+width:5em; 
+overflow:hidden; 
+border:1px solid #000000;
+}
+</style>
+</head>
+<body>
+
+<p>The following two divs contains a long text that will not fit in the box. As 
+you can see, the text is clipped.</p>
+<p>This div uses "text-overflow:ellipsis":</p>
+
+<div id="div1" class="test" style="text-overflow:ellipsis;">This is some long text that will not fit in the box</div>
+<p>This div uses "text-overflow:clip":</p>
+<div class="test" style="text-overflow:clip;">This is some long text that will not fit in the box</div>
+
+</body>
+
+<script>
+function isTranslated()
+{
+    var el1 = document.getElementById("div1");
+    var st1 = window.getComputedStyle(el1, null);
+    var tr1 = st1.getPropertyValue("text-overflow");
+   if(tr1 == "ellipsis")
+   {
+        return true
+   }
+   else
+   {
+        return false
+   }
+
+
+}
+</script>
+</html>

@@ -324,7 +324,7 @@ class ModuleController {
 						functionInstance = Function.findById(key)
 						try{
 							if(!functionInstance.delete(flush:true)){
-								unDeletedList.add(functionInstance?.name)
+									unDeletedList.add(functionInstance?.name)
 							}
 						}
 						catch (org.springframework.dao.DataIntegrityViolationException e) {

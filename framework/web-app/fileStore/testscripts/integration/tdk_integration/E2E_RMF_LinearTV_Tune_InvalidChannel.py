@@ -3,7 +3,7 @@
 <xml>
   <id>1597</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LinearTV_Tune_InvalidChannel</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -44,6 +44,67 @@ import tdklib;
 import time;
 from tdkintegration import getURL_PlayURL;
 
+def invalidocapidplay(obj,streamId):
+    #Prmitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('TDKE2E_RMFLinearTV_GetURL');
+
+    #set the dvr play url for first channel
+    streamDetails = tdkTestObj.getStreamDetails('01');
+    url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamId;
+
+    print "Request URL : %s" %url;
+    tdkTestObj.addParameter("Validurl",url);
+
+    #Execute the test case in STB
+    expectedresult="SUCCESS";
+    tdkTestObj.executeTestCase(expectedresult);
+
+    #Get the result of execution
+    actualresult = tdkTestObj.getResult();
+
+    #compare the actual result with expected result
+    if expectedresult in actualresult:
+        #Set the result status of execution
+        tdkTestObj.setResultStatus("SUCCESS");
+        details =  tdkTestObj.getResultDetails();
+
+        #Remove unwanted part from URL
+        PLAYURL = details.split("[RESULTDETAILS]");
+        ValidURL = PLAYURL[-1];
+
+        expectedresult="FAILURE";
+
+        #Prmitive test case which associated to this Script
+        tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
+
+        print "Play Url Requested: %s"%(ValidURL);
+        tdkTestObj.addParameter("playUrl",ValidURL);
+
+        #Execute the test case in STB
+        tdkTestObj.executeTestCase(expectedresult);
+
+        #Get the result of execution
+        actualresult = tdkTestObj.getResult();
+        print "The E2E LinearTv Play : %s" %actualresult;
+
+        #Set the result status of execution
+        if "SUCCESS" in actualresult.upper():
+            tdkTestObj.setResultStatus("FAILURE");
+            details = tdkTestObj.getResultDetails();
+            print "E2E LinearTv Playback Successful: [%s]"%details;
+            retValue = "FAILURE"
+
+        else:
+            tdkTestObj.setResultStatus("SUCCESS");
+            details =  tdkTestObj.getResultDetails();
+            print "Execution Failed: [%s]"%(details);
+            retValue = "SUCCESS"
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+        retValue = "FAILURE"
+    return retValue
+
+
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
 
@@ -68,7 +129,8 @@ if "SUCCESS" in result.upper():
     result1 = getURL_PlayURL(obj,'01');
 
     #Calling getURL_PlayURL with the invalid Stream ID
-    result2 = getURL_PlayURL(obj,'00');
+    result2 = invalidocapidplay(obj,'0x00');
+
         
     if ("SUCCESS" in result1.upper()) and ("FAILURE" in result2.upper()):                                        
         print "Execution Success";
@@ -81,3 +143,4 @@ if "SUCCESS" in result.upper():
 else:
          print "Failed to load tdkintegration module";
          obj.setLoadModuleStatus("FAILURE");
+

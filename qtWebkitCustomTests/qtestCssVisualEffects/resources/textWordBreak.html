@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style> 
+p.test1
+{
+width:9em; 
+border:1px solid #000000;
+word-break:keep-all;
+}
+
+p.test2
+{
+width:9em; 
+border:1px solid #000000;
+word-break:break-all;
+}
+
+p.test3
+{
+width:11em;
+border:1px solid #000000;
+word-wrap:break-word;
+}
+</style>
+</head>
+<body>
+
+<p class="test1"> This paragraph contains some text. This line will-break-at-hyphenates.</p>
+<p class="test2"> This paragraph contains some text: The lines will break at any character.</p>
+<p class="test3"> This paragraph contains a very long word: thisisaveryveryveryveryveryverylongword. The long word will break and wrap to the next line.</p>
+
+<p><b>Note:</b> The word-break property does not work in Opera.</p>
+
+</body>
+<script>
+function wordBreak()
+{
+    var elem = document.getElementsByClassName("test2")[0];
+    var style = window.getComputedStyle(elem,null);
+    var wordbreak = style.getPropertyValue("word-break");
+
+    return wordbreak;
+}
+function wordWrap()
+{
+    var elem = document.getElementsByClassName("test3")[0];
+    var style = window.getComputedStyle(elem,null);
+    var wordwrap = style.getPropertyValue("word-wrap");
+
+    return wordwrap;
+}
+</script>
+</html>
+

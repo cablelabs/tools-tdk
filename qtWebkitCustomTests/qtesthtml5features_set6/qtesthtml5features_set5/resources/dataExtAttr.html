@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<h1>Fruits</h1>
+</head>
+<body>
+<div id='strawberry-plant' data-fruit='12'><p>strawberry</p>
+<div id='apple-plant' data-fruit='12'><p>apple</p>
+</div>
+
+<script>
+var plant = document.getElementById('strawberry-plant');
+var fruitCount1 = plant.getAttribute('data-fruit'); // fruitCount = '12'
+
+// 'Setting' data-attributes using setAttribute
+plant.setAttribute('data-fruit','7'); 
+
+var fruitCount2 = plant.getAttribute('data-fruit'); // fruitCount = '7'
+
+function getDataAttr()
+{
+    if(fruitCount1 != fruitCount2)
+    {
+        return true;
+    }
+}
+</script>
+
+</body>
+</html>
+

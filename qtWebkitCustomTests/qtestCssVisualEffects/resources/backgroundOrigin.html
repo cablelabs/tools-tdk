@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style> 
+div
+{
+border:1px solid black;
+padding:35px;
+background-image:url(http://www.w3schools.com/cssref/smiley.gif);
+background-repeat:no-repeat;
+background-position:left;
+}
+#div1
+{
+background-origin:border-box;
+}
+#div2
+{
+background-origin:content-box;
+}
+</style>
+</head>
+<body>
+
+<p>background-origin:border-box:</p>
+<div id="div1">
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.
+</div>
+
+<p>background-origin:content-box:</p>
+<div id="div2">
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.
+</div>
+
+</body>
+<script>
+function backgndOrigin()
+{
+    var elem = document.getElementById('div2');
+    var style = window.getComputedStyle(elem,null);
+    var origin = style.getPropertyValue("background-origin");
+
+    return origin;
+}
+</script>
+</html>
+
+

@@ -1142,7 +1142,7 @@ class TDKScriptingLibrary:
 				resultIndex = result.find("details") + len("details"+"\":\"")
 				message = result[resultIndex:]
 				details = message[:(message.find("\""))]
-				print "Deatils : " + details
+				print "Details : " + details
 				sys.stdout.flush()
 				exit()
 		
@@ -1199,6 +1199,24 @@ class TDKScriptingLibrary:
 		return
 
 	########## End of Function ##########
+
+        def resetConnectionAfterReboot(self):
+
+        # To reset tcp connection with other instances after STB reboot in multi component tests
+
+        # Syntax       : OBJ.resetConnectionAfterReboot()
+        # Description  : To reset tcp connection with other instances after STB reboot in multi component tests
+        # Parameters   : none
+        # Return Value : null
+
+                print "Resetting connection after Reboot"
+                self.tcpClient.close()
+                time.sleep(5)
+                self.tcpClient = socket.socket()
+                self.tcpClient.connect((self.IP, self.portValue))
+                return
+
+        ########## End of Function ##########
 
 	def insertExecutionDetails(self,executionTime, testName, tcName, outData, devName, executeMethodId):
 	# Insert the execution details into database
@@ -1469,23 +1487,53 @@ def fetchTotalRecording(testObj):
 		
 #Helper funtion to InitiateRecording
 def initiateDvrRecording(testObj,duration):
-        primitiveObj = testObj.createTestStep("RMF_Dvr_CreateNew_Recording");
+	oldTestObj = testObj	
+	checkFlag = 0	
         RECORD_ERROR = 1
         SUCCESS = 0
-		
+	
+	# Using this primitive object coming from script to fetch gateway ip address.
+	#In case, script is from tdkintegration.	
+        primitiveObj = testObj.createTestStep("RMF_Dvr_CreateNew_Recording");
+	
         streamDetails = primitiveObj.getStreamDetails('01');
+	gatewayIp = streamDetails.getGatewayIp();	
+	print "GatewayIp:",streamDetails.getGatewayIp()	
+	print "IP:",oldTestObj.IP
+	print "Port:",oldTestObj.portValue
+	
+	#Confirming tdkIntegration component and does client initiates the execution of the test script.
+	print "ComponentName:",testObj.componentName
+	if testObj.componentName == "tdkintegration":
+		checkFlag = 1;
+		obj = TDKScriptingLibrary("mediaframework","2.0");
 
+                obj.configureTestCase(oldTestObj.url,oldTestObj.realpath,oldTestObj.execID,oldTestObj.execDevId,oldTestObj.resultId,str(gatewayIp),8087,69,8088,oldTestObj.testcaseId,oldTestObj.deviceId,"false","false","false",'RMF_Dvr_CreateNew_Recording');
+                
+		#Get the result of connection with test component and STB
+                result =obj.getLoadModuleResult();		
+		print "Load Module Status:",result;
+		if "SUCCESS" not in result.upper():
+			print "Failed to load the mediaframework component to initiate recording. Something went wrong!!!"
+			return RECORD_ERROR;
+		testObj = obj;
+		#Loading the primitive test case to initiate the recording in the gateway box.
+        	primitiveObj = testObj.createTestStep("RMF_Dvr_CreateNew_Recording");
+
+
+	#Record Attribute setting.
         recordtitle = "test_dvr"
         #Generating the random recordid of 10 digits.
         recordidInt = random.randrange(10**9, 10**10)
         recordid = str(recordidInt)
         recordduration = str(duration)
         ocapid = streamDetails.getOCAPID();
-
-        print recordid
-        print recordduration
-        print recordtitle
-        print ocapid
+	
+	print "Initiating the recording, with below atrributes:"
+        print "RecordId:",recordid
+        print "RecordDuration:",recordduration
+        print "RecordTitle:",recordtitle
+        print "OcapId:",ocapid
 
         primitiveObj.addParameter("recordId",recordid);
         primitiveObj.addParameter("recordDuration",recordduration);
@@ -1509,14 +1557,22 @@ def initiateDvrRecording(testObj,duration):
                 primitiveObj.setResultStatus(result);
                 return RECORD_ERROR
 
+        primitiveObj.setResultStatus(result);
+
         print "Initiating Reboot";
         testObj.initiateReboot();
 
-        primitiveObj.setResultStatus(result);
-
-        time.sleep(5)
+        time.sleep(10)
         print "Reboot Done"
 
+	#Check the flag to unload the module loaded for tdkIntegration.	
+	if checkFlag == 1:
+		testObj.unloadModule("mediaframework");
+		print "In the unload module for mediaframework"	
+	
+	#set back the old instance in case of tdkintegration.
+	oldTestObj = testObj	
+	
         return SUCCESS
 		
 #------------------------------------------------------------------------------

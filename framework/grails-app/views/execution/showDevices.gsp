@@ -23,7 +23,8 @@ $(document).ready(function() {
 
 <g:form  method="post">
 	<input type="hidden" name="id" id="id" value="${device?.id}">
-	<g:hiddenField name="stbname" id="stbname" value="${device?.stbName}" />	
+	<g:hiddenField name="stbname" id="stbname" value="${device?.stbName}" />
+	<g:hiddenField name="exId" id="exId" value="${device?.id}" />	
 	<table>
 		<tr>
 			<th colspan="2" align="center">Execute script on ${device?.stbName}</th>
@@ -94,8 +95,8 @@ $(document).ready(function() {
 			<td colspan="2" align="center">				
 				<g:hiddenField name="pageFlag" value="execute"/>
 				<span id="executeBtn" class="buttons"><g:submitToRemote class="save" before="showWaitSpinner();" 
-				action="executeScriptMethod" controller="execution" update="resultDiv123" value="Execute" 
-				onComplete="completed()" onFailure="changeStyles()"  onSuccess="changeStyles()" >
+				action="executeScriptMethod" controller="execution" update="resultDiv${device?.id}" value="Execute" 
+				onComplete="completed(${device?.id})" onFailure="changeStyles()"  onSuccess="changeStyles()" >
 				</g:submitToRemote>&emsp;	
 				</span>
 				<span id="scheduleBtn" class="buttons">
@@ -110,7 +111,7 @@ $(document).ready(function() {
 		<tr>		
 			<td>Execution Result</td>					
 			<td style="width:80%;">
-				<div id="resultDiv123" style="border-color: #FFAAAA;border-style: solid;
+				<div id="resultDiv${device?.id}" style="border-color: #FFAAAA;border-style: solid;
 					border-width: 1px;width: 550px;height:215px;overflow:auto;" >
 					
 				</div>

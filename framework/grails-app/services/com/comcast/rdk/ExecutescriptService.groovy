@@ -196,8 +196,12 @@ class ExecutescriptService {
 		else{
 			if(htmlData.contains(KEY_SCRIPTEND)){
 				htmlData = htmlData.replaceAll(KEY_SCRIPTEND,"")
-				String outputData = htmlData
-				executionService.updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
+				if(!checkExecutionCompletionStatus(executionResultId)){
+					executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
+				}else{
+					String outputData = htmlData
+					executionService.updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
+				}
 			}
 			else{
 				
@@ -276,6 +280,25 @@ class ExecutescriptService {
 		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
 		
 		return htmlData
+	}
+			
+	/** 
+	 *  Method to check whether the execution result is having any result update or not.
+	 *  Check If execution result  got any update or it is initial status.
+	 * @param executionResultId
+	 * @return
+	 */
+	def checkExecutionCompletionStatus(def executionResultId){
+		boolean status = true
+		ExecutionResult.withTransaction {
+			def resultArray = ExecutionResult.executeQuery("select a.status from ExecutionResult a where a.id = :exId",[exId: executionResultId])
+			if(resultArray?.size() > 0){
+				if(resultArray[0] == Constants.UNDEFINED_STATUS || resultArray[0] == Constants.PENDING){
+					status = false
+				}
+			}
+		}
+		return status
 	}
 
 	/**

@@ -11,11 +11,11 @@
  */
 package com.comcast.rdk
 
-import grails.converters.JSON
-import org.springframework.dao.DataIntegrityViolationException
 import static com.comcast.rdk.Constants.KEY_ON
+import grails.converters.JSON
+
+import org.apache.shiro.SecurityUtils
 import org.apache.shiro.crypto.hash.Sha256Hash
-import org.apache.commons.lang.RandomStringUtils
 
 class UserController {
 
@@ -219,15 +219,20 @@ class UserController {
         if(params?.listCount){ // to delete record(s) from list.gsp
             for (iterateVariable in params?.listCount){
                 countVariable++
-                if(params?.("chkbox"+countVariable) == KEY_ON){
-                    def idDb = params?.("id"+countVariable).toLong()
-                    userInstance = User.get(idDb)
-                    if (userInstance) {
-                         if (!userInstance.delete(flush: true)) { 
-                             
-                         }   
-                    }
-                }
+				if(params?.("chkbox"+countVariable) == KEY_ON){
+					def idDb = params?.("id"+countVariable).toLong()
+					userInstance = User.get(idDb)
+					if (userInstance) {
+						User userInst = User.findByUsername(SecurityUtils.subject.principal)
+						if(userInst && userInst?.id == idDb ){
+							flash.message = "Cannot delete the current user..."
+						}else{
+							if (!userInstance.delete(flush: true)) {
+
+							}
+						}
+					}
+				}
             }
         }
         redirect(action: "create")

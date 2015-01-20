@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+var imageErr = false;
+
+function doLog(logtxt)
+{
+    var div = document.getElementById('logs')
+    div.innerHTML = div.innerHTML + "*"+logtxt
+}
+
+function imgError()
+{
+    imageErr = true;
+    doLog('The image could not be loaded.');
+}
+</script>
+</head>
+<body>
+<div id="logs">
+log1
+</div>
+<img src="imagenotexisting.gif" onerror="imgError()">
+<p>A function is triggered if an error occurs when loading the image. The function shows an alert box with a text.
+In this example we refer to an image that does not exist, therefore the onerror event occurs.</p>
+
+</body>
+<script>
+function imageError()
+{
+    return imageErr;
+}
+</script>
+</html>
+

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+h1 {letter-spacing:2px;}
+h2 {letter-spacing:-3px;}
+</style>
+</head>
+
+<body>
+<h1 id="h1">This is heading 1</h1>
+<h2>This is heading 2</h2>
+</body>
+<script>
+function verifyLetterSpacing()
+{
+  var elem = document.getElementById("h1");
+  var style = window.getComputedStyle(elem, null);
+  var myLetterSpacing = style.getPropertyValue("letter-spacing");
+  return myLetterSpacing;
+}
+</script>
+</html>

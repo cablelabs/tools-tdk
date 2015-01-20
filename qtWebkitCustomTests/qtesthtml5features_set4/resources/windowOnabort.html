@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function abortWindow()
+{
+    abortCalled = true;
+}
+</script>
+</head>
+
+<body>
+<h1>Hello World!</h1>
+
+</body>
+<script>
+
+var abortCalled = false;
+function windowAbort()
+{
+    window.onabort = abortWindow();
+    return abortCalled ;
+}
+</script>
+</html>

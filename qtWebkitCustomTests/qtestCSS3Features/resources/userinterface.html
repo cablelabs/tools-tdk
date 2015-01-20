@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div
+{
+appearance:button;
+-moz-appearance:button; /* Firefox */
+-webkit-appearance:button; /* Safari and Chrome */
+border:2px solid;
+padding:10px 40px;
+width:300px;
+resize:both;
+overflow:auto;
+}
+</style>
+</head>
+<body>
+
+<p><b>Note:</b> Internet Explorer and Opera do not support the resize property.</p>
+
+<div id="div1">The resize property specifies whether or not an element is resizable by the user.</div>
+
+</body>
+<script>
+
+function usrAppear()
+{
+    var elem = document.getElementById("div1");
+    var appear = window.getComputedStyle(elem,null).getPropertyValue("-webkit-appearance");
+
+    return appear;
+}
+
+function txtResize()
+{
+    var elem = document.getElementById('div1');
+    var resize = window.getComputedStyle(elem,null).getPropertyValue("resize");
+
+    return resize;
+}
+</script>
+</html>
+

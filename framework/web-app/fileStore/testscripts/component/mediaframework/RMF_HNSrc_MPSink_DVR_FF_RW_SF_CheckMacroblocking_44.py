@@ -62,18 +62,19 @@ port = <port>
 obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
 obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_DVR_FF_RW_SF_CheckMacroblocking_44');
 
+expected_Result="SUCCESS"
+
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
 
     #Primitive test case which associated to this Script
     tdkTestObj =testobject.createTestStep(teststep);
     if teststep == "RMF_Element_Open":
         streamDetails = tdkTestObj.getStreamDetails('01');
-        recordingObj = tdkTestObj.getRecordingDetails();
-        num = recordingObj.getTotalRecordings();
-        print "Number of recordings: %d"%num
-        recordID = recordingObj.getRecordingId(num - 1);
+
+	recordID = matchList[1]
         url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id='+recordID[:-1];
         print "PLAY URL : %s" %url;
+
         open_parameter_value.append(url);
     for item in range(len(parametername)):
         tdkTestObj.addParameter(parametername[item],parametervalue[item]);
@@ -90,6 +91,26 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
+
+#Pre-requisite to Check and verify required recording is present or not.
+#---------Start-----------------
+matchList = []
+if expected_Result in loadModuleStatus.upper():
+		#Get DVR pre req done.
+		matchList = obj.checkAndVerifyDvrRecording(3);
+		if len(matchList) == 0:
+				print "DVR required Recording Not Found!!! Status: FAILURE"
+				print "DVR Test case execution skipped!!!."
+				obj.unloadModule("mediaframework");
+				exit()
+		else:
+				print "DVR required Recording Found. Proceeding to excute Test Case."
+				print "Record Details: ",matchList
+else:
+		print "Loading Module Failed."
+		print "Exiting the script without running the TC"
+		exit();
+#--------End-----------------------
 
 if Expected_Result in loadModuleStatus.upper():
         #Prmitive test case which associated to this Script

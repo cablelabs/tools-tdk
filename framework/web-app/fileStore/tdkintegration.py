@@ -275,7 +275,10 @@ def dvrPlayUrl(obj, kwargs={}):
     tdkTestObj.addParameter("playUrl",url);
 
     #Execute the test case in STB
-    expectedresult="SUCCESS";
+    if 'expectedResult' in kwargs:
+        expectedresult=str(kwargs["expectedResult"])
+    else:
+        expectedresult="SUCCESS"
 
     tdkTestObj.executeTestCase(expectedresult);
 
@@ -360,6 +363,9 @@ def getURL_PlayURL(obj,streamId):
             details =  tdkTestObj.getResultDetails();            
             print "Execution Failed: [%s]"%(details);
             retValue = "FAILURE"
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+        retValue = "FAILURE"
     return retValue
 
 

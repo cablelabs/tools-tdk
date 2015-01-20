@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/translateY.html</file>
+        <file>resources/keyframeAnimation.html</file>
+        <file>resources/animation.html</file>
+        <file>resources/3dtransform.html</file>
+        <file>resources/hslColor.html</file>
+    </qresource>
+</RCC>

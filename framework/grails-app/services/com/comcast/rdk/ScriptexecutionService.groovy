@@ -133,7 +133,34 @@ class ScriptexecutionService {
 		catch(Exception ex){
 			ex.printStackTrace()
 		}
-
+		return curlCommand
+	}
+	
+	def String getCustomCurlCommand(final String jsonString, final String callbackUrl,final String jfileName){
+		
+		String curlCommand
+		try{
+			File jenkFile = grailsApplication.parentContext.getResource("//fileStore//jenkinscredential.txt").file
+			String valueString
+			try {
+				File tempFile = new File(jfileName)
+			if(!tempFile.exists()){
+				tempFile.createNewFile()
+			}
+			
+			def mjsonString = jsonString
+			tempFile.write("${mjsonString}")
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+			
+			if(callbackUrl){
+				curlCommand = "curl --fail -X POST --insecure ${callbackUrl} -H 'Content-Type: application/json' -d '@${jfileName}' --verbose"
+			}
+		}
+		catch(Exception ex){
+			ex.printStackTrace()
+		}
 		return curlCommand
 	}
 		
@@ -371,14 +398,24 @@ class ScriptexecutionService {
 			
 		def executeCallBackUrl(final def execName, final def url, final def callbackUrl, final def filePath, 
 			final def executionStartTime, final def imageName, final def boxType,final def realPath){
-			String curlCommand = getCurlCommand(thirdPartyJsonResult(execName,url,executionStartTime,imageName,boxType,realPath), callbackUrl)
-	
+		def jfileName
+		String curlCommand
+
+		try{
+			if(callbackUrl.contains("jenkins")){
+				def newDataString = thirdPartyJsonResult(execName,url,executionStartTime,imageName,boxType,realPath)
+				newDataString  = newDataString.replaceAll("\"", "\\\\\\\\\\\\\"")
+				curlCommand = getCurlCommand( newDataString , callbackUrl)
+			}else{
+				jfileName = filePath+"/callBack"+System.currentTimeMillis()+".json"
+				curlCommand = getCustomCurlCommand(thirdPartyJsonResult(execName,url,executionStartTime,imageName,boxType,realPath), callbackUrl,jfileName)
+			}
+
 			File newFile = new File(filePath, execName+"-curlscript.sh");
 			boolean isFileCreated = newFile.createNewFile()
 			if(isFileCreated) {
 				newFile.setExecutable(true, false )
 			}
-
 			if(curlCommand){
 				PrintWriter fileNewPrintWriter = newFile.newPrintWriter();
 				fileNewPrintWriter.print( curlCommand )
@@ -387,7 +424,7 @@ class ScriptexecutionService {
 				def absolutePath = newFile.absolutePath
 
 				if(absolutePath != null){
-		
+
 					String[] cmd = [
 						"sh",
 						absolutePath
@@ -399,14 +436,20 @@ class ScriptexecutionService {
 					} catch (Exception e) {
 						e.printStackTrace()
 					}
-					
 				}
 			}
 			if(newFile.exists()){
 				newFile.delete();
 			}
+		}finally{
+			if(jfileName){
+				File jFile = new File(jfileName);
+				if(jFile.exists()){
+					jFile.delete();
+				}
+			}
 		}
-		
+	}
 		
 		
 		def String thirdPartyJsonResult(final String execName, final String appurl, final def executionStartTime,
@@ -439,6 +482,7 @@ class ScriptexecutionService {
 //							def script = scriptService.getScript(realPath, moduleName, execResObj?.script) // TODO realpath
 //								Script script = Script.findByName(execResObj?.script)
 							Module module = Module.findByName(moduleName)
+							if(module){
 								if(module?.testGroup?.groupValue?.toString()?.equals("E2E") ){
 									List val1 = systemMap.get(moduleName);
 									if(!val1){
@@ -455,6 +499,7 @@ class ScriptexecutionService {
 									}
 									val.add(execResObj?.id)
 								}
+							}
 						}
 						def statusVal
 						def newmap = [:]
@@ -497,7 +542,6 @@ class ScriptexecutionService {
 							compObject.add("ScriptDetails", scriptStatusArray)
 							compArray.add(compObject)
 						}
-						
 						JsonArray systemArray = new JsonArray();
 						systemMap.each{ k, v ->
 							JsonObject sysObject = new JsonObject();
@@ -601,9 +645,7 @@ class ScriptexecutionService {
 			tdkObject.addProperty("duration", execTme.toString())
 			tdkObject.add("result", dataArray )
 			String newDataString = tdkObject.toString()
-			newDataString  = newDataString.replaceAll("\"", "\\\\\\\\\\\\\"")
 			return newDataString
-			
 		}
 	
 	/**

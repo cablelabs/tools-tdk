@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p:empty
+{
+width:100px;
+height:20px;
+background:#ff0000;
+}
+</style>
+</head>
+<body>
+
+<p></p>
+<p>A paragraph.</p>
+<p>Another paragraph.</p>
+
+</body>
+<script>
+function getBackground()
+{
+    var el1 = document.getElementsByTagName("p");
+    var flag = false;
+
+    for(var index = 0 ; index < el1.length ; index++)
+    {
+        var st1 = window.getComputedStyle(el1[index], null);
+        var tr1 = st1.getPropertyValue("background-color");
+        var childNode = el1[index].childNodes;
+        if(childNode.length == 0 && tr1 == "rgb(255, 0, 0)")
+        {
+            flag = true;
+        }
+        if(childNode.length > 0 && tr1 == "rgba(0, 0, 0, 0)")
+        {
+            flag = true;
+        }
+        else
+        {
+            flag = false;
+        }
+    }
+    return flag;
+}
+</script>
+</html>

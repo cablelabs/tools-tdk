@@ -3,7 +3,7 @@
 <xml>
   <id>1728</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TRM_CT_22</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -25,7 +25,7 @@ Test Type: Negative</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>As per XONE-15184, CancelLive is an internal message between TRM and QAMSrc module. It is sent from TRM to QAMSrc only and does not modify the state of the tuners.</remarks>
+  <remarks>This will cause segmentation fault till XONE-15997 is fixed.</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
   <skip>true</skip>
   <!--  -->

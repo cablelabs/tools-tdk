@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+Downloading progress:
+<progress id="prog1" value="22" max="100">
+</progress>
+
+<p><strong>Note:</strong> The progress tag is not supported in Internet Explorer 9 and earlier versions.</p>
+
+</body>
+<script>
+function progressBar()
+{
+    var progVal = document.getElementById("prog1").value;
+    var progMax = document.getElementById("prog1").max;
+    if((progVal == 22)&& (progMax == 100))
+    {
+        return true;
+    }
+}
+</script>
+</html>

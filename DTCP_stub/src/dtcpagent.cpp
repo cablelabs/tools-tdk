@@ -49,6 +49,21 @@ bool DTCPAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj
 
 std::string DTCPAgent::testmodulepre_requisites()
 {
+    std::list<DTCP_SESSION_HANDLE>::iterator it;
+    if(!srcSessionHandlerList.empty()) {
+        DEBUG_PRINT(DEBUG_ERROR, "Contents of source session handler list");
+        for(it = srcSessionHandlerList.begin(); it != srcSessionHandlerList.end(); it++) {
+            DEBUG_PRINT(DEBUG_LOG, "Source Handler: %p ",(void*)*it);
+        }
+    }
+
+    if(!sinkSessionHandlerList.empty()) {
+        DEBUG_PRINT(DEBUG_ERROR, "Contents of sink session handler list");
+        for(it = sinkSessionHandlerList.begin(); it != sinkSessionHandlerList.end(); it++) {
+            DEBUG_PRINT(DEBUG_LOG, "Sink Handler: %p ",(void*)*it);
+        }
+    }
+
     return "SUCCESS";
 }
 
@@ -61,6 +76,21 @@ std::string DTCPAgent::testmodulepre_requisites()
 
 bool DTCPAgent::testmodulepost_requisites()
 {
+    std::list<DTCP_SESSION_HANDLE>::iterator it;
+    if(!srcSessionHandlerList.empty()) {
+        DEBUG_PRINT(DEBUG_ERROR, "Contents of source session handler list");
+        for(it = srcSessionHandlerList.begin(); it != srcSessionHandlerList.end(); it++) {
+            DEBUG_PRINT(DEBUG_LOG, "Source Handler: %p ",(void*)*it);
+        }
+    }
+
+    if(!sinkSessionHandlerList.empty()) {
+        DEBUG_PRINT(DEBUG_ERROR, "Contents of sink session handler list");
+        for(it = sinkSessionHandlerList.begin(); it != sinkSessionHandlerList.end(); it++) {
+            DEBUG_PRINT(DEBUG_LOG, "Sink Handler: %p ",(void*)*it);
+        }
+    }
+
     return TEST_SUCCESS;
 }
 
@@ -408,7 +438,11 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
 	    int numSessions = DTCPMgrGetNumSessions((DTCPDeviceType)iDeviceType);
             DEBUG_PRINT(DEBUG_LOG,"function %s numSessions %d",functionName.c_str(),numSessions);
 
-            response["result"] = "SUCCESS";
+            if ((numSessions < 0) || (((iDeviceType < DTCP_SOURCE) || (iDeviceType > DTCP_UNKNOWN)) && (numSessions > 0)))
+                response["result"] = "FAILURE";
+            else
+                response["result"] = "SUCCESS";
+
 	    details << numSessions;
             response["details"] = details.str();
         }
@@ -464,7 +498,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
 	    }
 
 	    DTCPIP_Session sessionInfo;
-	    sessionInfo.remote_ip = new (char);
+	    sessionInfo.remote_ip = new char [IPADDR_LEN+1];
             returnCode = DTCPMgrGetSessionInfo(pDtcpSession,&sessionInfo);
 
 	    if(returnCode != DTCP_SUCCESS)
@@ -486,7 +520,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
 	        details << "DeviceType:" << sessionInfo.device_type << " RemoteIp:" << sessionInfo.remote_ip << " UniqueKey:"<< sessionInfo.uniqueKey;
 	        response["details"] = details.str();
             }
-            delete sessionInfo.remote_ip;
+            delete [] sessionInfo.remote_ip;
 	}
         else if (functionName.compare("DTCPMgrSetLogLevel")==0)
         {

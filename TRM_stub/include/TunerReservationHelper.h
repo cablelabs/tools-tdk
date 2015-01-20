@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <uuid/uuid.h>
 #include <glib.h>
+#include <unistd.h>
 
 #include <vector>
 #include <map>

@@ -25,6 +25,7 @@
 
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
+#define IPADDR_LEN 15
 
 
 using namespace std;

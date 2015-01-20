@@ -166,9 +166,10 @@ class ScriptGroupController {
      */
 	def create() {
 		
-		def scriptNameList = scriptService.getScriptNameList(getRealPath())
+		def scriptNameList = scriptService.getScriptNameFileList(getRealPath())
 		def sList = scriptNameList.clone()
-		Collections.sort(sList)
+		sList?.sort{a,b -> a?.scriptName <=> b?.scriptName}
+		
 		[scriptGroupInstance: new ScriptGroup(params),scriptInstanceList:sList]
 	}
 
@@ -188,7 +189,7 @@ class ScriptGroupController {
 		}
 		else if(!(params?.idList)){
 			flash.message = "Select scripts to create a test suite."
-		errorList.add("Select scripts to create a test suite.")
+			errorList.add("Select scripts to create a test suite.")
 			render errorList as JSON
 			return
 		}
@@ -198,18 +199,17 @@ class ScriptGroupController {
 			idList = idList.replaceAll("end","")
 			
 			StringTokenizer st = new StringTokenizer(idList,",")
-			def sMap = scriptService.getScriptNameModuleNameMapping(realPath)
-			while(st.hasMoreTokens()){
-				String token = st.nextToken()
-				def module
-				if(token && token.size()>0){
-					module = sMap.get(token)
-					def sct = ScriptFile.findByScriptNameAndModuleName(token,module)
-				if(sct){
-					scriptGroupInstance.addToScriptList(sct)
+		while(st.hasMoreTokens()){
+			String token = st.nextToken()
+
+			if(token && token.size()>0){
+				ScriptFile sctFile = ScriptFile.findById(token)
+				if(sctFile && !scriptGroupInstance?.scriptList?.contains(sctFile)){
+					scriptGroupInstance.addToScriptList(sctFile)
 				}
-				}
+
 			}
+		}
 			
 			scriptGroupInstance.groups = utilityService.getGroup()
 			if (!scriptGroupInstance.save(flush: true)) {ex
@@ -286,21 +286,15 @@ class ScriptGroupController {
 			idList = idList.replaceAll("sgscript-","")
 			idList = idList.replaceAll("end","")
 			StringTokenizer st = new StringTokenizer(idList,",")
-			while(st.hasMoreTokens()){
-				String token = st.nextToken()
-				if(token && token.size()>0){
-//				Script sct = Script.findById(token)
-					def module
-//					def sMap = scriptService.getScriptsMap(getRealPath())
-					def sMap = scriptService.getScriptNameModuleNameMapping(getRealPath())
-					module = sMap.get(token)	
-					def sct = ScriptFile.findByScriptNameAndModuleName(token,module)
-				
-				if(sct && !scriptGroupInstance.scriptList.contains(sct)){
-					scriptGroupInstance.addToScriptList(sct)
-				}
+		while(st.hasMoreTokens()){
+			String token = st.nextToken()
+			if(token && token.size()>0){
+				ScriptFile sctFile = ScriptFile.findById(token)
+				if(sctFile && !scriptGroupInstance?.scriptList?.contains(sctFile)){
+					scriptGroupInstance.addToScriptList(sctFile)
 				}
 			}
+		}
 			
 
 		if (!scriptGroupInstance.save(flush: true)) {
@@ -731,7 +725,7 @@ class ScriptGroupController {
 					xml.version(1)
 					mkp.yield "\r\n  "
 					mkp.comment "Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1"
-					xml.name(params?.name)
+					xml.name(params?.name?.trim())
 					mkp.yield "\r\n  "
 					mkp.comment "If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension"
 					xml.primitive_test_id(ptest?.id)
@@ -823,7 +817,7 @@ class ScriptGroupController {
 //			scriptInstance.groups = utilityService.getGroup()
 			
 			if(saveScript){
-			def script = ScriptFile.findByScriptNameAndModuleName(params?.name,ptest?.module?.name)
+			def script = ScriptFile.findByScriptNameAndModuleName(params?.name?.trim(),ptest?.module?.name)
 			if(script == null){
 				script = new ScriptFile()
 				script.setScriptName(params?.name)
@@ -835,7 +829,7 @@ class ScriptGroupController {
 			def sObject = new ScriptObject()
 			sObject.setBoxTypes(boxTypes)
 			sObject.setRdkVersions(rdkVersions)
-			sObject.setName(params?.name)
+			sObject.setName(params?.name?.trim())
 			sObject.setModule(ptest?.module?.name)
 			sObject.setScriptFile(script)
 			sObject.setLongDuration(longDuration)
@@ -950,7 +944,7 @@ class ScriptGroupController {
 				xml.version(vers2)
 				mkp.yield "\r\n  "
 				mkp.comment "Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1"
-				xml.name(params?.name)
+				xml.name(params?.name?.trim())
 				mkp.yield "\r\n  "
 				mkp.comment "If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension"
 				xml.primitive_test_id(ptest?.id)
@@ -1035,9 +1029,9 @@ class ScriptGroupController {
 			}
 			String data = "'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
 			file.write(data)
-			if(params?.prevScriptName != params?.name ){
+			if(params?.prevScriptName != params?.name && params?.prevScriptName?.trim() != params?.name?.trim()){
 				File file1 = new File( "${request.getRealPath('/')}//fileStore//testscripts/"+scriptsDirName1+"/"+dirname+"/"+params?.prevScriptName?.trim()+".py");
-				if(file1.exists()){
+				if(file1.exists() ){
 					file1.delete()
 				}
 			}
@@ -1089,7 +1083,7 @@ class ScriptGroupController {
 		}else{
 		
 		
-		def script = ScriptFile.findByScriptNameAndModuleName(params?.name,ptest?.module?.name)
+		def script = ScriptFile.findByScriptNameAndModuleName(params?.name?.trim(),ptest?.module?.name)
 		if(script == null){
 			script = new ScriptFile()
 			script.setScriptName(params?.name)
@@ -1100,7 +1094,7 @@ class ScriptGroupController {
 		def sObject = new ScriptObject()
 		sObject.setBoxTypes(bTypes)
 		sObject.setRdkVersions(rdkVers)
-		sObject.setName(params?.name)
+		sObject.setName(params?.name?.trim())
 		sObject.setModule(ptest?.module?.name)
 		sObject.setScriptFile(script)
 		sObject.setLongDuration(longDuration)

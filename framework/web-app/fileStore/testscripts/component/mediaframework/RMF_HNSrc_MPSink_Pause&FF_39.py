@@ -60,6 +60,8 @@ port = <port>
 obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
 obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_Pause&FF_39');
 
+expected_Result="SUCCESS"
+
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
     #Primitive test case which associated to this Script
     global tdkTestObj
@@ -67,12 +69,9 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     global details
     tdkTestObj =testobject.createTestStep(teststep);
     if teststep == 'RMF_Element_Open':
-        streamDetails = tdkTestObj.getStreamDetails('01');
-        recordingObj = tdkTestObj.getRecordingDetails();
-        num = recordingObj.getTotalRecordings();
-        print "Number of recordings: %d"%num
-        recordID = recordingObj.getRecordingId(num - 1);
-        url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id='+recordID[:-1]+'&0';
+        streamDetails = tdkTestObj.getStreamDetails('01');        
+        recordID = matchList[1]		
+	url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id='+recordID[:-1]+'&0';
         print url;
         open_parameter_value.append(url);
     for item in range(len(parametername)):
@@ -87,9 +86,31 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     print "Status of "+ teststep+":  %s" %result;
     print "Details of "+ teststep+":  %s" %details;
     return result
+
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
+
+#Pre-requisite to Check and verify required recording is present or not.
+#---------Start-----------------
+matchList = []
+if expected_Result in loadModuleStatus.upper():
+        #Get DVR pre req done.
+        matchList = obj.checkAndVerifyDvrRecording(4);
+        if len(matchList) == 0:
+                print "DVR required Recording Not Found!!! Status: FAILURE"
+                print "DVR Test case execution skipped!!!."
+                obj.unloadModule("mediaframework");
+                exit()
+        else:
+                print "DVR required Recording Found. Proceeding to excute Test Case."
+                print "Record Details: ",matchList
+else:
+        print "Loading Module Failed."
+        print "Exiting the script without running the TC"
+        exit();
+#--------End-----------------------
+
 if Expected_Result in loadModuleStatus.upper():
 
         #Creating the Hnsrc instance

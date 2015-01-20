@@ -58,6 +58,10 @@ if "SUCCESS" in loadmodulestatus.upper():
         print "Mediaframework module loaded successfully";
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('RMF_HNSrc_GetBufferedRanges');
+        streamDetails = tdkTestObj.getStreamDetails('01'); 
+        url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+        print "PLAY URL : %s" %url;
+        tdkTestObj.addParameter("playuri",url);
         #Execute the test case in STB
         expectedresult="SUCCESS";
         tdkTestObj.executeTestCase(expectedresult);

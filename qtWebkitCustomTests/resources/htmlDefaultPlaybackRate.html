@@ -1,0 +1,33 @@
+<!DOCTYPE html> 
+<html> 
+<body> 
+
+<video id="video1" controls="controls" onloadedmetadata="getPlaySpeed()">
+  <source src="big_buck_bunny.mp4" type="video/mp4">
+  Your browser does not support HTML5 video.
+</video>
+</body> 
+<script>
+myVid=document.getElementById("video1");
+var flag=true;
+function getPlaySpeed()
+{ 
+  myRate = myVid.defaultPlaybackRate;
+  if( myRate != 1)
+  {
+    flag = false;
+  }
+  myVid.defaultPlaybackRate=0.5;
+  myRate = myVid.defaultPlaybackRate;
+  if(myRate != 0.5)
+  {
+    flag = false;
+  }
+} 
+
+function verifyTest()
+{
+  return flag;
+}
+</script> 
+</html>

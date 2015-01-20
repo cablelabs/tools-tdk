@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p.right
+{
+border-right-style:dotted;
+border-right-color:green;
+border-right-width:2px;
+}
+p.left
+{
+border-left-style:solid;
+border-left-color:red;
+border-left-width:2px;
+}
+
+p.top
+{
+border-top-style:dashed;
+border-top-color:blue;
+border-top-width:2px;
+}
+
+p.bottom
+{
+border-bottom-style:double;
+border-bottom-color:red;
+border-bottom-width:2px;
+}
+p.borderleft
+{
+    border-left:thick dashed #ff0000;
+}
+p.borderright
+{
+    border-right:thick solid #ff0000;
+}
+p.bordertop
+{
+    border-top:thick double #ff0000;
+}
+p.borderbottom
+{
+    border-bottom:thick dotted #ff0000;
+}
+</style>
+</head>
+
+<body>
+<p class="right">A solid red border</p>
+<p class="left">A solid green border</p>
+<p class="top">A solid green border</p>
+<p class="bottom">A solid green border</p>
+
+<p class="borderleft">A solid red border</p>
+<p class="borderright">A solid green border</p>
+<p class="bordertop">A solid green border</p>
+<p class="borderbottom">A solid green border</p>
+
+</body>
+<script>
+
+function rightBorderColor()
+{
+    var el1 = document.getElementsByClassName("right")[0];
+    var st1 = window.getComputedStyle(el1, null);
+    var tr1 = st1.getPropertyValue("border-right-color");
+    return tr1
+}
+function rightBorderWidth()
+{
+    var el1 = document.getElementsByClassName("right")[0];
+    var st1 = window.getComputedStyle(el1, null);
+    var tr1 = st1.getPropertyValue("border-right-width");
+    return tr1
+}
+function rightBorderStyle()
+{
+    var el1 = document.getElementsByClassName("right")[0];
+    var st1 = window.getComputedStyle(el1, null);
+    var tr1 = st1.getPropertyValue("border-right-style");
+    return tr1
+}
+
+function leftBorderColor()
+{
+var el1 = document.getElementsByClassName("left")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-left-color");
+return tr1
+}
+
+function leftBorderStyle()
+{
+var el1 = document.getElementsByClassName("left")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-left-style");
+return tr1
+}
+
+function leftBorderWidth()
+{
+var el1 = document.getElementsByClassName("left")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-left-width");
+return tr1
+}
+
+function topBorderColor()
+{
+var el1 = document.getElementsByClassName("top")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-top-color");
+return tr1
+}
+
+function topBorderStyle()
+{
+var el1 = document.getElementsByClassName("top")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-top-style");
+return tr1
+}
+
+function topBorderWidth()
+{
+var el1 = document.getElementsByClassName("top")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-top-width");
+return tr1
+}
+
+
+function bottomBorderColor()
+{
+var el1 = document.getElementsByClassName("bottom")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-bottom-color");
+return tr1
+}
+
+function bottomBorderStyle()
+{
+var el1 = document.getElementsByClassName("bottom")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-bottom-style");
+return tr1
+}
+
+function bottomBorderWidth()
+{
+var el1 = document.getElementsByClassName("bottom")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-bottom-width");
+return tr1
+}
+
+function leftBorder()
+{
+var el1 = document.getElementsByClassName("borderleft")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-left");
+if(tr1.indexOf("dashed"))
+{
+    return true
+}
+}
+
+function rightBorder()
+{
+var el1 = document.getElementsByClassName("borderright")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-right");
+if(tr1.indexOf("solid"))
+{
+    return true
+}
+}
+
+function topBorder()
+{
+var el1 = document.getElementsByClassName("bordertop")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-top");
+if(tr1.indexOf("double"))
+{
+    return true
+}
+}
+
+function bottomBorder()
+{
+var el1 = document.getElementsByClassName("borderbottom")[0];
+var st1 = window.getComputedStyle(el1, null);
+var tr1 = st1.getPropertyValue("border-bottom");
+if(tr1.indexOf("dotted"))
+{
+    return true
+}
+}
+</script>
+</html>

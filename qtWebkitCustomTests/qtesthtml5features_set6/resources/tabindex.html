@@ -1,0 +1,36 @@
+<html>
+<head>
+<script>
+function changeTabIndex()
+  {
+  
+  document.getElementById('1').tabIndex="3"
+  document.getElementById('2').tabIndex="2"
+  document.getElementById('3').tabIndex="1"
+  
+  }
+var tabIndexTest=false;
+
+function verifyTabIndex()
+{
+ changeTabIndex();
+ if (document.getElementById('1').tabIndex=="3" && document.getElementById('2').tabIndex=="2" && document.getElementById('3').tabIndex=="1")
+{
+  
+  tabIndexTest=true
+  
+}
+
+return tabIndexTest;
+}
+
+</script>
+</head>
+<body>
+<p><a id="1" href="http://www.w3schools.com/" tabindex="2">W3Schools</a></p>
+<p><a id="2" href="http://www.google.com/" tabindex="1">Google</a></p>
+<p><a id="3" href="http://www.microsoft.com/" tabindex="3">Microsoft</a></p>
+</body>
+</html>
+
+

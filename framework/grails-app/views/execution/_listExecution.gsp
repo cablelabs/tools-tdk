@@ -62,8 +62,8 @@
 							<g:if test="${executionInstance?.script}">
 								 <%
 						 String scriptName = executionInstance?.script;
-						 if(scriptName.length() > 40){
-							 scriptName = scriptName?.substring(0, 37) + "...";
+						 if(scriptName.length() > 35){
+							 scriptName = scriptName?.substring(0, 32) + "...";
 						 }
 						  %>
 								${scriptName}

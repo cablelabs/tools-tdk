@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div.ex1 {direction:rtl;}
+</style>
+</head>
+<body>
+
+<div>Some text. Default writing direction.</div>
+<div class="ex1">Some text. Right-to-left direction.</div>
+
+</body>
+<script>
+function verifyDirection()
+{
+  var elem = document.getElementsByClassName("ex1")[0];
+  var style = window.getComputedStyle(elem, null);
+  var myDirection = style.getPropertyValue("direction");
+  return myDirection;
+}
+</script>
+</html>
+

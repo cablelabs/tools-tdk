@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<title>HTML5 Video</title>
+</head>
+<body>
+
+<div id="log">
+</div>
+<video id="videoWebm">
+<source src="big_buck_bunny.mp4" type="video/mp4">
+</video>
+
+        <script type="text/javascript">
+
+alert("Inside script")
+        var videoWebm=document.getElementById("videoWebm")
+        var diff
+        var flagPlayAgain = false
+        videoWebm.play()
+         var t0 = (new Date()).getTime();
+alert("After play t0")
+          videoWebm.addEventListener("playing", function(event) {
+            if(flagPlayAgain == true)
+            {
+                alert("Playing video again")
+                diff = (new Date()).getTime() - t0
+            }
+
+        })
+
+
+        function playingVideo() {
+
+            return diff
+        }
+
+        function funPlayAgain()
+        {
+             alert("Play again")
+             videoWebm.play()
+
+             t0 = (new Date()).getTime();
+             flagPlayAgain = true
+        }
+
+function myFun()
+{
+    alert("Hello !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+}
+
+</script>
+</body>
+</html>

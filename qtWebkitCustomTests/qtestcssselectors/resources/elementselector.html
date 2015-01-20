@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p
+{
+text-decoration:underline;
+}
+</style>
+</head>
+<body>
+
+<h1>Welcome to My Homepage</h1>
+
+<div>
+<p id="firstname">My name is Donald.</p>
+<p id="hometown">I live in Duckburg.</p>
+</div>
+<p>My best friend is Mickey.</p>
+</body>
+<script>
+function textDecoration()
+{
+    var flag = false;
+    var el1 = document.getElementsByTagName("p");
+    for(var index = 0 ; index < el1.length ; index++)
+    {
+        var st1 = window.getComputedStyle(el1[index], null);
+        var tr1 = st1.getPropertyValue("text-decoration");
+        if(tr1 == "underline")
+        {
+            flag = true;
+        }
+        else
+        {
+            flag = false;
+        }
+    }
+return flag
+}
+</script>
+</html>

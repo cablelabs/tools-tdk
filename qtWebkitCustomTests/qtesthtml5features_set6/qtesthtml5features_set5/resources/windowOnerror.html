@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+var myFunctionCalled = false;
+
+function doLog(logtxt)
+{
+        var div = document.getElementById('logs')
+        div.innerHTML = div.innerHTML + "*"+logtxt
+}
+
+window.onerror = function()
+{
+    doLog("error!!!");
+    myFunctionCalled = true;
+}
+</script>
+</head>
+
+<body onload="myFn()">
+<div id="logs">
+log1
+</div>
+<h1>Hello World!</h1>
+
+</body>
+<script>
+
+function windowError()
+{
+    return myFunctionCalled;
+}
+</script>
+</html>
+

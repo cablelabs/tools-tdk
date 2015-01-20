@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+ul.a {list-style-type:circle;}
+ol.b {list-style-type:upper-roman;}
+</style>
+</head>
+
+<body>
+<p>Example of unordered lists:</p>
+
+<ul class="a">
+  <li>Coffee</li>
+  <li>Tea</li>
+  <li>Coca Cola</li>
+</ul>
+
+
+<p>Example of ordered lists:</p>
+
+<ol class="b">
+  <li>Coffee</li>
+  <li>Tea</li>
+  <li>Coca Cola</li>
+</ol>
+
+
+</body>
+<script>
+function verifyListStyle()
+{
+  var flag = false;
+  var elem = document.getElementsByClassName("a")[0];
+  var style = window.getComputedStyle(elem, null);
+  var myListType1 = style.getPropertyValue("list-style-type");
+
+  var elem = document.getElementsByClassName("b")[0];
+  var style = window.getComputedStyle(elem, null);
+  var myListType2 = style.getPropertyValue("list-style-type");
+
+  if((myListType1 == "circle") && (myListType2 == "upper-roman"))
+  {
+    flag = true;
+  }
+  return flag;
+}
+</script>
+</html>
+

@@ -6,6 +6,6 @@ AM_CXXFLAGS = -DDEBUG_LEVEL_TRACE -DAGENT_LOG_ENABLE -DRDKVERSION="\"${RDK_VERSI
 bin_PROGRAMS = agent
 agentdir = ${bindir}
 agent_SOURCES = src/agentmain.cpp src/rpcmethods.cpp
-agent_SCRIPTS = scripts/configure_iptables.sh scripts/flush_iptables.sh scripts/get_moca_devices.sh scripts/runSysStat.sh scripts/TDK_version.txt
+agent_SCRIPTS = scripts/runSysStat.sh scripts/TDK_version.txt
 agent_LDADD = -ljsoncpp -ljsonrpc-cpp -ldl -lpthread
 agent_includedir = ${includedir}

@@ -1,15 +1,15 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xml>
-  <module name='dtcp' testGroup='Component'>
+  <module name="dtcp" testGroup="Component">
     <primitiveTests>
-      <primitiveTest name='TestMgr_DTCPAgent_Init' id='661' version='1'>
-        <function>TestMgr_DTCPAgent_Init</function>
+      <primitiveTest id=" " name="DTCP_Comp_Test" version="2">
+        <function>TestMgr_DTCP_Test_Execute</function>
         <parameters>
-          <parameter name='param3' value='1' />
-          <parameter name='param1' value='192.168.30.80' />
-          <parameter name='param4' value='1' />
-          <parameter name='param2' value='1' />
-          <parameter name='funcName' value='DTCPMgrInitialize' />
+          <parameter name="funcName" value="DTCPMgrInitialize"/>
+          <parameter name="strParam1" value="lan0"/>
+          <parameter name="intParam2" value="0"/>
+          <parameter name="intParam3" value="0"/>
+          <parameter name="intParam4" value="0"/>
         </parameters>
       </primitiveTest>
     </primitiveTests>

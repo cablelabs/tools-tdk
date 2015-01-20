@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div.container
+{
+width:30em;
+border:1em solid;
+}
+div.box
+{
+box-sizing:border-box;
+-moz-box-sizing:border-box; /* Firefox */
+width:50%;
+border:1em solid red;
+float:left;
+outline:2px solid black;
+outline-offset:1px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+<div class="box" id="div1">This div occupies the left half.</div>
+<div class="box" id="div1">This div occupies the right half.</div>
+</div>
+
+</body>
+<script>
+
+
+function boxSize()
+{
+    var elem = document.getElementById('div1');
+    var box = window.getComputedStyle(elem,null).getPropertyValue("box-sizing");
+
+    return box;
+}
+function outlineOff()
+{
+    var elem = document.getElementById('div1');
+    var outline = window.getComputedStyle(elem,null).getPropertyValue("outline-offset");
+
+    return outline;
+}
+</script>
+</html>
+

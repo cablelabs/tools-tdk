@@ -1,0 +1,16 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/cssOutline.html</file>
+        <file>resources/cssEmptyCells.html</file>
+        <file>resources/cssWhiteSpace.html</file>
+        <file>resources/cssUnicodeBidi.html</file>
+        <file>resources/cssPadding.html</file>
+        <file>resources/cssBorderSpacing.html</file>
+        <file>resources/cssWordSpacing.html</file>
+        <file>resources/cssContent.html</file>
+        <file>resources/cssBorderWidth.html</file>
+        <file>resources/cssOutlineWidth.html</file>
+        <file>resources/cssUnicodeRange.html</file>
+        <file>resources/cssMargin.html</file>
+    </qresource>
+</RCC>

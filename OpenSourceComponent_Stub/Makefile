@@ -52,6 +52,7 @@ TARGETLIB	:= libopensourcetestsuitestub.so
 #
 LIB        = $(LIBDIR)/$(TARGETLIB)
 SOURCES   := $(SRC_DIR)*.cpp
+LDOPTS +=
 
 #
 # Intermediate files

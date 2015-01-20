@@ -61,6 +61,7 @@ class BoxManufacturerController {
 					if (boxManufacturerInstance) {
 						try{
 						  boxManufacturerInstance.delete(flush: true)
+						  flash.message = message(code: 'default.deleted.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'),  boxManufacturerInstance.name])
 						}
 						catch (DataIntegrityViolationException e) {
 				            flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'),  boxManufacturerInstance.name])				           

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+input[type="text"]:enabled
+{
+background-color:#ffff00;
+}
+input[type="text"]:disabled
+{
+background-color:#dddddd;
+}
+</style>
+</head>
+<body>
+
+<form action="">
+First name: <input type="text" value="Mickey" /><br>
+Last name: <input type="text" value="Mouse" /><br>
+Country: <input type="text" disabled="disabled" value="Disneyland" /><br>
+</form>
+
+</body>
+<script>
+function getBackground()
+{
+    var el1 = document.getElementsByTagName("input");
+    for(var index = 0 ; index < el1.length ; index++)
+    {
+        var attrValue = el1[index].getAttribute("disabled");
+        if(attrValue == "disabled")
+        {
+            var st1 = window.getComputedStyle(el1[index], null);
+            var tr1 = st1.getPropertyValue("background-color");
+            if(tr1 == "rgb(221, 221, 221)")
+            {
+                return true;
+            }
+        }
+    }
+}
+
+function getEnabledBackground()
+{
+var el1 = document.getElementsByTagName("input");
+for(var index = 0 ; index < el1.length ; index++)
+{
+    var attrValue = el1[index].disabled;
+    if(attrValue == false)
+    {
+        var st1 = window.getComputedStyle(el1[index], null);
+        var tr1 = st1.getPropertyValue("background-color");
+        if(tr1 == "rgb(255, 255, 0)")
+        {
+            return true;
+        }
+    }
+}
+}
+</script>
+</html>

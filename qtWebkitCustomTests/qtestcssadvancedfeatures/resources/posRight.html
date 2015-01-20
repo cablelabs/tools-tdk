@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+img
+{
+position:absolute;
+right:50px;
+}
+</style>
+</head>
+
+<body>
+<h1>This is a heading</h1>
+<img id="img1"src="http://www.w3schools.com/cssref/logocss.gif" width="95" height="84">
+</body>
+<script>
+
+function posRight()
+{
+
+    var elem = document.getElementById('img1');
+    var style = window.getComputedStyle(elem, null);
+    var pos = style.getPropertyValue("position");
+
+    var right = style.getPropertyValue("right");
+
+    if(pos == "absolute" && right == "50px")
+    {
+        return true;
+    }
+}
+
+</script>
+</html>

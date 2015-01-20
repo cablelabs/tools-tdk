@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head><title>HTML5 Video</title>
+</head>
+<body>
+
+<h1> Video test</h1>
+<div id="logs">
+log1
+</div>
+
+<video id="video1" onloadedmetadata="getLoadedDataEvnt()" preload controls>
+<source src="big_buck_bunny.mp4" type="video/mp4">
+</video>
+
+<script>
+var myVid=document.getElementById("video1");
+var getReadyState=0;
+var checkState = false;
+function doLog(logtxt)
+{
+        var div = document.getElementById('logs')
+        div.innerHTML = div.innerHTML + "*"+logtxt
+}
+
+doLog("log2");
+
+function getLoadedDataEvnt()
+{
+    doLog("Get ready state of the video");
+    getReadyState = myVid.readyState;
+
+    if(getReadyState != 0)
+    {
+        checkState = true;
+    }
+    else
+    {
+        checkState = false;
+    }
+}
+doLog("log3");
+
+function myReadyState()
+{
+    doLog("readystate: " + getReadyState);
+    return checkState;
+
+}
+
+doLog("logEnd");
+
+</script> 
+
+</body> 
+</html>

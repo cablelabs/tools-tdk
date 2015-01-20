@@ -222,7 +222,6 @@ function refreshElements(){
 //updateScriptGrp
 
 function updateSG() {
-	
 	var sortable = document.getElementById("sortable");
 
 	var dataList = ""
@@ -230,10 +229,6 @@ function updateSG() {
 		
 		var elmnt = $(this).attr('id');
 		elmnt = elmnt.replace("sgscript-","");
-		
-		elmnt = elmnt.replace(/sp_sp/g, ' ');
-		elmnt = elmnt.replace(/dot_dot/g, '.');
-		elmnt = elmnt.replace(/amp_amp/g, '&');
 		
 		elmnt = elmnt.replace("end","");
 		if(!dataList.contains(","+elmnt+",")){
@@ -254,9 +249,6 @@ function createSG() {
 	$( "li[id*='sgscript-']" ).each(function(index) {
 		var elmnt = $(this).attr('id');
 		elmnt = elmnt.replace("sgscript-","");
-		elmnt = elmnt.replace(/sp_sp/g, ' ');
-		elmnt = elmnt.replace(/dot_dot/g, '.');
-		elmnt = elmnt.replace(/amp_amp/g, '&');
 		elmnt = elmnt.replace("end","");
 		dataList = dataList +","+ elmnt;
 	});

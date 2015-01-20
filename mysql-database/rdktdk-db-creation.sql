@@ -10,5 +10,4 @@ grant CREATE, INSERT, DELETE, UPDATE, SELECT, DROP, ALTER, lock tables ON rdktes
 
 
 CREATE DATABASE IF NOT EXISTS rdktesttoolproddb_temp;
-CREATE USER 'rdktesttooluser'@'127.0.0.1' identified by '6dktoolus3r!';
 grant CREATE, INSERT, DELETE, UPDATE, SELECT, DROP, ALTER, lock tables ON rdktesttoolproddb_temp.* TO 'rdktesttooluser'@'127.0.0.1';

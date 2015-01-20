@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div *
+{
+background-color:yellow;
+}
+</style>
+</head>
+<body>
+
+<h1>Welcome to My Homepage</h1>
+
+<div class="intro">
+<p id="firstname">My name is Donald.</p>
+<p id="hometown">I live in Duckburg.</p>
+<div id="div1">Hello</div>
+</div>
+
+<p>My best friend is Mickey.</p>
+
+</body>
+<script>
+function backgroundColor()
+{
+    var el1 = document.getElementById("firstname");
+    var st1 = window.getComputedStyle(el1, null);
+    var tr1 = st1.getPropertyValue("background-color");
+
+    var el2 = document.getElementById("hometown");
+    var st2 = window.getComputedStyle(el2, null);
+    var tr2 = st2.getPropertyValue("background-color");
+
+    var el3 = document.getElementById("div1");
+    var st3 = window.getComputedStyle(el3, null);
+    var tr3 = st3.getPropertyValue("background-color");
+
+    if(tr1 == "rgb(255, 255, 0)" && tr2 == "rgb(255, 255, 0)" && tr3 == "rgb(255, 255, 0)")
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+</script>
+</html>

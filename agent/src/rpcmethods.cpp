@@ -557,6 +557,20 @@ void RpcMethods::ResetCrashStatus()
 }/* End of ResetCrashStatus */
 
 
+/********************************************************************************************************************
+ Purpose:              To reboot device.
+                             						
+ Return:                void
+
+*********************************************************************************************************************/
+void RpcMethods::CallReboot()
+{
+    DEBUG_PRINT (DEBUG_ERROR, "Going for a REBOOT !!!\n\n");
+    system ("sleep 10 && reboot &");
+	
+} /* End of CallReboot */
+
+
 
 /********************************************************************************************************************
  Purpose:               Extract Module name from Json request, load the corresponding module using LoadLibrary() and 
@@ -896,8 +910,7 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
     response ["result"] = "SUCCESS";
     response ["details"] = "Preconditions  set. Going for a reboot";
 
-    DEBUG_PRINT (DEBUG_ERROR, "Going for a REBOOT !!!\n\n");
-    system ("reboot");
+    CallReboot();
 
     return bRet;
 	
@@ -1026,6 +1039,37 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
 	
 } /* End of RPCRestorePreviousState */
 
+
+
+/********************************************************************************************************************
+ Purpose:               RPC call to reboot device under test on Agent monitor crash.
+ Parameters:   
+                             request [IN]       - Json request
+                             response [OUT]  - Json response with result "SUCCESS"
+ 
+ Return:                 bool  -      Always returning true from this function, with details in response[result]
+ 
+ Methods of same class used:   callReboot()
+
+*********************************************************************************************************************/
+bool RpcMethods::RPCRebootBox(const Json::Value& request, Json::Value& response)
+{
+
+    bool bRet = true;
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPC Reboot STB --> Entry\n");
+    //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
+    cout << "Received query: \n" << request << endl;
+
+    CallReboot(); // Calling box reboot function.
+
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+    response["result"] = "Success";
+
+    return bRet;
+	
+}
 
 
 
@@ -1227,7 +1271,7 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
     }
     else
     {
-        DEBUG_PRINT (DEBUG_TRACE, "\n %s successfully deleted\n\n\n" SHOW_DEFINE(MODULE_LIST_FILE) ); 
+        DEBUG_PRINT (DEBUG_TRACE, "\n %s successfully deleted\n\n\n", SHOW_DEFINE(MODULE_LIST_FILE)); 
     }
 
     /* Constructing JSON response */

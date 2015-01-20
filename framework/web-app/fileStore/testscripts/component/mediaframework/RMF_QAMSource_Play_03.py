@@ -44,6 +44,7 @@ import time;
 
 expected_Result="SUCCESS"
 failure = "FAILURE"
+result = "SUCCESS"
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
@@ -95,7 +96,7 @@ if expected_Result in loadModuleStatus.upper():
 
         src_parameter=[];
         src_element=[];
-        result=Create_and_ExecuteTestStep('RMF_CommentScirptForQam',obj,expected_Result,src_parameter,src_element);
+        #result=Create_and_ExecuteTestStep('RMF_CommentScirptForQam',obj,expected_Result,src_parameter,src_element);
         if expected_Result in result.upper():
                 print "rmf-streamer script commented and initiating reboot"
                 obj.initiateReboot();
@@ -189,7 +190,7 @@ if expected_Result in loadModuleStatus.upper():
 
         src_parameter=[];
         src_element=[];
-        result=Create_and_ExecuteTestStep('RMF_UnCommentScirptForQam',obj,expected_Result,src_parameter,src_element);
+        #result=Create_and_ExecuteTestStep('RMF_UnCommentScirptForQam',obj,expected_Result,src_parameter,src_element);
         if expected_Result in result.upper():
                 print "rmf-streamer script uncommented and initiating reboot"
         else:

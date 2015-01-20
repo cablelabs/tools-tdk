@@ -1,0 +1,31 @@
+<html>
+<head>Welcome to style testing</head>
+<body>
+
+<p id="p2">Hello World!</p>
+
+<script>
+var setTestStyle=false;
+function setStyle()
+{
+  document.getElementById("p2").style.color="blue";
+  
+}
+
+function verifyTestStyle()
+{
+  setStyle();
+  if(document.getElementById("p2").style.color=="blue")
+	{
+	  setTestStyle=true;	
+	}
+  
+  return setTestStyle;
+}
+
+</script>
+
+<p>The paragraph above was changed by a script.</p>
+
+</body>
+</html>

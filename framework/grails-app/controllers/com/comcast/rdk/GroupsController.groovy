@@ -90,9 +90,10 @@ class GroupsController {
 					if (groupInstance) {
 						try{
 							groupInstance.delete(flush: true)
+							flash.message = message(code: 'default.deleted.message', args: [message(code: 'groups.label', default: 'Groups'),  groupInstance?.name])
 						}
 						catch (DataIntegrityViolationException e) {
-							flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'groups.label', default: 'Groups'),  groupsInstance?.name])
+							flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'groups.label', default: 'Groups'),  groupInstance?.name])
 						}						
 					}
 				}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function myFunction()
+{
+    myFunctionCalled = true;
+}
+</script>
+</head>
+
+<body>
+<h1>Hello World!</h1>
+
+</body>
+<script>
+
+var myFunctionCalled = false;
+function windowLoad()
+{
+    window.onload = myFunction();
+    return myFunctionCalled;
+}
+</script>
+</html>

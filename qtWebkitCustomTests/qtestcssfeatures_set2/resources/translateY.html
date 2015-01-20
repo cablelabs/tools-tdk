@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div
+{
+width:100px;
+height:75px;
+background-color:red;
+border:1px solid black;
+}
+
+div#div2
+{
+transform:translateY(50px);
+-ms-transform:translateY(50px); /* IE 9 */
+-webkit-transform:translateY(50px); /* Safari and Chrome */
+}
+</style>
+</head>
+<body>
+
+<div id = "div">Hello. This is a DIV element.</div>
+
+<div id="div2">Hello. This is a DIV element.</div>
+
+</body>
+<script>
+
+function isTranslated()
+{
+    var el = document.getElementById("div2");
+    var st = window.getComputedStyle(el, null);
+    var tr = st.getPropertyValue("-webkit-transform")
+    var res = tr.split(",");
+    var newStr = res[5].slice(0,-1);
+    return newStr;
+}
+</script>
+</html>
+

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style> 
+h1:nth-last-of-type(2)
+{
+background:#ff0000;
+}
+</style>
+</head>
+<body>
+<h1>This is a heading1</h1>
+<p>The first paragraph.</p>
+<h1>This is a heading2</h1>
+<p>The second paragraph.</p>
+<h1>This is a heading3</h1>
+<p>The third paragraph.</p>
+<p><b>Note:</b> Internet Explorer 8 and earlier versions do not support the :nth-last-of-type() selector.</p>
+
+</body>
+<script>
+function getBackground()
+{
+    var elem = document.getElementsByTagName("h1");
+    var len = (elem.length)-1;
+    var result = false;
+
+    for(index=0; index<=len; index++)
+    {
+        var style = window.getComputedStyle(elem[index], null);
+        var backGnd = style.getPropertyValue("background-color");
+        if( backGnd == "rgb(255, 0, 0)" && index == (len-1))
+        {
+            result = true;
+        }
+        if(backGnd == "rgba(0, 0, 0, 0)" && index != (len-1) )
+        {
+            result = true;
+        }
+
+    }
+    return result;
+}
+        
+</script>
+</html>
+

@@ -24,7 +24,7 @@ else
 COPTS     += -DRDKVERSION="\"$(RDK_VERSION)\""
 endif
 
-#COPTS += -DAGENT_LOG_ENABLE
+COPTS += -DAGENT_LOG_ENABLE
 COPTS += 
 
 #

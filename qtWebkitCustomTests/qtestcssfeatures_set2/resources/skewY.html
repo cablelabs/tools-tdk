@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div
+{
+width:100px;
+height:75px;
+background-color:red;
+border:1px solid black;
+}
+div#div2
+{
+
+-webkit-transform:skewY(30deg); /* Safari and Chrome */
+}
+</style>
+</head>
+<body>
+
+<div>Hello. This is a DIV element.</div>
+
+<div id="div2">Hello. This is a DIV element.</div>
+<script>
+
+function isTranslated()
+{
+var el = document.getElementById("div2");
+var st = window.getComputedStyle(el, null);
+var tr = st.getPropertyValue("-webkit-transform")
+
+var values = tr.split('(')[1].split(')')[0].split(',');
+
+var skewY = (180/Math.PI) * Math.atan2( ((0*values[2])+(1*values[3])),((0*values[0])-(1*values[1]))) - 90 ;
+return skewY
+
+}
+</script>
+</body>
+</html>

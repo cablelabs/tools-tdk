@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p:nth-child(2)
+{
+background:#ff0000;
+}
+</style>
+</head>
+<body>
+
+<h1>This is a heading</h1>
+<p>The first paragraph.</p>
+<p>The second paragraph.</p>
+<p>The third paragraph.</p>
+<p>The fourth paragraph.</p>
+
+
+<div>
+<h2>Hello World </h2>
+<p>This is fifth paragraph</p>
+</div>
+<p><b>Note:</b> Internet Explorer 8 and earlier versions do not support the :nth-child() selector.</p>
+
+</body>
+
+<script>
+function getBackground()
+{
+var el1 = document.body.children;
+var result = false;
+for(var index = 0 ; index < el1.length ; index++)
+{
+    var st1 = window.getComputedStyle(el1[index], null);
+
+    if(el1[index].nodeName == "P" )
+    {
+
+        var tr1 = st1.getPropertyValue("background-color");
+
+        if(tr1 == "rgb(255, 0, 0)" && index == 1)
+        {
+            result = true;
+        }
+        if(tr1 == "rgba(0, 0, 0, 0)" && index != 1)
+        {
+            result = true;
+        }
+    }
+
+    var child = el1[index].children;
+
+    for(var index1 = 0 ; index1 < child.length ; index1++)
+    {
+        var st2 = window.getComputedStyle(child[index1], null);
+
+        if(child[index1].nodeName == "P" )
+        {
+            var tr2 = st2.getPropertyValue("background-color");
+            if(tr2 == "rgb(255, 0, 0)" && index1 == 1)
+            {
+                result = true;
+            }
+            if(tr2 == "rgba(0, 0, 0, 0)" && index1 != 1)
+            {
+                result = true;
+            }
+        }
+    }
+
+}
+return result;
+}
+</script>
+</html>

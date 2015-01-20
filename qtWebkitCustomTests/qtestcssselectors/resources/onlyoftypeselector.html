@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+p:only-of-type
+{
+background-color:#ff0000;
+}
+</style>
+</head>
+<body>
+
+<div><p>This is a paragraph.</p></div>
+
+<div><p>This is a paragraph.</p><p>This is a paragraph.</p></div>
+
+</body>
+<script>
+function getBackground()
+{
+    var elem = document.body.children;
+    var flag = false;
+
+    for(var index = 0 ; index < elem.length ; index++)
+    {
+        var childP = elem[index].getElementsByTagName("P");
+        if(childP.length == 0)
+        {
+            continue;
+        }
+        var st1 = window.getComputedStyle(childP[0], null);
+        var tr1 = st1.getPropertyValue("background-color");
+
+        if(childP.length == 1 && tr1 == "rgb(255, 0, 0)" )
+        {
+
+            flag = true;
+        }
+        if(childP.length != 1)
+        {
+            for(var index1 = 0 ; index1 < childP.length ; index1++)
+            {
+                var st2 = window.getComputedStyle(childP[index1], null);
+                var tr2 = st2.getPropertyValue("background-color");
+
+                if(tr2 == "rgba(0, 0, 0, 0)")
+                {
+                    flag = true;
+                }
+            }
+        }
+    }
+    return flag;
+}
+</script>
+</html>

@@ -829,6 +829,7 @@ int Agent()
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCLoadModule, std::string("LoadModule")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCUnloadModule, std::string("UnloadModule")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCEnableReboot, std::string("EnableReboot")));
+    go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCRebootBox, std::string("RebootBox")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCRestorePreviousState, std::string("RestorePreviousState")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCPerformanceBenchMarking, std::string("PerformanceBenchMarking")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCPerformanceSystemDiagnostics, std::string("PerformanceSystemDiagnostics")));

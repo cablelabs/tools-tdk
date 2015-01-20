@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resources/CSSTransition.html</file>
+        <file>resources/CSSTransform.html</file>
+        <file>resources/mq_touch.css</file>
+        <file>resources/CSSMediaQuery.html</file>
+    </qresource>
+</RCC>

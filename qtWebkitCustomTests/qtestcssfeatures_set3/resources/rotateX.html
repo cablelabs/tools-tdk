@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+div
+{
+width:100px;
+height:75px;
+background-color:red;
+border:1px solid black;
+}
+div#div2
+{
+transform:rotateX(120deg);
+-webkit-transform:rotateX(120deg); /* Safari and Chrome */
+}
+</style>
+</head>
+<body>
+
+<p><b>Note:</b> Internet Explorer 9 (and earlier versions) and Opera does not support the rotateY method.</p>
+
+<div>Hello. This is a DIV element.</div>
+
+<div id="div2">Hello. This is a DIV element.</div>
+
+</body>
+<script>
+
+function rotatedX()
+{
+    var domElement = document.getElementById("div2");
+    var computedStyle = window.getComputedStyle(domElement),
+    matrixStyle = computedStyle.transform || computedStyle.WebkitTransform || computedStyle.MozTransform || computedStyle.msTransform || computedStyle.OTransform;
+
+    if (matrixStyle) {
+        matrixStyle = matrixStyle.trim();
+    }
+
+    if (matrixStyle === 'none') {
+        if (parameterName.indexOf('rotate') === 0) {
+            return '0deg';
+        } else if (parameterName.indexOf('translate') === 0) {
+            return '0px';
+        } else if (parameterName === 'scale') {
+            return 1;
+        } else {
+            throw "Unsupported 3D parameter " + parameterName;
+        }
+    }
+
+    else if (!matrixStyle || matrixStyle.substr(0, 9) !== 'matrix3d(') {
+        //return something or die ?????
+        throw "Something is wrong with 3D transform style. Probably no style applied at all OR unknown CSS3 vendor OR unknown/unsupported 3D matrix representation string OR CSS3 3D transform is not fully supported in this browser";
+    }
+
+    var matrix = window.WebKitCSSMatrix && (new WebKitCSSMatrix(matrixStyle)) ||
+            window.MozCSSMatrix && (new MozCSSMatrix(matrixStyle)) ||
+            window.MsCSSMatrix && (new MsCSSMatrix(matrixStyle)) ||
+            window.OCSSMatrix && (new OCSSMatrix(matrixStyle)) ||
+            window.CSSMatrix && (new CSSMatrix(matrixStyle)); // sorry 4 copy-paste my friends
+
+    if (!matrix || isNaN(matrix.a) || isNaN(matrix.b) || isNaN(matrix.c) || isNaN(matrix.m41) || isNaN(matrix.m42) || isNaN(matrix.m43) || isNaN(matrix.m11)) {
+        throw "Could not catch CSSMatrix constructor for current browser, OR the constructor has returned a non-standard matrix object (need .a, .b, .c and mXX numerical properties to work)";
+    }
+
+
+    return Math.round(90 - (Math.asin(matrix.m22)*180/Math.PI));
+
+}
+</script>
+</html>

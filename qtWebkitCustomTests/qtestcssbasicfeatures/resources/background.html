@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body
+{
+background: #00ff00 url('http://www.w3schools.com/cssref/smiley.gif') no-repeat fixed center;
+}
+</style>
+</head>
+
+<body id="b1">
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+<p>This is some text</p>
+</body>
+<script>
+function backgndProp()
+{
+    var elem = document.getElementById('b1');
+    var style = window.getComputedStyle(elem,null);
+    var back = style.getPropertyValue("background");
+
+    return back;
+
+}
+</script>
+</html>

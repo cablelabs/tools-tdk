@@ -52,10 +52,48 @@ ip = <ipaddress>
 port = <port>
 
 obj.configureTestCase(ip,port,'E2E_RMF_DVR_TrickPlay_01');
+expected_Result="SUCCESS"
 
 #Get the result of connection with test component and STB
-result =obj.getLoadModuleResult();
-print "TDKIntegration module loading status : %s" %result;
+result = obj.getLoadModuleResult();
+print "tdkintegration module loaded: %s" %result;
+
+#Acquiring the instance of TDKScriptingLibrary for checking and verifying the DVR content.
+if "SUCCESS" in result.upper():
+         obj.setLoadModuleStatus("SUCCESS");
+         print "TDKIntegration module load successful";
+
+         #Pre-requisite to Check and verify required recording is present or not.
+         #---------Start-----------------
+         matchList = []
+         if expected_Result in result.upper():
+                  #Get DVR pre req done.
+                  matchList = obj.checkAndVerifyDvrRecording(3);
+                  if len(matchList) == 0:
+                           print "DVR required Recording Not Found!!! Status: FAILURE"
+                           print "DVR Test case execution skipped!!!."                           
+
+                           exit()
+                  else:
+                           print "DVR required Recording Found. Proceeding to excute Test Case."
+                           print "Record Details: ",matchList
+
+         else:
+                  print "Loading Module Failed."
+                  print "Exiting the script without running the TC"
+                  exit();
+        #--------End-----------------------
+
+time.sleep(10)
+
+#The Pre-requisite success. Proceed to execute the test case.
+obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+
+obj.configureTestCase(ip,port,'E2E_RMF_DVR_TrickPlay_01');
+
+#Get the result of connection with test component and STB
+result = obj.getLoadModuleResult();
+print "tdkintegration module loaded: %s" %result;
 
 if "SUCCESS" in result.upper():
          obj.setLoadModuleStatus("SUCCESS");
@@ -67,14 +105,11 @@ if "SUCCESS" in result.upper():
          #set the dvr play url
          streamDetails = tdkTestObj.getStreamDetails("01");
 
-         recordingObj = tdkTestObj.getRecordingDetails();
-         num = recordingObj.getTotalRecordings();
-         print "Number of recordings: %d"%num
-
-         recordID = recordingObj.getRecordingId(num - 1);
+         #fetch recording id from list matchList.
+         recordID = matchList[1]
 
          url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=4.00&time_pos=0.00'
-         
+
          print "The Play DVR Url Requested: %s"%url
          tdkTestObj.addParameter("playUrl",url);
 

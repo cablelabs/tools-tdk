@@ -67,13 +67,14 @@ class RpcMethods
         {
             m_pAgent = pAgent;
         }
-		
+
         bool RPCLoadModule (const Json::Value& request, Json::Value& response);
         bool RPCUnloadModule (const Json::Value& request, Json::Value& response);
         bool RPCEnableReboot (const Json::Value& request, Json::Value& response);
         bool RPCRestorePreviousState (const Json::Value& request, Json::Value& response);
         bool RPCGetHostStatus (const Json::Value& request, Json::Value& response);
         bool RPCResetAgent (const Json::Value& request, Json::Value& response);
+        bool RPCRebootBox (const Json::Value& request, Json::Value& response);
         bool RPCGetRDKVersion (const Json::Value& request, Json::Value& response);
         bool RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Value& response);
         bool RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response);
@@ -99,6 +100,7 @@ class RpcMethods
         std::string UnloadLibrary (char* pszLibName);
         char* GetHostIPInterface (const char* pszIPaddr);
         bool DeleteModuleFromFile (std::string strLibName);
+        void CallReboot();
         void ResetCrashStatus();
         void SetCrashStatus (const char* pszExecId, const char* pszDeviceId, const char* pszTestCaseId, const char* pszExecDevId, const char* pszResultId);
 	 

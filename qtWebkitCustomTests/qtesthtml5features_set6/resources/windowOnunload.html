@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<body>
+<p> hello </p>
+</body>
+<script>
+var flag=false;
+function verifyTest()
+{
+  window.onunload=myFunc();
+  return flag;
+}
+
+function myFunc()
+{
+  flag=true;
+}
+
+</script>
+</html>

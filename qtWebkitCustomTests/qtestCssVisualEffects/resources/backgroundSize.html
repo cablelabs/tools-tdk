@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+#p1
+{
+background:url("http://www.w3schools.com/cssref/img_flwr.gif");
+background-repeat:no-repeat;
+padding-top:40px;
+}
+</style>
+</head>
+<body>
+<p id="p1" style="background-size:200px 100px;">
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat.
+</p>
+
+<p>Original image: <img src="http://www.w3schools.com/cssref/img_flwr.gif" alt="Flowers" width="224" height="162" /></p>
+
+</body>
+<script>
+
+function backgndSize()
+{
+    var elem = document.getElementById('p1');
+    var style = window.getComputedStyle(elem,null);
+    var size = style.getPropertyValue("background-size");
+
+    return size;
+}
+</script>
+</html>
+

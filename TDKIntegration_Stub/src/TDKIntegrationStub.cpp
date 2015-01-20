@@ -1261,6 +1261,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
 	string url = req["playUrl"].asCString();
+	string modurl;
 
 	/*The URL speed comparision part of code is commented, Based on the comment made against the ticket RDKTT-49 */
 #if 0
@@ -1268,14 +1269,60 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	int playSpeedStrPosition = url.find("play_speed");
 	float urlSpeed = 0.0;
 #endif
+	if( url.find("dvr")!= -1)
+        {
+	int modurllen = url.find("&0");
+        modurl = url.substr(0,modurllen+2);
+        DEBUG_PRINT(DEBUG_LOG,"\nmodurl=%s\n",modurl.c_str());
+	}
+	else
+	{
+		modurl=url;
+	}
 
-	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
+	//if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
+	if(TEST_FAILURE == init_open_HNsrc_MPsink(modurl.c_str(),NULL,response))
 	{
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_ERROR, "After init_open_HNsrc_MPsink------------------\n");
+	
+        int playSpeedStrPosition = url.find("play_speed");
 
-	retHNSrcValue = pSource->play();
+        if( url.find("dvr")!= -1)
+        {
+                DEBUG_PRINT(DEBUG_LOG,"\nDVR url\n");
+        int TimePosStrPosition = url.find("time_pos");
+        float URLPlaySpeed = 0.0;
+        double URLTimepos = 0.0;
+        if(-1 != playSpeedStrPosition)
+        {
+                std::string playSpeed = url.substr(playSpeedStrPosition);
+                int ePos = playSpeed.find("=");
+                int aPos = playSpeed.find("&");
+                std::string rate = playSpeed.substr(ePos + 1,(aPos - ePos) - 1);
+                std::string Timepos = url.substr(TimePosStrPosition);
+                ePos = Timepos.find("=");
+                std::string time = Timepos.substr(ePos +1,string::npos );
+
+                URLPlaySpeed = strtof(rate.c_str(),NULL);
+                URLTimepos = strtod(time.c_str(),NULL);
+                DEBUG_PRINT(DEBUG_LOG,"URL appended Rate: %f\n",URLPlaySpeed);
+                DEBUG_PRINT(DEBUG_LOG,"URL appended time: %lf\n",URLTimepos);
+		retHNSrcValue = pSource->play(URLPlaySpeed,URLTimepos);
+        }
+        }
+        else if( url.find("live")!= -1)
+        {
+                DEBUG_PRINT(DEBUG_LOG,"\nLive url\n");
+		retHNSrcValue = pSource->play();
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_LOG,"\nInvalid url\n");
+		retHNSrcValue = -1;
+        }
+
 	sleep(1);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
