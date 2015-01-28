@@ -29,6 +29,11 @@ static HNSource *pSource = NULL;
 #define CLIENT_MOCA_INTERFACE "eth1"
 #endif
 
+#ifdef USE_SOC_INIT
+void soc_uninit();
+void soc_init(int , char *, int );
+#endif
+
 /********************************************************************************************************************
 Purpose:               To get the current status of the AV running
 
@@ -185,6 +190,11 @@ bool TDKIntegrationStub::initialize(IN const char* szVersion,IN RDKTestAgent *pt
 
 std::string TDKIntegrationStub::testmodulepre_requisites()
 {
+ 	#ifdef USE_SOC_INIT
+        //Initialize SOC
+        soc_init(1, "agent", 1);
+        #endif
+
         return "SUCCESS";
 }
 /***************************************************************************
@@ -196,6 +206,11 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
 
 bool TDKIntegrationStub::testmodulepost_requisites()
 {
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        soc_uninit();
+        #endif
+
         return TEST_SUCCESS;
 }
 /********************************************************************************************************************
@@ -3410,10 +3425,31 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         RMFState curstate;
         pSource = new HNSource();
         pSink =  new MediaPlayerSink();
+
+	if(pSource == NULL)
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "HNSource instance creation failed";
+		DEBUG_PRINT(DEBUG_ERROR, "HNSource instance creation failed\n");
+
+		return TEST_FAILURE;
+	}
+
+	if(pSink == NULL)
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "MPSink instance creation failed";
+		DEBUG_PRINT(DEBUG_ERROR, "MPSink instance creation failed\n");
+
+		return TEST_FAILURE;
+	}
+
         res_HNSrcInit = pSource->init();
-        DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Initialize is %d\n", res_HNSrcInit);
+        DEBUG_PRINT(DEBUG_LOG, "----->>>>>> Result of HNSrc Initialize is %d\n", res_HNSrcInit);
         if(0 != res_HNSrcInit)
         {
+		delete pSource;		
+
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to Initialize hnsource";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
@@ -3425,6 +3461,8 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         if(0 != res_HNSrcOpen)
         {
                 pSource->term();
+		delete pSource;
+
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to Open hnsource";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
@@ -3438,6 +3476,8 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         {
                 pSource->close();
                 pSource->term();
+		delete pSource;
+
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to Initialze Mpsink";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
@@ -3452,6 +3492,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 pSink->term();
                 pSource->close();
                 pSource->term();
+		delete pSource;
+		delete pSink;
+
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to set Video resolution";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
@@ -3465,6 +3508,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 pSink->term();
                 pSource->close();
                 pSource->term();
+		delete pSource;
+		delete pSink;
+
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to do set source";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
@@ -3482,6 +3528,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 		pSink->term();
 		pSource->close();
 		pSource->term();
+		delete pSource;
+		delete pSink;
+
 		return TEST_FAILURE;
 	}
 	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS))
@@ -3491,6 +3540,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 		pSink->term();
 		pSource->close();
 		pSource->term();
+		delete pSource;
+		delete pSink;
+
 		return TEST_FAILURE;
 	}
         sleep(30);
@@ -3500,6 +3552,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 pSink->term();
                 pSource->close();
                 pSource->term();
+		delete pSource;
+		delete pSink;
+
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to play video using Hnsource and Mpsink pipeline";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
@@ -3513,6 +3568,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 pSink->term();
                 pSource->close();
                 pSource->term();
+		delete pSource;
+		delete pSink;
+
                 DEBUG_PRINT(DEBUG_ERROR, "Play API call is Success, but Video is not playing");
                 response["result"] = "FAILURE";
                 response["details"] = "Play API call is Success, but Video is not playing";
@@ -3536,6 +3594,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 	                        pSink->term();
         	                pSource->close();
                 	        pSource->term();
+				delete pSource;
+				delete pSink;
+
 	                        DEBUG_PRINT(DEBUG_ERROR, "Video not paused");
         	                response["result"] = "FAILURE";
                 	        response["details"] = "Video not paused";
@@ -3551,6 +3612,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 pSink->term();
                 pSource->close();
                 pSource->term();
+		delete pSource;
+		delete pSink;
+
                 response["result"] = "FAILURE";
                 response["details"] = "HNSrc setSpeed() FAILURE";
                 DEBUG_PRINT(DEBUG_ERROR, "HNSrc setSpeed() FAILURE\n");
@@ -3560,6 +3624,12 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         res_HNSrcGetSpeed = pSource->getSpeed(SpeedRate);
         if(0 != res_HNSrcGetSpeed)
         {
+                pSink->term();
+                pSource->close();
+                pSource->term();
+		delete pSource;
+		delete pSink;
+
                 response["result"] = "FAILURE";
                 response["details"] = "FAILURE:Video is not playing for Requested Trickrate in Live ";
                 DEBUG_PRINT(DEBUG_ERROR, "HNSrc setSpeed() FAILURE\n");
@@ -3577,6 +3647,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 
         if(0 != res_MPSinkTerm)
         {
+		delete pSource;
+		delete pSink;
+
                 response["result"] = "FAILURE";
                 response["details"] = "Video played successfully, but failed to terminate MPSink";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
@@ -3584,6 +3657,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         }
         if(0 != res_HNSrcClose)
         {
+		delete pSource;
+		delete pSink;
+
                 response["result"] = "FAILURE";
                 response["details"] = "Video played successfully, but failed to close Hnsource";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
@@ -3591,11 +3667,17 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         }
         if(0 != res_HNSrcTerm)
         {
+		delete pSource;
+		delete pSink;
+
                 response["result"] = "FAILURE";
                 response["details"] = "Video played successfully, but failed to terminate Hnsource";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
                 return TEST_FAILURE;
         }
+
+	delete pSource;
+	delete pSink;
 
         response["result"] = "SUCCESS";
         response["details"] = "Video played with TSB successfully";

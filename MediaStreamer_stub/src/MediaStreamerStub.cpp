@@ -35,6 +35,11 @@
 #define TRASPORT_CMD_PATTERN "IpStreamOut::transport_command"
 #define FETCH_STREAMING_INT_NAME "streaming_interface_file"
 
+#ifdef USE_SOC_INIT
+void soc_uninit();
+void soc_init(int , char *, int );
+#endif
+
 
 using namespace std;
 
@@ -60,6 +65,11 @@ MediaStreamerAgent::MediaStreamerAgent()
  *****************************************************************************/
 std::string MediaStreamerAgent::testmodulepre_requisites()
 {
+	#ifdef USE_SOC_INIT
+        //Initialize SOC
+        soc_init(1, "agent", 1);
+        #endif
+
         return "SUCCESS";
 }
 
@@ -71,6 +81,11 @@ std::string MediaStreamerAgent::testmodulepre_requisites()
  *****************************************************************************/
 bool MediaStreamerAgent::testmodulepost_requisites()
 {
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        soc_uninit();
+        #endif
+
         return true;
 }
 /********************************************************************************************************************

@@ -38,6 +38,11 @@ using namespace std;
 #define SUCCESS 0
 #define FAILURE 1
 
+#ifdef USE_SOC_INIT
+void soc_uninit();
+void soc_init(int , char *, int );
+#endif
+
 string g_tdkPath = getenv("TDK_PATH");
 
 int usage()
@@ -469,7 +474,10 @@ int main(int argc, char *argv[])
 {
 	int result = SUCCESS;	
 	RMFResult retResult = RMF_RESULT_SUCCESS;	
-
+#ifdef USE_SOC_INIT	
+	//Initialize SOC
+	soc_init(1, "tdkRmfApp", 1);
+#endif
         switch(argc)
         {
 	case 2:
@@ -653,6 +661,10 @@ int main(int argc, char *argv[])
                 usage();
                 break;
         }
+#ifdef USE_SOC_INIT	
+	// Uninitialize SOC
+	soc_uninit();
+#endif
 
         return 0;
 }

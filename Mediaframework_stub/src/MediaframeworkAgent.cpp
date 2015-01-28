@@ -17,6 +17,10 @@ char *tdkP = getenv("TDK_PATH");
 
 string rdkLogPath = "NULL";
 string tdkPath = "NULL";
+#ifdef USE_SOC_INIT
+void soc_uninit();
+void soc_init(int , char *, int );
+#endif
 
 
 /*helper functions for DVR sink*/
@@ -289,6 +293,10 @@ Description   : Setting Pre-requisites needed to execute Mediaframework tests
 ***************************************************************************/
 std::string MediaframeworkAgent::testmodulepre_requisites()
 {
+	#ifdef USE_SOC_INIT
+        //Initialize SOC
+        soc_init(1, "agent", 1);
+	#endif
         DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Entry\n");
         ifstream logfile;
         string MF_testmodule_PR_cmd, MF_testmodule_PR_log,line;
@@ -5651,6 +5659,10 @@ Description   : Re-Setting the Pre-requisites which was set after execution
 ***************************************************************************/
 bool MediaframeworkAgent::testmodulepost_requisites()
 {
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        soc_uninit();
+	#endif
         DEBUG_PRINT(DEBUG_TRACE, "testmodulepost_requisites --> Entry\n");
         ifstream logfile;
         string MF_testmodule_POST_cmd, MF_testmodule_POST_log,line;
