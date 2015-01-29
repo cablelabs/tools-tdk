@@ -3,7 +3,7 @@
 <xml>
   <id>1601</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>7</version>
+  <version>8</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_Resolution_PowerModeChange_121</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -15,7 +15,8 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis></synopsis>
+  <synopsis>Check resolution value after power toggling the TV.
+TestcaseID: CT_DS121</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -45,67 +46,57 @@
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import devicesettings;
 from iarmbus import change_powermode
-from devicesettings import dsManagerInitialize, dsManagerDeInitialize, dsIsDisplayConnected
-
-#Test component to be tested
-dsObj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
-iarmObj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
 
-#Load modules
+#Load DS module
+dsObj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
 dsObj.configureTestCase(ip,port,'DS_Resolution_PowerModeChange_121');
 dsLoadStatus = dsObj.getLoadModuleResult();
 print "[DS LIB LOAD STATUS]  :  %s" %dsLoadStatus ;
 dsObj.setLoadModuleStatus(dsLoadStatus);
 
-iarmObj.configureTestCase(ip,port,'DS_Resolution_PowerModeChange_121');
-iarmLoadStatus = iarmObj.getLoadModuleResult();
-print "[IARMBUS LIB LOAD STATUS] : %s"%iarmLoadStatus ;
-iarmObj.setLoadModuleStatus(iarmLoadStatus);
-
-if ('SUCCESS' in dsLoadStatus.upper()) and ('SUCCESS' in iarmLoadStatus.upper()):
+if 'SUCCESS' in dsLoadStatus.upper():
         #Calling Device Settings - initialize API
-        result = dsManagerInitialize(dsObj)
+        result = devicesettings.dsManagerInitialize(dsObj)
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
         if "SUCCESS" in result:
                 #Calling DS_IsDisplayConnectedStatus function to check for display connection status
-                result = dsIsDisplayConnected(dsObj)
+                result = devicesettings.dsIsDisplayConnected(dsObj)
                 if "TRUE" in result:
-                    #Calling Device Settings - Set Resolution
-                    dsTestObj = dsObj.createTestStep('DS_SetResolution');
+                    #Save a copy of current resolution
+                    copyResolution = devicesettings.dsGetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0"});
+                    # Set resolution value to 1080i
                     resolution="1080i";
-                    print "Setting resolution to %s" %resolution;
-                    dsTestObj.addParameter("resolution",resolution);
-                    dsTestObj.addParameter("port_name","HDMI0");
-                    dsTestObj.addParameter("get_only",0);
-                    expectedresult="SUCCESS"
-                    dsTestObj.executeTestCase(expectedresult);
-                    actualresult = dsTestObj.getResult();
-                    print "[DS SetResolution RESULT] : %s" %actualresult;
-                    getResolution = dsTestObj.getResultDetails();
-                    print "getResolution:%s" %getResolution;
-                    #Check for SUCCESS/FAILURE return value of DS_SetResolution
-                    #Comparing the resolution before and after setting
-                    if (expectedresult in actualresult) and (resolution in getResolution):
-                        dsTestObj.setResultStatus("SUCCESS");
-                        print "SUCCESS: Get resolution same as Set resolution value";
+                    # Check if current value is already 1080i
+                    if resolution not in copyResolution:
+                        devicesettings.dsSetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':resolution});
                     else:
-                        dsTestObj.setResultStatus("FAILURE");
-                        print "FAILURE: Get resolution not same as Set resolution value";
+                        print "Resolution value already at %s"%resolution;
 
-                    #Calling IARMBus change_powermode to OFF(0)
-                    powermode=0
-                    result = change_powermode(iarmObj,powermode);
-                    print "Set PowerMode to %d: %s"%(powermode,result);
+                    #Load IARMBUS module
+                    iarmObj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
+                    iarmObj.configureTestCase(ip,port,'DS_Resolution_PowerModeChange_121');
+                    iarmLoadStatus = iarmObj.getLoadModuleResult();
+                    print "[IARMBUS LIB LOAD STATUS] : %s"%iarmLoadStatus ;
+                    iarmObj.setLoadModuleStatus(iarmLoadStatus);
+                    if 'SUCCESS' in iarmLoadStatus.upper():
+                            #Calling IARMBus change_powermode to OFF(0)
+                            powermode=0
+                            result = change_powermode(iarmObj,powermode);
+                            print "Set PowerMode to %d: %s"%(powermode,result);
 
-                    #Calling IARMBus change_powermode to ON(2)
-                    powermode=2
-                    result = change_powermode(iarmObj,powermode);
-                    print "Set PowerMode to %d: %s"%(powermode,result);
+                            #Calling IARMBus change_powermode to ON(2)
+                            powermode=2
+                            result = change_powermode(iarmObj,powermode);
+                            print "Set PowerMode to %d: %s"%(powermode,result);
+
+                            #Unload iarmbus module
+                            iarmObj.unloadModule('iarmbus');
 
                     #Calling Device Setting - Get Resolution
                     dsTestObj = dsObj.createTestStep('DS_SetResolution');
@@ -127,13 +118,15 @@ if ('SUCCESS' in dsLoadStatus.upper()) and ('SUCCESS' in iarmLoadStatus.upper())
                         dsTestObj.setResultStatus("FAILURE");
                         print "SUCCESS: Resolution changed after power mode off/on";
 
-                #Calling DS_ManagerDeInitialize to DeInitialize API
-                result = dsManagerDeInitialize(dsObj)
+                    #Revert to original value of resolution unless original value was already 1080i
+                    if resolution not in copyResolution:
+                        devicesettings.dsSetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':copyResolution});
 
-        #Unload the modules
+                else:
+                    print "Display Device NOT Connected to execute test";
+
+                #Calling DS_ManagerDeInitialize to DeInitialize API
+                result = devicesettings.dsManagerDeInitialize(dsObj)
+
+        #Unload the deviceSettings module
         dsObj.unloadModule("devicesettings");
-        iarmObj.unloadModule('iarmbus');
-elif ('SUCCESS' not in dsLoadStatus.upper()) and ('SUCCESS' in iarmLoadStatus.upper()):
-        iarmObj.unloadModule('iarmbus');
-elif ('SUCCESS' in dsLoadStatus.upper()) and ('SUCCESS' not in iarmLoadStatus.upper()):
-        dsObj.unloadModule('devicesettings');

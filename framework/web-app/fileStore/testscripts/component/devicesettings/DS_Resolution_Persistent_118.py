@@ -3,7 +3,7 @@
 <xml>
   <id>1594</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_Resolution_Persistent_118</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -15,7 +15,8 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis></synopsis>
+  <synopsis>To verify that HDMI resolution value does not change after STB reboot.
+TestcaseID: CT_DS118</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -25,7 +26,7 @@
   <!-- execution_time is the time out time for test execution -->
   <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
+  <skip>true</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
@@ -43,141 +44,77 @@
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
+import devicesettings;
+
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
+
+#Load module to be tested
+obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
 obj.configureTestCase(ip,port,'DS_Resolution_Persistent_118');
 loadmodulestatus =obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
+obj.setLoadModuleStatus("SUCCESS");
+
 if "SUCCESS" in loadmodulestatus.upper():
-        #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
-
-        #calling Device Settings - initialize API
-        tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
-        expectedresult="SUCCESS"
-        tdkTestObj.executeTestCase(expectedresult);
-        actualresult = tdkTestObj.getResult();
-        print "[DS Initialize RESULT] : %s" %actualresult;
+        #Calling Device Settings - initialize API
+        result = devicesettings.dsManagerInitialize(obj)
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
-        if expectedresult in actualresult:
-                tdkTestObj.setResultStatus("SUCCESS");
-                #calling DS_IsDisplayConnectedStatus function to check for display connection status
-                tdkTestObj = obj.createTestStep('DS_IsDisplayConnectedStatus');
-                expectedresult="SUCCESS"
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                print "[DS IsDisplayConnectedStatus RESULT] : %s"%actualresult;
-                displaydetails = tdkTestObj.getResultDetails();
-                print "[DS IsDisplayConnectedStatus DETAILS] : %s"%displaydetails;
-                #Check for SUCCESS/FAILURE return value of DS_IsDisplayConnectedStatus
-                if (expectedresult in actualresult) and ("TRUE" in displaydetails):
-                    tdkTestObj.setResultStatus("SUCCESS");
-                    #calling Device Setting -Set Resolution
-                    tdkTestObj = obj.createTestStep('DS_SetResolution');
-                    #Setting Resolution value
+        if "SUCCESS" in result:
+                #Calling DS_IsDisplayConnectedStatus function to check for display connection status
+                isDisplay = devicesettings.dsIsDisplayConnected(obj)
+                if "TRUE" in isDisplay:
+                    #Save a copy of current resolution
+                    copyResolution = devicesettings.dsGetResolution(obj,"SUCCESS",kwargs={'portName':"HDMI0"});
+                    #Setting Resolution value to 1080i
                     resolution="1080i";
-                    print "Setting resolution to %s" %resolution;
-                    tdkTestObj.addParameter("resolution",resolution);
-                    tdkTestObj.addParameter("port_name","HDMI0");
-                    tdkTestObj.addParameter("get_only",0);
-                    expectedresult="SUCCESS"
-                    tdkTestObj.executeTestCase(expectedresult);
-                    actualresult = tdkTestObj.getResult();
-                    print "[DS SetResolution RESULT] : %s" %actualresult;
-                    getResolution = tdkTestObj.getResultDetails();
-                    print "getResolution:%s" %getResolution;
-                    #Check for SUCCESS/FAILURE return value of DS_SetResolution
-                    if expectedresult in actualresult:
-                        #comparing the resolution before and after setting
-                        if resolution in getResolution :
+                    # Check if current value is already 1080i
+                    if resolution in copyResolution:
+                        print "Resolution value already at %s"%resolution;
+                    else:
+                        devicesettings.dsSetResolution(obj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':resolution});
+                else:
+                    print "Display Device NOT Connected"
+
+                #Calling DS_ManagerDeInitialize to DeInitialize API
+                result = devicesettings.dsManagerDeInitialize(obj)
+
+                if "TRUE" in isDisplay:
+                    #Reboot the box
+                    obj.initiateReboot();
+
+                    #Check the value of resolution after reboot
+                    #Calling Device Settings - initialize API
+                    result = devicesettings.dsManagerInitialize(obj)
+                    #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
+                    if "SUCCESS" in result:
+                        #Get the value of resolution
+                        tdkTestObj = obj.createTestStep('DS_SetResolution');
+                        print "Resolution before reboot:%s" %resolution;
+                        tdkTestObj.addParameter("port_name","HDMI0");
+                        tdkTestObj.addParameter("get_only",1);
+                        expectedresult="SUCCESS"
+                        tdkTestObj.executeTestCase(expectedresult);
+                        actualresult = tdkTestObj.getResult();
+                        print "[DS GetResolution RESULT] : %s" %actualresult;
+                        getResolution = tdkTestObj.getResultDetails();
+                        print "getResolution:%s" %getResolution;
+                        #comparing the resolution before and after reboot
+                        if (expectedresult in actualresult) and (resolution in getResolution):
                                 tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: Get resolution same as Set resolution value";
+                                print "SUCCESS: Resolution persisted after reboot";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: Get resolution not same as Set resolution value";
-                    else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                    #calling DS_ManagerDeInitialize to DeInitialize API
-                    tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
-                    expectedresult="SUCCESS"
-                    tdkTestObj.executeTestCase(expectedresult);
-                    actualresult = tdkTestObj.getResult();
-                    print "[DS Deinitalize RESULT] : %s" %actualresult;
-                    #Check for SUCCESS/FAILURE return value of DS_ManagerDeInitialize
-                    if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                    else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                else:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "FAILURE:Connection Failed";
-        else:
-                tdkTestObj.setResultStatus("FAILURE");
+                                print "FAILURE: Resolution did not persist after reboot";
 
-        #Reboot the box
-        obj.initiateReboot();
+                        #Revert to original value of resolution
+                        #Check if original value was already 1080i
+                        if resolution not in copyResolution:
+                                devicesettings.dsSetResolution(obj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':copyResolution});
 
-        #calling Device Settings - initialize API
-        tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
-        expectedresult="SUCCESS"
-        tdkTestObj.executeTestCase(expectedresult);
-        actualresult = tdkTestObj.getResult();
-        print "[DS Initialize RESULT] : %s" %actualresult;
-        #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
-        if expectedresult in actualresult:
-                tdkTestObj.setResultStatus("SUCCESS");
-                #calling DS_IsDisplayConnectedStatus function to check for display connection status
-                tdkTestObj = obj.createTestStep('DS_IsDisplayConnectedStatus');
-                expectedresult="SUCCESS"
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                print "[DS IsDisplayConnectedStatus RESULT] : %s"%actualresult;
-                displaydetails = tdkTestObj.getResultDetails();
-                print "[DS IsDisplayConnectedStatus DETAILS] : %s"%displaydetails;
-                #Check for SUCCESS/FAILURE return value of DS_IsDisplayConnectedStatus
-                if (expectedresult in actualresult) and ("TRUE" in displaydetails):
-                    tdkTestObj.setResultStatus("SUCCESS");
-                    #calling Device Setting -Get Resolution
-                    tdkTestObj = obj.createTestStep('DS_SetResolution');
-                    print "Resolution before reboot:%s" %resolution;
-                    tdkTestObj.addParameter("port_name","HDMI0");
-                    tdkTestObj.addParameter("get_only",1);
-                    expectedresult="SUCCESS"
-                    tdkTestObj.executeTestCase(expectedresult);
-                    actualresult = tdkTestObj.getResult();
-                    print "[DS GetResolution RESULT] : %s" %actualresult;
-                    getResolution = tdkTestObj.getResultDetails();
-                    print "getResolution:%s" %getResolution;
-                    #Check for SUCCESS/FAILURE return value of DS_SetResolution
-                    if expectedresult in actualresult:
-                        #comparing the resolution before and after setting
-                        if resolution in getResolution :
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: Resolution same after reboot";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: Resolution changed after reboot";
-                    else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                    #calling DS_ManagerDeInitialize to DeInitialize API
-                    tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
-                    expectedresult="SUCCESS"
-                    tdkTestObj.executeTestCase(expectedresult);
-                    actualresult = tdkTestObj.getResult();
-                    print "[DS Deinitalize RESULT] : %s" %actualresult;
-                    #Check for SUCCESS/FAILURE return value of DS_ManagerDeInitialize
-                    if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                    else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                else:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "FAILURE:Connection Failed";
-        else:
-                tdkTestObj.setResultStatus("FAILURE");
+                        #Calling DS_ManagerDeInitialize to DeInitialize API
+                        result = devicesettings.dsManagerDeInitialize(obj)
 
         #Unload the deviceSettings module
         obj.unloadModule("devicesettings");

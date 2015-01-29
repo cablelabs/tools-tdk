@@ -35,14 +35,20 @@ COPTS     += -DDEBUG_LEVEL_ERROR
 endif
 
 
-INCLUDES  :=    -I./include \
+INCLUDES  +=    -I./include \
                 -I../agent/include \
                 -I$(JSONRPC_PATH)/include \
                 -I$(JSONCPP_PATH)/include \
                 -I$(CURL_PATH)\
 		-I$(CURL_PATH)/../
 
-LDOPTS    := 	-L $(IMAGE_PATH)/usr/lib
+INCLUDES  +=    -I $(RDK_BUILD_DIR)/iarmbus/core/include \
+                -I $(RDK_BUILD_DIR)/iarmbus/core \
+                -I $(RDK_BUILD_DIR)/iarmmgrs/generic/ir/include \
+                -I $(RDK_BUILD_DIR)/iarmmgrs/generic/sysmgr/include \
+                -I $(RDK_BUILD_DIR)/xupnp/generic/include \
+
+LDOPTS    += 	-L $(IMAGE_PATH)/usr/lib -L $(IMAGE_PATH)/usr/local/lib
 CC        := 	g++
 TARGETLIB := 	libxupnpstub.so
 SOURCES   := 	$(SRC_DIR)/*.cpp

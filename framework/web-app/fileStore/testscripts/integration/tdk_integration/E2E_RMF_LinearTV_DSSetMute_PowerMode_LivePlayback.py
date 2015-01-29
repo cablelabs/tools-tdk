@@ -3,7 +3,7 @@
 <xml>
   <id>1581</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>7</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LinearTV_DSSetMute_PowerMode_LivePlayback</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -42,11 +42,12 @@
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 from tdkintegration import getURL_PlayURL;
-
+from iarmbus import change_powermode
 
 #Test component to be tested
 tdk_obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
 dev_obj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
+iarm_obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 
 #Ip address of the selected STB for testing
 ip = <ipaddress>
@@ -54,17 +55,20 @@ port = <port>
 
 tdk_obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_DSSetMute_PowerMode_LivePlayback');
 dev_obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_DSSetMute_PowerMode_LivePlayback');
+iarm_obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_DSSetMute_PowerMode_LivePlayback');
 
 loadmodulestatus = tdk_obj.getLoadModuleResult();
 loadmodulestatus1 = dev_obj.getLoadModuleResult();
+loadmodulestatus2 = iarm_obj.getLoadModuleResult();
 
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus1 ;
 
-if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.upper()):
+if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.upper()) and ("SUCCESS" in loadmodulestatus2.upper()):
     #Set the module loading status
     dev_obj.setLoadModuleStatus("SUCCESS");
-    tdk_obj.setLoadModuleStatus("SUCCESS");        
+    tdk_obj.setLoadModuleStatus("SUCCESS");
+    iarm_obj.setLoadModuleStatus("SUCCESS");
 
     #calling getURL_PlayURL to get and play the URL
     result = getURL_PlayURL(tdk_obj,'01');                
@@ -91,7 +95,7 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
             if "SUCCESS" in actualresult:
                 
                 #calling DS_SetPowerMode to set the power mode of STB
-                actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_SetPowerMode', 'SUCCESS', verifyList ={'new_power_state': str(powermode)},new_power_state = powermode);
+                change_powermode(iarm_obj,2);                        
 
             #calling DS_ManagerDeInitialize to DeInitialize API
             actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_ManagerDeInitialize', 'SUCCESS',verifyList ={});                                    
@@ -107,10 +111,11 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
     #Unload the deviceSettings module
     dev_obj.unloadModule("devicesettings");
     tdk_obj.unloadModule("tdkintegration");
+    iarm_obj.unloadModule("iarmbus");
 else:
         print"Load module failed";
         #Set the module loading status
         dev_obj.setLoadModuleStatus("FAILURE");
         iarm_obj.setLoadModuleStatus("FAILURE");
-
+        tdk_obj.setLoadModuleStatus("FAILURE");
 

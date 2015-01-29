@@ -118,7 +118,7 @@ if expected_Result in loadModuleStatus.upper():
                                                 result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,expected_Result,src_parameter,src_element);
                                                 if expected_Result in result.upper():
                                                         src_parameter=["url","dctpEnable","typeFlag"]
-                                                        src_element=["ocap://0xaq213","false"]
+                                                        src_element=["ocap://0xaq213","false",0]
                                                         result=Create_and_ExecuteTestStep('RmfElement_HNSink_SetProperties',obj,expected_Result,src_parameter,src_element);
                                                         if expected_Result in result.upper():
                                                                 src_parameter=["rmfElement"]

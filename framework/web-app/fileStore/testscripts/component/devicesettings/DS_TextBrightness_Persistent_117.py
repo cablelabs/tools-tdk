@@ -3,7 +3,7 @@
 <xml>
   <id>1593</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_TextBrightness_Persistent_117</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -15,7 +15,8 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis></synopsis>
+  <synopsis>To check that Front Panel timer brightness value is persisted after STB reboot.
+TestcaseID: CT_DS117</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->

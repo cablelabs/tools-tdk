@@ -55,6 +55,7 @@ ip = <ipaddress>
 port = <port>
 obj.configureTestCase(ip,port,'RMF_QAMSrc_HNSink_07');
 
+
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
     global details
     global tdkTestObj
@@ -94,11 +95,13 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 
     return result
 
+
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
 
 if expected_Result in loadModuleStatus.upper():
+        obj.initiateReboot();
         #Prmitive test case which associated to this Script
         #Change the List according to Prmitive test case
         src_parameter=[];
@@ -158,12 +161,13 @@ if expected_Result in loadModuleStatus.upper():
                                                         src_parameter=["rmfElement"]
                                                         src_element=["HNSink"]
                                                         result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);
+
                                         src_parameter=[]
                                         src_element=[]
                                         result=Create_and_ExecuteTestStep('RmfElement_HNSink_UninitPlatform',obj,expected_Result,src_parameter,src_element);
                                 src_parameter=["rmfElement","factoryEnable"]
                                 src_element=["QAMSrc","true"]
-                              result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,expected_Result,src_parameter,src_element);
+                                result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,expected_Result,src_parameter,src_element);
                         src_parameter=[];
                         src_element=[];
                         result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_UninitPlatform',obj,expected_Result,src_parameter,src_element);

@@ -14,54 +14,56 @@
 #define __XUPNP_STUB_H__
 
 #include <json/json.h>
-#include <string.h>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
-#include <fstream>
-#include <cstdlib>
+
 #define IN
 #define OUT
 
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
 
-#define TDK_XUPNP_JSON_FILE 	"/opt/output.json"
+#define DETAILS_LEN            75
+#define MAX_DATA_LEN           8192
+#define XCALDEVICE             "xcal-device"
+#define XDISCOVERY             "xdiscovery"
+#define XDISC_LOG_FILE         "/opt/logs/xdiscovery.log"
+#define XCALDEV_LOG_FILE       "/opt/logs/xdevice.log"
+#define XDISC_OUTPUT_FILE      "/opt/output.json"
+#define BASICDEVXML_FILE       "/opt/xupnp/BasicDevice.xml"
+#define XCALDEVCONFIG          "/etc/xupnp/xdevice.conf"
+#define XCALDEVHYBCONFIG       "/etc/xupnp/xdevice_hybrid.conf"
+#define STARTUPCMD             "/etc/init.d/start-upnp-service restart"
+#define TDK_XDEVICE_CONF_FILE  "tdk_xdevice.conf"
 
 using namespace std;
 
 class RDKTestAgent;
 class XUPNPAgent : public RDKTestStubInterface
 {
-        public:
-                //Constructor
-                XUPNPAgent();
+public:
+    //Constructor
+    XUPNPAgent();
 
-                //Inherited functions
-                bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
+    //Inherited functions
+    bool initialize(IN const char* szVersion, IN RDKTestAgent *);
 
-                bool cleanup(const char*, RDKTestAgent*);
-		std::string testmodulepre_requisites();
-                bool testmodulepost_requisites();
+    bool cleanup(const char*, RDKTestAgent*);
+    std::string testmodulepre_requisites();
+    bool testmodulepost_requisites();
 
-                //XUPNPAgent Wrapper functions
-		bool XUPNPAgent_checkjson(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_checkSTRurl(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_checkSerialNo(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_checkPBurl(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_recordId(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_ModBasicDevice(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_removeXmls(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_evtCheck(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_evttuneready(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_evtChannelMap(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_evtControllerID(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_evtPlantID(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_evtvodID(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_evtTimezone(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_IFDown(IN const Json::Value& req, OUT Json::Value& response);
-		bool XUPNPAgent_IPIFDown(IN const Json::Value& req, OUT Json::Value& response);
+    //XUPNPAgent Wrapper functions
+    //Generic (common to Gateway + IPClient boxes)
+    bool XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::Value& response);
+    bool XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response);
+    bool XUPNPAgent_CheckXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response);
+    bool XUPNPAgent_ModifyBasicDeviceXml(IN const Json::Value& req, OUT Json::Value& response);
+    bool XUPNPAgent_CheckXMLRestoration(IN const Json::Value& req, OUT Json::Value& response);
+    //Only for Gateway boxes
+    bool XUPNPAgent_ReadXcalDeviceLogFile(IN const Json::Value& req, OUT Json::Value& response);
+    bool XUPNPAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response);
 };
-        extern "C" XUPNPAgent* CreateObject();
+
+extern "C" XUPNPAgent* CreateObject();
 
 #endif //__XUPNP_STUB_H__
-

@@ -41,7 +41,7 @@ TestcaseID: CT_DTCP_02</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-from dtcp import init,startSource,stopSource;
+from dtcp import init,startSource,stopSource,setLogLevel;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("dtcp","2.0");
@@ -65,6 +65,7 @@ if "SUCCESS" in loadmodulestatus.upper():
   expectedresult="SUCCESS";
   #Pre-cond: DTCPMgrInit
   init(tdkTestObj,expectedresult);
+  setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3});
   #Calling DTCPMgrStartSource
   startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lan0','port':5000})
   #Post-cond: DTCPMgrStopSource

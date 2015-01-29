@@ -3,7 +3,7 @@
 <xml>
   <id>1595</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_PowerModeToggle_Stress_119</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -15,7 +15,8 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis></synopsis>
+  <synopsis>Check multiple (50 times) toggles between STB Standby and Power-on.
+TestcaseID: CT_DS119</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->

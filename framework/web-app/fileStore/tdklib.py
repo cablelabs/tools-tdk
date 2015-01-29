@@ -1,15 +1,14 @@
 #!/usr/bin/python
-#
-# ============================================================================
-# COMCAST C O N F I D E N T I A L AND PROPRIETARY
-# ============================================================================
-# This file (and its contents) are the intellectual property of Comcast.  It may
-# not be used, copied, distributed or otherwise  disclosed in whole or in part
-# without the express written permission of Comcast.
-# ============================================================================
-# Copyright (c) 2014 Comcast. All rights reserved.
-# ============================================================================
-#
+
+#============================================================================
+#COMCAST CONFIDENTIAL AND PROPRIETARY
+#============================================================================
+#This file and its contents are the intellectual property of Comcast.  It may
+#not be used, copied, distributed or otherwise  disclosed in whole or in part
+#without the express written permission of Comcast.
+#============================================================================
+#Copyright (c) 2013 Comcast. All rights reserved.
+#============================================================================
 
 #------------------------------------------------------------------------------
 # module imports
@@ -36,7 +35,9 @@ import MySQLdb
 import shutil
 import logging
 import random
-#import _mysql
+import select
+import StringIO
+from xml.dom.minidom import Document,parseString
 
 #------------------------------------------------------------------------------
 # module class
@@ -298,12 +299,20 @@ class PrimitiveTestCase:
 			self.logTransferPort = logTransferPort
 			self.result = ""
 			self.streamID = None
+			self.resultStr=None
+			self.resultDetails=None
 			self.resultStatus = None
 			self.expectedResult = None
 			temp = self.url + "/primitiveTest/getJson?testName=&idVal=2"
 			data = temp.split("&")
 			url = data[0] + name + "&" + data[1]
 			self.jsonMsgValue = urllib.urlopen(url).read() 
+			self.parentTestCase=None
+			self.TestFnLogDom=None
+			self.executionTime=0
+			self.xmlLogEnabled=True;
+			self.testFnDescription="None"
+			
 		except:
 			print "#TDK_@error-An Error occured in fetching Primitive Test details"
 			sys.stdout.flush()
@@ -316,6 +325,14 @@ class PrimitiveTestCase:
     	#------------------------------------------------------------------------------
     	# Public methods
     	#------------------------------------------------------------------------------
+	def setParentTestCase(self,parentTestCase):
+		self.parentTestCase=parentTestCase
+	def setXmlLog(self,functionLogDom,testFnDescription):
+		self.TestFnLogDom=functionLogDom
+		self.testFnDescription=testFnDescription
+		
+	def enableXmlLog(self,bEnabled):
+		self.xmlLogEnabled=bEnabled 
 
 	def addParameter(self, paramName, paramValue):
 
@@ -330,6 +347,12 @@ class PrimitiveTestCase:
 
 		try:
 			data = json.loads(self.jsonMsgValue)
+			if self.xmlLogEnabled==True:	
+				paramEl=self.parentTestCase.xmlLogDom.createElement("Parameter")
+				addTxtEle(self.parentTestCase.xmlLogDom,paramEl,"name",str(paramName))
+				addTxtEle(self.parentTestCase.xmlLogDom,paramEl,"value",str(paramValue))
+				self.TestFnLogDom.appendChild(paramEl)
+
 		except:
 			print "#TDK_@error-ERROR : Json Message is in Incorrect Format !!!"
 			sys.stdout.flush()
@@ -397,13 +420,25 @@ class PrimitiveTestCase:
 		self.tcpClient.send(self.jsonMsgValue)
 		t1 = time.time();
 		self.result = self.tcpClient.recv(1024)
-		t2 = time.time();executionTime = t2-t1;
+		t2 = time.time();
+		self.executionTime = t2-t1;
+		# TODO check if required		self.executionName=executionName
 		self.expectedResult = expectedResult
 
 		self.result = self.result.replace("result","TDK__#@$00_result")
 		self.result = self.result.replace("details","TDK__#@$00_details")
 		self.result = self.result.replace("log-path","TDK__#@$00_log-path")
-		return executionTime;
+
+		self.result = self.result.replace("performanceDataReading","TDK__#@$00_performanceDataReading")
+		self.result = self.result.replace("performanceDataName","TDK__#@$00_performanceDataName")
+		self.result = self.result.replace("performanceDataUnit","TDK__#@$00_performanceDataUnit")
+		self.result = self.result.replace("performanceDataInfo","TDK__#@$00_performanceDataInfo")
+
+		
+		if self.xmlLogEnabled==True:
+			addTxtEle(self.parentTestCase.xmlLogDom,self.TestFnLogDom,"ResultStr",str(self.result))
+			addTxtEle(self.parentTestCase.xmlLogDom,self.TestFnLogDom,"ExecutionTime",str(self.executionTime))
+		return self.executionTime;
 
 	########## End of Function ##########
 
@@ -418,12 +453,18 @@ class PrimitiveTestCase:
     		
 		if "Method not found." in self.result:
 			print "#TDK_@error-ERROR : Method not registered with Test Agent"
+			if self.xmlLogEnabled==True:
+				addTxtEle(self.parentTestCase.xmlLogDom,self.TestFnLogDom,"message","#TDK_@error-ERROR : Method not registered with Test Agent")
                         sys.stdout.flush()
                         exit()
 		else:
 			message = self.getValueFromJSON("TDK__#@$00_result")
-			return message
+			self.resultStr=message			
+			if self.xmlLogEnabled==True:
+				addTxtEle(self.parentTestCase.xmlLogDom,self.TestFnLogDom,"Message",str(message))
 
+			return message
+		
 	########## End of Function ##########
 
 	def setResultStatus(self, status):
@@ -437,6 +478,8 @@ class PrimitiveTestCase:
 
 		try:
 			self.resultStatus = status
+			if "FAILURE" in status :
+				self.parentTestCase.resultStatus=status
 			result = self.getResult()
 			temp = self.url + "/execution/saveResultDetails?execId=&resultData=&execResult=&expectedResult=&resultStatus=&testCaseName=&execDevice=&"  
 			data = temp.split("&")
@@ -445,14 +488,44 @@ class PrimitiveTestCase:
 				+ data[5] + str(self.testCaseName) + "&" + data[6] + str(self.execDevId)
 
 			loadstring = urllib.urlopen(url).read()
+			if self.xmlLogEnabled==True:
+				incidentEle=self.parentTestCase.xmlLogDom.createElement("Incident")			
+				incidentEle.setAttribute("type",str(status))
+				self.TestFnLogDom.appendChild(incidentEle)
+				addTxtEle(self.parentTestCase.xmlLogDom,self.TestFnLogDom,"Result",str(result))
+
 			sys.stdout.flush()
-		except:
-			print "#TDK_@error-ERROR : Unable to access url to save result details !!!" 
+			
+		except :
+			print "#TDK_@error-ERROR : error:Unable to access url to save result details !!!"
+			print "Unexpected error:", sys.exc_info()[0] 
 			sys.stdout.flush()
 			exit()
+		
 		return
 		
 	########## End of Function ##########
+	def logPerformanceData(self,performanceDataName="no_name_given",performanceDataUnit="unit_not_set",performanceDataReading="no_data",performanceDataInfo="no_info"):
+		if self.xmlLogEnabled==True:
+			if performanceDataName == "no_name_given":
+				performanceDataReading = self.getValueFromJSON("TDK__#@$00_performanceDataReading")
+				performanceDataName=self.getValueFromJSON("TDK__#@$00_performanceDataName")
+				performanceDataUnit=self.getValueFromJSON("TDK__#@$00_performanceDataUnit")
+				performanceDataInfo=self.getValueFromJSON("TDK__#@$00_performanceDataInfo")
+
+			performanceDataEle=self.parentTestCase.xmlLogDom.createElement("PerformanceData")
+			performanceDataEle.setAttribute("name",str(performanceDataName))
+			performanceDataEle.setAttribute("unit",str(performanceDataUnit))
+			addTxtEle(self.parentTestCase.xmlLogDom,performanceDataEle,"PerfDataReading",str(performanceDataReading))
+			addTxtEle(self.parentTestCase.xmlLogDom,performanceDataEle,"PerfDataInfo",str(performanceDataInfo))
+			self.TestFnLogDom.appendChild(performanceDataEle)
+
+	                sys.stdout.flush()
+		else:
+			print "xmlLogEnabled==False for this function."+self.testCaseName 
+			return None
+#                self.resultDetails=message
+                return performanceDataEle.toxml() 
 	
 	def getResultDetails(self):
     	
@@ -465,6 +538,7 @@ class PrimitiveTestCase:
     
 		message = self.getValueFromJSON("TDK__#@$00_details")
 		sys.stdout.flush()
+		self.resultDetails=message
 		return message
 
 	########## End of Function ##########
@@ -618,8 +692,9 @@ class PrimitiveTestCase:
         	ipAddress = self.ip
         	port = self.logTransferPort
 		#dir = self.realpath + str(self.execID) previously it was like this
+		'''#TODO: Commented below block. Verify if it is OK.  This block was  unnecessarily creating a logpth/executionid folder
 		dir = self.realpath + str(self.execID)
-#		print "Directory path:",dir
+		print "Directory path:",dir
 		#checking if directory is exists or not if exists then rename the existing one as <execID>old and create new with name <execID>.
 		try:
                         os.makedirs(dir)
@@ -631,7 +706,7 @@ class PrimitiveTestCase:
 									print "\n Error in log Directory path \n"
                         else:
                                 print "\n Error in log Directory path \n"
-
+		'''
 		#TODO
 		destinationLogPath = self.realpath + "logs/" + str(self.execID) + "/" + str(self.execDevId) + "/" + str(self.resultId) + "/" 
 		#destinationLogPath = self.realpath +  str(self.execID) + "/" + str(self.execDevId) + "/" 
@@ -774,6 +849,11 @@ class PrimitiveTestCase:
 	
 ########## End of Class  ##########
 		
+def addTxtEle(xmlLogDom,parentElement,tagName,contentText):
+	child=xmlLogDom.createElement(tagName)
+	contentTextNode=xmlLogDom.createTextNode(str(contentText))
+	child.appendChild(contentTextNode)
+	parentElement.appendChild(child)
 
 #------------------------------------------------------------------------------
 # module class
@@ -806,9 +886,17 @@ class TDKScriptingLibrary:
 		self.IP = None
 		self.realpath = None
 		self.tcpClient = None
-		self.data1=None
-		self.data2=None
+		self.resultStatus='SUCCESS'
+		self.uiLogData=None
 		self.execName=None
+		self.xmlLogDom=None
+		self.scriptName=None
+		self.enabledXmlLogging=False
+		self.logpath=None
+		self.primitiveTests=[]	
+		self.startTime=0;
+		self.timeTaken=0
+		self.infoDict=None
 		return 
 
 	def __del__(self):
@@ -817,7 +905,12 @@ class TDKScriptingLibrary:
     	#------------------------------------------------------------------------------
     	# Public methods
     	#------------------------------------------------------------------------------
-		
+	def enableLogging(self,scriptName,logpath,infoDict=None):
+		self.scriptName=scriptName				
+		self.enabledXmlLogging=True
+		self.logpath=logpath
+		self.infoDict=infoDict
+
 	def configureTestCase(self, url, path, execId, execDeviceId, execResId, deviceIp, devicePort, logTransferPort,\
 				statusPort, testcaseID, deviceId, performanceBenchMarkingEnabled, performanceSystemDiagnosisEnabled, \
 				scriptSuiteEnabled, executionName):
@@ -852,6 +945,7 @@ class TDKScriptingLibrary:
 	#                socket.error - Error while opening socket
     	
 		try:
+			
 			self.url = url
 			self.execID = execId
 			self.resultId = execResId
@@ -865,12 +959,36 @@ class TDKScriptingLibrary:
 			self.performanceBenchMarkingEnabled = performanceBenchMarkingEnabled  
 			self.performanceSystemDiagnosisEnabled = performanceSystemDiagnosisEnabled 
 			self.scriptSuiteEnabled = scriptSuiteEnabled
-			
+			self.startTime=time.time()
 			self.realpath = self.realpath + "/"
-			print "The real path:",self.realpath
 
 			# Querry Test Manager to get status port and log transfer port
                         url = self.url + "/execution/getClientPort?deviceIP=" + str(self.IP) + "&agentPort=" + str(self.portValue)
+			
+			self.xmlLogDom=Document()
+			testCase=self.xmlLogDom.createElement("TestCase")
+			testCase.setAttribute("name",str(self.scriptName))
+			if self.infoDict is not None:
+				for key in self.infoDict:
+					testCase.setAttribute(str(key),str(self.infoDict[key]))
+
+			self.xmlLogDom.appendChild(testCase)
+			envEl=self.xmlLogDom.createElement("Environment")
+#			self.addTxtEle(envEl,"url",url)
+			addTxtEle(self.xmlLogDom,envEl,"execId",execId)
+			
+			addTxtEle(self.xmlLogDom,envEl,"execResId",execResId)
+			addTxtEle(self.xmlLogDom,envEl,"execDeviceId",execDeviceId)
+			addTxtEle(self.xmlLogDom,envEl,"testcaseID",testcaseID)
+			addTxtEle(self.xmlLogDom,envEl,"deviceId",deviceId)
+			addTxtEle(self.xmlLogDom,envEl,"deviceIp",deviceIp)
+			addTxtEle(self.xmlLogDom,envEl,"path",path)
+			addTxtEle(self.xmlLogDom,envEl,"executionName",executionName)
+			addTxtEle(self.xmlLogDom,envEl,"componentName",self.componentName)
+			addTxtEle(self.xmlLogDom,envEl,"rdkversion",self.rdkversion)
+			testCase.appendChild(envEl)
+			#print self.xmlLogDom.toprettyxml(indent='\t')
+			
                         try:
                                 loadstring = urllib.urlopen(url).read()
 
@@ -879,6 +997,7 @@ class TDKScriptingLibrary:
                                         self.statusPort = statusPort
                                 else:
                                         data = json.loads(loadstring)
+					
                                         self.logTransferPort = int(data["logTransferPort"])
                                         self.statusPort = int(data["statusPort"])
 
@@ -891,15 +1010,13 @@ class TDKScriptingLibrary:
                                 print "#TDK_@error-ERROR : Unable to access url for getting device port numbers !!!"
 				print "Details : "
 				logging.exception('')
-#                               print "Details : ", sys.exc_info()[0]
                                 sys.stdout.flush()
                                 exit()
 
 			# Connecting to device
-#			print "In tdklib 1"
 			self.tcpClient.connect((self.IP, self.portValue))
-#			print "In tdklib 2"
-			self.data1 = "Connected to "+ self.IP +" Box for testing "+ self.componentName;#print "Connected to "+ self.IP +" Box for testing "+ self.componentName
+			self.uiLogData =str(self.uiLogData)+ "<br/> Connected to "+ str(self.IP) +" Box for testing "+ str(self.componentName);
+			#print "Connected to "+ self.IP +" Box for testing "+ self.componentName
 			self.execName = executionName
 			print "Test Execution Name is: %s" %self.execName
 	
@@ -935,7 +1052,7 @@ class TDKScriptingLibrary:
 			exit()
 		else:
 			print "Connected to Server!\n"
-			self.data2 = "Connected to Server!";#print "Connected to Server!\n";
+			self.uiLogData = self.uiLogData+"<br/> Connected to Server!";#print "Connected to Server!\n";
 			sys.stdout.flush()
 			self.result = self.tcpClient.recv(1048)
 
@@ -956,6 +1073,11 @@ class TDKScriptingLibrary:
 			resultIndex = self.result.find("result") + len("result\":\"")
 			message = self.result[resultIndex:]
 			message = message[:(message.find("\""))]
+			if "Success" in message:
+				self.uiLogData=self.uiLogData+ "<br/> Opensource test module successfully loaded\n"
+			else:
+				self.uiLogData=self.uiLogData+ "<br/> Failed to load Opensource test module \n"
+
 			return message
 		else:
 			return "#TDK_@error-Error in socket.. Please check STB is up and agent is running inside it"
@@ -986,16 +1108,18 @@ class TDKScriptingLibrary:
 			url = data[0] + str(self.execID) + "&" + data[1] + str(status) + "&" + data[2] + str(self.execDevId) \
 			      + "&" + data[3] + str(self.resultId)
 			loadstring = urllib.urlopen(url).read()
+		
 		except:
 			print "#TDK_@error-ERROR : Unable to access url to save result details !!!"
+			print "Unexpected error:", sys.exc_info()[0]
 			sys.stdout.flush()
-
+		
 		sys.stdout.flush()
 		return
 
         ########## End of Function ##########
 
-	def createTestStep(self, testCaseName):
+	def createTestStep(self, testCaseName,testFnDescription="none",bXmlLogEnabledForTestFn=True):
 
 	# Create an object for testcase 
 
@@ -1006,6 +1130,19 @@ class TDKScriptingLibrary:
     	
 		sys.stdout.flush()
 		testObj = PrimitiveTestCase(testCaseName, self.url, self.execID, self.execDevId, self.resultId, self.IP, self.realpath, self.tcpClient, self.logTransferPort, self.testcaseId, self.deviceId)
+		testObj.setParentTestCase(self)
+		if bXmlLogEnabledForTestFn == True:
+			testFnEl=self.xmlLogDom.createElement("TestFunction")
+			testFnEl.setAttribute("name",str(testCaseName))
+			testFnEl.setAttribute("description",str(testFnDescription))
+			self.xmlLogDom.getElementsByTagName("TestCase")[0].appendChild(testFnEl)
+			testObj.setXmlLog(testFnEl,testFnDescription)
+			testObj.enableXmlLog(True)
+		else:
+			testObj.enableXmlLog(False)
+
+		self.primitiveTests.append(testObj)
+
 		return testObj
  
 	########## End of Function ##########
@@ -1056,14 +1193,24 @@ class TDKScriptingLibrary:
 	# Description  : Unload module
 	# Parameters   : cName - Component name
 	# Return Value : null
-    		
-		try:
+    		try:
+			if(self.enabledXmlLogging == True):
+				logdir=self.logpath+"/logs/"+str(self.execID)+"/"+str(self.execDevId)+"/"+str(self.resultId)
+				print "print the xml log to  "+logdir
+				if not os.path.exists(logdir):
+					os.makedirs(logdir)
+
+				logxmlfile = open(logdir+"/"+str(self.scriptName)+"_xmllog.xml", "wb")	
+				logstr=self.xmlLogDom.toprettyxml(indent='\t')
+				logxmlfile.write(logstr)
+				logxmlfile.close()
+			
 			final = {'jsonrpc':'2.0','id':'2','method':'UnloadModule','param1':cName,'version':self.rdkversion, \
                                  'ScriptSuiteEnabled':self.scriptSuiteEnabled}
 			query = json.dumps(final)
 			self.tcpClient.send(query)
 			unloadmoduleresult = self.tcpClient.recv(1048)
-
+		
 		except socket.error:
 			print "******************************************************************************************" 
 			print " #TDK_@error-Error while Connecting to Server ... "
@@ -1073,7 +1220,7 @@ class TDKScriptingLibrary:
 			self.tcpClient.close()
 			exit()
 		except:
-			print "#TDK_@error-ERROR : Unable to connect.. Please check box is up and agent is running.....\n"
+			print "#TDK_@error-ERROR : Unable to connect.. Please check box is up and agent is running.....\nOr there can be a problem with writing the xml log file. "
 			print "Details : "
 			logging.exception('')
 			sys.stdout.flush()
@@ -1083,6 +1230,8 @@ class TDKScriptingLibrary:
 			if unloadmoduleresult:
 				if "SUCCESS" in unloadmoduleresult.upper():
 					print "Unload Module Status  : Success"
+					endTime=time.time()
+					self.timeTaken=endTime-self.startTime
 				else:
 					print "Unload Module Status  : Failure"
 
@@ -1133,18 +1282,21 @@ class TDKScriptingLibrary:
 			sys.stdout.flush()
 			exit()
 		else:
-			result = self.tcpClient.recv(1048)
-			if "SUCCESS" in result.upper():
-				print "\"" + self.IP + "\"" + " Going For a Reboot.."
-				sys.stdout.flush()
-			else:
-				print "#TDK_@error-ERROR : Unable to set preconditons for reboot"
-				resultIndex = result.find("details") + len("details"+"\":\"")
-				message = result[resultIndex:]
-				details = message[:(message.find("\""))]
-				print "Details : " + details
-				sys.stdout.flush()
-				exit()
+			self.tcpClient.setblocking(0)
+			recvStatus = select.select([self.tcpClient], [], [], 5) #Setting timeout for response(3 Sec)
+			if recvStatus[0]:
+				result = self.tcpClient.recv(1048)
+				if "SUCCESS" in result.upper():
+					print "\"" + self.IP + "\"" + " Going For a Reboot.."
+					sys.stdout.flush()
+				else:
+					print "#TDK_@error-ERROR : Unable to set preconditons for reboot"
+					resultIndex = result.find("details") + len("details"+"\":\"")
+					message = result[resultIndex:]
+					details = message[:(message.find("\""))]
+					print "Deatils : " + details
+					sys.stdout.flush()
+					exit()
 		
 		# Waiting to get a "FREE" status from device
 		time.sleep(60);
@@ -1199,88 +1351,63 @@ class TDKScriptingLibrary:
 		return
 
 	########## End of Function ##########
+ 
+	def resetConnectionAfterReboot(self):
 
-        def resetConnectionAfterReboot(self):
+	# To reset tcp connection with other instances after STB reboot in multi component tests
 
-        # To reset tcp connection with other instances after STB reboot in multi component tests
+	# Syntax       : OBJ.resetConnectionAfterReboot()
+	# Description  : To reset tcp connection with other instances after STB reboot in multi component tests
+	# Parameters   : none
+	# Return Value : null
 
-        # Syntax       : OBJ.resetConnectionAfterReboot()
-        # Description  : To reset tcp connection with other instances after STB reboot in multi component tests
-        # Parameters   : none
-        # Return Value : null
+		print "Resetting connection after Reboot"
+		self.tcpClient.close()
+		time.sleep(5)
+		self.tcpClient = socket.socket()
+		self.tcpClient.connect((self.IP, self.portValue))
+		return
 
-                print "Resetting connection after Reboot"
-                self.tcpClient.close()
-                time.sleep(5)
-                self.tcpClient = socket.socket()
-                self.tcpClient.connect((self.IP, self.portValue))
-                return
+	########## End of Function ##########
 
-        ########## End of Function ##########
+	def insertScriptAndFnExeDetailsInDb(self):
+		
+			script=self.scriptName 
+			devName=self.execName.split("-")[0]
+			print "Device Name: "+str(devName);
+			conn = MySQLdb.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
+			cur = conn.cursor()
 
-	def insertExecutionDetails(self,executionTime, testName, tcName, outData, devName, executeMethodId):
-	# Insert the execution details into database
-        # Syntax       : obj.insertExecutionDetails(executionTime, "WebkitTest", "OpenSource_Comp_Test", outData, devName);
-        # Description  : Insert the execution details in execution table of database
-        # Parameters   : executionTime - time taken for execution of tests in seconds; testName - name of test on basis of which we can select script; tcName - testcaseName, outData - output Data, devName - name of device(STB) in which tests are executing
-        # Return Value : null
-        	try:
-	            if "WebkitTest" in testName:
-        	        script = "WebkitTest_Directfb"
-	            elif "GstreamerTest" in testName:
-        	        script = "GstreamerBasePluginTest"
-		    elif "RdkUnitTest_Webkit" in testName:
-                        script = "RdkUnitTest_Webkit"
-		    elif "DLNATest" in testName:
-        	        script = "DlnaTest"
-                    else:
-                        script = "OpenSource_Comp_Test";
-                        print "other than opensource test";
+			logfile=open(self.logpath+"/logs/"+self.scriptName+".log")
+			outputData=logfile.read() 
+			logfile.close()
+			outputData=conn.escape_string(outputData)
+			timeNow=time.time()
+			executionTime=timeNow-self.startTime
+			
+			query2 = """INSERT INTO execution_result (id, version, device, execution_id, execution_device_id, execution_output, script, status) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s')""" % (self.resultId, self.rdkversion, devName, self.execID, self.execDevId, outputData, script,  self.resultStatus);
+                        try :
+                                cur.execute(query2);
+				print "Row(s) updated :" +  str(cur.rowcount)+" in table: execution_result";
+				conn.commit();
+                        except Exception, e:
+                                print str(e)
+                                print "------"+e.message
+			
+			for testFn in self.primitiveTests :
+				expectedResult = "Test Suite Executed"
+				executeMethodId=self.fetchLastExecuteMethodResultId()+1		
+				query3 = """INSERT INTO execute_method_result (id, version, actual_result, execution_result_id, expected_result, function_name, status) VALUES ('%s','%s','%s','%s','%s','%s','%s')""" % (executeMethodId, self.rdkversion, testFn.resultStatus, self.resultId, expectedResult, testFn.testCaseName, testFn.resultStatus);
+				try :
+					cur.execute(query3);
+					print "Row(s) updated :" +  str(cur.rowcount)+" in table: execute_method_result";
+					conn.commit();
 
-        	    executionDate = strftime("%Y-%m-%d %H:%M:%S", gmtime());
-		    print "Date of Execution: "+executionDate;
-		    print "Device Name: "+devName;
-		    #execName = devName+"-"+strftime("%Y%m%d%H%M%S", gmtime());
-	            print "execution name inside insert function: %s" %self.execName;
-	            #resultobj = PrimitiveTestCase(tcName);
-        	    conn = MySQLdb.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
-        	    #conn = _mysql.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
-                    cur = conn.cursor()
-		    print "\n+++++++++++++++\n"
-                    outputData= self.data1 + "<br/>" + self.data2 + "<br/>" + outData;
-		    print "final ouputData in tdklib is: " + outputData;
-		    	
-                    query1 = """INSERT INTO execution (id, version, date_of_execution, device, device_group, execution_time, is_marked, name, output_data, result, script, script_group, groups_id, is_performance_done) VALUES ('%s','%s','%s','%s','%s','%s','%d','%s','%s','%s','%s','%s', NULL, 0)""" % (self.execID, self.rdkversion, executionDate, devName, "NULL", executionTime, 0, self.execName, outputData, tcName.resultStatus, script, "NULL");
-                    print query1;
-                    cur.execute(query1);
-                    print "Row(s) were updated :" +  str(cur.rowcount);
-		    conn.commit();
-		    print "\n+++++++++++++++\n"
-		    query4 = "INSERT INTO execution_device (id, version, date_of_execution, device, device_ip, execution_id, execution_time, status) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s')" % (self.execDevId, self.rdkversion, executionDate, devName, self.IP, self.execID, executionTime, tcName.resultStatus);
-                    print query4;
-                    cur.execute(query4);
-                    print "Row(s) were updated :" +  str(cur.rowcount);
-                    conn.commit();
-		    print "\n+++++++++++++++\n"
-		    query2 = """INSERT INTO execution_result (id, version, device, execution_id, execution_device_id, execution_output, script, status) VALUES ('%s','%s','%s','%s','%s','%s','%s','%s')""" % (self.resultId, self.rdkversion, devName, self.execID, self.execDevId, outputData, script,  tcName.resultStatus);
-                    print query2;
-                    cur.execute(query2);
-                    print "Row(s) were updated :" +  str(cur.rowcount);
-                    conn.commit();
-		    print "\n+++++++++++++++\n"
-		    expectedResult = "Test Suite Executed"
-                    query3 = """INSERT INTO execute_method_result (id, version, actual_result, execution_result_id, expected_result, function_name, status) VALUES ('%s','%s','%s','%s','%s','%s','%s')""" % (executeMethodId, self.rdkversion, tcName.resultStatus, self.resultId, expectedResult, tcName.testCaseName, tcName.resultStatus);
-                    print query3;
-                    cur.execute(query3);
-                    print "Row(s) were updated :" +  str(cur.rowcount);
-                    conn.commit();
-		    print "\n+++++++++++++++\n"
-		    conn.close();
-		except Exception, e:
-			print "ERROR : exception in inserting data!\n";
-			print "Exception type is: %s" %e;
-		else:
-			print "Unload module Success\n"
+				except Exception, e:
+					print str(e)
+					print "------"+e.message
+
+
     ########## End of Function ##########
 
 	def fetchLastExecutionId(self):
@@ -1323,11 +1450,11 @@ class TDKScriptingLibrary:
                         #conn = _mysql.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
                         cur = conn.cursor()
                         query = "SELECT id FROM execution_result ORDER BY id DESC limit 1";
-                        print query;
+                        #print query;
                         cur.execute(query);
                         lastExecResId = list(cur.fetchall());
                         print "list value: ", lastExecResId;
-                        print "Row(s) were updated :" +  str(cur.rowcount);
+                        print "Row(s) fetched :" +  str(cur.rowcount);
                         print "Last ExecutionId fetched from the database is:", lastExecResId[0];
                         for execResId in lastExecResId:
                                 print execResId[0]
@@ -1356,7 +1483,7 @@ class TDKScriptingLibrary:
                         cur.execute(query);
                         lastExecMethResId = list(cur.fetchall());
 			print "list value: ", lastExecMethResId;
-                        print "Row(s) were updated :" +  str(cur.rowcount);
+                        print "Row(s) fetched :" +  str(cur.rowcount);
                         print "Last ExecuteMethodResultId fetched from the database is:", lastExecMethResId[0];
                         for execMethResId in lastExecMethResId:
                                 print execMethResId[0]
@@ -1385,7 +1512,7 @@ class TDKScriptingLibrary:
                         cur.execute(query);
                         lastExecDevId = list(cur.fetchall());
                         print "list value: ", lastExecDevId;
-                        print "Row(s) were updated :" +  str(cur.rowcount);
+                        print "Row(s) fetched  :" +  str(cur.rowcount);
                         print "Last ExecutionDeviceId fetched from the database is:", lastExecDevId[0];
                         for execDevId in lastExecDevId:
                                 print execDevId[0]
