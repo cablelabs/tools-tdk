@@ -37,6 +37,7 @@ def resetAgent(deviceIP,devicePort,enableReset):
 	try:
         	port = devicePort
         	tcpClient = socket.socket()
+		tcpClient.settimeout(5.0)
         	tcpClient.connect((deviceIP, port))
 
        		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'ResetAgent','enableReset':enableReset}

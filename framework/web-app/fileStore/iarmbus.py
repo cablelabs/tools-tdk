@@ -15,6 +15,106 @@
 #------------------------------------------------------------------------------
 import tdklib;
 
+def IARMBUS_Init(obj,expectedresult):
+
+    #Primitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('IARMBUS_Init')
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedresult)
+
+    #Get the result of execution
+    actualresult = tdkTestObj.getResult()
+    details = tdkTestObj.getResultDetails()
+    print "Result: IARMBus Init [%s]"%(actualresult)
+
+    #Set the result status of execution
+    if expectedresult in actualresult:
+        tdkTestObj.setResultStatus("SUCCESS")
+        retValue = "SUCCESS"
+    else:
+        print "Failure Details: [%s]"%(details)
+        tdkTestObj.setResultStatus("FAILURE")
+        retValue = "FAILURE"
+
+    return retValue
+
+
+def IARMBUS_Connect(obj,expectedresult):
+
+    #Primitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('IARMBUS_Connect')
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedresult)
+
+    #Get the result of execution
+    actualresult = tdkTestObj.getResult()
+    details = tdkTestObj.getResultDetails()
+    print "Result: IARMBus Connect [%s]"%(actualresult)
+
+    #Set the result status of execution
+    if expectedresult in actualresult:
+        tdkTestObj.setResultStatus("SUCCESS")
+        retValue = "SUCCESS"
+    else:
+        print "Failure Details: [%s]"%(details)
+        tdkTestObj.setResultStatus("FAILURE")
+        retValue = "FAILURE"
+
+    return retValue
+
+
+def IARMBUS_DisConnect(obj,expectedresult):
+
+    #Primitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('IARMBUS_DisConnect')
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedresult)
+
+    #Get the result of execution
+    actualresult = tdkTestObj.getResult()
+    details = tdkTestObj.getResultDetails()
+    print "Result: IARMBus DisConnect [%s]"%(actualresult)
+
+    #Set the result status of execution
+    if expectedresult in actualresult:
+        tdkTestObj.setResultStatus("SUCCESS")
+        retValue = "SUCCESS"
+    else:
+        print "Failure Details: [%s]"%(details)
+        tdkTestObj.setResultStatus("FAILURE")
+        retValue = "FAILURE"
+
+    return retValue
+
+
+def IARMBUS_Term(obj,expectedresult):
+
+    #Primitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('IARMBUS_Term')
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedresult)
+
+    #Get the result of execution
+    actualresult = tdkTestObj.getResult()
+    details = tdkTestObj.getResultDetails()
+    print "Result: IARMBus Term [%s]"%(actualresult)
+
+    #Set the result status of execution
+    if expectedresult in actualresult:
+        tdkTestObj.setResultStatus("SUCCESS")
+        retValue = "SUCCESS"
+    else:
+        print "Failure Details: [%s]"%(details)
+        tdkTestObj.setResultStatus("FAILURE")
+        retValue = "FAILURE"
+
+    return retValue
+
+
 def change_powermode(obj,mode):
 
     #Setting the POWER state

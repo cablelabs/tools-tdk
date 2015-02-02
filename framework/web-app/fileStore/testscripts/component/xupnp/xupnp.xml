@@ -1,41 +1,44 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xml>
-  <module name='xupnp' testGroup='Component'>
+  <module name="xupnp" testGroup="Component">
     <primitiveTests>
-      <primitiveTest name='TestMgr_XUPNPAgent_checkjson' id='662' version='0'>
-        <function>TestMgr_XUPNPAgent_checkjson</function>
-        <parameters />
+      <primitiveTest id="" name="XUPNP_CheckXDiscOutputFile" version="1">
+        <function>TestMgr_XUPNP_CheckXDiscOutputFile</function>
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='TestMgr_XUPNPAgent_checkSTRurl' id='663' version='0'>
-        <function>TestMgr_XUPNPAgent_checkSTRurl</function>
-        <parameters />
-      </primitiveTest>
-      <primitiveTest name='TestMgr_XUPNPAgent_checkSerialNo' id='664' version='0'>
-        <function>TestMgr_XUPNPAgent_checkSerialNo</function>
-        <parameters />
-      </primitiveTest>
-      <primitiveTest name='TestMgr_XUPNPAgent_checkPBurl' id='665' version='0'>
-        <function>TestMgr_XUPNPAgent_checkPBurl</function>
-        <parameters />
-      </primitiveTest>
-      <primitiveTest name='TestMgr_XUPNPAgent_recordId' id='666' version='0'>
-        <function>TestMgr_XUPNPAgent_recordId</function>
-        <parameters />
-      </primitiveTest>
-      <primitiveTest name='TestMgr_XUPNPAgent_ModBasicDevice' id='667' version='0'>
-        <function>TestMgr_XUPNPAgent_ModBasicDevice</function>
-        <parameters />
-      </primitiveTest>
-      <primitiveTest name='TestMgr_XUPNPAgent_removeXmls' id='668' version='0'>
-        <function>TestMgr_XUPNPAgent_removeXmls</function>
-        <parameters />
-      </primitiveTest>
-      <primitiveTest name='TestMgr_XUPNPAgent_evtCheck' id='669' version='1'>
-        <function>TestMgr_XUPNPAgent_evtCheck</function>
+      <primitiveTest id=" " name="XUPNP_ReadXDiscOutputFile" version="1">
+        <function>TestMgr_XUPNP_ReadXDiscOutputFile</function>
         <parameters>
-          <parameter name='evtName' value='serialNo' />
-          <parameter name='evtValue' value='PAP' />
+          <parameter name="paramName" value="sno"/>
         </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="XUPNP_GetUpnpResult" version="1">
+        <function>TestMgr_XUPNP_GetUpnpResult</function>
+        <parameters>
+          <parameter name="paramName" value="sno"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="XUPNP_BroadcastEvent" version="1">
+        <function>TestMgr_XUPNP_BroadcastEvent</function>
+        <parameters>
+          <parameter name="error" value="0"/>
+          <parameter name="eventLog" value="TestXcalLog"/>
+          <parameter name="payload" value="TestPayload"/>
+          <parameter name="state" value="1"/>
+          <parameter name="stateId" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="XUPNP_ModifyBasicDeviceXml" version="1">
+        <function>TestMgr_XUPNP_ModifyBasicDeviceXml</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="XUPNP_CheckXMLRestoration" version="1">
+        <function>TestMgr_XUPNP_CheckXMLRestoration</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="XUPNP_ReadXcalDeviceLogFile" version="1">
+        <function>TestMgr_XUPNP_ReadXcalDeviceLogFile</function>
+        <parameters/>
       </primitiveTest>
     </primitiveTests>
   </module>
