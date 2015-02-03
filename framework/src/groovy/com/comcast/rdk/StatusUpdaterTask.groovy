@@ -130,6 +130,17 @@ class StatusUpdaterTask implements Runnable {
 					}
 				}
 			}
+			else if(outData.equals(Status.BUSY.toString()))
+			{
+					String status = Status.BUSY.toString()
+					def execList = Execution.findAllByExecutionStatusAndDevice(Constants.PAUSED,device?.getStbName());
+					def deviceObj = Device.findById(device?.id)
+					if (execList?.size() > 0)
+					{
+						executescriptService.resetAgent(deviceObj, Constants.FALSE)
+						Thread.sleep(6000)
+					}
+			}							
 			if(devExist){
 				callStatusUpdater(device,outData)
 			}

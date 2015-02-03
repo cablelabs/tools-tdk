@@ -11,8 +11,6 @@
  */
 package com.comcast.rdk
 
-import java.util.List;
-import java.util.Map;
 
 /**
  * Service class to manage the script files in file store.
@@ -147,10 +145,45 @@ class ScriptService {
 						scriptgroupService.saveToScriptGroups(sFile,sObject)
 						scriptgroupService.saveToDefaultGroups(sFile,sObject, script?.boxTypes)
 					}
+					createDefaultGroupWithoutOS(sObject,sFile)
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace()
+		}
+	}
+	
+	def createDefaultGroupWithoutOS(def scriptObject , def scriptFile){
+		def sName = scriptObject.getModule()
+		Module module
+		Module.withTransaction{
+			module = Module.findByName(sName)
+		}
+		if(module?.testGroup != TestGroup.OpenSource){
+			scriptObject?.boxTypes?.each{ bType ->
+
+				scriptObject?.rdkVersions?.each{ vers ->
+
+					String name = vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE
+					ScriptGroup.withTransaction {
+						def scriptGrpInstance = ScriptGroup.findByName(name)
+						if(!scriptObject?.getLongDuration()){
+							if(!scriptGrpInstance){
+								scriptGrpInstance = new ScriptGroup()
+								scriptGrpInstance.name = name
+							}
+							if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
+								scriptGrpInstance.addToScriptList(scriptFile)
+								scriptGrpInstance.save(flush:true)
+							}
+						}else{
+							if(scriptGrpInstance && scriptGrpInstance?.scriptList?.contains(scriptFile)){
+								scriptGrpInstance.removeFromScriptList(scriptFile)
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 			

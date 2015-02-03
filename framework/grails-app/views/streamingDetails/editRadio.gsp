@@ -33,8 +33,8 @@
 		</fieldset>
 		<div style="width : 100%;text-align: center;">
 			<span class="buttons">
-			<g:actionSubmit class="save" action="update" value="${message(code: 'default.button.update.label', default: 'Update')}" /></span>
-			<span class="buttons"><g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
+			<g:actionSubmit class="save" action="updateRadio" value="${message(code: 'default.button.update.label', default: 'Update')}" /></span>
+			<span class="buttons"><g:actionSubmit class="delete" action="deleteRadioStreamDetails" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
 		</div>
 	</g:form>
 </div>

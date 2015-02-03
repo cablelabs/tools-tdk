@@ -168,6 +168,7 @@ public final class Constants
     
     public static final String COMPONENT ="component";
     public static final String INTEGRATION ="integration";
+    public static final String NO_OS_SUITE = "_NO_OS";
     
     
 }

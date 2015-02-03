@@ -61,12 +61,31 @@ class ScriptgroupService {
 				sObject?.rdkVersions?.each{ vers ->
 
 //					String name = vers?.toString()+"_"+bType?.name
-					String name = ""
+					def names = []
+					
+					Module module
+					Module.withTransaction{
+						module = Module.findByName(sObject?.module)
+					}
+					
 					if(!sObject.getLongDuration()){
-						name = vers?.toString()+"_"+bType?.name
+						names.add(vers?.toString()+"_"+bType?.name)
+						if(module?.testGroup != TestGroup.OpenSource){
+							names.add(vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE)
+						}
+						removeScriptsFromSuites(scriptInstance, vers?.toString()+"_"+bType?.name+"_LD")
 				   }else{
-						name = vers?.toString()+"_"+bType?.name+"_LD"
+				   
+				   		try {
+							removeScriptsFromSuites(scriptInstance, vers?.toString()+"_"+bType?.name)
+							removeScriptsFromSuites(scriptInstance, vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE)
+						} catch (Exception e) {
+							e.printStackTrace()
+						}
+						names.add(vers?.toString()+"_"+bType?.name+"_LD")
 				   }
+				   
+				   names.each { name ->
 					def scriptGrpInstance = ScriptGroup.findByName(name)
 					if(!scriptGrpInstance){
 						scriptGrpInstance = new ScriptGroup()
@@ -77,6 +96,7 @@ class ScriptgroupService {
 					if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptInstance)){
 						scriptGrpInstance.addToScriptList(scriptInstance)
 					}
+				   }
 				}
 			}
 		} catch (Exception e) {
@@ -296,7 +316,7 @@ class ScriptgroupService {
 		
 					bTypeList?.each { bType ->
 						rdkVersionList.each { vers ->
-							def groupNames  = [vers?.toString()+"_"+bType?.name,vers?.toString()+"_"+bType?.name+"_LD"]
+							def groupNames  = [vers?.toString()+"_"+bType?.name,vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE,vers?.toString()+"_"+bType?.name+"_LD"]
 					groupNames.each {  groupName ->
 							def scriptGrpInstance = ScriptGroup.findByName(groupName)
 							if(scriptGrpInstance && scriptGrpInstance?.scriptList?.contains(scriptInstance)){
@@ -309,26 +329,35 @@ class ScriptgroupService {
 					sObject?.getBoxTypes()?.each{ bType ->
 		
 						sObject?.getRdkVersions()?.each{ vers ->
-		
-							String name = ""
-					
+							
+							Module module
+							Module.withTransaction{
+								module = Module.findByName(sObject?.module)
+							}
+							
+					def names = []
 					if(!sObject?.getLongDuration()){
-						name = vers?.toString()+"_"+bType?.name
+						names.add(vers?.toString()+"_"+bType?.name)
+						if(module?.testGroup != TestGroup.OpenSource){
+							names.add(vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE)
+						}
 				   }else{
-						name = vers?.toString()+"_"+bType?.name+"_LD"
+						names.add(vers?.toString()+"_"+bType?.name+"_LD")
 				   }
-		
-							def scriptGrpInstance = ScriptGroup.findByName(name)
-							if(!scriptGrpInstance){
-								scriptGrpInstance = new ScriptGroup()
-								scriptGrpInstance.name = name
-								scriptGrpInstance.save()
-							}
-							if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptInstance)){
-								scriptGrpInstance.addToScriptList(scriptInstance)
-							}
+				   
+					names.each {  name ->
+						def scriptGrpInstance = ScriptGroup.findByName(name)
+						if(!scriptGrpInstance){
+							scriptGrpInstance = new ScriptGroup()
+							scriptGrpInstance.name = name
+							scriptGrpInstance.save()
+						}
+						if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptInstance)){
+							scriptGrpInstance.addToScriptList(scriptInstance)
 						}
 					}
+				}
+			}
 				} catch (Exception e) {
 					e.printStackTrace()
 				}

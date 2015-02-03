@@ -196,12 +196,12 @@ class ExecutescriptService {
 		else{
 			if(htmlData.contains(KEY_SCRIPTEND)){
 				htmlData = htmlData.replaceAll(KEY_SCRIPTEND,"")
-				if(!checkExecutionCompletionStatus(executionResultId)){
-					executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
-				}else{
+//				if(!checkExecutionCompletionStatus(executionResultId)){
+//					executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
+//				}else{
 					String outputData = htmlData
 					executionService.updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
-				}
+//				}
 			}
 			else{
 				
@@ -225,6 +225,7 @@ class ExecutescriptService {
 					} catch (Exception e) {
 						e.printStackTrace()
 					}
+					executionService.callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 					htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
 					executionService.updateExecutionResultsTimeOut(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 					Thread.sleep(10000)
@@ -281,7 +282,7 @@ class ExecutescriptService {
 		
 		return htmlData
 	}
-			
+		
 	/** 
 	 *  Method to check whether the execution result is having any result update or not.
 	 *  Check If execution result  got any update or it is initial status.
@@ -293,9 +294,9 @@ class ExecutescriptService {
 		ExecutionResult.withTransaction {
 			def resultArray = ExecutionResult.executeQuery("select a.status from ExecutionResult a where a.id = :exId",[exId: executionResultId])
 			if(resultArray?.size() > 0){
-				if(resultArray[0] == Constants.UNDEFINED_STATUS || resultArray[0] == Constants.PENDING){
-					status = false
-				}
+//				if(resultArray[0] == Constants.UNDEFINED_STATUS || resultArray[0] == Constants.PENDING){
+//					status = false
+//				}
 			}
 		}
 		return status
@@ -378,6 +379,7 @@ class ExecutescriptService {
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 			Thread.sleep(4000)
+			executionService.callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
@@ -402,6 +404,7 @@ class ExecutescriptService {
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 			Thread.sleep(4000)
+			executionService.callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
@@ -426,6 +429,7 @@ class ExecutescriptService {
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 			Thread.sleep(4000)
+			executionService.callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 		} catch (Exception e) {
 			e.printStackTrace()
 		}

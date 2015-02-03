@@ -324,12 +324,15 @@ class ModuleController {
 						functionInstance = Function.findById(key)
 						try{
 							if(!functionInstance.delete(flush:true)){
+								if(functionInstance?.errors?.allErrors?.size() > 0){
 									unDeletedList.add(functionInstance?.name)
+								}
 							}
 						}
 						catch (org.springframework.dao.DataIntegrityViolationException e) {
 							unDeletedList.add(functionInstance?.name)
-						}						
+							
+						}	
 						resultstatus.flush()
 					}
 				} catch (Exception e) {
@@ -343,7 +346,7 @@ class ModuleController {
             flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), unDeletedList.toString() ])}"
         }
 		if(unDeletedList.size() > 0){
-			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), unDeletedList.toString() ])}"
+			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), unDeletedList.toString() ])}"
 		}
         redirect(action: "show", id : params?.moduleid)    
     }
@@ -363,7 +366,9 @@ class ModuleController {
 						parameterTypeInstance = ParameterType.findById(key)
 						try{
 							if(!parameterTypeInstance.delete(flush:true)){
-								unDeletedList.add(parameterTypeInstance?.name)
+								if(parameterTypeInstance?.errors?.allErrors?.size() > 0){
+									unDeletedList.add(parameterTypeInstance?.name)
+								}
 							}
 						}
 						catch (org.springframework.dao.DataIntegrityViolationException e) {

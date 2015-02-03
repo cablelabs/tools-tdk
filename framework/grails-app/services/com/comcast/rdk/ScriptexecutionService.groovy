@@ -222,6 +222,12 @@ class ScriptexecutionService {
 			
 			def executionStartTime = System.currentTimeMillis()
 			
+			try {
+				saveThirdPartyExecutionDetails(Execution.findByName(execName),execName,url,callbackUrl,filePath,executionStartTime,imageName,boxType)
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+			
 			Execution ex = Execution.findByName(execName)
 			ExecutionDevice execDevice = ExecutionDevice.findById(execDeviceId)
 			if((skipStatus || notApplicable)&& scriptGrpSize == 0){
@@ -371,7 +377,12 @@ class ScriptexecutionService {
 			final def executionStartTime, final def imageName, final def boxType){
 			
 		try{
-			ThirdPartyExecutionDetails details
+			ThirdPartyExecutionDetails details = null
+			
+			ThirdPartyExecutionDetails.withTransaction {
+				details = ThirdPartyExecutionDetails.findByExecNameAndExecutionStartTime(execName,executionStartTime)
+			}
+			if(details == null){
 			ThirdPartyExecutionDetails.withTransaction {
 				details = new ThirdPartyExecutionDetails()
 				details.execution = execution
@@ -383,6 +394,7 @@ class ScriptexecutionService {
 				details.imageName = imageName
 				details.boxType = boxType
 				details.save(flush:true)
+			}
 			}
 			if(details){
 				Execution.withTransaction{
@@ -721,10 +733,17 @@ class ScriptexecutionService {
 
 		
 		def executionResultId = executionResult?.id
+		
+		def sFile 
+		try {
+			sFile = ScriptFile.findByScriptNameAndModuleName(scriptInstance?.name,scriptInstance?.primitiveTest?.module?.name)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 
 		scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
 			executionId  + COMMA_SEPERATOR + execDeviceId + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance?.statusPort + COMMA_SEPERATOR +
-			scriptInstance?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR+ SINGLE_QUOTES + "false" + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + "false" + SINGLE_QUOTES + COMMA_SEPERATOR +
+			sFile?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR+ SINGLE_QUOTES + "false" + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + "false" + SINGLE_QUOTES + COMMA_SEPERATOR +
 			SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR )//+ gatewayIp + COMMA_SEPERATOR)
 		
 		scriptData	 = scriptData + "\nprint \"SCRIPTEND#!@~\";"
@@ -818,6 +837,7 @@ class ScriptexecutionService {
 			try {
 				ScriptExecutor scriptExecutor = new ScriptExecutor()
 				resetExecutionData = scriptExecutor.executeScript(cmd,1)
+				executionService.callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 			} catch (Exception e) {
 				e.printStackTrace()
 			}
@@ -845,6 +865,7 @@ class ScriptexecutionService {
 						htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
 						executionService.updateExecutionResultsTimeOut(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
 						Thread.sleep(6000)
+						executionService.callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 				}else{
 					try {
 						executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
@@ -862,6 +883,7 @@ class ScriptexecutionService {
 						try {
 							ScriptExecutor scriptExecutor = new ScriptExecutor()
 							resetExecutionData = scriptExecutor.executeScript(cmd,1)
+							executionService.callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 						} catch (Exception e) {
 							e.printStackTrace()
 						}

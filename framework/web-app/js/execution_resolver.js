@@ -306,10 +306,20 @@ function showWaitSpinner(){
 	$("#executeBtn").hide();
 	
 	var execId = $('#exId').val();
+	var deviceList= $('#devices').val();
+	if(deviceList  && deviceList.length > 1 )
+	{
+		$('#resultDiv'+execId).show();	
+		$('#resultDiv'+execId).html('Multiple Device Execution ');
+		//$('#dynamicResultDiv').show();
+	}
+	else
+	{	
 	$('#resultDiv'+execId).hide();
 	$('#dynamicResultDiv').show();
 	$('#dynamicResultDiv').html('Starting the script execution...');
 	repeatTask = setInterval("updateLog()",5000);
+	}
 }
 
 function showSpinner(){

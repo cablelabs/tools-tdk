@@ -1532,6 +1532,7 @@ class ExecutionService {
 		]
 		ScriptExecutor scriptExecutor = new ScriptExecutor()
 		def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+		callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 		Thread.sleep(4000)
 	}
 	
@@ -1553,7 +1554,45 @@ class ExecutionService {
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 			Thread.sleep(4000)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+	
+	
+	/**
+	 * Method to check whether the agent reset failed. If the agent reset failed it will request to reboot the box.
+	 * @param output
+	 * @param device
+	 * @return
+	 */
+	def callRebootOnAgentResetFailure(String output,Device device){
+		if(output?.contains("Failed to reset agent") || output?.contains("Unable to reach agent")){
+			rebootBox(device)
+		}
+	}
+	
+	/**
+	 * Method to reboot the box by invoking the python script.
+	 * @param deviceInstance
+	 * @return
+	 */
+	def rebootBox(Device deviceInstance ){
+		println "Reboot Box "+deviceInstance
+		try {
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callRebootOnCrash.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.stbPort
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor()
+			def resetData = scriptExecutor.executeScript(cmd,1)
+			Thread.sleep(10000)
 		} catch (Exception e) {
 			e.printStackTrace()
 		}

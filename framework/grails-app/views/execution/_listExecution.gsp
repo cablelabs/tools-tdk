@@ -103,7 +103,7 @@
 								</g:if>
 							</g:if>
 							</g:if> 
-						<g:link action="exportToExcel" id="${executionInstance.id}" ><img src="../images/excel.png" /></g:link>
+						<g:link action="exportConsolidatedToExcel" id="${executionInstance.id}" ><img src="../images/excel.png" /></g:link>
 						
 						</td>
 					</tr>

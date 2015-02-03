@@ -239,7 +239,15 @@ function updateSG() {
 	var name = document.getElementById("scriptName").value;
 	var id = document.getElementById("sgId").value;
 	var version = document.getElementById("sgVersion").value;
-	$.get('updateScriptGrp', {id: id, version:version, idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data);  });
+	
+	var name = document.getElementById("scriptName").value;
+	if(name == null || name.length == 0 ){
+		alert("Please enter script group name ");
+	}else if(dataList == "" && dataList.length == 0){
+		alert("Please add scripts to the script group");
+	}else{
+		$.get('updateScriptGrp', {id: id, version:version, idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data);  });
+	}
 }
 function createSG() {
 	var sortable = document.getElementById("sortable");
@@ -254,7 +262,13 @@ function createSG() {
 	});
 
 	var name = document.getElementById("scriptName").value;
-	$.get('createScriptGrp', {idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data); });
+	if(name == null || name.length == 0 ){
+		alert("Please enter script group name ");
+	}else if(dataList == "" && dataList.length == 0){
+		alert("Please add scripts to the script group");
+	}else{ 
+		$.get('createScriptGrp', {idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data); });
+	}
 }
 function createScriptForm() {
 	checkAnyEditingScript();

@@ -205,6 +205,11 @@ class JobSchedulerService implements Job{
 								execName = executionName
 							}
 
+							int scriptCnt = 0
+							if(scriptGroupInstance?.scriptList?.size() > 0){
+								scriptCnt = scriptGroupInstance?.scriptList?.size()
+							}
+							
 							Execution.withTransaction { status ->
 								try {
 									execution = new Execution()
@@ -218,6 +223,7 @@ class JobSchedulerService implements Job{
 									execution.groups = jobDetails?.groups
 									execution.isBenchMarkEnabled = jobDetails?.isBenchMark?.equals("true")
 									execution.isSystemDiagnosticsEnabled = jobDetails?.isSystemDiagnostics?.equals("true")
+									execution.scriptCount = scriptCnt
 									if(! execution.save(flush:true)) {
 										log.error "Error saving Execution instance : ${execution.errors}"
 										executionSaveStatus = false
@@ -851,6 +857,7 @@ class JobSchedulerService implements Job{
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 			Thread.sleep(4000)
 		}
 		else{
@@ -872,6 +879,7 @@ class JobSchedulerService implements Job{
 					]
 					ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 					def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+					callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 					htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
 					updateExecutionResultsTimeOut(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
 					Thread.sleep(4000)
@@ -890,6 +898,7 @@ class JobSchedulerService implements Job{
 						]
 						ScriptExecutor scriptExecutor = new ScriptExecutor()
 						def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+						callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 						Thread.sleep(4000)
 					} catch (Exception e) {
 						e.printStackTrace()
@@ -949,6 +958,41 @@ class JobSchedulerService implements Job{
 
 		def output = new ScriptExecutor().execute( getCommand( executionData ), execTime)
 		return output
+	}
+	
+	/**
+	 * Method to check whether the agent reset failed. If the agent reset failed it will request to reboot the box.
+	 * @param output
+	 * @param device
+	 * @return
+	 */
+	def callRebootOnAgentResetFailure(String output,Device device){
+		if(output?.contains("Failed to reset agent") || output?.contains("Unable to reach agent")){
+			rebootBox(device)
+		}
+	}
+	
+	/**
+	 * Method to reboot the box by invoking the python script.
+	 * @param deviceInstance
+	 * @return
+	 */
+	def rebootBox(Device deviceInstance ){
+		try {
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callRebootOnCrash.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.stbPort
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor()
+			def resetData = scriptExecutor.executeScript(cmd,1)
+			Thread.sleep(10000)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 	}
 
 	/**
@@ -1242,8 +1286,11 @@ class JobSchedulerService implements Job{
 		]
 		ScriptExecutor scriptExecutor = new ScriptExecutor()
 		def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+		callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 		Thread.sleep(4000)
 	}
+	
+	
 
 	/**
 	 * Method to execute the script to transfer box parameters to /logs/devicelogs

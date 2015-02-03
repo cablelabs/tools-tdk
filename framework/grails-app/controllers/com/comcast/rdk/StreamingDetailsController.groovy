@@ -158,6 +158,44 @@ class StreamingDetailsController {
         flash.message = message(code: 'default.updated.message', args: [message(code: 'streamingDetails.label', default: 'StreamingDetails'), streamingDetailsInstance.streamId])
         redirect(action: "list")
     }
+	/**
+	 * update the radio stream details 
+	 * @param id
+	 * @param version
+	 * @return
+	 */
+	 def updateRadio(Long id,Long version)
+	  {
+			def radioStreamingDetailsInstance= RadioStreamingDetails.get(id)
+			if(!radioStreamingDetailsInstance){
+				flash.message = message(code: 'default.not.found.message', args: [message(code: 'radioStreamingDetails.label', default: 'RadioStreamingDetails'), radioStreamingDetailsInstance.streamId])
+				redirect(action: "list")
+				return
+			}
+			
+			if(version != null )
+			{
+				if(radioStreamingDetailsInstance.version > version){
+					radioStreamingDetailsInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
+						[message(code: 'radioStreamingDetails.label', default: 'RadioStreamingDetails')] as Object[],
+						"Another user has updated this RadioStreamingDetails while you were editing")
+							//render(view: "edit", model: [streamingDetailsInstance: streamingDetailsInstance])
+			  redirect(action: "list")
+			  return
+			}
+			radioStreamingDetailsInstance.properties = params
+			if (!radioStreamingDetailsInstance.save(flush: true)) {
+				// render(view: "edit", model: [streamingDetailsInstance: streamingDetailsInstance])
+				 redirect(action: "list")
+				 return
+			 }
+	 
+			 flash.message = message(code: 'default.updated.message', args: [message(code: 'radioStreamingDetails.label', default: 'RadioStreamingDetails'),radioStreamingDetailsInstance.streamId])
+			 redirect(action: "list")
+			}
+	
+	  }
+	 
 
     /**
      * Delete stream details
@@ -208,20 +246,20 @@ class StreamingDetailsController {
 	
 	def deleteRadioStreamDetails() {
 		Long id = params.id as Long
-		def streamingDetailsInstance = RadioStreamingDetails.get(id)
-		  if (!streamingDetailsInstance) {
-			  flash.message = message(code: 'default.not.found.message', args: [message(code: 'streamingDetails.label', default: 'StreamingDetails'), streamingDetailsInstance.streamId])
+		def radioStreamingDetailsInstance = RadioStreamingDetails.get(id)
+		  if (!radioStreamingDetailsInstance) {
+			  flash.message = message(code: 'default.not.found.message', args: [message(code: 'radioStreamingDetails.label', default: 'RadioStreamingDetails'), radioStreamingDetailsInstance.streamId])
 			  redirect(action: "list")
 			  return
 		  }
   
 		  try {
-			  streamingDetailsInstance.delete(flush: true)
-			  flash.message = message(code: 'default.deleted.message', args: [message(code: 'streamingDetails.label', default: 'StreamingDetails'), streamingDetailsInstance.streamId])
+			  radioStreamingDetailsInstance.delete(flush: true)
+			  flash.message = message(code: 'default.deleted.message', args: [message(code: 'radioStreamingDetails.label', default: 'RadioStreamingDetails'), radioStreamingDetailsInstance.streamId])
 			  redirect(action: "list")
 		  }
 		  catch (DataIntegrityViolationException e) {
-			  flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'streamingDetails.label', default: 'StreamingDetails'), streamingDetailsInstance.streamId])
+			  flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'radioStreamingDetails.label', default: 'RadioStreamingDetails'), radioStreamingDetailsInstance.streamId])
 			  redirect(action: "list")
 		  }
 	  }

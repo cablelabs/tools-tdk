@@ -752,7 +752,7 @@ class ExecutionController {
      * Execute the script
      * @return
      */
-    def executeScriptMethod() {		
+    def executeScriptMethod() {	
 		boolean aborted = false
 		def exId
         def scriptGroupInstance
@@ -808,19 +808,24 @@ class ExecutionController {
 		}
 		
         else if(deviceInstance?.deviceStatus.toString().equals(Status.BUSY.toString())){
-            htmlData = message(code: 'execution.device.notfree')
+            htmlData =deviceName+ " : "+message(code: 'execution.device.notfree')
         }
 		else if(deviceInstance?.deviceStatus.toString().equals(Status.NOT_FOUND.toString())){
-			htmlData = message(code: 'execution.device.notfree')
+			htmlData =deviceName+" : "+ message(code: 'execution.device.notfree')
 		}
 		else if(deviceInstance?.deviceStatus.toString().equals(Status.HANG.toString())){
-			htmlData = message(code: 'execution.device.notfree')
+			htmlData = deviceName+ " : "+message(code: 'execution.device.notfree')
 		}		
 		else if(repeatCount == 0){
 			htmlData = "Give a valid entry in repeat"
 		}	
         else{			
         	StringBuilder output = new StringBuilder();
+			
+			if(deviceList.size() > 1){
+					output.append("Multiple Device Execution ")
+			}
+			
 			try{
 			def isBenchMark = FALSE
 			def isSystemDiagnostics = FALSE
@@ -847,6 +852,7 @@ class ExecutionController {
 				deviceList.each{ device ->
 					deviceInstance = Device.findById(device)
 					boolean validScript = false
+					deviceName = deviceInstance?.stbName
 						if(scriptType == SINGLE_SCRIPT){
 							def scripts = params?.scripts
 							if(scripts instanceof String){
@@ -860,16 +866,16 @@ class ExecutionController {
 									if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
 										validScript = true
 									}else{
-										htmlData = "RDK Version supported by the script is not matching with the RDK Version of selected Device "+deviceInstance?.stbName+"<br>"
+										htmlData = "<br>"+deviceName +"  : RDK Version supported by the script is not matching with the RDK Version of selected Device "+deviceInstance?.stbName+"<br>"
 									}
 								}else{
-									htmlData = message(code: 'execution.boxtype.nomatch')
+									htmlData = "<br>"+deviceName +" : "+ message(code: 'execution.boxtype.nomatch')
 								}
 								}else{
-									htmlData = "No Script is available with name ${params?.scripts} in module ${moduleName}"
+									htmlData = "<br>"+deviceName +"  : No Script is available with name ${params?.scripts} in module ${moduleName}"
 								}
 								}else{
-									htmlData = "No module associated with script ${params?.scripts}"
+									htmlData = "<br>"+deviceName +" : No module associated with script ${params?.scripts}"
 								}
 							}
 							else{
@@ -1028,9 +1034,11 @@ class ExecutionController {
 								executionService.executeVersionTransferScript(request.getRealPath('/'),filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
 							}
 							if(deviceList.size() > 1){
-															
 								executescriptService.executeScriptInThread(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
 										filePath, getRealPath(), params?.myGroup, url, isBenchMark, isSystemDiagnostics, params?.rerun)
+								htmlData=" <br> " + deviceName+"  :   Execution triggered "															
+								output.append(htmlData)
+												
 								
 							}else{
 										htmlData = executescriptService.executescriptsOnDevice(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
@@ -1060,21 +1068,19 @@ class ExecutionController {
 							}
 						}
 					}
+					
 					else{
 						def devcInstance = Device.findById(device)
 						if(!scriptStatus){
-							htmlData = message(code: 'execution.boxtype.nomatch')
+							htmlData ="<br>"+deviceName+"  :  "+ message(code: 'execution.boxtype.nomatch')
 						}else{
-							htmlData = "RDK Version supported by the script is not matching with the RDK Version of selected Device "+devcInstance?.stbName+"<br>"
+							htmlData ="<br>"+deviceName+ " :  RDK Version supported by the script is not matching with the RDK Version of selected Device "+devcInstance?.stbName+"<br>"
 						}
 						
 
 						if(executionService.deviceAllocatedList.contains(devcInstance?.id)){
 							executionService.deviceAllocatedList.remove(devcInstance?.id)
 						}
-
-						
-						
 						output.append(htmlData)
 					}
 					htmlData = ""				
@@ -1098,9 +1104,12 @@ class ExecutionController {
 									e.printStackTrace()
 								}
 							}else{
+													
 								if(i > 0){
 									def execName1 = executionName + UNDERSCORE +i
+									
 									try {
+										
 										Execution execution = new Execution()
 										execution.name = execName1
 										execution.script = scriptName
@@ -1123,14 +1132,14 @@ class ExecutionController {
 										th.printStackTrace()
 									}
 								}
-
-								htmlData = message(code: 'execution.device.notfree')
+								
+								htmlData = "<br>"+deviceName+" : "+message(code: 'execution.device.notfree') 
 								output.append(htmlData)
 							}
 				}
 				}else{
 						if(!singleScript){
-							htmlData = "No valid script available to execute."
+							htmlData = "<br>"+deviceName+ "  :  No valid script available to execute."
 						}
 					output.append(htmlData)
 				}
@@ -1305,6 +1314,7 @@ class ExecutionController {
 		try {
 			Execution.withTransaction{
 				Execution execution = Execution.findById(execId)
+				
 						if(execution && !(execution?.result?.equals( FAILURE_STATUS ))){
 							execution?.result = statusData?.toUpperCase().trim()
 									execution?.save(flush:true)
@@ -1320,7 +1330,7 @@ class ExecutionController {
 						if(executionResult && !(executionResult?.status.equals( FAILURE_STATUS ))){
 							executionResult?.status = statusData?.toUpperCase().trim()
 									executionResult?.save(flush:true)
-						}
+					}
 			}
 		} catch (Exception e) {
 			e.printStackTrace()
@@ -1873,9 +1883,9 @@ class ExecutionController {
 		ThirdPartyExecutionDetails.withTransaction {
 			ThirdPartyExecutionDetails  thirdPartyExecutionDetails = ThirdPartyExecutionDetails.findByExecName(exName)
 			if(thirdPartyExecutionDetails){
-				scriptexecutionService.executeCustomCallBackUrl(thirdPartyExecutionDetails.execName,thirdPartyExecutionDetails.url,thirdPartyExecutionDetails.callbackUrl,thirdPartyExecutionDetails.filePath,thirdPartyExecutionDetails.executionStartTime,thirdPartyExecutionDetails.imageName,thirdPartyExecutionDetails.boxType,realPath,moduleType)
+				scriptexecutionService.executeCallBackUrl(thirdPartyExecutionDetails.execName,thirdPartyExecutionDetails.url,thirdPartyExecutionDetails.callbackUrl,thirdPartyExecutionDetails.filePath,thirdPartyExecutionDetails.executionStartTime,thirdPartyExecutionDetails.imageName,thirdPartyExecutionDetails.boxType,realPath,moduleType)
 			}
 		}
-	}
+  }
 
 }

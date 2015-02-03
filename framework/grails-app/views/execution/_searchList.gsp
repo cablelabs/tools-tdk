@@ -12,15 +12,16 @@
 <%@ page import="com.comcast.rdk.Execution" %>
 <script type="text/javascript">
 	$(document).ready(function() {
-		$("#searchtable").dataTable({
+		oTable = $("#searchtable").dataTable({
 			"sPaginationType" : "full_numbers"
 		});
+		oTable.fnSort( [ [3,'desc'] ] );
 	});
 </script>
 <br/>	
 <g:if test="${executionInstanceList}">
 <div id="list-execution" class="content scaffold-list" role="main">					
-	<table id="searchtable">
+	<table id="searchtable" style="table-layout:fixed;">
 		<thead>					
 			<tr>
 				<th>Execution Name</th>						
@@ -33,8 +34,8 @@
 		<tbody>
 		  <g:each in="${executionInstanceList}" status="i" var="executionInstance">			
 			<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">				
-				<td align="center" nowrap>${fieldValue(bean: executionInstance, field: "name")}</td>				
-				<td align="center">
+				<td align="center" style ="width :20% ; word-wrap:break-word;" >${fieldValue(bean: executionInstance, field: "name")}</td>				
+				<td align="center" style ="width :20% ; word-wrap:break-word; ">
 					<g:if test="${executionInstance?.script}">
 						${fieldValue(bean: executionInstance, field: "script")}
 					</g:if>
@@ -42,8 +43,8 @@
 						${fieldValue(bean: executionInstance, field: "scriptGroup")}
 					</g:else>													
 				</td>					
-				<td align="center" nowrap>${fieldValue(bean: executionInstance, field: "device")}</td>				
-				<td align="center" nowrap>${fieldValue(bean: executionInstance, field: "dateOfExecution")}</td>											
+				<td align="center" >${fieldValue(bean: executionInstance, field: "device")}</td>				
+				<td align="center" >${fieldValue(bean: executionInstance, field: "dateOfExecution")}</td>											
 				<td align="center"><g:link onclick="showExecutionLog(${executionInstance.id}); return false;" id="${executionInstance.id}">
 					
 						<g:if test="${ !(executionInstance.result) }" >FAILURE						
