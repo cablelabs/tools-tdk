@@ -13,6 +13,7 @@
 #include "xupnpAgent.h"
 #include <string.h>
 #include <fstream>
+#include <sstream>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +25,16 @@ extern "C" {
 #endif
 
 string g_tdkPath = getenv("TDK_PATH");
-static bool wareHouseModeEnabled = false;
+static char xdiscOutputFile[STR_LEN];
+
+/***************************************************************************
+ *Function name : readLogFile
+ *Description   : Helper API to check if a log pattern is found in the file specified
+ *Input         : Filename - Name of file where the log has to be searched
+ *                parameter - pattern to be searched in the log file
+ *Output        : true if pattern is found
+ *                false if pattern not found or filename does not exist
+ *****************************************************************************/
 
 bool readLogFile(const char *filename, const string parameter)
 {
@@ -50,33 +60,6 @@ bool readLogFile(const char *filename, const string parameter)
         DEBUG_PRINT(DEBUG_ERROR,"Unable to open file %s\n", filename);
     }
     return false;
-}
-
-bool enableWareHouseMode(const char *filename)
-{
-    bool ret = false;
-    char strCmd[128] = {'\0'};
-    string localConfFile = g_tdkPath + "/" + TDK_XDEVICE_CONF_FILE;
-
-    //Create temp conf file
-    sprintf(strCmd,"sed -e '/\\[Flags\\]/a\\wareHouseMode=true' %s > %s",filename, localConfFile.c_str());
-    if (-1 != system(strCmd)) {
-        DEBUG_PRINT(DEBUG_TRACE,"Successfully created temp file %s\n",localConfFile.c_str());
-        memset(strCmd,'\0',sizeof(strCmd));
-        sprintf(strCmd,"mv %s %s",localConfFile.c_str(),filename);
-        if (-1 != system(strCmd)) {
-            DEBUG_PRINT(DEBUG_TRACE,"Successfully modified %s\n",filename);
-            ret = true;
-        }
-        else {
-            DEBUG_PRINT(DEBUG_ERROR,"Failed to modify %s\n",filename);
-        }
-    }
-    else {
-        DEBUG_PRINT(DEBUG_ERROR,"Failed to create temp file %s\n",localConfFile.c_str());
-    }
-
-    return ret;
 }
 
 /*************************************************************************
@@ -119,41 +102,115 @@ bool XUPNPAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentOb
 
 /***************************************************************************
  *Function name : testmodulepre_requisites
- *Descrption    : testmodulepre_requisites will be used for setting the
+ *Description   : testmodulepre_requisites will be used for setting the
  *                pre-requisites that are necessary for this component
- *                Checks that xdiscovery process is running in the system
+ *                1. Checks that xdiscovery process is running in the system
+ *                2. Checks that xcal-device process is running in the system (on gateway only)
+ *                3. Get the location of output.json file on the device
  *****************************************************************************/
 
 std::string XUPNPAgent::testmodulepre_requisites()
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Entry\n");
+    char output[LINE_LEN] = {'\0'};
+    char strCmd[STR_LEN] = {'\0'};
+    FILE *fp = NULL;
 
-    if (-1 != system("pidstat | grep xdiscovery")) {
-        DEBUG_PRINT(DEBUG_TRACE, "%s process is running\n",XDISCOVERY);
+    //1. Check if xdiscovery process in running
+    sprintf(strCmd,"pidstat | grep %s",XDISCOVERY);
+    fp = popen(strCmd, "r");
+    if (fp != NULL)
+    {
+        /* Read the output */
+        while (fgets(output, sizeof(output)-1, fp) != NULL) {
+            DEBUG_PRINT(DEBUG_TRACE, "command output %s\n",output);
+        }
+        pclose(fp);
+        if (strstr(output,XDISCOVERY)) {
+            DEBUG_PRINT(DEBUG_TRACE, "%s process is running\n",XDISCOVERY);
+        }
+        else {
+            DEBUG_PRINT(DEBUG_TRACE, "%s process is not running\n",XDISCOVERY);
+            DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
+            return "FAILURE:xdiscovery process is not running";
+        }
     }
     else {
-        DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
-        return "FAILURE:xdiscovery process is not running";
+        DEBUG_PRINT(DEBUG_ERROR, "Failed to get status of process %s\n",XDISCOVERY);
+        return "FAILURE:Failed to get status of xdiscovery process";
     }
 
-    if (!wareHouseModeEnabled) {
-        //Set wareHouseMode flag in xdevice.conf / xdevice_hybrid.conf
-        bool xDevCnf = enableWareHouseMode(XCALDEVCONFIG);
-        bool xDevHybCnf = enableWareHouseMode(XCALDEVHYBCONFIG);
+    //2. Check for xcal-device process if it's gateway box (xdevice.conf will be present)
+    ifstream xDevCnfFile(XCALDEVCONFIG);
+    if (xDevCnfFile.good()) {
+        xDevCnfFile.close();
+        DEBUG_PRINT(DEBUG_TRACE, "Gateway Box. %s file found\n",XCALDEVCONFIG);
 
-        if (xDevCnf || xDevHybCnf) {
-            DEBUG_PRINT(DEBUG_TRACE, "Re-starting xupnp script after xdevice conf modification\n");
-            system(STARTUPCMD);
-            sleep(5);
+        fp = NULL;
+        memset(output,'\0',sizeof(output));
+        memset(strCmd,'\0',sizeof(strCmd));
+
+        sprintf(strCmd,"pidstat | grep %s",XCALDEVICE);
+        fp = popen(strCmd, "r");
+        if (fp != NULL)
+        {
+            /* Read the output */
+            while (fgets(output, sizeof(output)-1, fp) != NULL) {
+                DEBUG_PRINT(DEBUG_TRACE, "command output %s\n",output);
+            }
+
+            pclose(fp);
+            if (strstr(output,XCALDEVICE)) {
+                DEBUG_PRINT(DEBUG_TRACE, "%s process is running\n",XCALDEVICE);
+            }
+            else {
+                DEBUG_PRINT(DEBUG_TRACE, "*** WARNING *** %s process is not running\n",XCALDEVICE);
+                DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
+            }
         }
-        else if(!xDevCnf && !xDevHybCnf) {
-            DEBUG_PRINT(DEBUG_TRACE, "IP Client Box. Not enabling wareHouseMode\n");
+        else {
+            DEBUG_PRINT(DEBUG_ERROR, "Failed to get status of process %s\n",XCALDEVICE);
+            return "FAILURE:Failed to get status of xcal-device process";
         }
-        wareHouseModeEnabled = true;
-        DEBUG_PRINT(DEBUG_TRACE, "WareHouseMode Enabled\n");
     }
     else {
-        DEBUG_PRINT(DEBUG_TRACE, "WareHouseMode already enabled\n");
+        DEBUG_PRINT(DEBUG_TRACE, "IP Client Box. Not checking for %s process\n",XCALDEVICE);
+    }
+
+    //3. Get the location of output.json file on the device
+    fp = NULL;
+    memset(output,'\0',sizeof(output));
+    memset(strCmd,'\0',sizeof(strCmd));
+
+    sprintf(strCmd,"cat %s |grep outputJsonFile|grep -v '#' |cut -d '=' -f2-",XDISCONFIG);
+    fp = popen(strCmd, "r");
+    if (fp != NULL)
+    {
+        /* Read the output */
+        while (fgets(output, sizeof(output)-1, fp) != NULL) {
+            DEBUG_PRINT(DEBUG_TRACE, "command output %s\n",output);
+        }
+        pclose(fp);
+        if (output[0] != '\0') {
+            //Removing trailing newline character from fgets() input
+            char *pos;
+            if ((pos=strchr(output, '\n')) != NULL) {
+                *pos = '\0';
+            }
+
+            memset(xdiscOutputFile,'\0',sizeof(xdiscOutputFile));
+            strncpy(xdiscOutputFile,output,strlen(output));
+            DEBUG_PRINT(DEBUG_TRACE, "Path for output.json = %s\n",xdiscOutputFile);
+        }
+        else {
+            DEBUG_PRINT(DEBUG_ERROR, "Path for output.json could not be found\n");
+            DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
+            return "FAILURE:Could not locate output.json file";
+        }
+    }
+    else {
+        DEBUG_PRINT(DEBUG_ERROR, "Failed to get output.json path \n");
+        return "FAILURE:Failed to get path for output.json file";
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
@@ -162,7 +219,7 @@ std::string XUPNPAgent::testmodulepre_requisites()
 
 /***************************************************************************
  *Function name : testmodulepost_requisites
- *Descrption    : testmodulepost_requisites will be used for resetting the
+ *Description   : testmodulepost_requisites will be used for resetting the
  *                pre-requisites that are set
  *
  *****************************************************************************/
@@ -175,10 +232,13 @@ bool XUPNPAgent::testmodulepost_requisites()
 /**************************************************************************
 Function name : XUPNPAgent_GetUpnpResult
 
-Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE".
+Arguments     : Input argument is parameter name.
+                Output argument is "SUCCESS" or "FAILURE".
 
-Description   : Receives the request from Test Manager to check the basestreamingurl is present in the json message.
+Description   : Receives the request from Test Manager to get the value for
+                parameter name from xdiscovery process.
 **************************************************************************/
+
 bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_GetUpnpResult --->Entry\n");
@@ -217,26 +277,36 @@ bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::V
             response["result"] = "FAILURE";
             response["details"] = "GetXUPNPDeviceInfo IARM_Bus_Call return NULL buffer pointer";
         }
-        else if (strstr(param->pBuffer,"null")) {
-            DEBUG_PRINT(DEBUG_ERROR, "GetXUPNPDeviceInfo IARM_Bus_Call returned buffer with value null\n");
-            response["result"] = "FAILURE";
-            response["details"] = "GetXUPNPDeviceInfo IARM_Bus_Call returned buffer with value null";
-        }
         else {
             DEBUG_PRINT(DEBUG_TRACE, "GetXUPNPDeviceInfo IARM_Bus_Call successful\n");
-            char *subStr;
-            if ((subStr = strstr(param->pBuffer,parameter.c_str())))
+
+            string strBuffer(param->pBuffer);
+            istringstream iss(strBuffer);
+            string value;
+
+            do
             {
-                DEBUG_PRINT(DEBUG_LOG,"Parameter found: %s\n",subStr);
-                response["result"] = "SUCCESS";
-                response["details"] = subStr;
-            }
-            else {
-                DEBUG_PRINT(DEBUG_ERROR,"Requested param (%s) not found in upnp result %s\n",parameter.c_str(),param->pBuffer);
+                string sub;
+                iss >> sub;
+                if (sub.find(parameter) != string::npos)
+                {
+                    value += sub;
+                }
+            } while (iss);
+
+            if(value.empty())
+            {
+                DEBUG_PRINT(DEBUG_ERROR,"Requested param (%s) not found in upnp result %s\n",parameter.c_str(),strBuffer.c_str());
                 response["result"] = "FAILURE";
                 response["details"] = "Parameter not found in upnp result";
             }
+            else {
+                DEBUG_PRINT(DEBUG_LOG,"Parameter found: %s\n",value.c_str());
+                response["result"] = "SUCCESS";
+                response["details"] = value;
+            }
         }
+
         IARM_Free(IARM_MEMTYPE_PROCESSLOCAL, param);
     }
 
@@ -247,10 +317,13 @@ bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::V
 /**************************************************************************
 Function name : XUPNPAgent_ReadXDiscOutputFile
 
-Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE".
+Arguments     : Input argument is parameter name.
+                Output argument is "SUCCESS" or "FAILURE".
 
-Description   : Receives the request from Test Manager to check the basestreamingurl is present in the json message.
+Description   : Receives the request from Test Manager to get the value for
+                parameter name from xdiscovery output file (output.json)
 **************************************************************************/
+
 bool XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_ReadXDiscOutputFile --->Entry\n");
@@ -258,9 +331,9 @@ bool XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT J
     string parameter = req["paramName"].asString();
     string value;
 
-    DEBUG_PRINT(DEBUG_TRACE, "Reading parameter %s in file %s\n",parameter.c_str(),XDISC_OUTPUT_FILE);
+    DEBUG_PRINT(DEBUG_TRACE, "Reading parameter %s in file %s\n",parameter.c_str(),xdiscOutputFile);
 
-    ifstream outputFile(XDISC_OUTPUT_FILE);
+    ifstream outputFile(xdiscOutputFile);
     if(outputFile.is_open())
     {
         string line;
@@ -280,10 +353,12 @@ bool XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT J
         outputFile.close();
 
         if (!numberOfOccurence) {
+            char strCmd[STR_LEN] = {'\0'};
             //Parameter not found, print the output file
-            DEBUG_PRINT(DEBUG_ERROR,"Requested param (%s) not found in %s file \n",parameter.c_str(),XDISC_OUTPUT_FILE);
-            value.assign("Parameter not found in file "XDISC_OUTPUT_FILE);
-            system("cat "XDISC_OUTPUT_FILE);
+            DEBUG_PRINT(DEBUG_ERROR,"Requested param (%s) not found in %s file \n",parameter.c_str(),xdiscOutputFile);
+            value.assign("Parameter not found in output.json file");
+            sprintf(strCmd,"cat %s",xdiscOutputFile);
+            system(strCmd);
         }
         else {
             DEBUG_PRINT(DEBUG_TRACE, "Param value  = %s\n",value.c_str());
@@ -295,11 +370,10 @@ bool XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT J
     }
     else
     {
-        value.assign("Unable to open output file "XDISC_OUTPUT_FILE);
-        DEBUG_PRINT(DEBUG_ERROR,"Unable to open file %s\n",XDISC_OUTPUT_FILE);
+        value.assign("Unable to open output.json file");
+        DEBUG_PRINT(DEBUG_ERROR,"Unable to open file %s\n",xdiscOutputFile);
     }
 
-    DEBUG_PRINT(DEBUG_TRACE, "%s is not present in file %s\n",parameter.c_str(),XDISC_OUTPUT_FILE);
     response["result"] = "FAILURE";
     response["details"] = value;
 
@@ -312,25 +386,26 @@ Function name : XUPNPAgent_CheckXDiscOutputFile
 
 Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE".
 
-Description   : Receives the request from Test Manager to check the JSON messsage is present or not.
+Description   : Receives the request from Test Manager to check if xdiscovery output file is
+                created or not.
 **************************************************************************/
 bool XUPNPAgent::XUPNPAgent_CheckXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_CheckXDiscOutputFile --->Entry\n");
-    char stringDetails[DETAILS_LEN] = {'\0'};
+    char stringDetails[STR_LEN] = {'\0'};
 
     // Check if xdiscovery output file is created
-    ifstream xdiscOutFile(XDISC_OUTPUT_FILE);
+    ifstream xdiscOutFile(xdiscOutputFile);
     if (xdiscOutFile.good()) {
         xdiscOutFile.close();
-        sprintf(stringDetails,"%s file found", XDISC_OUTPUT_FILE);
-        DEBUG_PRINT(DEBUG_TRACE, "%s file found\n",XDISC_OUTPUT_FILE);
+        sprintf(stringDetails,"%s file found", xdiscOutputFile);
+        DEBUG_PRINT(DEBUG_TRACE, "%s file found\n",xdiscOutputFile);
         response["result"] = "SUCCESS";
         response["details"] = stringDetails;
     }
     else {
-        sprintf(stringDetails,"xdiscovery output file %s file not found", XDISC_OUTPUT_FILE);
-        DEBUG_PRINT(DEBUG_TRACE, "xdiscovery output file %s file not found\n",XDISC_OUTPUT_FILE);
+        sprintf(stringDetails,"xdiscovery output file %s file not found", xdiscOutputFile);
+        DEBUG_PRINT(DEBUG_TRACE, "xdiscovery output file %s file not found\n",xdiscOutputFile);
         response["result"] = "FAILURE";
         response["details"] = stringDetails;
     }
@@ -344,13 +419,15 @@ Function name : XUPNPAgent_ModifyBasicDeviceXml
 
 Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE".
 
-Description   : Receives the request from Test Manager to modify the xml file and check the behavior message.
+Description   : Receives the request from Test Manager to modify BasicDevice.xml file
+                and checks if the file is restored when xupnp service is restarted.
 **************************************************************************/
+
 bool XUPNPAgent::XUPNPAgent_ModifyBasicDeviceXml(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_ModifyBasicDeviceXml --->Entry\n");
 
-    char strCmd[128] = {'\0'};
+    char strCmd[STR_LEN] = {'\0'};
     string localConfFile = g_tdkPath + "/tdk_BasicDevice.xml";
 
     //Create temp BasicDevice.xml file
@@ -412,13 +489,11 @@ Function name : XUPNPAgent_CheckXMLRestoration
 
 Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE".
 
-Description   : Receives the request from Test Manager to remove all the  xml files refered by the process xcal-device and xdiscovery and check the behavior message.
-                /etc/xupnp contents
-                BasicDevice.xml DiscoverFriendlies.xml
-                xdiscovery.conf for XI3
-                BasicDevice.xml DiscoverFriendlies.xml RemoteUIServer.xml RemoteUIServerDevice.xml
-                xdiscovery.conf xdevice.conf xdevice_hybrid.conf for XG1
+Description   : Receives the request from Test Manager to remove all xml files
+                referred by the process xcal-device and xdiscovery and checks
+                if the files are restored when xupnp service is restarted.
 **************************************************************************/
+
 bool XUPNPAgent::XUPNPAgent_CheckXMLRestoration(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_CheckXMLRestoration --->Entry\n");
@@ -460,15 +535,29 @@ bool XUPNPAgent::XUPNPAgent_CheckXMLRestoration(IN const Json::Value& req, OUT J
 /**************************************************************************
 Function name : XUPNPAgent_ReadXcalDeviceLogFile
 
-Arguments     : Input argument : 2 , evtName and evtValue
-		Output argument : "SUCCESS"  is TRUE
-			  	  "FAILURE"  is FALSE
+Arguments     : Input argument  : NONE
+		Output argument : "SUCCESS"/"FAILURE"
 
-Description   : Common function to receive the request from Test Manager to check the sysmgrs events triggered from iarmbus is received or not.
+Description   : Receives the request from Test Manager to check that services
+                are published by xcal-device or not.
 **************************************************************************/
+
 bool XUPNPAgent::XUPNPAgent_ReadXcalDeviceLogFile(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_ReadXcalDeviceLogFile --->Entry\n");
+
+    // Check if xcal-device log file is created
+    ifstream xcalLogFile(XCALDEV_LOG_FILE);
+    if ( !xcalLogFile.good() )
+    {
+        DEBUG_PRINT(DEBUG_TRACE, "xcal-device log file %s not found\n",XCALDEV_LOG_FILE);
+        response["result"] = "FAILURE";
+        response["details"] = "xcal-device log file not found";
+        DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_ReadXcalDeviceLogFile --> Exit\n");
+        return TEST_FAILURE;
+    }
+    xcalLogFile.close();
+    DEBUG_PRINT(DEBUG_TRACE, "xcal-device log file %s found\n",XCALDEV_LOG_FILE);
 
     if (false == readLogFile(XCALDEV_LOG_FILE, "WareHouse Mode recvid"))
     {
@@ -514,12 +603,14 @@ bool XUPNPAgent::XUPNPAgent_ReadXcalDeviceLogFile(IN const Json::Value& req, OUT
 /**************************************************************************
 Function name : XUPNPAgent_BroadcastEvent
 
-Arguments     : Input argument : 2 , evtName and evtValue
-		Output argument : "SUCCESS"  is TRUE
-			  	  "FAILURE"  is FALSE
+Arguments     : Input argument  : stateId, state, error, payload, eventLog
+		Output argument : "SUCCESS" / "FAILURE"
 
-Description   : Common function to receive the request from Test Manager to check the sysmgrs events triggered from iarmbus is received or not.
+Description   : Common function to receive the request from Test Manager to check
+                that events specified by stateId when broadcasted by TDK agent is
+                received by xcal-device process or not using event log messages.
 **************************************************************************/
+
 bool XUPNPAgent::XUPNPAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_BroadcastEvent --->Entry\n");

@@ -830,6 +830,7 @@ int Agent()
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCUnloadModule, std::string("UnloadModule")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCEnableReboot, std::string("EnableReboot")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCRebootBox, std::string("RebootBox")));
+    go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetRDKVersion, std::string("GetRDKVersion")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCRestorePreviousState, std::string("RestorePreviousState")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCPerformanceBenchMarking, std::string("PerformanceBenchMarking")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCPerformanceSystemDiagnostics, std::string("PerformanceSystemDiagnostics")));
@@ -1056,6 +1057,7 @@ int AgentMonitor()
 
     /* Registering methods to agent monitor */
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCResetAgent, std::string("ResetAgent")));
+    /* TO DO : Below rpc to be removed from agent monitor. Retaining so that it wont break Test Manager logic */
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetRDKVersion, std::string("GetRDKVersion")));
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetAgentConsoleLogPath, std::string("GetAgentConsoleLogPath")));	
 

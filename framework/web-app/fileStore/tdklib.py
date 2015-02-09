@@ -31,6 +31,7 @@ from resetAgent import resetAgent
 from time import gmtime, strftime
 from devicestatus import getStatus
 from recorderlib import startRecorderApp
+from getRDKVersion import getRDKVersion
 import MySQLdb
 import shutil
 import logging
@@ -1184,6 +1185,19 @@ class TDKScriptingLibrary:
 
 	########## End of Function ##########
 
+        def getRDKVersion(self):
+
+	# To fetch RDK version from STB
+
+	# Syntax       : OBJ.getRDKVersion()
+	# Description  : To fetch RDK version from STB
+	# Parameters   : Nil
+	# Return Value : RDK Version
+
+                version = getRDKVersion (self.IP, self.portValue)
+                return version
+
+        ########## End of Function ##########
 
 	def unloadModule(self, cName):
 

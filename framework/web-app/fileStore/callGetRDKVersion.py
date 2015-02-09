@@ -27,5 +27,5 @@ if((len(sys.argv))!=3):
 else:
 	deviceIP = sys.argv[1]
 	devicePort = (int)(sys.argv[2])
-	getRDKVersion(deviceIP,devicePort)
+	version = getRDKVersion(deviceIP,devicePort)
 

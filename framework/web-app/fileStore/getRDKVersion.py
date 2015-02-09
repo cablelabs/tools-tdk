@@ -25,11 +25,11 @@ import sys
 
 def getRDKVersion(deviceIP,devicePort):
 
-        # Syntax       : getDevices.getConnectedDevices( deviceIP,devicePort )
-        # Description  : Sends a json query to get the MAC address of connected devices from the json response.
-        # Parameters   : deviceIP - IP address of the device under test(Gateway box).
-	#		 devicePort - Port Number of the device under test(Gateway box). 
-        # Return Value : Returns string which holds MAC address of connected devices.
+        # Syntax       : getRDKVersion.getRDKVersion( deviceIP,devicePort )
+        # Description  : Sends a json query to get the RDK version of device.
+        # Parameters   : deviceIP - IP address of the device under test.
+	#		 devicePort - Port Number of the device under test. 
+        # Return Value : Returns string which holds RDK version of connected devices.
 
 	try:
         	port = devicePort
@@ -53,6 +53,8 @@ def getRDKVersion(deviceIP,devicePort):
         	        message = message[:(message.find("\""))]
 			print message
 			sys.stdout.flush()
+
+		return message
 
 	except socket.error:
 		print "AGENT_NOT_FOUND"

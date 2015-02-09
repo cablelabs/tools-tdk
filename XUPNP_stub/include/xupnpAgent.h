@@ -23,16 +23,18 @@
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
 
-#define DETAILS_LEN            75
+#define STR_LEN                128
+#define LINE_LEN               1024
 #define MAX_DATA_LEN           8192
 #define XCALDEVICE             "xcal-device"
 #define XDISCOVERY             "xdiscovery"
 #define XDISC_LOG_FILE         "/opt/logs/xdiscovery.log"
 #define XCALDEV_LOG_FILE       "/opt/logs/xdevice.log"
-#define XDISC_OUTPUT_FILE      "/opt/output.json"
+//#define XDISC_OUTPUT_FILE      "/opt/output.json"
 #define BASICDEVXML_FILE       "/opt/xupnp/BasicDevice.xml"
 #define XCALDEVCONFIG          "/etc/xupnp/xdevice.conf"
 #define XCALDEVHYBCONFIG       "/etc/xupnp/xdevice_hybrid.conf"
+#define XDISCONFIG             "/etc/xupnp/xdiscovery.conf"
 #define STARTUPCMD             "/etc/init.d/start-upnp-service restart"
 #define TDK_XDEVICE_CONF_FILE  "tdk_xdevice.conf"
 
