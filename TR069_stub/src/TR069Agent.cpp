@@ -282,8 +282,10 @@ bool TR069Agent::TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT 
 		string value = req["paramValue"].asCString();
 
 		DEBUG_PRINT(DEBUG_TRACE, "Value: %s and FirmwareName: %s\n",value.c_str(),firmwareName.c_str());
+		
+		int len = firmwareName.size();		
 
-		if(value == firmwareName)
+		if (value.compare(0,len,firmwareName) == 0)
 		{
 			response["result"] = "SUCCESS";
 			response["details"] = "Verification Success";

@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Verify that EDID value is retrieved even when HDMI port is connected and disabled. in order to disable fetching of display details manual plugout of HDMI is required.
+  <synopsis>Verify that EDID value is retrieved even when HDMI port is connected and disabled. In order to disable fetching of display details manual plugout of HDMI is required.
 TestcaseID: CT_DS123</synopsis>
   <!--  -->
   <groups_id />
