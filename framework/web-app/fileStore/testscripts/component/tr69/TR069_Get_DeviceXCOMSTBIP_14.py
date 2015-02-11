@@ -93,7 +93,7 @@ if "Empty" not in details:
 
         tdkTestObj.setResultStatus(result);
 else:
-        tdkTestObj.setResultStatus(result);
+        tdkTestObj.setResultStatus(actualresult);
 
 
 obj.unloadModule("tr069module");

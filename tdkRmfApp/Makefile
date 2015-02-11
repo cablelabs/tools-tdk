@@ -18,13 +18,12 @@ INCLUDES  +=    -I$(RDK_BUILD_DIR)/mediaframework/core/  \
 		-I$(RDK_BUILD_DIR)/opensource/gstreamer/gstreamer-0.10.34 \
 		-I$(RDK_BUILD_DIR)/opensource/src/libxml2/include/ \
 		-I$(RDK_BUILD_DIR)/opensource/src/glib/gmodule \
-		\
 		-I$(RDK_BUILD_DIR)/mediaframework/osal/utils/inc/ \
-		\
 		-I$(RDK_BUILD_DIR)/mediaframework/hnsource/ \
 		-I$(RDK_BUILD_DIR)/mediaframework/dvr/source/ \
 		-I$(RDK_BUILD_DIR)/mediaframework/dvr/common/tasseograph \
 		-I$(RDK_BUILD_DIR)/mediaframework/dvr/common/dvrmgr/ \
+		-I$(RDK_BUILD_DIR)/mediaframework/cfg \
 		-I$(RDK_BUILD_DIR)/rdklogger/include/ \
 		-I$(RDK_BUILD_DIR)/mediaframework/dvr/sink/ \
 		-I$(RDK_BUILD_DIR)/mediaframework/qamsource/main/ \

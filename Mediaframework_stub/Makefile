@@ -34,9 +34,7 @@ INCLUDES  +=    -I./include \
 		-I$(RDK_BUILD_DIR)/opensource/gstreamer/gstreamer-0.10.34 \
 		-I$(RDK_BUILD_DIR)/opensource/src/libxml2/include/ \
 		-I$(RDK_BUILD_DIR)/opensource/src/glib/gmodule \
-		\
 		-I$(RDK_BUILD_DIR)/mediaframework/osal/utils/inc/ \
-		\
 		-I$(RDK_BUILD_DIR)/mediaframework/hnsource/ \
 		-I$(RDK_BUILD_DIR)/mediaframework/hnsink/ \
 		-I$(RDK_BUILD_DIR)/mediaframework/dvr/source/ \
@@ -46,6 +44,7 @@ INCLUDES  +=    -I./include \
 		-I$(RDK_BUILD_DIR)/mediaframework/dvr/sink/ \
 		-I$(RDK_BUILD_DIR)/mediaframework/qamsource/main/ \
 		-I$(RDK_BUILD_DIR)/mediaframework/init/ \
+		-I$(RDK_BUILD_DIR)/mediaframework/cfg \
 		-I$(PLATFORM_SDK)/include \
 		-I${PLATFORM_SDK}/lib/glib-2.0/include \
             	-I${PLATFORM_SDK}/include/glib-2.0 \
