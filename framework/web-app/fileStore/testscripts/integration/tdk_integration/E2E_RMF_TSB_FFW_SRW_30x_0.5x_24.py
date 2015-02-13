@@ -42,6 +42,7 @@ Test case ID - E2E_RMF_TSB_24</synopsis>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 import time;
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
@@ -62,7 +63,10 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Stream details for tuning
         streamDetails = tdkTestObj.getStreamDetails('01');
         #Framing URL for Request
-        url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()+"&tsb=1";
+        url = tdkintegration.E2E_getStreamingURL(obj, "TSB" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
         print "Request URL : %s" %url;
         tdkTestObj.addParameter("Validurl",url);
         #Execute the test case in STB and pass the expected result
@@ -100,7 +104,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                         #Stream details for tuning
                         streamDetails = tdkTestObj.getStreamDetails('01');
                         #Framing URL for Request
-                        url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()+"&tsb=1";
+			url = tdkintegration.E2E_getStreamingURL(obj, "TSB" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+			if url == "NULL":
+			    print "Failed to generate the Streaming URL";
+			    tdkTestObj.setResultStatus("FAILURE");
                         print "Request URL : %s" %url;
                         tdkTestObj.addParameter("Validurl",url);
                         #Execute the test case in STB and pass the expected result

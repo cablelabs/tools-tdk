@@ -40,6 +40,7 @@ Testcase Id: E2E_DVR_Skip_Fwd_16</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 import time;
 import timeit;
 

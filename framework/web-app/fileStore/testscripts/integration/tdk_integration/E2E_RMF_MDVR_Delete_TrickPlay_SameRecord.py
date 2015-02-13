@@ -39,6 +39,7 @@
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib
+import tdkintegration;
 from tdklib import CreateTestThread
 
 globalObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");

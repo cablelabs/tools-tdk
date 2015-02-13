@@ -39,6 +39,7 @@ Test Case ID: CT_RMF_HNSource_06.</synopsis>
 </xml>
 '''
 import tdklib;
+import mediaframework;
 src_element=["HNSrc"]
 Expected_Result="SUCCESS"
 src_parameter=["rmfElement"]

@@ -41,6 +41,7 @@
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 from tdkintegration import getURL_PlayURL;
 from iarmbus import change_powermode
 

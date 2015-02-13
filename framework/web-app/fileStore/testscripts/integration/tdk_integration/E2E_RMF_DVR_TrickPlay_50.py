@@ -41,6 +41,7 @@
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 import time;
 
 #Test component to be tested
@@ -87,7 +88,10 @@ if "SUCCESS" in result.upper():
 
          recordID = recordingObj.getRecordingId(num - 1);
 
-         url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
+         url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
+         if url == "NULL":
+             print "Failed to generate the Streaming URL";
+             tdkTestObj.setResultStatus("FAILURE");
 
          print "The Play DVR Url Requested: %s"%url
          tdkTestObj.addParameter("playUrl",url);

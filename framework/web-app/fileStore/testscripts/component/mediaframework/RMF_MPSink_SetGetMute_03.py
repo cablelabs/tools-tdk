@@ -40,6 +40,7 @@ Test Case ID: CT_RMF_MPSink_03.</synopsis>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import mediaframework;
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
 #IP and Port of box, No need to change,

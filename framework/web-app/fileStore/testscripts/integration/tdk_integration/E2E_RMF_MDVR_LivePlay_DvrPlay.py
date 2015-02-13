@@ -40,6 +40,7 @@ Test Case ID : CT_MDVR_05</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib
+import tdkintegration;
 from tdklib import CreateTestThread
 
 globalObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
@@ -141,7 +142,10 @@ if "SUCCESS" in result.upper():
         clientMAC1 = ClientListObj.getClientMACAddress(1)
 
         streamDetails = tdkTestObj.getStreamDetails('01');
-        URL1 = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+        URL1 = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if URL1 == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
         thread1 = CreateTestThread(clientIP,clientPORT1,TDKE2E_mDVR_PlayUrl,kwargs={"URL":URL1,"MAC":clientMAC1})
 
         # Request for playing recorded content on client 2
@@ -152,7 +156,10 @@ if "SUCCESS" in result.upper():
         num = recordingObj.getTotalRecordings();
         print "Number of recordings: %d"%num
         recordID = recordingObj.getRecordingId(num - 1);
-        URL2 = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1]
+	URL2 = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1]);
+	if URL2 == "NULL":
+		print "Failed to generate the Streaming URL";
+		tdkTestObj.setResultStatus("FAILURE");	
         thread2 = CreateTestThread(clientIP,clientPORT2,TDKE2E_mDVR_PlayUrl,kwargs={"URL":URL2,"MAC":clientMAC2})
 
         # Start the threads and wait for all threads to finish

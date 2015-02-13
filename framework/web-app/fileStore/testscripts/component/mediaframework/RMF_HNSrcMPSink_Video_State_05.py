@@ -39,6 +39,7 @@
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
+import mediaframework;
 import time;
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
@@ -57,7 +58,10 @@ if "SUCCESS" in loadmodulestatus.upper():
 	#Prmitive test case which associated to this Script
 	tdkTestObj = obj.createTestStep('RMF_HNSrcMPSink_Video_State');
         streamDetails = tdkTestObj.getStreamDetails('01'); 
-        url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+        url = mediaframework.getStreamingURL("Live" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
         print "PLAY URL : %s" %url;
         tdkTestObj.addParameter("playuri",url);
 	#Execute the test case in STB

@@ -40,6 +40,7 @@ Test Case ID : CT_MDVR_04</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib
+import tdkintegration;
 from tdklib import CreateTestThread
 
 globalObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
@@ -143,7 +144,10 @@ if "SUCCESS" in result.upper():
 
         # Frame the URL
         streamDetails = tdkTestObj.getStreamDetails('01');
-        URL = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+        URL = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if URL == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
 
         thread1 = CreateTestThread(clientIP,clientPORT1,TDKE2E_mDVR_PlayUrl,kwargs={"URL":URL,"MAC":clientMAC1})
         thread2 = CreateTestThread(clientIP,clientPORT2,TDKE2E_mDVR_PlayUrl,kwargs={"URL":URL,"MAC":clientMAC2})

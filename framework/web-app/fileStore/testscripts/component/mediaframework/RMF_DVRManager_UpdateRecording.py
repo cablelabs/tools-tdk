@@ -41,6 +41,7 @@ Test Type: Positive</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import mediaframework;
 import random;
 
 #Test component to be tested
@@ -70,7 +71,10 @@ if "SUCCESS" in result.upper():
     tdkTestObj.addParameter("recordingId",recordingId);
 
     streamDetails = tdkTestObj.getStreamDetails('01');
-    playUrl = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+    playUrl = mediaframework.getStreamingURL("Live" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+    if playUrl == "NULL":
+        print "Failed to generate the Streaming URL";
+        tdkTestObj.setResultStatus("FAILURE");
     print "Requested play url : %s" %playUrl;
     tdkTestObj.addParameter("playUrl",playUrl);
 

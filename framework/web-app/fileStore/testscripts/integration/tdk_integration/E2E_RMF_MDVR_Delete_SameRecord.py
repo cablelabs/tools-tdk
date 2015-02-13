@@ -39,6 +39,7 @@
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib
+import tdkintegration;
 from tdklib import CreateTestThread
 
 globalObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
@@ -146,7 +147,10 @@ if "SUCCESS" in result.upper():
                                         
         streamDetails = tdkTestObj.getStreamDetails('01');
         recordID = 0000;
-        URL = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + str(recordID)
+	URL = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , str(recordID));
+	if URL == "NULL":
+		print "Failed to generate the Streaming URL";
+		tdkTestObj.setResultStatus("FAILURE");
 
         thread1 = CreateTestThread(clientIP,clientPORT1,TDKE2E_mDVR_PlayUrl,kwargs={"URL":URL,"MAC":clientMAC1})
         thread2 = CreateTestThread(clientIP,clientPORT2,TDKE2E_mDVR_PlayUrl,kwargs={"URL":URL,"MAC":clientMAC2})

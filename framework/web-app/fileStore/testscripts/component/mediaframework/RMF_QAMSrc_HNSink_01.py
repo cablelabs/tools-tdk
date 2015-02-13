@@ -3,10 +3,10 @@
 <xml>
   <id>1154</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSrc_HNSink_01</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>494</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Create_Instance</primitive_test_name>
@@ -41,6 +41,7 @@ Test Type: Positive</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib;
+import mediaframework;
 import time;
 
 expected_Result="SUCCESS"
@@ -127,7 +128,7 @@ if expected_Result in loadModuleStatus.upper():
                                                 #result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,expected_Result,src_parameter,src_element);
                                                 if expected_Result in result.upper():
                                                         src_parameter=["dctpEnable","typeFlag","socketId"]
-                                                        src_element=["false",0,37]
+                                                        src_element=["false",0,8080]
                                                         result=Create_and_ExecuteTestStep('RmfElement_HNSink_SetProperties',obj,expected_Result,src_parameter,src_element);
                                                         if expected_Result in result.upper():
                                                                 src_parameter=["rmfElement"]

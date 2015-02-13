@@ -40,6 +40,7 @@ Testcase ID: E2E_DVR_PlayBack_02</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 import random;
 import timeit;
 import time;
@@ -85,7 +86,10 @@ def playDVR (recordingId):
         recordID = recordingId
         print "\nRecord ID = %s" %recordID
 
-        url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID + '&0&play_speed=1.00&time_pos=0.00'
+         url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
+         if url == "NULL":
+             print "Failed to generate the Streaming URL";
+             tdkTestObj.setResultStatus("FAILURE");
         print "The Play DVR Url Requested: %s" %url
 
         tdkTestObj.addParameter("playUrl",url);
@@ -158,7 +162,10 @@ if "SUCCESS" in result.upper():
         tdkTestObj.addParameter("recordDuration",duration);
 
         streamDetails = tdkTestObj.getStreamDetails('01');
-        playUrl = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+        playUrl = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if playUrl == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
         print "Requested url : %s" %playUrl;
         tdkTestObj.addParameter("qamLocator",playUrl);
 

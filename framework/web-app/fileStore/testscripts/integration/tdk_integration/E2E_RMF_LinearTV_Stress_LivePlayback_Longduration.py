@@ -39,6 +39,7 @@
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 import time;
 src_element=["HNSrc"]
 Expected_Result = "SUCCESS"
@@ -108,7 +109,10 @@ if ("SUCCESS" in result.upper()) and ("SUCCESS" in result1.upper()):
     #set the dvr play url
     streamDetails = tdkTestObj.getStreamDetails("01");
  
-    url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()  
+        url = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
 
     print "Request URL : %s" %url;
     tdkTestObj.addParameter("Validurl",url);

@@ -3,17 +3,17 @@
 <xml>
   <id>871</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_BufferClearing_17</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>495</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Init</primitive_test_name>
   <!--  -->
   <primitive_test_version>1</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>These Script tests the RDK Mediaframework video buffer clearing by changing channel in HNSrc MPSink pipeline. Test Case ID: CT_RMF_HNSrc_MPSink_17.</synopsis>
   <!--  -->
@@ -23,9 +23,9 @@
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>RDKTT-126</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -38,6 +38,7 @@
 </xml>
 '''
 import tdklib;
+import mediaframework;
 import time;
 src_element=["HNSrc"]
 Expected_Result="SUCCESS"
@@ -71,7 +72,11 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         else:
                 streamDetails = tdkTestObj.getStreamDetails('01');
         tunecounter=tunecounter+1;
-        url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID()+'&tsb=1';
+        url = mediaframework.getStreamingURL("TSB" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
+            return "FAILURE" ;
         print "PLAY URL : %s" %url;
         open_parameter_value.append(url);
     for item in range(len(parametername)):
@@ -144,7 +149,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                                                                 #Play the HNSRC-->MPSINK pipeline
                                                                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
                                                                                                                                 if Expected_Result in result.upper():
-                                                                                                                                        time.sleep(2);
+                                                                                                                                        time.sleep(8);
                                                                                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                                                                                                                                         if Expected_Result in result.upper():
                                                                                                                                                 SecondStream_Mediatime=Mediatime[1];

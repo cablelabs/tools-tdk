@@ -40,6 +40,7 @@ Test caseId: CT_RMF_QAMSrc_03</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
+import mediaframework;
 import time;
 
 expected_Result="SUCCESS"

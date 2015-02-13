@@ -3,7 +3,7 @@
 <xml>
   <id>950</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>7</version>
+  <version>9</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_LivetsbReset_19</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -38,6 +38,7 @@
 </xml>
 '''
 import tdklib;
+import mediaframework;
 import time;
 src_element=["HNSrc"]
 Expected_Result="SUCCESS"
@@ -66,7 +67,11 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     tdkTestObj =testobject.createTestStep(teststep);
     if teststep == "RMF_Element_Open":
         streamDetails = tdkTestObj.getStreamDetails('01');
-        url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID()+'&tsb=1';
+        url = mediaframework.getStreamingURL("TSB" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
+            return "FAILURE" ;
         print "PLAY URL : %s" %url;
         open_parameter_value.append(url);
     for item in range(len(parametername)):
@@ -122,7 +127,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                                                                         if Expected_Result in result.upper():
                                                                                 initialmediatime=float(Mediatime[1]);
-                                                                                time.sleep(600);
+                                                                                time.sleep(1000);
                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                                                                                 if Expected_Result in result.upper():
                                                                                         Mediatime[1]=float(Mediatime[1]);

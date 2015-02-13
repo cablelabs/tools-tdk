@@ -3,7 +3,7 @@
 <xml>
   <id>1575</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LinearTV_Stress_LivePlay_SwitchingChannel_LongDuration</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -22,7 +22,7 @@ E2E_LinearTV_45</synopsis>
   <!--  -->
   <execution_time>630</execution_time>
   <!--  -->
-  <long_duration>false</long_duration>
+  <long_duration>true</long_duration>
   <!-- execution_time is the time out time for test execution -->
   <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
@@ -42,6 +42,7 @@ E2E_LinearTV_45</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 import time;
 from tdkintegration import getURL_PlayURL;
 

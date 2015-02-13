@@ -3,17 +3,17 @@
 <xml>
   <id>430</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_GetBufferedRanges_04</name>
-  <!-- If you are adding a new script you can specify the script name. -->
-  <primitive_test_id>247</primitive_test_id>
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
+  <primitive_test_id> </primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_HNSrc_GetBufferedRanges</primitive_test_name>
   <!--  -->
-  <primitive_test_version>0</primitive_test_version>
+  <primitive_test_version>8</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>These Script tests the RDK Mediaframework HNSrc element to Get the range of buffer.
 Test Case ID: CT_RMF_HNSrc_05.</synopsis>
@@ -40,6 +40,7 @@ Test Case ID: CT_RMF_HNSrc_05.</synopsis>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import mediaframework;
 import time
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
@@ -59,7 +60,10 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('RMF_HNSrc_GetBufferedRanges');
         streamDetails = tdkTestObj.getStreamDetails('01'); 
-        url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+        url = mediaframework.getStreamingURL("Live" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
         print "PLAY URL : %s" %url;
         tdkTestObj.addParameter("playuri",url);
         #Execute the test case in STB

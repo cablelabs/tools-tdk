@@ -3,17 +3,17 @@
 <xml>
   <id>943</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_Pause&amp;FF_39</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>495</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Init</primitive_test_name>
   <!--  -->
   <primitive_test_version>1</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>These Script tests the RDK Mediaframework to check state by pausing &amp; FF the pipeline . Test Case ID: CT_RMF_HNSrc_MPSink_39.</synopsis>
   <!--  -->
@@ -38,6 +38,7 @@
 </xml>
 '''
 import tdklib;
+import mediaframework;
 import time;
 src_element=["HNSrc"]
 Expected_Result="SUCCESS"
@@ -71,7 +72,11 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     if teststep == 'RMF_Element_Open':
         streamDetails = tdkTestObj.getStreamDetails('01');        
         recordID = matchList[1]		
-	url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id='+recordID[:-1]+'&0';
+        url = mediaframework.getStreamingURL("DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
+            return "FAILURE" ;
         print url;
         open_parameter_value.append(url);
     for item in range(len(parametername)):

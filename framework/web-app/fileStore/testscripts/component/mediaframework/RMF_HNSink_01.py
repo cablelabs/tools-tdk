@@ -40,6 +40,7 @@ Test CaseID: CT_RMF_HNSINK_01</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
+import mediaframework;
 import time;
 
 expected_Result="SUCCESS"

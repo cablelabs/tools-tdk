@@ -41,6 +41,7 @@ Test Type: Negative</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import mediaframework;
 import random;
 
 #Test component to be tested
@@ -48,6 +49,7 @@ obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
 
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import mediaframework;
 import random;
 
 #Test component to be tested

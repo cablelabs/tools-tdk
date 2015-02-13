@@ -63,7 +63,8 @@
 
 #define TEST_SUCCESS true
 #define TEST_FAILURE false 
-
+#define JSON_PARSER_LOG_PATH "output_json_parser_details.log"
+#define JSON_PARSER_SCRIPT "output_json_parser.sh"
 using namespace std;
 #define NUMBER_OCAPID 10
 

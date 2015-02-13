@@ -39,6 +39,7 @@ Test Case ID: CT_RMF_MPSink_01.</synopsis>
 </xml>
 '''
 import tdklib;
+import mediaframework;
 src_element=["MPSink"]
 Expected_Result="SUCCESS"
 src_parameter=["rmfElement"]

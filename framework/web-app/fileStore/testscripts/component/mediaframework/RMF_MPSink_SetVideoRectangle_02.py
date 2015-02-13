@@ -38,6 +38,7 @@
 </xml>
 '''
 import tdklib;
+import mediaframework;
 src_element=["MPSink"]
 Expected_Result="SUCCESS"
 src_parameter=["rmfElement"]

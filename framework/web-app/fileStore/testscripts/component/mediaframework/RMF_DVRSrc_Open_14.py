@@ -3,17 +3,17 @@
 <xml>
   <id>855</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>8</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrc_Open_14</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>494</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Create_Instance</primitive_test_name>
   <!--  -->
   <primitive_test_version>1</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>This script tests the RDK Mediaframework DVRSrc element to call Open API by passing valid url but invalid segmentNumber as input to its url parameter and Close a DVRsource element.
 Test Case ID: CT_RMF_DVRSrc_14.
@@ -41,6 +41,7 @@ Test Type: Negative.</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
+import mediaframework;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");

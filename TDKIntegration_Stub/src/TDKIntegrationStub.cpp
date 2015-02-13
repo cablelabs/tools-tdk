@@ -3271,10 +3271,10 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 	url=(char*)request["Validurl"].asCString();
 
 	DEBUG_PRINT(DEBUG_LOG,"\nValidurl from TestFramework : %s\n",request["Validurl"].asCString());
+	string streaming_interface;
+	string streamingip;
 #ifdef ENABLE_HYBRID_CODECOMPILE
         /*Fetching the streming interface IP: eth1 */
-        string streamingip;
-	string streaming_interface;
 	size_t pos = 0;
 	size_t found;
 	streaming_interface=fetchStreamingInterface();
@@ -3295,6 +3295,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 	const char * streaming_interface_name = streaming_interface.c_str();
 	streamingip=GetHostIP(streaming_interface_name);
         string urlIn = url;
+#if 0
         string http = "http://";
 
         http.append(streamingip);
@@ -3306,6 +3307,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 
         pos = urlIn.find(":8080");
         urlIn = urlIn.replace(0,pos,http);
+#endif
 
         DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to CURL(): %s\n",urlIn.c_str());
 #else
@@ -3343,6 +3345,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
         }
 
         resultip = ip;
+	streamingip = ip;
         DEBUG_PRINT(DEBUG_TRACE, "IP :%send\n",resultip.c_str());
         string urlIn = url;
         string http = "http://";
@@ -3361,6 +3364,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
     #endif
 
 #endif
+#if 0
 	curl = curl_easy_init();
 	if(curl)
 	{
@@ -3380,28 +3384,84 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 		return TEST_FAILURE;
 	}
 	curl_easy_cleanup(curl);
-
-	ifstream file("jsonfile.json");
+	ifstream file("/tmp/output.json");
 	file>>root;
-	errorResponse = root["errorCode"].asInt();
-	response["details"] = root["videoStreamingURL"].asString();
+	//errorResponse = root["errorCode"].asInt();
+	response["details"] = root["xmediagateways"].asCString();
 
 	DEBUG_PRINT(DEBUG_LOG,"\nJSON Response from MediaStreamer :-\n");
-	DEBUG_PRINT(DEBUG_LOG,"\nErrorCode         : %d\n",root["errorCode"].asInt());
-	DEBUG_PRINT(DEBUG_LOG,"\nErrorDescription  : %s \n",root["errorDescription"].asCString());
-	DEBUG_PRINT(DEBUG_LOG,"\nVideoStreamingURL : %s\n",root["videoStreamingURL"].asCString());
+	//DEBUG_PRINT(DEBUG_LOG,"\nErrorCode         : %d\n",root["errorCode"].asInt());
+	//DEBUG_PRINT(DEBUG_LOG,"\nErrorDescription  : %s \n",root["errorDescription"].asCString());
+	DEBUG_PRINT(DEBUG_LOG,"\nVideoStreamingURL : %s\n",root["xmediagateways"].asCString());
 
-	if(!errorResponse)
+	//if(!errorResponse)
 	{
 		response["result"] = "SUCCESS";
 		return TEST_FAILURE;
 	}
-	else
+	//else
 	{
 		//Filling json response with FAILURE status and error message
 		response["result"] = "FAILURE";
 		return TEST_FAILURE;
 	}
+#endif
+
+// Added the code to parse the base URL from output.json
+	ifstream logfile;
+	string json_parser_cmd, json_parser_log,line;
+	json_parser_cmd=g_tdkPath + "/" + JSON_PARSER_SCRIPT;
+	json_parser_log=g_tdkPath + "/" + JSON_PARSER_LOG_PATH;
+	string parser_chk= "source "+json_parser_cmd + " "+ streamingip + " "+"\""+ urlIn.c_str()+"\"";
+	try
+        {
+                system((char *)parser_chk.c_str());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of parser script\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+		response["result"] = "FAILURE";
+		response["details"] = "Exception occured execution of parser script";
+		return TEST_FAILURE;
+        }
+	logfile.open(json_parser_log.c_str());
+        if(logfile.is_open())
+        {
+                if(getline(logfile,line)>0);
+                {
+                        logfile.close();
+			pos = line.find(":8080");
+			if (pos!=std::string::npos)
+        		{
+                        	DEBUG_PRINT(DEBUG_LOG,"\noutput.json parsed \n");
+				response["result"] = "SUCCESS";
+				response["details"]= line;
+				logfile.close();
+                        	return TEST_SUCCESS;
+			}
+			else
+			{
+				response["result"] = "FAILURE";
+				response["details"]= line;
+				logfile.close();
+				return TEST_FAILURE;
+			}	
+                }
+                logfile.close();
+                DEBUG_PRINT(DEBUG_ERROR,"\nJson file  not parsed \n");
+		response["result"] = "FAILURE";
+		response["details"] = "Proper result is not found in the log file";
+                return TEST_FAILURE;
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the log file.\n");
+		response["result"] = "FAILURE";
+		response["details"] = "Unable to open the log file";
+                return TEST_FAILURE;
+        }
+	
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ERMF_GETURL---Exit\n");
 	return TEST_SUCCESS;
 }

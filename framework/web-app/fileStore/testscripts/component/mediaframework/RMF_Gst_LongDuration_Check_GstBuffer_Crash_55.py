@@ -40,6 +40,7 @@ Test Type: Positive.</synopsis>
 </xml>
 '''
 import tdklib;
+import mediaframework;
 import time;
 
 src_element=["HNSrc"]
@@ -67,7 +68,11 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     tdkTestObj =testobject.createTestStep(teststep);
     if teststep == "RMF_Element_Open":
         streamDetails = tdkTestObj.getStreamDetails('01');
-        url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID()+'&tsb=1';
+        url = mediaframework.getStreamingURL("TSB" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
+            return "FAILURE" ;
         print "PLAY URL : %s" %url;
         open_parameter_value.append(url);
     for item in range(len(parametername)):

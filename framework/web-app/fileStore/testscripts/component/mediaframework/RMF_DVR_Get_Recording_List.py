@@ -77,7 +77,7 @@ def rmfAppMod():
     recordid = "11111"
     recordduration = "1" 
 
-    cmd = 'record -id ' + recordid + ' -duration ' + recordduration + ' -title ' + recordtitle + ' http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://' + streamDetails.getOCAPID();
+    cmd = 'record -id ' + recordid + ' -duration ' + recordduration + ' -title ' + recordtitle + ' http://' + streamDetails.getGatewayIp() + ':8080/hnStreamStart?live=ocap://' + streamDetails.getOCAPID();
      
     print "Request record URL : %s" %cmd;
     tdkTestObj.addParameter("rmfapp_command",cmd);  

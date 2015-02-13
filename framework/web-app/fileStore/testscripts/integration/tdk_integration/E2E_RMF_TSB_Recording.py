@@ -39,6 +39,7 @@
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 import time;
 from tdkintegration import TSB_play,sched_rec
 

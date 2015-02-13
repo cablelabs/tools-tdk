@@ -113,3 +113,29 @@ def deleteRecording(obj,kwargs={}):
         return retValue
 
 ########## End of deleteRecording Function ##########
+
+########## End of createRecording Function ##########
+
+# To Create the Streaming URL 
+#
+# Parameters   : playback_type : Type of playback - Live/TSB/DVR
+#		 GatewayIP - IP of gateway device
+#                ID - OCAP /Recording Id
+#                tsb_size = Optional parameter for tsb size . Default value is 60
+# Return Value : url - Streaming URL
+#
+def getStreamingURL( playback_type , GatewayIP , ID , tsb_size=60):
+	
+	if playback_type.upper() == "LIVE":
+		url = 'http://' + GatewayIP + ':8080/hnStreamStart?live=ocap://'+ ID ;
+	elif playback_type.upper() == "DVR":	
+		url = 'http://' + GatewayIP + ':8080/hnStreamStart?recordingId='+ ID +'&segmentId=0';
+	elif playback_type.upper() == "TSB":
+		url = 'http://' + GatewayIP + ':8080/hnStreamStart?live=ocap://'+ ID +'&tsb='+str(tsb_size);
+	else:
+		print "Invalid Playback Type";
+		return "NULL";
+	return url;
+
+########## End of getStreamingURL Function ##########
+

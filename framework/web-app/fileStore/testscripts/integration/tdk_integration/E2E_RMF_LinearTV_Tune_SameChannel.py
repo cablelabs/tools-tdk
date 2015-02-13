@@ -42,6 +42,7 @@ E2E_LinearTV_09</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 import time;
 from tdkintegration import getURL_PlayURL;
 

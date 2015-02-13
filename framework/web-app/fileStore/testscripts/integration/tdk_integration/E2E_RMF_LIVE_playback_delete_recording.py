@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LIVE_playback_delete_recording</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -39,6 +39,7 @@
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 import time;
 from tdkintegration import deleteRecording
 src_element=["HNSrc"]
@@ -117,7 +118,10 @@ if ("SUCCESS" in result.upper()) and ("SUCCESS" in result1.upper()):
     #set the dvr play url
     streamDetails = tdkTestObj.getStreamDetails("02");
  
-    url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()   
+    url = tdkintegration.E2E_getStreamingURL(media_obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+    if url == "NULL":
+        print "Failed to generate the Streaming URL";
+        tdkTestObj.setResultStatus("FAILURE");
 
     print "Request URL : %s" %url;
     tdkTestObj.addParameter("Validurl",url);

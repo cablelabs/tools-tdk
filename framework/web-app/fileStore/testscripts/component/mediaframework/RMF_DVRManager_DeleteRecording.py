@@ -3,7 +3,7 @@
 <xml>
   <id>565</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>75</version>
+  <version>94</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRManager_DeleteRecording</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -41,6 +41,7 @@ Test Type: Positive</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import mediaframework;
 import random;
 
 #Test component to be tested
@@ -65,13 +66,16 @@ if "SUCCESS" in result.upper():
     tdkTestObj = obj.createTestStep('RMF_DVRManager_DeleteRecording');
 
     expectedRes = "SUCCESS"
-    recordingId = "363009"
+    recordingId = "2060245343"
 
     print "Requested record ID: %s"%recordingId
     tdkTestObj.addParameter("recordingId",recordingId);
 
     streamDetails = tdkTestObj.getStreamDetails('01');
-    playUrl = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+    playUrl = mediaframework.getStreamingURL("Live" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+    if playUrl == "NULL":
+        print "Failed to generate the Streaming URL";
+        tdkTestObj.setResultStatus("FAILURE");
     print "Requested play url : %s" %playUrl;
     tdkTestObj.addParameter("playUrl",playUrl);
 

@@ -40,6 +40,7 @@ Testcase ID:</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib
+import tdkintegration;
 from tdklib import CreateTestThread
 from mediaframework import createRecording,deleteRecording;
 from random import randint
@@ -77,11 +78,17 @@ def TDKE2E_PlayUrl(IP,PORT,args=(),kwargs={}):
 
         streamDetails = tdkTestObj.getStreamDetails(streamId)
         if 'trickplay' in kwargs.values():
-                url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID()
+		url = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+		if url == "NULL":
+		    print "Failed to generate the Streaming URL";
+		    tdkTestObj.setResultStatus("FAILURE");
                 print "URL for trickplay : %s"%url
         else:
                 recordId = str(kwargs["ID"])
-                url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordId + '&0'
+		url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordId);
+		if url == "NULL":
+			print "Failed to generate the Streaming URL";
+			tdkTestObj.setResultStatus("FAILURE");
                 print "URL for DVR playback : %s"%url
 
         tdkTestObj.addParameter("playUrl",url);

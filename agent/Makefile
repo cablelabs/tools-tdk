@@ -4,6 +4,8 @@ include ../def.inc
 
 default: build
 
+SCRIPTS += scripts/output_json_parser.sh
+
 COPTS     += -rdynamic
 
 #debug log level

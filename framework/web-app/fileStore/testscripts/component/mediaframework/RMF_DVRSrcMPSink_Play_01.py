@@ -3,7 +3,7 @@
 <xml>
   <id>489</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>11</version>
+  <version>20</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrcMPSink_Play_01</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -85,7 +85,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     return result
 
 tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
-recordingObj = tdkTestObj.getRecordingDetails();
+
 
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
@@ -93,6 +93,8 @@ print "Load Module Status :  %s" %loadModuleStatus;
 
 #Pre-requisite to Check and verify required recording is present or not.
 #---------Start-----------------
+
+
 matchList = []
 if expected_Result in loadModuleStatus.upper():
         #Get DVR pre req done.
@@ -109,7 +111,11 @@ else:
         print "Loading Module Failed."
         print "Exiting the script without running the TC"
         exit();
-#--------End-----------------------
+
+
+#---------End-------------------
+
+
 
 if expected_Result in loadModuleStatus.upper():
         
@@ -134,7 +140,7 @@ if expected_Result in loadModuleStatus.upper():
                                         result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,expected_Result,src_parameter,src_element);
                                         if expected_Result in result.upper():
                                                 src_parameter=["X","Y","width","height"];
-                                                src_element=[0,0,720,1280];
+                                                src_element=[0,0,1280,720];
                                                 result=Create_and_ExecuteTestStep('RMF_Element_MpSink_SetVideoRectangle',obj,expected_Result,src_parameter,src_element);
                                                 if expected_Result in result.upper():
                                                         src_parameter=["rmfSourceElement","rmfSinkElement"];

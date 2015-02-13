@@ -38,6 +38,7 @@
 </xml>
 '''
 import tdklib;
+import mediaframework;
 import time;
 src_element=["HNSrc"]
 Expected_Result="SUCCESS"
@@ -73,7 +74,11 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         else:
                 streamDetails = tdkTestObj.getStreamDetails('02');
         tunecounter=tunecounter+1;
-        url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID()+'&tsb=1';
+        url = mediaframework.getStreamingURL("TSB" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
+            return "FAILURE" ;
         print "PLAY URL : %s" %url;
         open_parameter_value.append(url);
     for item in range(len(parametername)):

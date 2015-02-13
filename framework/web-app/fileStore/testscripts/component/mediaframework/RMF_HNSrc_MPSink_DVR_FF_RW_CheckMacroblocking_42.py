@@ -3,10 +3,10 @@
 <xml>
   <id>1638</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_DVR_FF_RW_CheckMacroblocking_42</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>494</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Create_Instance</primitive_test_name>
@@ -40,6 +40,7 @@ Test Type: Positive</synopsis>
 </xml>
 '''
 import tdklib;
+import mediaframework;
 import time;
 
 src_element=["HNSrc"]
@@ -71,11 +72,18 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     tdkTestObj =testobject.createTestStep(teststep);
     if teststep == "RMF_Element_Open":
         streamDetails = tdkTestObj.getStreamDetails('01');
-
+        #recordingObj = tdkTestObj.getRecordingDetails();
+        #num = recordingObj.getTotalRecordings();
+        #print "Number of recordings: %d"%num
+		
+		        #fetch recording id from list matchList.
 	recordID = matchList[1]
-        url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id='+recordID[:-1];
+        url = mediaframework.getStreamingURL("DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
+            return "FAILURE" ;
         print "PLAY URL : %s" %url;
-
         open_parameter_value.append(url);
     for item in range(len(parametername)):
         tdkTestObj.addParameter(parametername[item],parametervalue[item]);

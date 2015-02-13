@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>5</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrcMPSink_FF_Rewind_error_Check_04</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -39,6 +39,7 @@
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
+import mediaframework;
 import time;
 
 #Test component to be tested
@@ -212,7 +213,7 @@ if expected_Result in loadModuleStatus.upper():
                                                                                                         currentSpeed = playSpeed;
                                                                                                         print "CurrentSpeed:",currentSpeed
                                                                                                         if expected_Result in result.upper():
-                                                                                                                if currentSpeed == trickPlay:
+                                                                                                                if currentSpeed == trickPlay2:
                                                                                                                         print "DVRSource Play trickplay Successfull"
                                                                                                                         tdkTestObj.setResultStatus(result);
                                                                                                                 else:

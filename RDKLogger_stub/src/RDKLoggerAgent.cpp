@@ -102,12 +102,13 @@ bool CheckLog(const char* search)
             getline(logFile,line);
             if (line.find(search, 0) != string::npos) 
             {
+		DEBUG_PRINT(DEBUG_TRACE,"Success! RDKLogger test log \"%s\" found in file %s\n",search,TDK_LOG);
 		logFile.close();
              	return true;
             }
         }
         logFile.close();
-        DEBUG_PRINT(DEBUG_ERROR,"Error! No Log found\n");
+        DEBUG_PRINT(DEBUG_ERROR,"Error! RDKLogger test log \"%s\" not found in file %s\n",search,TDK_LOG);
     }
     else
     {

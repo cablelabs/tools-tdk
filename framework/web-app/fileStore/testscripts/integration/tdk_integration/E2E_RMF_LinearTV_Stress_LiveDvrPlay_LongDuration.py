@@ -41,6 +41,7 @@
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import tdkintegration;
 import time;
 
 #Test component to be tested
@@ -100,7 +101,10 @@ if "SUCCESS" in result.upper():
     streamDetails = tdkTestObj.getStreamDetails('01');
     
     #Framing URL for Live Play Request
-    url1="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()
+    url1 = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+    if url1 == "NULL":
+        print "Failed to generate the Streaming URL";
+        tdkTestObj.setResultStatus("FAILURE");
 
     print "Request URL : %s" %url1;
     tdkTestObj.addParameter("Validurl",url1);
@@ -124,7 +128,11 @@ if "SUCCESS" in result.upper():
 
     recordID = recordingObj.getRecordingId(num - 1);
     #Framing URL for DVR Play Request
-    url2 = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1];
+    url2 = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1]);
+    if url2 == "NULL":
+        print "Failed to generate the Streaming URL";
+        tdkTestObj.setResultStatus("FAILURE");
+
     
     if expectedresult in actualresult:
 

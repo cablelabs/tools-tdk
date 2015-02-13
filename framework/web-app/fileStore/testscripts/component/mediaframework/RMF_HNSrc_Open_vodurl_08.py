@@ -39,6 +39,7 @@ Test Case ID: CT_RMF_HNSource_08.</synopsis>
 </xml>
 '''
 import tdklib;
+import mediaframework;
 src_element=["HNSrc"]
 Expected_Result="SUCCESS"
 src_parameter=["rmfElement"]
@@ -56,7 +57,11 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     #Primitive test case which associated to this Script
     if teststep == "RMF_Element_Open":
         streamDetails = tdkTestObj.getStreamDetails('01');
-        url = 'http://' + streamDetails.getGatewayIp() + ':8080/hnStreamStart?live=vod://indemand.com/INTL0712000007101043?r=1';
+        url = mediaframework.getStreamingURL("Live" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
+            return "FAILURE" ;
         print "PLAY URL : %s" %url;
         open_parameter_value.append(url);
 

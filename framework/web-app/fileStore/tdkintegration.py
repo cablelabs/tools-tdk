@@ -217,10 +217,12 @@ def dvr_playback(tdkTestObj,recording_id,**kwargs):
     print "Recording ID %s"%recording_id
 
     if 'trickplay' in kwargs.values():
-        url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recording_id + '&0&play_speed=4.00&time_pos=0.00'
+        #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recording_id + '&0&play_speed=4.00&time_pos=0.00'
+	url = 'http://' + streamDetails.getGatewayIp() + ':8080/hnStreamStart?recordingId='+ recording_id +'&segmentId=0';
 	print "URL for trickplay %s"%url
     else:
-        url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recording_id
+        #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recording_id
+	url = 'http://' + streamDetails.getGatewayIp() + ':8080/hnStreamStart?recordingId='+ recording_id +'&segmentId=0';
 	print "URL:  %s"%url
  
 
@@ -265,11 +267,13 @@ def dvrPlayUrl(obj, kwargs={}):
     streamDetails = tdkTestObj.getStreamDetails(streamId)
 
     if 'trickplay' in kwargs.values():
-        url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID()
+	url = E2E_getStreamingURL(obj , "LIVE", streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID()
         print "URL for trickplay : %s"%url
     else:
         recordId = str(kwargs["ID"])
-        url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordId + '&0'
+	url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordId);
+        #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordId + '&0'
         print "URL for DVR playback : %s"%url
 
     tdkTestObj.addParameter("playUrl",url);
@@ -314,8 +318,8 @@ def getURL_PlayURL(obj,streamId):
         
     #set the dvr play url for first channel
     streamDetails = tdkTestObj.getStreamDetails(streamId);        
-    url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()
-
+    #url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()
+    url = E2E_getStreamingURL(obj, "LIVE", streamDetails.getGatewayIp() , streamDetails.getOCAPID());
     print "Request URL : %s" %url;
     tdkTestObj.addParameter("Validurl",url);        
 
@@ -392,7 +396,8 @@ def skip_forward(obj):
     print "Number of recordings: %d"%num
     recordID = recordingObj.getRecordingId(num - 1);
 
-    url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
+    #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
+    url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID[:-1]);
 
     print "The Play DVR Url Requested: %s"%url
     tdkTestObj.addParameter("playUrl",url);
@@ -439,7 +444,8 @@ def skip_backward(obj):
     print "Number of recordings: %d"%num
     recordID = recordingObj.getRecordingId(num - 1);
 
-    url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
+    #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
+    url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID[-1]);
 
     print "The Play DVR Url Requested: %s"%url
     tdkTestObj.addParameter("playUrl",url);
@@ -480,7 +486,8 @@ def TSB_play(obj,streamId):
     #Stream details for tuning
     streamDetails = tdkTestObj.getStreamDetails(streamId);
     #Framing URL for Request
-    url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()+"&tsb=1";
+    #url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()+"&tsb=1";
+    url = E2E_getStreamingURL(obj, "TSB", streamDetails.getGatewayIp() , streamDetails.getOCAPID());
     print "Request URL : %s" %url;
     tdkTestObj.addParameter("Validurl",url);
     #Execute the test case in STB and pass the expected result
@@ -549,7 +556,8 @@ def deleteRecording(obj, streamId,recordingId):
     tdkTestObj.addParameter("recordingId",recording_id);
 
     streamDetails = tdkTestObj.getStreamDetails(streamId);
-    playUrl = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+    #playUrl = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+    playUrl = E2E_getStreamingURL(obj , "LIVE", streamDetails.getGatewayIp() , streamDetails.getOCAPID());
     print "Requested play url : %s" %playUrl;
     tdkTestObj.addParameter("playUrl",playUrl);
 
@@ -571,3 +579,33 @@ def deleteRecording(obj, streamId,recordingId):
          print "DVRManager DeleteRecording Failed: [%s]"%details;
 
     return retValue
+
+# To Create the Streaming URL
+#
+# Parameters   : playback_type : Type of playback - Live/TSB/DVR
+#                GatewayIP - IP of gateway device
+#                ID - OCAP /Recording Id
+#                tsb_size = Optional parameter for tsb size . Default value is 60
+# Return Value : url - Streaming URL
+#
+def E2E_getStreamingURL( obj ,playback_type , GatewayIP , ID , tsb_size=60):
+
+   version = obj.getRDKVersion();
+   if version.upper() == "RDK2DOT0":
+        if playback_type.upper() == "LIVE":
+                url = 'http://' + GatewayIP + ':8080/hnStreamStart?live=ocap://'+ ID ;
+        elif playback_type.upper() == "DVR":
+                url = 'http://' + GatewayIP + ':8080/hnStreamStart?recordingId='+ ID +'&segmentId=0';
+        elif playback_type.upper() == "TSB":
+                url = 'http://' + GatewayIP + ':8080/hnStreamStart?live=ocap://'+ ID +'&tsb='+str(tsb_size);
+        else:
+                print "Invalid Playback Type";
+                return "NULL";
+   else:
+	print "Invalid RDK Version Type";
+        return "NULL";
+
+   return url;
+
+########## End of getStreamingURL Function ##########
+

@@ -42,6 +42,7 @@ Test case ID - E2E_LinearTV_41</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk test case script
 import tdklib;
+import tdkintegration;
 import time;
 import timeit;
 
@@ -61,7 +62,11 @@ def getURL_PlayURL(obj,streamId):
         
     #set the dvr play url for first channel
     streamDetails = tdkTestObj.getStreamDetails(streamId);        
-    url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()
+    url = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+    if url == "NULL":
+        print "Failed to generate the Streaming URL";
+        tdkTestObj.setResultStatus("FAILURE");
+	return "FAILURE";
 
     print "Request URL : %s" %url;
     tdkTestObj.addParameter("Validurl",url);        
@@ -136,7 +141,10 @@ if "SUCCESS" in result.upper():
     #Stream details for tuning
     streamDetails = tdkTestObj.getStreamDetails('01');
     #Framing URL for Request
-    url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()+"&tsb=1";
+    url = tdkintegration.E2E_getStreamingURL(obj, "TSB" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+    if url == "NULL":
+        print "Failed to generate the Streaming URL";
+        tdkTestObj.setResultStatus("FAILURE");
     print "Request URL : %s" %url;
     tdkTestObj.addParameter("Validurl",url);
     #Execute the test case in STB and pass the expected result

@@ -40,6 +40,7 @@ Test Type: Positive</synopsis>
 </xml>
 '''
 import tdklib;
+import mediaframework;
 import time;
 
 src_element=["HNSrc"]
@@ -75,7 +76,11 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         else:
                 streamDetails = tdkTestObj.getStreamDetails('02');
                 print "Open Channel 2"
-        url = 'http://' + streamDetails.getGatewayIp() + ':8080/vldms/tuner?ocap_locator=ocap://'+streamDetails.getOCAPID();
+        url = mediaframework.getStreamingURL("Live" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        if url == "NULL":
+            print "Failed to generate the Streaming URL";
+            tdkTestObj.setResultStatus("FAILURE");
+            return "FAILURE" ;
         print "PLAY URL : %s" %url;
         open_parameter_value.append(url);
         openCount = openCount + 1
