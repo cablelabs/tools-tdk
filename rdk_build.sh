@@ -173,6 +173,14 @@ function build()
 {
     cd $TDK_PATH
     make
+    retCode=$?	
+    echo "return value :" $retCode
+     if [ $retCode -ne 0 ]; then
+       echo "BUILDING tdk FAILED"
+       exit $retCode
+    fi
+	
+
 }
 
 function rebuild()

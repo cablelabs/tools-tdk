@@ -646,48 +646,44 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
     system(strNullLog.c_str());
 
 	
-/* Redirecting console log to a file */
-#ifdef AGENT_LOG_ENABLE
-
-    /* Redirecting stderr buffer to stdout */
-    dup2(fileno(stdout), fileno(stderr));
-
-    /* Checking if it is a new execution, If it is new clear old logfile and create a new one */
-    if (strcmp (pszResultId, RpcMethods::sm_strResultId.c_str()) != 0)
+    /* Check whether sm_nConsoleLogFlag is set, if it is set the redirect console log to a file */
+    if(RpcMethods::sm_nConsoleLogFlag ==FLAG_SET)
     {
-        /* Copying result id to a static variable */
-        RpcMethods::sm_strResultId = pszResultId;
-	
-        /* Clear old log files */
-        sprintf (szCommand, "rm -rf %s/*", RpcMethods::sm_strLogFolderPath.c_str()); //Constructing Command
-        system (szCommand);
-        sleep(1);
+        /* Redirecting stderr buffer to stdout */
+        dup2(fileno(stdout), fileno(stderr));
 
-        /* Constructing path to new log file */
-        strFilePath = RpcMethods::sm_strLogFolderPath;
-        strFilePath.append("AgentConsole.log");
-
-        RpcMethods::sm_strConsoleLogPath = strFilePath;
-
-        /* Redirecting stdout buffer to logfile */
-        if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "w", stdout)) == NULL)
+        /* Checking if it is a new execution, If it is new clear old logfile and create a new one */
+        if (strcmp (pszResultId, RpcMethods::sm_strResultId.c_str()) != 0)
         {
-            DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
-        }
-		
-    }
-    else
-    {
-         /* If it is an existing execution, Append to the existing file */
-        if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "a", stdout)) == NULL)
-        {
-            DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
-        }
-
-    }
-
+            /* Copying result id to a static variable */
+            RpcMethods::sm_strResultId = pszResultId;
 	
-#endif /* End of AGENT_LOG_ENABLE */
+            /* Clear old log files */
+            sprintf (szCommand, "rm -rf %s/*", RpcMethods::sm_strLogFolderPath.c_str()); //Constructing Command
+            system (szCommand);
+            sleep(1);
+
+            /* Constructing path to new log file */
+            strFilePath = RpcMethods::sm_strLogFolderPath;
+            strFilePath.append("AgentConsole.log");
+
+            RpcMethods::sm_strConsoleLogPath = strFilePath;
+
+            /* Redirecting stdout buffer to logfile */
+            if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "w", stdout)) == NULL)
+            {
+                DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
+            }	
+        }
+        else
+        {
+            /* If it is an existing execution, Append to the existing file */
+            if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "a", stdout)) == NULL)
+            {
+                DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
+            }
+        }
+    }	
 	
     fprintf(stdout,"\nStarting Execution..\n");
 	
@@ -820,17 +816,16 @@ bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& respo
 
     DEBUG_PRINT (DEBUG_LOG, "\nRPC Unload Module --> Exit \n"); 
 
-/* Closing console log output file */
-#ifdef AGENT_LOG_ENABLE
-
-    if(RpcMethods::sm_nModuleCount == 0)  // Checking if all loaded modules are unloaded
+    /* Check whether sm_nConsoleLogFlag is set, if it is set then close console log output file */
+    if (RpcMethods::sm_nConsoleLogFlag == FLAG_SET)
     {
-        fclose(RpcMethods::sm_pLogStream);
-        RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
+        if(RpcMethods::sm_nModuleCount == 0)  // Checking if all loaded modules are unloaded
+        {
+            fclose(RpcMethods::sm_pLogStream);
+            RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
+        }
     }
 
-#endif /* End of AGENT_LOG_ENABLE */
-	
     return bRet;
 	
 } /* End of RPCUnloadModule */
@@ -975,30 +970,29 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
         pszResultId = request ["resultID"].asCString();    
     }
 
-/* Redirecting console log to a file */
-#ifdef AGENT_LOG_ENABLE
-
-    /* Extracting file to log file */
-    strFilePath = RpcMethods::sm_strLogFolderPath;
-    strFilePath.append("AgentConsole.log");
-
-    RpcMethods::sm_strConsoleLogPath = strFilePath;
-
-    /* After reboot, copy result id to static variable */
-    RpcMethods::sm_strResultId = pszResultId;
-    
-    /* Redirecting stderr buffer to stdout */
-    dup2 (fileno(stdout), fileno(stderr));
-	
-    /* Redirecting stdout buffer to log file */
-    if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "a", stdout)) == NULL)
+    /*Check whether sm_nConsoleLogFlag is set, if it is set then redirect console log to a file */
+    if (RpcMethods::sm_nConsoleLogFlag == FLAG_SET)
     {
-        DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
+        /* Extracting file to log file */
+        strFilePath = RpcMethods::sm_strLogFolderPath;
+        strFilePath.append("AgentConsole.log");
+
+        RpcMethods::sm_strConsoleLogPath = strFilePath;
+
+        /* After reboot, copy result id to static variable */
+        RpcMethods::sm_strResultId = pszResultId;
+    
+        /* Redirecting stderr buffer to stdout */
+        dup2 (fileno(stdout), fileno(stderr));
+	
+        /* Redirecting stdout buffer to log file */
+        if((RpcMethods::sm_pLogStream = freopen(RpcMethods::sm_strConsoleLogPath.c_str(), "a", stdout)) == NULL)
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
+        }
+
+        fprintf(stdout,"\nRestoring previous state after box reboot..\n");
     }
-
-    fprintf(stdout,"\nRestoring previous state after box reboot..\n");
-
-#endif /* End of AGENT_LOG_ENABLE */
 
     DEBUG_PRINT (DEBUG_TRACE, "\nRPC Restore Previouse State --> Entry\n");
     //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
@@ -1361,13 +1355,12 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         response["result"] = "FAILURE";
     }
 
-/* Closing console log output file */
-#ifdef AGENT_LOG_ENABLE
-
-    fclose(RpcMethods::sm_pLogStream);
-    RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
-
-#endif /* End of AGENT_LOG_ENABLE */
+    /* Check whether sm_nConsoleLogFlag is set, if it is set then close console log output file */
+    if (RpcMethods::sm_nConsoleLogFlag == FLAG_SET)
+    {
+       fclose(RpcMethods::sm_pLogStream);
+       RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
+    }
 	
     return bRet;
 

@@ -26,9 +26,6 @@ else
 COPTS     += -DRDKVERSION="\"$(RDK_VERSION)\""
 endif
 
-COPTS += -DAGENT_LOG_ENABLE
-COPTS += 
-
 #
 # Source files
 #
@@ -52,7 +49,7 @@ endif
 
 
 CC	  := g++
-TARGETNAME:=$(TARGETDIR)/agent
+TARGETNAME:=$(TARGETDIR)/rdk_tdk_agent_process
 SOURCES   := src/*.cpp
 
 
@@ -73,4 +70,4 @@ build: TARGET
 # Clean 
 #
 clean:
-	rm -rf $(TARGETDIR)/agent
+	rm -rf $(TARGETDIR)/rdk_tdk_agent_process

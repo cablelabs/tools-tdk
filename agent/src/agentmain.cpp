@@ -73,6 +73,12 @@ pthread_t agentExecuterThreadId;
 
 Json::Rpc::TcpServer go_Server (ANY_ADDR, RDK_TEST_AGENT_PORT);
 
+/* Structure to hold process details */
+struct sProcessInfo 
+{
+    char **pProcessName;
+    int nProcessNameSize;
+};
 
 /* To enable port forwarding. In gateway boxes only  */
 #ifdef PORT_FORWARD
@@ -89,6 +95,7 @@ Json::Rpc::TcpServer go_Server (ANY_ADDR, RDK_TEST_AGENT_PORT);
 int RpcMethods::sm_nAgentPID = 0;
 int RpcMethods::sm_nRouteSetFlag = FLAG_NOT_SET;
 int RpcMethods::sm_nGetDeviceFlag = FLAG_NOT_SET;
+int RpcMethods::sm_nConsoleLogFlag = FLAG_NOT_SET;
 int RpcMethods::sm_nStatusQueryFlag = FLAG_NOT_SET;
 
 string RpcMethods::sm_strBoxIP = "";
@@ -100,11 +107,11 @@ std::string RpcMethods::sm_strLogFolderPath = "";
 std::string RpcMethods::sm_strTDKPath = "";
 
 /********************************************************************************************************************
- Purpose:               To get a substring seperated by a delimiter.
+ Purpose:                To get a substring seperated by a delimiter.
  
  Parameters:   
-                             strLine [IN]    - Line of string to get seperated.
-                             strDelimiter [IN]  - delimiter 
+                         strLine [IN]    - Line of string to get seperated.
+                         strDelimiter [IN]  - delimiter 
  
  Return:                 string    - substring
 
@@ -129,9 +136,9 @@ std::string GetSubString (std::string strLine, std::string strDelimiter)
  Purpose:               To get the Host's IP Address by querrying the network Interface.
  
  Parameters:   
-                             szInterface [IN]    - Interface used to communicate.
+                        szInterface [IN]    - Interface used to communicate.
  
- Return:                 string    - IP address of corresponding interface.
+ Return:                string    - IP address of corresponding interface.
 
 *********************************************************************************************************************/
 std::string GetHostIP (const char* szInterface)
@@ -174,13 +181,13 @@ std::string GetHostIP (const char* szInterface)
                         manager IP address from configuration file
  
  Parameters:   
-                             strStringToSend [IN] - data to send
-                             nStringSize [IN]  - size of data
+                        strStringToSend [IN] - data to send
+                        nStringSize [IN]  - size of data
  
- Return:                 int    -  Success/Failure
+ Return:                int    -  Success/Failure
 
  Other Methods used:     
-                                    GetSubString()
+                        GetSubString()
 
 *********************************************************************************************************************/
 int SendInfo (char* strStringToSend, int nStringSize)
@@ -272,17 +279,12 @@ int SendInfo (char* strStringToSend, int nStringSize)
 } /* End of SendInfo */
 
 
-
 /********************************************************************************************************************
- Purpose:               Signal Handler. Handles signals and jump to the jumpbuffer to keep application active.
+ Purpose:               Function to print back trace on crash
  
- Parameters:   
-                             nCode [IN] - Signal number
+ Parameters:            Nil
                              
- Return:                 void
-
- Other Methods used:     
-                                    SendInfo()
+ Return:                void
 
 *********************************************************************************************************************/
 static void printBackTrace(void)
@@ -292,8 +294,23 @@ static void printBackTrace(void)
     int calls = backtrace(buffer, BT_BUFFER_SIZE);
     backtrace_symbols_fd(buffer, calls, STDOUT_FILENO);
     DEBUG_PRINT (DEBUG_LOG, "%s() --> Exit\n",__FUNCTION__);
-}
 
+} /* End of printBackTrace */
+
+
+
+/********************************************************************************************************************
+ Purpose:               Signal Handler. Handles signals and jump to the jumpbuffer to keep application active.
+ 
+ Parameters:   
+                        nCode [IN] - Signal number
+                             
+ Return:                void
+
+ Other Methods used:     
+                        SendInfo()
+
+*********************************************************************************************************************/
 static void SignalHandler (int nCode)
 {
     switch(nCode)
@@ -411,16 +428,16 @@ int SendDetailsToManager()
 
 /********************************************************************************************************************
  Purpose:               To Check if device had a crash during last power cycle. If it had, send Test casedetails such as execution ID, 
-                             device ID and Test case ID to test manager using SendInfo()
+                        device ID and Test case ID to test manager using SendInfo()
  
  Parameters:   
-                             null
+                        null
  
- Return:                 int    -  Success/Failure
+ Return:                int    -  Success/Failure
 
  Other Methods used:    
-                                    SendInfo() 
-                                    GetSubString()
+                        SendInfo() 
+                        GetSubString()
 
 *********************************************************************************************************************/
 void* ReportCrash (void*)
@@ -604,11 +621,11 @@ void* ReportCrash (void*)
 
 
 /********************************************************************************************************************
- Purpose:               To check the device status, whether the execution is in progress or box is free for execution. (Thread Function)
+ Purpose:             To check the device status, whether the execution is in progress or box is free for execution. (Thread Function)
  
  Parameters:          null
  
- Return:                 null
+ Return:              null
 
 *********************************************************************************************************************/
 void *CheckStatus (void *)
@@ -661,14 +678,14 @@ void *CheckStatus (void *)
 /********************************************************************************************************************
  Purpose:               To check whether a status query is received, if not send the device details to test manager. (Thread Function)
  
- Parameters:          null
+ Parameters:            null
  
- Return:                 null
+ Return:                null
 
  Other Methods used: 
-                                    GetSubString()
-                                    GetHostIP()
-                                    SendDetailsToManager()
+                        GetSubString()
+                        GetHostIP()
+                        SendDetailsToManager()
 
 *********************************************************************************************************************/
 void *ProcessDeviceDetails (void *)
@@ -755,14 +772,14 @@ void *ProcessDeviceDetails (void *)
 /********************************************************************************************************************
  Description:           Agent Application. It enables RPC communication with test manager. 
  
- Parameters:          null
+ Parameters:            null
  
- Return:                 int - Success/Failure
+ Return:                int - Success/Failure
 
  Other Methods used: 
-                                    GetSubString()
-                                    GetHostIP()
-                                    SendDetailsToManager()
+                        GetSubString()
+                        GetHostIP()
+                        SendDetailsToManager()
 
 *********************************************************************************************************************/
 int Agent()
@@ -948,22 +965,22 @@ int Agent()
 } /* End of Agent */
 
 
-
-
 /********************************************************************************************************************
- Description:           To execute Agent. It helps to restart agent on receiving a ResetAgent message from TM.
+ Description:         To execute Agent. It helps to restart agent on receiving a ResetAgent message from TM.
  
- Parameters:          null
+ Parameters:          pProcessDetails - pointer to structure have process info
  
- Return:                 void
+ Return:              void
 
- Other Methods used: Agent()
+ Other Methods used:  Agent()
  
 *********************************************************************************************************************/
-void *AgentExecuter (void *)
+void *AgentExecuter (void *pProcessDetails)
 {
     int nReturnValue = RETURN_SUCCESS;
     int nPID = RETURN_SUCCESS;
+
+    struct sProcessInfo *pProcessInfo = (struct sProcessInfo *) pProcessDetails;
 
     /* Restart the agent if s_bAgentReset is true */
     while(s_bAgentReset)
@@ -972,6 +989,26 @@ void *AgentExecuter (void *)
         if (nPID == RETURN_SUCCESS)
         {
             waitpid (-1, NULL, WNOHANG | WUNTRACED);
+
+            /* Modifying child process name to tdk_agent */
+            strncpy (pProcessInfo -> pProcessName[0], "tdk_agent", pProcessInfo -> nProcessNameSize);
+
+            /* Start tftp server for logfile transfer */
+            nPID = RETURN_SUCCESS;
+            nPID = fork();
+            if (nPID == RETURN_SUCCESS)
+            {
+                /* Modifying child process name to tdk_agent_tftp */
+                strncpy (pProcessInfo -> pProcessName[0], "tdk_agent_tftp", pProcessInfo -> nProcessNameSize);
+                system (START_TFTP_SERVER);
+                exit(0);
+            }
+            else if (nPID < RETURN_SUCCESS)
+            {
+                DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!! Couldnot start tftp server for logfile transfer \n");
+            }
+
+            /* Starting agent */
             nReturnValue = Agent();
             if(nReturnValue == RETURN_FAILURE)
             {
@@ -980,6 +1017,7 @@ void *AgentExecuter (void *)
 
             sleep(3);
             exit(0);
+			
         }
         else if (nPID < RETURN_SUCCESS)
         {
@@ -1002,19 +1040,26 @@ void *AgentExecuter (void *)
                         receiving "AgentReset" message from Test Manager. It also starts TFTP server
                         for log transferring. 
  
- Parameters:          null
+ Parameters:            pProcessName - pointer to process name
+                        nProcessNameSize - length of process name
  
- Return:                 int - Success/Failure
+ Return:                int - Success/Failure
 
- Other Methods used:     AgentExecuter()
+ Other Methods used:    AgentExecuter()
  
 *********************************************************************************************************************/
-int AgentMonitor()
+int AgentMonitor (char **pProcessName, int nProcessNameSize)
 {
     int nPID = RETURN_SUCCESS;
     int nReturnValue = RETURN_SUCCESS;
+    struct sProcessInfo *pProcessInfo;
 
     DEBUG_PRINT (DEBUG_LOG, "\nStarting Agent Monitoring..\n");
+
+    /* Populating structure members for process info */
+    pProcessInfo = (struct sProcessInfo*) malloc (sizeof (struct sProcessInfo) );
+    pProcessInfo -> pProcessName = pProcessName;
+    pProcessInfo -> nProcessNameSize = nProcessNameSize;
 
     /* Registering signals to signal handler */
     if (signal (SIGTERM, SignalHandler) == SIG_ERR)
@@ -1062,7 +1107,7 @@ int AgentMonitor()
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetAgentConsoleLogPath, std::string("GetAgentConsoleLogPath")));	
 
     /* Starting a thread for agent execution */
-    nReturnValue = pthread_create (&agentExecuterThreadId, NULL, AgentExecuter, NULL);
+    nReturnValue = pthread_create (&agentExecuterThreadId, NULL, AgentExecuter, (void *)(pProcessInfo));
     if(nReturnValue != RETURN_SUCCESS)
     {
         DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start execute Agent  \n");
@@ -1071,32 +1116,20 @@ int AgentMonitor()
 		
     }
 	
-    /* Start tftp server for logfile transfer */
-    nPID = fork();
-    if (nPID == RETURN_SUCCESS)
+    while (s_bAgentMonitorRun)
     {
-        system (START_TFTP_SERVER);
-        exit(0);
-    }
-    else if (nPID < RETURN_SUCCESS)
-    {
-        DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!! Couldnot start tftp server for logfile transfer \n");
-    }
-    else
-    {
-        while (s_bAgentMonitorRun)
-        {
-            waitpid (-1, NULL, WNOHANG | WUNTRACED);
+        waitpid (-1, NULL, WNOHANG | WUNTRACED);
 		
-            /* server waiting indefinitely */
-            o_Monitor.WaitMessage(1000);
-        }
-
-        /* clean up and exit */
-        DEBUG_PRINT (DEBUG_LOG, "\nExiting Agent Monitoring..\n");
-        o_Monitor.Close();
-        networking::cleanup();
+        /* server waiting indefinitely */
+        o_Monitor.WaitMessage(1000);
     }
+
+    /* clean up and exit */
+    DEBUG_PRINT (DEBUG_LOG, "\nExiting Agent Monitoring..\n");
+    o_Monitor.Close();
+    networking::cleanup();
+    free (pProcessInfo);
+    pProcessInfo = NULL;
 
     return RETURN_SUCCESS;
 
@@ -1107,21 +1140,26 @@ int AgentMonitor()
 /********************************************************************************************************************
  Description:           main function. Starts agent monitoring.
  
- Parameters:          null
+ Parameters:            null
  
- Return:                 int - Success/Failure
+ Return:                int - Success/Failure
 
- Other Methods used: AgentMonitor()
+ Other Methods used:    AgentMonitor()
  
 *********************************************************************************************************************/
-int main()
+int main(int argc, char **argv)
 {
     int nPgid = 0;
     char* pszPath;
     std::string strEnvPath;
     std::string strFolderPath;
     int nReturnValue = RETURN_SUCCESS;
- 
+
+    int nProcessNameSize = strlen(argv[0]);        // To fetch how many chars have been allocated
+
+    /* Modifying process name to tdk_agent_monitor  */
+    strncpy(argv[0], "tdk_agent_monitor", nProcessNameSize); 
+
     /* Set Process group id as pid of parent agent process */
     if (setpgid (0, 0) != RETURN_SUCCESS)
     {
@@ -1131,11 +1169,25 @@ int main()
     nPgid = getpgid(0);
     DEBUG_PRINT (DEBUG_LOG, "\nProcess Group Id : %d\n", nPgid);
 
-#ifdef AGENT_LOG_ENABLE
+    RpcMethods::sm_nConsoleLogFlag = FLAG_NOT_SET;
+    
+    /* check whether the argument is given */
+    if (argc ==2)
+    {       /* checks wether the given argument is equvalent to the desired string*/
+            if( 0 != strcmp (argv[1],"--enable-console-log") )
+            {
+                    /* enables the sm_nConsoleLogFlag and write to NULL_LOG file*/
+                    RpcMethods::sm_nConsoleLogFlag = FLAG_SET;
+                    RpcMethods::sm_pLogStream = freopen(NULL_LOG, "w", stdout);
+            }
+    }
+    else
+    {
+         /* enables the sm_nConsoleLogFlag and write to NULL_LOG file*/
+         RpcMethods::sm_nConsoleLogFlag = FLAG_SET;
+         RpcMethods::sm_pLogStream = freopen(NULL_LOG, "w", stdout);
+    }
 
-    RpcMethods::sm_pLogStream = freopen(NULL_LOG, "w", stdout);
-
-#endif
 
     /* Checking environment variable TDK_PATH */
     pszPath = getenv ("TDK_PATH");
@@ -1167,13 +1219,13 @@ int main()
     }
 
     /* Starting agent monitor */
-    nReturnValue = AgentMonitor();
+    nReturnValue = AgentMonitor (argv, nProcessNameSize);
 
-#ifdef AGENT_LOG_ENABLE
-
-    fclose(RpcMethods::sm_pLogStream);
-
-#endif
+    /* closes the file */
+    if(RpcMethods::sm_nConsoleLogFlag == FLAG_SET)
+    {
+         fclose(RpcMethods::sm_pLogStream);
+    }
 
     DEBUG_PRINT (DEBUG_LOG, "\nAgent Shutttingdown...\n");
 	
@@ -1184,7 +1236,3 @@ int main()
 
 
 /* End of agentmain */
-
-
-
-

@@ -45,6 +45,7 @@ class RpcMethods
 	
     public:
         static FILE *sm_pLogStream;
+        static int sm_nConsoleLogFlag;
         static int sm_nAgentPID;
         static int sm_nModuleCount;
         static int sm_nRouteSetFlag;
