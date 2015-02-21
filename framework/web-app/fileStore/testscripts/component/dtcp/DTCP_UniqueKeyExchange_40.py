@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>12</version>
+  <version>14</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_UniqueKeyExchange_40</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,7 +11,7 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -66,10 +66,9 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-Cond: Init,StartSource,CreateSrcSession,CreateSinkSession
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lan0','port':5000})
+  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
   #Enable uniqueKey flag to request unique exchange key
-  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':ip,'srcPort':5000,'uniqueKey':1,'maxPacketSize':4096})
-  #dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5000,'uniqueKey':1,'maxPacketSize':4096})
+  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5000,'uniqueKey':1,'maxPacketSize':4096})
   #Provide session exchange key sink generates (decimal 87 or 0x57)
   dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':87,'pcpPacketSize':0,'maxPacketSize':4096})
 

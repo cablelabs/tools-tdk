@@ -16,6 +16,22 @@ import sys
 import socket
 import json
 
+def tftpDownload(ipaddrs, logtransferport, remotefile, localfile):
+
+	# Connect to TFTP server and download the file
+	try:
+		client = tftpy.TftpClient (ipaddrs, logtransferport)
+		client.download (remotefile, localfile)
+
+	except TypeError:
+		print "Connection Error!!! Transfer of " + remotefile + " Failed: Make sure Agent is running"
+		exit()
+
+	except:
+		print "Error!!! Transfer of " + remotefile + " Failed.."
+		exit()
+
+
 # Check the number of arguments and print the syntax if args not equal to 5
 if ( (len(sys.argv)) != 6):
         print "Usage : python " + sys.argv[0] + " Device_IP_Address Agent_Port_Number Log_Transfer_Port RPC_Method Local_file_path"
@@ -41,39 +57,39 @@ try:
 	result = tcpClient.recv(1048) #Receiving response
 
 	tcpClient.close()
-
 	# Extracting result and logpath from response message
 	resultIndex = result.find("result") + len("result"+"\":\"")
 	message = result[resultIndex:]
 	message = message[:(message.find("\""))]
-	print message.upper()
 
 	resultIndex = result.find("logpath") + len("logpath"+"\":\"")
 	message = result[resultIndex:]
 	message = message[:(message.find("\""))]
 	logpath = message
-	print "Log Path : " + logpath
 
 except socket.error:
 	print "Unable to reach agent"
 	exit()
 
-# Constructing path for remote and local files
-filename = logpath.split("/")[-1]
-remotefile = logpath
-localfile = localfilepath + "/" + filename
+if "PerformanceSystemDiagnostics" in rpcmethod:
 
-# Connect to TFTP server and download the file
-try:
-	client = tftpy.TftpClient (ipaddrs, logtransferport)
-	client.download (remotefile, localfile)
-       
-except TypeError:
-	print "Connection Error!!! Transfer of " + remotefile + " Failed: Make sure Agent is running"
-	exit()
+	# Constructing path for remote and local files
+	remotefile = logpath + "/cpu.log"
+	localfile = localfilepath + "/cpu.log"
 
-except:
-	print "Error!!! Transfer of " + remotefile + " Failed.."
-	exit()
+	tftpDownload(ipaddrs, logtransferport, remotefile, localfile)
+
+	# Constructing path for remote and local files
+	remotefile = logpath + "/memused.log"
+	localfile = localfilepath + "/memused.log"
+
+	tftpDownload(ipaddrs, logtransferport, remotefile, localfile)
+
+else:
+	# Downloading files using TFTP
+	filename = logpath.split("/")[-1]
+	remotefile = logpath
+	localfile = localfilepath + "/" + filename
+	tftpDownload(ipaddrs, logtransferport, remotefile, localfile)
 
 # End of File

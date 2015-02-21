@@ -76,7 +76,7 @@ if 0 == len(details):
         tdkTestObj.setResultStatus("FAILURE");
 else:
         print "[TEST EXCEUTION DETAILS] : %s"%details;
-        expectedOutput = ["Present","None","Error"]
+        expectedOutput = ["Present","None","Error","Absent"]
         print "[EXPECTED VALUES] : ",expectedOutput
         if details in expectedOutput:
                 tdkTestObj.setResultStatus("SUCCESS");

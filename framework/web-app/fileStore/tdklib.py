@@ -420,7 +420,7 @@ class PrimitiveTestCase:
 		sys.stdout.flush()
 		self.tcpClient.send(self.jsonMsgValue)
 		t1 = time.time();
-		self.result = self.tcpClient.recv(1024)
+		self.result = self.tcpClient.recv(2048)
 		t2 = time.time();
 		self.executionTime = t2-t1;
 		# TODO check if required		self.executionName=executionName

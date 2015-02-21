@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_CreateMaxSinkSess_35</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,7 +11,7 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -69,8 +69,8 @@ if "SUCCESS" in loadmodulestatus.upper():
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
   #Creating 10 instances of StartSource,CreateSinkSession
   for port in range (5000,5010):
-      dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lan0','port':port})
-      dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':ip,'srcPort':port,'uniqueKey':0,'maxPacketSize':4096})
+      dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
+      dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':port,'uniqueKey':0,'maxPacketSize':4096})
   #Post-Cond: Stop all source after deleting all sink sessions
   sinkNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1}))
   for index in range (0,sinkNum):

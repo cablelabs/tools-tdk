@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_StopAllSources_38</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -69,9 +69,10 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Creating/removing multiple listeners using startsource/stopsource
   for x in range (0,2):
       for port in range (8000,8005):
-          dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lan0','port':port})
+          dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
       dtcp.stopSource(tdkTestObj,expectedresult)
-
+  #If stopSource is successful, DTCPMgrCreateSinkSession should fail with socket connection error
+  dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'127.0.0.1','srcPort':5000,'uniqueKey':0,'maxPacketSize':4096})
   #Unload the dtcp module
   obj.unloadModule("dtcp");
 else:

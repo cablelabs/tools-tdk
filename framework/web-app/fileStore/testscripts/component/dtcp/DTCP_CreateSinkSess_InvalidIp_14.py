@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>5</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_CreateSinkSess_InvalidIp_14</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,7 +11,7 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -66,9 +66,8 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: DTCPMgrInit,setLoglevel,DTCPMgrStartSource
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lan0','port':5000})
+  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
   #Calling CreateSinkSession
-  #result=dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'254.254.254.254','srcPort':5000,'uniqueKey':0,'maxPacketSize':4096})
   result=dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'0.42.42.42','srcPort':5000,'uniqueKey':0,'maxPacketSize':4096})
   #Post-Cond: DeleteSinkSession,StopSrc
   if expectedresult not in result:

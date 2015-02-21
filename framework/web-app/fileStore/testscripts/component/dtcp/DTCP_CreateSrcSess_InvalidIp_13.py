@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>6</version>
+  <version>10</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_CreateSrcSess_InvalidIp_13</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,7 +11,7 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -65,12 +65,14 @@ if "SUCCESS" in loadmodulestatus.upper():
   expectedresult="SUCCESS";
   #Pre-cond: DTCPMgrInit,DTCPMgrStartSource
   dtcp.init(tdkTestObj,expectedresult);
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lan0','port':5000})
-  #Calling CreateSourceSession/Check for DTCP_ERR_INVALID_IP_ADDRESS(-10) in result
-  #result=dtcp.createSourceSession(tdkTestObj,'FAILURE',kwargs={"sinkIp":'254.254.254.254',"keyLabel":0,"pcpPacketSize":0,"maxPacketSize":4096})
+  dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
+  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
+  #Calling CreateSourceSession for DTCP_ERR_INVALID_IP_ADDRESS
   result=dtcp.createSourceSession(tdkTestObj,'FAILURE',kwargs={"sinkIp":'0.42.42.42',"keyLabel":0,"pcpPacketSize":0,"maxPacketSize":4096})
-  #Post-Cond: DeleteDTCPSession,DTCPMgrStopSource
-  dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
+  #If sink session creation is allowed in failure case call DeleteDTCPSession
+  if "FAILURE" in result:
+      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
+  #Post-Cond: DTCPMgrStopSource
   dtcp.stopSource(tdkTestObj,expectedresult)
 
   #Unload the dtcp module

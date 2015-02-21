@@ -2,11 +2,11 @@
 <xml>
   <module name="dtcp" testGroup="Component">
     <primitiveTests>
-      <primitiveTest id=" " name="DTCP_Comp_Test" version="2">
+      <primitiveTest name="DTCP_Comp_Test" id=" " version="3">
         <function>TestMgr_DTCP_Test_Execute</function>
         <parameters>
           <parameter name="funcName" value="DTCPMgrInitialize"/>
-          <parameter name="strParam1" value="lan0"/>
+          <parameter name="strParam1" value="lo"/>
           <parameter name="intParam2" value="0"/>
           <parameter name="intParam3" value="0"/>
           <parameter name="intParam4" value="0"/>

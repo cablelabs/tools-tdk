@@ -34,6 +34,7 @@ void soc_uninit();
 void soc_init(int , char *, int );
 #endif
 
+#define PRE_REQUISITE_FILE "scripts/tdkintegration_test_module_pre-script.sh"
 /********************************************************************************************************************
 Purpose:               To get the current status of the AV running
 
@@ -190,11 +191,24 @@ bool TDKIntegrationStub::initialize(IN const char* szVersion,IN RDKTestAgent *pt
 
 std::string TDKIntegrationStub::testmodulepre_requisites()
 {
+	DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Entry\n");
  	#ifdef USE_SOC_INIT
-        //Initialize SOC
-        soc_init(1, "agent", 1);
+		//Initialize SOC
+		soc_init(1, "agent", 1);
         #endif
-
+        string TDK_testmodule_PR_cmd;
+        TDK_testmodule_PR_cmd= g_tdkPath + "/" + PRE_REQUISITE_FILE;
+        string pre_req_chk= "source "+TDK_testmodule_PR_cmd;
+        try
+        {
+                system((char *)pre_req_chk.c_str());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of pre-requisite script\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                return "FAILURE<DETAILS>Exception occured execution of pre-requisite script";
+        }
         return "SUCCESS";
 }
 /***************************************************************************

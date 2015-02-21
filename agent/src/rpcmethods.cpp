@@ -24,6 +24,7 @@
 #include <net/if.h>
 #include <ifaddrs.h>
 #include <errno.h>
+#include <sstream>
 #include <algorithm>
 
 /* Application Includes */
@@ -46,10 +47,9 @@ bool   	     bBenchmarkEnabled;
 #define DEVICE_LIST_FILE     "devicesFile.ini"                 	// File to populate connected devices
 #define CRASH_STATUS_FILE    "crashStatus.ini"               	// File to store test details on a device crash
 #define REBOOT_CONFIG_FILE   "rebootconfig.ini"            	// File to store the state of test before reboot 
-#define MODULE_LIST_FILE     "modulelist.ini"            	// File to store list of loaded modules 
-#define BENCHMARKING_FILE    "benchmark.log"
-#define SYSDIAGNOSTIC_FILE   "systemDiagnostics.log"
-#define SYSSTATAVG_FILE      "sysStatAvg.log"
+#define MODULE_LIST_FILE     "modulelist.ini"                     	// File to store list of loaded modules 
+#define BENCHMARKING_FILE    "benchmark.log"                 // File to store benchmark information
+#define SYSSTATAVG_FILE      "sysStatAvg.log"                   // File to store data from sysstat tool
 
 #define GET_DEVICES_SCRIPT   "$TDK_PATH/get_moca_devices.sh"      // Script to find connected devices
 #define SET_ROUTE_SCRIPT     "$TDK_PATH/configure_iptables.sh"        // Script to set port forwarding rules to connected devices
@@ -68,6 +68,10 @@ struct sModuleDetails
 };
 
 using namespace std;
+
+pthread_t performanceThreadId;      // Thread ID for performance execution thread
+
+bool bKeepPerformanceAlive = false;         // Global variable to keep performance execution thread alive
 
 typedef void* handler;
 typedef std::map <int, sModuleDetails> ModuleMap;
@@ -93,6 +97,32 @@ int RpcMethods::sm_nModuleCount = 0;                                  // Setting
 std::string RpcMethods::sm_strResultId = "0000";
 int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of device as FREE by default
 std::string RpcMethods::sm_strConsoleLogPath = "";
+
+
+
+/********************************************************************************************************************
+ Purpose:               This function will execute in a thread. It will invoke a shell script which inturn fetch performance data using sysstat tool.
+ 
+ Parameters:          Nil
+
+ Return:                 Name of the interface if it a valid IP address, else an "NOT VALID" string.
+
+*********************************************************************************************************************/
+void* PerformanceExecuter (void*)
+{
+    int nReturnValue = RETURN_SUCCESS;
+
+    /* Deleting log file from previous execution */
+    nReturnValue = remove ("/opt/TDK/sysStatAvg.log");
+
+    while (bKeepPerformanceAlive)
+    {
+        system (SYSSTAT_SCRIPT);
+    }
+	
+    pthread_exit (NULL);
+	
+} /* End of PerformanceExecuter */
 
 
 /********************************************************************************************************************
@@ -288,7 +318,7 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
 		
         /* Executing "testmodulepre_requisites" function of loaded module to enable pre-requisites */
         strPreRequisiteDetails = pRDKTestStubInterface -> testmodulepre_requisites ();
-	 std::transform(strPreRequisiteDetails.begin(), strPreRequisiteDetails.end(), strPreRequisiteDetails.begin(), ::toupper);
+	std::transform(strPreRequisiteDetails.begin(), strPreRequisiteDetails.end(), strPreRequisiteDetails.begin(), ::toupper);
 
         if (strPreRequisiteDetails.find("SUCCESS") != std::string::npos) 
         {
@@ -583,6 +613,8 @@ void RpcMethods::CallReboot()
  
  Methods of same class used:   LoadLibrary()
                                              SetCrashStatus()
+                                             
+ Other Methods used :             PerformanceExecuter()
 
 *********************************************************************************************************************/
 bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& response)
@@ -592,6 +624,7 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
     std::string strFilePath;
     std::string strLoadModuleDetails;
     std::string strNullLog;
+    int nReturnValue = RETURN_SUCCESS;
 
     char szLibName[LIB_NAME_SIZE];
     char szCommand[COMMAND_SIZE];
@@ -638,16 +671,12 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
     system(strNullLog.c_str());
 
     strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
-    strNullLog.append(SYSDIAGNOSTIC_FILE);
-    system(strNullLog.c_str());
-
-    strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
     strNullLog.append(SYSSTATAVG_FILE);
     system(strNullLog.c_str());
 
 	
     /* Check whether sm_nConsoleLogFlag is set, if it is set the redirect console log to a file */
-    if(RpcMethods::sm_nConsoleLogFlag ==FLAG_SET)
+    if(RpcMethods::sm_nConsoleLogFlag == FLAG_SET)
     {
         /* Redirecting stderr buffer to stdout */
         dup2(fileno(stdout), fileno(stderr));
@@ -683,7 +712,7 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
                 DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
             }
         }
-    }	
+    }
 	
     fprintf(stdout,"\nStarting Execution..\n");
 	
@@ -719,9 +748,17 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
         }
 
         pszSysDiagFlag =  request ["performanceSystemDiagnosisEnabled"].asCString();
-        if (strcmp(pszSysDiagFlag,"true") == 0)
+        if (strcmp(pszSysDiagFlag, "true") == 0)
         {
-    		system (SYSSTAT_SCRIPT);
+
+            bKeepPerformanceAlive = true;
+
+            /* Starting a thread to collect performance data during test execution */
+            nReturnValue = pthread_create (&performanceThreadId, NULL, PerformanceExecuter, NULL);
+            if(nReturnValue != RETURN_SUCCESS)
+            {
+                DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Performance Executer  \n");
+            }     
         }
 			
         response["result"] = "Success";
@@ -970,8 +1007,8 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
         pszResultId = request ["resultID"].asCString();    
     }
 
-    /*Check whether sm_nConsoleLogFlag is set, if it is set then redirect console log to a file */
-    if (RpcMethods::sm_nConsoleLogFlag == FLAG_SET)
+    /* Check whether sm_nConsoleLogFlag is set, if it is set then redirect console log to a file */
+    if(RpcMethods::sm_nConsoleLogFlag == FLAG_SET)
     {
         /* Extracting file to log file */
         strFilePath = RpcMethods::sm_strLogFolderPath;
@@ -990,7 +1027,6 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
         {
             DEBUG_PRINT (DEBUG_ERROR, "Failed to redirect console logs\n");
         }
-
         fprintf(stdout,"\nRestoring previous state after box reboot..\n");
     }
 
@@ -1160,7 +1196,6 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
 } /* End of RPCGetHostStatus */
 
 
-
 /********************************************************************************************************************
  Purpose:               To reset agent when there is a timeout. It will send custom signal (SIGUSR1) to agent process.
  Parameters:   
@@ -1304,18 +1339,6 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         signal (SIGINT, SIG_DFL);
         sleep(2);	
 
-        /* Start tftp server for logfile transfer */
-        nPID = fork();
-        if (nPID == RETURN_SUCCESS)
-        {
-            system (START_TFTP_SERVER);
-            exit(0);
-        }
-        else if (nPID < RETURN_SUCCESS)
-        {
-            DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!! Couldnot start tftp server for logfile transfer \n");
-        }
-
         {
             /* Restart Agent */
             nReturnValue = kill (RpcMethods::sm_nAgentPID, SIGKILL);
@@ -1365,8 +1388,6 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
     return bRet;
 
 }/* End of RPCResetAgent */
-
-
 
 
 /********************************************************************************************************************
@@ -1423,16 +1444,14 @@ bool RpcMethods::RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Val
 
 
 /********************************************************************************************************************
- Purpose:               
+ Purpose:               RPC Method to send path to log file to Test Manager.
  
  Parameters:   
                              request [IN]       - Json request.
                              response [OUT]  - Json response with result "SUCCESS/FAILURE".
  
  Return:                 bool  -      Always returning true from this function, with details in response[result].
-
- Other Methods used: 
-
+ 
 *********************************************************************************************************************/
 bool RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::Value& response)
 {
@@ -1456,7 +1475,7 @@ bool RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::V
     }
     else
     {
-	DEBUG_PRINT (DEBUG_ERROR, "\nError!!! %s not found\n", BENCHMARKING_FILE);
+        DEBUG_PRINT (DEBUG_ERROR, "\nError!!! %s not found\n", BENCHMARKING_FILE);
         response["result"]  = "FAILURE";
     }
 
@@ -1471,7 +1490,7 @@ bool RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::V
 
 
 /********************************************************************************************************************
- Purpose:               
+ Purpose:               RPC Method to stop performance thread and to send path to log file to Test Manager.
  
  Parameters:   
                              request [IN]       - Json request.
@@ -1479,13 +1498,12 @@ bool RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::V
  
  Return:                 bool  -      Always returning true from this function, with details in response[result].
 
- Other Methods used: 
-
 *********************************************************************************************************************/
 bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
-    std::string strLogPath;	
+    char szBuffer[128];
+    std::string strLogPath;
 
     /* Constructing JSON response */
     response["jsonrpc"] = "2.0";
@@ -1493,29 +1511,54 @@ bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Js
 
     DEBUG_PRINT (DEBUG_TRACE, "\nRPCPerformanceSystemDiagnostics --> Entry \n");
     std::cout << "Received query: " << request << std::endl;
-    
-    /* Extracting log file path */
-    strLogPath = RpcMethods::sm_strTDKPath;
-    strLogPath.append(SYSDIAGNOSTIC_FILE);
-	
-    if (std::ifstream(strLogPath.c_str()))
+
+    /* Setting variable to false for stopping performance thread */
+    if (bKeepPerformanceAlive)
     {
-       	response["result"]  = "SUCCESS";
+        bKeepPerformanceAlive = false;
+        sleep (1);
+        pthread_join (performanceThreadId, NULL);
+    }
+	
+    sleep(2);
+
+    /* Creating pipe to execute script which will extract performance data */ 	
+    FILE* pipe = popen("sh PerformanceDataExtractor.sh", "r");
+    if (!pipe)
+    {
+        DEBUG_PRINT (DEBUG_TRACE, "\nError in creating pipe to extract performance data\n");
     }
     else
     {
-	DEBUG_PRINT (DEBUG_ERROR, "\nError!!! %s not found\n", SYSDIAGNOSTIC_FILE);
-       	response["result"]  = "FAILURE";
+        while(!feof(pipe)) 
+        {
+            if(fgets(szBuffer, 128, pipe) != NULL)
+            {
+                DEBUG_PRINT (DEBUG_TRACE, "%s \n",szBuffer);
+            }
+        }
+	
+        pclose(pipe);
     }
 
-    response["logpath"] = strLogPath.c_str();
-   
+    strLogPath = RpcMethods::sm_strTDKPath;
+	
+    if (std::ifstream(strLogPath.c_str()))
+    {
+        response["result"]  = "SUCCESS";		
+        response["logpath"] = strLogPath.c_str();
+    }
+    else
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "\nError!!!Path to log file (%s) not found\n",strLogPath.c_str());
+        response["result"]  = "FAILURE";
+    }
+
     DEBUG_PRINT (DEBUG_TRACE, "\nRPCPerformanceSystemDiagnostics --> Exit \n");
  
     return bRet;
 	
 } /* End of RPCPerformanceSystemDiagnostics */
-
 
 
 

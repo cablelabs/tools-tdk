@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>6</version>
+  <version>8</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_DeleteSrcSess_08</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,7 +11,7 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -66,7 +66,7 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: Init,SetLoglevel,StartSource,CreateSrcSession
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lan0','port':5000})
+  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
   prevNum = dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
   print "num of src sessions before creating new session: [%s]"%prevNum
   dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})

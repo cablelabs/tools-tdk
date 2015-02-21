@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_CreateSinkSessWithoutStartSrc_34</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,7 +11,7 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -67,7 +67,10 @@ if "SUCCESS" in loadmodulestatus.upper():
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
-  result = dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':ip,'srcPort':5000,'uniqueKey':0,'maxPacketSize':4096})
+  #Make sure no DTCP source is listening for AKE requests
+  dtcp.stopSource(tdkTestObj,expectedresult)
+  result = dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'127.0.0.1','srcPort':5000,'uniqueKey':0,'maxPacketSize':4096})
+  #If sink session creation is allowed in failure case call DeleteDTCPSession
   if expectedresult not in result:
       dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
 

@@ -131,10 +131,11 @@ def createSourceSession(tdkTestObj,expectedresult,kwargs={}):
         #Set the result status of execution
         if expectedresult in result:
                 tdkTestObj.setResultStatus("SUCCESS");
+                retValue = "SUCCESS"
         else:
                 tdkTestObj.setResultStatus("FAILURE");
+                retValue = "FAILURE"
 
-	retValue = result+','+details
         return retValue
 
 

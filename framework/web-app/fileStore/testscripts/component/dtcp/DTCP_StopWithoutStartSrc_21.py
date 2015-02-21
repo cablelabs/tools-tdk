@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_StopWithoutStartSrc_21</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,12 +11,12 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
   <synopsis>To stop DTCP-IP source without adding AKE reques listeners with StartSource()
-TestType: Negative
+TestType: Positive
 TestcaseID: CT_DTCP_21</synopsis>
   <!--  -->
   <groups_id />
@@ -67,7 +67,7 @@ if "SUCCESS" in loadmodulestatus.upper():
   init(tdkTestObj,expectedresult);
   setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
   #Calling DTCPMgrStopSource
-  stopSource(tdkTestObj,'FAILURE')
+  stopSource(tdkTestObj,expectedresult)
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");

@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_MultiStartSource_37</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,11 +11,11 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>To start multiple DTCP-IP source listeners on different interfaces and ports.
+  <synopsis>To start multiple DTCP-IP source listeners on different interfaces and ports. Maximum Listener Count is 10.
 TestType: Positive
 TestcaseID: CT_DTCP_37</synopsis>
   <!--  -->
@@ -66,9 +66,11 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: Init
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  #Executing 50 instances of StartSource
-  for port in range (6000,6050):
-      dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lan0','port':port})
+  #Executing 10 instances of StartSource
+  for port in range (6000,6010):
+      dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
+  #Add new listener with StartSource (11th instance)
+  dtcp.startSource(tdkTestObj,'FAILURE',kwargs={'ifName':'lo','port':6010})
   #Post-Cond: Stop all sources
   dtcp.stopSource(tdkTestObj,expectedresult)
 

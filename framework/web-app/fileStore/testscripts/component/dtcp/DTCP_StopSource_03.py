@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>6</version>
+  <version>8</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_StopSource_03</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,7 +11,7 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -41,7 +41,7 @@ TestcaseID: CT_DTCP_03</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-from dtcp import init,startSource,stopSource;
+from dtcp import init,setLogLevel,startSource,stopSource;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("dtcp","2.0");
@@ -65,7 +65,8 @@ if "SUCCESS" in loadmodulestatus.upper():
   expectedresult="SUCCESS";
   #Pre-cond: DTCPMgrInit,DTCPMgrStartSource
   init(tdkTestObj,expectedresult);
-  startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lan0','port':5000})
+  setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
+  startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
   #Calling DTCPMgrStopSource
   stopSource(tdkTestObj,expectedresult)
 

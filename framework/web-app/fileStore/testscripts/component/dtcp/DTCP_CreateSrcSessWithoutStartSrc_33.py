@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_CreateSrcSessWithoutStartSrc_33</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,12 +11,12 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
   <synopsis>To create a new authenticated source session with a remote DTCP-IP sink without invoking StartSource().
-TestType: Positive
+TestType: Negative
 TestcaseID: CT_DTCP_33</synopsis>
   <!--  -->
   <groups_id />
@@ -67,9 +67,12 @@ if "SUCCESS" in loadmodulestatus.upper():
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
-  result = dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':ip,'keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
-  #Pre-cond: deleteSrcSession
-  dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
+  #Make sure no DTCP source is listening for AKE requests
+  dtcp.stopSource(tdkTestObj,expectedresult)
+  result = dtcp.createSourceSession(tdkTestObj,'FAILURE',kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
+  #If source session creation is allowed in failure case call DeleteDTCPSession
+  if expectedresult not in result:
+      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");

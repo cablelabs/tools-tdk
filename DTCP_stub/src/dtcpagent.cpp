@@ -294,7 +294,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
 		{
 			DEBUG_PRINT(DEBUG_LOG, "Source Session List is empty");
         		response["result"]="FAILURE";
-			response["details"]="Source Session List is empty";
+			response["details"]="Source Session not created";
 		}
             }
             else if(iDeviceType == DTCP_SINK)
@@ -341,7 +341,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
 		{
 			DEBUG_PRINT(DEBUG_LOG, "Sink Session List is empty");
         		response["result"]="FAILURE";
-			response["details"]="Sink Session List is empty";
+			response["details"]="Sink Session not created";
 		}
             }
 	    else
@@ -387,7 +387,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
 		{
 			DEBUG_PRINT(DEBUG_LOG, "Source Session List is empty");
         		response["result"]="FAILURE";
-			response["details"]="Source Session List is empty";
+			response["details"]="Source Session not created";
 		}
 	    }
             else if(iDeviceType == DTCP_SINK)
@@ -418,7 +418,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
 		{
 			DEBUG_PRINT(DEBUG_LOG, "Sink Session List is empty");
         		response["result"]="FAILURE";
-			response["details"]="Sink Session List is empty";
+			response["details"]="Sink Session List not created";
 		}
 	    }
 	    else
@@ -466,7 +466,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
 		{
 			DEBUG_PRINT(DEBUG_LOG, "Source Session List is empty");
         		response["result"]="FAILURE";
-			response["details"]="Source Session List is empty";
+			response["details"]="Source Session not created";
                         DEBUG_PRINT(DEBUG_TRACE, "DTCPAgent_Test_Execute -->Exit");
                         return TEST_FAILURE;
 		}	
@@ -483,7 +483,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
 		{
 			DEBUG_PRINT(DEBUG_LOG, "Sink Session List is empty");
         		response["result"]="FAILURE";
-			response["details"]="Sink Session List is empty";
+			response["details"]="Sink Session List not created";
                         DEBUG_PRINT(DEBUG_TRACE, "DTCPAgent_Test_Execute -->Exit");
                         return TEST_FAILURE;
 		}	
