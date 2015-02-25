@@ -7,7 +7,7 @@ default: build
 #
 SRC_DIR   := src
 OBJDIR    := obj
-COPTS     := -c
+COPTS     := -c -g
 
 ifeq ($(RDK_VERSION),RDK1DOT3)
 COPTS     += -DRDK_BR_1DOT3

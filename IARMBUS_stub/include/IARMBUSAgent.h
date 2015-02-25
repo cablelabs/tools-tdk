@@ -32,6 +32,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "dummytestmgr.h"
+#include "keyeventdata.h" /*Performance test include*/
 #include <fstream>
 #include <sstream>
 #define IN
@@ -78,6 +79,20 @@ class IARMBUSAgent : public RDKTestStubInterface
 		bool IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response);
 		bool get_LastReceivedEventDetails(IN const Json::Value& req, OUT Json::Value& response);
 		bool InvokeSecondApplication(IN const Json::Value& req, OUT Json::Value& response);
+		/*IARMBus Performance test Wrapper functions*/
+                bool BUSAgent_Init(IN const Json::Value& req, OUT Json::Value& response);
+                bool BUSAgent_Term(IN const Json::Value& req, OUT Json::Value& response);
+                bool BUSAgent_BusConnect(IN const Json::Value& req, OUT Json::Value& response);
+                bool BUSAgent_BusDisconnect(IN const Json::Value& req, OUT Json::Value& response);
+                bool RegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response);
+                bool GetLastReceivedEventDetails(IN const Json::Value& req, OUT Json::Value& response);
+                bool UnRegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response);
+                bool RegisterMultipleEventHandlers (IN const Json::Value& req, OUT Json::Value& response);
+                bool UnRegisterMultipleEventHandlers(IN const Json::Value& req, OUT Json::Value& response);
+                bool InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json::Value& response);
+                std::string testenvPath;
+                int keyCode, keyType;
+
 		
 };
 #endif //__IARM_STUB_H__

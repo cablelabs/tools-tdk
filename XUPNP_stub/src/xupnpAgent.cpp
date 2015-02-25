@@ -244,6 +244,7 @@ bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::V
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_GetUpnpResult --->Entry\n");
 
     string parameter = req["paramName"].asString();
+
     IARM_Result_t iarmResult = IARM_RESULT_SUCCESS;
     IARM_Bus_SYSMGR_GetXUPNPDeviceInfo_Param_t *param = NULL;
 
@@ -254,9 +255,9 @@ bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::V
 
     if(iarmResult != IARM_RESULT_SUCCESS)
     {
-        DEBUG_PRINT(DEBUG_ERROR, "Error allocating shared mem for gw device data\n");
+        DEBUG_PRINT(DEBUG_ERROR, "Error allocating memory for get device info\n");
         response["result"] = "FAILURE";
-        response["details"] = "Error allocating shared mem for data";
+        response["details"] = "Error allocating memory for get device info";
     }
     else
     {
@@ -272,15 +273,20 @@ bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::V
             response["result"] = "FAILURE";
             response["details"] = "IARM_Bus_Call to GetXUPNPDeviceInfo failed";
         }
-        else if ((!param->pBuffer) || (param->pBuffer[0] == '\0')) {
-            DEBUG_PRINT(DEBUG_ERROR, "GetXUPNPDeviceInfo IARM_Bus_Call return NULL buffer pointer\n");
-            response["result"] = "FAILURE";
-            response["details"] = "GetXUPNPDeviceInfo IARM_Bus_Call return NULL buffer pointer";
-        }
-        else {
-            DEBUG_PRINT(DEBUG_TRACE, "GetXUPNPDeviceInfo IARM_Bus_Call successful\n");
+        else
+        {
+            DEBUG_PRINT(DEBUG_TRACE, "IARM_Bus_Call to GetXUPNPDeviceInfo successful\n");
 
-            string strBuffer(param->pBuffer);
+            char upnpResults[MAX_DATA_LEN+1] = {'\0'};
+#ifdef IARM_USE_DBUS
+            memcpy(upnpResults, ((char *)param + sizeof(IARM_Bus_SYSMGR_GetXUPNPDeviceInfo_Param_t)), param->bufLength);
+#else
+            memcpy(upnpResults, param->pBuffer, param->bufLength);
+#endif
+            upnpResults[param->bufLength] = '\0';
+
+            //Concatenate parameter info from all services published
+            string strBuffer(upnpResults);
             istringstream iss(strBuffer);
             string value;
 
@@ -300,14 +306,19 @@ bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::V
                 response["result"] = "FAILURE";
                 response["details"] = "Parameter not found in upnp result";
             }
-            else {
+            else
+            {
                 DEBUG_PRINT(DEBUG_LOG,"Parameter found: %s\n",value.c_str());
                 response["result"] = "SUCCESS";
-                response["details"] = value;
+                //Truncate value beyond 512 characters
+                if (value.length() > 512)
+                    response["details"] = value.substr (0,512) + "...";
+                else
+                    response["details"] = value;
             }
-        }
 
-        IARM_Free(IARM_MEMTYPE_PROCESSLOCAL, param);
+            IARM_Free(IARM_MEMTYPE_PROCESSLOCAL, param);
+        }
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_GetUpnpResult -->Exit\n");
@@ -361,9 +372,13 @@ bool XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT J
             system(strCmd);
         }
         else {
-            DEBUG_PRINT(DEBUG_TRACE, "Param value  = %s\n",value.c_str());
+            DEBUG_PRINT(DEBUG_TRACE, "value  = %s\n",value.c_str());
             response["result"] = "SUCCESS";
-            response["details"] = value;
+            //Truncate value beyond 512 characters
+            if (value.length() > 512)
+                response["details"] = value.substr (0,512) + "...";
+            else
+                response["details"] = value;
             DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_ReadXDiscOutputFile -->Exit\n");
             return TEST_SUCCESS;
         }
@@ -728,6 +743,6 @@ Description   : This function will be used to destory the XUPNPAgent object.
 **************************************************************************/
 extern "C" void DestroyObject(XUPNPAgent *stubobj)
 {
-    DEBUG_PRINT(DEBUG_LOG, "Destroying RDKLogger Agent object\n");
+    DEBUG_PRINT(DEBUG_LOG, "Destroying XUPNPAgent object\n");
     delete stubobj;
 }

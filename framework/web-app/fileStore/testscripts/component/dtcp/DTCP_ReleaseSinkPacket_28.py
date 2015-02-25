@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_ReleaseSinkPacket_28</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -63,17 +63,22 @@ if "SUCCESS" in loadmodulestatus.upper():
   tdkTestObj = obj.createTestStep('DTCP_Comp_Test');
 
   expectedresult="SUCCESS";
-  #Pre-cond: DTCPMgrInit,StartSource,CreateSinkSession
+  #Pre-Cond: Init,StartSource,CreateSrcSession,CreateSinkSession
   dtcp.init(tdkTestObj,expectedresult);
+  dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
   dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
+  #Disable unique key exchange
   dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5000,'uniqueKey':0,'maxPacketSize':4096})
-  #Calling Release Packet for Sink
-  dtcp.releasePacket(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
-  #Post-Cond: DeleteSinkSession,StopSource
+  #No session exchange key
+  dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
+  #Calling Release Packet
+  dtcp.releasePacket(tdkTestObj,expectedresult,kwargs={"index":0})
+  #Post-Cond: DeleteSinkSession,DeleteSrcSession,StopSource
+  dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
   dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
   dtcp.stopSource(tdkTestObj,expectedresult)
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");
 else:
-  print"DTCP module load failed";
+  print"DTCP module load failed"

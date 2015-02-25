@@ -152,6 +152,17 @@ bool IARMBUSAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgent
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::get_LastReceivedEventDetails, "TestMgr_IARMBUS_GetLastReceivedEventDetails");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::InvokeSecondApplication, "TestMgr_IARMBUS_InvokeSecondApplication");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_GetContext, "TestMgr_IARMBUS_GetContext");
+	/*IarmBus Performance test Wrapper functions*/
+        ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::BUSAgent_Init, "TestMgr_IARMBUSPERF_Init");
+        ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::BUSAgent_Term, "TestMgr_IARMBUSPERF_Term");
+        ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::BUSAgent_BusConnect, "TestMgr_IARMBUSPERF_Connect");
+        ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::BUSAgent_BusDisconnect, "TestMgr_IARMBUSPERF_Disconnect");
+        ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::RegisterEventHandler, "TestMgr_IARMBUSPERF_RegisterEventHandler");
+        ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::UnRegisterEventHandler, "TestMgr_IARMBUSPERF_UnRegisterEventHandler");
+        ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::InvokeEventTransmitterApp, "TestMgr_IARMBUSPERF_InvokeEventTransmitterApp");
+        ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::GetLastReceivedEventDetails, "TestMgr_IARMBUSPERF_GetLastReceivedEventDetails");
+        ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::RegisterMultipleEventHandlers, "TestMgr_IARMBUSPERF_RegisterMultipleEventHandlers");
+
 	return TEST_SUCCESS;
 
 }
@@ -1497,6 +1508,17 @@ bool IARMBUSAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_GetLastReceivedEventDetails");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_InvokeSecondApplication");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_GetContext");
+	/*IARMBus Performance test Wrapper Functions*/
+        ptrAgentObj->UnregisterMethod("TestMgr_IARMBUSPERF_Init");
+        ptrAgentObj->UnregisterMethod("TestMgr_IARMBUSPERF_Term");
+        ptrAgentObj->UnregisterMethod("TestMgr_IARMBUSPERF_Connect");
+        ptrAgentObj->UnregisterMethod("TestMgr_IARMBUSPERF_Disconnect");
+        ptrAgentObj->UnregisterMethod("TestMgr_IARMBUSPERF_RegisterEventHandler");
+        ptrAgentObj->UnregisterMethod("TestMgr_IARMBUSPERF_UnRegisterEventHandler");
+        ptrAgentObj->UnregisterMethod("TestMgr_IARMBUSPERF_InvokeEventTransmitterApp");
+        ptrAgentObj->UnregisterMethod("TestMgr_IARMBUSPERF_GetLastReceivedEventDetails");
+        ptrAgentObj->UnregisterMethod("TestMgr_IARMBUSPERF_RegisterMultipleEventHandlers");
+
 	return TEST_SUCCESS;
 }
 

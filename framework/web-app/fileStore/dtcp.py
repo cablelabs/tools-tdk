@@ -181,16 +181,14 @@ def processPacket(tdkTestObj,expectedresult,kwargs={}):
 
         #Add parameters to test object
        	index=int(kwargs["index"])
-	deviceType=int(kwargs["deviceType"])
         tdkTestObj.addParameter("funcName", fnName)
  	tdkTestObj.addParameter("intParam2", index);
-	tdkTestObj.addParameter("intParam3", deviceType);
         #Execute the test case in STB
         tdkTestObj.executeTestCase(expectedresult)
         #Get the result of execution
         result = tdkTestObj.getResult()
         details = tdkTestObj.getResultDetails()
-        print "Input: [funcName:%s index:%d deviceType:%d]"%(fnName,index,deviceType)
+        print "Input: [funcName:%s index:%d]"%(fnName,index)
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
 	time.sleep(10);
@@ -210,16 +208,14 @@ def releasePacket(tdkTestObj,expectedresult,kwargs={}):
         fnName="DTCPMgrReleasePacket"
         #Add parameters to test object
         index=int(kwargs["index"])
-        deviceType=int(kwargs["deviceType"])
         tdkTestObj.addParameter("funcName", fnName)
         tdkTestObj.addParameter("intParam2", index);
-        tdkTestObj.addParameter("intParam3", deviceType);
         #Execute the test case in STB
         tdkTestObj.executeTestCase(expectedresult)
         #Get the result of execution
         result = tdkTestObj.getResult()
         details = tdkTestObj.getResultDetails()
-        print "Input: [funcName:%s index:%d deviceType:%d]"%(fnName,index,deviceType)
+        print "Input: [funcName:%s index:%d]"%(fnName,index)
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
         #Set the result status of execution

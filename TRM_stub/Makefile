@@ -1,6 +1,12 @@
+#include ../def.inc
+#default: build
+
 CC      = g++
 CFLAGS  = -Wall -g -DGCC4_XXX -Wno-format -Wunused -DUSE_CC_GETTIMEOFDAY -DRMF_OSAL_FEATURE_IPV6 -DRMF_OSAL_LITTLE_ENDIAN -DDEBUG_CONF_FILE="\"/etc/debug.ini\""
 
+#
+# Source files
+#
 SRC_DIR = src
 OBJ_DIR = ./
 TRM_LIB = libtrmstub.so

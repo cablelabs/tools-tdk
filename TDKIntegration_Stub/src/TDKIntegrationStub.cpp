@@ -1298,7 +1298,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	int playSpeedStrPosition = url.find("play_speed");
 	float urlSpeed = 0.0;
 #endif
-	if( url.find("dvr")!= -1)
+	if( url.find("recordingId")!= -1)
         {
 	int modurllen = url.find("&0");
         modurl = url.substr(0,modurllen+2);
@@ -1318,7 +1318,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	
         int playSpeedStrPosition = url.find("play_speed");
 
-        if( url.find("dvr")!= -1)
+	if( url.find("recordingId")!= -1)
         {
                 DEBUG_PRINT(DEBUG_LOG,"\nDVR url\n");
         int TimePosStrPosition = url.find("time_pos");
@@ -3373,6 +3373,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
         DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed to CURL: %s\n",urlIn.c_str());
 
     #else
+        size_t pos = 0;
         string urlIn = url;
         DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed to CURL: %s\n",urlIn.c_str());
     #endif

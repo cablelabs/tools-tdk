@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_ProcessPacket_Neg_26</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -11,7 +11,7 @@
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
   <!--  -->
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -66,12 +66,9 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: DTCPMgrInit
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
-  dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
-  #Calling ProcessPacket for Src
-  dtcp.processPacket(tdkTestObj,'FAILURE',kwargs={"index":0,"deviceType":0})
-  #Calling ProcessPacket for Sink
-  dtcp.processPacket(tdkTestObj,'FAILURE',kwargs={"index":0,"deviceType":1})
+  dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
+  #Calling ProcessPacket
+  dtcp.processPacket(tdkTestObj,'FAILURE',kwargs={"index":0})
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");

@@ -9,6 +9,7 @@ SRC_DIR   := src
 OBJDIR    := obj
 COPTS     := -c
 
+#RDK version
 ifeq ($(RDK_VERSION),RDK1DOT3)
 COPTS     += -DRDK_BR_1DOT3
 VERSION    = br1.3
@@ -32,6 +33,10 @@ COPTS     += -DDEBUG_LEVEL_LOG
 endif
 ifeq ($(DEBUG_LEVEL),ERROR)
 COPTS     += -DDEBUG_LEVEL_ERROR
+endif
+
+ifeq ($(USE_DBUS),y)
+COPTS     += -DIARM_USE_DBUS
 endif
 
 
