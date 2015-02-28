@@ -192,16 +192,27 @@ bool TDKIntegrationStub::initialize(IN const char* szVersion,IN RDKTestAgent *pt
 std::string TDKIntegrationStub::testmodulepre_requisites()
 {
 	DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Entry\n");
+	int sysRetValScript;
  	#ifdef USE_SOC_INIT
 		//Initialize SOC
-		soc_init(1, "agent", 1);
+		soc_init(1, "tdk_agent", 1);
         #endif
+// Need to fix the hang happening while stoping the xre service
+#if 0
         string TDK_testmodule_PR_cmd;
         TDK_testmodule_PR_cmd= g_tdkPath + "/" + PRE_REQUISITE_FILE;
         string pre_req_chk= "source "+TDK_testmodule_PR_cmd;
+
         try
         {
-                system((char *)pre_req_chk.c_str());
+
+                 sysRetValScript = system((char *)pre_req_chk.c_str());
+        	if(sysRetValScript!=0)
+        	{
+                	DEBUG_PRINT(DEBUG_ERROR,"\nsystem command is failed on executing mplayerscript \n");
+                	return "SUCCESS";
+        	}
+
         }
         catch(...)
         {
@@ -209,6 +220,7 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
                 DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
                 return "FAILURE<DETAILS>Exception occured execution of pre-requisite script";
         }
+#endif
         return "SUCCESS";
 }
 /***************************************************************************

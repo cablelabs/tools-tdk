@@ -3,10 +3,10 @@
 <xml>
   <id>1732</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TRM_CT_40</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>636</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TRM_CancelRecording</primitive_test_name>
@@ -34,120 +34,50 @@ Test Type: Positive</synopsis>
     <!--  -->
   </box_types>
   <rdk_versions>
-    <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
+    <!--  -->
+    <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("trm","2.0");
+import trm;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'TRM_CT_40');
 
+#Test component to be tested
+obj = tdklib.TDKScriptingLibrary("trm","2.0");
+obj.configureTestCase(ip,port,'TRM_CT_40');
 #Get the result of connection with test component and STB
-result =obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %result;
+result = obj.getLoadModuleResult();
+print "[TRM LIB LOAD STATUS]  :  %s" %result;
+#Set the module loading status
+obj.setLoadModuleStatus(result);
 
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in result.upper():
-    #Set the module loading status
-    obj.setLoadModuleStatus("SUCCESS");
 
-    #Primitive test case which associated to this Script
-    tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
-
-    duration = 10000
-    startTime = 0
-    hot = 1
-
-    for deviceNo in range(0,5):
-        # Frame different request URL for each client box
-        streamId = '0'+str(deviceNo+1)
-        locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
-        recordingId = 'RecordIdCh'+streamId
-        print "DeviceNo:%d Locator:%s hot:%d recordingId:%s duration:%d startTime:%d"%(deviceNo,locator,hot,recordingId,duration,startTime)
-
-        tdkTestObj.addParameter("deviceNo",deviceNo);
-        tdkTestObj.addParameter("duration",duration);
-        tdkTestObj.addParameter("locator",locator);
-        tdkTestObj.addParameter("startTime", startTime);
-        tdkTestObj.addParameter("hot",hot);
-        tdkTestObj.addParameter("recordingId",recordingId);
-
-        expectedRes = "SUCCESS"
-
-        #Execute the test case in STB
-        tdkTestObj.executeTestCase(expectedRes);
-
-        #Get the result of execution
-        result = tdkTestObj.getResult();
-        print "[TEST EXECUTION RESULT] : %s" %result;
-        details = tdkTestObj.getResultDetails();
-        print "[TEST EXECUTION DETAILS] : %s" %details;
-
-        if "SUCCESS" in result.upper():
-            #Set the result status of execution
-            tdkTestObj.setResultStatus("SUCCESS");
-        else:
-            tdkTestObj.setResultStatus("FAILURE");
-    # End of for loop
-
-    # Cancel Recording 3
-    tdkTestObj = obj.createTestStep('TRM_CancelRecording');
-
-    locator = tdkTestObj.getStreamDetails('03').getOCAPID()
-
-    tdkTestObj.addParameter("locator",locator);
-
-    expectedRes = "SUCCESS"
-
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedRes);
-
-    #Get the result of execution
-    result = tdkTestObj.getResult();
-    print "[TEST EXECUTION RESULT] : %s" %result;
-    details = tdkTestObj.getResultDetails();
-    print "[TEST EXECUTION DETAILS] : %s" %details;
-
-    if "SUCCESS" in result.upper():
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
+    #Fetch max tuner supported
+    maxTuner = trm.getMaxTuner(obj,'SUCCESS')
+    if ( 0 == maxTuner ):
+        print "Exiting without executing the script"
     else:
-        tdkTestObj.setResultStatus("FAILURE");
+        # Start hot recording of different channels on all the tuners
+        for deviceNo in range(0,maxTuner):
+            # Frame different request URL for each client box
+            streamId = '0'+str(deviceNo+1)
+            recordingId = 'RecordIdCh'+streamId
+            trm.reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':10000,'startTime':0,'recordingId':recordingId,'hot':1})
+        # End for loop
 
-    # Get all Tuner states
-    print "Get all Tuner states"
-    tdkTestObj = obj.createTestStep('TRM_GetAllTunerStates');
-
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedRes);
-
-    #Get the result of execution
-    result = tdkTestObj.getResult();
-    print "[TEST EXECUTION RESULT] : %s" %result;
-    details = tdkTestObj.getResultDetails();
-    print "[TEST EXECUTION DETAILS] : %s" %details;
-
-    #Set the result status of execution
-    if expectedRes in result.upper():
-        tdkTestObj.setResultStatus("SUCCESS");
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
-    # Get all Tuner states End
-
-    #unloading trm module
-    obj.unloadModule("trm");
-else:
-    print "Failed to load trm module";
-    #Set the module loading status
-    obj.setLoadModuleStatus("FAILURE");
+        # Cancel recording on channel 3
+        trm.cancelRecording(obj,'SUCCESS',kwargs={'streamId':'03'})
+        # Get all Tuner states
+        trm.getAllTunerStates(obj,'SUCCESS')
+        #unloading trm module
+        obj.unloadModule("trm");

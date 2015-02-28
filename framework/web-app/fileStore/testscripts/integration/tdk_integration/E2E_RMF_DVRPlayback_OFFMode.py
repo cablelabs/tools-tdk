@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVRPlayback_OFFMode</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -81,32 +81,53 @@ if "SUCCESS" in loadmodulestatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
                 if "SUCCESS" in result1.upper():
                     #Prmitive test case which associated to this Script
                     tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
+	                #Pre-requisite to Check and verify required recording is present or not.
+                    #---------Start-----------------
 
-                    recordingObj = tdkTestObj.getRecordingDetails();
-                    num = recordingObj.getTotalRecordings();
-                    print "Number of recordings: %d"%num    
-                    recording_id = recordingObj.getRecordingId(num - 1);
+                    duration = 4
+                    matchList = []
+                    matchList = tdkTestObj.getRecordingDetails(duration);
+                    obj.resetConnectionAfterReboot()
+                    tdkTestObj = obj.createTestStep('TDKE2E_Rmf_Dvr_Play_TrickPlay_RewindFromEndPoint');
+
+                    #set the dvr play url
+                    streamDetails = tdkTestObj.getStreamDetails("01");
+
+                    time.sleep(10)
+		 
+                    if matchList:
+		 
+                        print "Recording Details : " , matchList
+
+                        #fetch recording id from list matchList.
+                        recordID = matchList[1]
 
                     
-                    #Calling DvrPlay_rec to play the recorded content
-                    result2 = dvr_playback(tdkTestObj,recording_id);
-                    #Setting Power mode to ON
-                    change_powermode(iarm_obj,2);                    
+                        #Calling DvrPlay_rec to play the recorded content
+                        result2 = dvr_playback(tdkTestObj, recordID);
+                        #Setting Power mode to ON
+                        change_powermode(iarm_obj,2);                    
                     
             
-                # Calling IARM_Bus_DisConnect API
-                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});                                 
+                        # Calling IARM_Bus_DisConnect API
+                        actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});                                 
             
-            else:
-                print "FAILURE: IARM_Bus_Connect failed. %s" %details;
-            #calling IARMBUS API "IARM_Bus_Term"
-            actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={});            
+			 
+		    else:
+                           print "No Matching recordings list found"
+			
+			
+			
+                else:
+                    print "FAILURE: IARM_Bus_Connect failed. %s" %details;
+                    #calling IARMBUS API "IARM_Bus_Term"
+                    actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={});            
             
         else:
             print "FAILURE: IARM_Bus_Init failed. %s " %details;
-        print "Tdkintegration module loaded successfully";
-        obj.unloadModule("tdkintegration");
-        iarm_obj.unloadModule("iarmbus");
+            print "Tdkintegration module loaded successfully";
+            obj.unloadModule("tdkintegration");
+            iarm_obj.unloadModule("iarmbus");
 else:
          print "Failed to load TDKIntegration module";
          obj.setLoadModuleStatus("FAILURE");

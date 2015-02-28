@@ -1,5 +1,5 @@
-#include ../def.inc
-#default: build
+include ../def.inc
+default: build
 
 CC      = g++
 CFLAGS  = -Wall -g -DGCC4_XXX -Wno-format -Wunused -DUSE_CC_GETTIMEOFDAY -DRMF_OSAL_FEATURE_IPV6 -DRMF_OSAL_LITTLE_ENDIAN -DDEBUG_CONF_FILE="\"/etc/debug.ini\""
@@ -35,6 +35,16 @@ ifeq ($(DEBUG_LEVEL),ERROR)
 COPTS     += -DDEBUG_LEVEL_ERROR
 endif
 
+ifeq ($(RDK_PLATFORM_DEVICE),xg1)
+ifeq ($(RDK_PLATFORM_SOC),intel)
+TRM_NUMBER_OF_TUNERS=5
+endif
+ifeq ($(RDK_PLATFORM_SOC),broadcom)
+TRM_NUMBER_OF_TUNERS=6
+endif
+COPTS     += -DNUM_OF_TUNERS=$(TRM_NUMBER_OF_TUNERS)
+endif
+
 OBJS       = $(OBJ_DIR)/TRMAgent.o $(OBJ_DIR)/TunerReservationHelper.o
 
 INCLUDES+= -I./include \
@@ -54,7 +64,7 @@ LDOPTS  += -L $(IMAGE_PATH)/usr/local/lib \
            -L $(IMAGE_PATH)/usr/lib \
            -lrmfosal -lrmfosalutils -ltrm -lpthread -lrdkloggers -ljansson -llog4c
 
-all: clean library install
+build: clean library install
 	@echo "Build Finished...."
 
 library: $(OBJS)
@@ -68,5 +78,8 @@ $(OBJ_DIR)/%.o:$(SRC_DIR)/%.cpp
 install:
 	mv $(TRM_LIB) $(LIBDIR)
 
+#
+# Clean
+#
 clean :
 	rm -rf *.o $(TRM_LIB)

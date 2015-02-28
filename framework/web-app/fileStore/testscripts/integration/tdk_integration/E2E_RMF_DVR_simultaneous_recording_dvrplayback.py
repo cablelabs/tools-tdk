@@ -3,10 +3,10 @@
 <xml>
   <id>1682</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_simultaneous_recording_dvrplayback</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>541</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>10</execution_time>
+  <execution_time>20</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -75,20 +75,39 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
     #Prmitive test case which associated to this Script
     tdkTestObj = tdk_obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
 
-    recordingObj = tdkTestObj.getRecordingDetails();
-    num = recordingObj.getTotalRecordings();
-    print "Number of recordings: %d"%num    
-    recording_id = recordingObj.getRecordingId(num - 1);
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
 
-    result3 = dvr_playback(tdkTestObj,recording_id);
+    duration = 4
+    matchList = []
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    tdk_obj.resetConnectionAfterReboot()
+    tdkTestObj = tdk_obj.createTestStep('TDKE2E_Rmf_Dvr_Play_TrickPlay_RewindFromEndPoint');
+
+    #set the dvr play url
+    streamDetails = tdkTestObj.getStreamDetails("01");
+
+    time.sleep(10)
+		 
+    if matchList:
+		 
+         print "Recording Details : " , matchList
+
+         #fetch recording id from list matchList.
+         recordID = matchList[1]
+
+         result3 = dvr_playback(tdkTestObj,recording_id);
         
-    if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()) and ("SUCCESS" in result3.upper()):                                        
-        print "Execution  Success"
-    else:            
-        print "Execution  failure"
-         
-    rec_obj.unloadModule("rmfapp");
-    tdk_obj.unloadModule("tdkintegration");
+         if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()) and ("SUCCESS" in result3.upper()):                                        
+             print "Execution  Success"
+         else:           
+		    print "Execution  failure"
+		    rec_obj.unloadModule("rmfapp");
+		    tdk_obj.unloadModule("tdkintegration");
+    else:
+         print "No Matching recordings list found"
+	 obj.unloadModule("tdkintegration");			 
+         time.sleep(10);
     
 else:
     print "Failed to load rmfapp module";

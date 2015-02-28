@@ -17,6 +17,7 @@
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 #include "rdk_utils.h"
+#include <sstream>
 
 #define IN
 #define OUT
@@ -24,8 +25,7 @@
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
 
-#define TOTAL_DEVICE_NUMBER 5   // For HYBRID_GW TRM_NUMBER_OF_TUNERS = 5
-#define TOTAL_LOCATOR_NUMBER 7
+#define TOTAL_DEVICE_NUMBER 10
 
 using namespace std;
 
@@ -44,6 +44,7 @@ public:
     bool testmodulepost_requisites();
 
     //TRMAgent Wrapper functions
+    bool TRMAgent_GetMaxTuners(IN const Json::Value& req, OUT Json::Value& response);
     bool TRMAgent_GetAllTunerIds(IN const Json::Value& req, OUT Json::Value& response);
     bool TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::Value& response);
     bool TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::Value& response);

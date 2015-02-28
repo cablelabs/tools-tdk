@@ -10,7 +10,7 @@
         <function>TestMgr_TRM_GetAllTunerIds</function>
         <parameters/>
       </primitiveTest>
-      <primitiveTest name="TRM_GetAllReservations" id=" " version="2">
+      <primitiveTest id=" " name="TRM_GetAllReservations" version="2">
         <function>TestMgr_TRM_GetAllReservations</function>
         <parameters>
           <parameter name="deviceNo" value="-1"/>
@@ -72,6 +72,10 @@
           <parameter name="deviceNo" value="0"/>
           <parameter name="activity" value="1"/>
         </parameters>
+      </primitiveTest>
+      <primitiveTest name="TRM_GetMaxTuners" id="" version="1">
+        <function>TestMgr_TRM_GetMaxTuners</function>
+        <parameters/>
       </primitiveTest>
     </primitiveTests>
   </module>

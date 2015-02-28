@@ -3,10 +3,10 @@
 <xml>
   <id>1021</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>11</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_TrickPlay_28</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>544</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_Rmf_Dvr_Play_Pause_Play_Repeat</primitive_test_name>
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>12</execution_time>
+  <execution_time>20</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -28,9 +28,9 @@
   <skip>false</skip>
   <!--  -->
   <box_types>
-    <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
+    <!--  -->
+    <box_type>Hybrid-1</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -58,24 +58,40 @@ repeatCount = 5;
 obj.configureTestCase(ip,port,'E2E_RMF_DVR_TrickPlay_28');
 
 #Get the result of connection with test component and STB
-result =obj.getLoadModuleResult();
+result = obj.getLoadModuleResult();
+print "tdkintegration module loaded: %s" %result; 
 
 if "SUCCESS" in result.upper():
-         obj.setLoadModuleStatus("SUCCESS");
-         print "TDKIntegration module load successful";
+    obj.setLoadModuleStatus("SUCCESS");
+    print "TDKIntegration module load successful";
 
-         #Prmitive test case which associated to this Script
-         tdkTestObj = obj.createTestStep('TDKE2E_Rmf_Dvr_Play_Pause_Play_Repeat');
+    #Prmitive test case which associated to this Script
+    tdkTestObj =obj.createTestStep('TDKE2E_Rmf_Dvr_Play_Pause_Play_Repeat');
 
-         #set the dvr play url
-         streamDetails = tdkTestObj.getStreamDetails("01");
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
 
-         recordingObj = tdkTestObj.getRecordingDetails();
-         num = recordingObj.getTotalRecordings();
-         print "Number of recordings: %d"%num
+    duration = 4
+    matchList = []
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.resetConnectionAfterReboot()
+    tdkTestObj = obj.createTestStep('TDKE2E_Rmf_Dvr_Play_Pause_Play_Repeat');
 
-         recordID = recordingObj.getRecordingId(num - 1);
+    #set the dvr play url
+    streamDetails = tdkTestObj.getStreamDetails("01");
 
+    #recordingObj = tdkTestObj.getRecordingDetails(duration);
+    #num = recordingObj.getTotalRecordings();
+    #print "Number of recordings: %d"%num
+
+    #recordID = recordingObj.getRecordingId(num - 1);
+
+
+    if matchList:
+		 
+         print "Recording Details : " , matchList
+         #fetch recording id from list matchList.
+         recordID = matchList[1]
          url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
          if url == "NULL":
              print "Failed to generate the Streaming URL";
@@ -106,6 +122,11 @@ if "SUCCESS" in result.upper():
                  print "E2E DVR Pause Play multiple times Failed: [%s]"%details;
          time.sleep(40);
          obj.unloadModule("tdkintegration");
+    else:
+        print "No Matching recordings list found"
+					 
+        time.sleep(10);
+        obj.unloadModule("tdkintegration");
 else:
          print "Failed to load TDKIntegration module";
          obj.setLoadModuleStatus("FAILURE");

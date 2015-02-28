@@ -3,7 +3,7 @@
 <xml>
   <id>874</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>5</version>
+  <version>9</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_DVR_FF_32x_29</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>12</execution_time>
+  <execution_time>20</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -37,6 +37,7 @@
   </rdk_versions>
 </xml>
 '''
+# use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib;
 import mediaframework;
 import time;
@@ -63,11 +64,14 @@ obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_DVR_FF_32x_29');
 
 expected_Result="SUCCESS"
 
+matchList = []
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
     #Primitive test case which associated to this Script
     global Mediatime
-    global tdkTestObj
     global Mediaspeed
+    global tdkTestObj
+    global matchList
+    #Primitive test case which associated to this Script
     tdkTestObj =testobject.createTestStep(teststep);
     if teststep == 'RMF_Element_Open':
         streamDetails = tdkTestObj.getStreamDetails('01');
@@ -75,7 +79,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         #num = recordingObj.getTotalRecordings();
         #print "Number of recordings: %d"%num
 		
-		        #fetch recording id from list matchList.
+        #fetch recording id from list matchList.
 	recordID = matchList[1]
         url = mediaframework.getStreamingURL("DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
         if url == "NULL":
@@ -102,6 +106,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         if "SUCCESS" in result.upper():
                 Mediaspeed=details.split(":");
                 print Mediaspeed[1];
+    			
     return result
 
 
@@ -109,27 +114,21 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
 
+tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
 #Pre-requisite to Check and verify required recording is present or not.
 #---------Start-----------------
-matchList = []
-if expected_Result in loadModuleStatus.upper():
-		#Get DVR pre req done.
-		matchList = obj.checkAndVerifyDvrRecording(3);
-		if len(matchList) == 0:
-				print "DVR required Recording Not Found!!! Status: FAILURE"
-				print "DVR Test case execution skipped!!!."
-				obj.unloadModule("mediaframework");
-				exit()
-		else:
-				print "DVR required Recording Found. Proceeding to excute Test Case."
-				print "Record Details: ",matchList
-else:
-		print "Loading Module Failed."
-		print "Exiting the script without running the TC"
-		exit();
-#--------End-----------------------
-if Expected_Result in loadModuleStatus.upper():
 
+duration = 3
+  
+matchList = tdkTestObj.getRecordingDetails(duration);
+obj.resetConnectionAfterReboot()
+
+#---------End-------------------	
+
+
+
+if expected_Result in loadModuleStatus.upper():
+        
         #Prmitive test case which associated to this Script
         #Creating the Hnsrc instance
         result=Create_and_ExecuteTestStep('RMF_Element_Create_Instance',obj,Expected_Result,src_parameter,src_element);

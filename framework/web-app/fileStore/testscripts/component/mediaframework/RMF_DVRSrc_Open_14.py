@@ -3,7 +3,7 @@
 <xml>
   <id>855</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>8</version>
+  <version>14</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrc_Open_14</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -21,7 +21,7 @@ Test Type: Negative.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>8</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -54,18 +54,18 @@ obj.configureTestCase(ip,port,'RMF_DVRSrc_Open_14');
 
 expected_Result="SUCCESS"
 expected_Failure = "FAILURE"
-
+matchList = []
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
-
+    global details
+    global tdkTestObj
+    global matchList
     #Primitive test case which associated to this Script
     tdkTestObj =testobject.createTestStep(teststep);
 
     if teststep == 'RMF_Element_Open':
-        recordingObj = tdkTestObj.getRecordingDetails();
-        num = recordingObj.getTotalRecordings();
-        print "Number of recordings: %d"%num
-        recordID = recordingObj.getRecordingId(num - 1);
         parametername.append("url");
+        #fetch recording id from list matchList.
+	recordID = matchList[1]
         #Invalid segment number.
         segNum = "500"
         dvrLocator = "dvr://local/" + recordID[:-1] + "#" + segNum
@@ -91,12 +91,29 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 
     print "[Execution Result]:  %s" %result;
     print "[Execution Details]:  %s" %details;
+    
+	
 
+    
     return result
+
 
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
+tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
+#Pre-requisite to Check and verify required recording is present or not.
+#---------Start-----------------
+
+duration = 3
+  
+matchList = tdkTestObj.getRecordingDetails(duration);
+obj.resetConnectionAfterReboot()
+
+#---------End-------------------
+
+
+
 
 if expected_Result in loadModuleStatus.upper():
         #Prmitive test case which associated to this Script

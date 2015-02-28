@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_Get_Resolution_During_Standby</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -67,7 +67,7 @@ def GetListofResolution(obj):
                     #calling DS_Resolution get list of supported resolutions and the default resolution
                     tdkTestObj = obj.createTestStep('DS_Resolution');
                     tdkTestObj.addParameter("port_name","HDMI0");
-                    expectedresult="FAILURE"
+                    expectedresult="SUCCESS"
                     tdkTestObj.executeTestCase(expectedresult);
                     actualresult = tdkTestObj.getResult();
                     resolutiondetails = tdkTestObj.getResultDetails();
@@ -75,11 +75,11 @@ def GetListofResolution(obj):
                     #Check for SUCCESS/FAILURE return value of DS_Resolution
                     if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");
-                        print "SUCCESS :Application was unable to get the list of supported and default resolutions";
+                        print "SUCCESS :Application was able to get the list of supported and default resolutions";
                         retval="SUCCESS";
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "FAILURE :Application was able to get the list of supported resolutions";
+                        print "FAILURE :Application was unable to get the list of supported resolutions";
                         retval="FAILURE";
                     #calling DS_ManagerDeInitialize to DeInitialize API
                     tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');

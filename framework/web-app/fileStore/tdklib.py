@@ -41,6 +41,11 @@ import StringIO
 from xml.dom.minidom import Document,parseString
 
 #------------------------------------------------------------------------------
+# Initialization
+#------------------------------------------------------------------------------
+AGENTPORT = 8087
+
+#------------------------------------------------------------------------------
 # module class
 #------------------------------------------------------------------------------
 class RecordList:
@@ -77,9 +82,11 @@ class RecordList:
 			self.deviceId = deviceId
 			self.logpath = ""
 			self.numOfRecordings = 0
+			self.recordingObj = None
 		except:
 			print "#TDK_@error-An Error occured in fetching Recording details"
 			sys.stdout.flush()
+			exit()
 		else:
 			return 
 
@@ -90,84 +97,70 @@ class RecordList:
     	# Public methods
     	#------------------------------------------------------------------------------
 
-	def rmfAppMod(self):
+	def initiateDvrRecording(self,duration):
+		
+		obj = TDKScriptingLibrary("mediaframework","2.0");
 
-	# To initiate a recording in the Gateway box using rmfapp
-
-        # Syntax       : OBJ.rmfAppMod()
-        #                
-        # Parameters   : None
-        #                
-        # Return Value : 0 on success and 1 on failure
-
-    		obj = TDKScriptingLibrary("rmfapp","2.0");
-    		obj.configureTestCase(self.url,self.path,self.execId,self.execDevId,self.execResId,self.ipaddress,self.portnumber,69,8088,self.testCaseId,self.deviceId,"false","false","false",'TdkRmfApp_CreateRecord');
+		obj.configureTestCase(self.url,self.path,self.execId,self.execDevId,self.execResId,self.ipaddress,self.portnumber,69,8088,self.testCaseId,self.deviceId,"false","false","false",'RMF_Dvr_CreateNew_Recording');
 
     		#Get the result of connection with test component and STB
-    		result =obj.getLoadModuleResult();
+    		result = obj.getLoadModuleResult();
 
     		if "SUCCESS" not in result.upper():
          		obj.setLoadModuleStatus("FAILURE");
          		return 1;
 
-    		obj.setLoadModuleStatus(result);
-		print "rmfApp module loading status :%s" %result;	
-	
-		obj.initiateReboot();
+		primitiveObj = obj.createTestStep("RMF_Dvr_CreateNew_Recording");
 
-    		#Prmitive test case which initiates recording if no recordings found
-    		tdkTestObj = obj.createTestStep('TdkRmfApp_CreateRecording');
+		#Record Attribute setting.
+		recordtitle = "test_dvr"
 
-    		streamDetails = tdkTestObj.getStreamDetails('01');
-
-    		recordtitle = "test_dvr"
-    		recordid = "117712111"
-		recordduration = "4"
+		#Generating the random recordid of 10 digits.
+		recordidInt = random.randrange(10**9, 10**10)
+		recordid = str(recordidInt)
+		recordduration = str(duration)
+		streamDetails = primitiveObj.getStreamDetails('01');
 		ocapid = streamDetails.getOCAPID();
 
-		print recordid
-		print recordduration
-		print recordtitle
-		print ocapid
+		print "Record ID : " ,recordid
+		print "Record Duration(in mins) : " ,recordduration
+		print "Record Title : " ,recordtitle
+		print "Source ID : " ,ocapid
 
-		tdkTestObj.addParameter("recordId",recordid);
-		tdkTestObj.addParameter("recordDuration",recordduration);
-		tdkTestObj.addParameter("recordTitle",recordtitle);
-		tdkTestObj.addParameter("ocapId",ocapid);
+		primitiveObj.addParameter("recordId",recordid);
+		primitiveObj.addParameter("recordDuration",recordduration);
+		primitiveObj.addParameter("recordTitle",recordtitle);
+		primitiveObj.addParameter("ocapId",ocapid);
 
-    		expectedresult="SUCCESS"
+		expectedresult = "SUCCESS"
 
-    		#Execute the test case in STB
-    		tdkTestObj.executeTestCase(expectedresult);
-		
-		print "After execution test tdkRmfApp."
-		
-		time.sleep(3);	
-		
-		print "After Sleeping."		
-	
-    		#Get the result of execution
-    		result = tdkTestObj.getResult();
+		#Execute the test case in STB
+		primitiveObj.executeTestCase(expectedresult);
 
-		print "After Checking for result."	
-	
-    		if expectedresult in result:
-         		tdkTestObj.setResultStatus("SUCCESS");
-    		else:
-         		tdkTestObj.setResultStatus("FAILURE");
-         		details=tdkTestObj.getResultDetails();
-         		obj.unloadModule("rmfapp");
+		#Get the result of execution
+		result = primitiveObj.getResult();
+		print "Result of recording: " ,result
+
+		#Check any failure, During the recording.
+		if expectedresult not in result.upper():
+			print "Failed to record"
+         		primitiveObj.setResultStatus("FAILURE");
+         		obj.unloadModule("mediaframework");
          		return 1;
 
-    		duration = int(recordduration)
-		
-		obj.initiateReboot();
-    		obj.unloadModule("rmfapp");
-    		return 0;
+		else:
+			primitiveObj.setResultStatus(result);
+			print "Initiating Reboot";
+			obj.initiateReboot();
+			time.sleep(5)
 
+		obj.unloadModule("mediaframework");
+
+		return 0
+			
 	########## End of Function ##########
 
-	def getRecordList(self):
+	def getRecordList(self, duration):
 
 	# To fetch the list of recordings from a gateway box.
 
@@ -204,9 +197,9 @@ class RecordList:
 		               	obj.unloadModule("mediaframework");
                			return 1;
 
-          		recordingObj = tdkTestObj.getRecordingDetails(self.logpath);
+          		self.recordingObj = tdkTestObj.getRecordingDetails(duration, self.logpath);
 
-          		self.numOfRecordings = recordingObj.getTotalRecordings();
+          		self.numOfRecordings = self.recordingObj.getTotalRecordings();
 
           		#Set the result status of execution
           		tdkTestObj.setResultStatus("SUCCESS");
@@ -219,8 +212,44 @@ class RecordList:
      		return 0
 
 	########## End of Function ##########
+	
+	def findRecordMatchingDuration(self,duration):
+		returnValue = 0
+        	recordList = []
+        	index = 0
 
-	def getList(self):
+		returnValue = self.getRecordList(duration);
+                if returnValue == 1:
+                        print "#TDK_@error-Failed to fetch recording details"
+			sys.stdout.flush()
+                        exit()
+
+		if self.numOfRecordings!= 0:
+			print "List of Recordings :"
+
+        	while index < self.numOfRecordings:
+
+                        recordDuration = self.recordingObj.getDuration(index);
+                        print "ID : ", index, "      Record Duration : " ,recordDuration
+
+                        #converting the duration into seconds and comparing it with avaliable recordings duration.
+                        if int(recordDuration) >= (duration * 60):
+                                recordList = [index];
+                                recordList.append(self.recordingObj.getRecordingId(index))
+                                recordList.append(self.recordingObj.getRecordingTitle(index))
+                                recordList.append(self.recordingObj.getDuration(index))
+                                recordList.append(self.recordingObj.getSegmentName(index))
+                                print "Found matching recording : " ,recordList
+                                break;
+
+			else:
+                        	index = index + 1
+
+        	return recordList
+
+	########## End of Function ##########
+
+	def getRecordDetail(self,duration):
 
 	# An api to fetch list of recording, if recording doesnot exist, initiate a recording and 
 	# fetch that details
@@ -233,23 +262,45 @@ class RecordList:
 
         	print "Trying to fetch recording details from gateway box [" + str(self.ipaddress) + "]"
 
-        	retrmfAppMod = 0
-        	retgetRecordList = 0
+		returnValue = 0
+        	retInitiateRecording = 0
+        	recordList = []
+
         	#Fetch the recording list.
-        	retgetRecordList = self.getRecordList();
+        	returnValue = self.getRecordList(duration);
+		if returnValue == 1:
+			print "#TDK_@error-Failed to fetch recording details"
+			sys.stdout.flush()
+			exit()
 
         	#If recordDetails file Creation fails, exit without running other scripts
         	if "NULL" not in self.logpath.upper():
+
                 	#check if numOfRecordings is 0, then initiate the recording.
                 	if 0 == self.numOfRecordings:
-	                        retrmfAppMod = self.rmfAppMod();
-				time.sleep(8);
-        	                retgetRecordList = self.getRecordList();
+				print "No Recording found in box. Initiating new recording with duration ", (duration + 1), " mins"
+				retInitiateRecording = self.initiateDvrRecording(duration + 1);
+               			time.sleep(8);
+			        recordList = self.findRecordMatchingDuration(duration);
 
-        	if ((retrmfAppMod == 0) & (retgetRecordList == 0)):
-                	return 0
-        	else:
-                	return 1
+			else:
+			        recordList = self.findRecordMatchingDuration(duration);
+				if (len(recordList) == 0):
+					print "Matching Recording not found. So, Recording initiated with the duration required"
+					retInitiateRecording = self.initiateDvrRecording(duration + 1);
+                                	time.sleep(8);
+			        	recordList = self.findRecordMatchingDuration(duration);
+							
+		if (retInitiateRecording == 1):
+			status = 1 #Recording Unsuccessful
+
+		elif not recordList:
+			status = 2 #No matching recording available
+
+		else:
+			status = 0 #Matching recording found
+
+		return status ,recordList
 
 	########## End of Function ##########
 
@@ -778,7 +829,7 @@ class PrimitiveTestCase:
 
         ########## End of Function ##########
 
-        def getRecordingDetails(self, infoFileName = "client"):
+        def getRecordingDetails(self, duration, infoFileName = "client"):
 
         # Create an object for Recording details
 
@@ -789,20 +840,28 @@ class PrimitiveTestCase:
 
                 ipAddress = self.ip
                 port = self.logTransferPort
+		recList = []
 
 		if (infoFileName == "client"):
 			returnvalue = 1
 			obj = self.getStreamDetails('01')
 			gatewayip = obj.getGatewayIp()
 			recobj = RecordList(str(gatewayip),8087,self.realpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
-			returnvalue = recobj.getList()
+			returnvalue,reclist = recobj.getRecordDetail(duration)
 			if(returnvalue == 0):
 				destinationLogPath = self.realpath + "/fileStore/recordDetails.txt"
                         	recordingObj = recordinglib.RecordingDetails (destinationLogPath)
-			else:
-				print "#TDK_@error-ERROR : Failed to fetch recording details from gateway box ( " + str(gatewayip) + " ) !!! "
+			elif(returnvalue == 1):
+				print "#TDK_@error-ERROR : Failed to fetch recording details from gateway box (" + str(gatewayip) + ") !!!"
 				sys.stdout.flush()
                                 exit()
+			else:
+				print "#TDK_@error-ERROR : Unable to create recording in gateway box (" + str(gatewayip) + ") !!!"
+				sys.stdout.flush()
+                                exit()
+
+                	sys.stdout.flush()
+                	return reclist
 	
 		else:
 
@@ -817,8 +876,8 @@ class PrimitiveTestCase:
                 	else:
                         	recordingObj = recordinglib.RecordingDetails (destinationLogPath)
 
-                sys.stdout.flush()
-                return recordingObj
+                	sys.stdout.flush()
+                	return recordingObj
 
 
 	########## End of Function ##########
@@ -1187,12 +1246,12 @@ class TDKScriptingLibrary:
 
         def getRDKVersion(self):
 
-	# To fetch RDK version from STB
+        # To fetch RDK version from STB
 
-	# Syntax       : OBJ.getRDKVersion()
-	# Description  : To fetch RDK version from STB
-	# Parameters   : Nil
-	# Return Value : RDK Version
+        # Syntax       : OBJ.getRDKVersion()
+        # Description  : To fetch RDK version from STB
+        # Parameters   : Nil
+        # Return Value : RDK Version
 
                 version = getRDKVersion (self.IP, self.portValue)
                 return version
@@ -1365,24 +1424,25 @@ class TDKScriptingLibrary:
 		return
 
 	########## End of Function ##########
- 
-	def resetConnectionAfterReboot(self):
 
-	# To reset tcp connection with other instances after STB reboot in multi component tests
+        def resetConnectionAfterReboot(self):
 
-	# Syntax       : OBJ.resetConnectionAfterReboot()
-	# Description  : To reset tcp connection with other instances after STB reboot in multi component tests
-	# Parameters   : none
-	# Return Value : null
+        # To reset tcp connection with other instances after STB reboot in multi component tests
 
-		print "Resetting connection after Reboot"
-		self.tcpClient.close()
-		time.sleep(5)
-		self.tcpClient = socket.socket()
-		self.tcpClient.connect((self.IP, self.portValue))
-		return
+        # Syntax       : OBJ.resetConnectionAfterReboot()
+        # Description  : To reset tcp connection with other instances after STB reboot in multi component tests
+        # Parameters   : none
+        # Return Value : null
 
-	########## End of Function ##########
+                print "Resetting connection to device.."
+		if(self.portValue == AGENTPORT):
+                    self.tcpClient.close()
+                    time.sleep(5)
+                    self.tcpClient = socket.socket()
+                    self.tcpClient.connect((self.IP, self.portValue))
+                return
+
+        ########## End of Function ##########
 
 	def insertScriptAndFnExeDetailsInDb(self):
 		
@@ -1538,183 +1598,12 @@ class TDKScriptingLibrary:
                         print "Exception type is: %s" %e;
                 else:
                         print "Unload module Success\n"
-    ########## End of Function ##########	
+
+    ########## End of Function ##########
+
 	
-	def checkAndVerifyDvrRecording(self,duration=4):
-        # Checks to see sepcified duration or greater duration recording is present or not.
-        # If not, records with specidifed duration.
-
-        # Syntax       : OBJ.checkAndVerifyDvrRecording(duration)
-        # eg           : OBJ.checkAndVerifyDvrRecording(3)
-        # Description  : Checks to see sepcified duration or greater duration recording is present or not.
-        # If not, records with specidifed duration.
-        # Parameters   : duration - duration of the recording to check for in mins.
-        # Return Value : result will be list with recording details found, else empty list if not found.
-        # eg           : list = [0,'1111111','test_dvr',299,2121443214321423]
-        #                       [index,recordingId,recordingName,durationInSecs,sgementName] - if found.
-        #               else, Empty list.
-                print "In checkAndVerifyDvrRecording"
-                numOfRecordings,recordingObj = fetchTotalRecording(self)
-                list1 = []
-
-                if recordingObj == "NULL":
-                        print "Failed to fetch Recording list."
-                        return list1
-
-                print "Done Fetching list1"
-
-                list1 = findRecordMatchingDuration(numOfRecordings,recordingObj,duration)
-                if (len(list1) == 0):
-                        print "Matching Recording not found. So, Recording initiated with the duration required"
-                        #Increasing the duration by 1 minute. To make sure sufficient recording will be done.
-                        result = initiateDvrRecording(self,duration + 1)
-                        if result == 1:
-                                print "Initiated recording for ",duration," failed!!!."
-                                list2 = []
-                                return list2
-                        print "Recording Successful!!!."
-                        numOfRecordings,recordingObj = fetchTotalRecording(self)
-                        if recordingObj == "NULL":
-                                print "Failed to fetch Recording list. After initiating recording."
-                                return list1
-
-                        print "Done Fetching"
-                        list1 = findRecordMatchingDuration(numOfRecordings,recordingObj,duration)
-                        print "List:",list1
-                        return list1
-
-                print "Match found!!!. Recording details: ",list1
-
-                return list1;
-    ########## End of Function ##########	
 ########## End of Class  ##########
 
-#Helper function to return a list (containing matching Record details else empty)
-def findRecordMatchingDuration(numOfRecordings,recordingObj,duration):
-        print "In findRecordMatchingDuration"
-        list1 = []
-        if numOfRecordings > 0:
-                i = 0
-                while i< numOfRecordings:
-                        du = recordingObj.getDuration(i);
-                        print "Duration: ",du
-                        #converting the duration into seconds and comparing it with avaliable recordings duration.
-                        if int(du) >= (duration * 60):
-                                list1 = [i];
-                                list1.append(recordingObj.getRecordingId(i))
-                                list1.append(recordingObj.getRecordingTitle(i))
-                                list1.append(recordingObj.getDuration(i))
-                                list1.append(recordingObj.getSegmentName(i))
-                                print "Matching recording found with duration found."
-                                print list1
-                                return list1
-                        i = i + 1
-
-        print "Matching recording not found."
-        return list1
-		
-#Helper function to return Number of Recordings.
-def fetchTotalRecording(testObj):
-        print "In FetchTotalRecording"
-        primitiveObj = testObj.createTestStep("RMF_GetDvr_Recording_List");
-
-        recordingObj = primitiveObj.getRecordingDetails();
-        print "Call done for reading the file"
-        numOfRecordings = recordingObj.getTotalRecordings();
-        print "Total Rec: ",numOfRecordings
-
-        return numOfRecordings,recordingObj
-
-		
-#Helper funtion to InitiateRecording
-def initiateDvrRecording(testObj,duration):
-	oldTestObj = testObj	
-	checkFlag = 0	
-        RECORD_ERROR = 1
-        SUCCESS = 0
-	
-	# Using this primitive object coming from script to fetch gateway ip address.
-	#In case, script is from tdkintegration.	
-        primitiveObj = testObj.createTestStep("RMF_Dvr_CreateNew_Recording");
-	
-        streamDetails = primitiveObj.getStreamDetails('01');
-	gatewayIp = streamDetails.getGatewayIp();	
-	print "GatewayIp:",streamDetails.getGatewayIp()	
-	print "IP:",oldTestObj.IP
-	print "Port:",oldTestObj.portValue
-	
-	#Confirming tdkIntegration component and does client initiates the execution of the test script.
-	print "ComponentName:",testObj.componentName
-	if testObj.componentName == "tdkintegration":
-		checkFlag = 1;
-		obj = TDKScriptingLibrary("mediaframework","2.0");
-
-                obj.configureTestCase(oldTestObj.url,oldTestObj.realpath,oldTestObj.execID,oldTestObj.execDevId,oldTestObj.resultId,str(gatewayIp),8087,69,8088,oldTestObj.testcaseId,oldTestObj.deviceId,"false","false","false",'RMF_Dvr_CreateNew_Recording');
-                
-		#Get the result of connection with test component and STB
-                result =obj.getLoadModuleResult();		
-		print "Load Module Status:",result;
-		if "SUCCESS" not in result.upper():
-			print "Failed to load the mediaframework component to initiate recording. Something went wrong!!!"
-			return RECORD_ERROR;
-		testObj = obj;
-		#Loading the primitive test case to initiate the recording in the gateway box.
-        	primitiveObj = testObj.createTestStep("RMF_Dvr_CreateNew_Recording");
-
-
-	#Record Attribute setting.
-        recordtitle = "test_dvr"
-        #Generating the random recordid of 10 digits.
-        recordidInt = random.randrange(10**9, 10**10)
-        recordid = str(recordidInt)
-        recordduration = str(duration)
-        ocapid = streamDetails.getOCAPID();
-	
-	print "Initiating the recording, with below atrributes:"
-        print "RecordId:",recordid
-        print "RecordDuration:",recordduration
-        print "RecordTitle:",recordtitle
-        print "OcapId:",ocapid
-
-        primitiveObj.addParameter("recordId",recordid);
-        primitiveObj.addParameter("recordDuration",recordduration);
-        primitiveObj.addParameter("recordTitle",recordtitle);
-        primitiveObj.addParameter("ocapId",ocapid);
-
-        expectedresult="SUCCESS"
-
-        print "Before executing the Test case"
-        #Execute the test case in STB
-        primitiveObj.executeTestCase(expectedresult);
-
-        print "After execu done"
-        #Get the result of execution
-        result = primitiveObj.getResult();
-        print "Result of recording: ",result
-
-        #Check any failure, During the recording.
-        if expectedresult not in result.upper():
-                print "Failed to record"
-                primitiveObj.setResultStatus(result);
-                return RECORD_ERROR
-
-        primitiveObj.setResultStatus(result);
-
-        print "Initiating Reboot";
-        testObj.initiateReboot();
-
-        time.sleep(10)
-        print "Reboot Done"
-
-	#Check the flag to unload the module loaded for tdkIntegration.	
-	if checkFlag == 1:
-		testObj.unloadModule("mediaframework");
-		print "In the unload module for mediaframework"	
-	
-	#set back the old instance in case of tdkintegration.
-	oldTestObj = testObj	
-	
-        return SUCCESS
 		
 #------------------------------------------------------------------------------
 # module class

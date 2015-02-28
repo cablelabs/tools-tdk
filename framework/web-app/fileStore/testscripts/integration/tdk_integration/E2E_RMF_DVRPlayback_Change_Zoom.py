@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>13</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVRPlayback_Change_Zoom</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -49,27 +49,38 @@ tdk_obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
 ip = <ipaddress>
 port = <port>
 obj.configureTestCase(ip,port,'E2E_RMF_DVRPlayback_Change_Zoom');
+
+matchList = []
 tdk_obj.configureTestCase(ip,port,'E2E_RMF_DVRPlayback_Change_Zoom');
 loadmodulestatus =obj.getLoadModuleResult();
 loadmodulestatus1 = tdk_obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
 if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.upper()):
-        #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
-        tdk_obj.setLoadModuleStatus("SUCCESS");
+    #Set the module loading status
+    obj.setLoadModuleStatus("SUCCESS");
+    tdk_obj.setLoadModuleStatus("SUCCESS");
+    tdkTestObj = tdk_obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
 
-        #Prmitive test case which associated to this Script
-        tdkTestObj = tdk_obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
+    duration = 4
+    global matchList 
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.resetConnectionAfterReboot()
+    tdkTestObj = tdk_obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
 
-        recordingObj = tdkTestObj.getRecordingDetails();
-        num = recordingObj.getTotalRecordings();
-        print "Number of recordings: %d"%num    
-        recording_id = recordingObj.getRecordingId(num - 1);
+    #set the dvr play url
+ 
+    if matchList:
+		 
+         print "Recording Details : " , matchList
+         #fetch recording id from list matchList.
+         recordID = matchList[1]
 
                     
-        #Calling DvrPlay_rec to play the recorded content
-        result = dvr_playback(tdkTestObj,recording_id);
-        if ("SUCCESS" in result.upper()):
+         #Calling DvrPlay_rec to play the recorded content
+         result = dvr_playback(tdkTestObj,recordID );
+         if ("SUCCESS" in result.upper()):
         
             #calling Device Settings - initialize API
             tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
@@ -121,11 +132,11 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
                     tdkTestObj.setResultStatus("FAILURE");
                     print "FAILURE: Device Setting Initialize failed";
             print "[TEST EXECUTION RESULT] : %s" %actualresult;
-        else:
+         else:
             print "Execution  failure"
-        #Unload the deviceSettings module
-        obj.unloadModule("devicesettings");
-        tdk_obj.unloadModule("tdkintegration");
+         #Unload the deviceSettings module
+         obj.unloadModule("devicesettings");
+         tdk_obj.unloadModule("tdkintegration");
 else:
         print"Load module failed";
         #Set the module loading status

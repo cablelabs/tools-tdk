@@ -3,7 +3,7 @@
 <xml>
   <id>489</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>20</version>
+  <version>22</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrcMPSink_Play_01</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -21,7 +21,7 @@ Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>8</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -41,6 +41,7 @@ Test Type: Positive</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
+import mediaframework;
 import time;
 
 #Test component to be tested
@@ -86,7 +87,6 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 
 tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
 
-
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
@@ -94,24 +94,10 @@ print "Load Module Status :  %s" %loadModuleStatus;
 #Pre-requisite to Check and verify required recording is present or not.
 #---------Start-----------------
 
-
+duration = 3
 matchList = []
-if expected_Result in loadModuleStatus.upper():
-        #Get DVR pre req done.
-        matchList = obj.checkAndVerifyDvrRecording(3);
-        if len(matchList) == 0:
-                print "DVR required Recording Not Found!!! Status: FAILURE"
-                print "DVR Test case execution skipped!!!."
-                obj.unloadModule("mediaframework");
-                exit()
-        else:
-                print "DVR required Recording Found. Proceeding to excute Test Case."
-                print "Record Details: ",matchList
-else:
-        print "Loading Module Failed."
-        print "Exiting the script without running the TC"
-        exit();
-
+matchList = tdkTestObj.getRecordingDetails(duration);
+obj.resetConnectionAfterReboot()
 
 #---------End-------------------
 
@@ -140,7 +126,7 @@ if expected_Result in loadModuleStatus.upper():
                                         result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,expected_Result,src_parameter,src_element);
                                         if expected_Result in result.upper():
                                                 src_parameter=["X","Y","width","height"];
-                                                src_element=[0,0,1280,720];
+                                                src_element=[0,0,720,1280];
                                                 result=Create_and_ExecuteTestStep('RMF_Element_MpSink_SetVideoRectangle',obj,expected_Result,src_parameter,src_element);
                                                 if expected_Result in result.upper():
                                                         src_parameter=["rmfSourceElement","rmfSinkElement"];

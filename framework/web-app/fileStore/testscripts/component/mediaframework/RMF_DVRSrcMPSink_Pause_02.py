@@ -3,7 +3,7 @@
 <xml>
   <id>490</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>5</version>
+  <version>8</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrcMPSink_Pause_02</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -21,7 +21,7 @@ Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>8</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -55,9 +55,11 @@ obj.configureTestCase(ip,port,'RMF_DVRSrcMPSink_Pause_02');
 
 expected_Result = "SUCCESS"
 
+matchList = []
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
     global details
     global tdkTestObj
+    global matchList
     #Primitive test case which associated to this Script
     tdkTestObj =testobject.createTestStep(teststep);
 
@@ -82,32 +84,21 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 
     print "[Execution Result]:  %s" %result;
     print "[Execution Details]:  %s" %details;
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
 
+    duration = 3
+  
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.resetConnectionAfterReboot()
+
+    #---------End-------------------
     return result
 
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
 
-#Pre-requisite to Check and verify required recording is present or not.
-#---------Start-----------------
-matchList = []
-if expected_Result in loadModuleStatus.upper():
-        #Get DVR pre req done.
-        matchList = obj.checkAndVerifyDvrRecording(4);
-        if len(matchList) == 0:
-                print "DVR required Recording Not Found!!! Status: FAILURE"
-                print "DVR Test case execution skipped!!!."
-                obj.unloadModule("mediaframework");
-                exit()
-        else:
-                print "DVR required Recording Found. Proceeding to excute Test Case."
-                print "Record Details: ",matchList
-else:
-        print "Loading Module Failed."
-        print "Exiting the script without running the TC"
-        exit();
-#--------End-----------------------
 
 
 if expected_Result in loadModuleStatus.upper():

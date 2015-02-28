@@ -3,10 +3,10 @@
 <xml>
   <id>1579</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LinearTV_Stress_LiveDvrPlay_LongDuration</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>541</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
@@ -28,9 +28,9 @@
   <skip>false</skip>
   <!--  -->
   <box_types>
-    <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
+    <!--  -->
+    <box_type>Hybrid-1</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -122,38 +122,60 @@ if "SUCCESS" in result.upper():
     PLAYURL = details.split("[RESULTDETAILS]");
     url1 = PLAYURL[-1];
 
-    recordingObj = tdkTestObj.getRecordingDetails();
-    num = recordingObj.getTotalRecordings();
-    print "Number of recordings: %d"%num
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
 
-    recordID = recordingObj.getRecordingId(num - 1);
-    #Framing URL for DVR Play Request
-    url2 = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1]);
-    if url2 == "NULL":
-        print "Failed to generate the Streaming URL";
-        tdkTestObj.setResultStatus("FAILURE");
+    duration = 4
+    matchList = []
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.resetConnectionAfterReboot()
+    tdkTestObj = obj.createTestStep('TDKE2E_RMFLinearTV_GetURL');
+
+    #set the dvr play url
+    streamDetails = tdkTestObj.getStreamDetails("01");
+
+    time.sleep(10)
+		 
+    if matchList:
+		 
+         print "Recording Details : " , matchList
+
+         #fetch recording id from list matchList.
+         recordID = matchList[1]
+         #Framing URL for DVR Play Request
+         url2 = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1]);
+         if url2 == "NULL":
+           print "Failed to generate the Streaming URL";
+           tdkTestObj.setResultStatus("FAILURE");
 
     
-    if expectedresult in actualresult:
+         if expectedresult in actualresult:
 
-        for i in range(1,600):        
+            for i in range(1,600):        
                                         
-            #Calling the PlayURL function to play the requested URL
-            result1 = PlayURL(obj,url1);
+                #Calling the PlayURL function to play the requested URL
+                result1 = PlayURL(obj,url1);
           
-            #Calling the PlayURL function to play the requested URL
-            result2 = PlayURL(obj,url2);
+                #Calling the PlayURL function to play the requested URL
+                result2 = PlayURL(obj,url2);
         
-            if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()):                                        
-                print "Execution Success at iteration %d"%i;
-            else:            
-                print "Execution failure at iteration %d"%i;
-                break;
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
-        print "Json Response Parameter is Failure";
+                if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()):                                        
+                    print "Execution Success at iteration %d"%i;
+                else:            
+                   print "Execution failure at iteration %d"%i;
+                   break;
+         else:
+              tdkTestObj.setResultStatus("FAILURE");
+              print "Json Response Parameter is Failure";
          
-    obj.unloadModule("tdkintegration");
+              obj.unloadModule("tdkintegration");
+			  
+    else:
+         print "No Matching recordings list found"
+					 
+         time.sleep(10);
+         obj.unloadModule("tdkintegration");
+	
 else:
          print "Failed to load tdkintegration module";
          obj.setLoadModuleStatus("FAILURE");

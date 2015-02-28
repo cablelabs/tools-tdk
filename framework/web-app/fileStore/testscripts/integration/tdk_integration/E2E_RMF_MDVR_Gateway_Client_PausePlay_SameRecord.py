@@ -3,10 +3,10 @@
 <xml>
   <id>1542</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_MDVR_Gateway_Client_PausePlay_SameRecord</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>583</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_MDVR_GetResult</primitive_test_name>
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -39,9 +39,8 @@
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib
-import tdkintegration;
 from tdklib import CreateTestThread
-
+import tdkintegration;
 globalObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
 
 def TDKE2E_mDVR_Pause(IP,PORT,args=(),kwargs={}):
@@ -199,11 +198,15 @@ if "SUCCESS" in result.upper():
 
     #set the dvr play url
     streamDetails = tdkTestObj.getStreamDetails("01");
-    recordingObj = tdkTestObj.getRecordingDetails();
-    num = recordingObj.getTotalRecordings();
-    print "Number of recordings: %d"%num
-    recordID = recordingObj.getRecordingId(num - 1);
-    URL = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1]);
+    # Fetch recording of duration 1 min
+    duration = 4	
+    #recInfoAsList = [index,recordingId,recordingTitle,duration,segmentName]
+    recInfoAsList = tdkTestObj.getRecordingDetails(duration);
+    if not recInfoAsList:
+	        print "Recording details list is empty";
+		tdkTestObj.setResultStatus("FAILURE");
+    recordID = recInfoAsList[1]
+    URL = tdkintegration.E2E_getStreamingURL(globalObj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1]);
     if URL == "NULL":
         print "Failed to generate the Streaming URL";
         tdkTestObj.setResultStatus("FAILURE");

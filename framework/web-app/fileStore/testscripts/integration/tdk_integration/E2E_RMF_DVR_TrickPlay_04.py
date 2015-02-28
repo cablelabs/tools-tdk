@@ -3,7 +3,7 @@
 <xml>
   <id>999</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>9</version>
+  <version>16</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_TrickPlay_04</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>12</execution_time>
+  <execution_time>18</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -64,27 +64,22 @@ if "SUCCESS" in result.upper():
          obj.setLoadModuleStatus("SUCCESS");
          print "TDKIntegration module load successful";
 
+         #Prmitive test case which associated to this Script
+         tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
+
          #Pre-requisite to Check and verify required recording is present or not.
          #---------Start-----------------
+
+         duration = 4
          matchList = []
-         if expected_Result in result.upper():
-                  #Get DVR pre req done.
-                  matchList = obj.checkAndVerifyDvrRecording(3);
-                  if len(matchList) == 0:
-                           print "DVR required Recording Not Found!!! Status: FAILURE"
-                           print "DVR Test case execution skipped!!!."
-                           exit()
-                  else:
-                           print "DVR required Recording Found. Proceeding to excute Test Case."
-                           print "Record Details: ",matchList
-         else:
-                  print "Loading Module Failed."
-                  print "Exiting the script without running the TC"
-                  exit();
-        #--------End-----------------------
+         matchList = tdkTestObj.getRecordingDetails(duration);
+         obj.resetConnectionAfterReboot()
+         tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
 
-time.sleep(10)
+         #set the dvr play url
+         streamDetails = tdkTestObj.getStreamDetails("01");
 
+         time.sleep(10)
 #The Pre-requisite success. Proceed to execute the test case.
 obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
 
@@ -98,39 +93,44 @@ if "SUCCESS" in result.upper():
          obj.setLoadModuleStatus("SUCCESS");
          print "Tdkintegration module load successful";
 
-         #Prmitive test case which associated to this Script
-         tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
-         #set the dvr play url
-         streamDetails = tdkTestObj.getStreamDetails("01");
+		 
+         if matchList:
+		 
+               print "Recording Details : " , matchList
 
-         #fetch recording id from list matchList.
-         recordID = matchList[1]
+               #fetch recording id from list matchList.
+               recordID = matchList[1]
 
-         url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=32.00&time_pos=0.00'
+               url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=32.00&time_pos=0.00'
 
-         print "The Play DVR Url Requested: %s"%url
-         tdkTestObj.addParameter("playUrl",url);
+               print "The Play DVR Url Requested: %s"%url
+               tdkTestObj.addParameter("playUrl",url);
 
-         #Execute the test case in STB
-         expectedresult="SUCCESS";
-         tdkTestObj.executeTestCase(expectedresult);
+               #Execute the test case in STB
+               expectedresult="SUCCESS";
+               tdkTestObj.executeTestCase(expectedresult);
 
-         #Get the result of execution
-         actualresult = tdkTestObj.getResult();
-         details =  tdkTestObj.getResultDetails();
+               #Get the result of execution
+               actualresult = tdkTestObj.getResult();
+               details =  tdkTestObj.getResultDetails();
 
-         print "The E2E DVR playback when Fast Forward is done at 32x Speed from starting point of the video: %s" %actualresult;
+               print "The E2E DVR playback when Fast Forward is done at 32x Speed from starting point of the video: %s" %actualresult;
 
-         #compare the actual result with expected result
-         if expectedresult in actualresult:
-                 #Set the result status of execution
-                 tdkTestObj.setResultStatus("SUCCESS");
-                 print "E2E DVR Playback Successful: [%s]"%details;
+               #compare the actual result with expected result
+               if expectedresult in actualresult:
+                      #Set the result status of execution
+                      tdkTestObj.setResultStatus("SUCCESS");
+                      print "E2E DVR Playback Successful: [%s]"%details;
+               else:
+                       tdkTestObj.setResultStatus("FAILURE");
+                       print "E2E DVR Playback Failed: [%s]"%details;
+               time.sleep(40);
+               obj.unloadModule("tdkintegration");
          else:
-                 tdkTestObj.setResultStatus("FAILURE");
-                 print "E2E DVR Playback Failed: [%s]"%details;
-         time.sleep(40);
-         obj.unloadModule("tdkintegration");
+               print "No Matching recordings list found"
+					 
+               time.sleep(10);
+               obj.unloadModule("tdkintegration");
 else:
          print "Failed to load tdkintegration module";
          obj.setLoadModuleStatus("FAILURE");

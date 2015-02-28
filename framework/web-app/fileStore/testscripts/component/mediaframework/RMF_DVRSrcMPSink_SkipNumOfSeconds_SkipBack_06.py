@@ -3,7 +3,7 @@
 <xml>
   <id>495</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>8</version>
+  <version>11</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrcMPSink_SkipNumOfSeconds_SkipBack_06</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -21,7 +21,7 @@ Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>8</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -39,7 +39,7 @@ Test Type: Positive</synopsis>
   </rdk_versions>
 </xml>
 '''
-# use tdklib library,which provides a wrapper for tdk testcase script 
+#use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib;
 import mediaframework;
 import time;
@@ -58,10 +58,11 @@ expected_Result="SUCCESS"
 playTime = 0.0
 startTime = 0.0
 durationTime = 0.0
-
+matchList = []
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
     global details
     global tdkTestObj
+    global matchList
     #Primitive test case which associated to this Script
     tdkTestObj =testobject.createTestStep(teststep);
 
@@ -102,25 +103,16 @@ loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
 
 
+tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
 #Pre-requisite to Check and verify required recording is present or not.
 #---------Start-----------------
-matchList = []
-if expected_Result in loadModuleStatus.upper():
-        #Get DVR pre req done.
-        matchList = obj.checkAndVerifyDvrRecording(4);
-        if len(matchList) == 0:
-                print "DVR required Recording Not Found!!! Status: FAILURE"
-                print "DVR Test case execution skipped!!!."
-                obj.unloadModule("mediaframework");
-                exit()
-        else:
-                print "DVR required Recording Found. Proceeding to excute Test Case."
-                print "Record Details: ",matchList
-else:
-        print "Loading Module Failed."
-        print "Exiting the script without running the TC"
-        exit();
-#--------End-----------------------
+
+duration = 3
+  
+matchList = tdkTestObj.getRecordingDetails(duration);
+obj.resetConnectionAfterReboot()
+
+#---------End-------------------
 
 if expected_Result in loadModuleStatus.upper():
         #Prmitive test case which associated to this Script

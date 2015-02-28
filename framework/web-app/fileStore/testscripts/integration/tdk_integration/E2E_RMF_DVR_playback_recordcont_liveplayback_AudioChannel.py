@@ -3,10 +3,10 @@
 <xml>
   <id>1669</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>7</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_playback_recordcont_liveplayback_AudioChannel</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>541</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -28,9 +28,9 @@
   <skip>false</skip>
   <!--  -->
   <box_types>
-    <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
+    <!--  -->
+    <box_type>Hybrid-1</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -70,10 +70,14 @@ if "SUCCESS" in result.upper():
     #Prmitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
 
-    recordingObj = tdkTestObj.getRecordingDetails();
-    num = recordingObj.getTotalRecordings();
-    print "Number of recordings: %d"%num    
-    recording_id = recordingObj.getRecordingId(num - 1);
+    duration = 1
+    #recInfoAsList = [index,recordingId,recordingTitle,duration,segmentName]
+    recInfoAsList = tdkTestObj.getRecordingDetails(duration);
+    if not recInfoAsList:
+           print "Recording details list is empty"; 
+           tdkTestObj.setResultStatus("FAILURE");
+    recording_id = recInfoAsList[1]
+
 
     
     #Calling DvrPlay_rec to play the recorded content
@@ -83,8 +87,7 @@ if "SUCCESS" in result.upper():
         print "Execution Success"
     else:            
         print "Execution failure"
-         
-    obj.unloadModule("tdkintegration");
+        obj.unloadModule("tdkintegration");
     
 else:
     print "Failed to load tdkintegration module";

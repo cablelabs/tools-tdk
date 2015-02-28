@@ -67,7 +67,7 @@ std::string MediaStreamerAgent::testmodulepre_requisites()
 {
 	#ifdef USE_SOC_INIT
         //Initialize SOC
-        soc_init(1, "agent", 1);
+        soc_init(1, "tdk_agent", 1);
         #endif
 
         return "SUCCESS";

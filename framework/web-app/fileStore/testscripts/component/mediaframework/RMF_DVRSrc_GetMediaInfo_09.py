@@ -3,7 +3,7 @@
 <xml>
   <id>847</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>26</version>
+  <version>37</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrc_GetMediaInfo_09</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -21,7 +21,7 @@ Test Type: Positive.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>8</execution_time>
+  <execution_time>20</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -58,6 +58,7 @@ expected_Failure = "FAILURE"
 
 def compareGetMediaInfo(tdkObj,sTime,tDuration):
         global duration
+		
         if tDuration == duration:
                 print "DVRSrc getMediaInfo() success"
                 tdkObj.setResultStatus("SUCCESS");
@@ -66,12 +67,12 @@ def compareGetMediaInfo(tdkObj,sTime,tDuration):
                 tdkObj.setResultStatus("FAILURE");
         return ;
 
-
+matchList = []
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
-
+    global matchList
     #Primitive test case which associated to this Script
     tdkTestObj =testobject.createTestStep(teststep);
-
+   
     if teststep == 'RMF_Element_Open':		
 	#fetch recording id from list matchList.
         recordID = matchList[1]
@@ -80,7 +81,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         print dvrLocator
         parametervalue.append(dvrLocator);
         global duration
-        duration = matchList[3]
+        #duration = matchList[3]
         
 
     for item in range(len(parametername)):
@@ -109,32 +110,20 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 
     print "[Execution Result]:  %s" %result;
     print "[Execution Details]:  %s" %details;
-
+    
     return result
-
+tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
-
 #Pre-requisite to Check and verify required recording is present or not.
 #---------Start-----------------
-matchList = []
-if expected_Result in loadModuleStatus.upper():
-        #Get DVR pre req done.
-        matchList = obj.checkAndVerifyDvrRecording(4);
-        if len(matchList) == 0:
-                print "DVR required Recording Not Found!!! Status: FAILURE"
-                print "DVR Test case execution skipped!!!."
-                obj.unloadModule("mediaframework");
-                exit()
-        else:
-                print "DVR required Recording Found. Proceeding to excute Test Case."
-                print "Record Details: ",matchList
-else:
-        print "Loading Module Failed."
-        print "Exiting the script without running the TC"
-        exit();
-#--------End-----------------------
+
+duration = 3
+
+matchList = tdkTestObj.getRecordingDetails(duration);
+obj.resetConnectionAfterReboot()
+#---------End-------------------
 
 if expected_Result in loadModuleStatus.upper():
         #Prmitive test case which associated to this Script

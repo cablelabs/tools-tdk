@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>10</version>
+  <version>11</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_Set_Resolution_During_Standby</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -67,7 +67,7 @@ def SetResolution(obj):
                         #calling DS_Resolution get list of supported resolutions and the default resolution
                         tdkTestObj = obj.createTestStep('DS_Resolution');
                         tdkTestObj.addParameter("port_name","HDMI0");
-                        expectedresult="FAILURE"
+                        expectedresult="SUCCESS"
                         tdkTestObj.executeTestCase(expectedresult);
                         actualresult = tdkTestObj.getResult();
                         resolutiondetails = tdkTestObj.getResultDetails();
@@ -75,11 +75,11 @@ def SetResolution(obj):
                         #Check for SUCCESS/FAILURE return value of DS_Resolution
                         if expectedresult in actualresult:
                                 tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS :Application was unable to get the list of supported and default resolutions";
+                                print "SUCCESS :Application was able to get the list of supported and default resolutions";
                                 retval="SUCCESS";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE :Application was able to get the list of supported resolutions";
+                                print "FAILURE :Application was unable to get the list of supported resolutions";
                                 retval="FAILURE";
                         #calling DS_SetResolution to set and get the display resolution as 720p    
                         resolution="720p";
@@ -88,26 +88,26 @@ def SetResolution(obj):
                                 tdkTestObj = obj.createTestStep('DS_SetResolution');
                                 tdkTestObj.addParameter("resolution",resolution);
                                 tdkTestObj.addParameter("port_name","HDMI0");
-                                expectedresult="FAILURE"
+                                expectedresult="SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
                                 resolutiondetails = tdkTestObj.getResultDetails();
                                 #Check for SUCCESS/FAILURE return value of DS_SetResolution
                                 if expectedresult in actualresult:
-                                        print "SUCCESS:set and get resolution fails to execute during STANDBY";
+                                        print "SUCCESS:set and get resolution executes during STANDBY";
                                         print "getresolution %s" %resolutiondetails;
                                         #comparing the resolution before and after setting
                                         if resolution in resolutiondetails :
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "FAILURE: Both the resolutions are same and resolution is set during standby";
-                                                retval="FAILURE";
-                                        else:
                                                 tdkTestObj.setResultStatus("SUCCESS");
-                                                print "SUCCESS: Both the resolutions are not same";
+                                                print "SUCCESS: Both the resolutions are same and resolution is set during standby";
                                                 retval="SUCCESS";
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "FAILURE: Both the resolutions are not same";
+                                                retval="FAILURE";
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "FAILURE:set and get resolution API executes successfully during STANDBY";
+                                        print "FAILURE:set and get resolution API failed to execute successfully during STANDBY";
                                         retval="FAILURE";
                         else:
                                 print "FAILURE:Requested resolution are not supported by this device";

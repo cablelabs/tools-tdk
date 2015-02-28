@@ -3,17 +3,17 @@
 <xml>
   <id>923</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_MS_RecordingPlayback</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>493</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>MS_RMFStreamer_Player</primitive_test_name>
   <!--  -->
   <primitive_test_version>3</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>This scripts test the  Requesting  Recorded content playback via streaming Interface.
 Test case Id: CT_RMFStreamer_17</synopsis>
@@ -61,42 +61,55 @@ if "SUCCESS" in result.upper():
 
          #Prmitive test case which associated to this Script
          tdkTestObj = obj.createTestStep('MS_RMFStreamer_Player');
+         #Pre-requisite to Check and verify required recording is present or not.
+         #---------Start-----------------
 
+         duration = 4
+         matchList = []
+         matchList = tdkTestObj.getRecordingDetails(duration);
+         obj.resetConnectionAfterReboot()
+         tdkTestObj = obj.createTestStep('MS_RMFStreamer_Player');
+	#-----------End-----------------
          #set the dvr play url
          streamDetails = tdkTestObj.getStreamDetails("01");
+         time.sleep(10)
+		 
+         if matchList:
+		 
+              print "Recording Details : " , matchList
 
-         recordingObj = tdkTestObj.getRecordingDetails();
-         num = recordingObj.getTotalRecordings();
-         print "Number of recordings: %d"%num
-
-         recordID = recordingObj.getRecordingId(num - 1);
-         #url = 'http://169.254.224.174:8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
-         url = "http://"+ streamDetails.getGatewayIp() + ":8080/vldms/dvr?rec_id=" + recordID[:-1]; 
-         print "The Play DVR Url Requested: %s"%url
-         tdkTestObj.addParameter("VideostreamURL",url);
-         playtime = 30;
-         tdkTestObj.addParameter("play_time",playtime);         
-         #Execute the test case in STB
-         expectedresult="SUCCESS";
-         tdkTestObj.executeTestCase(expectedresult);
+              #fetch recording id from list matchList.
+              recordID = matchList[1]
+        
+              #url = 'http://169.254.224.174:8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
+              url = "http://"+ streamDetails.getGatewayIp() + ":8080/vldms/dvr?rec_id=" + recordID[:-1]; 
+              print "The Play DVR Url Requested: %s"%url
+              tdkTestObj.addParameter("VideostreamURL",url);
+              playtime = 30;
+              tdkTestObj.addParameter("play_time",playtime);         
+              #Execute the test case in STB
+              expectedresult="SUCCESS";
+              tdkTestObj.executeTestCase(expectedresult);
           
-         #Get the result of execution
-         actualresult = tdkTestObj.getResult();
+              #Get the result of execution
+              actualresult = tdkTestObj.getResult();
          
 
-         print "The DVR to play in normal speed : %s" %actualresult;
+              print "The DVR to play in normal speed : %s" %actualresult;
 
-         #compare the actual result with expected result
-         if expectedresult in actualresult:
+              #compare the actual result with expected result
+              if expectedresult in actualresult:
                  #Set the result status of execution
                  tdkTestObj.setResultStatus("SUCCESS");
                  print "DVR Playback in normal speed";
-         else:
+              else:
                  tdkTestObj.setResultStatus("FAILURE");
                  details =  tdkTestObj.getResultDetails();
                  print "DVR Play in normal speed Failed :[%s]"%details;
 
-         obj.unloadModule("mediastreamer");
+         else:
+               print "No Matching recordings list found"
+               obj.unloadModule("mediastreamer");
 else:
          print "Failed to RmfStreamer module";
          obj.setLoadModuleStatus("FAILURE");

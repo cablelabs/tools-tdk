@@ -3,7 +3,7 @@
 <xml>
   <id>1019</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>8</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_TrickPlay_26</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>12</execution_time>
+  <execution_time>20</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -56,33 +56,30 @@ obj.configureTestCase(ip,port,'E2E_RMF_DVR_TrickPlay_26');
 expected_Result="SUCCESS"
 
 #Get the result of connection with test component and STB
-result =obj.getLoadModuleResult();
+result = obj.getLoadModuleResult();
+print "tdkintegration module loaded: %s" %result; 
 
 #Acquiring the instance of TDKScriptingLibrary for checking and verifying the DVR content.
 if "SUCCESS" in result.upper():
-         obj.setLoadModuleStatus("SUCCESS");
-         print "TDKIntegration module load successful";
+    obj.setLoadModuleStatus("SUCCESS");
+    print "TDKIntegration module load successful";
 
-         #Pre-requisite to Check and verify required recording is present or not.
-         #---------Start-----------------
-         matchList = []
-         if expected_Result in result.upper():
-                  #Get DVR pre req done.
-                  matchList = obj.checkAndVerifyDvrRecording(3);
-                  if len(matchList) == 0:
-                           print "DVR required Recording Not Found!!! Status: FAILURE"
-                           print "DVR Test case execution skipped!!!."
-                           exit()
-                  else:
-                           print "DVR required Recording Found. Proceeding to excute Test Case."
-                           print "Record Details: ",matchList
-         else:
-                  print "Loading Module Failed."
-                  print "Exiting the script without running the TC"
-                  exit();
-        #--------End-----------------------
+    #Prmitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('TDKE2E_Rmf_Dvr_Pause_Play');
 
-time.sleep(10)
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
+
+    duration = 4
+    matchList = []
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.resetConnectionAfterReboot()
+    tdkTestObj = obj.createTestStep('TDKE2E_Rmf_Dvr_Pause_Play');
+
+    #set the dvr play url
+    streamDetails = tdkTestObj.getStreamDetails("01");
+
+    time.sleep(10)
 
 #The Pre-requisite success. Proceed to execute the test case.
 obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
@@ -94,14 +91,12 @@ result = obj.getLoadModuleResult();
 print "tdkintegration module loaded: %s" %result;
 
 if "SUCCESS" in result.upper():
-         obj.setLoadModuleStatus("SUCCESS");
-         print "TDKIntegration module load successful";
-
-         #Prmitive test case which associated to this Script
-         tdkTestObj = obj.createTestStep('TDKE2E_Rmf_Dvr_Pause_Play');
-
-         #set the dvr play url
-         streamDetails = tdkTestObj.getStreamDetails("01");
+    obj.setLoadModuleStatus("SUCCESS");
+    print "TDKIntegration module load successful";
+		 
+    if matchList:
+		 
+         print "Recording Details : " , matchList
 
          #fetch recording id from list matchList.
          recordID = matchList[1]
@@ -133,6 +128,11 @@ if "SUCCESS" in result.upper():
                  print "E2E DVR Play on the video paused Failed: [%s]"%details;
          time.sleep(40);
          obj.unloadModule("tdkintegration");
+    else:
+        print "No Matching recordings list found"
+					 
+        time.sleep(10);
+        obj.unloadModule("tdkintegration");
 else:
          print "Failed to load TDKIntegration module";
          obj.setLoadModuleStatus("FAILURE");

@@ -3,10 +3,10 @@
 <xml>
   <id>1627</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TDK_E2E_DVR_Playback_Trickplay_All_Recordings_LongDuration_8hr_test</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>556</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_Rmf_LinearTv_Dvr_Play</primitive_test_name>
@@ -70,62 +70,74 @@ if "SUCCESS" in result.upper():
          #set the dvr play url
          streamDetails = tdkTestObj.getStreamDetails("01");
 
-         recordingObj = tdkTestObj.getRecordingDetails();
-         numberOfRecordings = recordingObj.getTotalRecordings();
-         print "\nNumber of recordings: %d" %numberOfRecordings
+         #Pre-requisite to Check and verify required recording is present or not.
+         #---------Start-----------------
+ 
+         duration = 4
+         global matchList
+         matchList = tdkTestObj.getRecordingDetails(duration);
+         obj.resetConnectionAfterReboot()
+         tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
+         if matchList:
+		 
+             print "Recording Details : " , matchList
 
-         playSpeedlist = ['1.00','4.00','8.00','15.00','30.00','60.00']
-         print "Play speed list : %s " %playSpeedlist
+             #fetch recording id from list matchList.
+             recordID = matchList[1]
+             playSpeedlist = ['1.00','4.00','8.00','15.00','30.00','60.00']
+             print "Play speed list : %s " %playSpeedlist
 
-         testTime = testTimeInHours * 60 * 60
-         testTime = 25 * 60
-         timer = 0
-         iteration = 0
+             testTime = testTimeInHours * 60 * 60
+             testTime = 25 * 60
+             timer = 0
+             iteration = 0
 
-         while (timer < testTime):
+             while (timer < testTime):
 
-             startTime = 0
-             startTime = timeit.default_timer()
-             iteration = iteration + 1
-             print "\n\n----------------------------  Iteration : %d  ----------------------------\n" %(iteration)
+                 startTime = 0
+                 startTime = timeit.default_timer()
+                 iteration = iteration + 1
+                 print "\n\n----------------------------  Iteration : %d  ----------------------------\n" %(iteration)
 
-             for index in range (0, numberOfRecordings):
-                 recordID = recordingObj.getRecordingId(index)
-                 print "\nRecord ID = %s" %recordID
+                 for index in range (0, numberOfRecordings):
+                     recordID = recordingObj.getRecordingId(index)
+                     print "\nRecord ID = %s" %recordID
 
-                 for i in range (0, len(playSpeedlist)):
+                     for i in range (0, len(playSpeedlist)):
 
-                     url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=' + playSpeedlist[i] +'&time_pos=0.00'
-                     print "The Play DVR Url Requested: %s" %url
+                         url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=' + playSpeedlist[i] +'&time_pos=0.00'
+                         print "The Play DVR Url Requested: %s" %url
+  
+                         tdkTestObj.addParameter("playUrl",url);
 
-                     tdkTestObj.addParameter("playUrl",url);
+                         #Execute the test case in STB
+                         expectedresult="SUCCESS";
+                         tdkTestObj.executeTestCase(expectedresult);
 
-                     #Execute the test case in STB
-                     expectedresult="SUCCESS";
-                     tdkTestObj.executeTestCase(expectedresult);
+                         #Get the result of execution
+                         actualresult = tdkTestObj.getResult();
+                         details =  tdkTestObj.getResultDetails();
 
-                     #Get the result of execution
-                     actualresult = tdkTestObj.getResult();
-                     details =  tdkTestObj.getResultDetails();
+                         print "The E2E DVR playback of Fast Forward is tested with " + playSpeedlist[i].replace(".00","") + "x Speed from starting point of the video: %s" %actualresult;
 
-                     print "The E2E DVR playback of Fast Forward is tested with " + playSpeedlist[i].replace(".00","") + "x Speed from starting point of the video: %s" %actualresult;
+                         #compare the actual result with expected result
+                         if expectedresult in actualresult:
+                             #Set the result status of execution
+                            tdkTestObj.setResultStatus("SUCCESS");
+                            print "E2E DVR Playback Successful: [%s]"%details;
+                         else:
+                            tdkTestObj.setResultStatus("FAILURE");
+                            print "E2E DVR Playback Failed: [%s]"%details;
 
-                     #compare the actual result with expected result
-                     if expectedresult in actualresult:
-                         #Set the result status of execution
-                         tdkTestObj.setResultStatus("SUCCESS");
-                         print "E2E DVR Playback Successful: [%s]"%details;
-                     else:
-                         tdkTestObj.setResultStatus("FAILURE");
-                         print "E2E DVR Playback Failed: [%s]"%details;
+                         time.sleep(40);
 
-                     time.sleep(40);
-
-             stopTime = timeit.default_timer()
-             timer = timer + (stopTime - startTime)
+                 stopTime = timeit.default_timer()
+                 timer = timer + (stopTime - startTime)
       
-         print "Total Time in Seconds = %f" %(timer) 
-         obj.unloadModule("tdkintegration");
+             print "Total Time in Seconds = %f" %(timer) 
+             obj.unloadModule("tdkintegration");
+         else:
+	 	   print "no mathching records are found"
 else:
          print "Failed to load tdkintegration module";
          obj.setLoadModuleStatus("FAILURE");

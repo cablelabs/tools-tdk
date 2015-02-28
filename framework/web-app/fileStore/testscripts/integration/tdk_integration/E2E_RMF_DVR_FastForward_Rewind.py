@@ -3,7 +3,7 @@
 <xml>
   <id>1679</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>11</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_FastForward_Rewind</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,48 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
-  <!--  -->
-  <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
-  <!--  -->
-  <box_types>
-    <box_type>IPClient-3</box_type>
-    <!--  -->
-    <box_type>Hybrid-1</box_type>
-    <!--  -->
-  </box_types>
-  <rdk_versions>
-    <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
-  </rdk_versions>
-</xml>
-'''
-'''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id>1679</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>E2E_RMF_DVR_FastForward_Rewind</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id>535</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
-  <primitive_test_name>TDKE2E_Rmf_Dvr_Play_Forward_Rewind</primitive_test_name>
-  <!--  -->
-  <primitive_test_version>1</primitive_test_version>
-  <!--  -->
-  <status>FREE</status>
-  <!--  -->
-  <synopsis>FFWD &amp; RWD to the Start &amp; End of a Clear Recording during Playback</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -82,7 +41,6 @@
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-import tdkintegration;
 import time;
 
 #Test component to be tested
@@ -96,6 +54,7 @@ port = <port>
 #Number of times the pause/play should repeat.
 skipNumOfSec = 30;
 
+matchList = []
 #Number of repeatation
 repeatCount = 1;
 
@@ -106,38 +65,53 @@ def fastforward_Start(obj):
     #set the dvr play url
     streamDetails = tdkTestObj.getStreamDetails("01");
 
-    recordingObj = tdkTestObj.getRecordingDetails();
-    num = recordingObj.getTotalRecordings();
-    print "Number of recordings: %d"%num
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
 
-    recordID = recordingObj.getRecordingId(num - 1);
+    duration = 4
+    global matchList
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.resetConnectionAfterReboot()
+    tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
 
-    url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=4.00&time_pos=0.00'
+    #set the dvr play url
+    #streamDetails = tdkTestObj.getStreamDetails("01");
 
-    print "The Play DVR Url Requested: %s"%url
-    tdkTestObj.addParameter("playUrl",url);
 
-    #Execute the test case in STB
-    expectedresult="SUCCESS";
-    tdkTestObj.executeTestCase(expectedresult);
+    if matchList:
+		 
+      print "Recording Details : " , matchList
 
-    #Get the result of execution
-    actualresult = tdkTestObj.getResult();
-    details =  tdkTestObj.getResultDetails();
+      #fetch recording id from list matchList.
+      recordID = matchList[1]
+      url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=4.00&time_pos=0.00'
 
-    print "The E2E DVR playback of Fast Forward is tested with 4x Speed from starting point of the video: %s" %actualresult;
+      print "The Play DVR Url Requested: %s"%url
+      tdkTestObj.addParameter("playUrl",url);
 
-    #compare the actual result with expected result
-    if expectedresult in actualresult:
+      #Execute the test case in STB
+      expectedresult="SUCCESS";
+      tdkTestObj.executeTestCase(expectedresult);
+
+      #Get the result of execution
+      actualresult = tdkTestObj.getResult();
+      details =  tdkTestObj.getResultDetails();
+
+      print "The E2E DVR playback of Fast Forward is tested with 4x Speed from starting point of the video: %s" %actualresult;
+
+      #compare the actual result with expected result
+      if expectedresult in actualresult:
         #Set the result status of execution
         tdkTestObj.setResultStatus("SUCCESS");
         retValue = "SUCCESS"
         print "E2E DVR Playback Successful: [%s]"%details;
-    else:
+      else:
         tdkTestObj.setResultStatus("FAILURE");
         retValue = "FAILURE"
         print "E2E DVR Playback Failed: [%s]"%details;
-        
+
+    else:
+        print "No Matching recordings list found"
     return retValue
 
 def rewind_End(obj):
@@ -148,43 +122,45 @@ def rewind_End(obj):
     #set the dvr play url
     streamDetails = tdkTestObj.getStreamDetails("01");
 
-    recordingObj = tdkTestObj.getRecordingDetails();
-    num = recordingObj.getTotalRecordings();
-    print "Number of recordings: %d"%num
 
-    recordID = recordingObj.getRecordingId(num - 1);
-    url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
-    if url == "NULL":
-        print "Failed to generate the Streaming URL";
-        tdkTestObj.setResultStatus("FAILURE");
+    if matchList:
+		 
+         print "Recording Details : " , matchList
 
-    print "The Play DVR Url Requested: %s"%url
-    tdkTestObj.addParameter("playUrl",url);
-    #Rewind speed
-    rSpeed = -4.00
-    print "The Rewind Speed Requested: %f"%rSpeed;
-    tdkTestObj.addParameter("rewindSpeed",rSpeed);
+         #fetch recording id from list matchList.
+         recordID = matchList[1]
 
-    #Execute the test case in STB
-    expectedresult="SUCCESS";
-    tdkTestObj.executeTestCase(expectedresult);
+         url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
+         print "The Play DVR Url Requested: %s"%url
+         tdkTestObj.addParameter("playUrl",url);
+         #Rewind speed
+         rSpeed = -4.00
+         print "The Rewind Speed Requested: %f"%rSpeed;
+         tdkTestObj.addParameter("rewindSpeed",rSpeed);
 
-    #Get the result of execution
-    actualresult = tdkTestObj.getResult();
-    details =  tdkTestObj.getResultDetails();
+         #Execute the test case in STB
+         expectedresult="SUCCESS";
+         tdkTestObj.executeTestCase(expectedresult);
 
-    print "The E2E DVR Rewind form end Point : %s" %actualresult;
+         #Get the result of execution
+         actualresult = tdkTestObj.getResult();
+         details =  tdkTestObj.getResultDetails();
 
-    #compare the actual result with expected result
-    if expectedresult in actualresult:
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
-        retValue = "SUCCESS"
-        print "E2E DVR Rewind From end point Successful: [%s]"%details;
+         print "The E2E DVR Rewind form end Point : %s" %actualresult;
+
+         #compare the actual result with expected result
+         if expectedresult in actualresult:
+             #Set the result status of execution
+             tdkTestObj.setResultStatus("SUCCESS");
+             retValue = "SUCCESS"
+             print "E2E DVR Rewind From end point Successful: [%s]"%details;
+         else:
+             tdkTestObj.setResultStatus("FAILURE");
+             retValue = "FAILURE"
+             print "E2E DVR Rewind From end point Failed: [%s]"%details;
     else:
-        tdkTestObj.setResultStatus("FAILURE");
-        retValue = "FAILURE"
-        print "E2E DVR Rewind From end point Failed: [%s]"%details;
+        print "No Matching recordings list found"
+					 
                  
     return retValue
     

@@ -3,10 +3,10 @@
 <xml>
   <id>1657</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TDK_RMF_ScheduleRecording_Playback_LongDuration_8hr_test</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>556</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_Rmf_LinearTv_Dvr_Play</primitive_test_name>
@@ -40,10 +40,10 @@ Testcase ID: E2E_DVR_PlayBack_02</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-import tdkintegration;
 import random;
 import timeit;
 import time;
+import tdkintegration;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
@@ -86,8 +86,8 @@ def playDVR (recordingId):
         recordID = recordingId
         print "\nRecord ID = %s" %recordID
 
-         url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
-         if url == "NULL":
+        url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
+        if url == "NULL":
              print "Failed to generate the Streaming URL";
              tdkTestObj.setResultStatus("FAILURE");
         print "The Play DVR Url Requested: %s" %url

@@ -3,10 +3,10 @@
 <xml>
   <id>1515</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>12</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_MDVR_TrickPlay_SameRecord</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>583</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_MDVR_GetResult</primitive_test_name>
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -76,9 +76,10 @@ def TDKE2E_mDVR_PlayUrl(IP,PORT,args=(),kwargs={}):
       tdkTestObj = obj.createTestStep('TDKE2E_RMFLinearTV_GetURL');    
 
       #Stream details for tuning
-      streamDetails = tdkTestObj.getStreamDetails('01');
+      globalstreamDetails = tdkTestObj.getStreamDetails('01');
+     
       #Framing URL for Request
-      url = tdkintegration.E2E_getStreamingURL(obj, "TSB" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+      url = tdkintegration.E2E_getStreamingURL(obj,"TSB",streamDetails.getGatewayIp(),streamDetails.getOCAPID());
       if url == "NULL":
           print "Failed to generate the Streaming URL";
           tdkTestObj.setResultStatus("FAILURE");
@@ -174,13 +175,15 @@ if "SUCCESS" in result.upper():
         clientPORT2 = ClientListObj.getAgentPort(2)
         clientMAC2 = ClientListObj.getClientMACAddress(2)
 
-        # Get recorded content url
         streamDetails = tdkTestObj.getStreamDetails('01');
-        recordingObj = tdkTestObj.getRecordingDetails();
-        num = recordingObj.getTotalRecordings();
-        print "Number of recordings: %d"%num
-        recordID = recordingObj.getRecordingId(num - 1);
-        URL = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1]);
+        duration = 4	
+        #recInfoAsList = [index,recordingId,recordingTitle,duration,segmentName]
+        recInfoAsList = tdkTestObj.getRecordingDetails(duration);
+        if not recInfoAsList:
+            print "Recording details list is empty";
+            tdkTestObj.setResultStatus("FAILURE");
+        recordID = recInfoAsList[1]
+        URL = tdkintegration.E2E_getStreamingURL(globalObj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1]);
         if URL == "NULL":
             print "Failed to generate the Streaming URL";
             tdkTestObj.setResultStatus("FAILURE");

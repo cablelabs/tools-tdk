@@ -1,110 +1,179 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xml>
-  <module name='iarmbus' testGroup='Component'>
+  <module name="iarmbus" testGroup="Component">
     <primitiveTests>
-      <primitiveTest name='IARMBUS_Init' id='4' version='1'>
+      <primitiveTest id="4" name="IARMBUS_Init" version="1">
         <function>TestMgr_IARMBUS_Init</function>
         <parameters>
-          <parameter name='Process_name' value='agent' />
+          <parameter name="Process_name" value="agent"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_Term' id='5' version='0'>
+      <primitiveTest id="5" name="IARMBUS_Term" version="0">
         <function>TestMgr_IARMBUS_Term</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_Connect' id='6' version='0'>
+      <primitiveTest id="6" name="IARMBUS_Connect" version="0">
         <function>TestMgr_IARMBUS_Connect</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_DisConnect' id='7' version='0'>
+      <primitiveTest id="7" name="IARMBUS_DisConnect" version="0">
         <function>TestMgr_IARMBUS_Disconnect</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_BusCall' id='8' version='8'>
+      <primitiveTest id="8" name="IARMBUS_BusCall" version="8">
         <function>TestMgr_IARMBUS_BusCall</function>
         <parameters>
-          <parameter name='testapp_API0_data' value='2' />
-          <parameter name='resource_type' value='0' />
-          <parameter name='owner_name' value='IRMgr' />
-          <parameter name='testapp_API1_data' value='3' />
-          <parameter name='set_timeout' value='1' />
-          <parameter name='newState' value='0' />
-          <parameter name='mfr_param_type' value='0' />
-          <parameter name='method_name' value='GetRepeatInterval' />
+          <parameter name="testapp_API0_data" value="2"/>
+          <parameter name="resource_type" value="0"/>
+          <parameter name="owner_name" value="IRMgr"/>
+          <parameter name="testapp_API1_data" value="3"/>
+          <parameter name="set_timeout" value="1"/>
+          <parameter name="newState" value="0"/>
+          <parameter name="mfr_param_type" value="0"/>
+          <parameter name="method_name" value="GetRepeatInterval"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_RegisterCall' id='9' version='1'>
+      <primitiveTest id="9" name="IARMBUS_RegisterCall" version="1">
         <function>TestMgr_IARMBUS_RegisterCall</function>
         <parameters>
-          <parameter name='owner_name' value='ReleaseOwnership' />
+          <parameter name="owner_name" value="ReleaseOwnership"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_RequestResource' id='11' version='3'>
+      <primitiveTest id="11" name="IARMBUS_RequestResource" version="3">
         <function>TestMgr_IARMBUS_RequestResource</function>
         <parameters>
-          <parameter name='resource_type' value='1' />
+          <parameter name="resource_type" value="1"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_ReleaseResource' id='12' version='3'>
+      <primitiveTest id="12" name="IARMBUS_ReleaseResource" version="3">
         <function>TestMgr_IARMBUS_ReleaseResource</function>
         <parameters>
-          <parameter name='resource_type' value='1' />
+          <parameter name="resource_type" value="1"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_BroadcastEvent' id='18' version='6'>
+      <primitiveTest id="18" name="IARMBUS_BroadcastEvent" version="6">
         <function>TestMgr_IARMBUS_BroadcastEvent</function>
         <parameters>
-          <parameter name='owner_name' value='Daemon' />
-          <parameter name='event_id' value='1' />
-          <parameter name='state' value='0' />
-          <parameter name='keyType' value='1' />
-          <parameter name='error' value='0' />
-          <parameter name='newState' value='1' />
-          <parameter name='keyCode' value='1' />
-          <parameter name='payload' value='abc' />
-          <parameter name='resource_type' value='0' />
+          <parameter name="owner_name" value="Daemon"/>
+          <parameter name="event_id" value="1"/>
+          <parameter name="state" value="0"/>
+          <parameter name="keyType" value="1"/>
+          <parameter name="error" value="0"/>
+          <parameter name="newState" value="1"/>
+          <parameter name="keyCode" value="1"/>
+          <parameter name="payload" value="abc"/>
+          <parameter name="resource_type" value="0"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_RegisterEventHandler' id='22' version='15'>
+      <primitiveTest id="22" name="IARMBUS_RegisterEventHandler" version="15">
         <function>TestMgr_IARMBUS_RegisterEventHandler</function>
         <parameters>
-          <parameter name='event_id' value='0' />
-          <parameter name='owner_name' value='Daemon' />
+          <parameter name="event_id" value="0"/>
+          <parameter name="owner_name" value="Daemon"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_UnRegisterEventHandler' id='23' version='14'>
+      <primitiveTest id="23" name="IARMBUS_UnRegisterEventHandler" version="14">
         <function>TestMgr_IARMBUS_UnRegisterEventHandler</function>
         <parameters>
-          <parameter name='owner_name' value='Daemon' />
-          <parameter name='event_id' value='0' />
+          <parameter name="owner_name" value="Daemon"/>
+          <parameter name="event_id" value="0"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_IsConnected' id='25' version='1'>
+      <primitiveTest id="25" name="IARMBUS_IsConnected" version="1">
         <function>TestMgr_IARMBUS_IsConnected</function>
         <parameters>
-          <parameter name='member_name' value='agent' />
+          <parameter name="member_name" value="agent"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_RegisterEvent' id='27' version='1'>
+      <primitiveTest id="27" name="IARMBUS_RegisterEvent" version="1">
         <function>TestMgr_IARMBUS_RegisterEvent</function>
         <parameters>
-          <parameter name='max_event' value='2' />
+          <parameter name="max_event" value="2"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_GetContext' id='29' version='0'>
+      <primitiveTest id="29" name="IARMBUS_GetContext" version="0">
         <function>TestMgr_IARMBUS_GetContext</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_GetLastReceivedEventDetails' id='31' version='0'>
+      <primitiveTest id="31" name="IARMBUS_GetLastReceivedEventDetails" version="0">
         <function>TestMgr_IARMBUS_GetLastReceivedEventDetails</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='IARMBUS_InvokeSecondApplication' id='209' version='1'>
+      <primitiveTest id="209" name="IARMBUS_InvokeSecondApplication" version="1">
         <function>TestMgr_IARMBUS_InvokeSecondApplication</function>
         <parameters>
-          <parameter name='argv1' value='ON' />
-          <parameter name='appname' value='/tst_iarmbus' />
+          <parameter name="argv1" value="ON"/>
+          <parameter name="appname" value="/tst_iarmbus"/>
         </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="IARMBUSPERF_Disconnect" version="1">
+        <function>TestMgr_IARMBUSPERF_Disconnect</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="IARMBUSPERF_Init" version="1">
+        <function>TestMgr_IARMBUSPERF_Init</function>
+        <parameters>
+          <parameter name="Process_name" value="agent"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="IARMBUSPERF_InvokeEventTransmitterApp" version="1">
+        <function>TestMgr_IARMBUSPERF_InvokeEventTransmitterApp</function>
+        <parameters>
+          <parameter name="event_id" value="0"/>
+          <parameter name="evttxappname" value="gen_single_event"/>
+          <parameter name="keyCode" value="300"/>
+          <parameter name="keyType" value="32768"/>
+          <parameter name="newState" value="1"/>
+          <parameter name="owner_name" value="IRMgr"/>
+          <parameter name="resource_type" value="1"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="IARMBUSPERF_RegisterEventHandler" version="1">
+        <function>TestMgr_IARMBUSPERF_RegisterEventHandler</function>
+        <parameters>
+          <parameter name="event_id" value="0"/>
+          <parameter name="owner_name" value="IRMgr"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="IARMBUSPERF_RegisterMultipleEvtHandlersForSingleEvt" version="1">
+        <function>TestMgr_IARMBUSPERF_RegisterMultipleEventHandlers</function>
+        <parameters>
+          <parameter name="event_id" value="0"/>
+          <parameter name="owner_name" value="IRMgr"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="IARMBUSPERF_RegisterTwoEvtHandlersTwoEvents" version="1">
+        <function>TestMgr_IARMBUSPERF_RegisterTwoEvtHandlersTwoEvents</function>
+        <parameters>
+          <parameter name="event_id" value="0"/>
+          <parameter name="owner_name" value="IRMgr"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="IARMBUSPERF_Term" version="1">
+        <function>TestMgr_IARMBUSPERF_Term</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="IARMBUSPERF_UnRegisterEventHandler" version="1">
+        <function>TestMgr_IARMBUSPERF_UnRegisterEventHandler</function>
+        <parameters>
+          <parameter name="event_id" value="0"/>
+          <parameter name="owner_name" value="IRMgr"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="IARMBUSPERF_Connect" version="1">
+        <function>TestMgr_IARMBUSPERF_Connect</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="IARMBUSPERF_RegisterMultipleEventHandlers" version="1">
+        <function>TestMgr_IARMBUSPERF_RegisterMultipleEventHandlers</function>
+        <parameters>
+          <parameter name="event_id" value="0"/>
+          <parameter name="owner_name" value="IRMgr"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name="IARMBUSPERF_GetLastReceivedEventDetails" id="" version="1">
+        <function>TestMgr_IARMBUSPERF_GetLastReceivedEventDetails</function>
+        <parameters/>
       </primitiveTest>
     </primitiveTests>
   </module>

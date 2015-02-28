@@ -16,12 +16,17 @@
 static TunerReservationHelper *pTrh = NULL;
 
 const char *deviceNames[TOTAL_DEVICE_NUMBER+1] = {
-    "Xi3 Family Room",
-    "Xi3 Living Room",
+    "Xi3 FamilyRoom",
+    "Xi3 LivingRoom",
     "Xi3 Bedroom",
     "Xi3 Kitchen",
-    "Xi3 Dining Room",
-    "Xi3 Gym"
+    "Xi3 DiningRoom",
+    "Xi3 Gym",
+    "Xi3 PlayRoom",
+    "Xi3 Security",
+    "Xi3 ControlRoom",
+    "Xi3 PrayerRoom",
+    "Xi3 StudyRoom"
 };
 
 /*************************************************************************
@@ -61,6 +66,7 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool TRMAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
 {
     DEBUG_PRINT(DEBUG_ERROR, "TRMAgent Initialization\n");
+    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetMaxTuners, "TestMgr_TRM_GetMaxTuners");
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetAllTunerIds, "TestMgr_TRM_GetAllTunerIds");
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetAllTunerStates, "TestMgr_TRM_GetAllTunerStates");
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetAllReservations, "TestMgr_TRM_GetAllReservations");
@@ -110,6 +116,32 @@ bool TRMAgent::testmodulepost_requisites()
     {
        delete pTrh;
     }
+    return TEST_SUCCESS;
+}
+
+/**************************************************************************
+Function name : TRMAgent::TRMAgent_GetMaxTuners
+
+Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE".
+
+Description   : Receives the request from Test Manager to get the max number of tuners.
+                Gets the response from TRM server and sent to the Test Manager.
+**************************************************************************/
+bool TRMAgent::TRMAgent_GetMaxTuners(IN const Json::Value& req, OUT Json::Value& response)
+{
+    DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetMaxTuners --->Entry\n");
+#ifdef NUM_OF_TUNERS
+    DEBUG_PRINT(DEBUG_TRACE, "Max number of tuners supported by device = %d\n", NUM_OF_TUNERS);
+    response["result"] = "SUCCESS";
+    ostringstream details;
+    details << NUM_OF_TUNERS;
+    response["details"] = details.str();
+#else
+    DEBUG_PRINT(DEBUG_TRACE, "Max number of tuners supported by device unknown\n");
+    response["result"] = "FAILURE";
+    response["details"] = "0";
+#endif
+    DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetMaxTuners -->Exit\n");
     return TEST_SUCCESS;
 }
 
@@ -596,6 +628,7 @@ bool TRMAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
         return TEST_FAILURE;
     }
 
+    ptrAgentObj->UnregisterMethod("TestMgr_TRM_GetMaxTuners");
     ptrAgentObj->UnregisterMethod("TestMgr_TRM_GetAllTunerIds");
     ptrAgentObj->UnregisterMethod("TestMgr_TRM_GetAllTunerStates");
     ptrAgentObj->UnregisterMethod("TestMgr_TRM_GetAllReservations");

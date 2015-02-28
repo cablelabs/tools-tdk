@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>16</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_delete_recording</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -17,9 +17,9 @@
   <!--  -->
   <synopsis>Try to delete the recorded when XG1  playing the same recorded content.</synopsis>
   <!--  -->
-  <groupsid />
+  <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -69,22 +69,47 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
     #Prmitive test case which associated to this Script
     tdkTestObj = tdk_obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
 
-    recordingObj = tdkTestObj.getRecordingDetails();
-    num = recordingObj.getTotalRecordings();
-    print "Number of recordings: %d"%num    
-    recording_id = recordingObj.getRecordingId(num - 1);
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
 
-    result1 = dvr_playback(tdkTestObj,recording_id);
+    duration = 4
+    matchList = []
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    tdk_obj.resetConnectionAfterReboot()
+    tdkTestObj = tdk_obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
 
-    result2 = deleteRecording(media_obj,'01',recording_id);
+    #set the dvr play url
+    streamDetails = tdkTestObj.getStreamDetails("01");
+	
+	
+
+    
+
+    if matchList:
+		 
+         print "Recording Details : " , matchList
+         #fetch recording id from list matchList.
+         recording_id = matchList[1]
+         result1 = dvr_playback(tdkTestObj,recording_id);
+
+         result2 = deleteRecording(media_obj,'01',recording_id);
         
-    if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()):                                        
-        print "Execution  Success"
-    else:            
-        print "Execution  failure"
+         if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()):                                        
+                 print "Execution  Success"
+         else:            
+                 print "Execution  failure"      
          
-    media_obj.unloadModule("mediaframework");
-    tdk_obj.unloadModule("tdkintegration");
+	 media_obj.unloadModule("mediaframework");
+         tdk_obj.unloadModule("tdkintegration");
+	
+	
+	
+    else:
+        print "No Matching recordings list found"
+					 
+        time.sleep(10);
+        media_obj.unloadModule("mediaframework");
+        tdk_obj.unloadModule("tdkintegration");
     
 else:
     print "Failed to load media framework module";
