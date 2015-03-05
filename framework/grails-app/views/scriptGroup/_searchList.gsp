@@ -27,13 +27,13 @@
 				<g:message code="default.list.label" args="[entityName]" />
 			</h1>
 			
-				<table id="scriptlisttable" class="display">
+				<table id="scriptlisttable" class="display" style="table-layout:fixed;">
 					<thead>
 						<tr>
-							<th>Select</th>
-							<th>Script Name</th>
+							<th width = "2%">Select</th>
+							<th width = "45%">Script Name</th>
 							<th>PrimitiveTest</th>
-							<th>BoxTypes</th>
+							<th width = "10%" >BoxTypes</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -41,12 +41,12 @@
 							<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
 								<td><g:checkBox name="${scriptListInstance?.name}"
 										value="${false}" /></td>
-								<td><g:link id="${scriptListInstance?.primitiveTest?.module?.name}@${scriptListInstance?.name}"
+								<td align="center" style ="width :20% ; word-wrap:break-word; " ><g:link id="${scriptListInstance?.primitiveTest?.module?.name}@${scriptListInstance?.name}"
 										onclick="showScript('${scriptListInstance?.primitiveTest?.module?.name}@${scriptListInstance?.name}','');return false;">
 										${scriptListInstance?.name}
 									</g:link></td>
 
-								<td>
+								<td align="center" style ="width :20% ; word-wrap:break-word; ">
 									${scriptListInstance?.primitiveTest?.name}
 								</td>
 

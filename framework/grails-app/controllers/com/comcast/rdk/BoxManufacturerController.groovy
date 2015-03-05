@@ -51,6 +51,7 @@ class BoxManufacturerController {
 
 	def deleteBoxManufacturer(){
 		def countVariable = 0
+			int deleteCount = 0
 		def boxManufacturerInstance
 		if(params?.listCount){ // to delete record(s) from list.gsp
 			for (iterateVariable in params?.listCount){
@@ -61,7 +62,7 @@ class BoxManufacturerController {
 					if (boxManufacturerInstance) {
 						try{
 						  boxManufacturerInstance.delete(flush: true)
-						  flash.message = message(code: 'default.deleted.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'),  boxManufacturerInstance.name])
+						  deleteCount++
 						}
 						catch (DataIntegrityViolationException e) {
 				            flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'),  boxManufacturerInstance.name])				           
@@ -69,6 +70,14 @@ class BoxManufacturerController {
 					}
 				}
 			}
+			}
+		if(deleteCount  > 1)
+		{
+			flash.message = "BoxManufactures deleted"
+		}
+		else
+		{
+			flash.message = message(code: 'default.deleted.message', args: [message(code: 'boxManufacturer.label', default: 'BoxManufacturer'),  boxManufacturerInstance.name])
 		}
 		redirect(action: "create")
 	}

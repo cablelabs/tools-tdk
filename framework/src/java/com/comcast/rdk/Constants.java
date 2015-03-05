@@ -170,5 +170,30 @@ public final class Constants
     public static final String INTEGRATION ="integration";
     public static final String NO_OS_SUITE = "_NO_OS";
     
+    public static final String SYSTEMDIAGNOSTICS_CPU = "SYSTEMDIAGNOSTICS_CPU";
+    public static final String SYSTEMDIAGNOSTICS_MEMORY = "SYSTEMDIAGNOSTICS_MEMORY";
+    public static final String CPU_STARTING = "%CPU_STARTING";
+    public static final String CPU_ENDING = "%CPU_ENDING";
+    public static final String CPU_PEAK = "%CPU_PEAK";
+    public static final String CPU_AVG = "%CPU_AVG";
+    
+    public static final String  MEMORY_AVAILABLE_PEAK = "%MEMORY_AVAILABLE_PEAK";
+    public static final String  MEMORY_USED_PEAK = "%MEMORY_USED_PEAK";
+    public static final String  MEMORY_PERC_PEAK = "%MEMORY_PERC_PEAK";
+    
+    public static final String  MEMORY_AVAILABLE_AVG = "%MEMORY_AVAILABLE_AVG";
+    public static final String  MEMORY_USED_AVG = "%MEMORY_USED_AVG";
+    public static final String  MEMORY_PERC_AVG = "%MEMORY_PERC_AVG";
+    
+    
+    public static final String  MEMORY_AVAILABLE_START = "%MEMORY_AVAILABLE_START";
+    public static final String  MEMORY_USED_START = "%MEMORY_USED_START";
+    public static final String  MEMORY_PERC_START = "%MEMORY_PERC_START";
+    
+    public static final String  MEMORY_AVAILABLE_END = "%MEMORY_AVAILABLE_END";
+    public static final String  MEMORY_USED_END = "%MEMORY_USED_END";
+    public static final String  MEMORY_PERC_END = "%MEMORY_PERC_END";
+    
+    
     
 }

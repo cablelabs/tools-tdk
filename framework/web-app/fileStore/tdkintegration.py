@@ -391,44 +391,60 @@ def skip_forward(obj):
     #set the dvr play url
     streamDetails = tdkTestObj.getStreamDetails("01");
 
-    recordingObj = tdkTestObj.getRecordingDetails();
-    num = recordingObj.getTotalRecordings();
-    print "Number of recordings: %d"%num
-    recordID = recordingObj.getRecordingId(num - 1);
+    
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
 
-    #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
-    url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID[:-1]);
+    duration = 4
+    matchList = []
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.resetConnectionAfterReboot()
+    tdkTestObj = obj.createTestStep('TDKE2E_Rmf_Dvr_Skip_Forward_Play'); 
+    #---------end----------------
+    
+    time.sleep(10)
+	
+    if matchList:
+       print "Recording Details : " , matchList
+       #fetch recording id from list matchList.
+       recordID = matchList[1]
 
-    print "The Play DVR Url Requested: %s"%url
-    tdkTestObj.addParameter("playUrl",url);
+       #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
+       url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID[:-1]);
 
-    print "The number of seconds to be skiped from strating of video: %d"%skipNumOfSec
-    tdkTestObj.addParameter("seconds",skipNumOfSec);
+       print "The Play DVR Url Requested: %s"%url
+       tdkTestObj.addParameter("playUrl",url);
 
-    print "The number of repeatation requested is %d"%repeatCount
-    tdkTestObj.addParameter("rCount",repeatCount);
+       print "The number of seconds to be skiped from strating of video: %d"%skipNumOfSec
+       tdkTestObj.addParameter("seconds",skipNumOfSec);
 
-    #Execute the test case in STB
-    expectedresult="SUCCESS";
-    tdkTestObj.executeTestCase(expectedresult);
+       print "The number of repeatation requested is %d"%repeatCount
+       tdkTestObj.addParameter("rCount",repeatCount);
 
-    #Get the result of execution
-    actualresult = tdkTestObj.getResult();
-    details =  tdkTestObj.getResultDetails();
+       #Execute the test case in STB
+       expectedresult="SUCCESS";
+       tdkTestObj.executeTestCase(expectedresult);
 
-    print "The E2E DVR Skip number of seconds from starting point of video : %s" %actualresult;
+       #Get the result of execution
+       actualresult = tdkTestObj.getResult();
+       details =  tdkTestObj.getResultDetails();
 
-    #compare the actual result with expected result
-    if expectedresult in actualresult:
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
-        retValue = "SUCCESS"
-        print "E2E DVR Skip number of seconds Successful: [%s]"%details;
+       print "The E2E DVR Skip number of seconds from starting point of video : %s" %actualresult;
+
+       #compare the actual result with expected result
+       if expectedresult in actualresult:
+          #Set the result status of execution
+          tdkTestObj.setResultStatus("SUCCESS");
+          retValue = "SUCCESS"
+          print "E2E DVR Skip number of seconds Successful: [%s]"%details;
+       else:
+          tdkTestObj.setResultStatus("FAILURE");
+          retValue = "FAILURE"
+          print "E2E DVR Skip number of seconds Failed: [%s]"%details;
+    
     else:
-        tdkTestObj.setResultStatus("FAILURE");
-        retValue = "FAILURE"
-        print "E2E DVR Skip number of seconds Failed: [%s]"%details;
-        
+       print "No Matching recordings list found"
+	    
     return retValue
 
 def skip_backward(obj):
@@ -438,45 +454,58 @@ def skip_backward(obj):
 
     #set the dvr play url
     streamDetails = tdkTestObj.getStreamDetails("01");
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
 
-    recordingObj = tdkTestObj.getRecordingDetails();
-    num = recordingObj.getTotalRecordings();
-    print "Number of recordings: %d"%num
-    recordID = recordingObj.getRecordingId(num - 1);
+    duration = 4
+    matchList = []
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.resetConnectionAfterReboot()
+    tdkTestObj = obj.createTestStep('TDKE2E_Rmf_Dvr_Skip_Backward_From_End'); 
+    #---------end----------------
+    
+    time.sleep(10)
+	
+    if matchList:
+       print "Recording Details : " , matchList
+       #fetch recording id from list matchList.
+       recordID = matchList[1]
+    
 
-    #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
-    url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID[-1]);
+       #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
+       url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID[-1]);
 
-    print "The Play DVR Url Requested: %s"%url
-    tdkTestObj.addParameter("playUrl",url);
+       print "The Play DVR Url Requested: %s"%url
+       tdkTestObj.addParameter("playUrl",url);
 
-    print "The number of seconds to be skiped from end of video: %d"%skipNumOfSec
-    tdkTestObj.addParameter("seconds",skipNumOfSec);
+       print "The number of seconds to be skiped from end of video: %d"%skipNumOfSec
+       tdkTestObj.addParameter("seconds",skipNumOfSec);
 
-    print "The number of repeatation requested is %d"%repeatCount
-    tdkTestObj.addParameter("rCount",repeatCount);
+       print "The number of repeatation requested is %d"%repeatCount
+       tdkTestObj.addParameter("rCount",repeatCount);
 
-    #Execute the test case in STB
-    expectedresult="SUCCESS";
-    tdkTestObj.executeTestCase(expectedresult);
+       #Execute the test case in STB
+       expectedresult="SUCCESS";
+       tdkTestObj.executeTestCase(expectedresult);
 
-    #Get the result of execution
-    actualresult = tdkTestObj.getResult();
-    details =  tdkTestObj.getResultDetails();
+       #Get the result of execution
+       actualresult = tdkTestObj.getResult();
+       details =  tdkTestObj.getResultDetails();
 
-    print "The E2E DVR Skip number of seconds from End of video :%s" %actualresult;
+       print "The E2E DVR Skip number of seconds from End of video :%s" %actualresult;
 
-    #compare the actual result with expected result
-    if expectedresult in actualresult:
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
-        retValue = "SUCCESS"
-        print "E2E DVR Skip number of seconds from end of video Successful: [%s]"%details;
+       #compare the actual result with expected result
+       if expectedresult in actualresult:
+          #Set the result status of execution
+          tdkTestObj.setResultStatus("SUCCESS");
+          retValue = "SUCCESS"
+          print "E2E DVR Skip number of seconds from end of video Successful: [%s]"%details;
+       else:
+          tdkTestObj.setResultStatus("FAILURE");
+          retValue = "FAILURE"
+          print "E2E DVR Skip number of seconds from end of video Failed: [%s]"%details;
     else:
-        tdkTestObj.setResultStatus("FAILURE");
-        retValue = "FAILURE"
-        print "E2E DVR Skip number of seconds from end of video Failed: [%s]"%details;
-        
+	   print "No Matching recordings list found"    
     return retValue
 
 def TSB_play(obj,streamId):
@@ -545,12 +574,23 @@ def deleteRecording(obj, streamId,recordingId):
     recording_id = recordingId;
 
     print "Recording ID %s"%recordingId
+	#Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
+
+    duration = 4
+    matchList = []
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.resetConnectionAfterReboot()
+    tdkTestObj = obj.createTestStep('RMF_DVRManager_DeleteRecording'); 
+    #---------end----------------
+    
+    time.sleep(10)
     if recordingId is 'NONE':    
         print "Get the recording Id"
-	recordingObj = tdkTestObj.getRecordingDetails();
-        num = recordingObj.getTotalRecordings();
-        print "Number of recordings: %d"%num    
-        recording_id = recordingObj.getRecordingId(num - 1);
+        if matchList:
+        	print "Recording Details : " , matchList
+         	#fetch recording id from list matchList.
+	        recordID = matchList[1]
 
     print "Requested record ID: %s"%recording_id
     tdkTestObj.addParameter("recordingId",recording_id);
@@ -577,6 +617,7 @@ def deleteRecording(obj, streamId,recordingId):
          tdkTestObj.setResultStatus("FAILURE");
          retValue = "FAILURE";
          print "DVRManager DeleteRecording Failed: [%s]"%details;
+	
 
     return retValue
 

@@ -147,7 +147,7 @@ class TrendsController {
 	 * Shows the chart to draw the chart based on SystemDiagnostics
 	 * @return
 	 */
-	def getStatusSystemDiagnosticsData(){
+	def getStatusSystemDiagnosticsCPUData(){
 		
 		def executionList
 		def cpuMemoryList = []
@@ -163,17 +163,29 @@ class TrendsController {
 			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
 	
 			def cpuValues = []
-			def memoryValues = []
+			def cpuPercValues = []
 			def performanceSd
 			String cpumemValue = ""
 			String memValue = ""
 			executionList.each{ execution ->
 				populateChartData(execution)
 				Double cpuTotal = 0
-				Double memoryTotal = 0
+				Double cpuPeak = 0
+				int counter = 0
 				execution?.executionresults?.each{ execResult ->
-					
-						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,"%CPU")
+					counter ++
+						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,Constants.CPU_AVG)
+						if(performanceSd?.processValue){
+							def cpuAvg = 0
+							try {
+								cpuAvg = Double.parseDouble(performanceSd?.processValue)
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+							cpuTotal = cpuTotal +  cpuAvg
+						}
+						
+						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,Constants.CPU_PEAK)
 						if(performanceSd?.processValue){
 							def cpuPercentage = 0
 							try {
@@ -181,11 +193,59 @@ class TrendsController {
 							} catch (Exception e) {
 								e.printStackTrace()
 							}
-							cpuTotal = cpuTotal +  cpuPercentage
+							if(cpuPeak < cpuPercentage){
+								cpuPeak = cpuPercentage
+							}
 						}
 						
 						
-						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,"%MEMORY")
+				}
+				cpuValues.add(cpuTotal/counter)
+				cpuPercValues.add(cpuPeak)
+			}	
+			cpuMemoryList.add(cpuValues)
+			cpuMemoryList.add(cpuPercValues)
+		}
+		def mapData = [execName: executionList?.name, systemDiag : cpuMemoryList]
+		render mapData as JSON
+	}
+
+	
+	/**
+	 * Shows the chart to draw the chart based on SystemDiagnostics
+	 * @return
+	 */
+	def getStatusSystemDiagnosticsPeakMemoryData(){
+		def executionList
+		def cpuMemoryList = []
+		if(params?.executionIds){
+			executionList = getExecutionLists(params?.executionIds)
+		}
+		else{
+			executionList = getExecutionList(params?.scriptGroup,params?.deviceId,params?.resultCnt)
+		}
+		
+		if(executionList){
+			
+			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
+	
+			def memoryValues = []
+			def memoryValues2 = []
+			def memoryValues3 = []
+			def performanceSd
+			String cpumemValue = ""
+			String memValue = ""
+			executionList.each{ execution ->
+				populateChartData(execution)
+				Double cpuTotal = 0
+				Double memoryAvailFirstTotal = 0
+				Double memoryUsedPeakTotal = 0
+				float memoryPercentagePeakTotal = 0
+				int counter = 0
+				execution?.executionresults?.each{ execResult ->
+					counter ++
+						
+						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,Constants.MEMORY_AVAILABLE_PEAK)
 						if(performanceSd?.processValue){
 							def memoryPercentage = 0
 							try {
@@ -193,15 +253,79 @@ class TrendsController {
 							} catch (Exception e) {
 								e.printStackTrace()
 							}
-							memoryTotal = memoryTotal +  memoryPercentage
+							memoryAvailFirstTotal = memoryAvailFirstTotal +  memoryPercentage
+						}
+						
+						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,Constants.MEMORY_USED_PEAK)
+						if(performanceSd?.processValue){
+							def memoryPercentage = 0
+							try {
+								memoryPercentage = Double.parseDouble(performanceSd?.processValue)
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+							memoryUsedPeakTotal = memoryUsedPeakTotal +  memoryPercentage
 						}
 						
 				}
-				cpuValues.add(cpuTotal)
-				memoryValues.add(memoryTotal)
-			}	
-			cpuMemoryList.add(cpuValues)
-			cpuMemoryList.add(memoryValues)			
+				memoryValues.add(memoryAvailFirstTotal/counter)
+				memoryValues2.add(memoryUsedPeakTotal/counter)
+			}
+			cpuMemoryList.add(memoryValues)
+			cpuMemoryList.add(memoryValues2)
+		}
+		def mapData = [execName: executionList?.name, systemDiag : cpuMemoryList]
+		render mapData as JSON
+	}
+	
+	/**
+	 * Shows the chart to draw the chart based on SystemDiagnostics
+	 * @return
+	 */
+	def getStatusSystemDiagnosticsMemoryPercData(){
+		def executionList
+		def cpuMemoryList = []
+		if(params?.executionIds){
+			executionList = getExecutionLists(params?.executionIds)
+		}
+		else{
+			executionList = getExecutionList(params?.scriptGroup,params?.deviceId,params?.resultCnt)
+		}
+		
+		if(executionList){
+			
+			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
+	
+			def memoryValues = []
+			def memoryValues2 = []
+			def memoryValues3 = []
+			def performanceSd
+			String cpumemValue = ""
+			String memValue = ""
+			executionList.each{ execution ->
+				populateChartData(execution)
+				Double cpuTotal = 0
+				Double memoryPercPeakTotal = 0
+				int counter = 0
+				execution?.executionresults?.each{ execResult ->
+					
+						counter++
+						performanceSd = Performance.findByExecutionResultAndProcessName(execResult,Constants.MEMORY_PERC_PEAK)
+						if(performanceSd?.processValue){
+							def memoryPercentage = 0
+							try {
+								memoryPercentage = Double.parseDouble(performanceSd?.processValue)
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+							memoryPercPeakTotal = memoryPercPeakTotal +  memoryPercentage
+						}
+						
+						
+				}
+				memoryValues.add(memoryPercPeakTotal/counter)
+			}
+			cpuMemoryList.add(memoryValues)
 		}
 		def mapData = [execName: executionList?.name, systemDiag : cpuMemoryList]
 		render mapData as JSON

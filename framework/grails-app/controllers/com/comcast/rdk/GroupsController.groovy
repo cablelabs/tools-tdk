@@ -79,6 +79,7 @@ class GroupsController {
 
     def deleteGroup(){
 		def countVariable = 0
+		int deleteCount = 0
 		def groupInstance
 		if(params?.listCount){
 			// to delete record(s) from list.gsp
@@ -90,7 +91,7 @@ class GroupsController {
 					if (groupInstance) {
 						try{
 							groupInstance.delete(flush: true)
-							flash.message = message(code: 'default.deleted.message', args: [message(code: 'groups.label', default: 'Groups'),  groupInstance?.name])
+							deleteCount++	
 						}
 						catch (DataIntegrityViolationException e) {
 							flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'groups.label', default: 'Groups'),  groupInstance?.name])
@@ -98,6 +99,14 @@ class GroupsController {
 					}
 				}
 			}
+			}
+		if(deleteCount  == 1)
+		{
+			flash.message = message(code: 'default.deleted.message', args: [message(code: 'groups.label', default: 'Groups'),  groupInstance?.name])
+		}
+		else
+		{
+			flash.message = "Multiple groups deleted"
 		}
 		redirect(action: "create")
 	}

@@ -14,7 +14,7 @@ CURRENT_PATH	:=$(PWD)
 export SCRIPTS_PATH =$(CURRENT_PATH)/OpenSourceComponent_Stub/script
 export PLAYER_SRC_PATH=$(CURRENT_PATH)/TDKIntegration_Stub/
 export IMAGE_PATH=$(RDK_BUILD_DIR)/work/rootfs/
-export SCRIPTS :=  $(CURRENT_PATH)/agent/scripts/StartTDK.sh $(CURRENT_PATH)/agent/scripts/StopTDK.sh $(CURRENT_PATH)/agent/scripts/sysDataDetails.sh scripts/runSysStat.sh
+export SCRIPTS :=$(CURRENT_PATH)/agent/scripts/StartTDK.sh $(CURRENT_PATH)/agent/scripts/StopTDK.sh $(CURRENT_PATH)/agent/scripts/sysDataDetails.sh scripts/runSysStat.sh scripts/TDK_version.txt $(CURRENT_PATH)/agent/scripts/TDKagentMonitor.sh $(CURRENT_PATH)/agent/scripts/PerformanceDataExtractor.sh
 PLAYER_EXE:= mplayer
 SUBDIRS =  agent DS_stub IARMBUS_stub SM_stub OpenSourceComponent_Stub ClosedCaption_stub RDKLogger_stub TDKIntegration_Stub TR069_stub 
 
@@ -40,7 +40,7 @@ $(SUBDIRS):
 agent:
 	@$(eval COPTS= -UPORT_FORWARD -DENABLE_PERFORMANCE_DIAG)
 	#platform specific libraries need to be added if needed in eval_LDOPTS
-	@$(eval LDOPTS= -l:libcurl.so.4 -l:libssl.so.1.0.0 -l:libcrypto.so.1.0.0 -lrdkCCGfx -lrdkCCReader -lrdkCCManager -l:libintl.so.8  -llog4c -lbcc -ldirectfb -l:libz.so -ldirect -lfusion )	
+	@$(eval LDOPTS= -lcurl)	
 	@echo "BUILDING AGENT"
 	$(MAKE) -C $(DEF_PATH)/$@
 	@echo "BUILDING AGENT SUCCESS"

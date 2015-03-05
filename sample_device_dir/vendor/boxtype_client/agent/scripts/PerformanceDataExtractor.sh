@@ -1,3 +1,4 @@
+#!/bin/sh
 #
 # ============================================================================
 # COMCAST C O N F I D E N T I A L AND PROPRIETARY
@@ -10,16 +11,25 @@
 # ============================================================================
 #
 
+export PATH=$PATH:/usr/local/bin:/usr/local/lib:/usr/local/lib/sa
 
-echo "Stopping TDK Agent.."
+cd $TDK_PATH
 
-sleep 1
+rm cpu.log memused.log
 
-#Killing inactive TDK processes
-#Make sure "ps" will list all process. In some platform it is "ps -ef". Make changes accordingly in below commands.
-ps | grep "agent" | grep -v "grep" | grep -v "syssnmpagent" | awk '{print $1}' | xargs kill -9 >& /dev/null
-ps | grep "tftp" | grep -v "grep" | awk '{print $1}' | xargs kill -9 >& /dev/null
-ps | grep "/opt/TDK/" | grep -v "grep" | awk '{print $1}' | xargs kill -9 >& /dev/null
-sleep 2
+while read line
+do
 
-echo "Done"
+    sed -e '0,/Average:        CPU/d' -e '/Average:         eth1/,$d' sysStatAvg.log > performance.temp
+
+    cat performance.temp | awk 'BEGIN { RS="" ; FS="\n" } { print $2 }' | awk '{print $8}' >> cpu.log
+
+    cat performance.temp  | awk 'BEGIN { RS="" ; FS="\n" } { print $8 }' | awk '{print$2,$3,$4}' >> memused.log
+
+    sed -e '1,25d' < sysStatAvg.log > temp
+
+    mv temp sysStatAvg.log
+
+done < sysStatAvg.log
+
+echo "Performance data Extracted"

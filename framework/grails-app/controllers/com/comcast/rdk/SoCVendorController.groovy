@@ -46,7 +46,7 @@ class SoCVendorController {
             return
         }
 
-        flash.message = message(code: 'default.created.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'), soCVendorInstance.id])
+        flash.message = message(code: 'default.created.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'), soCVendorInstance.name])
         redirect(action: "create")
     }
 
@@ -93,6 +93,7 @@ class SoCVendorController {
 	
 	def deleteSoCVendor(){
 		def countVariable = 0
+		int deleteCount = 0
 		def soCVendorInstance
 		if(params?.listCount){ // to delete record(s) from list.gsp
 			for (iterateVariable in params?.listCount){
@@ -103,7 +104,7 @@ class SoCVendorController {
 					if (soCVendorInstance) {
 						try{
 							 soCVendorInstance.delete(flush: true)
-							 flash.message = message(code: 'default.deleted.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'),  soCVendorInstance.name])
+							 deleteCount++
 						 }
 						 catch (DataIntegrityViolationException e) {
 							 flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'),  soCVendorInstance.name])
@@ -111,6 +112,15 @@ class SoCVendorController {
 					}
 				}
 			}
+		}
+		
+		if(deleteCount  > 1)
+		{
+			flash.message = "SoCVendors deleted"
+		}
+		else
+		{
+			flash.message = message(code: 'default.deleted.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'),  soCVendorInstance.name])
 		}
 		redirect(action: "create")
 	}

@@ -25,6 +25,9 @@ function showChart(){
 	var labels = ["Success", "Failure", "Not Executed"];
 	var labelsBenchMark = ["Execution Time(millisec)"];
 	var labelsSd = ["CPU Utilization","Memory Utilization"];
+	var labelsCPUSd = ["CPU Average Utilization","CPU Peak Utilization"];
+	var labelsMemorySd = ["Memory Available Peak","Memory Used Peak"];
+	var labelsMemoryPercSd = ["Memory Used Percentage Peak"];
 	var labelsSd1 = ["Paging In","Paging Out"];
 	var labelsSwap = ["Swaping"];
 	var labelsLoadAvg = ["Load Average"];
@@ -125,9 +128,8 @@ function showChart(){
 		    });	 
 		});	
 	}
-	else if(chartType == "CPU-Memory_Utilization"){			
-		$.get('getStatusSystemDiagnosticsData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
-			
+	else if(chartType == "CPU_Utilization"){			
+		$.get('getStatusSystemDiagnosticsCPUData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
 			if(data.systemDiag == null || data.systemDiag == ""){
 				alert("Performance data is not available with the selected script and device ");
 			}
@@ -143,7 +145,91 @@ function showChart(){
 		        legend: {
 		            show: true,
 		            placement: 'outsideGrid',
-		            labels: labelsSd,
+		            labels: labelsCPUSd,
+		            location: 'ne',
+		            rowSpacing: '0px'
+		        },
+		        axes: {
+		            xaxis: {
+		                renderer: $.jqplot.CategoryAxisRenderer,
+		                label:'Execution Name',
+		                ticks: data.execName,
+		                tickOptions:{
+		                    angle: -60
+		                },
+		                tickRenderer:$.jqplot.CanvasAxisTickRenderer
+		                
+		            },
+		            yaxis: {
+		        	    labelRenderer: $.jqplot.CanvasAxisLabelRenderer,			           
+			            label:'Percentage of Utilization'
+		        	}
+		        }
+		    });	 
+			
+		   }
+			
+		});	
+	}else if(chartType == "Memory_Utilization"){			
+		$.get('getStatusSystemDiagnosticsPeakMemoryData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
+			if(data.systemDiag == null || data.systemDiag == ""){
+				alert("Performance data is not available with the selected script and device ");
+			}
+			else{
+			plot3 = $.jqplot('chartdiv', data.systemDiag, {
+		        seriesDefaults: {
+		            renderer:$.jqplot.BarRenderer,
+		            rendererOptions: {
+		                barWidth: 20
+		             },
+		            pointLabels: { show: true }
+		        },
+		        legend: {
+		            show: true,
+		            placement: 'outsideGrid',
+		            labels: labelsMemorySd,
+		            location: 'ne',
+		            rowSpacing: '0px'
+		        },
+		        axes: {
+		            xaxis: {
+		                renderer: $.jqplot.CategoryAxisRenderer,
+		                label:'Execution Name',
+		                ticks: data.execName,
+		                tickOptions:{
+		                    angle: -60
+		                },
+		                tickRenderer:$.jqplot.CanvasAxisTickRenderer
+		                
+		            },
+		            yaxis: {
+		        	    labelRenderer: $.jqplot.CanvasAxisLabelRenderer,			           
+			            label:'Percentage of Utilization'
+		        	}
+		        }
+		    });	 
+			
+		   }
+			
+		});	
+	}else if(chartType == "Memory_Used_Percentage"){			
+		$.get('getStatusSystemDiagnosticsMemoryPercData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) { 
+			if(data.systemDiag == null || data.systemDiag == ""){
+				alert("Performance data is not available with the selected script and device ");
+			}
+			else{
+			plot3 = $.jqplot('chartdiv', data.systemDiag, {
+		        seriesDefaults: {
+		            renderer:$.jqplot.BarRenderer,
+		            rendererOptions: {
+		                barWidth: 20
+		             },
+		            pointLabels: { show: true }
+		        },
+		        legend: {
+		            show: true,
+		            placement: 'outsideGrid',
+		            labels: labelsMemoryPercSd,
 		            location: 'ne',
 		            rowSpacing: '0px'
 		        },

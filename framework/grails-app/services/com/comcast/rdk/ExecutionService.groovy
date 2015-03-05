@@ -1226,6 +1226,7 @@ class ExecutionService {
 			def executionDevice = ExecutionDevice.findAllByExecution(executionInstance)
 			def executionResult
 			def benchmarkPerformanceFile
+			def memoryPerfomanceFile
 			def cpuPerformanceFile
 			Performance performanceInstance
 			def stringArray
@@ -1233,9 +1234,9 @@ class ExecutionService {
 				executionResult = ExecutionResult.findAllByExecutionDevice(executiondevice)
 				executionResult.each { executionresult ->
 					benchmarkPerformanceFile = new File(filePath+"//logs//performance//${executionInstance?.id}//${executiondevice?.id}//${executionresult?.id}//benchmark.log")
-					cpuPerformanceFile = new File(filePath+"//logs//performance//${executionInstance?.id}//${executiondevice?.id}//${executionresult?.id}//systemDiagnostics.log")
-
-					if(benchmarkPerformanceFile.exists() || cpuPerformanceFile.exists()){
+					cpuPerformanceFile = new File(filePath+"//logs//performance//${executionInstance?.id}//${executiondevice?.id}//${executionresult?.id}//cpu.log")
+					memoryPerfomanceFile = new File(filePath+"//logs//performance//${executionInstance?.id}//${executiondevice?.id}//${executionresult?.id}//memused.log")
+					if(memoryPerfomanceFile.exists() || cpuPerformanceFile.exists() || benchmarkPerformanceFile.exists()){
 						execution.isPerformanceDone = true
 						execution.save(flush:true)
 					}
@@ -1263,77 +1264,46 @@ class ExecutionService {
 						benchmarkPerformanceFile.delete()
 					}
 					if(cpuPerformanceFile.exists()){
+						
+						List cpuValue = []
 						cpuPerformanceFile?.eachLine { line ->
 							if(!line?.isEmpty()){
-								if(line.startsWith("%cpu;")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "%CPU"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								if(line.startsWith("%memused")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "%MEMORY"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								else if( line.startsWith("%swpused")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "SWAPING"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								else if(line.startsWith("ldavg-1;")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "LOAD AVERAGE"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								else if(line.startsWith("pgpgin/s")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "PAGING : pgpgin/s"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
-								}
-								else if(line.startsWith("pgpgout/s")){
-									stringArray = line?.split(";")
-									performanceInstance = new Performance()
-									performanceInstance.executionResult = executionresult
-									performanceInstance.performanceType = "SYSTEMDIAGNOSTICS"
-									performanceInstance.processName = "PAGING : pgpgout/s"
-									performanceInstance.processValue = stringArray[1]?.trim()
-									performanceInstance.save(flush:true)
-									executionresult.addToPerformance(performanceInstance)
+								String input = line?.trim() 
+								try {
+									float val = Float.parseFloat(input)
+									cpuValue.add(100.00 - val)
+								} catch (Exception e) {
+									e.printStackTrace()
 								}
 							}
 						}
+						
+						float starting = cpuValue.first()
+						float ending = cpuValue.last()
+						float sumVal = cpuValue.sum()
+						float avg = sumVal / cpuValue.size()
+						cpuValue = cpuValue?.sort()
+						float peak = cpuValue?.last() 
+						
+						addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_CPU, Constants.CPU_STARTING, starting)
+						addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_CPU, Constants.CPU_ENDING, ending)
+						addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_CPU, Constants.CPU_AVG, avg)
+						addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_CPU, Constants.CPU_PEAK, peak)
+						
 						cpuPerformanceFile?.delete()
 					}
+					if(memoryPerfomanceFile?.exists()){
+						memoryFileParser(memoryPerfomanceFile,executionresult)
+						memoryPerfomanceFile?.delete()
+					}
 				}
+				
+				
 
 			}
 			new File(filePath+"//logs//performance//${executionInstance?.id}")?.deleteDir()
 		}catch(Exception e){
+				e.printStackTrace()
 			try{
 				new File(filePath+"//logs//performance//${executionInstance?.id}")?.deleteDir()
 			}catch(Exception ex){
@@ -1596,6 +1566,75 @@ class ExecutionService {
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
+	}
+	
+	def memoryFileParser(File memFile, def executionresult){
+		def memUsed = []
+		def memAvailable = []
+		def memPer = []
+		
+		memFile?.eachLine { line ->
+			StringTokenizer st = new StringTokenizer(line)
+			if(st.countTokens() == 3){
+				memAvailable.add(getLongValue(st?.nextToken()))
+				memUsed.add(getLongValue(st?.nextToken()))
+				memPer.add(getFloatValue(st?.nextToken()))
+			}
+		}
+		
+		try {
+			
+			
+			addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_MEMORY, Constants.MEMORY_USED_START, memUsed.first())
+			addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_MEMORY, Constants.MEMORY_USED_END, memUsed.last())
+			memUsed = memUsed?.sort()
+			addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_MEMORY, Constants.MEMORY_USED_PEAK, memUsed.last())
+			
+			addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_MEMORY, Constants.MEMORY_AVAILABLE_START, memAvailable.first())
+			addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_MEMORY, Constants.MEMORY_AVAILABLE_END, memAvailable.last())
+			memAvailable = memAvailable?.sort()
+			addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_MEMORY, Constants.MEMORY_AVAILABLE_PEAK, memAvailable.last())
+			
+			addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_MEMORY, Constants.MEMORY_PERC_START, memPer.first())
+			addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_MEMORY, Constants.MEMORY_PERC_END, memPer.last())
+			memPer = memPer?.sort()
+			addPerformanceParam(executionresult, Constants.SYSTEMDIAGNOSTICS_MEMORY, Constants.MEMORY_PERC_PEAK, memPer.last())
+			
+		} catch (Exception e) {
+		println " ERROR >>> "+e.getMessage() + "ee "+e.getCause()
+			e.printStackTrace()
+		}
+		
+		
+		
+	}
+	
+	def getLongValue(String val){
+		try {
+			return Long.parseLong(val)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		return 0
+	}
+	
+	def getFloatValue(String val){
+		try {
+			return Float.parseFloat(val)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		return 0.0
+	}
+	
+	def addPerformanceParam(def executionresult , def performanceType , def processName , def value){
+		Performance performanceInstance = new Performance()
+		performanceInstance.executionResult = executionresult
+		performanceInstance.performanceType = performanceType
+		performanceInstance.processName = processName
+		performanceInstance.processValue = value
+		performanceInstance.save(flush:true)
+		executionresult.addToPerformance(performanceInstance)
 	}
 	
 	

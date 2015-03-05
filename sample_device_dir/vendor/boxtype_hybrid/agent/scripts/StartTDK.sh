@@ -1,14 +1,15 @@
 #
 # ============================================================================
-# COMCAST CONFIDENTIAL AND PROPRIETARY
+# COMCAST C O N F I D E N T I A L AND PROPRIETARY
 # ============================================================================
-# This file (and its contents) are the intellectual property of Comcast.
-# It may not be used, copied, distributed or otherwise  disclosed in whole or in
-# part without the express written permission of Comcast.
-# ===========================================================================
+# This file (and its contents) are the intellectual property of Comcast.  It may
+# not be used, copied, distributed or otherwise  disclosed in whole or in part
+# without the express written permission of Comcast.
+# ============================================================================
 # Copyright (c) 2014 Comcast. All rights reserved.
 # ============================================================================
 #
+
 imagename=`cat /version.txt|grep imagename:|cut -d: -f 2`
 echo $imagename
 
@@ -30,6 +31,7 @@ if [ $? == 0 ]; then
 			echo "Pre requisites for mediaframework is not set"	
 		fi
 	fi
+		
 else
 	cp /etc/rmfconfig.ini /opt/
 	if [ $? == 0 ]; then
@@ -42,10 +44,14 @@ else
 		        reboot
 	       	else
 		       echo "Pre requisites for mediaframework is not set"
-		fi
-	fi                                                                      fi
+		fi       
+	fi	                                                                                                                                                                                      
+		                                                                                                                                                                                        	
+		
+fi
 #Setting up environment to run TDK
 export TDK_PATH=/opt/TDK
+export RDK_LOG_PATH=/opt/logs
 export PATH=$PATH:/usr/local/bin
 export OPENSOURCETEST_PATH=$TDK_PATH/opensourcecomptest/
 chmod 777 -R $TDK_PATH/opensourcecomptest/
@@ -70,5 +76,5 @@ ulimit -c unlimited
 
 echo "Going to start Agent"
 cd $TDK_PATH/
-./agent
-
+sh TDKagentMonitor.sh &
+./rdk_tdk_agent_process

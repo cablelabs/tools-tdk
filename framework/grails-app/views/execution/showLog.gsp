@@ -146,7 +146,17 @@ function hideParameters(k){
 	</tr>
 	<tr class="odd">
 		<td class="tdhead">Time taken for script execution(min)</td>
-		<td>${executionInstance?.executionTime}</td>				
+		<%
+			String time = executionInstance?.executionTime
+			try{
+				if(time && time?.length() > 0 && time?.contains(".")){
+					int indx = ((time.indexOf(".") + 3) <= time?.length() )?  (time.indexOf(".") + 3) : (time?.length() )
+					time = time.substring(0, time.indexOf(".")+3);
+				}
+			}catch(Exception e){
+			}
+		 %>
+		<td>${time}</td>				
 	</tr>
 	
 	<tr class="trborder even">
@@ -231,17 +241,17 @@ function hideParameters(k){
 							<g:else>
 							<g:if test="${(executionInstance.executionStatus)}"> 
 							
-							<g:if test="${fieldValue(bean: executionInstance, field: 'executionStatus').equals('PAUSED')}"> 
-								${fieldValue(bean: executionInstance, field: "executionStatus")}
+							<g:if test="${fieldValue(bean: executionInstance, field: 'executionStatus').equals('COMPLETED')}"> 
+								${fieldValue(bean: executionInstance, field: "result")}
 							</g:if>
 							<g:else>
-								${fieldValue(bean: executionInstance, field: "result")}
+								${fieldValue(bean: executionInstance, field: "executionStatus")}
 							</g:else>
 							</g:if>	
 							<g:else>
 								${fieldValue(bean: executionInstance, field: "result")}
 							</g:else>
-							</g:else>
+							</g:else>	
 		</th>			
 	</tr>	
 	<tr class="even">
@@ -412,13 +422,13 @@ function hideParameters(k){
 					</table>
 					
 						<%
-							def performance1 = Performance.findAllByExecutionResultAndPerformanceType(executionResultInstance,"SYSTEMDIAGNOSTICS")													
+							def performance1 = Performance.findAllByExecutionResultAndPerformanceType(executionResultInstance,"SYSTEMDIAGNOSTICS_CPU")													
 						%>
 						<table>	
 						<g:if test="${performance1}">		
 						<tbody>							
 							<tr class="fnhead">
-								<td class="tdhead" colspan="2">Performance Data</td>														
+								<td class="tdhead" colspan="2">CPU Utilization</td>														
 							</tr>		
 							<tr class="fnhead1">					
 								<td class="tdhead">Diagnostic Type</td>
@@ -431,7 +441,74 @@ function hideParameters(k){
 								</tr>					
 							</g:each>										
 						</tbody>
-						</g:if>		
+						</g:if>
+						</table>
+						<table>	
+						<tbody>							
+							<tr class="fnhead">
+								<td class="tdhead" colspan="4">Memory Utilization</td>														
+							</tr>
+
+
+
+												<tr class="fnhead1">
+													<td class="tdhead" style="max-width: 20px"></td>
+													<td class="tdhead">Free Memory (KB)</td>
+													<td class="tdhead">Used Memory (KB)</td>
+													<td class="tdhead">Memory Used (Perc)</td>
+												</tr>
+
+												<%
+							def freeInitial = Performance.findByExecutionResultAndProcessName(executionResultInstance,"%MEMORY_AVAILABLE_START")													
+						%>
+												<%
+							def usedInitial = Performance.findByExecutionResultAndProcessName(executionResultInstance,"%MEMORY_USED_START")													
+						%>
+												<%
+							def memInitial = Performance.findByExecutionResultAndProcessName(executionResultInstance,"%MEMORY_PERC_START")													
+						%>
+												<tr>
+													<td style="max-width: 20px"><b>Starting<b/></td>
+													<td>
+														${freeInitial?.processValue}
+													</td>
+									<td>${usedInitial?.processValue}</td>	
+									<td>${memInitial?.processValue}</td>						
+								</tr>					
+
+
+	<%
+							def freeEnd = Performance.findByExecutionResultAndProcessName(executionResultInstance,"%MEMORY_AVAILABLE_END")													
+						%>
+							<%
+							def usedEnd = Performance.findByExecutionResultAndProcessName(executionResultInstance,"%MEMORY_USED_END")													
+						%>
+						<%
+							def memEnd = Performance.findByExecutionResultAndProcessName(executionResultInstance,"%MEMORY_PERC_END")													
+						%>
+								<tr>				
+									<td style="max-width: 20px"><b>Ending<b></b></td>
+									<td>${freeEnd?.processValue}</td>
+									<td>${usedEnd?.processValue}</td>	
+									<td>${memEnd?.processValue}</td>						
+								</tr>	
+								
+									<%
+							def freePeak = Performance.findByExecutionResultAndProcessName(executionResultInstance,"%MEMORY_AVAILABLE_PEAK")													
+						%>
+							<%
+							def usedPeak = Performance.findByExecutionResultAndProcessName(executionResultInstance,"%MEMORY_USED_PEAK")													
+						%>
+						<%
+							def memPeak = Performance.findByExecutionResultAndProcessName(executionResultInstance,"%MEMORY_PERC_PEAK")													
+						%>
+								<tr>				
+									<td style="max-width: 20px"><b>Peak</b></td>
+									<td>${freePeak?.processValue}</td>
+									<td>${usedPeak?.processValue}</td>	
+									<td>${memPeak?.processValue}</td>						
+								</tr>							</tbody>
+						
 						</table>
 				</section>		
 				</span>		

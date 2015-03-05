@@ -271,6 +271,11 @@ class DeviceGroupController {
 			render(flash.message)
 			return
 		}
+		if(!params?.recorderId ||  params?.recorderId?.trim()?.length() ==  0 ){
+			flash.message = "Recorder id should not be blank"
+			render(flash.message)
+			return
+		}
 
 		/*if(Device.findByMacId(params?.macId)){
 			flash.message = "Mac Id already in use. Please use a different Name."
@@ -366,6 +371,13 @@ class DeviceGroupController {
                 return
             }
         }
+		
+		if(!params?.recorderIdedit ||  params?.recorderIdedit?.trim()?.length() ==  0 ){
+			flash.message = "Recorder id should not be blank"
+			redirect(action: "list", params: [deviceId: params.id])
+            return
+		}
+		
         boolean deviceInUse = devicegroupService.checkDeviceStatus(deviceInstance)
         if(deviceInUse){
 			flash.message = message(code: 'device.not.update', args: [deviceInstance.stbIp])

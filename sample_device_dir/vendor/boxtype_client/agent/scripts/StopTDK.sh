@@ -1,19 +1,20 @@
-#
 # ============================================================================
-# COMCAST CONFIDENTIAL AND PROPRIETARY
+# COMCAST C O N F I D E N T I A L AND PROPRIETARY
 # ============================================================================
-# This file (and its contents) are the intellectual property of Comcast.
-# It may not be used, copied, distributed or otherwise  disclosed in whole or in
-# part without the express written permission of Comcast.
-# ===========================================================================
+# This file (and its contents) are the intellectual property of Comcast.  It may
+# not be used, copied, distributed or otherwise  disclosed in whole or in part
+# without the express written permission of Comcast.
+# ============================================================================
 # Copyright (c) 2014 Comcast. All rights reserved.
 # ============================================================================
 #
+
 echo "Stopping TDK Agent.."
 
 sleep 1
 
 #Killing inactive TDK processes
+#Make sure "ps -ef" list all running process or make changes in below commands accordingly.
 ps -ef | grep "agent" | grep -v "grep" | grep -v "tr69agent" | awk '{print $2}' | xargs kill -9 >& /dev/null
 ps -ef | grep "tftp" | grep -v "grep" | awk '{print $2}' | xargs kill -9 >& /dev/null
 ps -ef | grep "/opt/TDK/" | grep -v "grep" | awk '{print $2}' | xargs kill -9 >& /dev/null

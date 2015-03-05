@@ -9,17 +9,11 @@
 # Copyright (c) 2014 Comcast. All rights reserved.
 # ============================================================================
 #
-
-
-echo "Stopping TDK Agent.."
-
-sleep 1
-
-#Killing inactive TDK processes
-#Make sure "ps" will list all process. In some platform it is "ps -ef". Make changes accordingly in below commands.
-ps | grep "agent" | grep -v "grep" | grep -v "syssnmpagent" | awk '{print $1}' | xargs kill -9 >& /dev/null
-ps | grep "tftp" | grep -v "grep" | awk '{print $1}' | xargs kill -9 >& /dev/null
-ps | grep "/opt/TDK/" | grep -v "grep" | awk '{print $1}' | xargs kill -9 >& /dev/null
-sleep 2
-
-echo "Done"
+HOME_NETWORK_INTERFACE=<moca_network_interface> #interface on gateway device corresponding to the MoCA network.
+#echo "Generating list of MoCA device MACs..."
+if [ $# -lt 1 ]; then
+	echo "Error! Insufficient arguments. Format is $0 <output file path>"
+	exit 1
+fi
+arp -n -i $HOME_NETWORK_INTERFACE | grep "?" | awk '{print $4}' > $TDK_PATH/$1
+#echo "Done"

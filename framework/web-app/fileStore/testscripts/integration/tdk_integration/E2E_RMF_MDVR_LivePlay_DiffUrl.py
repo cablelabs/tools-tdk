@@ -3,10 +3,10 @@
 <xml>
   <id>1285</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_MDVR_LivePlay_DiffUrl</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>583</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_MDVR_GetResult</primitive_test_name>
@@ -140,7 +140,7 @@ if "SUCCESS" in result.upper():
         clientMAC1 = ClientListObj.getClientMACAddress(1)
 
         streamDetails1 = tdkTestObj.getStreamDetails('01');
-        URL1 = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails1.getGatewayIp() , streamDetails1.getOCAPID());
+        URL1 = tdkintegration.E2E_getStreamingURL(globalObj, "LIVE" , streamDetails1.getGatewayIp() , streamDetails1.getOCAPID());
         if URL1 == "NULL":
             print "Failed to generate the Streaming URL";
             tdkTestObj.setResultStatus("FAILURE");
@@ -151,7 +151,7 @@ if "SUCCESS" in result.upper():
         clientMAC2 = ClientListObj.getClientMACAddress(2)
 
         streamDetails2 = tdkTestObj.getStreamDetails('02');
-        URL2 = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails2.getGatewayIp() , streamDetails2.getOCAPID());
+        URL2 = tdkintegration.E2E_getStreamingURL(globalObj, "LIVE" , streamDetails2.getGatewayIp() , streamDetails2.getOCAPID());
         if URL2 == "NULL":
             print "Failed to generate the Streaming URL";
             tdkTestObj.setResultStatus("FAILURE");

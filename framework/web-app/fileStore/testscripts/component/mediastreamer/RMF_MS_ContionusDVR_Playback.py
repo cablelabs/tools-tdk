@@ -3,17 +3,17 @@
 <xml>
   <id>913</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_MS_ContionusDVR_Playback</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>493</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>MS_RMFStreamer_Player</primitive_test_name>
   <!--  -->
   <primitive_test_version>3</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>This script test the Dvr playback via streaming Interface by continuous channel change every 10 seconds. Test Case Id: CT_RMFStreamer_19</synopsis>
   <!--  -->
@@ -58,12 +58,25 @@ if "SUCCESS" in result.upper():
          print "RmfStreamer load successful";
          #Prmitive test case which associated to this Script
          tdkTestObj = obj.createTestStep('MS_RMFStreamer_Player');
+         #---------Start-----------------
+
+	 duration = 4
+	 matchList = []
+	 matchList = tdkTestObj.getRecordingDetails(duration);
+         obj.resetConnectionAfterReboot()
+         tdkTestObj = obj.createTestStep('MS_RMFStreamer_Player');
          #set the dvr play url
          streamDetails = tdkTestObj.getStreamDetails("01");
-         recordingObj = tdkTestObj.getRecordingDetails();
-         num = recordingObj.getTotalRecordings();
-         print "Number of recordings: %d"%num
-         recordID = recordingObj.getRecordingId(num - 1);
+         time.sleep(50) 
+         
+         if matchList:
+		 
+            print "Recording Details : " , matchList
+
+            #fetch recording id from list matchList.
+            recordID = matchList[1]
+         else:
+             print "No Matching recordings list found"
          i = 0;
          for i in range(0,2):
                 print "****************%d" %i;
@@ -85,7 +98,14 @@ if "SUCCESS" in result.upper():
                         time.sleep(10);
                         #Prmitive test case which associated to this Script
                         tdkTestObj = obj.createTestStep('MS_RMFStreamer_Player');
-                        recordID = recordingObj.getRecordingId(num - 1);
+                        if matchList:
+		 
+                             print "Recording Details : " , matchList
+
+                             #fetch recording id from list matchList.
+                             recordID = matchList[1]
+                        else:
+                             print "No Matching recordings list found"
                         url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1];
                         print "The Play DVR Url Requested: %s"%url
                         tdkTestObj.addParameter("VideostreamURL",url);

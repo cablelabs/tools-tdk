@@ -46,6 +46,7 @@ def getRDKVersion(deviceIP,devicePort):
 		if "Method not found." in result:
                         print "METHOD_NOT_FOUND"
 			sys.stdout.flush()
+			sys.exit()
 
 		else:
 			resultIndex = result.find("result") + len("result"+"\":\"")

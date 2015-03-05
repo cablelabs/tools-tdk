@@ -60,6 +60,7 @@ class RDKVersionsController {
 
 	def deleteRDKVersions(){
 		def countVariable = 0
+		int deleteCount = 0
 		def rdkVersionsInstance
 		if(params?.listCount){ // to delete record(s) from list.gsp
 			for (iterateVariable in params?.listCount){
@@ -71,7 +72,7 @@ class RDKVersionsController {
 						
 						try{
 							rdkVersionsInstance.delete(flush: true)
-							flash.message = message(code: 'default.deleted.message', args: [message(code: 'rdkVersions.label', default: 'RDKVersions'),  rdkVersionsInstance.buildVersion])
+							deleteCount++
 						}
 						catch (DataIntegrityViolationException e) {
 							flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'rdkVersions.label', default: 'RDKVersions'),  rdkVersionsInstance.buildVersion])
@@ -80,6 +81,14 @@ class RDKVersionsController {
 					}
 				}
 			}
+			}
+		if(deleteCount  > 1)
+		{
+			flash.message = "RDKVersions deleted"
+		}
+		else
+		{
+			flash.message = message(code: 'default.deleted.message', args: [message(code: 'rdkVersions.label', default: 'RDKVersions'),  rdkVersionsInstance.buildVersion])
 		}
 		redirect(action: "create")
 	}

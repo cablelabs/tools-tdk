@@ -79,7 +79,7 @@
 			
 					<td style="vertical-align: top;">Select Field To Compare</td>
 					<td>				
-						<g:select id="chartType1" name="chartType" from="${['ExecutionStatus', 'TimingInfo', 'CPU-Memory_Utilization','Paging','Swaping','LoadAverage']}" value="${count}" required="" />
+						<g:select id="chartType1" name="chartType" from="${['ExecutionStatus', 'TimingInfo', 'CPU_Utilization','Memory_Utilization','Memory_Used_Percentage']}" value="${count}" required="" />
 					</td>				
 										
 					<td>
@@ -102,7 +102,7 @@
 					</td>
 					<td style="vertical-align: middle;">Select Field To Compare</td>
 					<td>				
-					<g:select id="chartType" name="chartType" from="${['ExecutionStatus', 'TimingInfo', 'CPU-Memory_Utilization','Paging','Swaping','LoadAverage']}" value="${count}" required="" /></td>									
+					<g:select id="chartType" name="chartType" from="${['ExecutionStatus', 'TimingInfo', 'CPU_Utilization','Memory_Utilization','Memory_Used_Percentage']}" value="${count}" required="" /></td>									
 					<td style="vertical-align: middle;">Result No's</td>
 					<td><g:select id="resultCount" name="result.count" from="${2..10}" value="${count}" style="width:45px;" required="" /></td>          		
 	          		<td>

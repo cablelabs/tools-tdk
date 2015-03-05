@@ -14,11 +14,19 @@
 <%@ page import="com.comcast.rdk.ScriptService"%>
 <%@ page import="java.util.Date"%>
 
+<script>
+$(document).ready(function(){
+$('#scheduletable').dataTable({
+	"sPaginationType": "full_numbers",
+	"bRetrieve": true	
+});
+});
+</script>
 <g:if test="${jobDetailList.size() > 0}" > 
 <table id="scheduletable" >
    <thead>	
    		<tr>
-     		<th colspan="8" align="center" style="background-color: white">Scheduled Jobs</th>            
+     		<th colspan="9" align="center" style="background-color: white">Scheduled Jobs</th>            
         </tr>   		
         <tr>
      		<th width="2%"></th>
@@ -28,6 +36,7 @@
             <th width="8%">Device</th>
             <th width="15%">Details</th>
             <th width="13%">EndDate</th>
+			<th width="10%">Status</th>
             <th width="2%">Delete</th>
         </tr>              
 	</thead>
@@ -76,11 +85,16 @@
 						time = date.getTime() - jobDetailsInstance?.startDate?.getTime()
 					}
 				 %>
+				<td align= "center">
+				 	<g:if test="${time > 0 }"> EXECUTED</g:if>
+				 	<g:else>PENDING</g:else>
+				
+				 </td>
 				 <td>
 					 <g:if test="${time > 0 }">
 						<g:remoteLink class="delete" 
 							action="deleteJob" controller="execution" update="newScheduleTable"
-							onSuccess="baseScheduleTableRemove();"
+							onSuccess="baseScheduleTableDelete();"
 							params="[jobId : "${jobDetailsInstance?.id}"]"><img alt="Delete" style="vertical-align: middle;" src="../images/remove.gif" />
 						</g:remoteLink>	
 					 </g:if>

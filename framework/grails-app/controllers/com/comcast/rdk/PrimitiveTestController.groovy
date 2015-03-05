@@ -400,14 +400,17 @@ class PrimitiveTestController {
 				try {
 					OutputStreamWriter out = new OutputStreamWriter(new FileOutputStream(primitiveFile),"UTF-8");
 					XmlUtil.serialize(root, out)
+					flash.message = message(code: 'default.updated.message', args: [message(code: 'primitiveTest.label', default: 'PrimitiveTest'), params?.id])
 				} catch (Exception e) {
 					File ff1 =new File(primitiveFilePath);
 					ff1.write(new String(data))
+					flash.message = "Error in updating the primitive test" 
 					e.printStackTrace()
 				}
 				}else{
 					flash.message = "Another user has updated this PrimitiveTest while you were editing"
 				}
+				
 			}
 		}else{
 			flash.message = "Error in updating the primitive test" 

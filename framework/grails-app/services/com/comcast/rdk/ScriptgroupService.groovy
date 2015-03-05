@@ -110,8 +110,8 @@ class ScriptgroupService {
 		try {
 			String moduleName = scriptObj.getModule()
 			if(scriptObj.getLongDuration()){
-				moduleName = moduleName + "_LD"
 				removeScriptsFromSuites(scriptInstance, moduleName)
+				moduleName = moduleName + "_LD"
 			}else{
 				removeScriptsFromSuites(scriptInstance, moduleName+"_LD")
 			}
@@ -215,20 +215,19 @@ class ScriptgroupService {
 	 * @return
 	 */
 	def removeScriptsFromBoxSuites(final def scriptInstance){
-
 		
 		int flag = 0
 		def boxTypeList = BoxType.list()
 		boxTypeList.each { boxType ->
 
-			def groupNames = [boxType.name + KEY_GROUP,boxType.name + KEY_GROUP+"_LD"]
+			def groupNames = [boxType?.name + KEY_GROUP,boxType?.name + KEY_GROUP+"_LD"]
 			
 			groupNames.each { groupName ->
 			
-			def scriptGrpInstance = ScriptGroup.findByName(groupName , [lock : true])
+			def scriptGrpInstance = ScriptGroup?.findByName(groupName , [lock : true])
 			if(scriptGrpInstance){
-				scriptGrpInstance.scriptList.each { script ->
-					if(script.name == scriptInstance.scriptName){
+				scriptGrpInstance?.scriptList.each { script ->
+					if(script?.name == scriptInstance?.scriptName){
 						flag = 1
 					}
 				}
@@ -239,32 +238,31 @@ class ScriptgroupService {
 			}
 			}
 		}
-		
-		
 	}
 	
-	def removeScriptsFromBoxSuites1(final def scriptInstance){
+	def removeScriptsFromBoxSuites1(final def scriptInstance){		
 		
 				String groupName
 				int flag = 0
-				def boxTypeList = BoxType.list()
-				boxTypeList.each { boxType ->
-		
+				def boxTypeList = BoxType?.list()
+				boxTypeList?.each {boxType ->		
 					groupName = boxType.name + KEY_GROUP
-					def scriptGrpInstance = ScriptGroup.findByName(groupName , [lock : true])
+					def scriptGrpInstance = ScriptGroup?.findByName(groupName , [lock : true])
 					if(scriptGrpInstance){
-						scriptGrpInstance.scriptList.each { script ->
-							if(script.scriptName == scriptInstance.scriptName){
+						if(scriptInstance){
+						scriptGrpInstance?.scriptList?.each { script ->
+							if(script?.scriptName == scriptInstance?.scriptName){
 								flag = 1
 							}
 						}
 		
 						if(flag){
-							scriptGrpInstance.removeFromScriptList(scriptInstance)
+							scriptGrpInstance?.removeFromScriptList(scriptInstance)
 						}
 					}
 				}
 			}
+	}
 	
 	/**
 	 * Method to save the script to relevant script groups and remove from others.
@@ -274,7 +272,7 @@ class ScriptgroupService {
 	def updateScriptsFromRDKVersionBoxTypeTestSuites(final Script scriptInstance){
 
 		try {
-			def bTypeList = BoxType.findAll()
+			def bTypeList = BoxType?.findAll()
 			def rdkVersionList = RDKVersions?.findAll()
 
 			bTypeList?.each { bType ->
@@ -555,21 +553,25 @@ class ScriptgroupService {
 
 		def scriptGrpInstance = ScriptGroup.findByName(sgName)
 		if(scriptGrpInstance){
+			if(scriptInstance){
 
-			scriptGrpInstance.scriptList.each { script ->
-				if(script.scriptName == scriptInstance.scriptName){
-					flag = 1
+				scriptGrpInstance.scriptList.each { script ->
+					if(script?.scriptName == scriptInstance?.scriptName){
+						flag = 1
+					}
 				}
+
+				if(flag == 1){
+					scriptGrpInstance.removeFromScriptList(scriptInstance)
+				}
+
+				//					if(sg.scriptsList.contains(scriptInstance)){
+				//						sg.removeFromScriptsList(scriptInstance)
+				//					}
+
+			}else{
+				Thread.dumpStack()
 			}
-
-			if(flag == 1){
-				scriptGrpInstance.removeFromScriptList(scriptInstance)
-			}
-
-			//					if(sg.scriptsList.contains(scriptInstance)){
-			//						sg.removeFromScriptsList(scriptInstance)
-			//					}
-
 		}
 
 	}

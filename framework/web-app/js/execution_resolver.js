@@ -226,7 +226,8 @@ function showScheduler(id){
 	        } }, { onClose : function(dialog) {
 		  $.modal.close(); } });
 	$("#scheduletable").dataTable( {
-		"sPaginationType": "full_numbers"
+		"sPaginationType": "full_numbers",
+		 "bRetrieve": "true" 
 	} );	
 }
 
@@ -369,6 +370,21 @@ function changeStyles(){
 function baseScheduleTableRemove(){		
 	$("#baseScheduleTable").hide();
 	$('.hello').remove();
+	alert("script/ScriptGroup unScheduled");
+}
+function baseScheduleTableSave()
+{
+	alert(" Script/ScriptGroup Scheduled");
+	$("#baseScheduleTable").hide();
+	$('.hello').remove();
+	
+}
+function baseScheduleTableDelete()
+{
+	
+	$("#baseScheduleTable").hide();
+	$('.hello').remove();
+	
 }
 
 /**
@@ -553,6 +569,10 @@ function deleteResults() {
 			});
 		}
 	}
+	else 
+	{
+		alert("Please select the execution entries")
+	}	
 }
 
 

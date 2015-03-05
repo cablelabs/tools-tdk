@@ -10,16 +10,20 @@
 # ============================================================================
 #
 
+loop=1
+sleep 60
 
-echo "Stopping TDK Agent.."
+# To monitor TDK Agent process and reboot box on its crash
+while [ $loop -eq 1 ]
+do
+#Make sure "ps -ef" list all running process or make changes in below commands accordingly.
+   status=`ps -ef | grep tdk_agent_monitor | grep -v grep`
+   if [ ! "$status" ];
+   then
+       echo "TDK agent monitor crashed.. Box going for Reboot.."
+       echo $(date) >> $TDK_PATH/monitorcrash.log
+       sleep 10 && reboot
+   fi
+   sleep 5
 
-sleep 1
-
-#Killing inactive TDK processes
-#Make sure "ps" will list all process. In some platform it is "ps -ef". Make changes accordingly in below commands.
-ps | grep "agent" | grep -v "grep" | grep -v "syssnmpagent" | awk '{print $1}' | xargs kill -9 >& /dev/null
-ps | grep "tftp" | grep -v "grep" | awk '{print $1}' | xargs kill -9 >& /dev/null
-ps | grep "/opt/TDK/" | grep -v "grep" | awk '{print $1}' | xargs kill -9 >& /dev/null
-sleep 2
-
-echo "Done"
+done

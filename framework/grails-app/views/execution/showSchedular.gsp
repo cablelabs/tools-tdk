@@ -39,7 +39,7 @@
 				<span id="executeBtn" class="buttons">
 				<g:submitToRemote class="save" 
 					action="scheduleOneOff" controller="execution" value="Schedule" 
-					update="newScheduleTable" onSuccess="baseScheduleTableRemove();">
+					update="newScheduleTable" onSuccess="baseScheduleTableSave();">
 				</g:submitToRemote>
 				</span>	
 			</div>								
@@ -106,7 +106,7 @@
 							<span class="buttons">
 								<g:submitToRemote class="save" 
 									action="scheduleOneOff" controller="execution" value="Schedule" 
-									update="newScheduleTable" onSuccess="baseScheduleTableRemove();" >
+									update="newScheduleTable" onSuccess="baseScheduleTableSave();" >
 								</g:submitToRemote>		
 							</span>
 						</td>									

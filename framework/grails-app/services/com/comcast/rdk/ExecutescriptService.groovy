@@ -271,7 +271,7 @@ class ExecutescriptService {
 				performanceFilePath
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
-			htmlData += scriptExecutor.executeScript(cmd,1)
+			htmlData += scriptExecutor.executeScript(cmd,10)
 		}
 		
 		def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
@@ -1215,9 +1215,11 @@ class ExecutescriptService {
 		def isSystemDiagnostics = execution.isSystemDiagnosticsEnabled ? "true" : "false"
 		def rerun = execution.isRerunRequired ? "true" : "false"
 		def htmlData
+		int scriptCnt
 		def scriptGroupInstance 
 		ScriptGroup.withTransaction {
 			scriptGroupInstance= ScriptGroup.findByName(scriptGroup)
+			scriptCnt= scriptGroupInstance?.scriptList?.size()
 		}
 		def rootFolder = grailsApplication.parentContext.getResource("/").file
 		String rootPath = rootFolder.absolutePath
@@ -1232,7 +1234,7 @@ class ExecutescriptService {
 
 		boolean executionSaveStatus 
 		
-			executionSaveStatus = saveRepeatExecutionDetails(execName, "", deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,groups)
+			executionSaveStatus = saveRepeatExecutionDetails(execName, "", deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,groups,scriptCnt)
 		
 		def executionDevice
 		if(executionSaveStatus){
@@ -1274,7 +1276,7 @@ class ExecutescriptService {
 	 * Method to save the repeat execution details
 	 */
 	public boolean saveRepeatExecutionDetails(final String execName, String scriptName, String deviceName,
-		ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,Groups groups){
+		ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,Groups groups, int scriptCnt){
 		   def executionSaveStatus = true
 		   try {
 			   Execution.withTransaction {
@@ -1282,6 +1284,7 @@ class ExecutescriptService {
 			   execution.name = execName
 			   execution.script = scriptName
 			   execution.device = deviceName
+			   execution.scriptCount = scriptCnt
 			   execution.scriptGroup = scriptGroupInstance?.name
 			   execution.result = UNDEFINED_STATUS
 			   execution.executionStatus = INPROGRESS_STATUS

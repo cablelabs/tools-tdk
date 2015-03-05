@@ -136,6 +136,8 @@ class ExecutedbService {
 		for(int i=0;i<selectedRows.size();i++){
 			if(selectedRows[i] != UNDEFINED && selectedRows[i] != MARK_ALL_ID1 && selectedRows[i] != MARK_ALL_ID2 ){
 				Execution executionInstance = Execution.findById(selectedRows[i].toLong())
+				if(!executionInstance?.executionStatus?.equals(INPROGRESS_STATUS) ){
+					if( !executionInstance?.executionStatus?.equals(PAUSED)){
 				if(executionInstance){
 
 					executionResultList  = ExecutionResult.findAllByExecution(executionInstance)
@@ -198,6 +200,8 @@ class ExecutedbService {
 				}
 				else{
 					log.info "Invalid executionInstance"
+				}
+				}
 				}
 			}
 		}

@@ -15,7 +15,7 @@ export SCRIPTS_PATH =$(CURRENT_PATH)/OpenSourceComponent_Stub/script
 export PLAYER_SRC_PATH=$(CURRENT_PATH)/MediaStreamer_stub/
 export T2P_SCRIPT_PATH=$(CURRENT_PATH)/TDKIntegration_Stub/scripts
 export IMAGE_PATH=$(RDK_BUILD_DIR)/sdk/fsroot/ramdisk/
-export SCRIPTS := $(CURRENT_PATH)/agent/scripts/StartTDK.sh scripts/configure_iptables.sh scripts/flush_iptables.sh scripts/get_moca_devices.sh  scripts/runSysStat.sh $(CURRENT_PATH)/agent/scripts/StopTDK.sh
+export SCRIPTS := $(CURRENT_PATH)/agent/scripts/StartTDK.sh $(CURRENT_PATH)/agent/scripts/configure_iptables.sh $(CURRENT_PATH)/agent/scripts/flush_iptables.sh $(CURRENT_PATH)/agent/scripts/get_moca_devices.sh  scripts/runSysStat.sh $(CURRENT_PATH)/agent/scripts/StopTDK.sh scripts/TDK_version.txt $(CURRENT_PATH)/agent/scripts/streaming_interface_file $(CURRENT_PATH)/agent/scripts/TDKagentMonitor.sh $(CURRENT_PATH)/agent/scripts/PerformanceDataExtractor.sh
 export CROSSCOMPILE =$(CROSS_COMPILE)
 
 SUBDIRS := agent MediaStreamer_stub OpenSourceComponent_Stub SM_stub IARMBUS_stub DS_stub ClosedCaption_stub RDKLogger_stub TDKIntegration_Stub
@@ -43,7 +43,7 @@ $(SUBDIRS):
 	$(MAKE) -C $(DEF_PATH)/$@
 	@echo "BUILD SUCCESS :" $@
 agent:
-	@$(eval LDOPTS =-lrdkCCReader -lrdkCCManager -l:libdirectfb-1.4.so.0.3.0 -l:libcurl.so.4 -llog4c)
+	@$(eval LDOPTS =-lcurl)
 	@$(eval COPTS = -DPORT_FORWARD)
 	$(MAKE) -C $(DEF_PATH)/$@
 	@echo "BUILD SUCCESS :" $@

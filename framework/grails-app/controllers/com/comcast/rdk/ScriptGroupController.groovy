@@ -1208,6 +1208,10 @@ class ScriptGroupController {
 						}
 					}
                 }
+				flash.message = message(code: 'default.updated.message', args: [
+					message(code: 'scriptGroup.label', default: 'Test Suite'),
+						scriptGroup
+						])
             }
         }
         else{
@@ -1228,6 +1232,10 @@ class ScriptGroupController {
 					if(script){
                     scriptGroupInstance.addToScriptList(script)
 					}
+					flash.message = message(code: 'default.created.message', args: [
+						message(code: 'scriptGroup.label', default: 'Test Suite'),
+						scriptGroupInstance.name
+					])
                 }
             }
             if (!scriptGroupInstance.save(flush: true)) {

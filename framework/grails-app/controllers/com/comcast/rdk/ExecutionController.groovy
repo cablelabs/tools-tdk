@@ -1572,6 +1572,7 @@ class ExecutionController {
 			}
 			else{
 				message = "Delete failed"
+				flash.message="Delete failed due to the pending execution"
 			}
 
 			returnMsg.add( message)
