@@ -1,0 +1,10 @@
+[Unit]
+Description=TDK Test Agent Start
+After=irmgr.service
+Requires=irmgr.service
+
+[Service]
+ExecStart=/opt/TDK/StartTDK.sh
+
+[Install]
+WantedBy=multi-user.target
