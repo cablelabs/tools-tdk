@@ -114,6 +114,7 @@ class DeviceSettingsAgent : public RDKTestStubInterface
 		bool VOP_getDisplayDetails(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOP_isContentProtected(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOP_setEnable(IN const Json::Value& req, OUT Json::Value& response);
+		bool HOST_getCPUTemperature(IN const Json::Value& req, OUT Json::Value& response);
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
 

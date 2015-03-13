@@ -75,6 +75,7 @@ bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getDisplayDetails, "TestMgr_DS_VOP_getDisplayDetails");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_isContentProtected, "TestMgr_DS_VOP_isContentProtected");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_setEnable, "TestMgr_DS_VOP_setEnable");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getCPUTemperature, "TestMgr_DS_HOST_getCPUTemperature");
 
 	/*initializing IARMBUS library */
 	IARM_Result_t retval;
@@ -1897,6 +1898,28 @@ bool DeviceSettingsAgent::VOP_setEnable(IN const Json::Value& req, OUT Json::Val
         return TEST_SUCCESS;
 }
 
+bool DeviceSettingsAgent::HOST_getCPUTemperature(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getCPUTemperature ---->Entry\n");
+        try
+        {
+                char details[30] = {'\0'};
+                float cpuTemp = device::Host::getInstance().getCPUTemperature();
+                DEBUG_PRINT(DEBUG_LOG,"Current CPU temperature: %+7.2fC\n", cpuTemp);
+                sprintf(details,"%5.2f",cpuTemp);
+                response["details"] = details;
+                response["result"] = "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in HOST_getCPUTemperature\n");
+                response["details"] = "Exception Caught in HOST_getCPUTemperature";
+                response["result"] = "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getCPUTemperature ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
 /**************************************************************************
  * Function Name: CreateObject
  * Description	: This function will be used to create a new object for the
@@ -1977,6 +2000,7 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_getDisplayDetails");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_isContentProtected");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_setEnable");
+	ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getCPUTemperature");
 
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;

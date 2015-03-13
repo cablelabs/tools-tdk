@@ -271,23 +271,33 @@ class DeviceGroupController {
 			render(flash.message)
 			return
 		}
-		if(!params?.recorderId ||  params?.recorderId?.trim()?.length() ==  0 ){
-			flash.message = "Recorder id should not be blank"
-			render(flash.message)
-			return
-		}
+		
 
 		/*if(Device.findByMacId(params?.macId)){
 			flash.message = "Mac Id already in use. Please use a different Name."
 			render("Mac Id already in use. Please use a different Name.")
 			return
 		}*/
+		
+		BoxType boxType = BoxType.findById(params?.boxType?.id)
+		
+		String newBoxType = boxType?.type?.toLowerCase()
+		
+		if (newBoxType.equals( BOXTYPE_GATEWAY )){
+			String recId =  params?.recorderId
+			if(recId?.trim()?.length() ==  0 ){
+				flash.message = "Recorder id should not be blank"
+				render(flash.message)
+			    return
+			}
+		}
         
         /**
          * Check whether streams are present
          * and there is no duplicate OcapIds
          */
         if((params?.streamid)){
+			
 			if(checkDuplicateOcapId(params?.ocapId)){
                 flash.message = message(code: 'duplicate.ocap.id')
 				render(flash.message)
@@ -372,11 +382,8 @@ class DeviceGroupController {
             }
         }
 		
-		if(!params?.recorderIdedit ||  params?.recorderIdedit?.trim()?.length() ==  0 ){
-			flash.message = "Recorder id should not be blank"
-			redirect(action: "list", params: [deviceId: params.id])
-            return
-		}
+		
+		
 		
         boolean deviceInUse = devicegroupService.checkDeviceStatus(deviceInstance)
         if(deviceInUse){
@@ -391,6 +398,21 @@ class DeviceGroupController {
 			BoxType boxType = BoxType.findById(params?.boxType?.id)
 			
 			String newBoxType = boxType?.type?.toLowerCase()
+			
+			if (newBoxType.equals( BOXTYPE_GATEWAY )){
+				String recId = ""
+				if(currentBoxType.equals( BOXTYPE_GATEWAY)){
+					recId = params?.recorderIdedit
+				}else if(currentBoxType.equals( BOXTYPE_CLIENT)){
+					recId = params?.recorderId
+				}
+				if(recId?.trim()?.length() ==  0 ){
+					flash.message = "Recorder id should not be blank"
+					redirect(action: "list", params: [deviceId: params.id])
+					return
+				}
+			}
+			
 
             deviceInstance.properties = params
 
@@ -421,13 +443,12 @@ class DeviceGroupController {
                     }
                 }
             }
-
+			
             if (!deviceInstance.save(flush: true)) {
                 devicegroupService.saveToDeviceGroup(deviceInstance)
                 redirect(action:"list")
                 return
             }
-			
            
            DeviceStream deviceStream
 
@@ -439,6 +460,7 @@ class DeviceGroupController {
 					 * and there is no duplicate OcapIds
 					 */
 					if((params?.streamid)){
+						
 						if(checkDuplicateOcapId(params?.ocapId)){
 							flash.message = message(code: 'duplicate.ocap.id')
 							redirect(action:"list")
@@ -456,6 +478,7 @@ class DeviceGroupController {
 					 * and there is no duplicate OcapIds
 					 */
 					if((params?.streamid)){
+						
 						if(checkDuplicateOcapId(params?.ocapId)){
 							flash.message = message(code: 'duplicate.ocap.id')
 							redirect(action:"list")
