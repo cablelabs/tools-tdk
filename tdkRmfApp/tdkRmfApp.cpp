@@ -49,13 +49,16 @@ int usage()
 {
         cout<<"Usage:"<<endl;
         cout<<"============="<<endl;
-        cout<<"tdkRmfApp <option> <url>"<<endl;
+        cout<<"tdkRmfApp <options> <url>"<<endl;
         cout<<endl<<"Options:"<<endl;
         cout<<"=============="<<endl;
-        cout<<"play:"<<endl;
-        cout<<"play option is used to play the entered url(plays for 60 seconds)."<<endl;
+        cout<<"play <option>:"<<endl;
+        cout<<"play -l for the entered url (plays for 60 seconds) live play back and play -d for Dvr play back (plays for 60 seconds)."<<endl;
         cout<<endl<<"Examples:"<<endl;
-        cout<<"tdkRmfApp play ocap://0x236A"<<endl;
+        cout<<"For Live playback with -l:"<<endl;
+	cout<<"tdkRmfApp play -l ocap://0x236A"<<endl;
+	cout<<"For Dvr playback with -d:"<<endl;
+	cout<<"tdkRmfApp play -d 467467695758585"<<endl;
         cout<<endl<<"record:"<<endl;
         cout<<"record option used to record given url. Each record option should be passed with a unique Id to indetify the recording."<<endl;
         cout<<endl<<"usage:"<<endl;
@@ -162,7 +165,7 @@ std::string fetchStreamingInterface()
 
 }
 
-int rmfHnSourceInitialize(string ocapId)
+int rmfHnSourceInitialize(string ocapIdOrRecordId,string liveOrDvr = "-l")
 {
 	RMFResult retResult = RMF_RESULT_SUCCESS;
 
@@ -188,6 +191,11 @@ int rmfHnSourceInitialize(string ocapId)
         string streamingIp = GetHostIP(streaming_interface_name);
         string url;
 	
+	if((liveOrDvr != "-l") || (liveOrDvr != "-d"))
+	{
+		usage();
+	}
+	
 	hnSource = new HNSource();
 	if ( NULL == hnSource )
         {
@@ -211,8 +219,19 @@ int rmfHnSourceInitialize(string ocapId)
         /*Constructing url of the form: http://<streamingIp>:8080/vldms/tuner?ocap_locator=ocap://0x125d */
         url = "http://";
         url.append(streamingIp);
-	url.append(":8080/vldms/tuner?ocap_locator=");
-        url.append(ocapId);
+	/*url.append(":8080/vldms/tuner?ocap_locator=");*/
+	if(liveOrDvr == "-l")
+	{
+		url.append(":8080/hnStreamStart?live=");
+        	url.append(ocapIdOrRecordId);
+		url.append("&tsb=26");
+	}
+	else if(liveOrDvr == "-d")
+	{
+		url.append(":8080/hnStreamStart?recordingId=");
+        	url.append(ocapIdOrRecordId);
+		url.append("&segmentId=0");
+	}
 
         cout<<"Complete URL:"<<url<<endl;
 
@@ -386,7 +405,8 @@ int rmfDvrSinkInitialize(string dvrRecordId,int duration,string title,string oca
 	/*Constructing url of the form: http://<streamingIp>:8080/vldms/tuner?ocap_locator=ocap://0x125d */
         string url = "http://";
         url.append(streamingIp);
-        url.append(":8080/vldms/tuner?ocap_locator=");
+        /*url.append(":8080/vldms/tuner?ocap_locator=");*/
+	url.append(":8080/hnStreamStart?live=");
         url.append(ocapId);
 
         cout<<"Complete URL:"<<url<<endl;
@@ -530,17 +550,18 @@ int main(int argc, char *argv[])
 		}
 		break;
 	      }
-        case 3:
+        case 4:
               {
                 cout<<"Num of arg="<<argc<<"  "<<endl;
                 string play(argv[1]);
-		string ocapId(argv[2]);
+		string liveOrDvr(argv[2]);
+		string ocapIdOrRecordId(argv[3]);
 
                 if(play == "play")
                 {
                         cout<<"entered play option"<<endl;
 			
-			result = rmfHnSourceInitialize(ocapId);			
+			result = rmfHnSourceInitialize(ocapIdOrRecordId,liveOrDvr);			
 			if(result != SUCCESS)
 			{
 				cout<<"Error: HnSource Initialize failed"<<endl;	

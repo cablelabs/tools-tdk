@@ -155,6 +155,13 @@ public class TDK_Recorder_Server extends TimerTask {
 			in.close();
 			System.out.println( new String(b));
 			//WriteFile(new String(b));
+			String response= "";
+			t.sendResponseHeaders(200, response.length());
+			final OutputStream os = t.getResponseBody();
+			os.write(response.getBytes());
+			os.close();
+			t.close();
+
 			System.exit(0);
 		}
 	}
@@ -177,6 +184,7 @@ public class TDK_Recorder_Server extends TimerTask {
 				buffer.append(sCurrentLine);
 			}
 			command = buffer.toString();
+			command = command.replaceAll("\\$\\{now\\}", "" + System.currentTimeMillis());
 		} 
 		catch (IOException e) 
 		{

@@ -222,3 +222,32 @@ def getAllTunerStates(obj,expectedresult):
         tdkTestObj.setResultStatus("FAILURE");
 
 #######################################################
+
+def getAllReservations(obj,expectedresult,kwargs={}):
+
+    #Primitive test case associated to the function
+    tdkTestObj = obj.createTestStep('TRM_GetAllReservations');
+
+    if 'deviceNo' in kwargs:
+        deviceNo = int(kwargs["deviceNo"])
+        tdkTestObj.addParameter("deviceNo",deviceNo);
+        print "Fetching reservation info for deviceNo: ",deviceNo
+    else:
+        print "Fetching all reservations"
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedresult);
+
+    #Get the result of execution
+    result = tdkTestObj.getResult();
+    details = tdkTestObj.getResultDetails();
+    print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
+    print "Details: [%s]"%details
+
+    #Set the result status of execution
+    if expectedresult in result.upper():
+        tdkTestObj.setResultStatus("SUCCESS");
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+
+#######################################################

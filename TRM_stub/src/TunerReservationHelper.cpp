@@ -21,6 +21,7 @@ static const char* ip = "127.0.0.1";
 static int port = 9987;
 static bool responseReceived = false;
 static bool responseSuccess = false;
+static char responseStr[OUTPUT_LEN];
 
 // Helper function to connect to TRM server
 static int connect_to_trm()
@@ -180,6 +181,28 @@ static bool url_request_post( const char *payload, int payload_length)
     return ret;
 }
 
+void updateResponseOut(const char* buf, int len)
+{
+    memset(responseStr,'\0',OUTPUT_LEN);
+    //Reduce the size of response msg by removing special characters added for indentation
+    for (int i=0,j=0; i<len && j<OUTPUT_LEN; i++)
+    {
+        if ( !((buf[i] == '\n') || (buf[i] == '\t') || (buf[i] == ' ') || (buf[i] == '\"')) )
+        {
+            responseStr[j] = buf[i];
+            j++;
+        }
+    }
+
+    //Replace 'details' with 'Details' in TRM response to avoid conflict with TDK json response
+    char *found = responseStr;
+    while ( found = strstr(found,"details") )
+    {
+        *found = 'D';
+        found++;
+    }
+}
+
 void processBuffer( const char* buf, int len)
 {
 
@@ -188,6 +211,7 @@ void processBuffer( const char* buf, int len)
     if (buf != NULL)
     {
 	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST","Response: \n%s\n", buf);
+        updateResponseOut(buf,len);
         std::vector<uint8_t> response;
         response.insert( response.begin(), buf, buf+len);
         RecorderMessageProcessor recProc;
@@ -399,7 +423,7 @@ void TunerReservationHelper::notifyResrvResponse(bool success)
     g_mutex_unlock (tunerStopMutex);
 }
 
-bool TunerReservationHelper::getAllTunerStates(void)
+bool TunerReservationHelper::getAllTunerStates(char *output)
 {
     bool ret = false;
     std::vector<uint8_t> out;
@@ -424,6 +448,11 @@ bool TunerReservationHelper::getAllTunerStates(void)
     if (ret == true)
     {
         ret = waitForTRMResponse();
+    }
+
+    if (ret == true)
+    {
+        strncpy(output,responseStr,strlen(responseStr));
     }
 
     return ret;
@@ -459,7 +488,7 @@ bool TunerReservationHelper::getAllTunerIds(void)
     return ret;
 }
 
-bool TunerReservationHelper::getAllReservations(string filterDevice)
+bool TunerReservationHelper::getAllReservations(string filterDevice, char*output)
 {
     bool ret = false;
     std::vector<uint8_t> out;
@@ -484,6 +513,11 @@ bool TunerReservationHelper::getAllReservations(string filterDevice)
     if (ret == true)
     {
         ret = waitForTRMResponse();
+    }
+
+    if (ret == true)
+    {
+        strncpy(output,responseStr,strlen(responseStr));
     }
 
     return ret;

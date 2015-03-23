@@ -1,22 +1,22 @@
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
-  <id>255</id>
+  <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>DS_IsContentProtection test_17</name>
+  <name>DS_IsHDCPSupported_test_18</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id>101</primitive_test_id>
+  <primitive_test_id> </primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
-  <primitive_test_name>DS_IsContentProtected</primitive_test_name>
+  <primitive_test_name>DS_IsHDCPSupported</primitive_test_name>
   <!--  -->
-  <primitive_test_version>1</primitive_test_version>
+  <primitive_test_version>2</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>This test script checks for Content Protection support of Video Output Port
-Test Case ID : CT_DS_17</synopsis>
+  <synopsis>This test script checks the HDCP support of Video Output Port.
+Test Case ID : CT_DS_18</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -52,7 +52,7 @@ port = <port>
 
 #Load module to be tested
 obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
-obj.configureTestCase(ip,port,'CT_DS_17');
+obj.configureTestCase(ip,port,'CT_DS_18');
 loadmodulestatus =obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
 obj.setLoadModuleStatus(loadmodulestatus);
@@ -62,20 +62,22 @@ if "SUCCESS" in loadmodulestatus.upper():
         result = dsManagerInitialize(obj)
         #Check for return value of DS_ManagerInitialize
         if "SUCCESS" in result:
-                #Check if Content is Protected
-                tdkTestObj = obj.createTestStep('DS_IsContentProtected')
-                tdkTestObj.addParameter("port_name",'HDMI0')
+                #Check if HDCP is Supported
+                tdkTestObj = obj.createTestStep('DS_IsHDCPSupported');
+                port_name='HDMI0';
+                print "PortName set to %s"%port_name;
+                tdkTestObj.addParameter("port_name",port_name);
                 expectedresult="SUCCESS"
-                tdkTestObj.executeTestCase(expectedresult)
-                actualresult = tdkTestObj.getResult()
-                details = tdkTestObj.getResultDetails()
+                tdkTestObj.executeTestCase(expectedresult);
+                actualresult = tdkTestObj.getResult();
+                details = tdkTestObj.getResultDetails();
                 print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,actualresult)
-                print "Details: [%s]"%details
-                #Check for return value of DS_IsContentProtected
+                print "Details: [%s]"%details;
+                #Check for return value of DS_IsHDCPSupported
                 if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS")
+                        tdkTestObj.setResultStatus("SUCCESS");
                 else:
-                        tdkTestObj.setResultStatus("FAILURE")
+                        tdkTestObj.setResultStatus("FAILURE");
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 result = dsManagerDeInitialize(obj)
         #Unload the deviceSettings module

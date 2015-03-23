@@ -26,7 +26,7 @@ def startRecorderApp(realpath,arg):
 
 	# To start recorder application
 
-	# Syntax       : OBJ.initiateApp(realpath)
+	# Syntax       : OBJ.startRecorderApp(realpath)
 	# Description  : start recorder application and redirect the console output back to script
 	# Parameters   : path of "filestore"
 	# Return Value : console output of the app
@@ -61,7 +61,7 @@ def startRecorderApp(realpath,arg):
     			raise Timout
 
 		signal.signal(signal.SIGALRM, timeoutHandler)
-		signal.alarm(3*60)  # 3 minutes
+		signal.alarm(8*60)  # 8 minutes
 
 		# Executing Recorder App
 		try:
@@ -71,8 +71,9 @@ def startRecorderApp(realpath,arg):
     			signal.alarm(0)  # reset the alarm
 		except Timout:
     			print "#TDK_@error-ERROR : Timeout!! Taking too long"
+			print "Details : ", outdata
 			sys.stdout.flush()
-#			sys.exit()
+			sys.exit()
 		except:
 			print "#TDK_@error-ERROR : Unable to initiate App"
 			sys.stdout.flush()

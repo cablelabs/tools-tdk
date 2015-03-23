@@ -208,7 +208,7 @@ char* getResult(int retval,char *resultDetails)
 {
 	if(retval==0)
 	{
-		strcpy(resultDetails,"NULL");
+		strcpy(resultDetails,"SUCCESS");
 		return (char*)"SUCCESS";
 	}
 	else
@@ -1356,21 +1356,29 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 			gsysMgrdata.str("");
 			gstateId =IARM_BUS_SYSMGR_SYSSTATE_CHANNELMAP;
 		}
-		else if((strcmp(methodName,"SetHDCPProfile")==0)||(strcmp(methodName,"GetHDCPProfile")==0))
+		else if(strcmp(methodName,"SetHDCPProfile")==0)
 		{
 			IARM_BUS_SYSMGR_HDCPProfileInfo_Param_t param;
 			param.HdcpProfile=req["newState"].asInt();
-			retval=IARM_Bus_Call(IARM_BUS_SYSMGR_NAME,methodName,&param,sizeof(param));	
+			DEBUG_PRINT(DEBUG_LOG,"Set HDCP Profile=%d\n", param.HdcpProfile);
+			retval=IARM_Bus_Call(IARM_BUS_SYSMGR_NAME,methodName,&param,sizeof(param));
+			DEBUG_PRINT(DEBUG_LOG,"SetHDCPProfile return code: %d\n", retval);
 			response["result"]=getResult(retval,resultDetails);
-			if (retval != 0)
-				response["details"]=resultDetails;
-			else
+			response["details"]=resultDetails;
+		}
+		else if(strcmp(methodName,"GetHDCPProfile")==0)
+		{
+			IARM_BUS_SYSMGR_HDCPProfileInfo_Param_t param;
+			retval=IARM_Bus_Call(IARM_BUS_SYSMGR_NAME,methodName,&param,sizeof(param));
+			DEBUG_PRINT(DEBUG_LOG,"GetHDCPProfile return code: %d Profile=%d\n", retval,param.HdcpProfile);
+			response["result"]=getResult(retval,resultDetails);
+			if (retval == 0)
 			{
-				char *HDCPdetails = (char*)malloc((sizeof(char*)*30));
-		                memset(HDCPdetails , '\0', (sizeof(char)*30));
-				sprintf(HDCPdetails,"%d",param.HdcpProfile);
-				response["details"]=HDCPdetails;
+				memset(resultDetails, '\0', (sizeof(char)*16));
+				sprintf(resultDetails,"%d",param.HdcpProfile);
+				response["details"]=resultDetails;
 			}
+			response["details"]=resultDetails;
 		}
 		else
 		{

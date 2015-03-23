@@ -56,12 +56,6 @@
         <function>TestMgr_DS_FP_getTextDisplays</function>
         <parameters />
       </primitiveTest>
-      <primitiveTest name='DS_HDCPSupport' id='65' version='1'>
-        <function>TestMgr_DS_VOPTYPE_HDCPSupport</function>
-        <parameters>
-          <parameter name='port_id' value='0' />
-        </parameters>
-      </primitiveTest>
       <primitiveTest name='DS_IsDynamicResolutionSupport' id='66' version='1'>
         <function>TestMgr_DS_VOPTYPE_isDynamicResolutionSupported</function>
         <parameters>
@@ -242,6 +236,32 @@
         <parameters>
           <parameter name='port_name' value='HDMI0' />
           <parameter name='enable' value='0' />
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_GetCPUTemperature" version="1">
+        <function>TestMgr_DS_HOST_getCPUTemperature</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_IsHDCPSupported" version="1">
+        <function>TestMgr_DS_VOPTYPE_isHDCPSupported</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_EnableHDCP" version="1">
+        <function>TestMgr_DS_VOPTYPE_enableHDCP</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+          <parameter name="protectContent" value="1"/>
+          <parameter name="hdcpKey" value="0"/>
+          <parameter name="keySize" value="0"/>
+          <parameter name="useMfrKey" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_GetHDCPStatus" version="1">
+        <function>TestMgr_DS_VOP_getHDCPStatus</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
         </parameters>
       </primitiveTest>
     </primitiveTests>

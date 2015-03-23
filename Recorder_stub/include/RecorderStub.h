@@ -26,7 +26,7 @@
 #define TEST_SUCCESS true
 #define TEST_FAILURE false 
 
-#define RECORDER_PATTERN "DVR_RECORDING_STATE"
+#define RECORDER_PATTERN "dvr_update_recording"
 #define RECORDER_LOG_PATH "/opt/TDK/recorderlog.txt"
 #define OCAPRI_LOG_PATH "/opt/logs/ocapri_log.txt"
 #define PRE_REQUISITE_LOG_PATH "logs/Recorder_testmodule_prereq_details.log"

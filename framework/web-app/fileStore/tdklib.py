@@ -97,7 +97,17 @@ class RecordList:
     	# Public methods
     	#------------------------------------------------------------------------------
 
-	def initiateDvrRecording(self,duration):
+	def initiateDvrRecording(self, duration, recordid = "0000", recordtitle = "test_dvr"):
+
+	# To initiate a new recording in box.
+
+        # Syntax       : OBJ.initiateDvrRecording(duration, recordid, recordtitle)
+        #
+        # Parameters   : duration - duration of recording
+	#                recordid - record id for recording
+	#                recordtitle - title of recording
+        #
+        # Return Value : 0 on success and 1 on failure
 		
 		obj = TDKScriptingLibrary("mediaframework","2.0");
 
@@ -112,12 +122,11 @@ class RecordList:
 
 		primitiveObj = obj.createTestStep("RMF_Dvr_CreateNew_Recording");
 
-		#Record Attribute setting.
-		recordtitle = "test_dvr"
+		#Generating the random recordid of 10 digits if id is "0000".
+		if (recordid == "0000"):
+			recordidInt = random.randrange(10**9, 10**10)
+			recordid = str(recordidInt)
 
-		#Generating the random recordid of 10 digits.
-		recordidInt = random.randrange(10**9, 10**10)
-		recordid = str(recordidInt)
 		recordduration = str(duration)
 		streamDetails = primitiveObj.getStreamDetails('01');
 		ocapid = streamDetails.getOCAPID();
@@ -143,13 +152,14 @@ class RecordList:
 
 		#Check any failure, During the recording.
 		if expectedresult not in result.upper():
-			print "Failed to record"
+			print "#TDK_@error-ERROR: Failed to record"
          		primitiveObj.setResultStatus("FAILURE");
          		obj.unloadModule("mediaframework");
          		return 1;
 
 		else:
 			primitiveObj.setResultStatus(result);
+			time.sleep(5)
 			print "Initiating Reboot";
 			obj.initiateReboot();
 			time.sleep(5)
@@ -164,10 +174,10 @@ class RecordList:
 
 	# To fetch the list of recordings from a gateway box.
 
-        # Syntax       : OBJ.getRecordList()
-        #                
-        # Parameters   : None
-        #                
+        # Syntax       : OBJ.getRecordList(duration)
+        #
+        # Parameters   : duration - duration of recordid
+        #
         # Return Value : 0 on success and 1 on failure
 
      		obj = TDKScriptingLibrary("mediaframework","2.0");
@@ -214,13 +224,22 @@ class RecordList:
 	########## End of Function ##########
 	
 	def findRecordMatchingDuration(self,duration):
+
+	# To find matching recording for a given duration.
+
+        # Syntax       : OBJ.findRecordMatchingDuration(duration)
+        #
+        # Parameters   : duration - duration of recording
+        #
+        # Return Value : 0 on success and 1 on failure
+
 		returnValue = 0
         	recordList = []
         	index = 0
 
 		returnValue = self.getRecordList(duration);
                 if returnValue == 1:
-                        print "#TDK_@error-Failed to fetch recording details"
+                        print "#TDK_@error-ERROR: Failed to fetch recording details"
 			sys.stdout.flush()
                         exit()
 
@@ -249,15 +268,81 @@ class RecordList:
 
 	########## End of Function ##########
 
+	def findMatchingRecording (self, searchPattern, searchField, duration = 3):
+
+	# To find matching recording with given record id or title.
+
+        # Syntax       : OBJ.getRecordList()
+        #
+        # Parameters   : searchPattern - pattern to search
+	#                searchField - RecordID/Title
+	#                duration - duration of recording
+        #
+        # Return Value : 0 on success and 1 on failure
+
+		returnValue = 0
+		searchFlag = 0
+		recordList = []
+		index = 0
+
+		returnValue = self.getRecordList(duration);
+		if returnValue == 1:
+			print "#TDK_@error-ERROR: Failed to fetch recording details"
+			sys.stdout.flush()
+			exit()
+
+		if self.numOfRecordings != 0:
+			print "List of Recordings :"
+		else :
+			print "#TDK_@error-ERROR: No recording found in box !!!"
+			sys.stdout.flush()
+			exit()
+
+		while index < self.numOfRecordings:
+			# Populating reference pattern
+			if searchField is "RecordID":
+				referencePattern = self.recordingObj.getRecordingId(index);
+			elif searchField is "Title":
+				referencePattern = self.recordingObj.getRecordingTitle(index);
+			else:
+				print "#TDK_@error-ERROR: No recording found in box !!!"
+				sys.stdout.flush()
+				exit()
+
+			print "ID : ", index, "      ", searchField, " : " , referencePattern
+
+			# searching for pattern in available list of recordings.
+			if (((str(searchPattern)).strip()) == ((str(referencePattern)).strip())):
+				recordList = [index];
+				recordList.append(self.recordingObj.getRecordingId(index))
+				recordList.append(self.recordingObj.getRecordingTitle(index))
+				recordList.append(self.recordingObj.getDuration(index))
+				recordList.append(self.recordingObj.getSegmentName(index))
+				print "Found matching recording : " ,recordList
+				searchFlag = 1
+				break;
+
+			else:
+				index = index + 1
+
+		if searchFlag == 0:
+			print "#TDK_@error-ERROR: Unable to find matching recording in box !!!"
+			sys.stdout.flush()
+			exit()
+
+		return recordList
+
+	########## End of Function ##########
+
 	def getRecordDetail(self,duration):
 
 	# An api to fetch list of recording, if recording doesnot exist, initiate a recording and 
 	# fetch that details
 
-        # Syntax       : OBJ.rmfAppMod()
-        #                
-        # Parameters   : None
-        #                
+        # Syntax       : OBJ.getRecordDetail(duration)
+        #
+        # Parameters   : duration - duration of recording
+        #
         # Return Value : 0 on success and 1 on failure
 
         	print "Trying to fetch recording details from gateway box [" + str(self.ipaddress) + "]"
@@ -826,6 +911,65 @@ class PrimitiveTestCase:
 
 		sys.stdout.flush()
 		return dvrObj
+
+        ########## End of Function ##########
+
+        def createRecording(self, duration, recordID = "0000", title = "sample_record"):
+
+        # Create a recording with given details
+
+        # Syntax      : OBJ.createRecording(duration, recordID, title)
+        # Description : Create a recording with given details
+        # Parameters  : duration - duration of recording
+	#		recordID - ID for recording
+	#		title    - title of recording
+        # Return Value: 0 - Success, 1 - Failure
+
+		returnvalue = 1
+		obj = self.getStreamDetails('01')
+		gatewayip = obj.getGatewayIp()
+		recobj = RecordList(str(gatewayip),8087,self.realpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
+		returnvalue = recobj.initiateDvrRecording(duration, recordID, title)
+		time.sleep(8)
+		return returnvalue
+
+        ########## End of Function ##########
+
+	def findRecordingByRecordId(self, recordId):
+
+        # Find a recording with given record id
+
+        # Syntax      : OBJ.findRecordingByRecordId(recordId)
+        # Description : Find a recording with given record id
+        # Parameters  : recordID - ID for recording
+        # Return Value: List with details of matching recording
+
+		returnvalue = 1
+		obj = self.getStreamDetails('01')
+		gatewayip = obj.getGatewayIp()
+		recobj = RecordList(str(gatewayip),8087,self.realpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
+		reclist = recobj.findMatchingRecording(recordId,"RecordID")
+		print "Record Details : ", reclist
+		return reclist
+
+        ########## End of Function ##########
+
+	def findRecordingByTitle(self, title):
+
+        # Find a recording with given record title
+
+        # Syntax      : OBJ.findRecordingByTitle(title)
+        # Description : Find a recording with given title
+        # Parameters  : title
+        # Return Value: List with details of matching recording
+
+		returnvalue = 1
+		obj = self.getStreamDetails('01')
+		gatewayip = obj.getGatewayIp()
+		recobj = RecordList(str(gatewayip),8087,self.realpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
+		reclist = recobj.findMatchingRecording(title,"Title")
+                print "Record Details : ", reclist
+                return reclist
 
         ########## End of Function ##########
 

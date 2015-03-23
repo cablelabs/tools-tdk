@@ -68,7 +68,9 @@ bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_addDisplayConnectionListener, "TestMgr_DS_HOST_addDisplayConnectionListener");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_removeDisplayConnectionListener, "TestMgr_DS_HOST_removeDisplayConnectionListener");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_Resolutions, "TestMgr_DS_HOST_Resolutions");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_HDCPSupport, "TestMgr_DS_VOPTYPE_HDCPSupport");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_isHDCPSupported, "TestMgr_DS_VOPTYPE_isHDCPSupported");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_enableHDCP, "TestMgr_DS_VOPTYPE_enableHDCP");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getHDCPStatus, "TestMgr_DS_VOP_getHDCPStatus");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_DTCPSupport, "TestMgr_DS_VOPTYPE_DTCPSupport");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_isDynamicResolutionSupported, "TestMgr_DS_VOPTYPE_isDynamicResolutionSupported");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getAspectRatio, "TestMgr_DS_VOP_getAspectRatio");
@@ -1534,56 +1536,204 @@ bool DeviceSettingsAgent::HOST_Resolutions(IN const Json::Value& req, OUT Json::
 	return TEST_SUCCESS;
 }
 
-
-
 /***************************************************************************
- *Function name	: VOPTYPE_HDCPSupport
- *Descrption	: This function will enable and check for the HDCP support for
-                  the given port.
+ *Function name	: VOPTYPE_isHDCPSupported
+ *Descrption	: This function will check if HDCP is supported for the given port.
  *parameter [in]: req-	port_id: id of the video port.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::VOPTYPE_HDCPSupport(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::VOPTYPE_isHDCPSupported(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_HDCPSupport ---->Entry\n");
-	if(&req["port_id"]==NULL )
-	{
-		return TEST_FAILURE;
-	}
-	int portID=req["port_id"].asInt();
-	bool HDCPEnable=false;
-	char HDCPSupportDetails1[30] ="HDCP set Status :";
+	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_isHDCPSupported ---->Entry\n");
+	std::string portName=req["port_name"].asCString();
+
 	try
 	{
-		/*getting instance for video ports*/	
-		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portID);
-		/*Enable HDCP support */
-		vPort.getType().getInstance(dsVIDEOPORT_TYPE_HDMI).enabledHDCP();	
-		/*checking HDCP status*/
-		HDCPEnable=vPort.getType().isHDTPSupported();
-		if(HDCPEnable==true)
+		/*getting instance for video ports*/
+		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
+		/*checking HDCP support*/
+		bool HDCPEnable = vPort.getType().isHDTPSupported();
+		DEBUG_PRINT(DEBUG_LOG,"\nIs HDCP Supported: %d\n", vPort.getType().isHDTPSupported());
+		if(true == HDCPEnable)
 		{
-			strcat(HDCPSupportDetails1,"TRUE");
-			response["result"]= "SUCCESS"; 
-		}
-		else if(HDCPEnable==false)
-		{
-			strcat(HDCPSupportDetails1,"FALSE");
-			response["result"]= "SUCCESS"; 
+			response["result"]= "SUCCESS";
+			response["details"]= "HDCP Support: TRUE";
 		}
 		else
 		{
-			response["result"]= "FAILURE"; 
+			response["result"]= "SUCCESS";
+			response["details"]= "HDCP Support: FALSE";
 		}
-		response["details"]=HDCPSupportDetails1; 
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPTYPE_HDCPSupport\n");
-		response["details"]= "Exception Caught in VOPTYPE_HDCPSupport";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPTYPE_isHDCPSupported\n");
+		response["details"]= "Exception Caught in VOPTYPE_isHDCPSupported";
 		response["result"]= "FAILURE";
 	}
-	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_HDCPSupport ---->Exit\n");
+
+	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_isHDCPSupported ---->Exit\n");
 	return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : VOPTYPE_enableHDCP
+ *Descrption    : This function enables HDCP for HDMI.
+ *parameter [in]: protectContent
+ *                hdcpKey
+ *                keySize
+ *                portName (hardcoded to type HDMI in RDK)
+ *****************************************************************************/
+bool DeviceSettingsAgent::VOPTYPE_enableHDCP(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_enableHDCP ---->Entry\n");
+
+        //std::string portName=req["port_name"].asCString();
+        bool protectContent = req["protectContent"].asInt();
+        string key = req["hdcpKey"].asCString();
+        int keySize = req["keySize"].asInt();
+        bool useMfrKey = req["useMfrKey"].asInt();
+        char *hdcpKey = 0;
+
+        try
+        {
+                if (useMfrKey)
+                {
+                        int IsMfrDataRead = false;
+                        int retry_count = 0;
+                        protectContent = true;
+                        IARM_Bus_MFRLib_GetSerializedData_Param_t param_, *param = &param_;
+
+                        do
+                        {
+                                IsMfrDataRead = false;
+                                /* Initialize the struct */
+                                memset(param, 0, sizeof(*param));
+                                /* Get Key */
+                                param->type = mfrSERIALIZED_TYPE_HDMIHDCP;
+                                param->bufLen = MAX_SERIALIZED_BUF;
+
+                                int ret = IARM_Bus_Call(IARM_BUS_MFRLIB_NAME,IARM_BUS_MFRLIB_API_GetSerializedData,
+                                          (void *)param, sizeof(IARM_Bus_MFRLib_GetSerializedData_Param_t));
+
+                                if(ret != IARM_RESULT_SUCCESS)
+                                {
+                                        DEBUG_PRINT(DEBUG_TRACE,"IARM_Bus_Call failed for %s: error code:%d\n","IARM_BUS_MFR_SERIALIZED_TYPE_HDMIHDCP",ret);
+                                }
+                                else
+                                {
+                                        DEBUG_PRINT(DEBUG_TRACE,"IARM_Bus_Call success for %s\n", "IARM_BUS_MFR_SERIALIZED_TYPE_HDMIHDCP");
+                                        keySize = param->bufLen;
+                                        hdcpKey = param->buffer;
+
+                                        if ((hdcpKey[0] == 0) && (hdcpKey[1] == 0) && (hdcpKey[2] == 0) &&
+                                            (hdcpKey[3] == 0) && (hdcpKey[4] == 0) && (hdcpKey[5] == 0))
+                                        {
+                                                DEBUG_PRINT(DEBUG_TRACE,"Invalid MFR Data !! Wait for MFR data to be ready..Retry after 10 sec\n");
+                                                sleep(10);
+                                        }
+                                        else
+                                        {
+                                                DEBUG_PRINT(DEBUG_TRACE,"Received [%d] bytes from %s\n", param->bufLen,"IARM_BUS_MFR_SERIALIZED_TYPE_HDMIHDCP");
+                                                IsMfrDataRead = true;
+                                        }
+                                }
+
+                                retry_count ++;
+
+                        } while((false == IsMfrDataRead) && (retry_count < 6));
+
+                        if (false == IsMfrDataRead)
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Failed to get MfrData for enabling HDCP\n");
+                                response["result"] = "FAILED";
+                                response["details"] = "Failed to get MfrData for enabling HDCP";
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"protectContent:%d hdcpKeyAddr:%p keySize:%d\n", protectContent,hdcpKey,keySize);
+                                /* Enable HDCP */
+                                device::VideoOutputPortType::getInstance(device::VideoOutputPortType::kHDMI).enabledHDCP(protectContent,hdcpKey,keySize);
+                                response["result"] = "SUCCESS";
+                                response["details"] = "Enable HDCP done";
+                        }
+                }
+                else
+                {
+                        hdcpKey = &key[0];
+                        DEBUG_PRINT(DEBUG_TRACE,"protectContent:%d hdcpKeyAddr:%p hdcpKey:%s keySize:%d\n", protectContent,hdcpKey,hdcpKey,keySize);
+                        /* Enable HDCP */
+                        device::VideoOutputPortType::getInstance(device::VideoOutputPortType::kHDMI).enabledHDCP(protectContent,hdcpKey,keySize);
+                        response["result"] = "SUCCESS";
+                        response["details"] = "Enable HDCP done";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPTYPE_enableHDCP\n");
+                response["details"]= "Exception Caught in VOPTYPE_enableHDCP";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_enableHDCP ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : VOP_getHDCPStatus
+ *Descrption    : This function gets the status of HDCP authentication.
+ *parameter [in]: portName
+ *****************************************************************************/
+bool DeviceSettingsAgent::VOP_getHDCPStatus(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nVOP_getHDCPStatus ---->Entry\n");
+        std::string portName=req["port_name"].asCString();
+
+        try
+        {
+                char details[30] = {'\0'};
+                // getting instance for video port
+                device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
+                // checking HDCP status
+                int hdcpStatus = vPort.getHDCPStatus();
+                DEBUG_PRINT(DEBUG_ERROR,"PortName: %s hdcpStatus: %d\n", portName.c_str(), hdcpStatus);
+                // Verify the status value
+                if ((hdcpStatus < dsHDCP_STATUS_UNPOWERED) || (hdcpStatus >= dsHDCP_STATUS_MAX))
+                {
+                    response["result"] = "FAILURE";
+                    sprintf(details,"InvalidStatus(%d)",hdcpStatus);
+                }
+                else
+                {
+                    response["result"] = "SUCCESS";
+                    switch(hdcpStatus)
+                    {
+                        case dsHDCP_STATUS_UNPOWERED:
+                            sprintf(details,"Unpowered(%d)",hdcpStatus);
+                            break;
+                        case dsHDCP_STATUS_UNAUTHENTICATED:
+                            sprintf(details,"Unauthenticated(%d)",hdcpStatus);
+                            break;
+                        case dsHDCP_STATUS_AUTHENTICATED:
+                            sprintf(details,"Authenticated(%d)",hdcpStatus);
+                            break;
+                        case dsHDCP_STATUS_AUTHENTICATIONFAILURE:
+                            sprintf(details,"AuthenticationFailure(%d)",hdcpStatus);
+                            break;
+                        case dsHDCP_STATUS_INPROGRESS:
+                            sprintf(details,"InProgress(%d)",hdcpStatus);
+                    }
+                }
+                response["details"] = details;
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOP_getHDCPStatus\n");
+                response["details"]= "Exception Caught in VOP_getHDCPStatus";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"\nVOP_getHDCPStatus ---->Exit\n");
+        return TEST_SUCCESS;
 }
 
 /***************************************************************************
@@ -1696,37 +1846,24 @@ bool DeviceSettingsAgent::VOPTYPE_isDynamicResolutionSupported(IN const Json::Va
 bool DeviceSettingsAgent::VOP_isContentProtected(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_isContentProtected ---->Entry\n");
-	if(&req["port_name"]==NULL)
-	{
-		return TEST_FAILURE;
-	}
-	char cpDetails1[40] ="ContentProtection status:";
-	char *cpDetails = (char*)malloc(sizeof(char)*20);
-	memset(cpDetails,'\0', (sizeof(char)*20));
 	std::string portName=req["port_name"].asCString();
-	bool cp_Support=false;
+
 	try
 	{
 		/*getting instance for video ports*/	
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
-		cp_Support=vPort.isContentProtected();
-		DEBUG_PRINT(DEBUG_LOG,"\nContent Protection Support:%d\n",vPort.isContentProtected());
-		if(cp_Support==true)
+		bool cpSupport = vPort.isContentProtected();
+		DEBUG_PRINT(DEBUG_LOG,"\nIs Content Protected: %d\n",vPort.isContentProtected());
+		if(true == cpSupport)
 		{
-			sprintf(cpDetails,"%s","TRUE");
-			response["result"]= "SUCCESS";
-		}
-		else if(cp_Support==false)
-		{
-			sprintf(cpDetails,"%s","FALSE");
+			response["details"]= "Content Protected: TRUE";
 			response["result"]= "SUCCESS";
 		}
 		else
 		{
-			response["result"]= "FAILURE";
+			response["details"]= "Content Protected: FALSE";
+			response["result"]= "SUCCESS";
 		}
-		strcat(cpDetails1,cpDetails);
-		response["details"]=cpDetails1;
 	}
 	catch(...)
 	{
@@ -1734,7 +1871,7 @@ bool DeviceSettingsAgent::VOP_isContentProtected(IN const Json::Value& req, OUT 
 		response["details"]= "Exception Caught in VOP_isContentProtected";
 		response["result"]= "FAILURE";
 	}
-	free(cpDetails);
+
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_isContentProtected ---->Exit\n");
 	return TEST_SUCCESS;
 }
@@ -1993,7 +2130,9 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_addDisplayConnectionListener");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_removeDisplayConnectionListener");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_Resolutions");
-	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_HDCPSupport");
+	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_isHDCPSupported");
+	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_enableHDCP");
+	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_getHDCPStatus");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_DTCPSupport");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_isDynamicResolutionSupported");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_getAspectRatio");

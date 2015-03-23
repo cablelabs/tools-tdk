@@ -164,7 +164,7 @@ bool RecorderAgent::Recorder_ScheduleRecording(IN const Json::Value& request, OU
 	set_time = "date " + datetime;
 	try
         {
-                system((char *)set_time.c_str());
+                //system((char *)set_time.c_str());
         }
         catch(...)
         {
@@ -175,7 +175,7 @@ bool RecorderAgent::Recorder_ScheduleRecording(IN const Json::Value& request, OU
 
 
         string json_url = "{\"updateSchedule\" : {\"requestId\" : \"7\", \"schedule\" : [\
-        {\"recordingId\" : "+recording_id+",\"locator\" : [ \"ocap://"+src_id+"\" ] ,\"epoch\" : \"${now}\" ,\"start\" : \""+current_rec+"\" ,\"duration\" : "+duration_msec+" ,\"properties\":{\"title\":\"Recording_"+recording_id+"\"},\"bitRate\" : \"HIGH_BIT_RATE\" ,\"deletePriority\" : \"P3\" }]}}";
+        {\"recordingId\" : \""+recording_id+"\",\"locator\" : [ \"ocap://"+src_id+"\" ] ,\"epoch\" : ${now} ,\"start\" : "+current_rec+" ,\"duration\" : "+duration_msec+" ,\"properties\":{\"title\":\"Recording_"+recording_id+"\"},\"bitRate\" : \"HIGH_BIT_RATE\" ,\"deletePriority\" : \"P3\" }]}}";
 
         DEBUG_PRINT(DEBUG_LOG,"Framed_RecordingURL is %s\n", json_url.c_str());
         response["details"] = json_url;
@@ -188,7 +188,7 @@ bool RecorderAgent::Recorder_ScheduleRecording(IN const Json::Value& request, OU
         //* To handle exception for system call
         try
         {
-                system((char *)log_removing.c_str());
+                //system((char *)log_removing.c_str());
         }
         catch(...)
         {

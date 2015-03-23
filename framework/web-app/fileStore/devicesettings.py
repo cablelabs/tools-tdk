@@ -186,3 +186,34 @@ def dsSetResolution(obj,expectedresult,kwargs={}):
         return getResolution
 
 ## End of Set Resolution ##
+
+## Get CPU Temperture ##
+def dsGetCPUTemp(obj,expectedresult):
+
+        #Primitive test case which associated to this Script
+        tdkTestObj = obj.createTestStep('DS_GetCPUTemperature');
+
+        #Execute the test case in STB
+        tdkTestObj.executeTestCase(expectedresult);
+
+        #Get the result of execution
+        actualresult = tdkTestObj.getResult();
+        details = tdkTestObj.getResultDetails();
+        print "Result : [%s] "%actualresult,
+
+        #Set the result status of execution
+        if expectedresult in actualresult:
+		print "Details : [+%sC]" %details;
+		if ((float(details) <= float(0)) or (float(details) > float(125))):
+			print "Temperature out of range";
+			retValue = "FAILURE"
+		else:
+			retValue = "SUCCESS"
+        else:
+		print "Details : [%s]" %details;
+		retValue = "FAILURE"
+
+        tdkTestObj.setResultStatus(retValue);
+        return (retValue,details)
+
+## End of Get CPU Temperture ##

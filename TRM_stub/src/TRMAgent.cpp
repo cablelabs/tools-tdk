@@ -150,7 +150,7 @@ Function name : TRMAgent::TRMAgent_GetAllTunerIds
 
 Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE".
 
-Description   : Receives the request from Test Manager to fetch states for all tuners.
+Description   : Receives the request from Test Manager to fetch Ids for all tuners.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
 bool TRMAgent::TRMAgent_GetAllTunerIds(IN const Json::Value& req, OUT Json::Value& response)
@@ -194,10 +194,11 @@ Description   : Receives the request from Test Manager to fetch states for all t
 bool TRMAgent::TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllTunerStates --->Entry\n");
+    char output[OUTPUT_LEN] = {'\0'};
 
     try
     {
-        if (!pTrh->getAllTunerStates())
+        if (!pTrh->getAllTunerStates(output))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to get all tuners states";
@@ -215,8 +216,10 @@ bool TRMAgent::TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::V
         return TEST_FAILURE;
     }
 
+    DEBUG_PRINT(DEBUG_TRACE, "output length = %d output value = %s\n", strlen(output),output);
     response["result"] = "SUCCESS";
-    response["details"] = "TRM get all tuner states success";
+    response["details"] = output;
+
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllTunerStates -->Exit\n");
     return TEST_SUCCESS;
 }
@@ -236,6 +239,8 @@ bool TRMAgent::TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllReservations --->Entry\n");
     int deviceNo = req["deviceNo"].asInt();
     string filter = "";
+    char output[OUTPUT_LEN] = {'\0'};
+
     if ((0 <= deviceNo) && (deviceNo <= TOTAL_DEVICE_NUMBER))
     {
 	filter = deviceNames[deviceNo];
@@ -243,7 +248,7 @@ bool TRMAgent::TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::
 
     try
     {
-        if (!pTrh->getAllReservations(filter))
+        if (!pTrh->getAllReservations(filter, output))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to get all tuners reservations";
@@ -261,8 +266,9 @@ bool TRMAgent::TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::
         return TEST_FAILURE;
     }
 
+    DEBUG_PRINT(DEBUG_TRACE, "output length = %d output value = %s\n", strlen(output),output);
     response["result"] = "SUCCESS";
-    response["details"] = "TRM get all tuner reservations success";
+    response["details"] = output;
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllReservations -->Exit\n");
     return TEST_SUCCESS;
 }

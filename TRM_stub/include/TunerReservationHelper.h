@@ -36,6 +36,8 @@
 #include "trm/JsonEncoder.h"
 #include "trm/JsonDecoder.h"
 
+#define OUTPUT_LEN 2040 // max limit in TDK framework is 2048
+
 enum Type {
     REQUEST = 0x1234,
     RESPONSE = 0x1800,
@@ -46,9 +48,9 @@ enum Type {
 class TunerReservationHelper
 {
 public:
-    bool getAllTunerStates(void);
+    bool getAllTunerStates(char *output);
     bool getAllTunerIds(void);
-    bool getAllReservations(std::string filterDevice);
+    bool getAllReservations(std::string filterDevice, char *output);
     bool getVersion(void);
     bool validateTunerReservation(std::string device, std::string locator, int activityType);
     bool reserveTunerForRecord( std::string device, std::string recordingId, std::string locator, uint64_t startTime=0, uint64_t duration=0, bool hot=false);

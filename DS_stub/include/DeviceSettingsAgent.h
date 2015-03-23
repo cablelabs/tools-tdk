@@ -36,6 +36,7 @@
 
 #include "libIBus.h"
 #include "libIBusDaemon.h"
+#include "mfrMgr.h"
 
 #define IN
 #define OUT
@@ -107,7 +108,9 @@ class DeviceSettingsAgent : public RDKTestStubInterface
 		bool HOST_addDisplayConnectionListener(IN const Json::Value& req, OUT Json::Value& response);
 		bool HOST_removeDisplayConnectionListener(IN const Json::Value& req, OUT Json::Value& response);
 		bool HOST_Resolutions(IN const Json::Value& req, OUT Json::Value& response);
-		bool VOPTYPE_HDCPSupport(IN const Json::Value& req, OUT Json::Value& response);
+		bool VOPTYPE_isHDCPSupported(IN const Json::Value& req, OUT Json::Value& response);
+		bool VOPTYPE_enableHDCP(IN const Json::Value& req, OUT Json::Value& response);
+		bool VOP_getHDCPStatus(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOPTYPE_DTCPSupport(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOPTYPE_isDynamicResolutionSupported(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOP_getAspectRatio(IN const Json::Value& req, OUT Json::Value& response);
