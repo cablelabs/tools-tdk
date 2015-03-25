@@ -15,5 +15,6 @@ export PATH=$PATH:/usr/local/bin:/usr/local/lib:/usr/local/lib/sa
 
 cd $TDK_PATH
 
-sar -q -r -S -B -u -b -n DEV 2 1 | awk ' /Average:/ { print $0 }' >> sysStatAvg.log
+sar -r -u 1 1 | awk ' /Average:/ { print $0 }' >> sysStatAvg.log
 
+echo "ITERATION" >> sysStatAvg.log

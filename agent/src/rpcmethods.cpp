@@ -40,20 +40,24 @@ bool   	     bBenchmarkEnabled;
 
 /* Constants */
 #define LIB_NAME_SIZE 50       // Maximum size of component interface library name
-#define COMMAND_SIZE  100    // Maximum size of command
-#define ERROR_SIZE    50         // Maximum size of error string
-#define BUFFER_SIZE   32        // Maximum size of buffer
+#define COMMAND_SIZE  100      // Maximum size of command
+#define ERROR_SIZE    50       // Maximum size of error string
+#define BUFFER_SIZE   32       // Maximum size of buffer
 
 #define DEVICE_LIST_FILE     "devicesFile.ini"                 	// File to populate connected devices
-#define CRASH_STATUS_FILE    "crashStatus.ini"               	// File to store test details on a device crash
-#define REBOOT_CONFIG_FILE   "rebootconfig.ini"            	// File to store the state of test before reboot 
-#define MODULE_LIST_FILE     "modulelist.ini"                     	// File to store list of loaded modules 
-#define BENCHMARKING_FILE    "benchmark.log"                 // File to store benchmark information
+#define CRASH_STATUS_FILE    "crashStatus.ini"                  // File to store test details on a device crash
+#define REBOOT_CONFIG_FILE   "rebootconfig.ini"                 // File to store the state of test before reboot 
+#define MODULE_LIST_FILE     "modulelist.ini"                  	// File to store list of loaded modules 
+#define BENCHMARKING_FILE    "benchmark.log"                    // File to store benchmark information
 #define SYSSTATAVG_FILE      "sysStatAvg.log"                   // File to store data from sysstat tool
+#define CPU_IDLE_DATA_FILE       "cpu.log"                      // File to store cpu idle data
+#define MEMORY_USED_DATA_FILE    "memused.log"                  // File to store memory used data
+#define PERFORMANCE_CONFIG_FILE  "perfConfig.ini"               // File to store performance status which persist over reboot cycle
 
 #define GET_DEVICES_SCRIPT   "$TDK_PATH/get_moca_devices.sh"      // Script to find connected devices
-#define SET_ROUTE_SCRIPT     "$TDK_PATH/configure_iptables.sh"        // Script to set port forwarding rules to connected devices
-#define SYSSTAT_SCRIPT       "sh $TDK_PATH/runSysStat.sh"	          // Script to get system diagnostic info from sar command
+#define SET_ROUTE_SCRIPT     "$TDK_PATH/configure_iptables.sh"    // Script to set port forwarding rules to connected devices
+#define SYSSTAT_SCRIPT       "sh $TDK_PATH/runSysStat.sh"	  // Script to get system diagnostic info from sar command
+#define PERF_DATA_EXTRACTOR_SCRIPT       "sh $TDK_PATH/PerformanceDataExtractor.sh"	  // Script to extract usage details for cpu amd memory
 #define NULL_LOG_FILE        "cat /dev/null > "
 
 #ifndef RDKVERSION
@@ -69,14 +73,14 @@ struct sModuleDetails
 
 using namespace std;
 
-pthread_t performanceThreadId;      // Thread ID for performance execution thread
+pthread_t performanceThreadId;              // Thread ID for performance execution thread
 
 bool bKeepPerformanceAlive = false;         // Global variable to keep performance execution thread alive
 
 typedef void* handler;
 typedef std::map <int, sModuleDetails> ModuleMap;
 
-ModuleMap o_gModuleMap;                            // Map to store loaded modules and its handle
+ModuleMap o_gModuleMap;                     // Map to store loaded modules and its handle
 ModuleMap::iterator o_gModuleMapIter;
 
 /* To enable port forwarding. In gateway boxes only  */
@@ -93,7 +97,7 @@ ModuleMap::iterator o_gModuleMapIter;
 /* Initializations */
 static int nModuleId = 0;  
 std::fstream so_DeviceFile;
-int RpcMethods::sm_nModuleCount = 0;                                  // Setting Module count to 0 
+int RpcMethods::sm_nModuleCount = 0;                       // Setting Module count to 0 
 std::string RpcMethods::sm_strResultId = "0000";
 int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of device as FREE by default
 std::string RpcMethods::sm_strConsoleLogPath = "";
@@ -101,19 +105,16 @@ std::string RpcMethods::sm_strConsoleLogPath = "";
 
 
 /********************************************************************************************************************
- Purpose:               This function will execute in a thread. It will invoke a shell script which inturn fetch performance data using sysstat tool.
+ Purpose:             This function will execute in a thread. It will invoke a shell script which inturn fetch performance data using sysstat tool.
  
  Parameters:          Nil
 
- Return:                 Name of the interface if it a valid IP address, else an "NOT VALID" string.
+ Return:              Nil
 
 *********************************************************************************************************************/
 void* PerformanceExecuter (void*)
 {
     int nReturnValue = RETURN_SUCCESS;
-
-    /* Deleting log file from previous execution */
-    nReturnValue = remove ("/opt/TDK/sysStatAvg.log");
 
     while (bKeepPerformanceAlive)
     {
@@ -590,7 +591,7 @@ void RpcMethods::ResetCrashStatus()
 /********************************************************************************************************************
  Purpose:              To reboot device.
                              						
- Return:                void
+ Return:               Nil
 
 *********************************************************************************************************************/
 void RpcMethods::CallReboot()
@@ -666,14 +667,25 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
         pszResultId = request ["resultID"].asCString();    
     }
 
+    /* Clearing data in files that keep performance data */
     strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
     strNullLog.append(BENCHMARKING_FILE);
     system(strNullLog.c_str());
 
-    strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
-    strNullLog.append(SYSSTATAVG_FILE);
-    system(strNullLog.c_str());
+    if(bKeepPerformanceAlive == false)
+    {
+        strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
+        strNullLog.append(SYSSTATAVG_FILE);
+        system(strNullLog.c_str());
 
+        strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
+        strNullLog.append(CPU_IDLE_DATA_FILE);
+        system(strNullLog.c_str());
+
+        strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
+        strNullLog.append(MEMORY_USED_DATA_FILE);
+        system(strNullLog.c_str());
+    }
 	
     /* Check whether sm_nConsoleLogFlag is set, if it is set the redirect console log to a file */
     if(RpcMethods::sm_nConsoleLogFlag == FLAG_SET)
@@ -750,15 +762,18 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
         pszSysDiagFlag =  request ["performanceSystemDiagnosisEnabled"].asCString();
         if (strcmp(pszSysDiagFlag, "true") == 0)
         {
-
-            bKeepPerformanceAlive = true;
-
-            /* Starting a thread to collect performance data during test execution */
-            nReturnValue = pthread_create (&performanceThreadId, NULL, PerformanceExecuter, NULL);
-            if(nReturnValue != RETURN_SUCCESS)
+            /* Start thread only once */
+            if(bKeepPerformanceAlive == false)
             {
-                DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Performance Executer  \n");
-            }     
+                bKeepPerformanceAlive = true;
+
+                /* Starting a thread to collect performance data during test execution */
+                nReturnValue = pthread_create (&performanceThreadId, NULL, PerformanceExecuter, NULL);
+                if(nReturnValue != RETURN_SUCCESS)
+                {
+                    DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Performance Executer  \n");
+                }
+            }
         }
 			
         response["result"] = "Success";
@@ -895,11 +910,13 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
     char szLibName [LIB_NAME_SIZE];
     std::string strUnloadModuleDetails;
     std::fstream o_RebootConfigFile;         // File to list the loaded modules before reboot
+    std::fstream o_PerfConfigFile;           // File to store performance data collection status
 
     /* Prepare JSON response */
     response["jsonrpc"] = "2.0";
     response["id"] = request["id"];
     response["result"] = "SUCCESS";
+    response["details"] = "Preconditions  set. Going for a reboot";
 
     /* Extracting path to file */
     strFilePath = RpcMethods::sm_strTDKPath;
@@ -909,11 +926,11 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
 
     /* Iterate over the map to find out currently loaded modules and unload the same */
 
-   sModuleDetails o_ModuleDetails;
+    sModuleDetails o_ModuleDetails;
    
-   /* Parse through module map to find the module */
-   for (o_gModuleMapIter = o_gModuleMap.begin(); o_gModuleMapIter != o_gModuleMap.end(); o_gModuleMapIter ++ )
-   {
+    /* Parse through module map to find the module */
+    for (o_gModuleMapIter = o_gModuleMap.begin(); o_gModuleMapIter != o_gModuleMap.end(); o_gModuleMapIter ++ )
+    {
         o_ModuleDetails = o_gModuleMapIter -> second;
         sprintf (szLibName, "%s", o_ModuleDetails.strModuleName.c_str());
    
@@ -938,9 +955,28 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
 
     /* Resetting crash status before reboot */
     ResetCrashStatus();
-	
-    response ["result"] = "SUCCESS";
-    response ["details"] = "Preconditions  set. Going for a reboot";
+
+    /* Keep performance status in a file so as to start performance data collection after reboot */
+    if(bKeepPerformanceAlive)
+    {
+        /* Extracting path to file */
+        strFilePath = RpcMethods::sm_strTDKPath;
+        strFilePath.append(PERFORMANCE_CONFIG_FILE);
+
+        o_PerfConfigFile.open (strFilePath.c_str(), ios::out);
+        /* Adding performance status into file */
+        if (o_PerfConfigFile.is_open())
+        {
+            o_PerfConfigFile << "TRUE" << std::endl;
+            o_PerfConfigFile.close();
+        }
+        else
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "Unable to open performance configuration file \n");
+            response ["result"] = "FAILURE";
+            response ["details"] = "Unable to open performance configuration file";
+        }
+    }
 
     CallReboot();
 
@@ -966,11 +1002,15 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
     bool bRet = true;
     std::string strFilePath;
     std::string strLineInFile;
+    std::string strPerfStatus;
+    std::string strNullLog;
     std::string strLoadLibraryDetails;
     std::fstream o_RebootConfigFile;
+    std::fstream o_perfConfigFile;
     char szLibName [LIB_NAME_SIZE];
     int nReturnValue = RETURN_SUCCESS;
 
+    void *pvReturnValue;
     const char* pszExecId = NULL;
     const char* pszResultId = NULL;
     const char* pszDeviceId = NULL;
@@ -1064,9 +1104,47 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
 
     /* Deleting configuration file */
     nReturnValue = remove (strFilePath.c_str());
-		
+
+    /* Extracting path to file */
+    strFilePath = RpcMethods::sm_strTDKPath;
+    strFilePath.append(PERFORMANCE_CONFIG_FILE);
+
+    o_perfConfigFile.open (strFilePath.c_str(), ios::in);
+    if (o_perfConfigFile.is_open())
+    {
+        DEBUG_PRINT (DEBUG_LOG, "\nPerformance Configuration file %s found", SHOW_DEFINE (PERFORMANCE_CONFIG_FILE) );
+
+        /* Parsing configuration file to get crash status */
+        pvReturnValue = getline (o_perfConfigFile, strPerfStatus);
+        if (!pvReturnValue)
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve status of performnace monitoring");
+        }
+
+        if (strPerfStatus == "TRUE")
+        {
+            if(bKeepPerformanceAlive == false)
+            {
+                bKeepPerformanceAlive = true;
+
+                /* Starting a thread to collect performance data during test execution */
+                nReturnValue = pthread_create (&performanceThreadId, NULL, PerformanceExecuter, NULL);
+                if(nReturnValue != RETURN_SUCCESS)
+                {
+                    DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Performance Executer  \n");
+                }
+            }            
+        }
+        o_perfConfigFile.close();
+    }
+
+    strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
+    strNullLog.append(PERFORMANCE_CONFIG_FILE);
+    system(strNullLog.c_str());
+
+    nReturnValue = remove (strFilePath.c_str());
     return bRet;
-	
+
 } /* End of RPCRestorePreviousState */
 
 
@@ -1523,7 +1601,7 @@ bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Js
     sleep(2);
 
     /* Creating pipe to execute script which will extract performance data */ 	
-    FILE* pipe = popen("sh PerformanceDataExtractor.sh", "r");
+    FILE* pipe = popen(PERF_DATA_EXTRACTOR_SCRIPT, "r");
     if (!pipe)
     {
         DEBUG_PRINT (DEBUG_TRACE, "\nError in creating pipe to extract performance data\n");

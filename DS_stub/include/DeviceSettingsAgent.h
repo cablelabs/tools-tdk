@@ -44,6 +44,10 @@
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
 
+#define STR_LEN   128
+#define LINE_LEN  1024
+#define MFRMGR    "mfrMgrMain"
+
 class PowerChangeNotify: public device::PowerModeChangeListener
 {
 	public:

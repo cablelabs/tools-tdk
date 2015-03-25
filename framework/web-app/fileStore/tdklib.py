@@ -102,11 +102,11 @@ class RecordList:
 	# To initiate a new recording in box.
 
         # Syntax       : OBJ.initiateDvrRecording(duration, recordid, recordtitle)
-        #
+        #                
         # Parameters   : duration - duration of recording
 	#                recordid - record id for recording
 	#                recordtitle - title of recording
-        #
+        #                
         # Return Value : 0 on success and 1 on failure
 		
 		obj = TDKScriptingLibrary("mediaframework","2.0");
@@ -175,9 +175,9 @@ class RecordList:
 	# To fetch the list of recordings from a gateway box.
 
         # Syntax       : OBJ.getRecordList(duration)
-        #
+        #                
         # Parameters   : duration - duration of recordid
-        #
+        #                
         # Return Value : 0 on success and 1 on failure
 
      		obj = TDKScriptingLibrary("mediaframework","2.0");
@@ -228,9 +228,9 @@ class RecordList:
 	# To find matching recording for a given duration.
 
         # Syntax       : OBJ.findRecordMatchingDuration(duration)
-        #
+        #                
         # Parameters   : duration - duration of recording
-        #
+        #                
         # Return Value : 0 on success and 1 on failure
 
 		returnValue = 0
@@ -267,82 +267,82 @@ class RecordList:
         	return recordList
 
 	########## End of Function ##########
-
+	
 	def findMatchingRecording (self, searchPattern, searchField, duration = 3):
 
 	# To find matching recording with given record id or title.
 
         # Syntax       : OBJ.getRecordList()
-        #
+        #                
         # Parameters   : searchPattern - pattern to search
 	#                searchField - RecordID/Title
 	#                duration - duration of recording
-        #
+        #                
         # Return Value : 0 on success and 1 on failure
 
 		returnValue = 0
 		searchFlag = 0
-		recordList = []
-		index = 0
+        	recordList = []
+        	index = 0
 
 		returnValue = self.getRecordList(duration);
-		if returnValue == 1:
-			print "#TDK_@error-ERROR: Failed to fetch recording details"
+                if returnValue == 1:
+                        print "#TDK_@error-ERROR: Failed to fetch recording details"
 			sys.stdout.flush()
-			exit()
+                        exit()
 
 		if self.numOfRecordings != 0:
 			print "List of Recordings :"
 		else :
-			print "#TDK_@error-ERROR: No recording found in box !!!"
+                        print "#TDK_@error-ERROR: No recording found in box !!!"
 			sys.stdout.flush()
-			exit()
+                        exit()			
 
-		while index < self.numOfRecordings:
+        	while index < self.numOfRecordings:
 			# Populating reference pattern
 			if searchField is "RecordID":
-				referencePattern = self.recordingObj.getRecordingId(index);
+                        	referencePattern = self.recordingObj.getRecordingId(index);
 			elif searchField is "Title":
-				referencePattern = self.recordingObj.getRecordingTitle(index);
+                        	referencePattern = self.recordingObj.getRecordingTitle(index);
 			else:
 				print "#TDK_@error-ERROR: No recording found in box !!!"
 				sys.stdout.flush()
 				exit()
 
-			print "ID : ", index, "      ", searchField, " : " , referencePattern
+                        print "ID : ", index, "      ", searchField, " : " , referencePattern
 
-			# searching for pattern in available list of recordings.
-			if (((str(searchPattern)).strip()) == ((str(referencePattern)).strip())):
-				recordList = [index];
-				recordList.append(self.recordingObj.getRecordingId(index))
-				recordList.append(self.recordingObj.getRecordingTitle(index))
-				recordList.append(self.recordingObj.getDuration(index))
-				recordList.append(self.recordingObj.getSegmentName(index))
-				print "Found matching recording : " ,recordList
+                        # searching for pattern in available list of recordings.
+                        if (((str(searchPattern)).strip()) == ((str(referencePattern)).strip())):
+                                recordList = [index];
+                                recordList.append(self.recordingObj.getRecordingId(index))
+                                recordList.append(self.recordingObj.getRecordingTitle(index))
+                                recordList.append(self.recordingObj.getDuration(index))
+                                recordList.append(self.recordingObj.getSegmentName(index))
+                                print "Found matching recording : " ,recordList
 				searchFlag = 1
-				break;
+                                break;
 
 			else:
-				index = index + 1
+                        	index = index + 1
 
 		if searchFlag == 0:
-			print "#TDK_@error-ERROR: Unable to find matching recording in box !!!"
+                        print "#TDK_@error-ERROR: Unable to find matching recording in box !!!"
 			sys.stdout.flush()
-			exit()
+                        exit()			
 
-		return recordList
+        	return recordList
 
 	########## End of Function ##########
-
+	
 	def getRecordDetail(self,duration):
 
 	# An api to fetch list of recording, if recording doesnot exist, initiate a recording and 
 	# fetch that details
 
         # Syntax       : OBJ.getRecordDetail(duration)
-        #
+        #                
         # Parameters   : duration - duration of recording
-        #
+        #                
         # Return Value : 0 on success and 1 on failure
 
         	print "Trying to fetch recording details from gateway box [" + str(self.ipaddress) + "]"
@@ -1445,6 +1445,7 @@ class TDKScriptingLibrary:
 			exit()
 		else:
 			if unloadmoduleresult:
+				print "Unloading Module : " , cName
 				if "SUCCESS" in unloadmoduleresult.upper():
 					print "Unload Module Status  : Success"
 					endTime=time.time()
