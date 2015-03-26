@@ -1551,8 +1551,8 @@ bool DeviceSettingsAgent::VOPTYPE_isHDCPSupported(IN const Json::Value& req, OUT
 		/*getting instance for video ports*/
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
 		/*checking HDCP support*/
-		bool HDCPEnable = vPort.getType().isHDTPSupported();
-		DEBUG_PRINT(DEBUG_LOG,"\nIs HDCP Supported: %d\n", vPort.getType().isHDTPSupported());
+		bool HDCPEnable = vPort.getType().isHDCPSupported();
+		DEBUG_PRINT(DEBUG_LOG,"\nIs HDCP Supported: %d\n", vPort.getType().isHDCPSupported());
 		if(true == HDCPEnable)
 		{
 			response["result"]= "SUCCESS";

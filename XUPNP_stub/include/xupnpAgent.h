@@ -30,13 +30,10 @@
 #define XDISCOVERY             "xdiscovery"
 #define XDISC_LOG_FILE         "/opt/logs/xdiscovery.log"
 #define XCALDEV_LOG_FILE       "/opt/logs/xdevice.log"
-//#define XDISC_OUTPUT_FILE      "/opt/output.json"
 #define BASICDEVXML_FILE       "/opt/xupnp/BasicDevice.xml"
-#define XCALDEVCONFIG          "/etc/xupnp/xdevice.conf"
-#define XCALDEVHYBCONFIG       "/etc/xupnp/xdevice_hybrid.conf"
 #define XDISCONFIG             "/etc/xupnp/xdiscovery.conf"
+#define XDISCONFIG_EMULTR      "/etc/xdiscovery.conf"
 #define STARTUPCMD             "/etc/init.d/start-upnp-service restart"
-#define TDK_XDEVICE_CONF_FILE  "tdk_xdevice.conf"
 
 using namespace std;
 

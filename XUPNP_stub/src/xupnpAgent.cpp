@@ -116,22 +116,20 @@ std::string XUPNPAgent::testmodulepre_requisites()
     char strCmd[STR_LEN] = {'\0'};
     FILE *fp = NULL;
 
-    //1. Check if xdiscovery process in running
+    //1. Check if xdiscovery process is running
     sprintf(strCmd,"pidstat | grep %s",XDISCOVERY);
     fp = popen(strCmd, "r");
     if (fp != NULL)
     {
         /* Read the output */
-        while (fgets(output, sizeof(output)-1, fp) != NULL) {
-            DEBUG_PRINT(DEBUG_TRACE, "command output %s\n",output);
-        }
-        pclose(fp);
-        if (strstr(output,XDISCOVERY)) {
-            DEBUG_PRINT(DEBUG_TRACE, "%s process is running\n",XDISCOVERY);
+        if (fgets(output, sizeof(output)-1, fp) != NULL) {
+            DEBUG_PRINT(DEBUG_TRACE, "%s process is running\n%s\n",XDISCOVERY,output);
+            pclose(fp);
         }
         else {
             DEBUG_PRINT(DEBUG_TRACE, "%s process is not running\n",XDISCOVERY);
             DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
+            pclose(fp);
             return "FAILURE:xdiscovery process is not running";
         }
     }
@@ -140,58 +138,68 @@ std::string XUPNPAgent::testmodulepre_requisites()
         return "FAILURE:Failed to get status of xdiscovery process";
     }
 
-    //2. Check for xcal-device process if it's gateway box (xdevice.conf will be present)
-    ifstream xDevCnfFile(XCALDEVCONFIG);
-    if (xDevCnfFile.good()) {
-        xDevCnfFile.close();
-        DEBUG_PRINT(DEBUG_TRACE, "Gateway Box. %s file found\n",XCALDEVCONFIG);
+#ifdef HYBRID
+    //2. Check if xcal-device process is running
+    fp = NULL;
+    memset(output,'\0',sizeof(output));
+    memset(strCmd,'\0',sizeof(strCmd));
 
-        fp = NULL;
-        memset(output,'\0',sizeof(output));
-        memset(strCmd,'\0',sizeof(strCmd));
-
-        sprintf(strCmd,"pidstat | grep %s",XCALDEVICE);
-        fp = popen(strCmd, "r");
-        if (fp != NULL)
-        {
-            /* Read the output */
-            while (fgets(output, sizeof(output)-1, fp) != NULL) {
-                DEBUG_PRINT(DEBUG_TRACE, "command output %s\n",output);
-            }
-
+    sprintf(strCmd,"pidstat | grep %s",XCALDEVICE);
+    fp = popen(strCmd, "r");
+    if (fp != NULL)
+    {
+        /* Read the output */
+        if (fgets(output, sizeof(output)-1, fp) != NULL) {
+            DEBUG_PRINT(DEBUG_TRACE, "%s process is running\n%s\n",XCALDEVICE,output);
             pclose(fp);
-            if (strstr(output,XCALDEVICE)) {
-                DEBUG_PRINT(DEBUG_TRACE, "%s process is running\n",XCALDEVICE);
-            }
-            else {
-                DEBUG_PRINT(DEBUG_TRACE, "*** WARNING *** %s process is not running\n",XCALDEVICE);
-                DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
-            }
         }
         else {
-            DEBUG_PRINT(DEBUG_ERROR, "Failed to get status of process %s\n",XCALDEVICE);
-            return "FAILURE:Failed to get status of xcal-device process";
+            DEBUG_PRINT(DEBUG_TRACE, "%s process is not running\n",XCALDEVICE);
+            DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
+            pclose(fp);
+            return "FAILURE:xcal-device process is not running";
         }
     }
     else {
-        DEBUG_PRINT(DEBUG_TRACE, "IP Client Box. Not checking for %s process\n",XCALDEVICE);
+        DEBUG_PRINT(DEBUG_ERROR, "Failed to get status of process %s\n",XCALDEVICE);
+        return "FAILURE:Failed to get status of xcal-device process";
     }
+#endif
 
     //3. Get the location of output.json file on the device
     fp = NULL;
     memset(output,'\0',sizeof(output));
     memset(strCmd,'\0',sizeof(strCmd));
 
+#if 0
     sprintf(strCmd,"cat %s |grep outputJsonFile|grep -v '#' |cut -d '=' -f2-",XDISCONFIG);
+#else
+    //Currently location of xdiscovery.conf is different on rdk platforms and emulator
+    ifstream xdiscConfFile(XDISCONFIG);
+    if (xdiscConfFile.good())
+    {
+        xdiscConfFile.close();
+        DEBUG_PRINT(DEBUG_TRACE, "%s file found\n",XDISCONFIG);
+        sprintf(strCmd,"cat %s | grep outputJsonFile | grep -v '#' |cut -d '=' -f2-",XDISCONFIG);
+    }
+    else
+    {
+        ifstream xdiscConfFile(XDISCONFIG_EMULTR);
+        if (xdiscConfFile.good())
+        {
+            xdiscConfFile.close();
+            DEBUG_PRINT(DEBUG_TRACE, "%s file found\n",XDISCONFIG_EMULTR);
+            sprintf(strCmd,"cat %s | grep outputJsonFile | grep -v '#' |cut -d '=' -f2-",XDISCONFIG_EMULTR);
+        }
+    }
+#endif
+
     fp = popen(strCmd, "r");
     if (fp != NULL)
     {
         /* Read the output */
-        while (fgets(output, sizeof(output)-1, fp) != NULL) {
-            DEBUG_PRINT(DEBUG_TRACE, "command output %s\n",output);
-        }
-        pclose(fp);
-        if (output[0] != '\0') {
+        if (fgets(output, sizeof(output)-1, fp) != NULL) {
+            DEBUG_PRINT(DEBUG_TRACE, "outputJsonFile value = %s\n",output);
             //Removing trailing newline character from fgets() input
             char *pos;
             if ((pos=strchr(output, '\n')) != NULL) {
@@ -201,10 +209,12 @@ std::string XUPNPAgent::testmodulepre_requisites()
             memset(xdiscOutputFile,'\0',sizeof(xdiscOutputFile));
             strncpy(xdiscOutputFile,output,strlen(output));
             DEBUG_PRINT(DEBUG_TRACE, "Path for output.json = %s\n",xdiscOutputFile);
+            pclose(fp);
         }
         else {
             DEBUG_PRINT(DEBUG_ERROR, "Path for output.json could not be found\n");
             DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
+            pclose(fp);
             return "FAILURE:Could not locate output.json file";
         }
     }
@@ -285,40 +295,49 @@ bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::V
 #endif
             upnpResults[param->bufLength] = '\0';
 
-            //Concatenate parameter info from all services published
-            string strBuffer(upnpResults);
-            istringstream iss(strBuffer);
-            string value;
-
-            do
+            if (( '\0' != upnpResults[0] ) && ( strncmp("null",upnpResults,4) ))
             {
-                string sub;
-                iss >> sub;
-                if (sub.find(parameter) != string::npos)
+                //Concatenate parameter info from all services published
+                string strBuffer(upnpResults);
+                istringstream iss(strBuffer);
+                string value;
+
+                do
                 {
-                    value += sub;
-                }
-            } while (iss);
+                    string sub;
+                    iss >> sub;
+                    if (sub.find(parameter) != string::npos)
+                    {
+                        value += sub;
+                    }
+                } while (iss);
 
-            if(value.empty())
-            {
-                DEBUG_PRINT(DEBUG_ERROR,"Requested param (%s) not found in upnp result %s\n",parameter.c_str(),strBuffer.c_str());
-                response["result"] = "FAILURE";
-                response["details"] = "Parameter not found in upnp result";
+                if(value.empty())
+                {
+                    DEBUG_PRINT(DEBUG_ERROR,"Requested param (%s) not found in upnp result %s\n",parameter.c_str(),strBuffer.c_str());
+                    response["result"] = "FAILURE";
+                    response["details"] = "Parameter not found in xupnp device info";
+                }
+                else
+                {
+                    DEBUG_PRINT(DEBUG_LOG,"Parameter found: %s\n",value.c_str());
+                    response["result"] = "SUCCESS";
+                    //Truncate value beyond 512 characters
+                    if (value.length() > 512)
+                        response["details"] = value.substr (0,512) + "...";
+                    else
+                        response["details"] = value;
+                }
             }
             else
             {
-                DEBUG_PRINT(DEBUG_LOG,"Parameter found: %s\n",value.c_str());
-                response["result"] = "SUCCESS";
-                //Truncate value beyond 512 characters
-                if (value.length() > 512)
-                    response["details"] = value.substr (0,512) + "...";
-                else
-                    response["details"] = value;
+                DEBUG_PRINT(DEBUG_TRACE, "IARMBus Call to GetXUPNPDeviceInfo returned null info\n");
+                response["result"] = "FAILURE";
+                response["details"] = "IARMBus Call to GetXUPNPDeviceInfo returned null info";
             }
-
-            IARM_Free(IARM_MEMTYPE_PROCESSLOCAL, param);
         }
+
+        IARM_Free(IARM_MEMTYPE_PROCESSLOCAL, param);
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_GetUpnpResult -->Exit\n");
