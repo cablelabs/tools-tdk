@@ -562,9 +562,9 @@ class PrimitiveTestCase:
 		# TODO check if required		self.executionName=executionName
 		self.expectedResult = expectedResult
 
-		self.result = self.result.replace("result","TDK__#@$00_result")
-		self.result = self.result.replace("details","TDK__#@$00_details")
-		self.result = self.result.replace("log-path","TDK__#@$00_log-path")
+		self.result = self.result.replace("\"result\"","\"TDK__#@$00_result\"")
+		self.result = self.result.replace("\"details\"","\"TDK__#@$00_details\"")
+		self.result = self.result.replace("\"log-path\"","\"TDK__#@$00_log-path\"")
 
 		self.result = self.result.replace("performanceDataReading","TDK__#@$00_performanceDataReading")
 		self.result = self.result.replace("performanceDataName","TDK__#@$00_performanceDataName")

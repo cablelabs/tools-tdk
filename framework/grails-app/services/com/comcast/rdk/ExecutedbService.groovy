@@ -518,6 +518,8 @@ class ExecutedbService {
 				moduleName = sMap.get(scriptName)
 				
 				if(!moduleName.equals("")){
+					def scriptObj = ScriptFile.findByScriptNameAndModuleName(scriptName,moduleName)
+					if(scriptObj){
 					def dataList
 					Map dataMapList = detailDataMap.get(moduleName)
 					if(dataMapList == null){
@@ -550,6 +552,8 @@ class ExecutedbService {
 							counter ++
 							dataMapList.put("counter",counter)
 						}
+					}
+				
 					}
 				}
 			}

@@ -516,9 +516,16 @@ class ExecutionService {
 	        versnFile.delete()
 			
 			Device device = Device.findByStbIp(stbIp)
-			
-			if(device?.boxType?.type?.equalsIgnoreCase(BOXTYPE_CLIENT)){
-				getDeviceDetails(device,logTransferPort,realPath)
+			def devName
+			ExecutionDevice.withTransaction {
+				devName = ExecutionDevice.get(exectionDeviceId)?.device
+	        }
+			def dev = device
+			if(devName){
+				dev = Device.findByStbName(devName)
+			}
+			if(dev?.boxType?.type?.equalsIgnoreCase(BOXTYPE_CLIENT)){
+				getDeviceDetails(dev,logTransferPort,realPath)
 			}
 			
         }

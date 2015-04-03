@@ -120,24 +120,37 @@ class MocaDeviceService {
 							executionService.executeSetRoute(device, childDevice)   //execute callsetroute.py
 						}
 						else{
-							if(!(deviceObj.gatewayIp?.equals(device?.stbIp))){
-								
-								try {
-									def parentDevice = Device.findByStbIp(deviceObj.gatewayIp)
-									if(parentDevice != null && parentDevice?.childDevices?.contains(deviceObj)){
-										parentDevice.removeFromChildDevices(deviceObj)
+							if(!(deviceObj.gatewayIp?.trim()?.equals(device?.stbIp?.trim()))){
+								def oldName = ""
+								def newName = ""
+									try {
+										deviceObj = Device.findByMacId(macId)
+										oldName = deviceObj?.stbName
+										deviceObj.stbIp =device?.stbIp
+										deviceObj.gatewayIp = device?.stbIp
+										deviceObj.stbName = device?.stbName+HYPHEN+BoxType.findByName(XI3_BOX)?.name+HYPHEN+macIdAppender
+										deviceObj.recorderId = device?.recorderId
+										newName = deviceObj.stbName
+										if(deviceObj.save(flush:true)){
+											try {
+												def parentDevice = Device.findByStbIp(deviceObj?.gatewayIp)
+												if(parentDevice != null && parentDevice?.childDevices?.id?.contains(deviceObj?.id)){
+													def deviceObj1 = parentDevice?.childDevices?.find { it.id == deviceObj?.id }
+													parentDevice.removeFromChildDevices(deviceObj1)
+												}
+												
+												if(!device?.childDevices?.id?.contains(deviceObj?.id)){
+													deviceObj = Device.findByMacId(macId)
+													device.addToChildDevices(deviceObj)
+												}
+												
+											} catch (Exception e) {
+												e.printStackTrace()
+											}
+										}
+									} catch (Exception e) {
+										e.printStackTrace()
 									}
-								} catch (Exception e) {
-									e.printStackTrace()
-								}
-								
-								deviceObj.stbIp =device?.stbIp
-								deviceObj.gatewayIp = device?.stbIp
-								deviceObj.stbName = device?.stbName+HYPHEN+BoxType.findByName(XI3_BOX)?.name+HYPHEN+macIdAppender
-								deviceObj.recorderId = device?.recorderId
-								deviceObj.save(flush:true)
-								
-								device.addToChildDevices(deviceObj)
 								
 								executionService.executeSetRoute(device, deviceObj)
 							}else{

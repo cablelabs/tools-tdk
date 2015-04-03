@@ -192,6 +192,18 @@ class ExecutescriptService {
 			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 			Thread.sleep(4000)
 			hardResetAgent(deviceInstance)
+			if(deviceInstance?.isChild)
+			{
+				def parentDevice = Device.findByStbIp(deviceInstance?.gatewayIp)
+				if(parentDevice != null && parentDevice?.childDevices?.contains(deviceInstance))
+				{
+					String stat = DeviceStatusUpdater?.fetchDeviceStatus(grailsApplication, parentDevice)
+					if(  stat?.equals(Status.BUSY.toString()) || stat?.equals(Status.HANG.toString()) ){
+							hardResetAgent(parentDevice)
+							Thread.sleep(4000)
+					}
+				}
+			}
 		}
 		else{
 			if(htmlData.contains(KEY_SCRIPTEND)){

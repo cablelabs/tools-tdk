@@ -97,7 +97,7 @@ class PrimitiveTestController {
 	 * 
 	 * @author subrata
 	 */
-	def getParameters() {
+	def getParameters1() {
 		if(! params.functionId) {
 			render "No function id found"
 			return
@@ -208,7 +208,15 @@ class PrimitiveTestController {
                     try {
 						  def writer = new FileWriter(primitiveFile)
                     XmlUtil.serialize(root, writer)
-                    primitiveService.addToPrimitiveList(params?.testName,moduleObj.getName())
+                   if( primitiveService.addToPrimitiveList(params?.testName,moduleObj.getName()))
+				   {
+					   render "PrimitiveTest created successully"
+				   }
+				   else
+				   {	
+					   render "PrimitiveTest not created successully "
+				   }
+				   
 					} catch (Exception e) {
 						primitiveFile.write(new String(data))
 						e.printStackTrace()

@@ -59,6 +59,7 @@ int usage()
 	cout<<"tdkRmfApp play -l ocap://0x236A"<<endl;
 	cout<<"For Dvr playback with -d:"<<endl;
 	cout<<"tdkRmfApp play -d 467467695758585"<<endl;
+#ifndef SINGLE_TUNER_IP_CLIENT
         cout<<endl<<"record:"<<endl;
         cout<<"record option used to record given url. Each record option should be passed with a unique Id to indetify the recording."<<endl;
         cout<<endl<<"usage:"<<endl;
@@ -72,13 +73,15 @@ int usage()
 	cout<<"List the avaliable recording with the details"<<endl;
 	cout<<endl<<"Example:"<<endl;
 	cout<<"tdkRmfApp ls"<<endl<<endl<<endl;
-
+#endif
         return 0;
 }
 
 static HNSource* hnSource=NULL;
 static MediaPlayerSink* mpSink=NULL;
+#ifndef SINGLE_TUNER_IP_CLIENT		
 static DVRSink* dvrSink=NULL;
+#endif
 
 std::string GetHostIP (const char* szInterface)
 {
@@ -374,7 +377,7 @@ int rmfMpSinkUninitialize()
 	return SUCCESS;
 }
 
-
+#ifndef SINGLE_TUNER_IP_CLIENT
 int rmfDvrSinkInitialize(string dvrRecordId,int duration,string title,string ocapId)
 {
 	RMFResult retResult = RMF_RESULT_SUCCESS;
@@ -489,6 +492,7 @@ int rmfDvrSinkUninitialize()
 
 	return SUCCESS;
 }
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -504,7 +508,7 @@ int main(int argc, char *argv[])
 	      {
                 cout<<"Num of arg="<<argc<<"  "<<endl;
                 string list(argv[1]);
-		
+#ifndef SINGLE_TUNER_IP_CLIENT		
 		if(list == "ls")
 		{
 			DVRManager *dvm= DVRManager::getInstance();
@@ -544,6 +548,7 @@ int main(int argc, char *argv[])
         	        }
 		}
 		else
+#endif
 		{
 
 			usage();
@@ -613,6 +618,7 @@ int main(int argc, char *argv[])
                 }
         case 6:
                 {
+#ifndef SINGLE_TUNER_IP_CLIENT		
                 cout<<"Num of arg="<<argc<<" "<<endl;
                 string record(argv[1]);
 		string recordId(argv[2]);
@@ -673,6 +679,7 @@ int main(int argc, char *argv[])
                         cout<<"DvrSink Uninitialize SUCCESS"<<endl;
                 }
                 else
+#endif 
                 {
                         usage();
                 }

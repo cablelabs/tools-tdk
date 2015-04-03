@@ -2,7 +2,7 @@ dnl                                               -*- Autoconf -*-
 dnl Process this file with autoconf to produce a configure script.
 
 dnl AC_PREREQ([2.69])
-AC_INIT(tdk, 1.0, ridish.ra@lnttechservices.com,tdk)
+AC_INIT(tdk, 1.0, praveensnair@tataelxsi.co.in,tdk)
 AC_CONFIG_SRCDIR([agent/src/agentmain.cpp])
 AM_CONFIG_HEADER(cfg/config.h)
 AC_CONFIG_MACRO_DIR([cfg])
@@ -62,7 +62,7 @@ AC_ARG_ENABLE([hybrid],
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub"
+                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub XUPNP_stub"
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc"
                   TDKINTEGRATION_FLAGS="-DENABLE_HYBRID_CODECOMPILE -DHYBRID" ;;
            no) HYBRID=false ;;
@@ -78,13 +78,27 @@ AC_ARG_ENABLE([client],
           case "${enableval}" in
              yes) CLIENT=true
                   SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub"
-                  TDKINTEGRATION_FLAGS="-DIPCLIENT -DSTAND_ALONE_CLIENT" ;;
+                  TDKINTEGRATION_FLAGS="-DIPCLIENT" ;;
            no) CLIENT=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
            esac
            ],
          [echo "client build is enable"])
 AM_CONDITIONAL([CLIENT], [test x$CLIENT = xtrue])
+
+AC_ARG_ENABLE([quemux86mc],
+        AS_HELP_STRING([--enable-qemux86mc],[enable quemux86mc build]),
+        [
+          case "${enableval}" in
+             yes) QEMUX86MC=true
+                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub"
+                  TDKINTEGRATION_FLAGS="-DIPCLIENT -DSTAND_ALONE_CLIENT" ;;
+           no) QEMUX86MC=false ;;
+          *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
+           esac
+           ],
+         [echo "client build is enable"])
+AM_CONDITIONAL([QEMUX86MC], [test x$QEMUX86MC = xtrue])
 
 AC_ARG_ENABLE([trace],
               AS_HELP_STRING([--enable-trace],[enable trace (default is no)]),

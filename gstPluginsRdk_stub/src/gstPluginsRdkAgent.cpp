@@ -156,7 +156,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Aesdecrypt_SetProp_DecryptionEnable(
 	ostringstream oss;	
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_decryption_enable_prop_set ";	
+	string cmd = "gstpluginsrdkcheck test_decryption_enable_prop_set ";
 	int setAesdecryptProp = req["propValue"].asInt();
 	oss << setAesdecryptProp;
 	string propValue = oss.str();
@@ -187,7 +187,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Aesdecrypt_GetProp_DecryptionEnable(
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Aesdecrypt_GetProp_DecryptionEnable ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_decryption_enable_prop_get ";	
+	string cmd = "gstpluginsrdkcheck test_decryption_enable_prop_get ";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());
@@ -215,7 +215,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Aesencrypt_SetProp_EncryptionEnable(
 	ostringstream oss;	
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_encryption_enable_prop_set ";	
+	string cmd = "gstpluginsrdkcheck test_encryption_enable_prop_set ";
 	int setAesencryptProp = req["propValue"].asInt();
 	oss << setAesencryptProp;
 	string propValue = oss.str();
@@ -246,7 +246,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Aesencrypt_GetProp_EncryptionEnable(
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Aesencrypt_GetProp_EncryptionEnable ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_encryption_enable_prop_get ";	
+	string cmd = "gstpluginsrdkcheck test_encryption_enable_prop_get ";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());
@@ -271,10 +271,10 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Aesencrypt_GetProp_EncryptionEnable(
 bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_SetProp_RecordId(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Dvrsrc_SetProp_RecordId ----->Entry\n");
-	ostringstream oss;	
+	ostringstream oss;
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_recordid_prop_set ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_recordid_prop_set ";
 	string propValue = req["propValue"].asString();
 	cmd.append(propValue); 
 	cmd.append(searchPattern);
@@ -304,7 +304,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_GetProp_RecordId(IN const Jso
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Dvrsrc_GetProp_RecordId ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_recordid_prop_get ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_recordid_prop_get ";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());
@@ -333,7 +333,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_SetProp_Segmentname(IN const 
 	ostringstream oss;	
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_segmentname_prop_set ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_segmentname_prop_set ";
 	int setSegmentNameProp = req["propValue"].asInt();
 	oss << setSegmentNameProp;
 	string propValue = oss.str();
@@ -365,7 +365,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_GetProp_Segmentname(IN const 
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Dvrsrc_GetProp_Segmentname ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_segmentname_prop_get ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_segmentname_prop_get ";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());
@@ -392,7 +392,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_GetProp_Ccivalue(IN const Jso
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Dvrsrc_GetProp_Ccivalue ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_ccivalue_prop_get ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_ccivalue_prop_get ";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());
@@ -420,7 +420,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_SetProp_Rate(IN const Json::V
 	ostringstream oss;	
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_rate_prop_set ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_rate_prop_set ";
 	float setRateProp = req["propValue"].asFloat();
 	oss << setRateProp;
 	string propValue = oss.str();
@@ -451,7 +451,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_GetProp_Rate(IN const Json::V
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Dvrsrc_GetProp_Rate ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_rate_prop_get ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_rate_prop_get ";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());
@@ -478,7 +478,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_GetProp_StartTime(IN const Js
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Dvrsrc_GetProp_StartTime ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_starttime_prop_get ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_starttime_prop_get ";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());
@@ -505,7 +505,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_GetProp_Duration(IN const Jso
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Dvrsrc_GetProp_Duration ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_duration_prop_get ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_duration_prop_get ";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());
@@ -533,7 +533,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_SetProp_PlayStartPosition(IN 
 	ostringstream oss;	
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_playstartposition_prop_set ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_playstartposition_prop_set ";
 	float setStartPosProp = req["propValue"].asFloat();
 	oss << setStartPosProp;
 	string propValue = oss.str();
@@ -564,7 +564,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsrc_GetProp_PlayStartPosition(IN 
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Dvrsrc_GetProp_PlayStartPosition ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsrc_playstartposition_prop_get ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsrc_playstartposition_prop_get ";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());
@@ -592,7 +592,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsink_SetProp_RecordId(IN const Js
 	ostringstream oss;	
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsink_recordid_prop_set ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsink_recordid_prop_set ";
 	string propValue = req["propValue"].asString();
 	cmd.append(propValue); 
 	cmd.append(searchPattern);
@@ -621,7 +621,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsink_GetProp_RecordId(IN const Js
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Dvrsink_GetProp_RecordId ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsink_recordid_prop_get ";	
+	string cmd = "gstpluginsrdkcheck test_dvrsink_recordid_prop_get ";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());
@@ -648,7 +648,7 @@ bool gstPluginsRdkAgent::gstPluginsRdkAgent_Dvrsink_GetProp_Ccivalue(IN const Js
 	DEBUG_PRINT(DEBUG_TRACE, "gstPluginsRdkAgent_Dvrsink_GetProp_Ccivalue ----->Entry\n");
 	
 	string searchPattern = SEARCH_PATTERN;
-	string cmd = "/opt/TDK/gstpluginsrdkcheck test_dvrsink_ccivalue_prop_get";	
+	string cmd = "gstpluginsrdkcheck test_dvrsink_ccivalue_prop_get";
 	cmd.append(searchPattern);
 
 	DEBUG_PRINT(DEBUG_TRACE,"The Complete Cmd: %s \n",cmd.c_str());

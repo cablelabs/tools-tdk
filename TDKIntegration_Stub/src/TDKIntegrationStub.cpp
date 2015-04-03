@@ -3335,9 +3335,9 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
         urlIn = urlIn.replace(0,pos,http);
 #endif
 
+
         DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to CURL(): %s\n",urlIn.c_str());
 #else
-
    #ifndef STAND_ALONE_CLIENT
 
         string cmd = "arp -n -i "+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
@@ -3389,7 +3389,6 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
         string urlIn = url;
         DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed to CURL: %s\n",urlIn.c_str());
     #endif
-
 #endif
 #if 0
 	curl = curl_easy_init();
@@ -3488,7 +3487,6 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 		response["details"] = "Unable to open the log file";
                 return TEST_FAILURE;
         }
-	
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ERMF_GETURL---Exit\n");
 	return TEST_SUCCESS;
 }

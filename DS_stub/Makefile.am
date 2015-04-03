@@ -11,6 +11,7 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/ds \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/ds-rpc \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmbus \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/ir \
+	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs-hal/ \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/mfr \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/power \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \

@@ -93,6 +93,7 @@ static long long getCurrentTime()
 	return currentTime;
 }
 
+#ifndef SINGLE_TUNER_IP_CLIENT
 /* Create test recording spec */
 void createTestRecordingSpec (string recordingId, string playUrl, RecordingSpec &spec)
 {
@@ -107,7 +108,7 @@ void createTestRecordingSpec (string recordingId, string playUrl, RecordingSpec 
         spec.setDeletePriority(PRIORITY);
         spec.setBitRate( RecordingBitRate_high );
 }
-
+#endif
 std::string fetchStreamingInterface()
 {
 	DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
@@ -395,6 +396,7 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute, "TestMgr_HNSrcMPSink_Video_MuteUnmute");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume, "TestMgr_HNSrcMPSink_Video_Volume");
 
+#ifndef SINGLE_TUNER_IP_CLIENT
 	/*DVR Recording List*/
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List, "TestMgr_DVR_Rec_List");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVR_CreateNewRecording, "TestMgr_DVR_CreateNewRecording");
@@ -420,8 +422,8 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording, "TestMgr_DVRManager_DeleteRecording");
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSegmentsCount, "TestMgr_DVRManager_GetSegmentsCount");
         ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex, "TestMgr_DVRManager_GetRecordingSegmentInfoByIndex");
+#endif
 
-#if 1
 /*Optimised Code*/	
 
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus,"TestMgr_CheckAudioVideoStatus");
@@ -459,14 +461,10 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement,"TestMgr_RmfElement_QAMSrc_GetLowLevelElement");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement,"TestMgr_RmfElement_QAMSrc_FreeLowLevelElement");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI,"TestMgr_RmfElement_QAMSrc_ChangeURI");
-
-
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_InitPlatform,"TestMgr_RmfElement_HNSink_InitPlatform");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_UninitPlatform,"TestMgr_RmfElement_HNSink_UninitPlatform");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetProperties,"TestMgr_RmfElement_HNSink_SetProperties");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetSourceType,"TestMgr_RmfElement_HNSink_SetSourceType");
-
-#endif	
 	return TEST_SUCCESS;
 }
 
@@ -475,12 +473,13 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 
 static RMFQAMSrc* qamSource=NULL;
 static RMFQAMSrc* new_qamsrc = NULL;
-static DVRSource* dvrSource=NULL;
 static HNSource* hnSource=NULL;
 static MediaPlayerSink* mpSink=NULL;
-static HNSink* hnSink=NULL;
 static RMFQAMSrc *qamSrcs[7];
-
+static HNSink* hnSink=NULL;
+#ifndef SINGLE_TUNER_IP_CLIENT
+static DVRSource* dvrSource=NULL;
+#endif
 /*QAMSrc rmf platform instance */
 static rmfPlatform *mPlatform = NULL;
 static void* lowSrcElement = NULL;
@@ -706,6 +705,8 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const 
         	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc instance created \n");
 		response["details"] = "QAMSrc instance creation successful";
 	}
+
+#ifndef SINGLE_TUNER_IP_CLIENT
 	if(rmfInstance == "DVRSrc")
 	{
 		dvrSource = new DVRSource();
@@ -720,6 +721,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const 
         	DEBUG_PRINT(DEBUG_TRACE, "DVRSrc is created \n");
 		response["details"] = "DVR instance creation successful";
 	}
+#endif
 	if(rmfInstance == "HNSrc")
 	{
 		hnSource = new HNSource();
@@ -828,6 +830,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const 
 		DEBUG_PRINT(DEBUG_TRACE, "QAMSrc is deleted \n");
 		response["details"] = "QAMSrc instance deleted successful";
 	}
+#ifndef SINGLE_TUNER_IP_CLIENT
 	if(rmfInstance == "DVRSrc")
 	{
 		delete dvrSource;
@@ -835,6 +838,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const 
 		DEBUG_PRINT(DEBUG_TRACE, "DVRSrc is deleted \n");
 		response["details"] = "DVR instance deleted successful";
 	}
+#endif
 	if(rmfInstance == "HNSrc")
 	{
 		delete hnSource;
@@ -894,6 +898,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Valu
 		}
                 response["details"] = "QAMSrc init successful";
 	}
+#ifndef SINGLE_TUNER_IP_CLIENT
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->init();	
@@ -908,6 +913,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Valu
 		}
                 response["details"] = "DVRSrc init successful";
 	}
+#endif
 	if(rmfComponent == "HNSrc")
 	{
 		retResult = hnSource->init();	
@@ -985,6 +991,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
 		}
                 response["details"] = "QAMSrc term() successful";
 	}
+#ifndef SINGLE_TUNER_IP_CLIENT
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->term();	
@@ -998,6 +1005,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
 		}
                 response["details"] = "DVRSrc term() successful";
 	}
+#endif
 	if(rmfComponent == "HNSrc")
 	{
 		retResult = hnSource->term();	
@@ -1113,6 +1121,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
 		}
                 response["details"] = "QAMSrc open() successful";
 	}
+#ifndef SINGLE_TUNER_IP_CLIENT
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->open(req["url"].asCString(),0);	
@@ -1126,6 +1135,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
 		}
                 response["details"] = "DVRSrc open() successful";
 	}
+#endif
 	if(rmfComponent == "HNSrc")
 	{
 		retResult = hnSource->open(urlIn.c_str(),0);	
@@ -1176,6 +1186,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementClose(IN const Json::Val
 		}
                 response["details"] = "QAMSrc close() successful";
 	}
+#ifndef SINGLE_TUNER_IP_CLIENT
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->close();	
@@ -1189,6 +1200,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementClose(IN const Json::Val
 		}
                 response["details"] = "DVRSrc close() successful";
 	}
+#endif
 	if(rmfComponent == "HNSrc")
 	{
 		retResult = hnSource->close();	
@@ -1270,6 +1282,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Val
 		}
                 response["details"] = "QAMSrc pause() successful";
 	}
+#ifndef SINGLE_TUNER_IP_CLIENT
 	if(rmfComponent == "DVRSrc")
 	{
 		retResult = dvrSource->pause();	
@@ -1283,7 +1296,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Val
 		}
                 response["details"] = "DVRSrc pause() successful";
 	}
-
+#endif
 	if(rmfComponent == "HNSrc")
 	{
 		retResult = hnSource->pause();	
@@ -1374,6 +1387,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 		}
                 response["details"] = "QAMSrc play() successful";
 	}
+#ifndef SINGLE_TUNER_IP_CLIENT
 	if(rmfComponent == "DVRSrc")
 	{
 		if(0 == playArgs)
@@ -1398,8 +1412,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 		}
                 response["details"] = "DVRSrc play() successful";
 	}
-	//int retValue;
-	//double mediaTime;
+#endif
 	if(rmfComponent == "HNSrc")
 	{
 
@@ -1410,16 +1423,6 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 		if(0 == playArgs)
                 {
                         retResult = hnSource->play();
-
-/*
-			sleep(5);
-        		retValue=hnSource->setMediaTime(0);
-        		cout<<"Return of Set Media time "<<retValue<<endl;
-        		sleep(5);
-        		retValue = hnSource->getMediaTime(mediaTime);
-        		cout<<"Return of get Media time "<<retValue<<endl;
-        		cout<<"get Media time value"<<mediaTime<<endl;
-*/
 	
                 }
                 else
@@ -1474,6 +1477,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetSpeed(IN const Json::
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s \n",rmfComponent.c_str());
         DEBUG_PRINT(DEBUG_TRACE, "SeSpeed: %f \n",playSpeed);
+#ifndef SINGLE_TUNER_IP_CLIENT
         if(rmfComponent == "DVRSrc")
         {
                 retResult = dvrSource->setSpeed(playSpeed);
@@ -1486,6 +1490,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetSpeed(IN const Json::
                 }
                 response["details"] = "DVRSrc setSpeed() successful";
         }
+#endif
         if(rmfComponent == "HNSrc")
         {
                 retResult = hnSource->setSpeed(playSpeed);
@@ -1525,6 +1530,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetSpeed(IN const Json::
         float playSpeed;
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
+#ifndef SINGLE_TUNER_IP_CLIENT
         if(rmfComponent == "DVRSrc")
         {
                 retResult = dvrSource->getSpeed(playSpeed);
@@ -1538,6 +1544,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetSpeed(IN const Json::
 		details << "DVRSrc getSpeed() successful, Speed:" << playSpeed;
                 response["details"] = details.str();
         }
+#endif
         if(rmfComponent == "HNSrc")
         {
                 retResult = hnSource->getSpeed(playSpeed);
@@ -1580,6 +1587,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Src Component: %s\n",rmfSrcComponent.c_str());
         DEBUG_PRINT(DEBUG_TRACE, "RMF Sink Component: %s\n",rmfSinkComponent.c_str());
 	
+#ifndef SINGLE_TUNER_IP_CLIENT
 	if(rmfSrcComponent == "DVRSrc" && rmfSinkComponent == "MPSink")
 	{
 		if(dvrSource == NULL || mpSink == NULL)
@@ -1603,6 +1611,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                 response["details"] = "MPSink setSource() successful";
 		DEBUG_PRINT(DEBUG_TRACE, "MPSink setSource() successful\n");
 	}
+#endif
 
 	if(rmfSrcComponent == "HNSrc" && rmfSinkComponent == "MPSink")
 	{
@@ -1784,6 +1793,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetMediaTime(IN const Js
 
         DEBUG_PRINT(DEBUG_TRACE, "Media Time: %f\n",mediaTime);
 
+#ifndef SINGLE_TUNER_IP_CLIENT
         if(rmfComponent == "DVRSrc")
         {
                 retResult = dvrSource->setMediaTime(mediaTime);
@@ -1796,6 +1806,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetMediaTime(IN const Js
                 }
                 response["details"] = "DVRSrc SetMediaTime() successful";
         }
+#endif
         if(rmfComponent == "HNSrc")
         {
                 retResult = hnSource->setMediaTime(mediaTime);
@@ -1835,6 +1846,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaTime(IN const Js
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
 
+#ifndef SINGLE_TUNER_IP_CLIENT
         if(rmfComponent == "DVRSrc")
         {
                 retResult = dvrSource->getMediaTime(mediaTime);
@@ -1848,6 +1860,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaTime(IN const Js
 		detail_string<<"DVRSrc GetMediaTime() successful, MediaTime:"<< mediaTime;
                 response["details"] = detail_string.str();
         }
+#endif
         if(rmfComponent == "HNSrc")
         {
                 retResult = hnSource->getMediaTime(mediaTime);
@@ -1886,6 +1899,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaInfo(IN const Js
 	RMFMediaInfo mediaInfo;        
 
         DEBUG_PRINT(DEBUG_TRACE, "RMF Component: %s\n",rmfComponent.c_str());
+#ifndef SINGLE_TUNER_IP_CLIENT
         if(rmfComponent == "DVRSrc")
         {
                 retResult = dvrSource->getMediaInfo(mediaInfo);
@@ -1899,7 +1913,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaInfo(IN const Js
 		detail_string<<"DVRSrc GetMediaInfo() successful, MediaStartTime:"<< mediaInfo.m_startTime <<" MediaDuration:"<<mediaInfo.m_duration;
                 response["details"] = detail_string.str();
         }
-        
+#endif        
 	if(rmfComponent == "")
         {
                 DEBUG_PRINT(DEBUG_ERROR, "Error: Enter the Src element to GetMediaInfo()\n");
@@ -1957,6 +1971,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::
 				 break;
 		}
 	}
+#ifndef SINGLE_TUNER_IP_CLIENT
 	if(rmfComponent == "DVRSrc")
         {
                 retResult = dvrSource->getState(&currentState,NULL);
@@ -1989,6 +2004,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::
 				 break;
 		}
         }
+#endif
 
         if(rmfComponent == "HNSrc")
         {
@@ -2069,8 +2085,6 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPatform_Init -->Entry\n");
 	int platformRes = RMF_SUCCESS;
-
-#if 1
 	string result;
 	result = qamsrcpre_requisites();
 	/*Checking for pre_requisites*/
@@ -2082,7 +2096,6 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init
 
                 return TEST_FAILURE;
 	}
-#endif
 
 	/* Initialzing the gthread instance */
 	getGthreadInstance();
@@ -2575,6 +2588,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_UninitPlatform(I
 
 #endif
 
+#ifndef SINGLE_TUNER_IP_CLIENT
 /**************************************************************************
 Function name : MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List
 
@@ -2729,7 +2743,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_CreateNewRecording(IN const Js
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVR_CreateNewRecording -->Exit\n");	
         return TEST_SUCCESS;
 }
-
+#endif
 /**************************************************************************
   Function name : MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetMute.
 
@@ -4001,6 +4015,7 @@ Description   : Receives the request from Test Manager to Initialize, get record
 Gets the response from DVRSink element and send it to the Test Manager.
  **************************************************************************/
 
+#ifndef SINGLE_TUNER_IP_CLIENT
 bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm --->Entry\n");
@@ -5649,6 +5664,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
         return TEST_FAILURE;
 }
+#endif
 /**************************************************************************
 Function name : MediaframeworkAgent::testmodulepost_requisites
 
@@ -5749,6 +5765,7 @@ bool MediaframeworkAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptr
 	ptrAgentObj->UnregisterMethod("TestMgr_HNSrcMPSink_Video_MuteUnmute");
 	ptrAgentObj->UnregisterMethod("TestMgr_HNSrcMPSink_Video_Volume");
 
+#ifndef SINGLE_TUNER_IP_CLIENT
 	/*DVR Recording List*/
 	ptrAgentObj->UnregisterMethod("TestMgr_DVR_Rec_List");
 	ptrAgentObj->UnregisterMethod("TestMgr_DVR_CreateNewRecording");
@@ -5773,6 +5790,7 @@ bool MediaframeworkAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptr
         ptrAgentObj->UnregisterMethod("TestMgr_DVRManager_DeleteRecording");
         ptrAgentObj->UnregisterMethod("TestMgr_DVRManager_GetSegmentsCount");
         ptrAgentObj->UnregisterMethod("TestMgr_DVRManager_GetRecordingSegmentInfoByIndex");
+#endif
 
 /*Optimised Code*/
 #if 1

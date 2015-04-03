@@ -25,6 +25,7 @@ import org.apache.shiro.SecurityUtils
 class ModuleController {
 
 	def utilityService
+    def moduleService
 	
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
@@ -262,8 +263,9 @@ class ModuleController {
             redirect(action: "list")
             return
         }
-        try {                       
-            deleteFunctionandParameters(moduleInstance)           
+        try { 
+            def path=request.getSession().getServletContext().getRealPath("")
+            moduleService.deleteFunctionandParameters(moduleInstance,path)           
             moduleInstance.delete(flush: true)
             flash.message = message(code: 'default.deleted.message', args: [message(code: 'module.label', default: 'Module'),  moduleInstance.name])
             redirect(action: "list")
@@ -274,40 +276,7 @@ class ModuleController {
         }
     }
     
-    /**
-     * Deletes functions of the given module
-     * @param moduleInstance
-     * @return
-     */
-    def deleteFunctionandParameters(final Module moduleInstance){
-        def functionInstance = Function.findAllByModule(moduleInstance)
-        functionInstance.each{ fnInstance ->
-            deleteParameters(fnInstance)
-            fnInstance.delete(flush: true)
-        }
-    }
-    
-    /**
-     * Deletes parameters of the given function
-     * @param function
-     * @return
-     */
-    def deleteParameters(final Function function){
-        def parameterList = ParameterType.findAllByFunction(function)
-        parameterList?.each { parameters ->
-            try{
-                def parameterInstanceList = Parameter.findByParameterType(parameters)
-                parameterInstanceList?.each { parameterType ->
-                    parameterType.delete()
-                }
-                parameters.delete()
-            }
-            catch(Exception ex){
-                log.error(parameters.errors)
-            }
-        }
-    }
-    
+   
     
     /**
      * Deletes the selected function/s

@@ -92,7 +92,7 @@ function getAssociatedFunctions(module_id) {
 function getAssociatedParameters() {
 	var function_id = $("#functionValue").val();
 	if(function_id != '') {
-		$.get('getParameters', {functionId: function_id}, function(data) {
+		$.get('getParameters1', {functionId: function_id}, function(data) {
 			var parameter = '';
 			var ids = '';
 			for(var index = 0; index < data.length; index ++ ) {
