@@ -104,7 +104,7 @@ int main(int argc,char **argv)
 
 	IARM_Result_t retCode = IARM_RESULT_SUCCESS;
 	DEBUG_PRINT(DEBUG_TRACE,"Client Entering %d\r\n", getpid());
-	IARM_Bus_Init("Bus Client");
+	IARM_Bus_Init("Bus_Client");
 	IARM_Bus_Connect();
 	//IARM_Bus_RegisterCall(IARM_BUS_COMMON_API_ReleaseOwnership, _ReleaseOwnership);
 	//DEBUG_PRINT(DEBUG_TRACE,"\nRequesting Resource\n");
