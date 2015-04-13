@@ -12,7 +12,7 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/glib-2.0 \
               -I${PKG_CONFIG_SYSROOT_DIR}/usr/lib/glib-2.0/include \
               -I${PKG_CONFIG_SYSROOT_DIR}/$(includedir)/rdk/iarmmgrs-hal \
-              -I./include -I${top_srcdir}/agent/include
+              -I${top_srcdir}/tdkRmfApp/include -I${top_srcdir}/agent/include
 
 bin_PROGRAMS = tdkRmfApp
 tdkRmfAppdir = ${bindir}

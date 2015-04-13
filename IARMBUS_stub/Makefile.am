@@ -14,7 +14,7 @@ INCLUDES = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/disk/ \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
-           -I./include -I${top_srcdir}/agent/include
+           -I${top_srcdir}/IARMBUS_stub/include -I${top_srcdir}/agent/include
 
 
 AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmbus/ \
@@ -27,14 +27,14 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmbus/ \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/curl \
-              -I./include -I${top_srcdir}/agent/include
+              -I${top_srcdir}/IARMBUS_stub/include -I${top_srcdir}/agent/include
 
 
 lib_LTLIBRARIES = libiarmbusstub.la
 libiarmbusstub_la_SOURCES = src/IARMBUSStub.cpp src/IARMBUSPerfStub.cpp
 libiarmbusstub_la_LIBADD = -lglib-2.0 -lIARMBus -ldirect -lfusion -ldbus-1 -lz
 libiarmbusstub_la_includedir = ${includedir}
-libiarmbusstub_la_include_HEADERS = ./include/IARMBUSAgent.h
+libiarmbusstub_la_include_HEADERS = ${top_srcdir}/IARMBUS_stub/include/IARMBUSAgent.h
 
 bin_PROGRAMS = tst_iarmbus Test_Event_Mgr
 tst_iarmbusdir = ${bindir}

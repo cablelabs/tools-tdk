@@ -7,7 +7,7 @@ AM_CFLAGS = -Wall -fPIC ${COPTS} $(GST_CFLAGS) $(GST_CHECK_CFLAGS) \
             -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
             -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/curl \
             -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
-            -I./include -I${top_srcdir}/agent/include
+            -I${top_srcdir}/gstPluginsRdk_check/include -I${top_srcdir}/agent/include
 
 bin_PROGRAMS = gstpluginsrdkcheck
 gstpluginsrdkcheck_SOURCES = src/gst_plugins_rdk.c

@@ -10,10 +10,10 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/dtcp/include/ \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/curl \
-              -I./include -I${top_srcdir}/agent/include
+              -I${top_srcdir}/DTCP_stub/include -I${top_srcdir}/agent/include
 
 lib_LTLIBRARIES = libdtcpstub.la
 libdtcpstub_la_SOURCES = src/dtcpagent.cpp
 libdtcpstub_la_LIBADD = -lDtcpMgr
 libdtcpstub_la_includedir = ${includedir}
-libdtcpstub_la_include_HEADERS = ./include/dtcpagent.h
+libdtcpstub_la_include_HEADERS = ${top_srcdir}/DTCP_stub/include/dtcpagent.h

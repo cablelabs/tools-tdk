@@ -59,7 +59,15 @@ int usage()
 	cout<<"tdkRmfApp play -l ocap://0x236A"<<endl;
 	cout<<"For Dvr playback with -d:"<<endl;
 	cout<<"tdkRmfApp play -d 467467695758585"<<endl;
-#ifndef SINGLE_TUNER_IP_CLIENT
+	cout<<"For live Rewind :"<<endl;
+	cout<<"tdkRmfApp rew -4 -l ocap://0x236A"<<endl;
+	cout<<"For live Fast-Forward :"<<endl;
+	cout<<"tdkRmfApp ff 4 -l ocap://0x236A"<<endl;
+	cout<<"For DVR Rewind :"<<endl;
+	cout<<"tdkRmfApp rew -4 -d 467467695758585"<<endl;
+	cout<<"For live Fast-Forward :"<<endl;
+	cout<<"tdkRmfApp ff 4 -d 467467695758585"<<endl;
+	#ifndef SINGLE_TUNER_IP_CLIENT
         cout<<endl<<"record:"<<endl;
         cout<<"record option used to record given url. Each record option should be passed with a unique Id to indetify the recording."<<endl;
         cout<<endl<<"usage:"<<endl;
@@ -616,6 +624,157 @@ int main(int argc, char *argv[])
                 }
                 break;
                 }
+	case 5:
+		{
+			cout<<"Num of arg="<<argc<<" "<<endl;
+			string trickplay(argv[1]);
+	                string trickplay_value(argv[2]);
+        	        string source(argv[3]);
+                	string ocapId(argv[4]);
+
+ 			if(trickplay == "rew")
+	                {
+				cout<<"entered rewind option"<<endl;
+				result = rmfHnSourceInitialize(ocapId,source);
+                        	if(result != SUCCESS)
+                        	{
+                                	cout<<"Error: HnSource Initialize failed"<<endl;
+                                	return FAILURE;
+                        	}
+                        	cout<<"HnSource Initialize success"<<endl;
+
+                        	result = rmfMpSinkInitialize();
+                        	if(result != SUCCESS)
+                        	{
+                                	cout<<"Error: MpSink Initialize failed"<<endl;
+                                	return FAILURE;
+                        	}
+                        	cout<<"MpSink Initialize success"<<endl;
+
+                        	/*Start playing*/
+                        	retResult = hnSource->play();
+                        	if(RMF_RESULT_SUCCESS != retResult)
+                        	{
+                                	cout<<"Error: HnSource play() FAILURE"<<endl;
+                                	return FAILURE;
+                        	}
+                        	cout<<"HNSrc play() success"<<endl;
+                        	cout<<"Plays for 60 secs"<<endl;
+
+                        	sleep(60);
+				double mediaTime;
+				retResult = hnSource->getMediaTime(mediaTime);
+			        cout<<"Return of get Media time "<<retResult<<endl;
+			        cout<<" Media time Value "<<mediaTime<<endl;
+				float trickplayspeed = strtof(trickplay_value.c_str(),NULL);
+				retResult = hnSource->play(trickplayspeed,mediaTime);
+				if(RMF_RESULT_SUCCESS != retResult)
+                                {
+                                        cout<<"Error: HnSource play() FAILURE"<<endl;
+                                        return FAILURE;
+                                }
+                                cout<<"HNSrc play() success"<<endl;
+                                cout<<"Rewind for 30 secs"<<endl;
+				sleep(30);
+                        	result = rmfHnSourceUnintialize();
+                        	if(result != SUCCESS)
+                        	{
+                                	cout<<"Error: HnSource Uninitialize failed"<<endl;
+                                	return FAILURE;
+                        	}
+                        	cout<<"HnSource Uninitialize success"<<endl;
+
+                        	result = rmfMpSinkUninitialize();
+                        	if(result != SUCCESS)
+                        	{
+                                	cout<<"Error: MpSink Uninitialize failed"<<endl;
+                                	return FAILURE;
+                        	}
+                        	cout<<"MpSink Uninitialize success"<<endl;
+
+
+			}
+  			else if(trickplay == "ff")
+                        {
+                                cout<<"Entered fast forward option"<<endl;
+                                result = rmfHnSourceInitialize(ocapId,source);
+                                if(result != SUCCESS)
+                                {
+                                        cout<<"Error: HnSource Initialize failed"<<endl;
+                                        return FAILURE;
+                                }
+                                cout<<"HnSource Initialize success"<<endl;
+
+                                result = rmfMpSinkInitialize();
+                                if(result != SUCCESS)
+                                {
+                                        cout<<"Error: MpSink Initialize failed"<<endl;
+                                        return FAILURE;
+                                }
+                                cout<<"MpSink Initialize success"<<endl;
+
+                                /*Start playing*/
+                                retResult = hnSource->play();
+                                if(RMF_RESULT_SUCCESS != retResult)
+                                {
+                                        cout<<"Error: HnSource play() FAILURE"<<endl;
+                                        return FAILURE;
+                                }
+                                cout<<"HNSrc play() success"<<endl;
+                                cout<<"Plays for 60 secs"<<endl;
+
+                                sleep(60);
+				/*retResult = hnSource->pause();
+			        if(RMF_RESULT_SUCCESS != retResult)
+       	 			{
+                			cout<<"Error: HNSource pause() FAILURE"<<endl;
+                			return FAILURE;
+        			}
+				sleep(5);*/
+                                double mediaTime=0;
+                                retResult = hnSource->getMediaTime(mediaTime);
+                                cout<<"Return of get Media time "<<retResult<<endl;
+                                cout<<" Media time Value "<<mediaTime<<endl;
+
+				retResult = hnSource->setVideoLength(mediaTime);
+				cout<<"Return of get set Video Length "<<retResult<<endl;
+
+				mediaTime=0;
+	
+                                float trickplayspeed = strtof(trickplay_value.c_str(),NULL);
+                                retResult = hnSource->play(trickplayspeed,mediaTime);
+                                if(RMF_RESULT_SUCCESS != retResult)
+                                {
+                                        cout<<"Error: HnSource play() FAILURE"<<endl;
+                                        return FAILURE;
+                                }
+                                cout<<"HNSrc play() success"<<endl;
+                                cout<<"Rewind for 30 secs"<<endl;
+                                sleep(30);
+                         	result = rmfHnSourceUnintialize();
+                                if(result != SUCCESS)
+                                {
+                                        cout<<"Error: HnSource Uninitialize failed"<<endl;
+                                        return FAILURE;
+                                }
+                                cout<<"HnSource Uninitialize success"<<endl;
+
+                                result = rmfMpSinkUninitialize();
+                                if(result != SUCCESS)
+                                {
+                                        cout<<"Error: MpSink Uninitialize failed"<<endl;
+                                        return FAILURE;
+                                }
+                                cout<<"MpSink Uninitialize success"<<endl;
+
+                        }
+			else
+                	{
+                        	usage();
+                	}
+                	break;
+
+		}
         case 6:
                 {
 #ifndef SINGLE_TUNER_IP_CLIENT		

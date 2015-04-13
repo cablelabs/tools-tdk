@@ -17,7 +17,7 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/ds \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/curl \
-              -I./include -I${top_srcdir}/agent/include
+              -I${top_srcdir}/DS_stub/include -I${top_srcdir}/agent/include
 
 lib_LTLIBRARIES = libdevicesettingsstub.la
 libdevicesettingsstub_la_SOURCES = src/DeviceSettingsAgent.cpp

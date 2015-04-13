@@ -10,10 +10,10 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/curl \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
-              -I./include -I${top_srcdir}/agent/include
+              -I${top_srcdir}/RDKLogger_stub/include -I${top_srcdir}/agent/include
 
 lib_LTLIBRARIES = librdkloggerstub.la
 librdkloggerstub_la_SOURCES = src/RDKLoggerAgent.cpp
 librdkloggerstub_la_LIBADD = -lrdkloggers
 librdkloggerstub_la_includedir = ${includedir}
-librdkloggerstub_la_include_HEADERS = ./include/RDKLoggerAgent.h
+librdkloggerstub_la_include_HEADERS = ${top_srcdir}/RDKLogger_stub/include/RDKLoggerAgent.h
