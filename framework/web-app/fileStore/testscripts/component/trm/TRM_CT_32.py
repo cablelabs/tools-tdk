@@ -3,7 +3,7 @@
 <xml>
   <id>1699</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TRM_CT_32</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -85,7 +85,7 @@ if "SUCCESS" in result.upper():
     # Pre-condition End
 
     # Device2: Recording new channel
-    streamId = '0'+str(maxTuner)
+    streamId = '0'+str(maxTuner+1)
     recordingId = 'RecordIdCh'+streamId
     trm.reserveForRecord(obj,'FAILURE',kwargs={'deviceNo':1,'streamId':streamId,'duration':duration,'startTime':startTime,'recordingId':recordingId,'hot':0})
 

@@ -181,7 +181,7 @@ static bool url_request_post( const char *payload, int payload_length)
     return ret;
 }
 
-void updateResponseOut(const char* buf, int len)
+static void formatResponse(const char* buf, int len)
 {
     memset(responseStr,'\0',OUTPUT_LEN);
     //Reduce the size of response msg by removing special characters added for indentation
@@ -193,14 +193,6 @@ void updateResponseOut(const char* buf, int len)
             j++;
         }
     }
-
-    //Replace 'details' with 'Details' in TRM response to avoid conflict with TDK json response
-    char *found = responseStr;
-    while ( found = strstr(found,"details") )
-    {
-        *found = 'D';
-        found++;
-    }
 }
 
 void processBuffer( const char* buf, int len)
@@ -211,7 +203,7 @@ void processBuffer( const char* buf, int len)
     if (buf != NULL)
     {
 	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST","Response: \n%s\n", buf);
-        updateResponseOut(buf,len);
+        formatResponse(buf,len);
         std::vector<uint8_t> response;
         response.insert( response.begin(), buf, buf+len);
         RecorderMessageProcessor recProc;

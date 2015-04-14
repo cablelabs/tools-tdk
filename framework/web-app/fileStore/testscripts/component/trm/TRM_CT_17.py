@@ -3,10 +3,10 @@
 <xml>
   <id>1725</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TRM_CT_17</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>613</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TRM_TunerReserveForRecord</primitive_test_name>
@@ -15,9 +15,9 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>This tests multiple terminals recording same station.
+  <synopsis>This tests multiple terminals recording same station at the same time.
 Test Case ID: CT_TRM_17
-Test Type: Positive</synopsis>
+Test Type: Negative</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -34,15 +34,16 @@ Test Type: Positive</synopsis>
     <!--  -->
   </box_types>
   <rdk_versions>
-    <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
+    <!--  -->
+    <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+from trm import reserveForRecord;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("trm","2.0");
@@ -62,45 +63,13 @@ if "SUCCESS" in result.upper():
     #Set the module loading status
     obj.setLoadModuleStatus("SUCCESS");
 
-    #Primitive test case which associated to this Script
-    tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
-
-    duration = 10000
     startTime = 0
-    hot = 0
-    locator = tdkTestObj.getStreamDetails('01').getOCAPID()
+    streamId = '01'
 
-    for deviceNo in range(0,2):
-        # Frame different request URL for each client box
-        streamId = '0'+str(deviceNo+1)
-        recordingId = 'RecordIdCh'+streamId
-
-        print "Record DeviceNo:%d Locator:%s hot=%d recordingId:%s duration:%d startTime:%d"%(deviceNo,locator,hot,recordingId,duration,startTime)
-
-        tdkTestObj.addParameter("deviceNo",deviceNo);
-        tdkTestObj.addParameter("duration",duration);
-        tdkTestObj.addParameter("locator",locator);
-        tdkTestObj.addParameter("startTime",startTime);
-        tdkTestObj.addParameter("recordingId",recordingId);
-        tdkTestObj.addParameter("hot",hot);
-
-        expectedRes = "SUCCESS"
-
-        #Execute the test case in STB
-        tdkTestObj.executeTestCase(expectedRes);
-
-        #Get the result of execution
-        result = tdkTestObj.getResult();
-        print "[TEST EXECUTION RESULT] : %s" %result;
-        details = tdkTestObj.getResultDetails();
-        print "[TEST EXECUTION DETAILS] : %s" %details;
-
-        if "SUCCESS" in result.upper():
-            #Set the result status of execution
-            tdkTestObj.setResultStatus("SUCCESS");
-        else:
-            tdkTestObj.setResultStatus("FAILURE");
-    # End of for loop
+    # Send first recording request from device 1
+    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':streamId,'duration':1000,'startTime':startTime,'recordingId':'RecordIdCh01','hot':0})
+    # Send second recording request from device 2
+    reserveForRecord(obj,'FAILURE',kwargs={'deviceNo':1,'streamId':streamId,'duration':1000,'startTime':startTime,'recordingId':'RecordIdCh02','hot':0})
 
     #unloading trm module
     obj.unloadModule("trm");

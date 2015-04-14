@@ -16,17 +16,17 @@
 static TunerReservationHelper *pTrh = NULL;
 
 const char *deviceNames[TOTAL_DEVICE_NUMBER+1] = {
-    "Xi3 FamilyRoom",
-    "Xi3 LivingRoom",
-    "Xi3 Bedroom",
-    "Xi3 Kitchen",
-    "Xi3 DiningRoom",
-    "Xi3 Gym",
-    "Xi3 PlayRoom",
-    "Xi3 Security",
-    "Xi3 ControlRoom",
-    "Xi3 PrayerRoom",
-    "Xi3 StudyRoom"
+    "Xi3 Room1",
+    "Xi3 Room2",
+    "Xi3 Room3",
+    "Xi3 Room4",
+    "Xi3 Room5",
+    "Xi3 Room6",
+    "Xi3 Room7",
+    "Xi3 Room8",
+    "Xi3 Room9",
+    "Xi3 Room10",
+    "Xi3 Room11"
 };
 
 /*************************************************************************
