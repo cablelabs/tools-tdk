@@ -71,7 +71,6 @@ bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_isHDCPSupported, "TestMgr_DS_VOPTYPE_isHDCPSupported");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_enableHDCP, "TestMgr_DS_VOPTYPE_enableHDCP");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getHDCPStatus, "TestMgr_DS_VOP_getHDCPStatus");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_DTCPSupport, "TestMgr_DS_VOPTYPE_DTCPSupport");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_isDynamicResolutionSupported, "TestMgr_DS_VOPTYPE_isDynamicResolutionSupported");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getAspectRatio, "TestMgr_DS_VOP_getAspectRatio");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getDisplayDetails, "TestMgr_DS_VOP_getDisplayDetails");
@@ -1767,55 +1766,6 @@ bool DeviceSettingsAgent::VOP_getHDCPStatus(IN const Json::Value& req, OUT Json:
 }
 
 /***************************************************************************
- *Function name	: VOPTYPE_DTCPSupport
- *Descrption	: This function will enable and check for the DTCP support for
-                  the given port.
- *parameter [in]: req-	port_id: id of the video port.
- *****************************************************************************/ 
-bool DeviceSettingsAgent::VOPTYPE_DTCPSupport(IN const Json::Value& req, OUT Json::Value& response)
-{
-	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_DTCPSupport ---->Entry\n");
-	if(&req["port_id"]==NULL )
-	{
-		return TEST_FAILURE;
-	}
-	int portID=req["port_id"].asInt();
-	char DTCPSupportDetails1[30] ="DTCP set Status :";
-	bool DTCPEnable=false;
-	try
-	{
-		/*getting instance for video ports*/	
-		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portID);
-		/*Enable DTCP support */
-		vPort.getType().getInstance(portID).enabledDTCP();	
-		/*checking DTCP status*/
-		DTCPEnable=vPort.getType().isDTCPSupported();
-		if(DTCPEnable==true)
-		{
-			strcat(DTCPSupportDetails1,"TRUE");
-			response["result"]= "SUCCESS"; 
-		}
-		else if(DTCPEnable==false)
-		{
-			strcat(DTCPSupportDetails1,"FALSE");
-			response["result"]= "SUCCESS"; 
-		}
-		else
-		{
-			response["result"]= "FAILURE"; 
-		}
-		response["details"]=DTCPSupportDetails1; 
-	}
-	catch(...)
-	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPTYPE_DTCPSupport\n");
-		response["details"]= "Exception Caught in VOPTYPE_DTCPSupport";
-		response["result"]= "FAILURE";
-	}
-	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_DTCPSupport ---->Exit\n");
-	return TEST_SUCCESS;
-}
-/***************************************************************************
  *Function name	: VOPTYPE_isDynamicResolutionSupported
  *Descrption	: This function will check for the DynamicResolution support for
                   the given port.
@@ -2163,7 +2113,6 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_isHDCPSupported");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_enableHDCP");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_getHDCPStatus");
-	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_DTCPSupport");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_isDynamicResolutionSupported");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_getAspectRatio");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_getDisplayDetails");

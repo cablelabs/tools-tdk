@@ -115,7 +115,6 @@ class DeviceSettingsAgent : public RDKTestStubInterface
 		bool VOPTYPE_isHDCPSupported(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOPTYPE_enableHDCP(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOP_getHDCPStatus(IN const Json::Value& req, OUT Json::Value& response);
-		bool VOPTYPE_DTCPSupport(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOPTYPE_isDynamicResolutionSupported(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOP_getAspectRatio(IN const Json::Value& req, OUT Json::Value& response);
 		bool VOP_getDisplayDetails(IN const Json::Value& req, OUT Json::Value& response);

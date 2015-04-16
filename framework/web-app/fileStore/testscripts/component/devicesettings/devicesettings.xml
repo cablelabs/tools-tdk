@@ -12,12 +12,6 @@
           <parameter name='port_name' value='HDMI0' />
         </parameters>
       </primitiveTest>
-      <primitiveTest name='DS_DTCPSupport' id='56' version='1'>
-        <function>TestMgr_DS_VOPTYPE_DTCPSupport</function>
-        <parameters>
-          <parameter name='port_id' value='0' />
-        </parameters>
-      </primitiveTest>
       <primitiveTest name='DS_GetAspectRatio' id='57' version='2'>
         <function>TestMgr_DS_VOP_getAspectRatio</function>
         <parameters>
