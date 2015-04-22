@@ -45,7 +45,7 @@ enum Type {
     UNKNOWN,
 };
 
-class TunerReservationHelper
+class TRMClient
 {
 public:
     bool getAllTunerStates(char *output);
@@ -63,8 +63,8 @@ public:
 
     static void init();
 
-    TunerReservationHelper();
-    ~TunerReservationHelper();
+    TRMClient();
+    ~TRMClient();
     void setToken( const std::string& token);
     void notifyResrvResponse(bool success);
 
@@ -72,7 +72,7 @@ public:
     static bool removeFromReservationDb(const std::string token);
 
 private:
-    TunerReservationHelper* impl;
+    TRMClient* impl;
     static bool inited;
     char guid[64];
     std::string token;
@@ -84,10 +84,10 @@ private:
     static std::map<int,TRM::TunerReservation> tunerReservationDb;
 };
 
-class RecorderMessageProcessor : public TRM::MessageProcessor
+class CTRMMonitor : public TRM::MessageProcessor
 {
 public :
-    RecorderMessageProcessor();
+    CTRMMonitor();
     void operator() (const TRM::ReserveTunerResponse &msg) ;
     void operator() (const TRM::CancelRecording &msg);
     void operator() (const TRM::CancelLive &msg);

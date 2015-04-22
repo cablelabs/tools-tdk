@@ -17,9 +17,9 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
 
 lib_LTLIBRARIES = libtrmstub.la
 libtrmstub_la_SOURCES = src/TRMAgent.cpp \
-                        src/TunerReservationHelper.cpp
+                        src/TRMAgentHelper.cpp
 
 libtrmstub_la_LIBADD = -lrmfosal -lrmfosalutils -ltrm -lpthread -lrdkloggers -ljansson -llog4c
 libtrmstub_la_includedir = ${includedir}
-libtrmstub_la_include_HEADERS = ${top_srcdir}/TRM_stub/include/TunerReservationHelper.h \
+libtrmstub_la_include_HEADERS = ${top_srcdir}/TRM_stub/include/TRMAgentHelper.h \
                                 ${top_srcdir}/TRM_stub/include/TRMAgent.h

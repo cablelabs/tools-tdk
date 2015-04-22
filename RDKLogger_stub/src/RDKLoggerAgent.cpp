@@ -13,6 +13,8 @@
 #include "RDKLoggerAgent.h"
 
 bool b_rdk_logger_enabled = false;
+string g_tdkPath = getenv("TDK_PATH");
+string tdkDebugIniFile = g_tdkPath + "/" + DEBUG_CONF;
 
 /* Helper functions */
 
@@ -51,7 +53,7 @@ bool dbgFinder( const char *module, const char *level)
     string    line;
     ifstream  debugFile;
 
-    debugFile.open(TDK_DEBUG_CONF_FILE);
+    debugFile.open(tdkDebugIniFile);
     if(debugFile.is_open())
     {
         while(debugFile.good())
@@ -71,7 +73,7 @@ bool dbgFinder( const char *module, const char *level)
     }
     else
     {
-	DEBUG_PRINT(DEBUG_ERROR,"\n%s: Unable to open conf file %s\n", __FUNCTION__,TDK_DEBUG_CONF_FILE);
+	DEBUG_PRINT(DEBUG_ERROR,"\n%s: Unable to open conf file %s\n", __FUNCTION__,tdkDebugIniFile.c_str());
     }
 
     return false;
@@ -85,16 +87,20 @@ bool dbgFinder( const char *module, const char *level)
  *               false if log msg is not found
  * Filename is derived from the console log file name generated 
  * on each testcase execution.
- * Assumption is that /opt/TDK/logs folder contains
- * one and only one AgentConsole log file
  **/
 
 bool CheckLog(const char* search)
 {
     string line;
     ifstream logFile;
+    string tdkLogFile = "";
 
-    logFile.open(TDK_LOG, ios::in);
+    /* Extracting path to logs folder */
+    tdkLogFile.append(g_tdkPath);
+    tdkLogFile.append("/logs/");
+    tdkLogFile.append(TDKAGENT_LOG);
+
+    logFile.open(tdkLogFile, ios::in);
     if(logFile.is_open())
     {
         while(logFile.good())
@@ -102,17 +108,17 @@ bool CheckLog(const char* search)
             getline(logFile,line);
             if (line.find(search, 0) != string::npos) 
             {
-		DEBUG_PRINT(DEBUG_TRACE,"Success! RDKLogger test log \"%s\" found in file %s\n",search,TDK_LOG);
+		DEBUG_PRINT(DEBUG_TRACE,"Success! RDKLogger test log \"%s\" found in file %s\n",search,tdkLogFile.c_str());
 		logFile.close();
              	return true;
             }
         }
         logFile.close();
-        DEBUG_PRINT(DEBUG_ERROR,"Error! RDKLogger test log \"%s\" not found in file %s\n",search,TDK_LOG);
+        DEBUG_PRINT(DEBUG_ERROR,"Error! RDKLogger test log \"%s\" not found in file %s\n",search,tdkLogFile.c_str());
     }
     else
     {
-	DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open file %s\n", TDK_LOG);
+	DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open file %s\n", tdkLogFile.c_str());
     }
 
     return false;
@@ -174,7 +180,7 @@ std::string RDKLoggerAgent::testmodulepre_requisites()
 
 	// Make a copy of debug.ini file for testing
      	ifstream  src(DEBUG_CONF_FILE, ios::binary);
-     	ofstream  dst(TDK_DEBUG_CONF_FILE, ios::binary);
+     	ofstream  dst(tdkDebugIniFile, ios::binary);
      	dst << src.rdbuf();
 
     	src.close();
@@ -184,7 +190,7 @@ std::string RDKLoggerAgent::testmodulepre_requisites()
 	// for simulating test scenarios
 	fstream debugFile;
 	string line;
-        debugFile.open (TDK_DEBUG_CONF_FILE, ios::in | ios::out | ios::app);
+        debugFile.open (tdkDebugIniFile, ios::in | ios::out | ios::app);
         if (debugFile.is_open())
         {
             debugFile << "LOG.RDK.TEST1 = ALL DEBUG TRACE" << endl;
@@ -198,7 +204,7 @@ std::string RDKLoggerAgent::testmodulepre_requisites()
 	    debugFile.clear();                  // clear fail and eof bits
 	    debugFile.seekg(0, ios::beg);       // back to the start!
 
-	    DEBUG_PRINT(DEBUG_TRACE, "\n==== Start %s ====================\n", TDK_DEBUG_CONF_FILE);
+	    DEBUG_PRINT(DEBUG_TRACE, "\n==== Start %s ====================\n", tdkDebugIniFile.c_str());
 	    while(debugFile.good())
             {
             	    getline(debugFile,line);
@@ -207,19 +213,19 @@ std::string RDKLoggerAgent::testmodulepre_requisites()
                 	continue;
 		    DEBUG_PRINT(DEBUG_TRACE, "%s", line.c_str());
             }
-	    DEBUG_PRINT(DEBUG_TRACE, "\n====== End %s ====================\n\n", TDK_DEBUG_CONF_FILE);
+	    DEBUG_PRINT(DEBUG_TRACE, "\n====== End %s ====================\n\n", tdkDebugIniFile.c_str());
 	    // end of printing temp debug.ini
 
 	    debugFile.close();
         }
         else
         {
-                DEBUG_PRINT(DEBUG_ERROR,"\n%s: Unable to open conf file %s\n",__FUNCTION__,TDK_DEBUG_CONF_FILE);
+                DEBUG_PRINT(DEBUG_ERROR,"\n%s: Unable to open conf file %s\n",__FUNCTION__,tdkDebugIniFile.c_str());
 		return "FAILURE<DETAILS>Failed to open conf file";
         }
 
         // Initialize the temp conf file
-	rdk_Error ret = rdk_logger_init(TDK_DEBUG_CONF_FILE);
+	rdk_Error ret = rdk_logger_init(tdkDebugIniFile.c_str());
         if ( RDK_SUCCESS != ret)
         {
                 DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger. ErrCode = %d\n", ret);
@@ -245,15 +251,15 @@ bool RDKLoggerAgent::testmodulepost_requisites()
 	DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule post_requisites --> Entry\n");
 
 	// Remove the local copy of debug.ini file
-	if( remove( TDK_DEBUG_CONF_FILE ) != 0 )
+	if( remove( tdkDebugIniFile.c_str() ) != 0 )
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n%s: Error deleting file %s\n", __FUNCTION__,TDK_DEBUG_CONF_FILE);
+		DEBUG_PRINT(DEBUG_ERROR,"\n%s: Error deleting file %s\n", __FUNCTION__,tdkDebugIniFile.c_str());
 		DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule post requisites --> Exit");
 		return TEST_FAILURE;
 	}
   	else
 	{
-		DEBUG_PRINT(DEBUG_TRACE, "%s file successfully deleted\n", TDK_DEBUG_CONF_FILE);
+		DEBUG_PRINT(DEBUG_TRACE, "%s file successfully deleted\n", tdkDebugIniFile.c_str());
 		DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule post requisites --> Exit");
 	}
 

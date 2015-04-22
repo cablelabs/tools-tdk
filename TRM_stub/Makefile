@@ -45,7 +45,7 @@ endif
 COPTS     += -DNUM_OF_TUNERS=$(TRM_NUMBER_OF_TUNERS)
 endif
 
-OBJS       = $(OBJ_DIR)/TRMAgent.o $(OBJ_DIR)/TunerReservationHelper.o
+OBJS       = $(OBJ_DIR)/TRMAgent.o $(OBJ_DIR)/TRMAgentHelper.o
 
 INCLUDES+= -I./include \
 	-I../agent/include \

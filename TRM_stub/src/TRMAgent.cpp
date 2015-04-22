@@ -11,9 +11,8 @@
  */
 
 #include "TRMAgent.h"
-#include "TunerReservationHelper.h"
 
-static TunerReservationHelper *pTrh = NULL;
+static TRMClient *pTrmClient = NULL;
 
 const char *deviceNames[TOTAL_DEVICE_NUMBER+1] = {
     "Xi3 Room1",
@@ -92,10 +91,10 @@ string TRMAgent::testmodulepre_requisites()
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRM testmodule pre_requisites --> Entry\n");
 
-    pTrh = new TunerReservationHelper();
-    if (NULL == pTrh)
+    pTrmClient = new TRMClient();
+    if (NULL == pTrmClient)
     {
-        DEBUG_PRINT(DEBUG_ERROR, "Failed to create TunerReservationHelper instance\n");
+        DEBUG_PRINT(DEBUG_ERROR, "Failed to create TRMClient instance\n");
         return "FAILURE";
     }
 
@@ -112,9 +111,9 @@ string TRMAgent::testmodulepre_requisites()
 
 bool TRMAgent::testmodulepost_requisites()
 {
-    if (NULL != pTrh)
+    if (NULL != pTrmClient)
     {
-       delete pTrh;
+       delete pTrmClient;
     }
     return TEST_SUCCESS;
 }
@@ -159,7 +158,7 @@ bool TRMAgent::TRMAgent_GetAllTunerIds(IN const Json::Value& req, OUT Json::Valu
 
     try
     {
-        if (!pTrh->getAllTunerIds())
+        if (!pTrmClient->getAllTunerIds())
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to get all tuners Ids";
@@ -198,7 +197,7 @@ bool TRMAgent::TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::V
 
     try
     {
-        if (!pTrh->getAllTunerStates(output))
+        if (!pTrmClient->getAllTunerStates(output))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to get all tuners states";
@@ -248,7 +247,7 @@ bool TRMAgent::TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::
 
     try
     {
-        if (!pTrh->getAllReservations(filter, output))
+        if (!pTrmClient->getAllReservations(filter, output))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to get all tuners reservations";
@@ -287,7 +286,7 @@ bool TRMAgent::TRMAgent_GetVersion(IN const Json::Value& req, OUT Json::Value& r
 
     try
     {
-        if (!pTrh->getVersion())
+        if (!pTrmClient->getVersion())
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to get tuner version";
@@ -349,7 +348,7 @@ bool TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Jso
 
     try
     {
-        if (!pTrh->reserveTunerForRecord(deviceNames[deviceNo], recordingId, locator, startTime, duration, hot))
+        if (!pTrmClient->reserveTunerForRecord(deviceNames[deviceNo], recordingId, locator, startTime, duration, hot))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to reserve tuner for record";
@@ -410,7 +409,7 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
 
     try
     {
-        if (!pTrh->reserveTunerForLive(deviceNames[deviceNo], locator, startTime, duration))
+        if (!pTrmClient->reserveTunerForLive(deviceNames[deviceNo], locator, startTime, duration))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to reserve tuner for live";
@@ -463,7 +462,7 @@ bool TRMAgent::TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT J
 
     try
     {
-        if (!pTrh->releaseTunerReservation(deviceNames[deviceNo], locator, activityType))
+        if (!pTrmClient->releaseTunerReservation(deviceNames[deviceNo], locator, activityType))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to release tuner reservation";
@@ -514,7 +513,7 @@ bool TRMAgent::TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT 
 
     try
     {
-        if (!pTrh->validateTunerReservation(deviceNames[deviceNo], locator, activityType))
+        if (!pTrmClient->validateTunerReservation(deviceNames[deviceNo], locator, activityType))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to validate tuner reservation";
@@ -554,7 +553,7 @@ bool TRMAgent::TRMAgent_CancelLive(IN const Json::Value& req, OUT Json::Value& r
 
     try
     {
-        if (!pTrh->cancelLive(locator))
+        if (!pTrmClient->cancelLive(locator))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to cancel live";
@@ -594,7 +593,7 @@ bool TRMAgent::TRMAgent_CancelRecording(IN const Json::Value& req, OUT Json::Val
 
     try
     {
-	if (!pTrh->cancelRecording(locator))
+	if (!pTrmClient->cancelRecording(locator))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to cancel recording";

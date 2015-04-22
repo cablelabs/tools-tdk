@@ -62,7 +62,7 @@ AC_ARG_ENABLE([hybrid],
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub XUPNP_stub"
+                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub"
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc"
                   TDKINTEGRATION_FLAGS="-DENABLE_HYBRID_CODECOMPILE -DHYBRID" ;;
            no) HYBRID=false ;;

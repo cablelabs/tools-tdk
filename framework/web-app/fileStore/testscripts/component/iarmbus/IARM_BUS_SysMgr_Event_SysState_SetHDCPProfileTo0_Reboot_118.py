@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARM_BUS_SysMgr_Event_SysState_SetHDCPProfileTo0_Reboot_118</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -24,13 +24,11 @@ Test case Id - CT_IARMBUS_118</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>Test is skipped as it is causing the box to goto ABL mode</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
-    <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
   </box_types>
@@ -79,7 +77,6 @@ def iarmBus_Connect(testObj):
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE: IARM_Bus_Connect failed. %s" %details;
                         return 1
-
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "FAILURE: IARM_Bus_Init failed. %s " %details;
@@ -190,7 +187,6 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 print "Failure returned from the iarmBus_Disconnect after setting the profile"
         else:
                 print "Failure returned from the iarmBus_Connect";
-
         #Unload the iarmbus module
         obj.unloadModule("iarmbus");
 else:

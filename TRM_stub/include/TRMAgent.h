@@ -18,6 +18,7 @@
 #include "rdktestagentintf.h"
 #include "rdk_utils.h"
 #include <sstream>
+#include "TRMAgentHelper.h"
 
 #define IN
 #define OUT

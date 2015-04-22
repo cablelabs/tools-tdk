@@ -70,7 +70,102 @@ bool getstreamingstatus(string scriptname)
                 return TEST_FAILURE;
 
 }
+#if 0
+/*********************************************************************************************
+Function name : fetchStreamURL
 
+Arguments     : URL
+
+Description   : Fetching the streaming interface IP and form the streaming URL
+ ********************************************************************************************/
+std::string fetchStreamingURL(string url)
+{
+size_t found;
+size_t pos;
+string streaming_interface;
+string streamingip;
+string http= "http://";;
+string urlIn;
+#ifdef	SINGLE_TUNER_IP_CLIENT
+	found=url.find("live");
+        if (found!=std::string::npos)
+        {
+		streaming_interface=fetchStreamingInterface();
+        	found=streaming_interface.find("FAILURE");
+        	if (found!=std::string::npos)
+        	{
+                	return found;
+        	}
+        	const char * streaming_interface_name = streaming_interface.c_str();
+        	streamingip=GetHostIP(streaming_interface_name);
+       		http.append(streamingip);
+        	pos = url.find(":8080");
+        	urlIn = urlIn.replace(0,pos,http);
+        	DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Streaming URL : %s\n",urlIn.c_str());
+
+	}
+        return url;
+#endif
+#ifdef ENABLE_HYBRID_CODECOMPILE
+
+	streaming_interface=fetchStreamingInterface();
+	found=streaming_interface.find("FAILURE");
+	if (found!=std::string::npos)
+	{
+		return found;
+        }
+        const char * streaming_interface_name = streaming_interface.c_str();
+        streamingip=GetHostIP(streaming_interface_name);
+        http.append(streamingip);
+        pos = url.find(":8080");
+        urlIn = urlIn.replace(0,pos,http);
+        DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Streaming URL : %s\n",urlIn.c_str());
+	return url;
+#else
+ #ifndef STAND_ALONE_CLIENT
+        string cmd = "arp -n -i "+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+        FILE* pipe = popen(cmd.c_str(), "r");
+        if (!pipe)
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "Error on popen()\n");
+		return "FAILURE<DETAILS> Error on popen()";
+        }
+        char buffer[128] = {'\0'};
+        std::string resultip = "";
+        char ip[128] = {'\0'};
+        if(fgets(buffer, sizeof(buffer), pipe) != NULL)
+        {
+                sscanf(buffer,"%s",ip);
+        }
+        pclose(pipe);
+        if(strcmp(ip,"") == 0)
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "Failed to fetch streaming ip\n");
+		return "FAILURE<DETAILS> Failed to fetch streaming ip ";
+        }
+        resultip = ip;
+        streamingip = ip;
+        DEBUG_PRINT(DEBUG_TRACE, "IP :%send\n",resultip.c_str());
+        urlIn = url;
+        http.append(resultip);
+        pos = urlIn.find(":8080");
+        urlIn = urlIn.replace(0,pos,http);
+    #else
+        string urlIn = url;
+    #endif
+        DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed: %s\n",urlIn.c_str());
+	return urlIn;	
+#endif
+
+}
+#endif
+/*********************************************************************************************
+Function name : fetchStreamingInterface
+
+Arguments     : NULL
+
+Description   : Fetching the streaming interface name from streaming_interface_name file 
+ ********************************************************************************************/
 std::string fetchStreamingInterface()
 {
         DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
@@ -282,7 +377,95 @@ std::string GetHostIP (const char* szInterface)
         return szAddressBuffer;
 
 } /* End of GetHostIP */
+/*********************************************************************************************
+Function name : fetchStreamURL
 
+Arguments     : URL
+
+Description   : Fetching the streaming interface IP and form the streaming URL
+ ********************************************************************************************/
+std::string fetchStreamingURL(string url)
+{
+size_t found;
+size_t pos;
+string streaming_interface;
+string streamingip;
+string http= "http://";;
+string urlIn;
+
+DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Streaming URL : %s\n",url.c_str());
+#ifdef  SINGLE_TUNER_IP_CLIENT
+        found=url.find("live");
+        if (found!=std::string::npos)
+        {
+                streaming_interface=fetchStreamingInterface();
+                found=streaming_interface.find("FAILURE");
+                if (found!=std::string::npos)
+                {
+                        return streaming_interface;
+                }
+                const char * streaming_interface_name = streaming_interface.c_str();
+                streamingip=GetHostIP(streaming_interface_name);
+                http.append(streamingip);
+                pos = url.find(":8080");
+                url = url.replace(0,pos,http);
+                DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Streaming URL : %s\n",url.c_str());
+
+        }
+        return url;
+#endif
+#ifdef ENABLE_HYBRID_CODECOMPILE
+
+        streaming_interface=fetchStreamingInterface();
+        found=streaming_interface.find("FAILURE");
+        if (found!=std::string::npos)
+        {
+                return streaming_interface;
+        }
+        const char * streaming_interface_name = streaming_interface.c_str();
+        streamingip=GetHostIP(streaming_interface_name);
+        http.append(streamingip);
+        pos = url.find(":8080");
+        url = url.replace(0,pos,http);
+        DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Streaming URL : %s\n",url.c_str());
+        return url;
+#else
+ #ifndef STAND_ALONE_CLIENT
+        string cmd = "arp -n -i "+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+        FILE* pipe = popen(cmd.c_str(), "r");
+        if (!pipe)
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "Error on popen()\n");
+                return "FAILURE<DETAILS> Error on popen()";
+        }
+        char buffer[128] = {'\0'};
+        std::string resultip = "";
+        char ip[128] = {'\0'};
+        if(fgets(buffer, sizeof(buffer), pipe) != NULL)
+        {
+                sscanf(buffer,"%s",ip);
+        }
+        pclose(pipe);
+        if(strcmp(ip,"") == 0)
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "Failed to fetch streaming ip\n");
+                return "FAILURE<DETAILS> Failed to fetch streaming ip ";
+        }
+        resultip = ip;
+        streamingip = ip;
+        DEBUG_PRINT(DEBUG_TRACE, "IP :%send\n",resultip.c_str());
+        urlIn = url;
+        http.append(resultip);
+        pos = urlIn.find(":8080");
+        urlIn = urlIn.replace(0,pos,http);
+    #else
+        string urlIn = url;
+    #endif
+        DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed: %s\n",urlIn.c_str());
+        return urlIn;
+#endif
+
+}
 #ifdef HYBRID
 #ifdef RDK_BR_1DOT3
 /**************************************************************************
@@ -465,7 +648,6 @@ bool TDKIntegrationStub::E2EStubGetRecURLS(IN const Json::Value& request, OUT Js
 	FILE *ErrorCheck;
 	int sysRetValCurl, sysRetValScript;
 	string recordedurl = request["RecordURL"].asString();
-	//char cmd[128] = "arp -n -i CLIENT_MOCA_INTERFACE|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'"; 
 	string cmd = "arp -n -i "+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'"; 
         FILE* pipe = popen(cmd.c_str(), "r");
         if (!pipe)
@@ -660,7 +842,6 @@ bool TDKIntegrationStub::E2ELinearTVstubGetURL(IN const Json::Value& request, OU
 
 	DEBUG_PRINT(DEBUG_LOG,"\nValidurl form TestFramework : %s\n",request["Validurl"].asCString());
 
-        //char cmd[128] = "arp -n -i CLIENT_MOCA_INTERFACE|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
         string cmd = "arp -n -i"+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
         FILE* pipe = popen(cmd.c_str(), "r");
         if (!pipe)
@@ -880,6 +1061,63 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 	Time tuneTime;
 	struct timeval startTime, endTime;
 	int sTime = 0, eTime = 0;
+	string urlIn,streaming_interface;
+	size_t found,pos;
+	urlIn = fetchStreamingURL(url);
+	found=urlIn.find("FAILURE");
+	if (found!=std::string::npos)
+        {
+		std::string delimiter = "<FAILURE>";
+                std::string token;
+                while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+                	token = streaming_interface.substr(0, pos);
+                        std::cout << token << std::endl;
+                        streaming_interface.erase(0, pos + delimiter.length());
+                 }
+                        response["result"] = "FAILURE";
+                        response["details"] = token;
+                        return TEST_FAILURE;
+        }
+
+	
+#if 0
+#ifdef SINGLE_TUNER_IP_CLIENT
+        size_t found;
+        DEBUG_PRINT(DEBUG_TRACE, "Entering in to single tuner zone \n");
+        found=url.find("live");
+        if (found!=std::string::npos)
+        {
+                streaming_interface=fetchStreamingInterface();
+                found=streaming_interface.find("FAILURE");
+                if (found!=std::string::npos)
+                {
+                        std::string delimiter = "<FAILURE>";
+                        std::string token;
+                        while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+                                token = streaming_interface.substr(0, pos);
+                                std::cout << token << std::endl;
+                                streaming_interface.erase(0, pos + delimiter.length());
+                        }
+                        response["result"] = "FAILURE";
+                        response["details"] = token;
+                        return TEST_FAILURE;
+                }
+        const char * streaming_interface_name = streaming_interface.c_str();
+        streamingip=GetHostIP(streaming_interface_name);
+        string urlIn = url;
+        string http = "http://";
+        http.append(streamingip);
+        pos = urlIn.find(":8080");
+        urlIn = urlIn.replace(0,pos,http);
+        DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to CURL(): %s\n",urlIn.c_str());
+	sTime = tuneTime.getTime(&startTime);
+        retHNSrcValue = pSource->open(urlIn.c_str(),mime);
+        eTime = tuneTime.getTime(&endTime);
+
+        DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Passed Open() with streamingIP URL\n");
+        }
+
+#endif
 
 #ifdef ENABLE_HYBRID_CODECOMPILE
 	/*Fetching the streming interface IP: eth1 */
@@ -930,7 +1168,6 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 
     #ifndef STAND_ALONE_CLIENT
 
-	//char cmd[128] = "arp -n -i CLIENT_MOCA_INTERFACE|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
 	string  cmd= "arp -n -i "+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
 	FILE* pipe = popen(cmd.c_str(), "r");
 	if (!pipe)
@@ -985,6 +1222,10 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
     #endif
 
 #endif
+#endif
+	sTime = tuneTime.getTime(&startTime);
+        retHNSrcValue = pSource->open(urlIn.c_str(),mime);
+        eTime = tuneTime.getTime(&endTime);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue)
 	{
 		response["result"] = "FAILURE";
@@ -3299,9 +3540,80 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 	DEBUG_PRINT(DEBUG_LOG,"\nValidurl from TestFramework : %s\n",request["Validurl"].asCString());
 	string streaming_interface;
 	string streamingip;
+	size_t pos = 0;
+        size_t found;
+	url = fetchStreamingURL(url);
+        found=url.find("FAILURE");
+        if (found!=std::string::npos)
+        {
+                std::string delimiter = "<FAILURE>";
+                std::string token;
+                while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+                        token = streaming_interface.substr(0, pos);
+                        std::cout << token << std::endl;
+                        streaming_interface.erase(0, pos + delimiter.length());
+                 }
+                        response["result"] = "FAILURE";
+                        response["details"] = token;
+                        return TEST_FAILURE;
+        }
+   if( (pos = url.find (":8080")) != std::string::npos)
+    {
+        streamingip = url.substr (0, pos);
+    }
+DEBUG_PRINT(DEBUG_TRACE, "IP :%send\n",streamingip.c_str());
+#ifdef  SINGLE_TUNER_IP_CLIENT
+        found=url.find("live");
+        if (found!=std::string::npos)
+        {
+		response["result"] = "SUCCESS";
+	        response["details"]= url;
+                return TEST_SUCCESS;
+
+        }
+	streamingip="mdvr";
+	
+#endif
+
+#if 0
+#ifdef SINGLE_TUNER_IP_CLIENT
+        size_t found;
+	DEBUG_PRINT(DEBUG_TRACE, "Entering in to single tuner zone \n");	
+	found=url.find("live");
+	if (found!=std::string::npos)
+	{
+        	streaming_interface=fetchStreamingInterface();
+	        found=streaming_interface.find("FAILURE");
+        	if (found!=std::string::npos)
+        	{
+                	std::string delimiter = "<FAILURE>";
+                	std::string token;
+                	while ((pos = streaming_interface.find(delimiter)) != std::string::npos) {
+                        	token = streaming_interface.substr(0, pos);
+                        	std::cout << token << std::endl;
+                        	streaming_interface.erase(0, pos + delimiter.length());
+                 	}
+                 	response["result"] = "FAILURE";
+                 	response["details"] = token;
+                 	return TEST_FAILURE;
+        	}
+        	const char * streaming_interface_name = streaming_interface.c_str();
+        	streamingip=GetHostIP(streaming_interface_name);
+        	string urlIn = url;
+        	string http = "http://";
+        	http.append(streamingip);
+        	pos = urlIn.find(":8080");
+        	urlIn = urlIn.replace(0,pos,http);
+		DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to CURL(): %s\n",urlIn.c_str());	
+		response["result"] = "SUCCESS";
+		response["details"]= urlIn;
+        	return TEST_SUCCESS;
+
+	} 
+ 
+#endif
 #ifdef ENABLE_HYBRID_CODECOMPILE
         /*Fetching the streming interface IP: eth1 */
-	size_t pos = 0;
 	size_t found;
 	streaming_interface=fetchStreamingInterface();
 	found=streaming_interface.find("FAILURE");
@@ -3321,21 +3633,6 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 	const char * streaming_interface_name = streaming_interface.c_str();
 	streamingip=GetHostIP(streaming_interface_name);
         string urlIn = url;
-#if 0
-        string http = "http://";
-
-        http.append(streamingip);
-
-        DEBUG_PRINT(DEBUG_TRACE, "Incoming URL: %s\n",url.c_str());
-        DEBUG_PRINT(DEBUG_TRACE, "After appending streaming IP to http: %s\n",http.c_str());
-        DEBUG_PRINT(DEBUG_TRACE, "IP : %s\n",streamingip.c_str());
-
-
-        pos = urlIn.find(":8080");
-        urlIn = urlIn.replace(0,pos,http);
-#endif
-
-
         DEBUG_PRINT(DEBUG_TRACE, "HYBRID:Final URL passed to CURL(): %s\n",urlIn.c_str());
 #else
    #ifndef STAND_ALONE_CLIENT
@@ -3375,70 +3672,25 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
         DEBUG_PRINT(DEBUG_TRACE, "IP :%send\n",resultip.c_str());
         string urlIn = url;
         string http = "http://";
-
         http.append(resultip);
-
-        size_t pos = 0;
         pos = urlIn.find(":8080");
         urlIn = urlIn.replace(0,pos,http);
 
         DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed to CURL: %s\n",urlIn.c_str());
 
     #else
-        size_t pos = 0;
         string urlIn = url;
         DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed to CURL: %s\n",urlIn.c_str());
     #endif
 #endif
-#if 0
-	curl = curl_easy_init();
-	if(curl)
-	{
-		curl_easy_setopt(curl, CURLOPT_URL,(char *)urlIn.c_str());
-		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
-		//write in to a file
-		filepointer=fopen("jsonfile.json","wb");
-		curl_easy_setopt( curl, CURLOPT_WRITEDATA, filepointer ) ;
-		curlResponse= curl_easy_perform(curl);
-		DEBUG_PRINT(DEBUG_ERROR,"The curlResponse value %d\n",curlResponse);
-		fclose(filepointer);
-	}
-	if(curlResponse != CURLE_OK)
-	{
-		fprintf(stderr, "curl_easy_perform() failed: %s \n",curl_easy_strerror(curlResponse));
-		response["result"] = "FAILURE";
-		return TEST_FAILURE;
-	}
-	curl_easy_cleanup(curl);
-	ifstream file("/tmp/output.json");
-	file>>root;
-	//errorResponse = root["errorCode"].asInt();
-	response["details"] = root["xmediagateways"].asCString();
-
-	DEBUG_PRINT(DEBUG_LOG,"\nJSON Response from MediaStreamer :-\n");
-	//DEBUG_PRINT(DEBUG_LOG,"\nErrorCode         : %d\n",root["errorCode"].asInt());
-	//DEBUG_PRINT(DEBUG_LOG,"\nErrorDescription  : %s \n",root["errorDescription"].asCString());
-	DEBUG_PRINT(DEBUG_LOG,"\nVideoStreamingURL : %s\n",root["xmediagateways"].asCString());
-
-	//if(!errorResponse)
-	{
-		response["result"] = "SUCCESS";
-		return TEST_FAILURE;
-	}
-	//else
-	{
-		//Filling json response with FAILURE status and error message
-		response["result"] = "FAILURE";
-		return TEST_FAILURE;
-	}
 #endif
-
 // Added the code to parse the base URL from output.json
 	ifstream logfile;
 	string json_parser_cmd, json_parser_log,line;
 	json_parser_cmd=g_tdkPath + "/" + JSON_PARSER_SCRIPT;
 	json_parser_log=g_tdkPath + "/" + JSON_PARSER_LOG_PATH;
-	string parser_chk= "source "+json_parser_cmd + " "+ streamingip + " "+"\""+ urlIn.c_str()+"\"";
+	//string parser_chk= "source "+json_parser_cmd + " "+ streamingip + " "+"\""+ urlIn.c_str()+"\"";
+	string parser_chk= "source "+json_parser_cmd + " "+ streamingip + " "+"\""+ url.c_str()+"\"";
 	try
         {
                 system((char *)parser_chk.c_str());

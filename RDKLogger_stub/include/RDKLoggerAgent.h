@@ -15,6 +15,7 @@
 
 #include <json/json.h>
 #include <string.h>
+#include <stdlib.h>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 #include "rdk_debug.h"
@@ -27,8 +28,8 @@
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
 
-#define TDK_LOG			"/opt/TDK/logs/AgentConsole.log"
-#define TDK_DEBUG_CONF_FILE 	"/opt/TDK/debug.ini"
+#define TDKAGENT_LOG		"AgentConsole.log"
+#define DEBUG_CONF		"debug.ini"
 #define SIZE    		256
 
 using namespace std;
