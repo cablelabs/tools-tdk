@@ -3,7 +3,7 @@
 <xml>
   <id>1628</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>12</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TDK_E2E_LinearTv_SwitchingChannel_DVRTrickplay_LongDuration_8hr_test</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -24,9 +24,9 @@ Testcase ID: E2E_LinearTV_42</synopsis>
   <!--  -->
   <long_duration>true</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>RDKTT-308 changes are required.</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
@@ -132,20 +132,24 @@ def DVR_PlayURL(obj):
 
          #set the dvr play url
          streamDetails = tdkTestObj.getStreamDetails("01");
-
+         duration = 4
          recordingObj = tdkTestObj.getRecordingDetails(duration);
-         numberOfRecordings = recordingObj.getTotalRecordings();
-         print "\nNumber of recordings: %d" %numberOfRecordings
 
-         recordID = recordingObj.getRecordingId (numberOfRecordings - 1);
-         print "\nRecord ID = %s" %recordID
+         recordID = recordingObj[1]
+         print "\nRecord ID = %s" %recordID[:-1]
 
          playSpeedlist = ['1.00','4.00','8.00','15.00','30.00','60.00']
          print "Play speed list : %s " %playSpeedlist
 
          for i in range (0, len(playSpeedlist)):
 
-                 url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=' + playSpeedlist[i] +'&time_pos=0.00'
+                 url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
+
+                 if url == "NULL":
+                     print "Failed to generate the Streaming URL";
+                     tdkTestObj.setResultStatus("FAILURE");
+                 url = url + "&play_speed=" + playSpeedlist[i]+ "&time_pos=0.00"
+
                  print "The Play DVR Url Requested: %s" %url
 
                  tdkTestObj.addParameter("playUrl",url);

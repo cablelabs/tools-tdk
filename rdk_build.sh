@@ -175,12 +175,11 @@ function build()
     make
     retCode=$?	
     echo "return value :" $retCode
-     if [ $retCode -ne 0 ]; then
+    if [ $retCode -ne 0 ]; then
        echo "BUILDING tdk FAILED"
        exit $retCode
     fi
-	
-
+    touch $RDK_PROJECT_ROOT_PATH/tdk_image
 }
 
 function rebuild()

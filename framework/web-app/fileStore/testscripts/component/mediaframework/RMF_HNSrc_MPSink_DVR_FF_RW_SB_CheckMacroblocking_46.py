@@ -3,7 +3,7 @@
 <xml>
   <id>1642</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>8</version>
+  <version>9</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_DVR_FF_RW_SB_CheckMacroblocking_46</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -147,10 +147,11 @@ if Expected_Result in loadModuleStatus.upper():
 
                                                                 if Expected_Result in result.upper():
                                                                         time.sleep(60)
-                                                                        checkStatusParameter=["audioVideoStatus"]
-                                                                        checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
-                                                                        result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
-                                                                        print "Audio check Done. Status: ",result;
+                                                                        #Commenting Audio Check as audio will not be available during the trickplay.
+                                                                        #checkStatusParameter=["audioVideoStatus"]
+                                                                        #checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                        #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
+                                                                        #print "Audio check Done. Status: ",result;
 
                                                                         checkStatusParameter=["audioVideoStatus"]
                                                                         checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
@@ -164,10 +165,10 @@ if Expected_Result in loadModuleStatus.upper():
                                                                         result=Create_and_ExecuteTestStep('RMF_Element_SetSpeed',obj,Expected_Result,src_play_parameter,src_play_element);
                                                                         if Expected_Result in result.upper():
                                                                                 time.sleep(5)
-                                                                                checkStatusParameter=["audioVideoStatus"]
-                                                                                checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
-                                                                                result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
-                                                                                print "Audio check Done. Status: ",result;
+                                                                                #checkStatusParameter=["audioVideoStatus"]
+                                                                                #checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                                #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
+                                                                                #print "Audio check Done. Status: ",result;
 
                                                                                 checkStatusParameter=["audioVideoStatus"]
                                                                                 checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
@@ -182,10 +183,10 @@ if Expected_Result in loadModuleStatus.upper():
 
                                                                                 if Expected_Result in result.upper():
                                                                                         time.sleep(5)
-                                                                                        checkStatusParameter=["audioVideoStatus"]
-                                                                                        checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
-                                                                                        result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
-                                                                                        print "Audio check Done. Status: ",result;
+                                                                                        #checkStatusParameter=["audioVideoStatus"]
+                                                                                        #checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                                        #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
+                                                                                        #print "Audio check Done. Status: ",result;
 
                                                                                         checkStatusParameter=["audioVideoStatus"]
                                                                                         checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
@@ -198,10 +199,10 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Setmediatime',obj,Expected_Result,mediatime_parameter_name,mediatime_parameter_value);
                                                                                         if Expected_Result in result.upper():
                                                                                                 time.sleep(5)
-                                                                                                checkStatusParameter=["audioVideoStatus"]
-                                                                                                checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
-                                                                                                result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
-                                                                                                print "Audio check Done. Status: ",result;
+                                                                                                #checkStatusParameter=["audioVideoStatus"]
+                                                                                                #checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                                                #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
+                                                                                                #print "Audio check Done. Status: ",result;
 
                                                                                                 checkStatusParameter=["audioVideoStatus"]
                                                                                                 checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]

@@ -1,5 +1,5 @@
-SCRIPT_PATH=/opt/TDK/script/
-LOG_PATH=/opt/TDK/
+SCRIPT_PATH=$TDK_PATH/script/
+LOG_PATH=$TDK_PATH/
 LOGFILE=output_json_parser_details.log
 STREAMING_IP=$1
 BASE_URL=$2
@@ -7,7 +7,7 @@ echo "Base Url : " $BASE_URL
 echo "Streaming IP :" $STREAMING_IP
 
 #check for xdiscovery.conf file
-cmd=`cat /etc/xupnp/xdiscovery.conf|grep outputJsonFile=|grep -v "#"|awk -F "=" '{print $2}'`
+cmd=`cat $XDISCOVERY_PATH/xdiscovery.conf|grep outputJsonFile=|grep -v "#"|awk -F "=" '{print $2}'`
 if [ $? == 0 ] && [ "$cmd" != "" ]; then
         echo $cmd
         echo "output.json location has parsed successfully"

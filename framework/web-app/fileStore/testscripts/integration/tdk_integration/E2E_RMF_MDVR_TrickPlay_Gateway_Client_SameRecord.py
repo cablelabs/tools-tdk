@@ -3,7 +3,7 @@
 <xml>
   <id>1540</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>5</version>
+  <version>7</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_MDVR_TrickPlay_Gateway_Client_SameRecord</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -23,9 +23,9 @@
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>RDKTT-308 changes are required.</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -142,7 +142,13 @@ if "SUCCESS" in result.upper():
         print "Recording details list is empty";
         tdkTestObj.setResultStatus("FAILURE");
     recordID = recInfoAsList[1]
-    URL = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=4.00&time_pos=0.00'
+    URL = tdkintegration.E2E_getStreamingURL(globalObj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
+
+    if URL == "NULL":
+        print "Failed to generate the Streaming URL";
+        tdkTestObj.setResultStatus("FAILURE");
+    URL = URL + "&play_speed=4.00&time_pos=0.00"
+    print "URL:",URL
                                        
     thread1 = CreateTestThread(ip,port,TDKE2E_mDVR_PlayUrl,kwargs={"URL":URL,"MAC":ip})
         

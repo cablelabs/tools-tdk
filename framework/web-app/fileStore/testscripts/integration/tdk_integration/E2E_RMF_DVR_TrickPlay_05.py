@@ -3,7 +3,7 @@
 <xml>
   <id>1000</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>11</version>
+  <version>13</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_TrickPlay_05</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -23,9 +23,9 @@
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>RDKTT - 308 changes are required.</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
@@ -100,7 +100,12 @@ if "SUCCESS" in result.upper():
         #fetch recording id from list matchList.
         recordID = matchList[1]
 
-        url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=64.00&time_pos=0.00'
+        url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] );
+
+        if url == "NULL":
+             print "Failed to generate the Streaming URL";
+             tdkTestObj.setResultStatus("FAILURE");
+        url = url + "&play_speed=64.00&time_pos=0.00"
         print "The Play DVR Url Requested: %s"%url
         tdkTestObj.addParameter("playUrl",url);
 

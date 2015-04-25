@@ -3,7 +3,7 @@
 <xml>
   <id>1669</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>8</version>
+  <version>15</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_playback_recordcont_liveplayback_AudioChannel</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -23,9 +23,9 @@
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>RDKTT-308 changes are required.</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
@@ -78,11 +78,9 @@ if "SUCCESS" in result.upper():
            tdkTestObj.setResultStatus("FAILURE");
     recording_id = recInfoAsList[1]
 
-
-    
     #Calling DvrPlay_rec to play the recorded content
-    result2 = dvr_playback(tdkTestObj,recording_id);
-        
+    result2 = dvr_playback(tdkTestObj,recording_id[:-1]);
+    
     if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()):                                        
         print "Execution Success"
     else:            

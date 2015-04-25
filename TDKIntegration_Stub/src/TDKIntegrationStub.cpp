@@ -1551,16 +1551,9 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	int playSpeedStrPosition = url.find("play_speed");
 	float urlSpeed = 0.0;
 #endif
-	if( url.find("recordingId")!= -1)
-        {
-	int modurllen = url.find("&0");
-        modurl = url.substr(0,modurllen+2);
-        DEBUG_PRINT(DEBUG_LOG,"\nmodurl=%s\n",modurl.c_str());
-	}
-	else
-	{
-		modurl=url;
-	}
+
+	modurl=url;
+	DEBUG_PRINT(DEBUG_LOG,"\nURL from SCript=%s\n",modurl.c_str());
 
 	//if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(modurl.c_str(),NULL,response))
