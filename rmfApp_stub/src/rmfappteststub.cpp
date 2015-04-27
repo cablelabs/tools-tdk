@@ -173,7 +173,10 @@ bool rmfAppTestStub::rmfAppTestStub_CreateRecord(IN const Json::Value& req, OUT 
 	DEBUG_PRINT(DEBUG_TRACE, "rmfAppTestStub_CreateRecord -->Entry\n");	
 
 	#if 1
-	string completeCmd = "/opt/TDK/tdkRmfApp ";
+	std::string completeCmd;
+	completeCmd = getenv ("TDK_PATH");
+	completeCmd.append("/tdkRmfApp ");
+//	string completeCmd = "/opt/TDK/tdkRmfApp ";
 	string recordCmd = "record";
 	string recordId = req["recordId"].asCString();
 	string duration = req["recordDuration"].asCString();

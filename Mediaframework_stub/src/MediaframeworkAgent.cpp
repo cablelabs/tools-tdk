@@ -572,7 +572,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckRmfStreamerCrash(IN const Jso
 	DEBUG_PRINT(DEBUG_LOG,"TDK_PATH: %s\n", tdkPath.c_str());
 	DEBUG_PRINT(DEBUG_LOG,"RDK_LOG_PATH: %s\n", rdkLogPath.c_str());
 	
-	/*Copying the file form /opt/logs to /opt/TDK and setting the permission for the file copied. */
+	/*Copying the file form /opt/logs to $TDK_PATH and setting the permission for the file copied. */
 	string logFileCopy = "cp -r " + rdkLogPath + "/" + ocapLogFile+ " " + tdkPath + "/" + ocapLogToTdkFolder;
 	string setPerm = "chmod 777 " + tdkPath + "/" + ocapLogToTdkFolder;
 
@@ -2618,8 +2618,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List(IN const Json::Value&
 	{
 		response["log-path"]= "NULL";	
 		response["result"] = "FAILURE";
-		response["details"] = "Enable to find: /opt/TDK/ path to create recordDetails.txt file";
-		DEBUG_PRINT(DEBUG_ERROR, "Enable to find: /opt/TDK/ path to create recordDetails.txt file");
+//		response["details"] = "Enable to find: /opt/TDK/ path to create recordDetails.txt file";
+//		DEBUG_PRINT(DEBUG_ERROR, "Enable to find: /opt/TDK/ path to create recordDetails.txt file");
+		response["details"] = "Enable to find: $TDK_PATH path to create recordDetails.txt file";
+		DEBUG_PRINT(DEBUG_ERROR, "Enable to find: $TDK_PATH path to create recordDetails.txt file");
 
 		return TEST_FAILURE;
 	}
@@ -2703,7 +2705,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_CreateNewRecording(IN const Js
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVR_CreateNewRecording -->Entry\n");	
 
 	#if 1
-	string completeCmd = "/opt/TDK/tdkRmfApp ";
+	std::string completeCmd;
+	completeCmd = getenv ("TDK_PATH");
+	completeCmd.append("/tdkRmfApp ");
+//	string completeCmd = "/opt/TDK/tdkRmfApp ";
 	string recordCmd = "record";
 	string recordId = req["recordId"].asCString();
 	string duration = req["recordDuration"].asCString();

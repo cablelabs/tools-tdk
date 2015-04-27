@@ -10,14 +10,15 @@
 #
 
 #Setting up environment to run TDK
-export TDK_PATH=/opt/TDK
-export PATH=$PATH:/usr/local/bin
+export TDK_PATH=/opt/TDK #Path where TDK libs and bins are installed
+export PATH=$PATH:/usr/local/bin:$TDK_PATH
 export TDK_LIB_PATH=$TDK_PATH/libs/
 export OPENSOURCETEST_PATH=$TDK_PATH/opensourcecomptest/
 chmod 777 -R $TDK_PATH/opensourcecomptest/
 export LD_LIBRARY_PATH=$TDK_PATH/libs/:/usr/local/lib/:/usr/local/Qt/lib/:/mnt/nfs/lib:/mnt/nfs/bin/target-snmp/lib/:/mnt/nfs/bin:/usr/local/lib/sa:$LD_LIBRARY_PATH
 export GST_PLUGIN_PATH=$GST_PLUGIN_PATH:/lib/gstreamer-0.10:/usr/local/lib/gstreamer-0.10:/mnt/nfs/gstreamer-plugins
 export GST_REGISTRY=$:/home/.gst-registry.dat
+export XDISCOVERY_PATH=/etc/xupnp
 
 #Setting up environment to run rmfApp
 export PFC_ROOT=/

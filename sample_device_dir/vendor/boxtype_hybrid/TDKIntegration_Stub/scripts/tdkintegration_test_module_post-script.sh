@@ -11,7 +11,7 @@
 #
 RMFCONFIG_PATH=/etc
 TARGET_PATH=/opt
-LOGPATH=/opt/TDK/logs
+LOGPATH=$TDK_PATH/logs
 LOGFILE=tdkintegration_testmodule_postreq_details.log
 #Create if log file not there
 mkdir -p $LOGPATH

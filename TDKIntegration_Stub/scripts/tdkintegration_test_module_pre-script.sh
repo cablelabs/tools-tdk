@@ -1,7 +1,7 @@
 #RMFCONFIG_PATH=/etc
 TARGET_PATH=/opt
-SCRIPT_PATH=/opt/TDK
-LOG_PATH=/opt/TDK/logs
+SCRIPT_PATH=$TDK_PATH
+LOG_PATH=$TDK_PATH/logs
 #LOGFILE=tdkintegration_testmodule_prereq_details.log
 
 mkdir -p $LOG_PATH

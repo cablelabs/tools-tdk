@@ -214,12 +214,24 @@ bool RecorderAgent::Recorder_checkRecording_status(IN const Json::Value& request
 
         string recording_id, RecorderLogFilePath, line_Recorder_Log, entry_pos, rec;
         recording_id = request["Recording_Id"].asString();
+
+        std::string strCmd;
+        strCmd = getenv ("TDK_PATH");
+        strCmd.append("/");
+        strCmd.append(RECORDER_LOG_PATH);
         
-        string log_copying = "cp -r " OCAPRI_LOG_PATH " " RECORDER_LOG_PATH;
-        string permission = "chmod 777 " RECORDER_LOG_PATH;
+//        string log_copying = "cp -r " OCAPRI_LOG_PATH " " RECORDER_LOG_PATH;
+//        string permission = "chmod 777 " RECORDER_LOG_PATH;
+
+        string log_copying = "cp -r " OCAPRI_LOG_PATH " ";
+        log_copying.append(strCmd);
+        string permission = "chmod 777 ";
+        permission.append(strCmd);
+
         DEBUG_PRINT(DEBUG_LOG,"copying is %s\n", log_copying.c_str());
         DEBUG_PRINT(DEBUG_LOG,"chmod is %s\n", permission.c_str());
-        RecorderLogFilePath = RECORDER_LOG_PATH;
+//        RecorderLogFilePath = RECORDER_LOG_PATH;
+        RecorderLogFilePath = strCmd;
 
         //* To handle exception for system call
         try
@@ -248,7 +260,8 @@ bool RecorderAgent::Recorder_checkRecording_status(IN const Json::Value& request
                                         {
                                                 response["result"] = "SUCCESS";
                                                 response["details"] = line_Recorder_Log.c_str();
-                                                response["log-path"]= RECORDER_LOG_PATH;
+//                                                response["log-path"]= RECORDER_LOG_PATH;
+                                                response["log-path"]= strCmd.c_str();
                                                 break;
                                         }
                                 }
@@ -257,7 +270,8 @@ bool RecorderAgent::Recorder_checkRecording_status(IN const Json::Value& request
                         {
                                 response["result"] = "FAILURE";
                                 response["details"] = "No Pattern found in Log file";
-                                response["log-path"]= RECORDER_LOG_PATH;
+//                                response["log-path"]= RECORDER_LOG_PATH;
+                                response["log-path"]= strCmd.c_str();
                         }
 
                 }

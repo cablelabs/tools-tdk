@@ -10,6 +10,7 @@
 # ============================================================================
 #
 
+export TDK_PATH=/opt/TDK #Path where TDK libs and bins are installed
 imagename=`cat /version.txt|grep imagename:|cut -d: -f 2`
 echo $imagename
 
@@ -23,9 +24,9 @@ if [ $? == 0 ]; then
 		sed -i '/imagename=/d' /opt/rmfconfig.ini
 		echo "imagename="$imagename >> /opt/rmfconfig.ini
 		echo "image name is set"
-		ls /opt/TDK/scripts/mediaframework_test_module_pre-script.sh
+		ls $TDK_PATH/scripts/mediaframework_test_module_pre-script.sh
 		if [ $? == 0 ]; then
-			sh /opt/TDK/scripts/mediaframework_test_module_pre-script.sh
+			sh $TDK_PATH/scripts/mediaframework_test_module_pre-script.sh
 			reboot
 		else
 			echo "Pre requisites for mediaframework is not set"	
@@ -38,9 +39,9 @@ else
 		sed -i '/imagename=/d' /opt/rmfconfig.ini
 		echo "imagename="$imagename >> /opt/rmfconfig.ini
 		echo "image name is set"
-		ls /opt/TDK/scripts/mediaframework_test_module_pre-script.sh
+		ls $TDK_PATH/scripts/mediaframework_test_module_pre-script.sh
 		if [ $? == 0 ]; then
-			sh /opt/TDK/scripts/mediaframework_test_module_pre-script.sh
+			sh $TDK_PATH/scripts/mediaframework_test_module_pre-script.sh
 		        reboot
 	       	else
 		       echo "Pre requisites for mediaframework is not set"
@@ -50,14 +51,14 @@ else
 		
 fi
 #Setting up environment to run TDK
-export TDK_PATH=/opt/TDK
 export RDK_LOG_PATH=/opt/logs
-export PATH=$PATH:/usr/local/bin
+export PATH=$PATH:/usr/local/bin:$TDK_PATH
 export OPENSOURCETEST_PATH=$TDK_PATH/opensourcecomptest/
 chmod 777 -R $TDK_PATH/opensourcecomptest/
 export LD_LIBRARY_PATH=$TDK_PATH/libs/:/usr/local/lib/:/usr/local/Qt/lib/:/mnt/nfs/lib:/mnt/nfs/bin/target-snmp/lib/:/mnt/nfs/bin:/usr/local/lib/sa:$LD_LIBRARY_PATH
 export GST_PLUGIN_PATH=$GST_PLUGIN_PATH:/lib/gstreamer-0.10:/usr/local/lib/gstreamer-0.10:/mnt/nfs/gstreamer-plugins
 export GST_REGISTRY=$:/home/.gst-registry.dat
+export XDISCOVERY_PATH=/etc/xupnp
 
 #Setting up environment to run rmfApp
 export PFC_ROOT=/

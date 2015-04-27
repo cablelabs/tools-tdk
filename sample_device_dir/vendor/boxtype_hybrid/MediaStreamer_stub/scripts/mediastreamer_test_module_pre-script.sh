@@ -11,8 +11,8 @@
 #
 MPEENV_PATH=/mnt/nfs/env
 TARGET_PATH=/opt
-SCRIPT_PATH=/opt/TDK
-LOG_PATH=/opt/TDK/logs
+SCRIPT_PATH=$TDK_PATH
+LOG_PATH=$TDK_PATH/logs
 LOGFILE=Mediastreamer_testmodule_prereq_details.log
 
 mkdir -p $LOG_PATH

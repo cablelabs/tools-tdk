@@ -11,7 +11,6 @@
 #
 RMFCONFIG_PATH=/etc/
 TARGET_PATH=/opt/
-TDK_PATH=/opt/TDK
 #removing old configuring status from the opt
 rm $TDK_PATH/logs/Recorder_testmodule_prereq_details.log
 
