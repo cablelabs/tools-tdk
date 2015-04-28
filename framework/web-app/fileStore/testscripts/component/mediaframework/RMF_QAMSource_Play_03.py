@@ -3,7 +3,7 @@
 <xml>
   <id>1123</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>11</version>
+  <version>14</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSource_Play_03</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -30,6 +30,8 @@ Test Case ID: CT_RMF_QAMSrc_MPSink_03.</synopsis>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Terminal-RNG</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -96,7 +98,7 @@ if expected_Result in loadModuleStatus.upper():
 
         src_parameter=[];
         src_element=[];
-        #result=Create_and_ExecuteTestStep('RMF_CommentScirptForQam',obj,expected_Result,src_parameter,src_element);
+        #result=Create_and_ExecuteTestStep('RMF_QAMSrc_CommentRmfStreamer',obj,expected_Result,src_parameter,src_element);
         if expected_Result in result.upper():
                 print "rmf-streamer script commented and initiating reboot"
                 obj.initiateReboot();
@@ -106,7 +108,7 @@ if expected_Result in loadModuleStatus.upper():
                 exit()
 
         #Prmitive test case which associated to this Script
-        #Change the List according to Prmitive test case
+        #Change the List according to Prmitive test case     
         src_parameter=[];
         src_element=[];
         result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_RmfPlatform_Init',obj,expected_Result,src_parameter,src_element);
@@ -190,7 +192,7 @@ if expected_Result in loadModuleStatus.upper():
 
         src_parameter=[];
         src_element=[];
-        #result=Create_and_ExecuteTestStep('RMF_UnCommentScirptForQam',obj,expected_Result,src_parameter,src_element);
+        #result=Create_and_ExecuteTestStep('RMF_QAMSrc_UnCommentRmfStreamer',obj,expected_Result,src_parameter,src_element);
         if expected_Result in result.upper():
                 print "rmf-streamer script uncommented and initiating reboot"
         else:

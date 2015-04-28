@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_LinearTrickplay_LongDuration_MonitorCPUTemp</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -62,101 +62,100 @@ if 'SUCCESS' in dsLoadStatus.upper():
         result = dsManagerInitialize(dsObj)
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
         if "SUCCESS" not in result:
-		print "Failed to Initialize device setting. Exiting..."
-        	#Unload the deviceSettings module
-        	dsObj.unloadModule("devicesettings");
-		exit()
+                print "Failed to Initialize device setting. Exiting..."
+                #Unload the deviceSettings module
+                dsObj.unloadModule("devicesettings");
+                exit()
 
-	#Load tdkintegration module
-	tdkIntObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
-	tdkIntObj.configureTestCase(ip,port,'E2E_LinearTrickplay_LongDuration_MonitorCPUTemp');
-	#Get the result of connection with test component and STB
-	tdkIntLoadStatus = tdkIntObj.getLoadModuleResult();
-	print "tdkintegration module loading status :  %s" %tdkIntLoadStatus;
-	tdkIntObj.setLoadModuleStatus(tdkIntLoadStatus);
+        #Load tdkintegration module
+        tdkIntObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+        tdkIntObj.configureTestCase(ip,port,'E2E_LinearTrickplay_LongDuration_MonitorCPUTemp');
+        #Get the result of connection with test component and STB
+        tdkIntLoadStatus = tdkIntObj.getLoadModuleResult();
+        print "tdkintegration module loading status :  %s" %tdkIntLoadStatus;
+        tdkIntObj.setLoadModuleStatus(tdkIntLoadStatus);
 
-	if "SUCCESS" in tdkIntLoadStatus.upper():
-		testTimeInHours = 8
-        	#Primitive test case which associated to this Script
-        	tdkTestObj = tdkIntObj.createTestStep('TDKE2E_RMFLinearTV_GetURL');
-        	#Stream details for tuning
-        	streamDetails = tdkTestObj.getStreamDetails('01');
-        	#Framing URL for Request
-        	url = E2E_getStreamingURL(tdkIntObj, "TSB", streamDetails.getGatewayIp(), streamDetails.getOCAPID());
-        	if url == "NULL":
-        		print "Failed to generate the Streaming URL";
-            		tdkTestObj.setResultStatus("FAILURE");
+        if "SUCCESS" in tdkIntLoadStatus.upper():
+                testTimeInHours = 8
+                #Primitive test case which associated to this Script
+                tdkTestObj = tdkIntObj.createTestStep('TDKE2E_RMFLinearTV_GetURL');
+                #Stream details for tuning
+                streamDetails = tdkTestObj.getStreamDetails('01');
+                #Framing URL for Request
+                url = E2E_getStreamingURL(tdkIntObj, "TSB", streamDetails.getGatewayIp(), streamDetails.getOCAPID());
+                if url == "NULL":
+                        print "Failed to generate the Streaming URL";
+                        tdkTestObj.setResultStatus("FAILURE");
 
-        	print "Request URL : %s" %url;
-        	tdkTestObj.addParameter("Validurl",url);
-        	#Execute the test case in STB and pass the expected result
-        	expectedresult="SUCCESS";
-        	tdkTestObj.executeTestCase(expectedresult);
-        	#Get the actual result of execution
-        	actualresult = tdkTestObj.getResult();
-        	print "Result of Json Response : %s" %actualresult;
-        	#compare the actual result with expected result of Json response Parameter
-        	if expectedresult in actualresult:
-                	print "Json Response Parameter is success";   
-                	tdkTestObj.setResultStatus("SUCCESS");
-                	details = tdkTestObj.getResultDetails();
-                	#Remove unwanted part from URL
-                	PLAYURL = details;
-				
-                	testTime = testTimeInHours * 60 * 60
-                	timer = 0
-                	iteration = 0
+                print "Request URL : %s" %url;
+                tdkTestObj.addParameter("Validurl",url);
+                #Execute the test case in STB and pass the expected result
+                expectedresult="SUCCESS";
+                tdkTestObj.executeTestCase(expectedresult);
+                #Get the actual result of execution
+                actualresult = tdkTestObj.getResult();
+                print "Result of Json Response : %s" %actualresult;
+                #compare the actual result with expected result of Json response Parameter
+                if expectedresult in actualresult:
+                        print "Json Response Parameter is success";
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        details = tdkTestObj.getResultDetails();
+                        #Remove unwanted part from URL
+                        PLAYURL = details;
 
-                	while (timer < testTime):
+                        testTime = testTimeInHours * 60 * 60
+                        timer = 0
+                        iteration = 0
 
-                    		startTime = 0
-                    		startTime = default_timer()
-                    		iteration = iteration + 1
-                    		print "\n\n----------------------------  Iteration : %d  ----------------------------\n" %(iteration)
-	
-                    		#Primitive test case which associated to this Script
-                    		tdkTestObj = tdkIntObj.createTestStep('TDKE2E_RMF_TSB_Play');
-                    		if iteration % 4 == 0:
-                        		rate = 4.0; 
-                    		elif  iteration % 4 == 1:
-                        		rate = 15.0; 
-                   	 	elif  iteration % 4 == 2:
-                        		rate = 30.0; 
-                    		elif  iteration % 4 == 3:
-                        		rate = 60.0; 
+                        while (timer < testTime):
 
-                    		print "Speed rate value set : %f" %rate;
-                    		tdkTestObj.addParameter("SpeedRate",rate);
-                    		tdkTestObj.addParameter("VideostreamURL",PLAYURL);
-                    		#Execute the test case in STB and pass the expected result
-                    		expectedresult="SUCCESS";
-                    		tdkTestObj.executeTestCase(expectedresult);
-                    		#Get the actual result of execution
-                    		actualresult = tdkTestObj.getResult();
-                    		print "Result of TSB Play : %s" %actualresult;
-                    		#compare the actual result with expected result of Json response Parameter
-                    		if expectedresult in actualresult:
-                        		tdkTestObj.setResultStatus("SUCCESS");
-                        		details = tdkTestObj.getResultDetails();
-                        		print "E2E RMF TSB Playback Successful: [%s]"%details;
-                    		else:
-                        		tdkTestObj.setResultStatus("FAILURE");
-                        		details =  tdkTestObj.getResultDetails();
-                        		print "E2E RMF TSB Playback Failed: [%s]"%details;
-                        		break;
+                                startTime = 0
+                                startTime = default_timer()
+                                iteration = iteration + 1
+                                print "\n\n----------------------------  Iteration : %d  ----------------------------\n" %(iteration)
+                                #Primitive test case which associated to this Script
+                                tdkTestObj = tdkIntObj.createTestStep('TDKE2E_RMF_TSB_Play');
+                                if iteration % 4 == 0:
+                                        rate = 4.0;
+                                elif  iteration % 4 == 1:
+                                        rate = 15.0;
+                                elif  iteration % 4 == 2:
+                                        rate = 30.0;
+                                elif  iteration % 4 == 3:
+                                        rate = 60.0;
 
-                    		#Calling Device Setting Get CPU Temperature
-                    		dsResult,dsDetails = dsGetCPUTemp(dsObj,"SUCCESS")
+                                print "Speed rate value set : %f" %rate;
+                                tdkTestObj.addParameter("SpeedRate",rate);
+                                tdkTestObj.addParameter("VideostreamURL",PLAYURL);
+                                #Execute the test case in STB and pass the expected result
+                                expectedresult="SUCCESS";
+                                tdkTestObj.executeTestCase(expectedresult);
+                                #Get the actual result of execution
+                                actualresult = tdkTestObj.getResult();
+                                print "Result of TSB Play : %s" %actualresult;
+                                #compare the actual result with expected result of Json response Parameter
+                                if expectedresult in actualresult:
+                                        tdkTestObj.setResultStatus("SUCCESS");
+                                        details = tdkTestObj.getResultDetails();
+                                        print "E2E RMF TSB Playback Successful: [%s]"%details;
+                                else:
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        details =  tdkTestObj.getResultDetails();
+                                        print "E2E RMF TSB Playback Failed: [%s]"%details;
+                                        break;
 
-                    		sleep(40);
-                    		stopTime = default_timer()
-                    		timer = timer + (stopTime - startTime)
-                    		print "Total Time in Seconds = %f" %(timer)
-        	else:
-            		tdkTestObj.setResultStatus("FAILURE");
-            		print "Json Response Parameter is Failure";
-		#Unload the tdkintegration module
-        	tdkIntObj.unloadModule("tdkintegration");
+                                #Calling Device Setting Get CPU Temperature
+                                dsResult,dsDetails = dsGetCPUTemp(dsObj,"SUCCESS")
+
+                                sleep(40);
+                                stopTime = default_timer()
+                                timer = timer + (stopTime - startTime)
+                                print "Total Time in Seconds = %f" %(timer)
+                else:
+                        tdkTestObj.setResultStatus("FAILURE");
+                        print "Json Response Parameter is Failure";
+                #Unload the tdkintegration module
+                tdkIntObj.unloadModule("tdkintegration");
 
         #Calling DS_ManagerDeInitialize to DeInitialize API
         result = dsManagerDeInitialize(dsObj)

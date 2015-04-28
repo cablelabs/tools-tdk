@@ -145,12 +145,12 @@ if Expected_Result in loadModuleStatus.upper():
                                                                         time.sleep(60)
                                                                         #Commenting Audio Check as audio will not be available during the trickplay.
                                                                         #checkStatusParameter=["audioVideoStatus"]
-                                                                        #checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                        #checkStatusFor=["CheckAudioStatus.sh"]
                                                                         #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                         #print "Audio check Done. Status: ",result;
 
                                                                         checkStatusParameter=["audioVideoStatus"]
-                                                                        checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                        checkStatusFor=["CheckVideoStatus.sh"]
                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                         print "Video check Done. Status: ",result;
 
@@ -162,12 +162,12 @@ if Expected_Result in loadModuleStatus.upper():
                                                                         if Expected_Result in result.upper():
                                                                                 time.sleep(5)
                                                                                 #checkStatusParameter=["audioVideoStatus"]
-                                                                                #checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                                #checkStatusFor=["CheckAudioStatus.sh"]
                                                                                 #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                 #print "Audio check Done. Status: ",result;
 
                                                                                 checkStatusParameter=["audioVideoStatus"]
-                                                                                checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                                checkStatusFor=["CheckVideoStatus.sh"]
                                                                                 result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                 print "Video check Done. Status: ",result;
 
@@ -178,12 +178,12 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                 if Expected_Result in result.upper():
                                                                                         time.sleep(5)
                                                                                         #checkStatusParameter=["audioVideoStatus"]
-                                                                                        #checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                                        #checkStatusFor=["CheckAudioStatus.sh"]
                                                                                         #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                         #print "Audio check Done. Status: ",result;
 
                                                                                         checkStatusParameter=["audioVideoStatus"]
-                                                                                        checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                                        checkStatusFor=["CheckVideoStatus.sh"]
                                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                         print "Video check Done. Status: ",result;
 
@@ -193,12 +193,12 @@ if Expected_Result in loadModuleStatus.upper():
                                                                         if Expected_Result in result.upper():
                                                                                 time.sleep(15)
                                                                                 #checkStatusParameter=["audioVideoStatus"]
-                                                                                #checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                                #checkStatusFor=["CheckAudioStatus.sh"]
                                                                                 #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                 #print "Audio check Done. Status: ",result;
 
                                                                                 checkStatusParameter=["audioVideoStatus"]
-                                                                                checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                                checkStatusFor=["CheckVideoStatus.sh"]
                                                                                 result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                 print "Video check Done. Status: ",result;
 

@@ -3,10 +3,10 @@
 <xml>
   <id>1058</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LinearTV_TuneHD_02</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>541</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
@@ -29,9 +29,13 @@ Test Case ID: E2E_LinearTV_02</synopsis>
   <skip>false</skip>
   <!--  -->
   <box_types>
+    <box_type>IPClient-3</box_type>
+    <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>IPClient-3</box_type>
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>Terminal-RNG</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>

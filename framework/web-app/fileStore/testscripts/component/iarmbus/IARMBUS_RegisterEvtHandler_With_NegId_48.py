@@ -33,6 +33,8 @@ TEST CASE ID:	CT_IARMBUS_48</synopsis>
     <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>

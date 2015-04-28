@@ -31,6 +31,8 @@ Test case Id - CT_IARMBUS_118</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
@@ -77,6 +79,7 @@ def iarmBus_Connect(testObj):
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE: IARM_Bus_Connect failed. %s" %details;
                         return 1
+
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "FAILURE: IARM_Bus_Init failed. %s " %details;
@@ -187,6 +190,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 print "Failure returned from the iarmBus_Disconnect after setting the profile"
         else:
                 print "Failure returned from the iarmBus_Connect";
+
         #Unload the iarmbus module
         obj.unloadModule("iarmbus");
 else:

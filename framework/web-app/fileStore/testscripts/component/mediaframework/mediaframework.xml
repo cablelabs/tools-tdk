@@ -450,7 +450,7 @@
       <primitiveTest id="659" name="CheckAudioVideoStatus" version="1">
         <function>TestMgr_CheckAudioVideoStatus</function>
         <parameters>
-          <parameter name="audioVideoStatus" value="/opt/TDK/CheckVideoStatus.sh"/>
+          <parameter name="audioVideoStatus" value="CheckVideoStatus.sh"/>
         </parameters>
       </primitiveTest>
       <primitiveTest id="671" name="ClearLogFile" version="1">

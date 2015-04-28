@@ -220,7 +220,7 @@ if Expected_Result in mfLoadModuleStatus.upper() and Expected_Result in dsLoadMo
                                                                         time.sleep(15)
 
                                                                         checkStatusParameter=["audioVideoStatus"]
-                                                                        checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                        checkStatusFor=["CheckVideoStatus.sh"]
                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus', mediaframework_obj,Expected_Result,checkStatusParameter,checkStatusFor);
 
                                                                         print "Video check Done. Status: ",result;
@@ -236,7 +236,7 @@ if Expected_Result in mfLoadModuleStatus.upper() and Expected_Result in dsLoadMo
                                                                                         if Expected_Result in result.upper():
                                                                                                 time.sleep(10);                                                         
                                                                                                 checkStatusParameter=["audioVideoStatus"]
-                                                                                                checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                                                checkStatusFor=["CheckVideoStatus.sh"]
                                                                                                 result=Create_and_ExecuteTestStep('CheckAudioVideoStatus', mediaframework_obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                                 print "Video check Done. Status: ",result;
                                                                                                 result=Create_and_ExecuteTestStep('DS_ManagerInitialize',ds_obj,Expected_Result,ds_mgr_name,ds_mgr_value);
@@ -262,7 +262,7 @@ if Expected_Result in mfLoadModuleStatus.upper() and Expected_Result in dsLoadMo
                                                                                                                 if Expected_Result in result.upper():
                                                                                                                         time.sleep(5);
                                                                                                                         checkStatusParameter=["audioVideoStatus"]
-                                                                                                                        checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                                                                        checkStatusFor=["CheckVideoStatus.sh"]
                                                                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus', mediaframework_obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                                                         print "Video check Done. Status: ",result;
                                                 #Close the Hnsrc Element

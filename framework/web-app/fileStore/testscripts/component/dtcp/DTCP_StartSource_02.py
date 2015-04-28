@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>9</version>
+  <version>13</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_StartSource_02</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -31,6 +31,8 @@ TestcaseID: CT_DTCP_02</synopsis>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Terminal-RNG</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -65,9 +67,9 @@ if "SUCCESS" in loadmodulestatus.upper():
   expectedresult="SUCCESS";
   #Pre-cond: DTCPMgrInit
   init(tdkTestObj,expectedresult);
-  setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3});
+  setLogLevel(tdkTestObj,expectedresult,kwargs={"level":5});
   #Calling DTCPMgrStartSource
-  startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
+  startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5010})
   #Post-cond: DTCPMgrStopSource
   stopSource(tdkTestObj,expectedresult)
 

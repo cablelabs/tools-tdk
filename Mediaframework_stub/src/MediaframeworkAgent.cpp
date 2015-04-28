@@ -489,12 +489,15 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus(IN const Jso
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckAudioVideoStatus -->Entry\n");
         char buffer[128];
+	string scriptPath = getenv("TDK_PATH");	
 	string script = req["audioVideoStatus"].asCString();	
         string result = "";
 	FILE* pipe = NULL;
 
-	cout<<"Checking for "<<script<<endl;
-	pipe = popen(script.c_str(), "r");
+	scriptPath.append("/");
+	scriptPath.append(script);
+	cout<<"Checking for "<<scriptPath<<endl;
+	pipe = popen(scriptPath.c_str(), "r");
 
         if (!pipe)
         {
@@ -509,7 +512,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus(IN const Jso
                         result += buffer;
         }
         pclose(pipe);
-        DEBUG_PRINT(DEBUG_TRACE, "Script Output: %s \n", script.c_str());
+        DEBUG_PRINT(DEBUG_TRACE, "Script Output: %s \n", scriptPath.c_str());
         DEBUG_PRINT(DEBUG_TRACE, "Script Result: %s\n", result.c_str());
         std::cout << "Status: "<<result <<std::endl;
 

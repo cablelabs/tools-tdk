@@ -58,13 +58,13 @@ LIBIARM	  := libiarmbusstub.so
 # Library built by this makefile
 #
 LIB        = $(LIBDIR)/$(LIBIARM)
-SOURCES   := $(SRC_DIR)*.cpp
+SOURCES   := $(SRC_DIR)/IARMBUSStub.cpp $(SRC_DIR)/IARMBUSPerfStub.cpp
 SOURCE_APP:= $(SRC_DIR)/tst_iarmbus.c
 DUMMY_TEST_APP_SOURCE:= $(SRC_DIR)/Test_Event_Mgr.c
 TARGET    := $(TARGETDIR)/$(APP_EXE)
 DUMMY_TEST_APP    := $(TARGETDIR)/$(DUMMY_TESTAPP_EXE)
-SINGLEEVT_SOURCE_APP:= $(SRC_DIR)/gen_single_event.c
-MULTIEVT_SOURCE_APP:= $(SRC_DIR)/gen_multiple_events.c
+SINGLEEVT_SOURCE_APP:= $(SRC_DIR)/gen_single_event.cpp
+MULTIEVT_SOURCE_APP:= $(SRC_DIR)/gen_multiple_events.cpp
 SINGLEEVT_APP_TARGET    := $(TARGETDIR)/$(SINGLEEVT_APP_EXE)
 MULTIEVT_APP_TARGET    := $(TARGETDIR)/$(MULTIEVT_APP_EXE)
 

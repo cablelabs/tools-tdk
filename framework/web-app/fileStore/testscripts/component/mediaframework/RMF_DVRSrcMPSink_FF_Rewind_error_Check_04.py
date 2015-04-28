@@ -212,11 +212,11 @@ if expected_Result in loadModuleStatus.upper():
                                                                                                                         print "DVRSource Play trickplay Failed"
                                                                                                                         tdkTestObj.setResultStatus(expected_Failure);
                                                                                                         checkStatusParameter=["audioVideoStatus"]
-                                                                                                        checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                                                        checkStatusFor=["CheckAudioStatus.sh"]
                                                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,expected_Result,checkStatusParameter,checkStatusFor);
                                                                                                         print "Audio check Done. Status: ",result;
                                                                                                         checkStatusParameter=["audioVideoStatus"]
-                                                                                                        checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                                                        checkStatusFor=["CheckVideoStatus.sh"]
                                                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,expected_Result,checkStatusParameter,checkStatusFor);
                                                                                                         print "Video check Done. Status: ",result;
                                                                                         else:

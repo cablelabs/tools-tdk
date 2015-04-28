@@ -3,7 +3,7 @@
 <xml>
   <id>1121</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>11</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSource_InitTerm_01</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -30,6 +30,8 @@ Test Case ID: CT_RMF_QAMSrc_MPSink_01.</synopsis>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Terminal-RNG</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -88,7 +90,7 @@ print "Load Module Status :  %s" %loadModuleStatus;
 if expected_Result in loadModuleStatus.upper():
 
         #Pre-requsite to kill the rmfStreamer Gthread instance and to start new gthread instance.      
-        #obj.initiateReboot();
+        obj.initiateReboot();
 
         #Prmitive test case which associated to this Script
         #Change the List according to Prmitive test case
@@ -122,7 +124,7 @@ if expected_Result in loadModuleStatus.upper():
                 result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_RmfPlatform_Uninit',obj,expected_Result,src_parameter,src_element);
         else:
                 print "Status of RmfElement_QAMSrc_RmfPlatform_Init:  %s" %loadModuleStatus;
-        #obj.initiateReboot();
+        obj.initiateReboot();
         obj.unloadModule("mediaframework");
 else:
         print "Load Module Failed"

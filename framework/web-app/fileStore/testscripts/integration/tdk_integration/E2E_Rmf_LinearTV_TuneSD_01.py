@@ -33,6 +33,8 @@ Test Case ID: E2E_LinearTV_01</synopsis>
     <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>

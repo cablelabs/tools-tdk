@@ -30,6 +30,8 @@
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
@@ -130,12 +132,12 @@ if Expected_Result in loadModuleStatus.upper():
                                                                         time.sleep(15)
 
                                                                         checkStatusParameter=["audioVideoStatus"]
-                                                                        checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                        checkStatusFor=["CheckAudioStatus.sh"]
                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                         print "Audio check Done. Status: ",result;
 
                                                                         checkStatusParameter=["audioVideoStatus"]
-                                                                        checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                        checkStatusFor=["CheckVideoStatus.sh"]
                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
 
                                                                         print "Video check Done. Status: ",result;
@@ -156,12 +158,12 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                                         time.sleep(15);
 
                                                                                                         checkStatusParameter=["audioVideoStatus"]
-                                                                                                        checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
+                                                                                                        checkStatusFor=["CheckAudioStatus.sh"]
                                                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                                         print "Audio check Done. Status: ",result;
 
                                                                                                         checkStatusParameter=["audioVideoStatus"]
-                                                                                                        checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                                                        checkStatusFor=["CheckVideoStatus.sh"]
                                                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
 
                                                                                                         print "Video check Done. Status: ",result;

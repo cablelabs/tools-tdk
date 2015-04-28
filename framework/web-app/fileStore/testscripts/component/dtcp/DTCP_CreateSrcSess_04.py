@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>7</version>
+  <version>8</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_CreateSrcSess_04</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -31,6 +31,8 @@ TestcaseID: CT_DTCP_04</synopsis>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Terminal-RNG</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -65,7 +67,7 @@ if "SUCCESS" in loadmodulestatus.upper():
   expectedresult="SUCCESS";
   #Pre-cond: DTCPMgrInit,DTCPMgrStartSource
   dtcp.init(tdkTestObj,expectedresult);
-  dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
+  dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":5})
   dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
   #Calling CreateSourceSession
   dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={"sinkIp":'127.0.0.1',"keyLabel":0,"pcpPacketSize":0,"maxPacketSize":4096})

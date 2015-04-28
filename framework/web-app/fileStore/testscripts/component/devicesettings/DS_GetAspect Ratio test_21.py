@@ -31,6 +31,8 @@ Test Case ID : CT_DS_21.Note: This script will through exception when calling se
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
     <box_type>IPClient-3</box_type>
     <!--  -->
   </box_types>

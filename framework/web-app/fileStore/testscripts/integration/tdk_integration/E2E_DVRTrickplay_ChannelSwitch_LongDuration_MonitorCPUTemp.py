@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_DVRTrickplay_ChannelSwitch_LongDuration_MonitorCPUTemp</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -55,42 +55,43 @@ def DVR_PlayURL(tdkIntObj):
 
         #Primitive test case which associated to this Script
         tdkTestObj = tdkIntObj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
-	
-        #set the dvr play url
-	duration = 4
-        recordingObj = tdkTestObj.getRecordingDetails(duration);
-	if recordingObj:
-		#fetch recording id from recordingObj
-		recordID = recordingObj[1]
-         	print "Record ID = %s" %recordID
-		streamDetails = tdkTestObj.getStreamDetails("01")
-         	playSpeedlist = ['1.00','4.00','8.00','15.00','30.00','60.00']
-		for speed in playSpeedlist:
-                	url = 'http://'+streamDetails.getGatewayIp()+':8080/vldms/dvr?rec_id='+recordID[:-1]+'&0&play_speed='+speed+'&time_pos=0.00'
-                 	print "The Play DVR Url Requested: %s" %url
-                 	tdkTestObj.addParameter("playUrl",url);
-                 	#Execute the test case in STB
-                 	expectedresult="SUCCESS";
-                 	tdkTestObj.executeTestCase(expectedresult);
-                 	#Get the result of execution
-                 	actualresult = tdkTestObj.getResult();
-                 	details =  tdkTestObj.getResultDetails();
-                 	print "E2E DVR FF playback tested with " + speed.replace(".00","") + "x Speed from starting point of the video: %s" %actualresult;
 
-                 	#compare the actual result with expected result
-                 	if expectedresult in actualresult:
-                     		#Set the result status of execution
-                     		tdkTestObj.setResultStatus("SUCCESS");
-                     		print "E2E DVR Playback Successful: [%s]"%details;
-                     		retValue = "SUCCESS"
-                 	else:
-                     		tdkTestObj.setResultStatus("FAILURE");
-                     		print "E2E DVR Playback Failed: [%s]"%details;
-                     		retValue = "FAILURE"
-                     		break;
-	else:
-		print "No Matching recordings list found"
-		retValue = "FAILURE"
+        #set the dvr play url
+        streamDetails = tdkTestObj.getStreamDetails("01");
+
+        duration = 4
+        recordingObj = tdkTestObj.getRecordingDetails(duration);
+        if recordingObj:
+                #fetch recording id from recordingObj
+                recordID = recordingObj[1]
+                print "Record ID = %s" %recordID
+                playSpeedlist = ['1.00','4.00','8.00','15.00','30.00','60.00']
+                for speed in playSpeedlist:
+                        url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=' + speed +'&time_pos=0.00'
+                        print "The Play DVR Url Requested: %s" %url
+                        tdkTestObj.addParameter("playUrl",url);
+                        #Execute the test case in STB
+                        expectedresult="SUCCESS";
+                        tdkTestObj.executeTestCase(expectedresult);
+                        #Get the result of execution
+                        actualresult = tdkTestObj.getResult();
+                        details =  tdkTestObj.getResultDetails();
+                        print "E2E DVR FF playback tested with " + speed.replace(".00","") + "x Speed from starting point of the video: %s" %actualresult;
+
+                        #compare the actual result with expected result
+                        if expectedresult in actualresult:
+                                #Set the result status of execution
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                print "E2E DVR Playback Successful: [%s]"%details;
+                                retValue = "SUCCESS"
+                        else:
+                                tdkTestObj.setResultStatus("FAILURE");
+                                print "E2E DVR Playback Failed: [%s]"%details;
+                                retValue = "FAILURE"
+                                break;
+        else:
+                print "No Matching recordings list found"
+                retValue = "FAILURE"
 
         return retValue
 
@@ -109,61 +110,61 @@ if 'SUCCESS' in dsLoadStatus.upper():
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
         if "SUCCESS" not in result:
                 print "Failed to Initialize device setting. Exiting..."
-        	#Unload the deviceSettings module
-        	dsObj.unloadModule("devicesettings");
+                #Unload the deviceSettings module
+                dsObj.unloadModule("devicesettings");
                 exit()
 
-	#Load tdkintegration module
-	tdkIntObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
-	tdkIntObj.configureTestCase(ip,port,'E2E_DVRTrickplay_ChannelSwitch_LongDuration_MonitorCPUTemp');
-	#Get the result of connection with test component and STB
-	tdkIntLoadStatus = tdkIntObj.getLoadModuleResult();
-	print "tdkintegration module loading status : %s" %tdkIntLoadStatus;
-	tdkIntObj.setLoadModuleStatus(tdkIntLoadStatus);
+        #Load tdkintegration module
+        tdkIntObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+        tdkIntObj.configureTestCase(ip,port,'E2E_DVRTrickplay_ChannelSwitch_LongDuration_MonitorCPUTemp');
+        #Get the result of connection with test component and STB
+        tdkIntLoadStatus = tdkIntObj.getLoadModuleResult();
+        print "tdkintegration module loading status : %s" %tdkIntLoadStatus;
+        tdkIntObj.setLoadModuleStatus(tdkIntLoadStatus);
 
-	if "SUCCESS" in tdkIntLoadStatus.upper():
-		testTimeInHours = 8
-    		testTime = testTimeInHours * 60 * 60
-    		timer = 0
-    		iteration = 0
+        if "SUCCESS" in tdkIntLoadStatus.upper():
+                testTimeInHours = 8
+                testTime = testTimeInHours * 60 * 60
+                timer = 0
+                iteration = 0
 
-    		while (timer < testTime):
+                while (timer < testTime):
 
-        		startTime = 0
-        		startTime = default_timer()
-        		iteration = iteration + 1
-        		print "\n----------------------------  Iteration : %d  ----------------------------\n" %(iteration)
+                        startTime = 0
+                        startTime = default_timer()
+                        iteration = iteration + 1
+                        print "\n----------------------------  Iteration : %d  ----------------------------\n" %(iteration)
 
-        		#Calling the getURL_PlayURL function for the requested StreamID
-        		print "\nPlaying Channel 1"
-        		result1 = getURL_PlayURL(tdkIntObj,'01');
+                        #Calling the getURL_PlayURL function for the requested StreamID
+                        print "\nPlaying Channel 1"
+                        result1 = getURL_PlayURL(tdkIntObj,'01');
 
-        		#Calling the getURL_PlayURL function for the requested StreamID
-        		print "\nPlaying Channel 2"
-        		result2 = getURL_PlayURL(tdkIntObj,'02');
+                        #Calling the getURL_PlayURL function for the requested StreamID
+                        print "\nPlaying Channel 2"
+                        result2 = getURL_PlayURL(tdkIntObj,'02');
 
-        		#Calling the DVR_PlayURL function for playing recorded content and DVR trickplay
-        		print "\nPlaying DVR in different speed"
-        		resultDVR = DVR_PlayURL(tdkIntObj);
+                        #Calling the DVR_PlayURL function for playing recorded content and DVR trickplay
+                        print "\nPlaying DVR in different speed"
+                        resultDVR = DVR_PlayURL(tdkIntObj);
 
-        		if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()) and ("SUCCESS" in resultDVR.upper()):                         
-            			print "Execution Success at iteration %d" %(iteration);
-        		else:
-            			print "Execution failure at iteration %d" %(iteration);
-            			break;
+                        if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()) and ("SUCCESS" in resultDVR.upper()):
+                                print "Execution Success at iteration %d" %(iteration);
+                        else:
+                                print "Execution failure at iteration %d" %(iteration);
+                                break;
 
-                       	#Calling Device Setting Get CPU Temperature
-                       	dsResult,dsDetails = dsGetCPUTemp(dsObj,"SUCCESS")
+                        #Calling Device Setting Get CPU Temperature
+                        dsResult,dsDetails = dsGetCPUTemp(dsObj,"SUCCESS")
 
                         sleep(40);
 
-        		stopTime = default_timer()
-        		timer = timer + (stopTime - startTime)
-      
-    			print "Total Time in Seconds = %f" %(timer)
+                        stopTime = default_timer()
+                        timer = timer + (stopTime - startTime)
 
-		#Unload the tdkintegration module
-    		tdkIntObj.unloadModule("tdkintegration");
+                        print "Total Time in Seconds = %f" %(timer)
+
+                #Unload the tdkintegration module
+                tdkIntObj.unloadModule("tdkintegration");
 
         #Calling DS_ManagerDeInitialize to DeInitialize API
         result = dsManagerDeInitialize(dsObj)

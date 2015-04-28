@@ -31,6 +31,8 @@ Test case Id - E2E_RMF_TSB_18</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
     <box_type>IPClient-3</box_type>
     <!--  -->
   </box_types>
