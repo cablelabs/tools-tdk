@@ -31,6 +31,8 @@ This test script will be applicable to XG1 with RDK version 1.2 running boxes. A
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Emulator-HYB</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.2</rdk_version>

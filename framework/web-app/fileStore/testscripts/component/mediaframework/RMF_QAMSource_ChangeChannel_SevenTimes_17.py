@@ -32,6 +32,8 @@ Test Case Type: Positive</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Emulator-HYB</box_type>
+    <!--  -->
     <box_type>Terminal-RNG</box_type>
     <!--  -->
   </box_types>

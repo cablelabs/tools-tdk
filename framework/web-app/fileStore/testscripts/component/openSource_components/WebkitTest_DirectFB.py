@@ -31,6 +31,10 @@ This test script will be applicable to XI3 with RDK version 1.2 running boxes. A
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
+    <box_type>IPClient-4</box_type>
+    <!--  -->
+    <box_type>Emulator-Client</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.2</rdk_version>

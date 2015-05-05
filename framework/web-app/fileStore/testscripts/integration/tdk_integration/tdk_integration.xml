@@ -198,6 +198,8 @@
       </primitiveTest>
       <primitiveTest name='TDKE2E_LinearTV_T2p_TrickMode' id='574' version='1'>
         <function>TestMgr_HybridE2E_T2pTrickMode</function>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
         <parameters>
           <parameter name='VideostreamURL' value='http://' />
           <parameter name='trickPlayRate' value='0.5' />
@@ -205,6 +207,8 @@
       </primitiveTest>
       <primitiveTest name='TDKE2E_LinearTV_T2p_Tuning' id='575' version='1'>
         <function>TestMgr_HybridE2E_T2pTuning</function>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
         <parameters>
           <parameter name='ValidocapId' value='0x1234' />
         </parameters>

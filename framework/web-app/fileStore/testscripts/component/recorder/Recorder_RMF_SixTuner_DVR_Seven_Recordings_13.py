@@ -31,6 +31,8 @@ TC ID:CT_Recorder_13</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Emulator-HYB</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>

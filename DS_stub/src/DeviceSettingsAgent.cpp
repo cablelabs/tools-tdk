@@ -385,7 +385,7 @@ bool DeviceSettingsAgent::FP_setScroll(IN const Json::Value& req, OUT Json::Valu
 		return TEST_FAILURE;
 	}
 	std::string text_display=req["text"].asCString();
-	char scrollDetails1[20]="Scroll :: ";
+	char scrollDetails1[40]="Scroll :: ";
 	int viteraion=req["viteration"].asInt();
 	int hiteraion=req["hiteration"].asInt();
 	int holdDuration=req["hold_duration"].asInt();
