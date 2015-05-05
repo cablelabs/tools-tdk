@@ -130,8 +130,8 @@ if "SUCCESS" in result.upper():
     else:
         print "No Matching recordings list found"
 					 
-        time.sleep(10);
-        obj.unloadModule("tdkintegration");
+    time.sleep(10);
+    obj.unloadModule("tdkintegration");
 else:
          print "Failed to load TDKIntegration module";
          obj.setLoadModuleStatus("FAILURE");
