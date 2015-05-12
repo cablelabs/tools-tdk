@@ -32,8 +32,6 @@ Test Type: Positive</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
@@ -55,7 +53,6 @@ ip = <ipaddress>
 port = <port>
 obj.configureTestCase(ip,port,'TRM_TunerReserveForHybrid');
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
 
 #Get the result of connection with test component and STB
 result =obj.getLoadModuleResult();

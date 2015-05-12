@@ -38,6 +38,7 @@ bool RecorderAgent::initialize(IN const char* szVersion, IN RDKTestAgent *ptrAge
 	DEBUG_PRINT(DEBUG_TRACE, "Registering wrapper functions with the agent\n");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_ScheduleRecording,"TestMgr_Recorder_ScheduleRecording");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_checkRecording_status,"TestMgr_Recorder_checkRecording_status");
+	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_SendRequest,"TestMgr_Recorder_SendRequest");
 	return TEST_SUCCESS;
 }
 
@@ -290,6 +291,21 @@ bool RecorderAgent::Recorder_checkRecording_status(IN const Json::Value& request
 }
 
 /**************************************************************************
+Function name : RecorderAgent::Recorder_SendRequest()
+
+Arguments     : None
+
+Description   : Returns success
+***************************************************************************/
+bool RecorderAgent::Recorder_SendRequest(IN const Json::Value& request, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "Recorder SendRequest ---> Entry\n");
+	response["result"] = "SUCCESS";
+	response["details"] = "SUCCESS";
+	DEBUG_PRINT(DEBUG_TRACE,"Recorder SendRequest ---> Exit\n");
+}
+
+/**************************************************************************
 Function name : RecorderAgent::CreateObject()
 
 Arguments     : NULL
@@ -316,8 +332,9 @@ bool RecorderAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentOb
         {
                 return TEST_FAILURE;
 	}
-	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_ScheduleRecording");
-	ptrAgentObj->UnregisterMethod("TestMgr_MediaStreamer_checkRecording_status");
+	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_ScheduleRecording");
+	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_checkRecording_status");
+	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_SendRequest");
 	/* All done, close things cleanly */
 	return TEST_SUCCESS;
 }

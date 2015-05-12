@@ -33,11 +33,7 @@ Test Case ID : CT_DS_37. NOTE: This test script cause the DS agent crash.</synop
     <!--  -->
     <box_type>IPClient-4</box_type>
     <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
-    <box_type>Emulator-HYB</box_type>
     <!--  -->
     <box_type>Terminal-RNG</box_type>
     <!--  -->

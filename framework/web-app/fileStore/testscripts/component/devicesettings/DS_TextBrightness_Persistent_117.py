@@ -31,8 +31,6 @@ TestcaseID: CT_DS117</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>

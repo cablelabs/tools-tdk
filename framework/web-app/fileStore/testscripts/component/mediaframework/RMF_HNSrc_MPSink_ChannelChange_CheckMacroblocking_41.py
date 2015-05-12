@@ -3,7 +3,7 @@
 <xml>
   <id>1634</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_ChannelChange_CheckMacroblocking_41</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -32,9 +32,9 @@ Test Type: Positive.</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -83,7 +83,11 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
             tdkTestObj.setResultStatus("FAILURE");
             return "FAILURE" ;
         print "PLAY URL : %s" %url;
-        open_parameter_value.append(url);
+        parametervalue.append(url);
+        if count == 2:
+            parametervalue.pop(1);
+            print "AFTER : %s" %parametervalue;
+
     for item in range(len(parametername)):
         tdkTestObj.addParameter(parametername[item],parametervalue[item]);
     #Execute the test case in STB
@@ -131,12 +135,12 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                 time.sleep(30)
                                                                                 #Commenting Audio Check as audio will not be available during the trickplay.
                                                                                 #checkStatusParameter=["audioVideoStatus"]
-                                                                                #checkStatusFor=["CheckAudioStatus.sh"]
+                                                                                #checkStatusFor=["/opt/TDK/CheckAudioStatus.sh"]
                                                                                 #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                 #print "Audio check Done. Status: ",result;
 
                                                                                 checkStatusParameter=["audioVideoStatus"]
-                                                                                checkStatusFor=["CheckVideoStatus.sh"]
+                                                                                checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
                                                                                 result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                 print "Video check Done. Status: ",result;
                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_GetState',obj,Expected_Result,src_parameter,src_element);
@@ -160,4 +164,4 @@ if Expected_Result in loadModuleStatus.upper():
         obj.unloadModule("mediaframework");
 else:
         print "Load Module Failed"
-        obj.setLoadModuleStatus("FAILURE"
+        obj.setLoadModuleStatus("FAILURE");

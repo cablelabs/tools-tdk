@@ -35,8 +35,6 @@ Test CaseID:CT_GST_PLUGINS_RDK_23</synopsis>
     <!--  -->
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
