@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+	<TestEnvironment>
+	<TARGET_IP>192.168.0.38</TARGET_IP>
+	<BUILD_VER>Release-1.31.0</BUILD_VER>
+	<RDK_VER>RDK1.3</RDK_VER>
+	<BOX_TYPE>IPClient-3</BOX_TYPE>
+	<TEST_MANAGER_URL>http://10.143.32.65:8080/rdk-test-tool-TWC-30Jan2015</TEST_MANAGER_URL>
+	<RESRC_PUBLISHER_LINK>http://192.168.0.39:8080/</RESRC_PUBLISHER_LINK>
+	<LOG_PATH>/home/hkampati/Desktop/apache-tomcat-6.0.37/webapps/rdk-test-tool-TWC-30Jan2015/</LOG_PATH>
+	<!-- LOG_PATH : Path where logs will be stored -->
+	<COMMON_XML_LOGS_PATH enabled="true">./TDKLOGS</COMMON_XML_LOGS_PATH>	
+	<!-- COMMON_XML_LOGS_PATH : All xml logs will be copied (**duplicated**) to this COMMON_XML_LOGS_PATH -->
+	<DEV_NAME>HUMAX_IPSTB0</DEV_NAME>
+	<PORT_ID>8087</PORT_ID>
+	<Database_Name host="localhost" username="root" password="root">rdktesttoolproddb</Database_Name>
+	<Device_Port>8090</Device_Port>
+	<RDK_Version file="version.info" versionStrInfo="image.version"></RDK_Version>
+	<TDK_Version file="TDK_version.txt" versionStrInfo="Version"></TDK_Version>
+	</TestEnvironment>
+
+	
+	<TestSuite name="GSTREAMER" component="GStreamer" testtype="hybrid"> 
+		<!--TestSuite is a groups of Test scripts for executing tests together-->
+		<!-- testtype can be "performence","functional" or "hybrid"-->
+		
+		<TestExecutionEnabled>false</TestExecutionEnabled>
+		<ReportGenerationEnabled status="false" relevanceNumber="5"></ReportGenerationEnabled>
+		<TestCaseReportName>GStreamerTestCaseReport</TestCaseReportName>
+		<SharedObjectName>opensourcetestsuite</SharedObjectName>
+		<TestScripts location="../tests/openSource_components/scripts/twc/" runall="false">
+			<ScriptName>twc_GstreamerBasePluginTest</ScriptName> 
+		</TestScripts>
+	</TestSuite>
+	<TestSuite name="WEBKIT"  component="QtWebkit" testtype="hybrid">
+		<TestExecutionEnabled>false</TestExecutionEnabled>
+		<ReportGenerationEnabled status="false" relevanceNumber="5"></ReportGenerationEnabled>
+		<TestCaseReportName>QTWebkitTestCaseReport</TestCaseReportName>
+		<SharedObjectName>opensourcetestsuite</SharedObjectName>
+        <TestScripts location="../tests/openSource_components/scripts/twc/"  runall="false">
+			<ScriptName >twc_WebkitTest_DirectFB</ScriptName>
+		</TestScripts> 
+	</TestSuite>
+	<TestSuite name="DeviceSettings" component="DeviceSettingsManager" testtype="functional">
+		<TestExecutionEnabled>false</TestExecutionEnabled>
+		<ReportGenerationEnabled status="false" relevanceNumber="5"></ReportGenerationEnabled>
+		<TestCaseReportName>DSTestCaseReport</TestCaseReportName>
+		<TestScripts location="../tests/devicesettings/scripts/twc/" runall="false" >
+			 <ScriptName>twc_DS_SetStereoMode_MONO_FORMAT_69</ScriptName>
+			 <ScriptName>twc_DS_AddDisplayconnection_Listener_test_14</ScriptName>
+			 <ScriptName>twc_DS_GetAspect_Ratio_test_21</ScriptName>
+		</TestScripts>
+		<SharedObjectName>devicesettings</SharedObjectName>
+		<Feature name="DeviceSettings"/>
+        </TestSuite>
+	<TestSuite name="RDKLogger"  component="RDKLogger" testtype="functional">
+		<TestExecutionEnabled>false</TestExecutionEnabled>
+		<ReportGenerationEnabled status="false" relevanceNumber="5"></ReportGenerationEnabled>
+		<TestCaseReportName>RDKLoggerTestCaseReport</TestCaseReportName>
+		<TestScripts location="../tests/rdk_logger/scripts/twc/" runall="false" >
+			 <exclude>twc_RDKLogger_CheckMPELogEnabled</exclude>
+			 <ScriptName>twc_RDKLogger_Dbg_Enabled_Status</ScriptName>
+		</TestScripts>
+		<SharedObjectName>rdklogger</SharedObjectName>
+		<Feature name="RDKLogger"/>
+        </TestSuite>
+
+	<TestSuite name="closedcaption"  component="ClosedCaptionManager" testtype="functional">
+		<TestExecutionEnabled>false</TestExecutionEnabled>
+		<ReportGenerationEnabled status="false" relevanceNumber="5"></ReportGenerationEnabled>
+		<TestCaseReportName>cckeyTestCaseReport</TestCaseReportName>
+		<SharedObjectName>cc</SharedObjectName>
+                <TestScripts location="../tests/closedcaption/scripts/twc/" runall="false">
+			 <ScriptName>twc_CC_Get_Attribute_BGOpacity_default_28</ScriptName>
+			 <ScriptName>twc_CC_Get_Attribute_BorderColor_default_34</ScriptName>
+		</TestScripts>
+		<Feature name="ClosedCaption"/>
+	</TestSuite>
+
+        <TestSuite name="IARMBUSFunc" component="IARMBus" testtype="functional">
+                <TestExecutionEnabled>false</TestExecutionEnabled>
+                <ReportGenerationEnabled status="false" relevanceNumber="5"></ReportGenerationEnabled>
+                <TestCaseReportName>IARMBUSFuncReport</TestCaseReportName>
+                <TestScripts location="../tests/iarmbus/scripts/twc/" runall="false" >
+			 <ScriptName>twc_IARMBUS_Broadcast_IR_event</ScriptName>
+			 <ScriptName>twc_IARMBUS_Broadcast_ResolutionChange_Event_test</ScriptName>
+                </TestScripts>
+                <SharedObjectName>iarmbus</SharedObjectName>
+                <Feature name="IARMBUSFunc"/>
+        </TestSuite>
+
+</configuration>
