@@ -34,8 +34,6 @@ Test Case Type: Positive.</synopsis>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
     <!--  -->
-    <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
