@@ -88,7 +88,7 @@ if 'SUCCESS' in dsLoadStatus.upper():
                 		#Verify that temperature reported from ds and tr69 are not very different (max 1C difference)
                 		tolerance = float(tr69Details) - float(dsDetails)
                 		print "Temperature value difference between DS and TR69 is %",abs(tolerance),"C"
-				if ( abs(tolerance) < float(1) ):
+				if ( abs(tolerance) <= float(1) ):
         				tr69TestObj.setResultStatus("SUCCESS");
 				else:
                         		print "TR69 CPU Temperature value failed verification"

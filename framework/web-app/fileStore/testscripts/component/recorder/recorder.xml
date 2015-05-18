@@ -18,6 +18,10 @@
           <parameter name='Duration' value='' />
         </parameters>
       </primitiveTest>
+      <primitiveTest name="Recorder_SendRequest" id="" version="1">
+        <function>TestMgr_Recorder_SendRequest</function>
+        <parameters/>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>
