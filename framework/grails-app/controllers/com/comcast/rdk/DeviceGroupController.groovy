@@ -81,6 +81,8 @@ class DeviceGroupController {
             return
         }
 		deviceGroupsInstance.groups = utilityService.getGroup()
+		if(params?.devices != null)
+		{
         if (!deviceGroupsInstance.save(flush: true)) {
             log.info("Device Group Not Created "+deviceGroupsInstance?.name)
             log.error( deviceGroupsInstance.errors)
@@ -92,6 +94,16 @@ class DeviceGroupController {
             message(code: 'deviceGroups.label', default: 'DeviceGroups'),
             deviceGroupsInstance.name
         ])
+		}
+		else
+		{
+			/*flash.message =message(code: 'default.not.created.message', args: [
+            message(code: 'deviceGroups.label', default: 'DeviceGroups'),
+            deviceGroupsInstance.name
+        ])*/
+			flash.message = "Please select the devices to save DeviceGroup"
+		}
+		
         redirect(action: "list")
     }
 
@@ -283,7 +295,7 @@ class DeviceGroupController {
 		
 		String newBoxType = boxType?.type?.toLowerCase()
 		
-		if (newBoxType.equals( BOXTYPE_GATEWAY )){
+		if (newBoxType.equals( BOXTYPE_GATEWAY ) || newBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
 			String recId =  params?.recorderId
 			if(recId?.trim()?.length() ==  0 ){
 				flash.message = "Recorder id should not be blank"
@@ -296,6 +308,8 @@ class DeviceGroupController {
          * Check whether streams are present
          * and there is no duplicate OcapIds
          */
+		if(newBoxType.equals( BOXTYPE_GATEWAY ) || newBoxType.equals(BOXTYPE_STANDALONE_CLIENT))
+		{
         if((params?.streamid)){
 			
 			if(checkDuplicateOcapId(params?.ocapId)){
@@ -304,7 +318,7 @@ class DeviceGroupController {
                 return
             }
         }
-		
+		}
 		def deviceInstance = new Device(params)
 		deviceInstance.groups = utilityService.getGroup()
         if (deviceInstance.save(flush: true)) {
@@ -350,7 +364,6 @@ class DeviceGroupController {
 				blankList.add(it)
 			}
 		}
-
         [url : getApplicationUrl(),deviceInstance: deviceInstance, flag : flag, showBlankRadio:showBlankRadio,blankList:blankList,gateways : devices, deviceStreams : deviceStream,radiodeviceStreams:radiodeviceStream, editPage : true, uploadBinaryStatus: deviceInstance.uploadBinaryStatus, id: id]
     }
 
@@ -401,7 +414,7 @@ class DeviceGroupController {
 			
 			if (newBoxType.equals( BOXTYPE_GATEWAY )){
 				String recId = ""
-				if(currentBoxType.equals( BOXTYPE_GATEWAY)){
+				if(currentBoxType.equals( BOXTYPE_GATEWAY) || currentBoxType.equals( BOXTYPE_STANDALONE_CLIENT)){
 					recId = params?.recorderIdedit
 				}else if(currentBoxType.equals( BOXTYPE_CLIENT)){
 					recId = params?.recorderId
@@ -430,12 +443,15 @@ class DeviceGroupController {
                 }
             }
             else{
-                if(currentBoxType.equals( BOXTYPE_GATEWAY )){
+                if(currentBoxType.equals( BOXTYPE_GATEWAY ) || currentBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
                     if(newBoxType.equals( BOXTYPE_CLIENT )){
                         deviceInstance.gatewayIp = params?.gatewayIpedit
                         deviceInstance.recorderId = ""
                         DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
 						DeviceRadioStream.executeUpdate("delete DeviceRadioStream d where d.device = :instance1",[instance1:deviceInstance])
+                    }else  if(currentBoxType.equals( BOXTYPE_STANDALONE_CLIENT ) && newBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
+                        deviceInstance.gatewayIp = params?.gatewayIp
+						deviceInstance.recorderId = params?.recorderIdedit
                     }
                     else{
                         deviceInstance.gatewayIp = ""
@@ -443,6 +459,7 @@ class DeviceGroupController {
                     }
                 }
             }
+			
 			
             if (!deviceInstance.save(flush: true)) {
                 devicegroupService.saveToDeviceGroup(deviceInstance)
@@ -453,8 +470,7 @@ class DeviceGroupController {
            DeviceStream deviceStream
 
             if(currentBoxType.equals( BOXTYPE_CLIENT )){
-                if(newBoxType.equals( BOXTYPE_GATEWAY )){
-					
+                if(newBoxType.equals( BOXTYPE_GATEWAY) || newBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
 					/**
 					 * Check whether streams are present
 					 * and there is no duplicate OcapIds
@@ -471,9 +487,9 @@ class DeviceGroupController {
                     saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)        
                 }
             }
-            else{                
-                if(deviceInstance.boxType.type.toLowerCase().equals( BOXTYPE_GATEWAY )){
-					/**
+            else{    
+                if(deviceInstance.boxType.type.toLowerCase().equals( BOXTYPE_GATEWAY ) || deviceInstance.boxType.type.toLowerCase().equals( BOXTYPE_STANDALONE_CLIENT )  ){
+						/**
 					 * Check whether streams are present
 					 * and there is no duplicate OcapIds
 					 */
@@ -595,7 +611,7 @@ class DeviceGroupController {
 				devicegroupService.updateExecDeviceReference(deviceInstance)
 				//DeviceGroup.executeUpdate("delete DeviceGroup d where d.device = :instance1",[instance1:deviceInstance])
 
-				if(deviceInstance.isChild == 1){
+				if(deviceInstance?.isChild == 1){
 					try {
 						def devices = Device.findAll()
 						devices?.each{ device ->
@@ -673,6 +689,36 @@ class DeviceGroupController {
 				redirect(action: "list")
 			}
 		}
+	}
+	def deleteDeviceWithName(final String device1)
+	{
+		def deviceName=Device?.findByStbName(device1)
+		try
+			{
+				def deviceList = Device.list()
+				deviceList?.each{ device ->
+					if(device1 == device)
+					{
+					
+					}
+					else
+					{
+						def deviceList1 = DeviceGroup.list()
+						deviceList1.each{device12 ->
+							
+						}
+					}				
+					
+				}
+			
+			}
+			catch(Exception e)
+			{
+					e.printStackTrace()
+			}
+		
+		render "deleteDevice"
+		
 	}
 	
 

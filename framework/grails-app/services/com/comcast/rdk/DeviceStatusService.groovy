@@ -74,7 +74,7 @@ public class DeviceStatusService {
 
 				} catch (Exception e) {			
 				}				
-				mocaDeviceService.updateMocaDevices(deviceInstance,boxtype)
+				mocaDeviceService?.updateMocaDevices(deviceInstance,boxtype)
 			}
 	}
 	

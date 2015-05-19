@@ -25,6 +25,6 @@
 		<g:message code="boxType.type.label" default="Type" />
 		<span class="required-indicator">*</span>
 	</label>
-	<g:select id="typeId" name="type" from="['Client','Gateway']" style="width : 150px;"/>
+	<g:select id="typeId" name="type" from="['Client','Stand-alone-Client','Gateway']" style="width : 150px;"/>
 	<%--<g:textField name="type" required="" value="${boxTypeInstance?.type}"/>--%>
 </div>

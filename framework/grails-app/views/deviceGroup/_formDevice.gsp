@@ -176,8 +176,8 @@
 		<g:select id="soCVendor" name="soCVendor.id" noSelection="['' : 'Please Select']" from="${com.comcast.rdk.SoCVendor.list()}" optionKey="id" required="" value="${deviceInstance?.soCVendor?.id}" class="many-to-one selectCombo"/>
 	</div>
 </g:if>
-
 <g:if  test="${ (deviceInstance?.boxType?.type?.toLowerCase() != 'gateway') }" >
+
 	<g:if test= "${deviceInstance.isChild  == 0}">
 		<div id="gatewayId" class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'gatewayIp', 'error')}">
 			<label for="gatewayIp">
@@ -206,7 +206,7 @@
 	<g:select id="gatewayIpedit" name="gatewayIpedit" noSelection="['' : 'Please Select']" from="${gateways?.stbName}" value="${deviceInstance?.gatewayIp}" class="many-to-one selectCombo"/>
 </div>
 
-<g:if test="${ (editPage == true ) && (deviceInstance?.boxType?.type == "Gateway") }">
+<g:if  test="${ (deviceInstance?.boxType?.type?.toLowerCase() == 'gateway' || deviceInstance?.boxType?.type?.toLowerCase() == 'stand-alone-client') }" >
 <div id="recorderIdedit" class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'recorderId', 'error')}">
 	<label for="recorderId">
 		<g:message code="device.recorderId.label" default="RecorderId" />
@@ -215,5 +215,14 @@
 	<g:textField name="recorderIdedit" value="${deviceInstance?.recorderId}" class="textwidth"/>
 </div>
 </g:if>
+<g:else>
+<div style="display:none;" id="recorderIdedit" class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'recorderId', 'error')}">
+	<label for="recorderId">
+		<g:message code="device.recorderId.label" default="RecorderId" />
+		<span class="required-indicator">*</span>
+	</label>
+	<g:textField name="recorderIdedit" value="${deviceInstance?.recorderId}" class="textwidth"/>
+</div>
+</g:else>
 
 <g:hiddenField id="editFlag" name="editFlag" value="${editPage}"/>

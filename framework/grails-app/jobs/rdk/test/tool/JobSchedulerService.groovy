@@ -115,7 +115,7 @@ class JobSchedulerService implements Job{
 
 			String htmlData = ""
 			boolean abortedExecution = false
-
+			boolean pause = false
 			def scriptObject
 			def scriptName
 
@@ -216,6 +216,7 @@ class JobSchedulerService implements Job{
 									execution.name = execName
 									execution.script = scriptName
 									execution.device = deviceName
+									execution.applicationUrl = url
 									execution.scriptGroup = scriptGroupInstance?.name
 									execution.result = UNDEFINED_STATUS
 									execution.executionStatus = INPROGRESS_STATUS
@@ -272,6 +273,7 @@ class JobSchedulerService implements Job{
 								scriptGroupInstance = ScriptGroup.findById(jobDetails?.scriptGroup,[lock: true])
 								scriptCounter = 0
 								List validScriptList = new ArrayList()
+								List pendingScripts = []
 								boolean skipStatus = false
 								boolean notApplicable = false
 
@@ -280,6 +282,7 @@ class JobSchedulerService implements Job{
 
 									def script = getScript(realpath,scrpt?.moduleName, scrpt?.scriptName)
 									
+									if(script){
 									if(validateScriptBoxTypes(script,deviceInstance)){
 										if(validateScriptRDKVersions(script,rdkVersion)){
 											if(script.skip.toString().equals("true")){
@@ -315,6 +318,11 @@ class JobSchedulerService implements Job{
 										String reason = "Box Type mismatch.<br>Device Box Type : "+deviceBoxType+", Script supported Box Types :"+boxTypeData
 										saveNotApplicableStatus(Execution.findByName(execName), executionDevice, script, deviceInstance, reason)
 									}
+										}else{
+											String reason = "No script is available with name :"+scrpt?.scriptName+" in module :"+scrpt?.moduleName
+											saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, scrpt?.scriptName, deviceInstance,reason)
+
+										}
 
 
 								}
@@ -335,15 +343,94 @@ class JobSchedulerService implements Job{
 										isMultiple = "false"
 									}
 									aborted = ExecutionService.abortList.contains(ex?.id?.toString())
-									if(!aborted){
+									
+									String deviceStatus = ""
+									if(!pause && !aborted){
+										try {
+											deviceStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+											/*Thread.start{
+												deviceStatusService.updateDeviceStatus(deviceInstance, devStatus)
+											}*/
+											if(deviceStatus.equals(Status.HANG.toString())){
+												resetAgent(deviceInstance, TRUE)
+												Thread.sleep(6000)
+												deviceStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+											}
+										}
+										catch(Exception eX){
+										}
+									}
+									
+									
+									if(!aborted && !(deviceStatus.equals(Status.NOT_FOUND.toString()) || deviceStatus.equals(Status.HANG.toString())) && !pause){
 										htmlData = executeScript(execName, executionDevice, scriptObj , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,executionName,isMultiple)
 										output.append(htmlData)
 										Thread.sleep(6000)
-									}
+									}else{
+				
+					if(!aborted && (deviceStatus.equals(Status.NOT_FOUND.toString()) ||  deviceStatus.equals(Status.HANG.toString()))){
+						pause = true
+					}
+
+					if(!aborted && pause) {
+						try {
+							pendingScripts.add(scriptObj)
+							def execInstance
+							Execution.withTransaction {
+								def execInstance1 = Execution.findByName(execName)
+								execInstance = execInstance1
+							}
+							def scriptInstanceObj
+//							Script.withTransaction {
+//							Script scriptInstance1 = Script.findById(scriptObj.id)
+							scriptInstanceObj = scriptObj
+//							}
+							Device deviceInstanceObj
+							def devId = deviceInstance?.id
+							Device.withTransaction {
+								Device deviceInstance1 = Device.findById(devId)
+								deviceInstanceObj = deviceInstance1
+							}
+							ExecutionDevice executionDevice1
+							ExecutionDevice.withTransaction {
+								def exDev = ExecutionDevice.findById(executionDevice?.id)
+								executionDevice1 = exDev
+							}
+							
+							ExecutionResult.withTransaction { resultstatus ->
+							try {
+								def executionResult = new ExecutionResult()
+								executionResult.execution = execInstance
+								executionResult.executionDevice = executionDevice1
+								executionResult.script = scriptInstanceObj?.name
+								executionResult.device = deviceInstanceObj?.stbName
+								executionResult.execDevice = null
+								executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
+								executionResult.status = PENDING
+								executionResult.dateOfExecution = new Date()
+								if(! executionResult.save(flush:true)) {
+								}
+								resultstatus.flush()
+							}
+							catch(Throwable th) {
+								resultstatus.setRollbackOnly()
+							}
+							}
+						} catch (Exception e) {
+						}
+
+					}
+				}
 								}
 
 								if(aborted && ExecutionService.abortList.contains(ex?.id?.toString())){
 									ExecutionService.abortList.remove(ex?.id?.toString())
+								}
+								if(!aborted && pause && pendingScripts.size() > 0 ){
+									println "here  going to save pauseeee "
+									def exeInstance = Execution.findByName(execName)
+									savePausedExecutionStatus(exeInstance?.id)
+									saveExecutionDeviceStatusData(PAUSED, executionDevice?.id)
 								}
 							}
 							else if(scripts){
@@ -435,7 +522,7 @@ class JobSchedulerService implements Job{
 							}
 
 							Execution executionInstance1 = Execution.findByName(execName)
-							if(executionInstance1){
+							if(!pause && executionInstance1){
 								saveExecutionStatus(aborted, executionInstance1?.id)
 							}
 							
@@ -490,7 +577,7 @@ class JobSchedulerService implements Job{
 				def executionObj = Execution.findByName(execName)
 				def executionDeviceObj = ExecutionDevice.findAllByExecutionAndStatusNotEqual(executionObj, SUCCESS_STATUS)
 
-				if(!abortedExecution && (executionDeviceObj.size() > 0 ) && (jobDetails?.rerun)){
+				if(!abortedExecution && !pause && (executionDeviceObj.size() > 0 ) && (jobDetails?.rerun)){
 					htmlData = reRunOnFailure(realpath,filePath,url,execName,executionName,jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.groups)
 					output.append(htmlData)
 				}
@@ -733,8 +820,13 @@ class JobSchedulerService implements Job{
 		def executionId = executionInstance?.id
 		Date executionDate = executionInstance?.dateOfExecution
 
-		def execStartTime = executionDate?.getTime()
-
+		//def execStartTime = executionDate?.getTime()
+		
+		// Add to fix
+		Date executionStartDt = new Date()
+        def execStartTime =  executionStartDt.getTime()
+		
+		
 		def executionResult
 
 		ExecutionResult.withTransaction { resultstatus ->
@@ -1610,4 +1702,55 @@ class JobSchedulerService implements Job{
 		   }
 		return primitiveMap
 	}
+	
+	public void savePausedExecutionStatus(def exId){
+		try {
+			Execution.withSession {
+			Execution.executeUpdate("update Execution c set c.executionStatus = :newStatus where c.id = :execId",
+					[newStatus: "PAUSED", execId: exId?.toLong()])
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+
+}
+	
+	public void saveExecutionDeviceStatusData(String status, def exDevId){
+		
+				try {
+					ExecutionDevice.withSession {
+					ExecutionDevice.executeUpdate("update ExecutionDevice c set c.status = :newStatus  where c.id = :execId",
+							[newStatus: status, execId: exDevId?.toLong()])
+					}
+				} catch (Exception e) {
+					e.printStackTrace()
+				}
+		
+		}
+	
+	public void saveNoScriptAvailableStatus(def executionInstance , def executionDevice , def scriptName , def deviceInstance, String reason){
+		try{
+		ExecutionResult.withTransaction { resultstatus ->
+			try {
+				ExecutionResult executionResult = new ExecutionResult()
+				executionResult.execution = executionInstance
+				executionResult.executionDevice = executionDevice
+				executionResult.script = scriptName
+				executionResult.device = deviceInstance?.stbName
+				executionResult.status = Constants.SKIPPED_STATUS
+				executionResult.dateOfExecution = new Date()
+				executionResult.executionOutput = "Test not executed. Reason : "+reason
+				if(! executionResult.save(flush:true)) {
+					log.error "Error saving executionResult instance : ${executionResult.errors}"
+				}
+				resultstatus.flush()
+			}
+			catch(Throwable th) {
+				resultstatus.setRollbackOnly()
+			}
+		}
+		}catch(Exception ee){
+		}
+	}
+	
 }

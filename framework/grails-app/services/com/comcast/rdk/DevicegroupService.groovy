@@ -34,8 +34,8 @@ class DevicegroupService {
             deviceGrpInstance.name = boxType
         }        
             
-        deviceGrpInstance.addToDevices(deviceInstance)
-        deviceGrpInstance.save(flush:true)
+        deviceGrpInstance?.addToDevices(deviceInstance)
+        deviceGrpInstance?.save(flush:true)
 
     }
     
@@ -82,7 +82,7 @@ class DevicegroupService {
                 deviceGroups?.each{ deviceGrp ->
                     deviceInstance = deviceGrp.devices.find { it.id == device.id }
                     if(deviceInstance){
-                        deviceGrp.removeFromDevices(deviceInstance)
+                        deviceGrp?.removeFromDevices(deviceInstance)
                     }
                 }
             }

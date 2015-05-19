@@ -87,8 +87,10 @@ public final class Constants
 	public static final String KEY_VIDEOFORMAT      = "videoformat";
 	public static final String BOXTYPE_CLIENT       = "client";
 	public static final String BOXTYPE_GATEWAY      = "gateway";
+	public static final String BOXTYPE_STANDALONE_CLIENT  = "stand-alone-client";
 	public static final int EXEC_EXITCODE_SUCCESS   = 0;
 	public static final String NEW_LINE             = "\n";
+	public static final String TAB					= "\t";
 	public static final String LINE_STRING          = "======";
 	public static final int INDEX_ZERO              = 0;
 	public static final int INDEX_ONE               = 1;

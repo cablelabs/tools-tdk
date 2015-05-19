@@ -490,10 +490,10 @@ class PrimitiveTestController {
 		
 		Device device = Device.findByStbIp(stbIp?.trim())
 		JsonObject outData = new JsonObject()
-		String boxtype = device?.boxType?.type.toLowerCase()
+		String boxtype = device?.boxType?.type?.toLowerCase()
 
 
-		if(boxtype?.equals( BOXTYPE_CLIENT )) {
+		if(boxtype?.equals( BOXTYPE_CLIENT ) ) {
 			String gateway = device?.gatewayIp.toString()
 			Device gatewayDevice =  Device.findByStbName(gateway.trim())
 			if(gateway) {
@@ -520,8 +520,36 @@ class PrimitiveTestController {
 					outData.addProperty(KEY_VIDEOFORMAT, streamingDetails?.videoFormat?.toString());
 				}
 			}
-		}
-		else{
+		}else if(boxtype?.equals( BOXTYPE_STANDALONE_CLIENT )) {
+			String gateway = device?.gatewayIp.toString()
+			Device gatewayDevice =  Device.findByStbName(gateway.trim())
+			if(gateway) {
+
+				if(idVal?.startsWith("R")){
+					RadioStreamingDetails streamingDetails = RadioStreamingDetails.findByStreamId(idVal)
+					DeviceRadioStream deviceStream = DeviceRadioStream.findByDeviceAndStream( device, streamingDetails )
+					outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
+					outData.addProperty(KEY_GATEWAYIP, gatewayDevice?.stbIp?.toString());
+					outData.addProperty(KEY_CHANNELTYPE, "radio");
+					outData.addProperty(KEY_OCAPID, deviceStream?.ocapId?.toString());
+					outData.addProperty(KEY_RECORDERID, gatewayDevice?.recorderId?.toString());
+					outData.addProperty(KEY_AUDIOFORMAT, "N/A");
+					outData.addProperty(KEY_VIDEOFORMAT, "N/A");
+				}else{
+					StreamingDetails streamingDetails = StreamingDetails.findByStreamId(idVal)
+					DeviceStream deviceStream = DeviceStream.findByDeviceAndStream( device, streamingDetails )
+					outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
+					outData.addProperty(KEY_GATEWAYIP, gatewayDevice?.stbIp?.toString());
+					outData.addProperty(KEY_CHANNELTYPE, streamingDetails?.channelType?.toString());
+					outData.addProperty(KEY_OCAPID, deviceStream?.ocapId?.toString());
+					outData.addProperty(KEY_RECORDERID, gatewayDevice?.recorderId?.toString());
+					outData.addProperty(KEY_AUDIOFORMAT, streamingDetails?.audioFormat?.toString());
+					outData.addProperty(KEY_VIDEOFORMAT, streamingDetails?.videoFormat?.toString());
+				}
+			}
+
+
+		}else{
 
 			if(idVal?.startsWith("R")){
 				RadioStreamingDetails streamingDetails = RadioStreamingDetails.findByStreamId(idVal)

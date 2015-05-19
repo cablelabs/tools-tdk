@@ -149,11 +149,13 @@ class ScriptgroupService {
 		 String groupName = module?.testGroup?.toString() + KEY_GROUP
 		 createOrUpdateScriptGroups(scriptInstance, groupName)
 		 
-		 boxTypeList.each { boxType ->
-			 BoxType box = BoxType.findById(boxType?.id);
-			 groupName = box.name + KEY_GROUP
-			 createOrUpdateScriptGroups(scriptInstance, groupName)
-		 }
+		boxTypeList.each { boxType ->
+			BoxType box = BoxType.findById(boxType?.id);
+			if(box){
+				groupName = box?.name + KEY_GROUP
+				createOrUpdateScriptGroups(scriptInstance, groupName)
+			}
+		}
 		 
 //		 String groupName = scriptInstance.primitiveTest.module.testGroup.toString() + KEY_GROUP
 		 
@@ -170,6 +172,7 @@ class ScriptgroupService {
 		 boxTypeList.each { boxType ->
  
 			 BoxType box = BoxType.findById(boxType?.id);
+			 if(box){
 			 groupName = box.name + KEY_GROUP
  
 			 if(scriptObject.getLongDuration()){
@@ -180,6 +183,7 @@ class ScriptgroupService {
 			 }
  
 			 createOrUpdateScriptGroups(scriptInstance, groupName)
+			 }
 		 }
 		 
 	 }

@@ -23,21 +23,30 @@ $('#scheduletable').dataTable({
 });
 </script>
 <g:if test="${jobDetailList.size() > 0}" > 
-<table id="scheduletable" >
+<table id="scheduletable" style="table-layout:fixed; " >
    <thead>	
    		<tr>
      		<th colspan="9" align="center" style="background-color: white">Scheduled Jobs</th>            
-        </tr>   		
+        </tr>   
+         <col width="4%">
+        <col width= "20%">
+        <col width ="13%">
+        <col width ="30%">
+        <col width ="20%">
+        <col width ="20%">
+        <col width ="15%">
+        <col width ="15%">
+        <col width ="4%">			
         <tr>
-     		<th width="2%"></th>
-     		<th width="12%">Job Name</th>    
-            <th width="13%">StartDate</th>                             
-            <th width="35%">Script/ScriptGroup</th>
-            <th width="8%">Device</th>
-            <th width="15%">Details</th>
-            <th width="13%">EndDate</th>
-			<th width="10%">Status</th>
-            <th width="2%">Delete</th>
+     		<th ></th>
+     		<th >Job Name</th>    
+            <th >StartDate</th>                             
+            <th >Script/ScriptGroup</th>
+            <th >Device</th>
+            <th >Details</th>
+            <th >EndDate</th>
+			<th	>Status</th>
+            <th >Delete</th>
         </tr>              
 	</thead>
 	<tbody>
@@ -47,26 +56,35 @@ $('#scheduletable').dataTable({
 		    <% count++ %>
 			<tr class="${(i % 2) == 0 ? 'even' : 'odd'}">
 				<% 
-		            def deviceInstance = Device.findById(jobDetailsInstance?.device) 
+		           def deviceInstance = Device.findById(jobDetailsInstance?.device) 
                     def scriptList = jobDetailsInstance.script 
                     def scrLst = ""
+					int count1 =0
+					String  str =" Multiple Scripts "
                     if(!(scriptList?.isEmpty())){  	
 	                    def scripts	                   
 	                    scriptList?.each{ scr ->
-	                      //  scripts = Script.findById(scr)
-	                        scrLst = scrLst + scr + ","
-	                    }	
+	                      //  scripts = Script.findById(scr) 
+							//scrLst = scrLst + scr + ","
+						if(count1 > 0){
+							scrLst = str
+						}
+						else{
+							scrLst = scrLst + scr + ","
+						}
+						count1++
+					}
                     }
                     else{
                         def scptGrp = ScriptGroup.findById(jobDetailsInstance?.scriptGroup)
                         scrLst = scptGrp
-                    }                    	        
+                    }                      	        
 				%>			
 				<td align="center"><g:checkBox name="chkbox${count}" value="${false}"  /></td>
 				<td align="center">${fieldValue(bean: jobDetailsInstance, field: "jobName")}</td>	
 				<td align="center">${fieldValue(bean: jobDetailsInstance, field: "startDate")}</td>							
 			
-				<td align="center">${scrLst }</td>
+				<td align="center" style ="width :40% ; word-wrap: break-word;">${scrLst }</td>
 			
 				<td align="center">${deviceInstance?.stbName} </td>
 				
@@ -90,7 +108,7 @@ $('#scheduletable').dataTable({
 				 	<g:else>PENDING</g:else>
 				
 				 </td>
-				 <td>
+				 <td align="center">
 					 <g:if test="${time > 0 }">
 						<g:remoteLink class="delete" 
 							action="deleteJob" controller="execution" update="newScheduleTable"

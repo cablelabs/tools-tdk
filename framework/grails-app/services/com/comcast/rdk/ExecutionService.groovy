@@ -40,6 +40,8 @@ class ExecutionService {
 	 */
 	public static volatile List abortList = []
 	
+	public static volatile List pauseList = []
+	
 	public static volatile List deviceAllocatedList = []
 	
 	
@@ -985,8 +987,8 @@ class ExecutionService {
 		def outputData
 		def deviceResponse
 		def outputArray		
-		macIdList.removeAll(macIdList)
-
+		//macIdList.removeAll(macIdList)
+		macIdList.clear()
 		outputData = executionResult.toString().trim()
 		if(outputData){
 			if( outputData != NO_DEVICES_MSG && outputData != "AGENT_NOT_FOUND"  && outputData != "FAILURE" && outputData != "" && outputData != " " && outputData != null){

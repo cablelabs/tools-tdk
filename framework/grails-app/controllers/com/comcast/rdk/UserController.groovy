@@ -213,12 +213,14 @@ class UserController {
 		render valueList as JSON
 	}
 	
-    def deleteUser(){
-        def countVariable = 0
-        def userInstance
-        if(params?.listCount){ // to delete record(s) from list.gsp
-            for (iterateVariable in params?.listCount){
-                countVariable++
+	def deleteUser(){
+		def countVariable = 0
+		def userInstance
+		int deleteCount = 0
+		if(params?.listCount){
+			// to delete record(s) from list.gsp
+			for (iterateVariable in params?.listCount){
+				countVariable++
 				if(params?.("chkbox"+countVariable) == KEY_ON){
 					def idDb = params?.("id"+countVariable).toLong()
 					userInstance = User.get(idDb)
@@ -227,16 +229,32 @@ class UserController {
 						if(userInst && userInst?.id == idDb ){
 							flash.message = "Cannot delete the current user..."
 						}else{
-							if (!userInstance.delete(flush: true)) {
-
+							try
+							{
+								userInstance.delete(flush:true)
+								deleteCount++
+							}
+							catch (Exception e) {
+								flash.message = message(code: 'default.not.deleted.message', args: [
+									message(code: 'user.label', default: 'User'),
+									userInstance?.username
+								])
 							}
 						}
 					}
 				}
-            }
-        }
-        redirect(action: "create")
-    }
+			}
+		}
+		if(deleteCount  >= 1)
+		{
+			flash.message = message(code: 'default.deleted.message', args: [
+				message(code: 'user.label', default: 'User'),
+				userInstance.username
+			])
+		}
+
+		redirect(action: "create")
+	}
 	
 	
 }

@@ -62,7 +62,7 @@ function showFields(){
 	var boxId = $("#boxType").find('option:selected').val();
 	var url = $("#url").val();
 	$.get('getBoxType', {id: boxId }, function(data) {
-		if(data[0] == 'gateway'){
+		if(data[0] == 'gateway' || data[0] == 'stand-alone-client' ){
 			var xmlhttp;	
 			if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
 				xmlhttp = new XMLHttpRequest();
@@ -76,19 +76,36 @@ function showFields(){
 			}			
 			xmlhttp.open("GET", url+"/deviceGroup/list?t="+Math.random()+"&max=10&offset=0&streamtable=true", true);
 			xmlhttp.send();
-			
 			$("#recorderId").show();
-			$("#gatewayId").hide()
+			if(data[0] == 'gateway'){
+				$("#gatewayId").hide()
+				$("#gatewayIdedit").hide();
+			}else if(data[0] == 'stand-alone-client'){
+				if($("#editFlag").val() == "true"){
+					$("#gatewayId").hide();
+					$("#gatewayIdedit").show();	
+					$("#recorderId").hide();
+				}
+				else{
+					$("#gatewayId").show();
+					$("#gatewayIdedit").hide();		
+				}
+			}
 			$("#streamdiv").show();
 			$("#recorderIdedit").hide();
-			$("#gatewayIdedit").hide();
+			
 			if($("#editFlag").val() == "true"){
+				$("#recorderId").hide();
 				$("#recorderIdedit").show();
+			}else{
+				$("#recorderIdedit").hide();
+				$("#recorderId").show();
 			}
 			
 		}
 		else{
 			if($("#editFlag").val() == "true"){
+				$("#gatewayId").hide();
 				$("#gatewayIdedit").show();	
 				$("#streamdiv").hide();	
 				$("#recorderIdedit").hide();

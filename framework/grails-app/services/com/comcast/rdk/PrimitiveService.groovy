@@ -48,14 +48,18 @@ class PrimitiveService {
 				def node = new XmlParser().parse(file)
 				def pList = []
 				node.each{
-					it.primitiveTests.each{
-					 it.primitiveTest.each {
-						 String pName = "${it.attribute('name')}"
-						 pName = pName?.trim()
-						 pList.add(pName)
-						 primitiveList.add(pName)
-						 primitiveModuleMap.put(pName,""+module.getName())
-					 }
+						try {
+							it.primitiveTests.each{
+								it.primitiveTest.each {
+									String pName = "${it.attribute('name')}"
+									pName = pName?.trim()
+									pList.add(pName)
+									primitiveList.add(pName)
+									primitiveModuleMap.put(pName,""+module.getName())
+								}
+							}
+						} catch (Exception e) {
+						e.printStackTrace()
 					}
 				   }
 				

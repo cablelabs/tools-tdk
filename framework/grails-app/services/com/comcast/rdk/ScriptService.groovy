@@ -71,55 +71,71 @@ class ScriptService {
 		scriptMapping.remove(script?.scriptName?.toString().trim())
 	}
 
-  def initializeScriptsData(def realPath){
-		def list1 = scriptsList.collect()
-		scriptsList.clear()
-		List scriptList = []
-		
-		List dirList = [Constants.COMPONENT,Constants.INTEGRATION]
-		def start = System.currentTimeMillis()
-		dirList.each{ directory ->
-		File scriptsDir = new File( "${realPath}//fileStore//testscripts//"+directory+"//")
-		if(scriptsDir.exists()){
-			def modules = scriptsDir.listFiles()
-			modules.each { module ->
-				def start1 =System.currentTimeMillis()
-				File [] files = module.listFiles(new FilenameFilter() {
-					@Override
-					public boolean accept(File dir, String name) {
-						return name.endsWith(".py");
-					}
-				});
-			def start2 = System.currentTimeMillis()
-			def sLst = []
-			files.each { file ->
-				String name = ""+file?.name?.trim()?.replace(".py", "")
-				def sFile
-				ScriptFile.withTransaction {
-				sFile = ScriptFile.findByScriptNameAndModuleName(name,module.getName())
-				if(sFile == null){
-					sFile = new ScriptFile()
-					sFile.setModuleName(module?.getName())
-					sFile.setScriptName(name)
-					sFile.save(flush:true)
-				}
-				}
-					if(!scriptsList.contains(sFile)){
-						scriptsList.add(sFile)
-						sLst.add(name)
-						scriptMapping.put(name, module?.getName())
-					}
-					
-					if(!scriptNameList.contains(name)){
-						scriptNameList.add(name)
-					}
-				updateDefaultScriptGroups(realPath,name,module?.getName())
-			}
+	def initializeScriptsData(def realPath){
+		try {
+			def list1 = scriptsList.collect()
+			scriptsList.clear()
+			List scriptList = []
 			
-			sLst?.sort()
-			scriptGroupMap.put(module?.getName(), sLst)
+			boolean updateReqd = isDefaultSGUpdateRequired(realPath)
+
+			List dirList = [
+				Constants.COMPONENT,
+				Constants.INTEGRATION
+			]
+			def start = System.currentTimeMillis()
+			dirList.each{ directory ->
+				File scriptsDir = new File( "${realPath}//fileStore//testscripts//"+directory+"//")
+				if(scriptsDir.exists()){
+					def modules = scriptsDir.listFiles()
+					modules.each { module ->
+
+						def start1 =System.currentTimeMillis()
+						try {
+							File [] files = module.listFiles(new FilenameFilter() {
+										@Override
+										public boolean accept(File dir, String name) {
+											return name.endsWith(".py");
+										}
+									});
+							def start2 = System.currentTimeMillis()
+							def sLst = []
+							files.each { file ->
+								String name = ""+file?.name?.trim()?.replace(".py", "")
+								def sFile
+								ScriptFile.withTransaction {
+									sFile = ScriptFile.findByScriptNameAndModuleName(name,module.getName())
+									if(sFile == null){
+										sFile = new ScriptFile()
+										sFile.setModuleName(module?.getName())
+										sFile.setScriptName(name)
+										sFile.save(flush:true)
+									}
+								}
+								if(!scriptsList.contains(sFile)){
+									scriptsList.add(sFile)
+									sLst.add(name)
+									scriptMapping.put(name, module?.getName())
+								}
+
+								if(!scriptNameList.contains(name)){
+									scriptNameList.add(name)
+								}
+								if(updateReqd == true){
+									updateDefaultScriptGroups(realPath,name,module?.getName())
+								}
+							}
+
+							sLst?.sort()
+							scriptGroupMap.put(module?.getName(), sLst)
+						} catch (Exception e) {
+							e.printStackTrace()
+						}
+					}
+				}
 			}
-		}
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
 		return scriptsList
 	}
@@ -262,7 +278,8 @@ class ScriptService {
 					try {
 						grpObj = Groups.findById(Integer.parseInt(grps))
 					} catch (Exception e) {
-						e.printStackTrace()
+						println " Error for script "+fileName+" = "+e.getMessage()
+//						e.printStackTrace()
 					}
 				}
 				script.put("groups",grpObj)
@@ -409,5 +426,27 @@ class ScriptService {
 			intVal = Integer.parseInt(iText?.trim())
 		}
 		return intVal
+	}
+	
+	def isDefaultSGUpdateRequired(def realPath){
+		try {
+		Properties prop = new Properties();
+		String fileName = realPath+"/fileStore/script.config";
+		File ff = new File(fileName)
+		if(ff.exists()){
+			InputStream is = new FileInputStream(fileName);
+			prop.load(is);
+			def value = prop.getProperty("defaultScriptGroup");
+			if(value){
+				if(value.equals("true")){
+					return true
+				}
+			}
+
+		}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		return false
 	}
 }
