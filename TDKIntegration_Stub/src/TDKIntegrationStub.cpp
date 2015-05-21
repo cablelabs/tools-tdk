@@ -1373,7 +1373,7 @@ bool playPause(OUT Json::Value& response)
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 	DEBUG_PRINT(DEBUG_TRACE, " Entered into %s\n",__FUNCTION__);
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -1496,7 +1496,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		retHNSrcValue = -1;
         }
 
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -1636,7 +1636,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Pause_Play(IN const Json::Value& req, OUT J
 		return TEST_FAILURE;
 	}
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -1653,7 +1653,6 @@ bool TDKIntegrationStub::E2ERMFAgent_Pause_Play(IN const Json::Value& req, OUT J
 		return TEST_FAILURE;
 	}
 	cout << "LOG Line:" << __LINE__ << " : Passed HNSrc play \n";
-	sleep(1);
 	/*Query the current speed */
 	float curSpeed = 0.0;
 	pSource->getSpeed(curSpeed);
@@ -1691,7 +1690,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Pause_Play(IN const Json::Value& req, OUT J
 		return TEST_FAILURE;
 	}
 
-	sleep(1);
+	sleep(5);
 
 	retHNSrcValue = pSource->getState(&curState, &pendingState);
 	if(RMF_STATE_CHANGE_SUCCESS != retHNSrcValue || RMF_STATE_PLAYING != curState)
@@ -1737,7 +1736,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_FF_FR(IN const Json::Value& 
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -1807,7 +1806,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN con
 	DEBUG_PRINT(DEBUG_TRACE, "TrickPlay RewindSpeed: %f\n",changeSpeed);
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -1923,7 +1922,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play(IN const Json::Value& req, 
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2035,7 +2034,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_Play(IN const Json::Value& req
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2124,7 +2123,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_Middle(IN const Json::Val
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2207,7 +2206,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_End(IN const Json::Value&
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2287,7 +2286,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_End(IN const Json::Value
 		return TEST_FAILURE;
 	}
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2379,7 +2378,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Middle(IN const Json::Va
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2457,7 +2456,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Starting(IN const Json::
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2537,7 +2536,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Rewind_Forward(IN const Json::Value& r
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2624,7 +2623,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& r
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2641,9 +2640,6 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& r
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
-
-	sleep(1);
-
 	RMFState curState, pendingState;
 	retHNSrcValue = pSource->getState(&curState, &pendingState);
 
@@ -2712,7 +2708,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value&
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2814,7 +2810,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_FF_FR(IN const Json::Value& req,
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2912,7 +2908,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -2963,7 +2959,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 		return TEST_FAILURE;
 	}
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -3066,7 +3062,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req,
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -3191,7 +3187,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Pause(IN const Json::Value& req,
 	}
 
 	retHNSrcValue = pSource->play();
-	sleep(1);
+	sleep(5);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue )
 	{
 		stringstream ss;
@@ -3275,7 +3271,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Play(IN const Json::Value& req, OUT Js
 	for (int repeat = 0; repeat < 2; repeat++)
 	{
 		retHNSrcValue = pSource->play();
-		sleep(1);
+		sleep(5);
 		if(RMF_RESULT_SUCCESS != retHNSrcValue )
 		{
 			stringstream ss;
@@ -3364,7 +3360,7 @@ bool TDKIntegrationStub::E2ERMFAgent_ChannelChange(IN const Json::Value& req, OU
 	retHNSrcValue = pSource->play();
 	eTime = tuneTime.getTime(&endTime);
 
-	sleep(1);
+	sleep(5);
 
 	totalTuningTime += tuneTime.ExecutionTime(sTime,&startTime,eTime,&endTime);
 	DEBUG_PRINT(DEBUG_TRACE, "Total time for tuning: %f in ms (milli seconds)\n",totalTuningTime);
