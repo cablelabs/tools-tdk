@@ -18,6 +18,6 @@ bin_PROGRAMS = tdkRmfApp
 tdkRmfAppdir = ${bindir}
 tdkRmfApp_SOURCES = tdkRmfApp.cpp
 tdkRmfApp_LDFLAGS = -ldvrmgr -ltinyxml -luuid -lcrypto -lTasseograph -lssl -lreadline -lnetsnmp -lnetsnmpagent -lnetsnmphelpers \
--lssl -lhistory -lgstreamer-0.10 -lgio-2.0 -lglib-2.0 -llog4c -lgobject-2.0 -linit -lrdkloggers -lrmfbase -lncurses -ldvrmgrsoc \
+-lssl -lhistory -lgstreamer-0.10 -lgio-2.0 -lglib-2.0 -llog4c -lgobject-2.0 -lrmfinit -lrdkloggers -lrmfbase -lncurses -ldvrmgrsoc \
 -lgstbase-0.10 -lhnsource -lrmfosal -lrmfosalutils -ltrm -ljansson -ldvrsink -lmediaplayersink -lIARMBus
 tdkRmfApp_includedir = ${includedir}
