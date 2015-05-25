@@ -29,10 +29,6 @@ Test CaseID:CT_GST_PLUGINS_RDK_23</synopsis>
   <skip>false</skip>
   <!--  -->
   <box_types>
-    <box_type>Hybrid-1</box_type>
-    <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
     <!--  -->
     <box_type>Emulator-Client</box_type>
