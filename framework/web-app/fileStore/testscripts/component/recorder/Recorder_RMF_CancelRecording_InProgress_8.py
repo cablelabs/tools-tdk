@@ -92,7 +92,6 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #Frame json message
         jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+longDuration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-        #jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"aaa123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -113,7 +112,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
 			loop = loop+1;
-                if ( ('status:[]' in actResponse) or ('ERROR' in actResponse)):
+		if 'acknowledgement' not in actResponse:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Received Empty/Error status";
                 elif 'acknowledgement' in actResponse:
@@ -141,7 +140,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                 #print "Retrieve Status Details: %s"%actResponse;
                                 sleep(10);
                                 loop = loop+1;
-                        if ( ('status:[]' in actResponse) or ('ERROR' in actResponse)):
+			if 'acknowledgement' not in actResponse:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Received Empty/Error status";
                         elif 'acknowledgement' in actResponse:
@@ -153,10 +152,13 @@ if "SUCCESS" in recLoadStatus.upper():
 	                    print recordingData
                             if 'NOTFOUND' not in recordingData:
             	            	key = 'error'
+				statusKey = 'status'
                 	        value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+				statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
                         	print "key: ",key," value: ",value
+				print "statusKey: ",statusKey," statusValue: ",statusValue
                                 print "Successfully retrieved the recording list from recorder";
-                                if "USER_STOP" in value.upper():
+				if "USER_STOP" in value.upper() and "INCOMPLETE" in statusValue.upper():
                                 	tdkTestObj.setResultStatus("SUCCESS");
                                 	print "Scheduled recording error recieved successfully";
                             	else:

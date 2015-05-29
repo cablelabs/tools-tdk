@@ -3,9 +3,9 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>7</version>
+  <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Recorder_RMF_UpdateSchedule_Legacy_LongPoll_5</name>
+  <name>Recorder_RMF_UpdateSchedule_Legacy_LongPoll_InvalidJson_39</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_5 - Recorder- To accept updateSchedule messages via legacy style</synopsis>
+  <synopsis>CT_Recoder_DVR_Protocol_39 - Recorder- Not to accept updateSchedule messages via legacy style for invalid json message</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -51,7 +51,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_UpdateSchedule_Legacy_LongPoll_5');
+recObj.configureTestCase(ip,port,'Recorder_RMF_UpdateSchedule_Legacy_LongPoll_InvalidJson_39');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
@@ -95,8 +95,7 @@ if "SUCCESS" in recLoadStatus.upper():
         now = "curTime"
 
         #Frame json message
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-        #jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"aaa123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -114,64 +113,18 @@ if "SUCCESS" in recLoadStatus.upper():
 		loop = 0;
 		while loop < 5:
 	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	                #print "Retrieve Status Details: %s"%actResponse;
+	                print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
 			loop = loop+1;
-		if 'acknowledgement' not in actResponse:
-                    tdkTestObj.setResultStatus("FAILURE");
+                if 'acknowledgement' not in actResponse:
+                    tdkTestObj.setResultStatus("SUCCESS");
                     print "Received Empty/Error status";
                 elif 'acknowledgement' in actResponse:
-                    tdkTestObj.setResultStatus("SUCCESS");
-                    print "Successfully retrieved acknowledgement from recorder";
-                    print "Wait for 60s for the recording to be completed"
-		    jsonMsgNoUpdate = "{\"updateSchedule\":{\"generationId\":\"0\"}}";
-		    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-                    sleep(60);
-                    # Reboot the STB
-		    print "Rebooting the STB to get the recording list from full sync"
-		    recObj.initiateReboot();
-		    print "Sleeping to wait for the recoder to be up"
-		    sleep(300);
-		    response = recorderlib.callServerHandler('clearStatus',ip);
-		    print "Clear Status Details: %s"%response;
-		    #Frame json message
-		    jsonMsgNoUpdate = "{\"noUpdate\":{}}";
-                    expResponse = "noUpdate";
-		    tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
-                    tdkTestObj1.executeTestCase(expectedResult);
-                    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-                    print "No Update Schedule Details: %s"%actResponse;
-                    if expResponse in actResponse:
-                        print "No Update Schedule message post success";
-                        print "Wait for 60s to get the recording list"
-                        sleep(60);
-                        tdkTestObj1.setResultStatus("SUCCESS");
-                        #Check for acknowledgement from recorder
-                        tdkTestObj1.executeTestCase(expectedResult);
-                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-			print actResponse;
-                        recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-                        print recordingData
-                        if 'NOTFOUND' not in recordingData:
-                            key = 'status'
-                            value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                            print "key: ",key," value: ",value
-                            print "Successfully retrieved the recording list from recorder";
-                            if "COMPLETE" in value.upper():
-                                tdkTestObj1.setResultStatus("SUCCESS");
-                                print "Scheduled recording completed successfully";
-                            else:
-                                tdkTestObj1.setResultStatus("FAILURE");
-                                print "Scheduled recording not completed successfully";
-                        else:
-                            tdkTestObj1.setResultStatus("FAILURE");
-                            print "Failed to retrieve the recording list from recorder";
-                    else:
-                            print "No Update Schedule message post failed";
-                            tdkTestObj1.setResultStatus("FAILURE");
+                    tdkTestObj.setResultStatus("FAILURE");
+                    print "Retrieved acknowledgement from recorder";
                 else:
                     tdkTestObj.setResultStatus("FAILURE");
-                    print "Failed to retrieve acknowledgement from recorder";
+                    print "Failed to retrieve empty status from recorder";
         else:
             tdkTestObj.setResultStatus("FAILURE");
             print "updateSchedule message post failed";

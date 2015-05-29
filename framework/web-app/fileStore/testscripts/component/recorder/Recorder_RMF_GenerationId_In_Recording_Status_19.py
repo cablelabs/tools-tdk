@@ -58,11 +58,9 @@ print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
 recObj.setLoadModuleStatus(recLoadStatus);
 
-#genIdInput1 = "abcd1";
-#genIdInput2 = "efgh2";
-
 genIdInput1 = "test4a";
-genIdInput2 = "test4b";
+#genIdInput2 = "test4b";
+genIdInput2 = "1431877561793;321744722806850394"
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
@@ -95,7 +93,6 @@ if "SUCCESS" in recLoadStatus.upper():
 	fullSch = "true";
 
         #Frame json message
-        print "Recording ID: %s"%recordingID;
 	jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput1+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
@@ -124,19 +121,18 @@ if "SUCCESS" in recLoadStatus.upper():
 
                 retry = 0;
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                while (('[]' in actResponse) and ('ERROR' not in actResponse) and (retry < 15)):
+                while (('[]' == actResponse) and ('ERROR' not in actResponse) and (retry < 15)):
                         sleep(10);
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                         retry += 1
                 print "Retrieve Status Details: %s"%actResponse;
 
-		if ( ('[]' in actResponse) or ('ERROR' in actResponse)):
+		if ( ('[]' == actResponse) or ('ERROR' in actResponse)):
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Received Empty/Error status";
                 else:
                     genOut = recorderlib.getGenerationId(actResponse)
 		    if genOut == genIdInput2:
-                    #if genOut in genIdInput2:
                         tdkTestObj.setResultStatus("SUCCESS");
 			print "GenerationId retrieved (%s) match with the expected (%s)"%(genOut,genIdInput2);
 			recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);

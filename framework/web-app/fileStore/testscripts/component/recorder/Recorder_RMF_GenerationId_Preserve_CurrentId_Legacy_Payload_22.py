@@ -98,15 +98,15 @@ if "SUCCESS" in recLoadStatus.upper():
                         sleep(10);
                         retry = 0;
                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                        while (( ('[]' in recResponse) or ('ack' not in recResponse) ) and ('ERROR' not in recResponse) and (retry < 15)):
+			while (( ('[]' == recResponse) or ('ack' not in recResponse) ) and (retry < 15)):
                                 sleep(10);
                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 retry += 1
                         print "Retrieve Status Details: %s"%recResponse;
 
-                        if ( ('[]' in recResponse) or ('ERROR' in recResponse)):
+                        if ( '[]' == recResponse) :
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "Received Empty/Error status";
+                                print "Received Empty status";
                         elif 'ack' in recResponse:
                                 print "Successfully retrieved acknowledgement from recorder for the message";
 
@@ -125,14 +125,14 @@ if "SUCCESS" in recLoadStatus.upper():
                                         sleep(10)
                                         retry = 0;
                                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        while (('[]' in recResponse) and ('ERROR' not in recResponse) and (retry < 15)):
+                                        while (('[]' == recResponse) and (retry < 15)):
                                                 sleep(10);
                                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                                 retry += 1
                                         print "Retrieve Status Details: %s"%recResponse;
 
-                                        if (('[]' in recResponse) or ('ERROR' in recResponse)):
-                                                print "Received Empty/Error status";
+                                        if ('[]' == recResponse):
+                                                print "Received Empty status";
                                                 tdkTestObj.setResultStatus("FAILURE");
                                         else:
                                                 genOut = recorderlib.getGenerationId(recResponse)

@@ -112,7 +112,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
 			loop = loop+1;
-                if ( ('status:[]' in actResponse) or ('ERROR' in actResponse)):
+		if 'acknowledgement' not in actResponse:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Received Empty/Error status";
                 elif 'acknowledgement' in actResponse:
@@ -144,7 +144,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                 #print "Retrieve Status Details: %s"%actResponse;
                                 sleep(10);
                                 loop = loop+1;
-                        if ( ('status:[]' in actResponse) or ('ERROR' in actResponse)):
+			if 'acknowledgement' not in actResponse:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Received Empty/Error status";
                         elif 'acknowledgement' in actResponse:

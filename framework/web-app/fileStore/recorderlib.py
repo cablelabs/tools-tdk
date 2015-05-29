@@ -107,11 +107,6 @@ def callServerHandler(methodName,gwIp):
         #                retrieveStatus : To retrieve the status message held by the simulator from a particular box
         #                clearDeviceStatus : To clear device status messages held by the simulator from a particular box
         #                retrieveDeviceStatus : To retrieve Device status messages held by the simulator from a particular box
-	#	         disableLPServer : To disable the LP server for a particular STB (This will not affect the LP server communication for other STB)
-	#                enableLPServer : To enable the LP server for STB
-	#                isEnabledLPServer : To check the LP server status of an STB
-	#                retrieveLPRedirectStatus : To retrieve the LP redirect status
-	#                clearLPRedirectStatus : To clear the LP redirect status	 
         # gwIp         : IP address of gateway box
         # Return Value : Console output of the curl command
 
@@ -212,6 +207,65 @@ def callServerHandlerWithMsg(methodName,jsonMsg,gwIp):
 
 ########## End of Function callServerHandlerWithMsg ##########
 
+def callServerHandlerWithType(methodName,type,gwIp):
+
+        # To enable/disable Longpoll and RWS server in the simulator for a particular box
+
+        # Parameters   : methodName, type, gwIp
+        # methodName   : REST API name. e.g., disableServer, enableServer
+        #                isEnabledServer  : To check the server status for an STB
+        #                enableServer : To enable the server for STB
+        #                disableServer : To disable the server for a particular STB (This will not affect the server communication for other STB)
+        #                retrieveDisabledStatus : To retrieve the recorder communication with disabled server
+        #                clearDisabledStatus : To clear the recorder communication with disabled server
+        # type         : RWSServer, RWSStatus, LPServer
+        # gwIp         : IP address of gateway box
+        # Return Value : Console output of the curl command
+
+        try:
+                serverIp = get_ip_address('eth0')
+        except:
+                print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
+                outdata = "ERROR: Unable to fetch recorder server IP"
+                sys.stdout.flush()
+                return outdata
+
+        # Constructing Query Command
+        cmd = 'curl '+'-g '+'\''+'http://'+serverIp+':8080/DVRSimulator/'+methodName+'?boxIp='+gwIp+'&serverType='+type+'\''
+
+        class Timout(Exception):
+                pass
+
+        def timeoutHandler(signum, frame):
+                raise Timout
+
+        signal.signal(signal.SIGALRM, timeoutHandler)
+        signal.alarm(20)
+
+        # Executing request command
+        try:
+                print "Executing cmd: ",cmd
+                sys.stdout.flush()
+                byteStr = subprocess.check_output(cmd, shell=True)
+                outdata = unicode(byteStr, errors='ignore')
+                #outdata = subprocess.check_output(cmd, shell=True)
+                signal.alarm(0)  # reset the alarm
+        except Timout:
+                print "#TDK_@error-ERROR : Timeout!! Taking too long"
+                outdata = "ERROR: Timeout!! Taking too long"
+                sys.stdout.flush()
+                return outdata
+        except:
+                print "#TDK_@error-ERROR : Unable to execute curl command"
+                outdata = "ERROR: Unable to execute query command"
+                sys.stdout.flush()
+                return outdata
+
+        return outdata
+
+########## End of Function callServerHandlerWithType ##########
+
+
 def callScheduleHandler(methodName,params,gwIp):
 
         # To invoke and fetch status of updateSchedule REST API in the simulator for a particular box
@@ -292,7 +346,6 @@ def getGenerationId(jsonData):
 
 ########## End of Function getGenerationId ##########
 
-
 def getStatusMessage(jsonData):
         ret = "NOSTATUS"
         try:
@@ -318,6 +371,65 @@ def getStatusMessage(jsonData):
         return ret
 
 ########## End of Function getStatusMessage ##########
+
+def getTimeFromStatus(jsonData):
+        ret = 0
+        try:
+                #jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
+                jsonList = json.loads(jsonData, strict=False)
+        except ValueError, e:
+                print e
+                return ret
+        except:
+                print "Unexpected error:", sys.exc_info()[0]
+                return ret
+
+        #Check if status is not empty
+        if jsonList == []:
+                print "ERROR: No status available"
+                return ret
+
+        #Get dictionary content inside list status
+        for my_item in jsonList:
+                try:
+			time = my_item['time']
+			print "Time = ",time
+                        return int(time)
+        	except KeyError, e:
+                	print "Invalid key %s" % str(e)
+
+        print "ERROR: time info not found!"
+        return ret
+
+########## End of Function getTimeFromStatus ##########
+
+def getTimeListFromStatus(jsonData):
+	ret = []
+        try:
+                jsonList = json.loads(jsonData, strict=False)
+        except ValueError, e:
+                print e
+                return ret
+        except:
+                print "Unexpected error:", sys.exc_info()[0]
+                return ret
+
+        #Check if status is not empty
+        if jsonList == []:
+                print "ERROR: No status available"
+                return ret
+
+        #Get dictionary content inside list status
+        for my_item in jsonList:
+                try:
+                        time = my_item['time']
+			ret.append(int(time))
+                except KeyError, e:
+                        print "Invalid key %s" % str(e)
+
+        return ret
+
+########## End of Function getTimeListFromStatus ##########
 
 def getRecordingFromRecId(jsonData,recordingId):
         ret = "NOTFOUND"
@@ -353,17 +465,21 @@ def getRecordingFromRecId(jsonData,recordingId):
 
 def getValueFromKeyInRecording(recording,key):
         value = "BADVALUE"
-        #Extract dictionary from list content value
-        content = {}
-        for line in recording['content']:
-                content.update(line)
         try:
                 if key in ['volume','start','duration','playbackLocator']:
-                        value = content[key]
+			#Extract dictionary from content list value
+			content = {}
+			if 'content' in recording:
+				for line in recording['content']:
+					content.update(line)
+				print "Recording content value: ",content
+                        	value = content[key]
+			else:
+				print "Recording missing content value"
                 else:
                         value = recording[key]
         except KeyError, e:
-                print "Invalid key %s" % str(e)
+                print "key %s not found in recording" % str(e)
 
         return value
 

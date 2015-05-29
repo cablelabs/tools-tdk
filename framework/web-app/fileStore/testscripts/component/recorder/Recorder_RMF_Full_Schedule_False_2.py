@@ -85,16 +85,16 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        duration = "120000";
+        duration = "180000";
         startTime = "0";
         futureStartTime = "120000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         futureOcapId= tdkTestObj.getStreamDetails('02').getOCAPID()
+	fullScheduleOcapId= tdkTestObj.getStreamDetails('03').getOCAPID()
         now = "curTime"
 
         #Frame json message
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"},{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+futureOcapId+"\"],\"epoch\":"+now+",\"start\":"+futureStartTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-        #jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"aaa123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"},{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+futureOcapId+"\"],\"epoch\":"+now+",\"start\":"+futureStartTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -115,19 +115,16 @@ if "SUCCESS" in recLoadStatus.upper():
 	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
 			loop = loop+1;
-                if ( ('status:[]' in actResponse) or ('ERROR' in actResponse)):
+		if 'acknowledgement' not in actResponse:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Received Empty/Error status";
                 elif 'acknowledgement' in actResponse:
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
-		    jsonMsgGenIdUpdate = "{\"updateSchedule\":{\"generationId\":\"0\"}}";
-		    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgGenIdUpdate,ip);
-                    sleep(10);
 
                     #Frame json message for update recording
-                    jsonMsgFullSchedule = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+2)+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+2)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+                    jsonMsgFullSchedule = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+2)+"\",\"locator\":[\"ocap://"+fullScheduleOcapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+2)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
                     expResponse = "updateSchedule";
                     tdkTestObj.executeTestCase(expectedResult);
@@ -142,17 +139,22 @@ if "SUCCESS" in recLoadStatus.upper():
                         tdkTestObj.executeTestCase(expectedResult);
                         print "Looping till acknowledgement is received"
                         loop = 0;
-                        while loop < 15:
+                        while loop < 5:
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 #print "Retrieve Status Details: %s"%actResponse;
                                 sleep(10);
                                 loop = loop+1;
-                        if ( ('status:[]' in actResponse) or ('ERROR' in actResponse)):
+			if 'acknowledgement' not in actResponse:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Received Empty/Error status";
                         elif 'acknowledgement' in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully retrieved acknowledgement from recorder";
+		            print "Wait till all the recording gets complete";	
+		            sleep(180);	
+			    jsonMsgGenIdUpdate = "{\"updateSchedule\":{\"generationId\":\"0\"}}";
+                    	    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgGenIdUpdate,ip);
+                    	    sleep(10);
                             # Reboot the STB
                             print "Rebooting the STB to get the recording list from full sync"
                             recObj.initiateReboot();
@@ -177,13 +179,17 @@ if "SUCCESS" in recLoadStatus.upper():
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 print actResponse;
                                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-                                print recordingData
-                                if 'NOTFOUND' not in recordingData:
+				futurerecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1))
+				fullSchedulerecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+2))
+                                print recordingData,futurerecordingData,fullSchedulerecordingData
+                                if 'NOTFOUND' not in recordingData or 'NOTFOUND' not in futurerecordingData or 'NOTFOUND' not in fullSchedulerecordingData:
                                     key = 'status'
                                     value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                    print "key: ",key," value: ",value
+				    futureRecValue = recorderlib.getValueFromKeyInRecording(futurerecordingData,key)
+				    fullScheduleValue = recorderlib.getValueFromKeyInRecording(fullSchedulerecordingData,key)
+                                    print "key: ",key," value: ",value," futureRecValue: ",futureRecValue," fullScheduleValue: ",fullScheduleValue
                                     print "Successfully retrieved the recording list from recorder";
-                                    if "COMPLETE" in value.upper():
+                                    if "COMPLETE" in value.upper() and "COMPLETE" in futureRecValue.upper() and "COMPLETE" in fullScheduleValue.upper():
                                         tdkTestObj1.setResultStatus("SUCCESS");
                                         print "Scheduled recording completed successfully";
                                     else:

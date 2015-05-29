@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_Full_Schedule_True_1</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -90,11 +90,11 @@ if "SUCCESS" in recLoadStatus.upper():
         futureStartTime = "120000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         futureOcapId= tdkTestObj.getStreamDetails('02').getOCAPID()
+	fullScheduleOcapId= tdkTestObj.getStreamDetails('03').getOCAPID()
         now = "curTime"
 
         #Frame json message
         jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"},{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+futureOcapId+"\"],\"epoch\":"+now+",\"start\":"+futureStartTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-        #jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"aaa123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -115,7 +115,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
 			loop = loop+1;
-                if ( ('status:[]' in actResponse) or ('ERROR' in actResponse)):
+		if 'acknowledgement' not in actResponse:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Received Empty/Error status";
                 elif 'acknowledgement' in actResponse:
@@ -127,7 +127,7 @@ if "SUCCESS" in recLoadStatus.upper():
                     sleep(10);
 
                     #Frame json message for update recording
-                    jsonMsgFullSchedule = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"fullSchedule\":true,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+2)+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+2)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+                    jsonMsgFullSchedule = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"fullSchedule\":true,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+2)+"\",\"locator\":[\"ocap://"+fullScheduleOcapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+2)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
                     expResponse = "updateSchedule";
                     tdkTestObj.executeTestCase(expectedResult);
@@ -147,7 +147,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                 #print "Retrieve Status Details: %s"%actResponse;
                                 sleep(10);
                                 loop = loop+1;
-                        if ( ('status:[]' in actResponse) or ('ERROR' in actResponse)):
+			if 'acknowledgement' not in actResponse:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Received Empty/Error status";
                         elif 'acknowledgement' in actResponse:
@@ -162,16 +162,31 @@ if "SUCCESS" in recLoadStatus.upper():
                             		key = 'error'
                                 	value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                                 	print "key: ",key," value: ",value
-                                	print "Successfully retrieved the recording list from recorder";
+                                	print "Successfully retrieved the recording list from recorder for inprogress recording";
                                 	if "USER_STOP" in value.upper():
-                                		tdkTestObj.setResultStatus("SUCCESS");
-                                        	print "Scheduled recording completed successfully";
+                                        	print "Recording in progress cancelled successfully";
+                                        	futurerecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1))
+                                        	print futurerecordingData
+                                                if 'NOTFOUND' not in futurerecordingData:
+                                                        key = 'error'
+                                                        value = recorderlib.getValueFromKeyInRecording(futurerecordingData,key)
+                                                        print "key: ",key," value: ",value
+                                                        print "Successfully retrieved the recording list from recorder for future recording";
+                                                        if "USER_STOP" in value.upper():
+                                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                                print "Future recording cancelled successfully";
+                                                        else:
+                                                                tdkTestObj.setResultStatus("FAILURE");
+                                                                print "Failed to cancel the recording the future recording";
+                                                else:
+                                                        tdkTestObj.setResultStatus("FAILURE");
+                                                        print "Failed to retrieve the recording list from recorder for future recording";
                                 	else:
                                 		tdkTestObj.setResultStatus("FAILURE");
-                                        	print "Scheduled recording not completed successfully";
+                                        	print "Failed to cancel the recording in progress";
                               	else:
                               		tdkTestObj.setResultStatus("FAILURE");
-                                	print "Failed to retrieve the recording list from recorder";
+                                	print "Failed to retrieve the recording list from recorder for inprogress recording";
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve acknowledgement from recorder";

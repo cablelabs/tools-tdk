@@ -5,7 +5,7 @@
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Recorder_RMF_GetRecordingsList_10</name>
+  <name>Recorder_RMF_GetRecordingsList_GenId_NotZero_42</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_10 - Recorder - To send initializing=true if and only if the recordingStatus contains ALL past, present, and future recordings on the box</synopsis>
+  <synopsis>CT_Recoder_DVR_Protocol_42 - Recorder - not to send initializing=true if box reboots with generation id not equal to zero</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -51,7 +51,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_GetRecordings_List_10');
+recObj.configureTestCase(ip,port,'Recorder_RMF_GetRecordingsList_GenId_NotZero_42');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
@@ -118,8 +118,6 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
-		    jsonMsgNoUpdate = "{\"updateSchedule\":{\"generationId\":\"0\"}}";
-		    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
                     sleep(60);
                     # Reboot the STB
 		    print "Rebooting the STB to get the recording list from full sync"
@@ -153,25 +151,11 @@ if "SUCCESS" in recLoadStatus.upper():
 				value = msg['recordingStatus']["initializing"];
 				print "Initializing value: %s"%value;
 			if "TRUE" in value.upper():
-                        	recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-                       		print recordingData
-                        	if 'NOTFOUND' not in recordingData:
-                            		key = 'status'
-                            		value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                            		print "key: ",key," value: ",value
-                            		print "Successfully retrieved the recording list from recorder";
-                            		if "COMPLETE" in value.upper():
-                                		tdkTestObj1.setResultStatus("SUCCESS");
-                                		print "Scheduled recording completed successfully";
-                            		else:
-                                		tdkTestObj1.setResultStatus("FAILURE");
-                                		print "Scheduled recording not completed successfully";
-				else:
-                                	tdkTestObj1.setResultStatus("FAILURE");
-                                	print "Failed to get the recording data";
+                                tdkTestObj1.setResultStatus("FAILURE");
+                                print "Retrieved the recording list from recorder for Generation Id other than zero";
                         else:
-                            tdkTestObj1.setResultStatus("FAILURE");
-                            print "Failed to retrieve the recording list from recorder";
+                                tdkTestObj1.setResultStatus("SUCCESS");
+                                print "Not Retrieved the recording list from recorder for Generation Id other than zero";
                     else:
                             print "No Update Schedule message post failed";
                             tdkTestObj1.setResultStatus("FAILURE");
