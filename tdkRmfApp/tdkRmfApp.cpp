@@ -235,7 +235,8 @@ int rmfHnSourceInitialize(string ocapIdOrRecordId,string liveOrDvr = "-l")
 	{
 		url.append(":8080/hnStreamStart?live=");
         	url.append(ocapIdOrRecordId);
-		url.append("&tsb=26");
+		//Commented the following line to fix the RDKTT-369 issue
+		//url.append("&tsb=26");
 	}
 	else if(liveOrDvr == "-d")
 	{
