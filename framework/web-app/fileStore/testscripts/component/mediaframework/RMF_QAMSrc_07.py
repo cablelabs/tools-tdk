@@ -20,7 +20,7 @@ Test Case ID: CT_RMF_QAMSrc_07</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>7</execution_time>
+  <execution_time>9</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
