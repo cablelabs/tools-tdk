@@ -15,6 +15,11 @@
 #include <sstream>
 #include <exception>
 
+#ifdef USE_SOC_INIT
+void soc_uninit();
+void soc_init(int, char *, int);
+#endif
+
 static list<DTCP_SESSION_HANDLE> srcSessionHandlerList;
 static list<DTCP_SESSION_HANDLE> sinkSessionHandlerList;
 
@@ -259,6 +264,11 @@ bool DTCPAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj
 
 std::string DTCPAgent::testmodulepre_requisites()
 {
+    //Initialize SOC
+    #ifdef USE_SOC_INIT
+    soc_init(1, (char*)"tdk_agent", 1);
+    #endif
+
     std::list<DTCP_SESSION_HANDLE>::iterator it;
     if(!srcSessionHandlerList.empty()) {
         DEBUG_PRINT(DEBUG_ERROR, "Contents of source session handler list\n");
@@ -286,6 +296,11 @@ std::string DTCPAgent::testmodulepre_requisites()
 
 bool DTCPAgent::testmodulepost_requisites()
 {
+    // Uninitialize SOC
+    #ifdef USE_SOC_INIT
+    soc_uninit();
+    #endif
+
     std::list<DTCP_SESSION_HANDLE>::iterator it;
     if(!srcSessionHandlerList.empty()) {
         DEBUG_PRINT(DEBUG_ERROR, "Contents of source session handler list\n");

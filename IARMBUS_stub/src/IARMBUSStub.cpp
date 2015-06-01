@@ -1227,6 +1227,21 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 			response["result"]=getResult(retval,resultDetails);
 			response["details"]=mfrdetails;
 		}
+		else if(strcmp(methodName,"mfrWriteImage")==0)
+                {
+                        IARM_Bus_MFRLib_WriteImage_Param_t param;
+                        const char* imgname=(char*)req["imagename"].asCString();
+                        const char* imgpath=(char*)req["imagepath"].asCString();
+                        strcpy(param.name,imgname);
+                        strcpy(param.path,imgpath);
+                        strcpy(param.callerModuleName,"TDK_agent");
+                        param.interval = 2;
+                        param.type = mfrIMAGE_TYPE_CDL;
+                        strcpy(param.cbData,"Test Success");
+                        retval=IARM_Bus_Call(ownerName,methodName,(void*)&param, sizeof(param));
+                        response["result"]=getResult(retval,resultDetails);
+                        response["details"]=resultDetails;
+                }
 		else
 		{
 			char param;

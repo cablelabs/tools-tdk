@@ -130,7 +130,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 tdkTestObj = obj.createTestStep('IARMBUS_UnRegisterEventHandler');
                                 tdkTestObj.addParameter("owner_name","SYSMgr");
                                 #Register for Broadcast event
-                                tdkTestObj.addParameter("event_id",3);
+                                tdkTestObj.addParameter("event_id",4);
                                 expectedresult="SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();

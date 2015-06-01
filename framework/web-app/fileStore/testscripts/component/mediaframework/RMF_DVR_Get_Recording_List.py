@@ -3,10 +3,10 @@
 <xml>
   <id>1168</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVR_Get_Recording_List</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>488</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_GetDvr_Recording_List</primitive_test_name>
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>3</execution_time>
+  <execution_time>5</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -39,15 +39,15 @@
   </rdk_versions>
 </xml>
 '''
-# use tdklib library,which provides a wrapper for tdk testcase script 
-import tdklib; 
+# use tdklib library,which provides a wrapper for tdk testcase script
+import tdklib;
 import time;
 import os;
 
 logpath = ""
 numOfRecordings = 0
 def rmfAppMod():
-    
+
     print "Entering into rmfApp function"
     obj = tdklib.TDKScriptingLibrary("rmfapp","2.0");
 
@@ -77,13 +77,13 @@ def rmfAppMod():
 
     recordtitle = "test_dvr"
     recordid = "11111"
-    recordduration = "1" 
+    recordduration = "1"
 
     cmd = 'record -id ' + recordid + ' -duration ' + recordduration + ' -title ' + recordtitle + ' http://' + streamDetails.getGatewayIp() + ':8080/hnStreamStart?live=ocap://' + streamDetails.getOCAPID();
-     
+
     print "Request record URL : %s" %cmd;
-    tdkTestObj.addParameter("rmfapp_command",cmd);  
-         
+    tdkTestObj.addParameter("rmfapp_command",cmd);
+
     expectedresult="Test Suite Executed"
     print "Sending command to CLI interface of application..."
 
@@ -102,17 +102,17 @@ def rmfAppMod():
          details=tdkTestObj.getResultDetails();
          print "FAILURE: rmfApp failed. Details: %s" %details;
          obj.unloadModule("rmfapp");
-         return 0;         
- 
-    duration = int(recordduration) 
+         return 0;
+
+    duration = int(recordduration)
     print duration
-    time.sleep(duration * 60) #delay so that recording will happen.         
-    print "Sleep successful"         
+    time.sleep(duration * 60) #delay so that recording will happen.
+    print "Sleep successful"
     obj.unloadModule("rmfapp");
-         
+
     return 0;
 
-def getRecordList(): 
+def getRecordList():
      #Test component to be tested
      obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
 
@@ -135,7 +135,7 @@ def getRecordList():
 
           expectedRes = "SUCCESS"
 
-          #Execute the test case in STB 
+          #Execute the test case in STB
           tdkTestObj.executeTestCase(expectedRes );
 
           #Get the result of execution
@@ -147,7 +147,7 @@ def getRecordList():
           global logpath
           logpath  = tdkTestObj.getLogPath();
           print "Recording List File Path: %s"%logpath;
-          
+
           if "NULL" in logpath.upper():
                tdkTestObj.setResultStatus("FAILURE");
                details=tdkTestObj.getResultDetails();
@@ -155,8 +155,8 @@ def getRecordList():
                obj.unloadModule("mediaframework");
                return 0;
 
-          recordingObj = tdkTestObj.getRecordingDetails(logpath);
-          
+          recordingObj = tdkTestObj.getRecordingDetails(1,logpath);
+
           global numOfRecordings
           numOfRecordings = recordingObj.getTotalRecordings();
 
@@ -168,19 +168,18 @@ def getRecordList():
      else:
           print "Failed to load mediaframework module";
           obj.setLoadModuleStatus("FAILURE");
-       
-     return 0
 
+     return 0
 
 #Fetch the recording list.
 getRecordList();
 print "Finished call to get RecordList"
 
 #If recordDetails file Creation fails, exit without running other scripts
-if "NULL" not in logpath.upper(): 
+if "NULL" not in logpath.upper():
      #check if numOfRecordings is 0, then initiate the recording.
      if 0 == numOfRecordings:
-          rmfAppMod();          
+          rmfAppMod();
           os.system('python resetAgent.py');
           getRecordList();
           print "Finished call to rmfAppMod"

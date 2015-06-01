@@ -26,8 +26,6 @@ m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])],
    AC_SUBST(AM_DEFAULT_VERBOSITY)])
 
 
-
-
 dnl **********************************
 dnl checks for dependencies
 dnl **********************************
@@ -77,7 +75,7 @@ AC_ARG_ENABLE([client],
         [
           case "${enableval}" in
              yes) CLIENT=true
-                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub"
+                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub SM_stub"
                   TDKINTEGRATION_FLAGS="-DIPCLIENT" ;;
            no) CLIENT=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
@@ -91,7 +89,7 @@ AC_ARG_ENABLE([quemux86mc],
         [
           case "${enableval}" in
              yes) QEMUX86MC=true
-                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub"
+                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub SM_stub"
                   TDKINTEGRATION_FLAGS="-DIPCLIENT -DSTAND_ALONE_CLIENT" ;;
            no) QEMUX86MC=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;

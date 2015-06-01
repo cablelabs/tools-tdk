@@ -3694,10 +3694,19 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         //SpeedRate = 0.5;
         DEBUG_PRINT(DEBUG_LOG, "Video is playing");
         DEBUG_PRINT(DEBUG_LOG, "Value from TM:%f",SpeedRate);
+	
+	double mediaTime;
+	pSource->getMediaTime(mediaTime);
+        DEBUG_PRINT(DEBUG_LOG, "Mediatime  is %d\n", mediaTime);
+	pSource->setVideoLength(mediaTime);
         if (SpeedRate >0)
         {
                 DEBUG_PRINT(DEBUG_ERROR, "\nPause the video for Forward speed\n");
-                res_HNSrcPause = pSource->pause();
+		float speed=0.0;
+		double mtime=0;
+		mediaTime=0;
+		res_HNSrcPause =pSource->play(speed,mtime);
+ //               res_HNSrcPause = pSource->pause();
                 DEBUG_PRINT(DEBUG_LOG, "RMF Result of Pause is %d\n", res_HNSrcPause);
                 sleep(100);
                 DEBUG_PRINT(DEBUG_LOG, "Pausing the Video for 100 seconds \n");
@@ -3720,7 +3729,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 }
         }
 
-        res_HNSrcSetSpeed = pSource->setSpeed(SpeedRate);
+        //res_HNSrcSetSpeed = pSource->setSpeed(SpeedRate);
+        DEBUG_PRINT(DEBUG_LOG, "speed  is %f\n", SpeedRate);
+	res_HNSrcSetSpeed = pSource->play(SpeedRate,mediaTime);
         if(0 != res_HNSrcSetSpeed)
         {
                 pSink->term();
@@ -3750,8 +3761,9 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 return TEST_FAILURE;
         }
         details << "HNSrc getSpeed() successful, Speed:" << SpeedRate;
+        DEBUG_PRINT(DEBUG_LOG, " Get speed  is %f\n", SpeedRate);
         response["details"] = details.str();
-
+	sleep(10);
         res_MPSinkTerm = pSink->term();
         DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPsink termination is %d\n", res_MPSinkTerm);
         res_HNSrcClose = pSource->close();
