@@ -71,7 +71,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         print "Request URL : %s" %url;
         tdkTestObj.addParameter("URL",url);
         #Execute the test case in STB and pass the expected result
-        expectedresult="FAILURE";
+        expectedresult="SUCCESS";
         tdkTestObj.executeTestCase(expectedresult);
         #Get the actual result of execution
         actualresult = tdkTestObj.getResult();
@@ -81,12 +81,12 @@ if "SUCCESS" in loadmodulestatus.upper():
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print details;
-                print "Json Response Parameter is Failed";
+                print "Json Response Parameter is Success";
 
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print details;
-                print "Json response parameter is Success";
+                print "Json response parameter is Failed";
         #unloading mediastreamer module
         obj.unloadModule("mediastreamer");
 else:
