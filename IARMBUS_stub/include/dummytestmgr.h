@@ -15,9 +15,16 @@
 #include "iarmUtil.h"
 #include "libIARM.h"
 #include "libIBus.h"
+#include <stdbool.h>
+#include <pthread.h>
 
+#define IARM_BUS_DUMMYMGR_NAME			  "Test_Event_Mgr"
 
-#define IARM_BUS_DUMMYMGR_NAME			  "DummyTestMgr"
+#define IARM_BUS_DUMMYMGR_API_HANDLER_READY "HandlerReady"
+
+typedef struct {
+    bool stopped;
+}IARM_Bus_DUMMYMGR_HandlerReady_Param_t;
 
 /*
  * Declare Published Events

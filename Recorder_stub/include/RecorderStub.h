@@ -47,6 +47,7 @@ class RecorderAgent : public RDKTestStubInterface
 		bool Recorder_ScheduleRecording(IN const Json::Value& request, OUT Json::Value& response);
 		bool Recorder_checkRecording_status(IN const Json::Value& request, OUT Json::Value& response);
 		bool Recorder_SendRequest(IN const Json::Value& request, OUT Json::Value& response);
+		bool Recorder_SendRequestToDeleteFile(IN const Json::Value& request, OUT Json::Value& response);
 		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);		
 		std::string testmodulepre_requisites();
 		bool testmodulepost_requisites();

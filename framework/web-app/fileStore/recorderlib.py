@@ -403,6 +403,71 @@ def getTimeFromStatus(jsonData):
 
 ########## End of Function getTimeFromStatus ##########
 
+def getTimeStampFromStatus(jsonData):
+        ret = 0
+        try:
+                #jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
+                jsonList = json.loads(jsonData, strict=False)
+        except ValueError, e:
+                print e
+                return ret
+        except:
+                print "Unexpected error:", sys.exc_info()[0]
+                return ret
+
+        #Check if status is not empty
+        if jsonList == []:
+                print "ERROR: No status available"
+                return ret
+
+        #Get dictionary content inside list status
+        for my_item in jsonList:
+                try:
+			if 'recordingStatus' in my_item['statusMessage']:
+				status = my_item['statusMessage']
+                        	timestamp = status ['recordingStatus'] ["timestamp"]
+                        	print "TimeStamp = ",timestamp
+                        	return int(timestamp)
+                except KeyError, e:
+                        print "Invalid key %s" % str(e)
+
+        print "ERROR: timestamp info not found!"
+        return ret
+
+########## End of Function getTimeStampFromStatus ##########
+
+def getTimeStampListFromStatus(jsonData):
+        ret = []
+        try:
+                #jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
+                jsonList = json.loads(jsonData, strict=False)
+        except ValueError, e:
+                print e
+                return ret
+        except:
+                print "Unexpected error:", sys.exc_info()[0]
+                return ret
+
+        #Check if status is not empty
+        if jsonList == []:
+                print "ERROR: No status available"
+                return ret
+
+        #Get dictionary content inside list status
+        for my_item in jsonList:
+                try:
+                        if 'recordingStatus' in my_item['statusMessage']:
+                                status = my_item['statusMessage']
+                                timestamp = status ['recordingStatus'] ["timestamp"]
+                                print "TimeStamp = ",timestamp
+                                ret.append(int(timestamp))
+                except KeyError, e:
+                        print "Invalid key %s" % str(e)
+
+        return ret
+
+########## End of Function getTimeStampListFromStatus ##########
+
 def getTimeListFromStatus(jsonData):
 	ret = []
         try:
@@ -484,3 +549,30 @@ def getValueFromKeyInRecording(recording,key):
         return value
 
 ########## End of Function getValueFromKeyInRecording ##########
+
+def getRecordings(jsonData):
+        recordings = []
+        try:
+                jsonList = json.loads(jsonData, strict=False)
+        except ValueError, e:
+                print e
+                return recordings
+        except:
+                print "Unexpected error:", sys.exc_info()[0]
+                return recordings
+
+        #Check if status is not empty
+        if jsonList == []:
+                print "ERROR: No status available"
+                return recordings
+
+        #Get statusMessage from status list
+        for my_item in jsonList:
+                if 'recordingStatus' in my_item['statusMessage']:
+                        recordings = my_item['statusMessage']['recordingStatus']['recordings']
+                else:
+                        print "Could not find recordingStatus in json message"
+
+        return recordings
+
+########## End of Function getRecordings ##########

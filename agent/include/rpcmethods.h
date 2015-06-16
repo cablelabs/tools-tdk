@@ -47,6 +47,7 @@ class RpcMethods
         static FILE *sm_pLogStream;
         static int sm_nConsoleLogFlag;
         static int sm_nAgentPID;
+        static int sm_nTFTPAgentPID;
         static int sm_nModuleCount;
         static int sm_nRouteSetFlag;
         static int sm_nGetDeviceFlag;
@@ -74,6 +75,8 @@ class RpcMethods
         bool RPCEnableReboot (const Json::Value& request, Json::Value& response);
         bool RPCRestorePreviousState (const Json::Value& request, Json::Value& response);
         bool RPCGetHostStatus (const Json::Value& request, Json::Value& response);
+        bool RPCCallEnableTDK(const Json::Value& request, Json::Value& response);
+        bool RPCCallDisableTDK(const Json::Value& request, Json::Value& response);
         bool RPCResetAgent (const Json::Value& request, Json::Value& response);
         bool RPCRebootBox (const Json::Value& request, Json::Value& response);
         bool RPCGetRDKVersion (const Json::Value& request, Json::Value& response);

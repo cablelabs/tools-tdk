@@ -131,10 +131,10 @@ if "SUCCESS" in recLoadStatus.upper():
                                 print "Successfully retrieved the recording list from recorder for inprogress recording";
                                 if "TRM_CANCELLED" in value.upper():
                                         tdkTestObj.setResultStatus("SUCCESS");
-                                        print "Future recording cancelled successfully";
+                                        print "Recording got cancelled";
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "Failed to cancel the future recording";
+                                        print "Recording scheduled successfully";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "Failed to retrieve the recording list from recorder for inprogress recording";

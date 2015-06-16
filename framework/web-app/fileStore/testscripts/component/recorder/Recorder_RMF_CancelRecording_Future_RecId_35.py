@@ -160,7 +160,7 @@ if "SUCCESS" in recLoadStatus.upper():
                         	print "key: ",key," value: ",value
 				print "statusKey: ",statusKey," statusValue: ",statusValue
                                 print "Successfully retrieved the recording list from recorder";
-				if "USER_STOP" in value.upper() and "ERASED" in statusValue.upper():
+				if "USER_STOP" in value.upper() and "ERASED" not in statusValue.upper():
                                 	tdkTestObj.setResultStatus("SUCCESS");
                                 	print "Cancelled future recording successfully";
                             	else:

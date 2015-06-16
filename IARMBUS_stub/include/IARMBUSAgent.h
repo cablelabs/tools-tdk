@@ -79,6 +79,7 @@ class IARMBUSAgent : public RDKTestStubInterface
 		bool IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response);
 		bool get_LastReceivedEventDetails(IN const Json::Value& req, OUT Json::Value& response);
 		bool InvokeSecondApplication(IN const Json::Value& req, OUT Json::Value& response);
+		bool SyncSecondApplication(IN const Json::Value& req, OUT Json::Value& response);
 		/*IARMBus Performance test Wrapper functions*/
                 bool BUSAgent_Init(IN const Json::Value& req, OUT Json::Value& response);
                 bool BUSAgent_Term(IN const Json::Value& req, OUT Json::Value& response);

@@ -3,15 +3,15 @@
 <xml>
   <id>417</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARMBUS_DummyCall_Persistent_test</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id>8</primitive_test_id>
+  <primitive_test_id> </primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>IARMBUS_BusCall</primitive_test_name>
   <!--  -->
-  <primitive_test_version>8</primitive_test_version>
+  <primitive_test_version>9</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -31,15 +31,15 @@ Test Case ID : CT_IARMBUS_41</synopsis>
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
     <!--  -->
-    <box_type>Terminal-RNG</box_type>
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -87,9 +87,11 @@ if "SUCCESS" in loadmodulestatus.upper():
                         print "SUCCESS: Application successfully connected with IARMBUS ";
                         i=0
                         for i in range(0,100):
+                                print "**************** Iteration ", (i+1), " ****************";
                                 tdkTestObj = obj.createTestStep('IARMBUS_InvokeSecondApplication');
                                 tdkTestObj.addParameter("appname","Test_Event_Mgr");
                                 tdkTestObj.addParameter("argv1","");
+                                tdkTestObj.addParameter("apptype","background");
                                 expectedresult="SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
@@ -98,60 +100,95 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 if expectedresult in actualresult:
                                         tdkTestObj.setResultStatus("SUCCESS");
                                         print "SUCCESS: Second application Invoked successfully";
-                                        #calling two dummy RPC using IARM_Bus_Call API
-                                        tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
-                                        tdkTestObj.addParameter("owner_name","DummyTestMgr");
-                                        tdkTestObj.addParameter("method_name","DummyAPI0");
-                                        api_0_Data=1;
-                                        tdkTestObj.addParameter("testapp_API0_data",api_0_Data);
-                                        expectedresult="SUCCESS"
-                                        tdkTestObj.executeTestCase(expectedresult);
-                                        actualresult = tdkTestObj.getResult();
-                                        details=tdkTestObj.getResultDetails();
-                                        print details;
-                                        #Check for SUCCESS/FAILURE return value of IARMBUS_BusCall
-                                        if expectedresult in actualresult:
-                                                print "SUCCESS: Application invokes RPC-DummyAPI0 successfully";
-                                                dataCompare="%s" %(api_0_Data+10000000);
-                                                if dataCompare in details:
-                                                        tdkTestObj.setResultStatus("SUCCESS");
-                                                        print "SUCCESS: Both data are same";
-                                                else:
-                                                        tdkTestObj.setResultStatus("FAILURE");
-                                                        print "FAILURE: Both data are not same";
-                                                        break;
-                                        else:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "FAILURE: IARM_Bus_Call failed. %s" %details;
 
-                                        tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
-                                        tdkTestObj.addParameter("owner_name","DummyTestMgr");
-                                        tdkTestObj.addParameter("method_name","DummyAPI1");
-                                        api_1_Data=3;
-                                        tdkTestObj.addParameter("testapp_API1_data",api_1_Data);
+                                        time.sleep(2)
+                                        #Syncing Second Application
+                                        tdkTestObj = obj.createTestStep('IARMBUS_SyncSecondApplication');
+                                        tdkTestObj.addParameter("lockenabled","false");
                                         expectedresult="SUCCESS"
                                         tdkTestObj.executeTestCase(expectedresult);
                                         actualresult = tdkTestObj.getResult();
-                                        details=tdkTestObj.getResultDetails();
-                                        print details;
-                                        #Check for SUCCESS/FAILURE return value of IARMBUS_BusCall
+                                        #Check for SUCCESS/FAILURE for syncing second application
                                         if expectedresult in actualresult:
-                                                print "SUCCESS: Application invokes an RPC-DummyAPI1 successfully";
-                                                dataCompare="%s" %(api_1_Data+10000000);
-                                                if dataCompare in details:
-                                                        tdkTestObj.setResultStatus("SUCCESS");
-                                                        print "SUCCESS: Both data are same";
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                print "SUCCESS: Second application synced successfully";
+
+                                                #calling two dummy RPC using IARM_Bus_Call API
+                                                tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
+                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                tdkTestObj.addParameter("method_name","DummyAPI0");
+                                                api_0_Data=1;
+                                                tdkTestObj.addParameter("testapp_API0_data",api_0_Data);
+                                                expectedresult="SUCCESS"
+                                                tdkTestObj.executeTestCase(expectedresult);
+                                                actualresult = tdkTestObj.getResult();
+                                                details=tdkTestObj.getResultDetails();
+                                                print details;
+                                                #Check for SUCCESS/FAILURE return value of IARMBUS_BusCall
+                                                if expectedresult in actualresult:
+                                                        print "SUCCESS: Application invokes RPC-DummyAPI0 successfully";
+                                                        dataCompare="%s" %(api_0_Data+10000000);
+                                                        if dataCompare in details:
+                                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                                print "SUCCESS: Both data are same";
+                                                        else:
+                                                                tdkTestObj.setResultStatus("FAILURE");
+                                                                print "FAILURE: Both data are not same";
+                                                                break;
                                                 else:
                                                         tdkTestObj.setResultStatus("FAILURE");
-                                                        print "FAILURE: Both data are not same";
-                                                        break;
+                                                        print "FAILURE: IARM_Bus_Call failed. %s" %details;
+
+                                                tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
+                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                tdkTestObj.addParameter("method_name","DummyAPI1");
+                                                api_1_Data=3;
+                                                tdkTestObj.addParameter("testapp_API1_data",api_1_Data);
+                                                expectedresult="SUCCESS"
+                                                tdkTestObj.executeTestCase(expectedresult);
+                                                actualresult = tdkTestObj.getResult();
+                                                details=tdkTestObj.getResultDetails();
+                                                print details;
+                                                #Check for SUCCESS/FAILURE return value of IARMBUS_BusCall
+                                                if expectedresult in actualresult:
+                                                        print "SUCCESS: Application invokes an RPC-DummyAPI1 successfully";
+                                                        dataCompare="%s" %(api_1_Data+10000000);
+                                                        if dataCompare in details:
+                                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                                print "SUCCESS: Both data are same";
+                                                        else:
+                                                                tdkTestObj.setResultStatus("FAILURE");
+                                                                print "FAILURE: Both data are not same";
+                                                                break;
+                                                else:
+                                                        tdkTestObj.setResultStatus("FAILURE");
+                                                        print "FAILURE: IARM_Bus_Call failed. %s" %details;
+
+                                                time.sleep(2)
+
+                                                #Syncing Second Application
+                                                tdkTestObj = obj.createTestStep('IARMBUS_SyncSecondApplication');
+                                                tdkTestObj.addParameter("lockenabled","false");
+                                                expectedresult="SUCCESS"
+                                                tdkTestObj.executeTestCase(expectedresult);
+                                                actualresult = tdkTestObj.getResult();
+                                                #Check for SUCCESS/FAILURE for syncing second application
+                                                if expectedresult in actualresult:
+                                                        tdkTestObj.setResultStatus("SUCCESS");
+                                                        print "SUCCESS: Second application synced successfully";
+                                                else:
+                                                        tdkTestObj.setResultStatus("FAILURE");
+                                                        print "FAILURE: Failed to sync second application";
+
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
-                                                print "FAILURE: IARM_Bus_Call failed. %s" %details;
+                                                print "FAILURE: Failed to sync second application";
+
                                         time.sleep(1);
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
                                         print "FAILURE: Second application failed to execute";
+
                         # Calling IARM_Bus_DisConnect API
                         tdkTestObj = obj.createTestStep('IARMBUS_DisConnect');
                         expectedresult="SUCCESS"
@@ -181,11 +218,11 @@ if "SUCCESS" in loadmodulestatus.upper():
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE: IARM_Bus Term failed";
-                        
+
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "FAILURE: IARM_Bus_Init failed. %s " %details;
-        
+
         print "[TEST EXECUTION RESULT] : %s" %actualresult;
         #Unload the iarmbus module
         obj.unloadModule("iarmbus");

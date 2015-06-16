@@ -85,6 +85,7 @@ if "SUCCESS" in recLoadStatus.upper():
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
         duration = "60000";
+	duration2 = "120000";
         startTime = "0";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime"
@@ -118,12 +119,9 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
-		    jsonMsgNoUpdate = "{\"updateSchedule\":{\"generationId\":\"0\"}}";
-		    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-                    sleep(60);
 
                     #Frame json message for update recording
-                    jsonMsgRescheduling = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+                    jsonMsgRescheduling = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration2+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
                     expResponse = "updateSchedule";
                     tdkTestObj.executeTestCase(expectedResult);
@@ -166,7 +164,7 @@ if "SUCCESS" in recLoadStatus.upper():
                             if expResponse in actResponse:
                                 print "No Update Schedule message post success";
                                 print "Wait for 60s to get the recording list"
-                                sleep(60);
+                                sleep(120);
                                 tdkTestObj1.setResultStatus("SUCCESS");
                                 #Check for acknowledgement from recorder
                                 tdkTestObj1.executeTestCase(expectedResult);
@@ -176,10 +174,12 @@ if "SUCCESS" in recLoadStatus.upper():
                                 print recordingData
                                 if 'NOTFOUND' not in recordingData:
                                     key = 'status'
+				    durationkey = 'duration'
                                     value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+				    durationvalue = recorderlib.getValueFromKeyInRecording(recordingData,durationkey)
                                     print "key: ",key," value: ",value
                                     print "Successfully retrieved the recording list from recorder";
-                                    if "COMPLETE" in value.upper():
+                                    if "COMPLETE" in value.upper() and  durationvalue == str(duration):
                                         tdkTestObj1.setResultStatus("SUCCESS");
                                         print "Scheduled recording completed successfully";
                                     else:

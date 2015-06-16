@@ -44,6 +44,7 @@ bool   	     bBenchmarkEnabled;
 #define ERROR_SIZE    50       // Maximum size of error string
 #define BUFFER_SIZE   32       // Maximum size of buffer
 
+#define TDK_ENABLE_FILE "/opt/.tdkenable"                            // File to check if TDK is enabled
 #define DEVICE_LIST_FILE     "devicesFile.ini"                 	// File to populate connected devices
 #define CRASH_STATUS_FILE    "crashStatus.ini"                  // File to store test details on a device crash
 #define REBOOT_CONFIG_FILE   "rebootconfig.ini"                 // File to store the state of test before reboot 
@@ -54,6 +55,8 @@ bool   	     bBenchmarkEnabled;
 #define MEMORY_USED_DATA_FILE    "memused.log"                  // File to store memory used data
 #define PERFORMANCE_CONFIG_FILE  "perfConfig.ini"               // File to store performance status which persist over reboot cycle
 
+#define ENABLE_TDK_SCRIPT   "$TDK_PATH/EnableTDK.sh"      // Script to enable TDK
+#define DISABLE_TDK_SCRIPT   "$TDK_PATH/DisableTDK.sh"      // Script to disable TDK
 #define GET_DEVICES_SCRIPT   "$TDK_PATH/get_moca_devices.sh"      // Script to find connected devices
 #define SET_ROUTE_SCRIPT     "$TDK_PATH/configure_iptables.sh"    // Script to set port forwarding rules to connected devices
 #define SYSSTAT_SCRIPT       "sh $TDK_PATH/runSysStat.sh"	  // Script to get system diagnostic info from sar command
@@ -1177,7 +1180,7 @@ bool RpcMethods::RPCRebootBox(const Json::Value& request, Json::Value& response)
 
     return bRet;
 	
-}
+}/* End of RPCRebootBox */
 
 
 
@@ -1259,19 +1262,115 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
         RpcMethods::sm_nStatusQueryFlag = FLAG_SET;
     }
 		
-    /* Sending the device status */	
-    if (RpcMethods::sm_nDeviceStatusFlag == DEVICE_FREE)
+    /* Sending the device status */
+
+/* To check if tdk is enabled.In gateway boxes only  */
+#ifdef PORT_FORWARD
+
+    strFilePath = TDK_ENABLE_FILE;
+
+    /* check if tdk enable file is there, if not send TDK Disabled */
+    std::ifstream infile(strFilePath.c_str());
+    if (!(infile.good()))
     {
-        response["result"] = "Device Free";
+        response["result"] = "TDK Disabled";
     }
-    else if (RpcMethods::sm_nDeviceStatusFlag == DEVICE_BUSY)
+    else
+
+#endif /* PORT_FORWARD */
+
     {
-        response["result"] = "Device Busy";
+        if (RpcMethods::sm_nDeviceStatusFlag == DEVICE_FREE)
+        {
+            response["result"] = "Device Free";
+        }
+        else if (RpcMethods::sm_nDeviceStatusFlag == DEVICE_BUSY)
+        {
+            response["result"] = "Device Busy";
+        }
     }
 	
     return bRet;
 	
 } /* End of RPCGetHostStatus */
+
+
+/********************************************************************************************************************
+ Purpose:               RPC call to enable TDK in STB
+ Parameters:
+                             request [IN]       - Json request
+                             response [OUT]  - Json response with result "SUCCESS"
+
+ Return:                 bool  -      Always returning true from this function, with details in response[result]
+
+*********************************************************************************************************************/
+bool RpcMethods::RPCCallEnableTDK(const Json::Value& request, Json::Value& response)
+{
+    bool bRet = true;
+    int nReturnValue = 0;
+    char szCommand[COMMAND_SIZE];
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPC Call Enable TDK --> Entry\n");
+    cout << "Received query: \n" << request << endl;
+
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+    response["result"] = "Success";
+
+    /* Constructing the command to invoke script */
+    sprintf (szCommand, "%s &", SHOW_DEFINE(ENABLE_TDK_SCRIPT)); //Constructing Command
+
+    DEBUG_PRINT (DEBUG_TRACE, "\n Invoking %s\n",szCommand);
+    nReturnValue = system (szCommand); //Calling script
+    if (nReturnValue == -1)
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "\n ERROR: Failed to invoke script\n");
+        response["result"] = "Failure";
+    }
+    sleep (2);
+
+    return bRet;
+
+}/* End of RPCEnableTDK */
+
+
+/********************************************************************************************************************
+ Purpose:               RPC call to disable TDK in STB
+ Parameters:
+                             request [IN]       - Json request
+                             response [OUT]  - Json response with result "SUCCESS"
+
+ Return:                 bool  -      Always returning true from this function, with details in response[result]
+
+*********************************************************************************************************************/
+bool RpcMethods::RPCCallDisableTDK(const Json::Value& request, Json::Value& response)
+{
+    bool bRet = true;
+    int nReturnValue = 0;
+    char szCommand[COMMAND_SIZE];
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPC Call Enable TDK --> Entry\n");
+    cout << "Received query: \n" << request << endl;
+
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+    response["result"] = "Success";
+
+    /* Constructing the command to invoke script */
+    sprintf (szCommand, "%s &", SHOW_DEFINE(DISABLE_TDK_SCRIPT)); //Constructing Command
+
+    DEBUG_PRINT (DEBUG_TRACE, "\n Invoking %s\n",szCommand);
+    nReturnValue = system (szCommand); //Calling script
+    if (nReturnValue == -1)
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "\n ERROR: Failed to invoke script\n");
+        response["result"] = "Failure";
+    }
+    sleep (2);
+
+    return bRet;
+
+}/* End of RPCCallDisableTDK */
 
 
 /********************************************************************************************************************
@@ -1900,8 +1999,5 @@ bool RpcMethods::RPCGetClientMocaIpAddress (const Json::Value& request, Json::Va
 #endif /* PORT_FORWARD */
 
 
-
 /* End of rpcmethods */
-
-
 

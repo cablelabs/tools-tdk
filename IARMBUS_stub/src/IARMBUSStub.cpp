@@ -27,6 +27,14 @@ int g_evtData[EVTDATA_MAX_SIZE],g_iter=0;
 char g_evtName[EVTDATA_MAX_SIZE];
 std::string g_tdkPath = getenv("TDK_PATH");
 
+/*Variables for invoking and syncing second app*/
+static int syncCount = 0;
+static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+static    IARM_Bus_DUMMYMGR_HandlerReady_Param_t handler_param;
+
+
 /**************************************************************************
  *
  * Function Name        : prereqcheck
@@ -151,6 +159,7 @@ bool IARMBUSAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgent
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_BusCall, "TestMgr_IARMBUS_BusCall");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::get_LastReceivedEventDetails, "TestMgr_IARMBUS_GetLastReceivedEventDetails");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::InvokeSecondApplication, "TestMgr_IARMBUS_InvokeSecondApplication");
+	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::SyncSecondApplication, "TestMgr_IARMBUS_SyncSecondApplication");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_GetContext, "TestMgr_IARMBUS_GetContext");
 	/*IarmBus Performance test Wrapper functions*/
         ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::BUSAgent_Init, "TestMgr_IARMBUSPERF_Init");
@@ -515,6 +524,7 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
 		gEventdata << "Event Details:" << ":: KeyCode :" << LastKeyCode << " :: KeyType : " <<LastKeyType ;
 		response["details"]=gEventdata.str().c_str();
 		gEventdata.str("");
+		strcpy(LastEvent , " ");
 		response["result"]="SUCCESS";
 		return true;
 	}
@@ -525,9 +535,10 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
 			(strcmp(g_ManagerName,"SYSMgr")==0) )
 	{
 		DEBUG_PRINT(DEBUG_TRACE,"\n get_LastReceivedEventDetails ****************** \n");
+		strcpy(LastEvent , " ");
 		response["result"]="SUCCESS";
 	}
-	else if (strcmp(g_ManagerName,"DummyTestMgr")==0)     
+	else if (strcmp(g_ManagerName, IARM_BUS_DUMMYMGR_NAME)==0)
 	{                                                   
 		for(int i=0;i<EVTDATA_MAX_SIZE;i++)         
 		{                                           
@@ -538,10 +549,11 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
 		response["details"]=gEventdata.str().c_str();
 		gEventdata.str("");
 		response["result"]="SUCCESS";               
-		return true;                                
+		return true;
 	}                                             
 	else if((strcmp(LastEvent,"IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE")==0))
 	{
+		strcpy(LastEvent , " ");
 		response["result"]="SUCCESS";               
 	}
 	else
@@ -759,6 +771,11 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 			dummydata=eventData->data.dummy2.dummyData;
 			evtname='Z';
 			DEBUG_PRINT(DEBUG_ERROR,"\nReceived k:%d",eventData->data.dummy2.dummyData);
+			/* Removing lock when event is received by stub*/
+			pthread_mutex_lock(&lock);
+			pthread_cond_signal(&cond);
+			pthread_mutex_unlock(&lock);
+
 			break;
 		}
 		if(g_iter<EVTDATA_MAX_SIZE)
@@ -1469,26 +1486,79 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
         {
                 return TEST_FAILURE;
         }
+
 	const char* appname=(char*)req["appname"].asCString();
 	const char* argv1=(char*)req["argv1"].asCString();
+	const char* apptype=(char*)req["apptype"].asCString();
 	std::string path;
-        path = g_tdkPath + "/" + appname +" " + argv1;
-        try
-        {
-                system((char *)path.c_str());
-        }
-        catch(...)
-        {
-                DEBUG_PRINT(DEBUG_ERROR,"Exception occured during system call\n");
-                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
-		response["result"]="FAILURE";
-                return TEST_FAILURE;
-        }
+	path = g_tdkPath + "/" + appname +" " + argv1;
+	syncCount = 0;
+
+	if (strcmp (apptype, "background") == 0)
+	{
+		path = path + " &";
+		DEBUG_PRINT(DEBUG_TRACE, "Second Application : %s\n",path.c_str());
+		try
+		{
+			system((char *)path.c_str());
+		}
+		catch(...)
+		{
+			DEBUG_PRINT(DEBUG_ERROR,"Exception occured during system call\n");
+			DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+			response["result"]="FAILURE";
+			return TEST_FAILURE;
+		}
+	}
+	else
+	{
+		try
+		{
+			system((char *)path.c_str());
+		}
+		catch(...)
+		{
+			DEBUG_PRINT(DEBUG_ERROR,"Exception occured during system call\n");
+			DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+			response["result"]="FAILURE";
+			return TEST_FAILURE;
+		}
+	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n InvokeSecondApplication --->Exit \n");
 	response["result"]="SUCCESS";
 	return TEST_SUCCESS;
 
 }
+
+
+/**************************************************************************
+ * Function Name : SyncSecondApplication
+ * Description	 : RPC method to sync second application
+***************************************************************************/
+bool IARMBUSAgent::SyncSecondApplication(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\n SyncSecondApplication --->Entry \n");
+	syncCount = syncCount+1;
+
+	/* Invoking handler to release lock */
+        IARM_Bus_Call(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_API_HANDLER_READY, &handler_param, sizeof(handler_param));
+
+	const char* lockenabled =(char*)req["lockenabled"].asCString();
+        if (strcmp (lockenabled, "true") == 0)
+	{
+		if((syncCount % 2) == 1)
+		{
+			pthread_mutex_lock(&lock);
+			pthread_cond_wait(&cond,&lock);
+			pthread_mutex_unlock(&lock);
+		}
+	}
+
+        DEBUG_PRINT(DEBUG_TRACE,"\n SyncSecondApplication --->Exit \n");
+        response["result"]="SUCCESS";
+	return TEST_SUCCESS;
+}
+
 /**************************************************************************
  * Function Name	: CreateObject
  * Description	: This function will be used to create a new object for the
@@ -1530,6 +1600,7 @@ bool IARMBUSAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_BusCall");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_GetLastReceivedEventDetails");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_InvokeSecondApplication");
+	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_SyncSecondApplication");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_GetContext");
 	/*IARMBus Performance test Wrapper Functions*/
         ptrAgentObj->UnregisterMethod("TestMgr_IARMBUSPERF_Init");

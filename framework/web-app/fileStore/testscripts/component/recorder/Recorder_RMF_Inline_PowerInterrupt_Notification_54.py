@@ -93,14 +93,16 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #Frame json message
         jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-        SchedulejsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+ocapId2+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        SchedulejsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+ocapId2+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
         actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
         print "Update Schedule Details: %s"%actResponse;
+ 	ScheduleResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',SchedulejsonMsg,ip);
+        print "Update Schedule Details: %s"%ScheduleResponse;
 
-        if expResponse in actResponse:
+        if expResponse in actResponse and expResponse in ScheduleResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
                 print "Wait for 60s to get acknowledgement"
@@ -131,32 +133,38 @@ if "SUCCESS" in recLoadStatus.upper():
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
                         SecondrecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1))
                         print recordingData,SecondrecordingData
-                        if 'NOTFOUND' not in recordingData or 'NOTFOUND' not in SecondrecordingData:
+                        if 'NOTFOUND' not in recordingData and 'NOTFOUND' not in SecondrecordingData:
                             key = 'status'
                             errorKey = 'error'
-                            timestampKey = 'timestamp'
                             
                             value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                             errorValue = recorderlib.getValueFromKeyInRecording(recordingData,errorKey)
-                            timestampValue = recorderlib.getValueFromKeyInRecording(recordingData,timestampKey)
                             
                             secondValue = recorderlib.getValueFromKeyInRecording(SecondrecordingData,key)
                             secondErrorValue = recorderlib.getValueFromKeyInRecording(SecondrecordingData,errorKey)
-                            secondTimestampValue = recorderlib.getValueFromKeyInRecording(SecondrecordingData,timestampKey)
                             
-                            print "key: ",key," value: ",value," errorValue: ",errorValue," timestampValue: ",timestampValue
+                            print "key: ",key," value: ",value," errorValue: ",errorValue
                             print "Successfully retrieved the recording list from recorder";
                             if "INCOMPLETE" in value.upper() and "POWER_INTERRUPTION" in errorValue.upper() and "INCOMPLETE" in secondValue.upper() and "POWER_INTERRUPTION" in secondErrorValue.upper():
                                 print "Power interruption happened successfully";
-                                if timestampValue != secondTimestampValue:
-                                        tdkTestObj1.setResultStatus("SUCCESS");
-                                        print "Power interrupt notification received in different timestamp";
-                                else:
-                                        tdkTestObj1.setResultStatus("FAILURE");
-                                        print "Power interrupt notification received in same timestamp";
+				timestampValue = recorderlib.getTimeStampListFromStatus(actResponse)
+                                print "Timestamp in recording status: ",timestampValue
+                                if timestampValue != []:
+                                	if timestampValue[0] != timestampValue[1]:
+                                        	print "Recorder has send the recording status notification at different timestamp"
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                        else:
+                                        	print "Recorder has not send the recording status notification at different timestamp"
+                                                tdkTestObj.setResultStatus("FAILURE");
+                            	else:
+                                	print "Recorder has not send the timestamp in  recording status"
+                                	tdkTestObj.setResultStatus("FAILURE");
+                            elif "BADVALUE" in value.upper() and "BADVALUE" in errorValue.upper() and "BADVALUE" in secondValue.upper() and "BADVALUE" in secondErrorValue.upper():
+			    	tdkTestObj.setResultStatus("FAILURE");
+                                print "Recording did not have error/status field";
                             else:
-                                tdkTestObj1.setResultStatus("FAILURE");
-                                print "Power Interruption not happened";
+                            	print "Recorder has not send recording status"
+                                tdkTestObj.setResultStatus("FAILURE");
                         else:
                             tdkTestObj1.setResultStatus("FAILURE");
                             print "Failed to retrieve the recording list from recorder";

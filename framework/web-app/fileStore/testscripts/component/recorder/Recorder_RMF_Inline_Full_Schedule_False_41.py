@@ -172,7 +172,7 @@ if "SUCCESS" in recLoadStatus.upper():
                             if expResponse in actResponse:
                                 print "No Update Schedule message post success";
                                 print "Wait for 60s to get the recording list"
-                                sleep(60);
+                                sleep(120);
                                 tdkTestObj1.setResultStatus("SUCCESS");
                                 #Check for acknowledgement from recorder
                                 tdkTestObj1.executeTestCase(expectedResult);

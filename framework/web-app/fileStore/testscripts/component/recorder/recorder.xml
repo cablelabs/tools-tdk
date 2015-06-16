@@ -1,26 +1,32 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xml>
-  <module name='recorder' testGroup='Component'>
+  <module name="recorder" testGroup="Component">
     <primitiveTests>
-      <primitiveTest name='Recorder_checkRecording_status' id='514' version='1'>
+      <primitiveTest id="514" name="Recorder_checkRecording_status" version="1">
         <function>TestMgr_Recorder_checkRecording_status</function>
         <parameters>
-          <parameter name='Recording_Id' value='0' />
+          <parameter name="Recording_Id" value="0"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='Recorder_ScheduleRecording' id='540' version='0'>
+      <primitiveTest id="540" name="Recorder_ScheduleRecording" version="0">
         <function>TestMgr_Recorder_ScheduleRecording</function>
         <parameters>
-          <parameter name='Start_time' value='' />
-          <parameter name='UTCTime' value='' />
-          <parameter name='Source_id' value='' />
-          <parameter name='Recording_Id' value='' />
-          <parameter name='Duration' value='' />
+          <parameter name="Start_time" value=""/>
+          <parameter name="UTCTime" value=""/>
+          <parameter name="Source_id" value=""/>
+          <parameter name="Recording_Id" value=""/>
+          <parameter name="Duration" value=""/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name="Recorder_SendRequest" id="" version="1">
+      <primitiveTest id="" name="Recorder_SendRequest" version="1">
         <function>TestMgr_Recorder_SendRequest</function>
         <parameters/>
+      </primitiveTest>
+      <primitiveTest name="Recorder_SendRequestToDeleteFile" id=" " version="1">
+        <function>TestMgr_Recorder_SendRequestToDeleteFile</function>
+        <parameters>
+          <parameter name="filename" value=""/>
+        </parameters>
       </primitiveTest>
     </primitiveTests>
   </module>

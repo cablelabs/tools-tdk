@@ -93,6 +93,7 @@ struct sProcessInfo
 
 /* Initialization */
 int RpcMethods::sm_nAgentPID = 0;
+int RpcMethods::sm_nTFTPAgentPID = 0;
 int RpcMethods::sm_nRouteSetFlag = FLAG_NOT_SET;
 int RpcMethods::sm_nGetDeviceFlag = FLAG_NOT_SET;
 int RpcMethods::sm_nConsoleLogFlag = FLAG_NOT_SET;
@@ -652,6 +653,8 @@ void *CheckStatus (void *)
 
     /* Registering methods to status server */
     o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetHostStatus, std::string("getHostStatus")));
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCCallEnableTDK, std::string("callEnableTDK")));
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCCallDisableTDK, std::string("callDisableTDK")));
 
     /* To set route to client devices. For gateway boxes only */
     #ifdef PORT_FORWARD
@@ -993,19 +996,27 @@ void *AgentExecuter (void *pProcessDetails)
             /* Modifying child process name to tdk_agent */
             strncpy (pProcessInfo -> pProcessName[0], "tdk_agent", pProcessInfo -> nProcessNameSize);
 
-            /* Start tftp server for logfile transfer */
-            nPID = RETURN_SUCCESS;
-            nPID = fork();
-            if (nPID == RETURN_SUCCESS)
+            /* To check if tftp server process is already running */
+            if ((RpcMethods::sm_nTFTPAgentPID ==0) || (0 != kill(RpcMethods::sm_nTFTPAgentPID, 0)))
             {
-                /* Modifying child process name to tdk_agent_tftp */
-                strncpy (pProcessInfo -> pProcessName[0], "tdk_agent_tftp", pProcessInfo -> nProcessNameSize);
-                system (START_TFTP_SERVER);
-                exit(0);
-            }
-            else if (nPID < RETURN_SUCCESS)
-            {
-                DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!! Couldnot start tftp server for logfile transfer \n");
+                /* Start tftp server for logfile transfer */
+                nPID = RETURN_SUCCESS;
+                nPID = fork();
+                if (nPID == RETURN_SUCCESS)
+                {
+                    /* Modifying child process name to tdk_agent_tftp */
+                    strncpy (pProcessInfo -> pProcessName[0], "tdk_agent_tftp", pProcessInfo -> nProcessNameSize);
+                    system (START_TFTP_SERVER);
+                    exit(0);
+                }
+                else if (nPID < RETURN_SUCCESS)
+                {
+                    DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!! Couldnot start tftp server for logfile transfer \n");
+                }
+                else
+                {
+                    RpcMethods::sm_nTFTPAgentPID = nPID; //Save process id in a static variable
+                }
             }
 
             /* Starting agent */

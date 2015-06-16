@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_34 - Recorder to send error when trying to cancel an invalid recording Id.</synopsis>
+  <synopsis>CT_Recoder_DVR_Protocol_34 - Recoder not to send error when trying to cancel a non existing recording Id - This is a negative scenario</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -149,20 +149,12 @@ if "SUCCESS" in recLoadStatus.upper():
                             actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 			    recordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+2))
 	                    print recordingData
-                            if 'NOTFOUND' not in recordingData:
-            	            	key = 'error'
-                	        value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                        	print "key: ",key," value: ",value
-                                print "Successfully retrieved the recording list from recorder";
-                                if "USER_STOP" not in value.upper():
-                                	tdkTestObj.setResultStatus("SUCCESS");
-                                	print "Invalid recording Id is not cancelled";
-                            	else:
-                                	tdkTestObj.setResultStatus("FAILURE");
-                                	print "Invalid recording Id is cancelled";
+                            if 'NOTFOUND' in recordingData:
+                                    tdkTestObj.setResultStatus("SUCCESS");
+                                    print "No error while trying to cancel non existing recording id";
 			    else:
                                     tdkTestObj.setResultStatus("FAILURE");
-                                    print "Invalid Rec Id available in the recording list";	
+                                    print "Error thrown when trying to cancel non existing recording id";	
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve acknowledgement from recorder";

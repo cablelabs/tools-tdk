@@ -91,7 +91,6 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #Frame json message
         jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-        #jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"aaa123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -141,7 +140,7 @@ if "SUCCESS" in recLoadStatus.upper():
                         loop = 0;
                         while loop < 5:
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                #print "Retrieve Status Details: %s"%actResponse;
+                                print "Retrieve Status Details: %s"%actResponse;
                                 sleep(10);
                                 loop = loop+1;
 			if 'acknowledgement' not in actResponse:
@@ -167,7 +166,7 @@ if "SUCCESS" in recLoadStatus.upper():
                             if expResponse in actResponse:
                                 print "No Update Schedule message post success";
                                 print "Wait for 60s to get the recording list"
-                                sleep(60);
+                                sleep(120);
                                 tdkTestObj1.setResultStatus("SUCCESS");
                                 #Check for acknowledgement from recorder
                                 tdkTestObj1.executeTestCase(expectedResult);

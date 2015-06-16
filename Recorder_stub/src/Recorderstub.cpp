@@ -39,6 +39,8 @@ bool RecorderAgent::initialize(IN const char* szVersion, IN RDKTestAgent *ptrAge
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_ScheduleRecording,"TestMgr_Recorder_ScheduleRecording");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_checkRecording_status,"TestMgr_Recorder_checkRecording_status");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_SendRequest,"TestMgr_Recorder_SendRequest");
+	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_SendRequestToDeleteFile,"TestMgr_Recorder_SendRequestToDeleteFile");
+
 	return TEST_SUCCESS;
 }
 
@@ -303,6 +305,47 @@ bool RecorderAgent::Recorder_SendRequest(IN const Json::Value& request, OUT Json
 	response["result"] = "SUCCESS";
 	response["details"] = "SUCCESS";
 	DEBUG_PRINT(DEBUG_TRACE,"Recorder SendRequest ---> Exit\n");
+	return TEST_SUCCESS;
+}
+
+/**************************************************************************
+Function name : RecorderAgent::Recorder_SendRequestToDeleteFile()
+
+Arguments     : Filename on STB to be deleted
+
+Description   : Returns success
+***************************************************************************/
+bool RecorderAgent::Recorder_SendRequestToDeleteFile(IN const Json::Value& request, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "Recorder SendRequestToDeleteFile ---> Entry\n");
+
+        string filename = request["filename"].asString();
+
+        if (!filename.empty())
+	{
+        	// Remove the file
+        	if( remove( filename.c_str() ) != 0 )
+        	{
+                	DEBUG_PRINT(DEBUG_ERROR,"Error deleting file %s\n", filename.c_str());
+			response["result"] = "FAILURE";
+			response["details"] = "Error deleting file";
+        	}
+        	else
+        	{
+                	DEBUG_PRINT(DEBUG_TRACE, "Successfully deleted file %s\n", filename.c_str());
+			response["result"] = "SUCCESS";
+			response["details"] = "File successfully deleted";
+        	}
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "Error: Filename is NULL\n");
+                response["result"] = "FAILURE";
+                response["details"] = "Error: Filename is null";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"Recorder SendRequestToDeleteFile ---> Exit\n");
+        return TEST_SUCCESS;
 }
 
 /**************************************************************************
@@ -335,6 +378,7 @@ bool RecorderAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentOb
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_ScheduleRecording");
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_checkRecording_status");
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_SendRequest");
+	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_SendRequestToDeleteFile");
 	/* All done, close things cleanly */
 	return TEST_SUCCESS;
 }

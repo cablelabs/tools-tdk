@@ -17,6 +17,10 @@
 #include "libIBus.h"
 #include "dummytestmgr.h"
 
+static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+static bool stopped = false;
+
 /**
  * These functions are invoked from other applications(test agent)
  */
@@ -43,20 +47,34 @@ static IARM_Result_t _dummyAPI1(void *arg)
     return retCode;
 }
 
-int main()
-{
 
-	printf("\ninside main\n");
-	int sleepus = 200 * 1000; 
-	IARM_Result_t retCode = IARM_RESULT_SUCCESS;
+static IARM_Result_t _handlerReady(void *arg)
+{
+    IARM_Bus_DUMMYMGR_HandlerReady_Param_t *param = (IARM_Bus_DUMMYMGR_HandlerReady_Param_t *)arg;
+    stopped = param->stopped;
+    /* Unlocking on receiving handler */
+    pthread_mutex_lock(&lock);
+    pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&lock);
+    return IARM_RESULT_SUCCESS;
+}
+
+int main(int argc, char **argv)
+{
+	printf("\nStarting Dummy Manager\n");
+
 	IARM_Bus_DUMMYMGR_EventData_t eventData;
 	IARM_Bus_Init(IARM_BUS_DUMMYMGR_NAME);
 	IARM_Bus_Connect();
 	IARM_Bus_RegisterEvent(IARM_BUS_DUMMYMGR_EVENT_MAX);
 	IARM_Bus_RegisterCall(IARM_BUS_DUMMYMGR_API_DummyAPI0,  	_dummyAPI0);
 	IARM_Bus_RegisterCall(IARM_BUS_DUMMYMGR_API_DummyAPI1,  	_dummyAPI1);
-	int i = 0,j=0;
-	usleep(4*sleepus);
+	IARM_Bus_RegisterCall(IARM_BUS_DUMMYMGR_API_HANDLER_READY,	_handlerReady);
+
+	/* Lock to get app synced */
+	pthread_mutex_lock(&lock);
+	pthread_cond_wait(&cond,&lock);
+	pthread_mutex_unlock(&lock);
 
 	/* Populate Event Data Here */
 	eventData.data.dummy0.dummyData = 1;
@@ -66,7 +84,13 @@ int main()
 	eventData.data.dummy2.dummyData = 3;
 	IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYZ, &eventData, sizeof(eventData));
 
+	/* Lock to get app synced */
+	pthread_mutex_lock(&lock);
+	pthread_cond_wait(&cond,&lock);
+	pthread_mutex_unlock(&lock);
+
 	IARM_Bus_Disconnect();
 	IARM_Bus_Term();
-	printf("\nExit main\n");
+
+	printf("\nExiting Dummy Manager\n");
 }
