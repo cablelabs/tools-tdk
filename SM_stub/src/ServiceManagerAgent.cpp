@@ -12,6 +12,12 @@
 
 #include "ServiceManagerAgent.h"
 
+char *rdkLogP = getenv("RDK_LOG_PATH");
+char *tdkP = getenv("TDK_PATH");
+
+string rdkLogPath;
+string tdkPath;
+
 /***************************************************************************
  *Function name	: ServiceManagerAgent 
  *Descrption	: This is a constructor function for ServiceManagerAgent class. 
@@ -60,6 +66,16 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_WebSocket_GetReadyState,"TestMgr_SM_WebSocket_GetReadyState");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_WebSocket_GetBufferedAmount,"TestMgr_SM_WebSocket_GetBufferedAmount");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_WebSocket_GetProtocol,"TestMgr_SM_WebSocket_GetProtocol");
+	/*HdmiCecService API's*/
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_SetEnabled,"TestMgr_SM_HdmiCec_SetEnabled");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_GetEnabled,"TestMgr_SM_HdmiCec_GetEnabled");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_SetName,"TestMgr_SM_HdmiCec_SetName");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_GetName,"TestMgr_SM_HdmiCec_GetName");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices,"TestMgr_SM_HdmiCec_GetConnectedDevices");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_SendMessage,"TestMgr_SM_HdmiCec_SendMessage");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_OnMessage,"TestMgr_SM_HdmiCec_OnMessage");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_ClearCecLog,"TestMgr_SM_HdmiCec_ClearCecLog");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_CheckStatus,"TestMgr_SM_HdmiCec_CheckStatus");
 
 	return TEST_SUCCESS;
 }
@@ -73,6 +89,33 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 
 std::string ServiceManagerAgent::testmodulepre_requisites()
 {
+        DEBUG_PRINT(DEBUG_TRACE,"testmodulepre_requisites() ---> Entry\n");
+
+	/*Check for the environment variable set or not */
+        if(rdkLogP == NULL)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nEnvironment variable not set for RDK_LOG_PATH\n");
+                return "FAILURE<DETAILS>Environment variable not set for \"RDK_LOG_PATH\"";
+        }
+        else
+        {
+                rdkLogPath.assign(rdkLogP);
+                DEBUG_PRINT(DEBUG_TRACE,"\n RDK_LOG_PATH=%s\n",rdkLogPath.c_str());
+        }
+
+        if(tdkP == NULL)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nEnvironment variable not set for TDK_PATH\n");
+                return "FAILURE<DETAILS>Environment variable not set for \"TDK_PATH\"";
+        }
+        else
+        {
+                tdkPath.assign(tdkP);
+                DEBUG_PRINT(DEBUG_TRACE,"\n TDK_PATH=%s\n",tdkPath.c_str());
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"testmodulepre_requisites() ---> Exit\n");
+
         return "SUCCESS";
 }
 /***************************************************************************
@@ -202,6 +245,12 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
         else if (serviceName == WebSocketService::SERVICE_NAME)
         {
                 serviceStruct.createFunction = &createWebSocketService;
+        }
+#endif
+#ifdef HAS_API_HDMI_CEC
+        else if (serviceName == HdmiCecService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createHdmiCecService;
         }
 #endif
 	else
@@ -1280,6 +1329,464 @@ bool ServiceManagerAgent::SM_WebSocket_GetProtocol(IN const Json::Value& req, OU
 	return TEST_SUCCESS;
 }
 
+#ifdef HAS_API_HDMI_CEC
+/*static HdmiCecService *ptr_service=NULL;*/
+#endif
+
+/***************************************************************************
+ *Function name : SM_HdmiCec_ClearCecLog
+ *Descrption    : This will ClearCecLog and new log entry be done.
+ *parameter [in]: NONE.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "SM_HdmiCec_ClearCecLog ---> Entry\n");
+#ifdef HAS_API_HDMI_CEC
+	string cecLogPath = rdkLogPath + "/" + "cec.txt";
+	string clearLogCmd = "cat /dev/null > " + cecLogPath;
+
+	DEBUG_PRINT(DEBUG_TRACE, "clearLogCmd: %s\n",clearLogCmd.c_str());
+	try
+	{
+		system((char *)clearLogCmd.c_str());
+	}
+	catch(...)
+	{
+		DEBUG_PRINT(DEBUG_ERROR,"Exception occured not able to Clear Cec Log\n");
+                DEBUG_PRINT(DEBUG_TRACE, "SM_HdmiCec_ClearCecLog ---> Exit\n");
+	        response["result"]="FAILURE";
+	        response["details"]="Exception occured not able to Clear Cec Log";
+		
+		return TEST_FAILURE;
+	}
+	
+	DEBUG_PRINT(DEBUG_TRACE,"Clear Cec Log Success\n");
+	response["result"]="SUCCESS";
+        response["details"]="Clear Cec Log Success";
+#else
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+        DEBUG_PRINT(DEBUG_TRACE, "SM_HdmiCec_ClearCecLog ---> Exit\n");
+	return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : SM_HdmiCec_CheckStatus
+ *Descrption    : This will search for the pattern in the cec log.
+ *parameter [in]: pattern - string.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckStatus ---> Entry\n");
+
+#ifdef HAS_API_HDMI_CEC 
+	string pattern = req["pattern"].asCString();
+	string cecLogPath = rdkLogPath + "/" + "cec.txt";
+	string cecTdkLog = "cecTdkLog.txt";
+	string tdkLogPath = tdkPath + "logs/" + cecTdkLog;
+	string cecTdkLogCpCmd = "cp -r " + cecLogPath + " " + tdkLogPath;
+	string setPermission = "chmod -R 777 " + tdkLogPath;	
+	
+	DEBUG_PRINT(DEBUG_TRACE,"Cec Tdk Log Path: %s\n",cecTdkLogCpCmd.c_str());
+	DEBUG_PRINT(DEBUG_TRACE,"SetPermissionPath: %s\n",setPermission.c_str());
+	
+	/*Copy Cec.log to TDK folder and handling exception for system call*/
+	try
+	{	
+		system((char *)cecTdkLogCpCmd.c_str());
+                system((char*)setPermission.c_str());
+	}
+	catch(...)
+	{
+		DEBUG_PRINT(DEBUG_ERROR,"Exception occured, Failed to copy Cec.log to TDK folder\n");
+		response["result"]="FAILURE";
+	        response["details"]="Exception occured, Failed to copy Cec.log to TDK folder";
+                return TEST_FAILURE;
+	}
+
+	DEBUG_PRINT(DEBUG_TRACE,"Successfully copied Cec.txt to TDK folder\n");
+	
+	/* Checking for the pattern from Cec.txt*/
+	ifstream cecLogFile;
+	string lineMatching;
+	DEBUG_PRINT(DEBUG_TRACE,"File Open for searching the pattern: %s\n",tdkLogPath.c_str());
+	DEBUG_PRINT(DEBUG_TRACE,"Pattern to be searched: %s\n",pattern.c_str());
+	cecLogFile.open(tdkLogPath.c_str());
+	if (cecLogFile.is_open())
+	{
+		while (!cecLogFile.eof())
+                {
+			if(getline(cecLogFile,lineMatching)>0)
+			{
+				if (lineMatching.find(pattern) != string::npos)
+				{
+					response["result"] = "SUCCESS";
+					response["details"] = lineMatching.c_str();
+					response["log-path"]= tdkLogPath.c_str();
+					break;
+				}
+			}
+			else
+			{
+                                response["result"] = "FAILURE";
+                                response["details"] = "No Pattern found in Log file";
+                                response["log-path"]= tdkLogPath.c_str();
+				return TEST_FAILURE;
+			}
+			
+		}
+		cecLogFile.close();
+		response["result"] = "SUCCESS";
+	}
+	else
+	{
+		DEBUG_PRINT(DEBUG_TRACE,"Unable to open %s\n", tdkLogPath.c_str());
+                DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckStatus ---> Exit\n");
+                response["result"] = "FAILURE";
+                response["details"] = "Unable to open the log file";
+		return TEST_FAILURE;
+	}
+#else
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif		
+	DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckStatus ---> Exit\n");
+	return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : SM_HdmiCec_SetEnabled
+ *Descrption    : This will enable the Cec service.
+ *parameter [in]: req - set true or false.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetEnabled ---->Entry\n");
+
+	bool valueToSetEnabled = req["valueToSetEnabled"].asInt();
+	bool getEnabledResult = false;
+
+	DEBUG_PRINT(DEBUG_TRACE,"Value passed to setEnabled: %d (true - 1, false - 0)\n",valueToSetEnabled);
+
+#ifdef HAS_API_HDMI_CEC
+	QString serviceName = HdmiCecService::SERVICE_NAME;
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
+	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+
+	if(ptr_service != NULL)
+        {
+		ptr_service->setEnabled(valueToSetEnabled);
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setEnabled called.\n");
+		
+		getEnabledResult = ptr_service->getEnabled();
+		if (valueToSetEnabled == getEnabledResult)
+		{
+			DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setEnabled() call Success.\n");
+                	response["result"]="SUCCESS";
+	                response["details"]="HdmiCec Service setEnabled() call Success.";
+		}
+		else
+		{
+			DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setEnabled() call Failure.\n");
+	                response["result"]="FAILURE";
+        	        response["details"]="HdmiCec Service setEnabled() call Failure.";
+			
+			return TEST_FAILURE;
+		}
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create HdmiCec Service handler.";
+	
+		return TEST_FAILURE;
+        }
+#else
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetEnabled ---->Exit\n");
+	return TEST_SUCCESS;
+}
+
+
+/***************************************************************************
+ *Function name : SM_HdmiCec_GetEnabled
+ *Descrption    : This will get current state (whether it is enabled or disabled) of Cec service.
+ *parameter [in]: NONE.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetEnabled ---->Entry\n");
+	std::stringstream details;	
+	/*Default value - false*/
+        bool getEnabledResult = false;
+
+#ifdef HAS_API_HDMI_CEC
+
+	QString serviceName = HdmiCecService::SERVICE_NAME;
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
+	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+
+        if(ptr_service != NULL)
+        {
+                getEnabledResult = ptr_service->getEnabled();
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getEnabled called.\n");
+
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getEnabled() call Success.\n");
+		details << "Cec: "<<getEnabledResult;
+                response["result"]="SUCCESS";
+                response["details"]=details.str();
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create HdmiCec Service handler.";
+
+                return TEST_FAILURE;
+        }
+#else
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetEnabled ---->Exit\n");
+	return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : SM_HdmiCec_SetName
+ *Descrption    : This will sets the name of the STB device..
+ *parameter [in]: req - name to be set to STB device as string.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetName ---->Entry\n");
+        std::stringstream details;
+	QString nameToSet = QString::fromStdString(req["nameToSet"].asCString());
+	QString getNameResult;
+
+	DEBUG_PRINT(DEBUG_TRACE,"Value passed to setName: %s \n",nameToSet.toUtf8().constData());
+
+#ifdef HAS_API_HDMI_CEC
+	QString serviceName = HdmiCecService::SERVICE_NAME;
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
+	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+        
+	if(ptr_service != NULL)
+        {
+                ptr_service->setName(nameToSet);
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setName called.\n");
+
+                getNameResult = ptr_service->getName();
+                if (nameToSet == getNameResult)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setName() call Success.\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="HdmiCec Service setName() call Success.";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setName() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="HdmiCec Service setName() call Failure.";
+
+                        return TEST_FAILURE;
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create HdmiCec Service handler.";
+
+                return TEST_FAILURE;
+        }
+#else
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetEnabled ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : SM_HdmiCec_GetName
+ *Descrption    : This will get current STB device name.
+ *parameter [in]: NONE.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetName ---->Entry\n");
+        std::stringstream details;
+	QString getNameResult;
+
+#ifdef HAS_API_HDMI_CEC
+	QString serviceName = HdmiCecService::SERVICE_NAME;
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
+	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+
+        if(ptr_service != NULL)
+        {
+                getNameResult = ptr_service->getName();
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getName called.\n");
+
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getName() call Success.\n");
+                details << "Cec: "<<getNameResult.toUtf8().constData();
+                response["result"]="SUCCESS";
+                response["details"]=details.str();
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create HdmiCec Service handler.";
+
+                return TEST_FAILURE;
+        }
+#else
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetName ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : SM_HdmiCec_GetConnectedDevices
+ *Descrption    : This will get the number of devices connected to STB.
+ *parameter [in]: NONE.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetConnectedDevices ---->Entry\n");
+        std::stringstream details;
+	QVariantList listOfDevicesConnected;
+
+#ifdef HAS_API_HDMI_CEC
+
+	QString serviceName = HdmiCecService::SERVICE_NAME;
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
+	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+        if(ptr_service != NULL)
+        {
+                listOfDevicesConnected = ptr_service->getConnectedDevices();
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getConnectedDevices called.\n");
+
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getConnectedDevices() call Success.\n");
+                details << "Cec: "<<listOfDevicesConnected.count();
+                response["result"]="SUCCESS";
+                response["details"]=details.str();
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create HdmiCec Service handler.";
+
+                return TEST_FAILURE;
+        }
+#else
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetConnectedDevices ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : SM_HdmiCec_SendMessage
+ *Descrption    : This will send the message to connected STB.
+ *parameter [in]: req - message.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SendMessage ---->Entry\n");
+        std::stringstream details;
+	QString messageToSend = QString::fromStdString(req["messageToSend"].asCString());
+	
+	DEBUG_PRINT(DEBUG_TRACE,"Value passed to sendMessage: %s \n",messageToSend.toUtf8().constData());
+
+#ifdef HAS_API_HDMI_CEC
+	QString serviceName = HdmiCecService::SERVICE_NAME;
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
+	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+        if(ptr_service != NULL)
+        {
+                ptr_service->sendMessage(messageToSend);
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service sendMessage() called.\n");
+
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service sendMessage() call Success.\n");
+                response["result"]="SUCCESS";
+                response["details"]="HdmiCec Service sendMessage() call Success.";
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create HdmiCec Service handler.";
+
+                return TEST_FAILURE;
+        }
+#else
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SendMessage ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : SM_HdmiCec_OnMessage
+ *Descrption    : This will be fired when a message is sent from an HDMI device to STB.
+ *parameter [in]: req - message.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_OnMessage ---->Entry\n");
+        std::stringstream details;
+        QString onMessage = QString::fromStdString(req["onMessage"].asCString());
+
+        DEBUG_PRINT(DEBUG_TRACE,"Value passed to onMessage: %s \n",onMessage.toUtf8().constData());
+
+#ifdef HAS_API_HDMI_CEC
+	QString serviceName = HdmiCecService::SERVICE_NAME;
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
+	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+        if(ptr_service != NULL)
+        {
+                ptr_service->onMessage(onMessage);
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service onMessage() called.\n");
+
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service onMessage() call Success.\n");
+                response["result"]="SUCCESS";
+                response["details"]="HdmiCec Service onMessage() call Success.";
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create HdmiCec Service handler.";
+
+                return TEST_FAILURE;
+        }
+#else
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_OnMessage ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
 /**************************************************************************
  * Function Name: CreateObject
  * Description	: This function will be used to create a new object for the
@@ -1337,6 +1844,16 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_WebSocket_GetReadyState");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_WebSocket_GetBufferedAmount");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_WebSocket_GetProtocol");
+	/*HdmiCecService API's*/
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_SetEnabled");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_GetEnabled");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_SetName");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_GetName");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_GetConnectedDevices");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_SendMessage");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_OnMessage");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_ClearCecLog");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_CheckStatus");
 
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;

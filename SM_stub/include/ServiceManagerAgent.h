@@ -13,10 +13,18 @@
 #ifndef __SERVICEMANAGER_AGENT_H__
 #define __SERVICEMANAGER_AGENT_H__
 
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <json/json.h>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 #include "servicemanager.h"
+using namespace std;
 
 // Includes for services
 #ifdef HAS_MEMORY_INFO
@@ -70,7 +78,9 @@
 #ifdef USE_STORAGE_MANAGER_API
 #include "storagemanagerapi.h"
 #endif
-
+#ifdef HAS_API_HDMI_CEC
+#include "hdmicecservice.h"
+#endif
 
 #define IN
 #define OUT
@@ -125,6 +135,16 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		bool SM_WebSocket_GetReadyState(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_WebSocket_GetBufferedAmount(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_WebSocket_GetProtocol(IN const Json::Value& req, OUT Json::Value& response);
+		/*HdmiCecService API's*/
+		bool SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_HdmiCec_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT Json::Value& response);
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
 		

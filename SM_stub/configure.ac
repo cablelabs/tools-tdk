@@ -3,7 +3,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 dnl AC_PREREQ([2.69])
 AC_INIT(tdk, 1.0, praveensnair@tataelxsi.co.in,tdk)
-AC_CONFIG_SRCDIR([agent/src/agentmain.cpp])
+AC_CONFIG_SRCDIR([src/ServiceManagerAgent.cpp])
 AM_CONFIG_HEADER(cfg/config.h)
 AC_CONFIG_MACRO_DIR([cfg])
 AC_CONFIG_AUX_DIR([cfg])
@@ -60,7 +60,7 @@ AC_ARG_ENABLE([hybrid],
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub"
+                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub SM_stub"
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc"
                   TDKINTEGRATION_FLAGS="-DENABLE_HYBRID_CODECOMPILE -DHYBRID" ;;
            no) HYBRID=false ;;
@@ -75,7 +75,7 @@ AC_ARG_ENABLE([client],
         [
           case "${enableval}" in
              yes) CLIENT=true
-                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub"
+                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub SM_stub"
                   TDKINTEGRATION_FLAGS="-DIPCLIENT" ;;
            no) CLIENT=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
@@ -89,7 +89,7 @@ AC_ARG_ENABLE([quemux86mc],
         [
           case "${enableval}" in
              yes) QEMUX86MC=true
-                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub"
+                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub SM_stub"
                   TDKINTEGRATION_FLAGS="-DIPCLIENT -DSTAND_ALONE_CLIENT" ;;
            no) QEMUX86MC=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
@@ -154,23 +154,5 @@ AC_SUBST(SUBDIR_HYBRID)
 AC_SUBST(SUBDIR_CLIENT)
 AC_SUBST(SM_STUB_CFLAG_HYBRID)
 AC_CONFIG_FILES([Makefile
-         cfg/Makefile
-         agent/Makefile
-         IARMBUS_stub/Makefile
-         DS_stub/Makefile
-         ClosedCaption_stub/Makefile
-         RDKLogger_stub/Makefile
-         TDKIntegration_Stub/Makefile
-         gstPluginsRdk_check/Makefile
-         gstPluginsRdk_stub/Makefile
-         Recorder_stub/Makefile
-         Mediaframework_stub/Makefile
-         MediaStreamer_stub/Makefile
-         OpenSourceComponent_Stub/Makefile
-         TR069_stub/Makefile
-         TRM_stub/Makefile
-         rmfApp_stub/Makefile
-         XUPNP_stub/Makefile
-         DTCP_stub/Makefile
-         tdkRmfApp/Makefile])
+         cfg/Makefile])
 AC_OUTPUT
