@@ -322,7 +322,7 @@ static void get_response (void* arg)
 bool waitForTRMResponse()
 {
   try {
-    int retry_count = 5;
+    int retry_count = 30;
     while ((false == responseReceived) && (retry_count >0))
     {
 	sleep(1);
