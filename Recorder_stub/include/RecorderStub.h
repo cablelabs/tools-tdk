@@ -18,6 +18,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <string>
 #define IN
@@ -33,6 +34,8 @@
 #define PRE_REQUISITE_FILE "scripts/Recorder_testmodule_pre-script.sh"
 #define POST_REQUISITE_LOG_PATH "logs/Recorder_testmodule_postreq_details.log"
 #define POST_REQUISITE_FILE "scripts/Recorder_testmodule_post-script.sh"
+#define RECORDING_METADATA_PATH "/tmp/mnt/diska3/persistent/dvr/recdbser"
+#define RMFCONFIG_INI_FILE "/opt/rmfconfig.ini"
 using namespace std;
 #define NUMBER_OCAPID 10
 
@@ -48,6 +51,8 @@ class RecorderAgent : public RDKTestStubInterface
 		bool Recorder_checkRecording_status(IN const Json::Value& request, OUT Json::Value& response);
 		bool Recorder_SendRequest(IN const Json::Value& request, OUT Json::Value& response);
 		bool Recorder_SendRequestToDeleteFile(IN const Json::Value& request, OUT Json::Value& response);
+		bool Recorder_DeleteRecordingMetaData(IN const Json::Value& request, OUT Json::Value& response);
+		bool Recorder_SetValuesInRmfconfig(IN const Json::Value& request, OUT Json::Value& response);
 		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);		
 		std::string testmodulepre_requisites();
 		bool testmodulepost_requisites();

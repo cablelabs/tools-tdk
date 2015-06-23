@@ -22,10 +22,23 @@
         <function>TestMgr_Recorder_SendRequest</function>
         <parameters/>
       </primitiveTest>
-      <primitiveTest name="Recorder_SendRequestToDeleteFile" id=" " version="1">
+      <primitiveTest id=" " name="Recorder_SendRequestToDeleteFile" version="1">
         <function>TestMgr_Recorder_SendRequestToDeleteFile</function>
         <parameters>
           <parameter name="filename" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="Recorder_DeleteRecordingMetaData" version="1">
+        <function>TestMgr_Recorder_DeleteRecordingMetaData</function>
+        <parameters>
+          <parameter name="Recording_Id" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name="Recorder_SetValuesInRmfconfig" id=" " version="1">
+        <function>TestMgr_Recorder_SetValuesInRmfconfig</function>
+        <parameters>
+          <parameter name="Keyword" value=""/>
+          <parameter name="Value" value=""/>
         </parameters>
       </primitiveTest>
     </primitiveTests>
