@@ -1288,6 +1288,36 @@ class TDKScriptingLibrary:
 			
 	########## End of Function ##########
 
+        def getLoadModuleDetails(self):
+
+        # Displays details of Load Module
+
+        # Syntax       : OBJ.getLoadModuleDetails()
+        # Description  : Shows details of LoadModule
+        # Parameters   : None
+        # Return Value : Details of the load module
+
+                response = self.result
+                if self.result:
+                        if "details" in self.result:
+                                resultIndex = self.result.find("details") + len("details\":\"")
+                                message = self.result[resultIndex:]
+                                message = message[:(message.find("\""))]
+                                sys.stdout.flush()
+                                self.result = response
+                                return message
+
+                        else:
+                                print "#TDK_@error-ERROR : No details in response messgage"
+                                sys.stdout.flush()
+                                exit()
+                else:
+                        print "#TDK_@error-Error in socket.. Please check STB is up and agent is running inside it"
+                        sys.stdout.flush()
+                        exit()
+
+	########## End of Function ##########
+
 	def setLoadModuleStatus(self, status):
 
 	# Set the status of load module as sccess or failure
@@ -1299,13 +1329,8 @@ class TDKScriptingLibrary:
 
 		try:
 			sys.stdout.flush()
-			if self.result:
-				if "details" in self.result:
-					resultIndex = self.result.find("details") + len("details\":\"")
-					message = self.result[resultIndex:]
-					message = message[:(message.find("\""))]
-					print "Load Module Details : " + message
-					sys.stdout.flush()
+                        details = self.getLoadModuleDetails()
+                        print "Load Module Details : " , details
 
 			temp = self.url + "/execution/saveLoadModuleStatus?execId=&statusData=&execDevice=&execResult=&"
 			data = temp.split("&")

@@ -328,6 +328,11 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
         {
             DEBUG_PRINT (DEBUG_LOG, "Pre-Requisites set successfully \n");
         }
+	 else if (strPreRequisiteDetails.find("<REBOOT>") != std::string::npos)
+        {
+            DEBUG_PRINT (DEBUG_LOG, "Box reboot required \n");
+            strLoadLibraryDetails = "REBOOT_REQUESTED";
+        }
         else
         {
             strDelimiter = "<DETAILS>";
@@ -749,7 +754,7 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
         strLoadModuleDetails = "Could not resolve Module Name";
     }
 
-    /* Construct Json response message with result and details */
+    /* Construct Json response message with result and details. Also enabling performance characteristics */
     if (m_iLoadStatus == FLAG_SET)
     {
         pszBenchMarkingFlag =  request ["performanceBenchMarkingEnabled"].asCString();
