@@ -44,6 +44,7 @@ AC_CHECK_FUNCS([memset strdup strerror])
 
 COPTS="-DDEBUG_LEVEL_TRACE"
 AM_CXXFLAGS="$AM_CXXFLAGS -DDEBUG_LEVEL_TRACE"
+AGENT_FLAGS=" "
 CONFIG_PREFIX="/etc/"
 DVRMGR_FLAGS=" "
 RDK_VERSION="RDK2DOT0"
@@ -61,6 +62,7 @@ AC_ARG_ENABLE([hybrid],
           case "${enableval}" in
              yes) HYBRID=true
                   SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub"
+                  AGENT_FLAGS=" -DPORT_FORWARD"
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc"
                   TDKINTEGRATION_FLAGS="-DENABLE_HYBRID_CODECOMPILE -DHYBRID" ;;
            no) HYBRID=false ;;
@@ -143,6 +145,7 @@ PKG_CHECK_MODULES([XML2], [libxml-2.0 >= 2.7.8])
 PKG_CHECK_MODULES([JANSON],[jansson >= 2.4])
 
 AC_SUBST(COPTS)
+AC_SUBST(AGENT_FLAGS)
 AC_SUBST(DVRMGR_FLAGS)
 AC_SUBST(CONFIG_PREFIX)
 AC_SUBST(RDK_VERSION)
