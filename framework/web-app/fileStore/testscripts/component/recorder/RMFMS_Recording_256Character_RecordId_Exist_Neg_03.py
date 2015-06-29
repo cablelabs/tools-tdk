@@ -21,7 +21,7 @@ Test Type: Negative.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>15</execution_time>
+  <execution_time>25</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -46,7 +46,9 @@ import tdklib;
 import re;
 import random;
 import time;
-
+import recorderlib
+from random import randint
+from time import sleep
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("Recorder","2.0");
 
@@ -70,16 +72,16 @@ def schdule_Recording(testStep,testObject,recordId):
         start_time = "0";
         #utctime=tdkTestObj.getUTCTime();
         #tdkTestObj.addParameter("UTCTime",utctime);
-        tdkTestObj.addParameter("Duration",duration);
-        tdkTestObj.addParameter("Recording_Id",recording_id);
-        tdkTestObj.addParameter("Start_time",start_time);
+        #tdkTestObj.addParameter("Duration",duration);
+        #tdkTestObj.addParameter("Recording_Id",recording_id);
+        #tdkTestObj.addParameter("Start_time",start_time);
         streamDetails = tdkTestObj.getStreamDetails('01');
         #Adding ocapid parameter
         validid = streamDetails.getOCAPID();
         Id = re.search(r"\w\w\w\w",validid);
         if Id:
                 print "ocapid : %s" %validid;
-                tdkTestObj.addParameter("Source_id",validid);
+                #tdkTestObj.addParameter("Source_id",validid);
                 #Execute the test case in STB
                 expectedresult="SUCCESS";
                 tdkTestObj.executeTestCase(expectedresult);
@@ -88,62 +90,80 @@ def schdule_Recording(testStep,testObject,recordId):
                 Jsonurldetails = tdkTestObj.getResultDetails();
                 print "Result of scheduling : %s" %actualresult;
                 print "Jsonurldetails is : %s" %Jsonurldetails;
-                RequestURL = Jsonurldetails.replace("\\","");
-                print "RequestURL  is : %s" %RequestURL ;
+#                RequestURL = Jsonurldetails.replace("\\","");
+		RequestURL = Jsonurldetails.replace("${now}","curTime");
+#		RequestURL = RequestURL.replace(" ", "");
+#		RequestURL = RequestURL.replace("\\", "");
+                print "RequestURL (DEFAULT) is : %s" %RequestURL ;
                 #compare the actual result with expected result
                 if expectedresult in actualresult:
-                        status_expected = "acknowledgement";
                         print "Recorder received the requested recording url";
-                        time.sleep(30);
-                        status_actual =tdkTestObj.initiateRecorderApp(RequestURL);
-                        print "Status string is: %s"%status_actual;
-                        if status_expected in status_actual:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                time.sleep(100);
-                                print "TDK_Server received the Json Message";
-                                #Prmitive test case which associated to this Script
-                                tdkTestObj = testObject.createTestStep('Recorder_checkRecording_status');
-                                print "Recording_ID--->: ",recording_id
-                                PATTERN = recording_id;                                
-                                tdkTestObj.addParameter("Recording_Id",recording_id);
-                                #Execute the test case in STB
-                                expectedresult="SUCCESS";
-                                tdkTestObj.executeTestCase(expectedresult);
-                                #Get the Actual result of streaming Interface
-                                actualresult = tdkTestObj.getResult();
-                                print "In script **********************"
-                                patterndetails = tdkTestObj.getResultDetails();
-                                print "Pattern details is : %s" %patterndetails;
-                                duration_int = int(duration);
-                                duration_sec = duration_int/1000;
-                                duration_string = str(duration_sec);
-                                print duration_string;
-                                #compare the actual result with expected result
-                                if expectedresult in actualresult:
-                                        if (PATTERN in patterndetails):
-                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                #Getting the mplayer log file from DUT
-                                                logpath=tdkTestObj.getLogPath();
-                                                print "Log path : %s" %logpath;
-                                                tdkTestObj.transferLogs(logpath,"false");
-                                                print "Successfully scheduled a Recording";
-                                                return 0
-                                        else:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                #Getting the mplayer log file from DUT
-                                                logpath=tdkTestObj.getLogPath();
-                                                print "Log path : %s" %logpath;
-                                                tdkTestObj.transferLogs(logpath,"false");
-                                                print "Failed to search the pattern in the logfile";
-                                else:
-                                        print "Failed to schedule a Recording";
-                                        tdkTestObj.setResultStatus("FAILURE");
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "Failed to Receive acknowledgement from rmfStreamer";
+                        time.sleep(10);
+                        #status_actual =tdkTestObj.initiateRecorderApp(RequestURL);
+			RequestURL="{\"updateSchedule\":{\"requestId\":\"TDK123\",\"generationId\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recording_id))+"\",\"locator\":[\"ocap://"+validid+"\"],\"epoch\":curTime,\"start\":"+start_time+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recording_id))+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+			print "RequestURL (HARD CODED) is : %s" %RequestURL ;
+			serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
+			print "serverResponse : %s" %serverResponse;
+			if "updateSchedule" in serverResponse:
+				print "updateSchedule message post success";
+				sleep(10);
+                        	retry = 0;
+                            	recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                            	while (( ('[]' in recResponse) or ('ack' not in recResponse) ) and ('ERROR' not in recResponse) and (retry < 10)):
+                                	sleep(10);
+					recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                                	retry += 1
+                            	print "Retrieve Status Details: %s" %recResponse;
+				if "ack" in recResponse:
+					tdkTestObj.setResultStatus("SUCCESS");
+	                                time.sleep(100);
+	                                print "TDK_Server received the Json Message";
+	                                #Prmitive test case which associated to this Script
+	                                tdkTestObj = testObject.createTestStep('Recorder_checkRecording_status');
+	                                print "Recording_ID--->: ",recording_id
+	                                PATTERN = recording_id;                                
+	                                tdkTestObj.addParameter("Recording_Id",recording_id);
+	                                #Execute the test case in STB
+	                                expectedresult="SUCCESS";
+	                                tdkTestObj.executeTestCase(expectedresult);
+        	                        #Get the Actual result of streaming Interface
+                	                actualresult = tdkTestObj.getResult();
+                        	        print "In script **********************"
+                                	patterndetails = tdkTestObj.getResultDetails();
+	                                print "Pattern details is : %s" %patterndetails;
+        	                        duration_int = int(duration);
+	                                duration_sec = duration_int/1000;
+        	                        duration_string = str(duration_sec);
+                	                print duration_string;
+                        	        #compare the actual result with expected result
+                                	if expectedresult in actualresult:
+                                        	if (PATTERN in patterndetails):
+                                                	tdkTestObj.setResultStatus("SUCCESS");
+	                                                #Getting the mplayer log file from DUT
+        	                                        logpath=tdkTestObj.getLogPath();
+                	                                print "Log path : %s" %logpath;
+                        	                        tdkTestObj.transferLogs(logpath,"false");
+                                	                print "Successfully scheduled a Recording";
+                                        	        return 0
+	                                        else:
+        	                                        tdkTestObj.setResultStatus("FAILURE");
+	                                                #Getting the mplayer log file from DUT
+        	                                        logpath=tdkTestObj.getLogPath();
+                	                                print "Log path : %s" %logpath;
+                        	                        tdkTestObj.transferLogs(logpath,"false");
+                                	                print "Failed to search the pattern in the logfile";
+	                                else:
+        	                                print "Failed to schedule a Recording";
+                	                        tdkTestObj.setResultStatus("FAILURE");
+				else:
+	                                tdkTestObj.setResultStatus("FAILURE");
+        	                        print "Failed to Receive acknowledgement from rmfStreamer";
+			else:
+				print "updateSchedule message post failed";
+				tdkTestObj.setResultStatus("FAILURE");
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "Recorder Failed to receive the requested request-Please check precondition";
+                        print "Recorder NOT received the requested recording url";
                 #unloading Recorder module
                 #obj.unloadModule("Recorder");
         else:
@@ -159,14 +179,19 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Set the module loading status
         obj.setLoadModuleStatus("SUCCESS");
         obj.initiateReboot();
+	print "Sleeping to wait for the recoder to be up"
+	sleep(300);
 
         rec_id = random.randrange(10**9, 10**256)
-        ret = schdule_Recording('Recorder_ScheduleRecording',obj,rec_id)
+	print "Schedule the first recording"
+        ret = schdule_Recording('Recorder_SendRequest',obj,rec_id)
         if ret == 0:
                 #Again try recording with same recording ID.
-                ret = schdule_Recording('Recorder_ScheduleRecording',obj,rec_id)
+		print "Schedule the second recording with same recording ID"
+                ret = schdule_Recording('Recorder_SendRequest',obj,rec_id)
 
 else:
         print "Failed to load Recorder module";
         #Set the module loading status
         obj.setLoadModuleStatus("FAILURE");
+

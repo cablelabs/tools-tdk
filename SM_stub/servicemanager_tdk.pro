@@ -1,6 +1,6 @@
 
-QT += webkitwidgets webkit widgets network core gui
-DEFINES += HAS_API_HDMI_CEC QT_WEBKIT_LIB USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE DEBUG_LEVEL_TRACE RDK2DOT0
+QT += widgets network core gui
+DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE DEBUG_LEVEL_TRACE RDK2DOT0
 
 INCLUDEPATH += ${SM_STUB_ROOT_PATH}/include
 INCLUDEPATH += ${SM_STUB_ROOT_PATH}/../agent/include
@@ -26,7 +26,7 @@ TEMPLATE = lib
 TARGET = servicemanagerstub
 
 LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
-LIBS += -lservicemanager -lRCEC -lRCECOSHal -lRCECIARMBusHal -lQt5WebKitWidgets -ludev -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10 -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5WebKit -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata
+LIBS += -lservicemanager -lRCEC -lRCECOSHal -lRCECIARMBusHal -ludev -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10 -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata
 
 HEADERS += $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/hdmicecservice.h \
 

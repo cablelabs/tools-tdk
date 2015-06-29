@@ -21,7 +21,7 @@ Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>10</execution_time>
+  <execution_time>30</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -47,6 +47,9 @@ import re;
 import random;
 import time;
 import mediaframework;
+import recorderlib
+from random import randint
+from time import sleep
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("Recorder","2.0");
@@ -192,46 +195,80 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Set the module loading status
         obj.setLoadModuleStatus("SUCCESS");
         obj.initiateReboot();
+        print "Waiting 300 seconds for STB to reboot";
+	sleep(300);
+
+        response = recorderlib.callServerHandler('clearStatus',ip);
+        print "Clear Status Details: %s"%response;
+        response = recorderlib.callServerHandler('retrieveStatus',ip);
+        print "Retrieve Status Details: %s"%response;
+
         #Prmitive test case which associated to this Script
-        tdkTestObj = obj.createTestStep('Recorder_ScheduleRecording');
+        tdkTestObj = obj.createTestStep('Recorder_SendRequest');
         rec_id = random.randrange(10**9, 10**256);
+	requestID = str(rec_id);
         recording_id_256 = str(rec_id);
+	genIdInput = requestID;
         print "Record_256---->:",recording_id_256 
         duration = "180000";
         start_time = "0";
         #utctime=tdkTestObj.getUTCTime();
         #tdkTestObj.addParameter("UTCTime",utctime);
-        tdkTestObj.addParameter("Duration",duration);
-        tdkTestObj.addParameter("Recording_Id",recording_id_256);
-        tdkTestObj.addParameter("Start_time",start_time);
+        #tdkTestObj.addParameter("Duration",duration);
+        #tdkTestObj.addParameter("Recording_Id",recording_id_256);
+        #tdkTestObj.addParameter("Start_time",start_time);
         streamDetails = tdkTestObj.getStreamDetails('01');
         #Adding ocapid parameter
         validid = streamDetails.getOCAPID();
         Id = re.search(r"\w\w\w\w",validid);
         if Id:
                 print "ocapid : %s" %validid;
-                tdkTestObj.addParameter("Source_id",validid);
+                #tdkTestObj.addParameter("Source_id",validid);
                 #Execute the test case in STB
                 expectedresult="SUCCESS";
                 tdkTestObj.executeTestCase(expectedresult);
                 #Get the Actual result of streaming Interface
                 actualresult = tdkTestObj.getResult();
-                Jsonurldetails = tdkTestObj.getResultDetails();
-                print "Result of scheduling : %s" %actualresult;
-                print "Jsonurldetails is : %s" %Jsonurldetails;
-                RequestURL = Jsonurldetails.replace("\\","");
+                #Jsonurldetails = tdkTestObj.getResultDetails();
+                #print "Result of scheduling : %s" %actualresult;
+                #print "Jsonurldetails is : %s" %Jsonurldetails;
+                #RequestURL = Jsonurldetails.replace("\\","");
+                #RequestURL = Jsonurldetails.replace("${now}","curTime");
+                #RequestURL = RequestURL.replace(" ","");
+     	        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"schedule\":[{\"recordingId\":\""+recording_id_256+"\",\"locator\":[\"ocap://0x125d\"],\"epoch\":curTime,\"start\":0,\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recording_id_256+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
                 print "RequestURL  is : %s" %RequestURL ;
                 #compare the actual result with expected result
                 if expectedresult in actualresult:
-                        status_expected = "acknowledgement";
-                        print "Recorder received the requested recording url";
-                        time.sleep(30);
-                        status_actual =tdkTestObj.initiateRecorderApp(RequestURL);
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        print "Requested recording url is formed";
+                        #status_expected = "acknowledgement";
+                        status_expected = "updateSchedule";
+                        #time.sleep(30);
+                        #status_actual =tdkTestObj.initiateRecorderApp(RequestURL);
+        		expectedResult="SUCCESS";
+			tdkTestObj.executeTestCase(expectedResult);
+			sleep(5);
+			status_actual = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
                         print "Status string is: %s"%status_actual;
                         if status_expected in status_actual:
                                 tdkTestObj.setResultStatus("SUCCESS");
-                                time.sleep(100);
-                                print "TDK_Server received the Json Message";
+                		print "updateSchedule message post success";
+                		tdkTestObj.executeTestCase(expectedResult);
+				print "Waiting to get acknowledgment status"
+				sleep(10);
+				retry=0
+				actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+		                while ((('[]' in actResponse) or ('ack' not in actResponse)) and ('ERROR' not in actResponse) and (retry < 15)):
+					sleep(10);
+					actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+					retry += 1
+				print "Retrieve Status Details: %s"%actResponse;
+		                if (('[]' in actResponse) or ('ERROR' in actResponse)):
+	        		        tdkTestObj.setResultStatus("FAILURE");
+		        	        print "Received Empty/Error status";
+		                elif 'acknowledgement' in actResponse:
+                			tdkTestObj.setResultStatus("SUCCESS");
+		                    	print "Successfully retrieved acknowledgement from recorder";
                                 #Prmitive test case which associated to this Script
                                 tdkTestObj = obj.createTestStep('Recorder_checkRecording_status');
                                 print "Record_256---->:",recording_id_256
@@ -274,10 +311,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         tdkTestObj.setResultStatus("FAILURE");
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "Failed to Receive acknowledgement from rmfStreamer";
+                		print "updateSchedule message post failure";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "Recorder Failed to receive the requested request-Please check precondition";
+                        print "Requested recording url not formed";
                 #unloading Recorder module
                 obj.unloadModule("Recorder");
         else:

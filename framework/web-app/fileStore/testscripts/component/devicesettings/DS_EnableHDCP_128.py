@@ -51,6 +51,7 @@ TestcaseID: CT_DS128</synopsis>
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 import devicesettings;
+import time;
 
 #Ip address of the selected STB for testing
 ip = <ipaddress>
@@ -96,6 +97,8 @@ if "SUCCESS" in loadmodulestatus.upper():
                             tdkTestObj.setResultStatus("FAILURE");
 
                         #Get the status of HDCP authentication
+                        print "Waiting for 10 secs"
+                        time.sleep(2)
                         tdkTestObj = obj.createTestStep('DS_GetHDCPStatus');
                         tdkTestObj.addParameter("port_name","HDMI0");
                         expectedresult="SUCCESS"
