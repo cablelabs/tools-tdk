@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
@@ -176,7 +179,7 @@ if "SUCCESS" in recLoadStatus.upper():
 				    durationvalue = recorderlib.getValueFromKeyInRecording(recordingData,durationkey)
                                     print "key: ",key," value: ",value
                                     print "Successfully retrieved the recording list from recorder";
-                                    if "COMPLETE" in value.upper() and durationvalue == str(duration):
+                                    if "COMPLETE" in value.upper() and (int(duration)-30000) <= int(durationvalue) <= (int(duration)+30000):
                                         tdkTestObj1.setResultStatus("SUCCESS");
                                         print "Scheduled recording completed successfully";
 				    elif "BADVALUE" in value.upper():

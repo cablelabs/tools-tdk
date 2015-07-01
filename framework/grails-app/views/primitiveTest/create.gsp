@@ -56,7 +56,7 @@
 			<table class="noClass" style="border: 1; border-color: black;">
 				<tr>
 					<td>
-						<div class="treeborder" style="width: 230px; height: 400px; overflow: auto;">
+						<div class="treeborder" style="width: 290px; height: 400px; overflow: auto;">
 							<ul id="primitveTestbrowser" class="filetree">
 								<li  class="" id="root"><span class="folder">Primitive Tests</span>
 									<ul>

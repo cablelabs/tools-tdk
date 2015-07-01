@@ -83,6 +83,8 @@ class Execution {
 	boolean isAborted = false
 	
 	boolean isRerunRequired = false
+	
+	boolean isStbLogRequired = false
 
 	/**
 	 * Indicates the group name which the device belongs
@@ -141,6 +143,7 @@ class Execution {
 		isSystemDiagnosticsEnabled(nullable:true, blank:true)
 		isAborted(nullable:true, blank:true)
 		isRerunRequired(nullable:true, blank:true)
+		isStbLogRequired(nullable:true, blank:true)
 		applicationUrl(nullable:true, blank:true)
 		scriptCount(nullable:true, blank:true)
     }

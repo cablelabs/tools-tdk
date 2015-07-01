@@ -67,7 +67,7 @@ function showStreamDetails12(){
 		<g:if test="${SecurityUtils.subject.principal}">
 			<span style="color : #A24C15;" > Welcome, ${userInstance.name}</span> &emsp;
 			 <a href="" onclick="showStreamDetails12();return false;">Change Password</a>&emsp;
-			 <g:link controller="auth" action="signOut" class="customizedLink">SignOut</g:link>
+			 <g:link controller="auth" action="signOut" class="customizedLink" style="padding-right:10px;">SignOut</g:link>
 		</g:if>		
 	</div>
 	<hr>
@@ -75,7 +75,7 @@ function showStreamDetails12(){
 	<table id="maintable">
 		<tr>
 			<td nowrap="nowrap"
-				style="position: absolute; min-width: 500px; height: 20px; width: 947px; background-color: #E9F1F1; border-bottom-color: #0CB2DD" >
+				style="position: absolute; min-width: 500px; height: 20px; width: 100%; background-color: #E9F1F1; border-bottom-color: #0CB2DD" >
 				<div id="header" align="left">
 					<ul>
 						<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
@@ -148,7 +148,7 @@ function showStreamDetails12(){
 	
 	<div class="footer" role="contentinfo"> 
 	<div>
-		<label>RDK Test Development Kit TM-M24</label>
+		<label> <b> RDK Test Development Kit TM-M25 </b></label>
 	</div>
 	</div>
 	<div id="spinner" class="spinner" style="display: none;">

@@ -81,7 +81,7 @@
 			<table class="noClass" style="border: 1; border-color: black;">
 				<tr>
 					<td style="width: 20%; vertical-align: top;" class="treeborder">
-						<div class="" style="vertical-align: top; width: 240px; max-height: 260px;">
+						<div class="" style="vertical-align: top; width: 290px; max-height: 260px;">
 							<ul id="scriptbrowser" class="filetree">
 								<li class="" id="root"><span class="folder" id="addScriptId" style="overflow: auto;">Scripts</span>
 								<% int scriptCount = 0;
@@ -104,7 +104,7 @@
 								</li>
 							</ul>
 						</div>
-						<div class="" style="width: 240px; max-height: 350px;vertical-align: top;">
+						<div class="" style="width: 290px; max-height: 350px;vertical-align: top;">
 							<ul id="scriptgrpbrowser" class="filetree">
 								<li class="" id="root1"><span class="folder" id="addscriptGrpId">TestSuite</span>
 									<ul>

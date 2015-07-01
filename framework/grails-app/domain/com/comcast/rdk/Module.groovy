@@ -41,7 +41,7 @@ class Module{
 	 */
 	Groups groups
 
-	static hasMany = [logFileNames: String]
+	static hasMany = [logFileNames: String , stbLogFiles :String]
 	
     static constraints = {
         name(unique:true, blank:false, nullable:false)

@@ -62,9 +62,12 @@ obj.setLoadModuleStatus(loadmodulestatus);
 if "SUCCESS" in loadmodulestatus.upper():
 
         print "Rebooting box for setting configuration"
-        obj.initiateReboot();
+	loadmoduledetails = obj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               obj.initiateReboot();
+	       sleep(300);
         print "Waiting for the recoder to be up"
-        sleep(300);
+
 
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
@@ -89,7 +92,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         #For full sync, schedule a small recording with 1 min duration and wait till it ends
         duration = "60000";
         startTime = "0";
-        genIdInput = "0";
+        genIdInput = "TDK456";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
 

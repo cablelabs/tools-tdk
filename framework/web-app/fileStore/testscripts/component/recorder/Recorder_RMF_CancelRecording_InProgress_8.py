@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
@@ -104,17 +107,16 @@ if "SUCCESS" in recLoadStatus.upper():
                 sleep(60);
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
+		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                print "Retrieve Status Details: %s"%actResponse;
 		print "Looping till acknowledgement is received"
 		loop = 0;
-		while loop < 5:
+		while (loop < 5) and ('acknowledgement' not in actResponse):
 	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
 			loop = loop+1;
-		if 'acknowledgement' not in actResponse:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "Received Empty/Error status";
-                elif 'acknowledgement' in actResponse:
+			print "Retrieve Status Details: %s"%actResponse;
+                if 'acknowledgement' in actResponse:
                     tdkTestObj.setResultStatus("SUCCESS");
 		    print "Successfully retrieved acknowledgement from recorder";
 

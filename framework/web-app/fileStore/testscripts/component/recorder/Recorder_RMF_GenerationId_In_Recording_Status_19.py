@@ -59,8 +59,8 @@ print "Recorder module loading status : %s" %recLoadStatus;
 recObj.setLoadModuleStatus(recLoadStatus);
 
 genIdInput1 = "test4a";
-#genIdInput2 = "test4b";
-genIdInput2 = "1431877561793;321744722806850394"
+genIdInput2 = "test4b";
+#genIdInput2 = "1431877561793;321744722806850394"
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
@@ -68,10 +68,13 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 
         print "Sleeping to wait for the recoder to be up"
-	sleep(300);
+
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -104,9 +107,9 @@ if "SUCCESS" in recLoadStatus.upper():
         #expResponse = "updateSchedule";
         #tdkTestObj.executeTestCase(expectedResult);
         response = recorderlib.callServerHandler('clearStatus',ip);
-	jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"fullSchedule\":"+fullSch+",\"generationId\":\""+genIdInput2+"\",\"schedule\":[{}]}}";
-	#jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput2+"\",\"schedule\":[{}]}}";
-	#jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"fullSchedule\" : 1,\"generationId\":\""+genIdInput2+"\",\"schedule\":[{}]}}";
+	#jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"fullSchedule\":"+fullSch+",\"generationId\":\""+genIdInput2+"\",\"schedule\":[{}]}}";
+	jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"fullSchedule\":"+fullSch+",\"generationId\":\""+genIdInput2+"\"}}";
+
         actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
         print "Update Schedule Details for the second json: %s"%actResponse;
 

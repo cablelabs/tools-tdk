@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
 
         #Giving no update here to get the recording list in case the previous generation id is set to zero before reboot
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
@@ -94,7 +97,7 @@ if "SUCCESS" in recLoadStatus.upper():
         now = "curTime"
 
         #Frame json message
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"},{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+futureOcapId+"\"],\"epoch\":"+now+",\"start\":"+futureStartTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"},{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+futureOcapId+"\"],\"epoch\":"+now+",\"start\":"+futureStartTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -122,12 +125,9 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
-		    jsonMsgGenIdUpdate = "{\"updateSchedule\" : {\"generationId\":\"0\"} }";
-		    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgGenIdUpdate,ip);
-                    sleep(10);
 
                     #Frame json message for update recording
-                    jsonMsgFullSchedule = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+2)+"\",\"locator\":[\"ocap://"+fullScheduleOcapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+2)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+                    jsonMsgFullSchedule = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+2)+"\",\"locator\":[\"ocap://"+fullScheduleOcapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+2)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
                     expResponse = "updateSchedule";
                     tdkTestObj.executeTestCase(expectedResult);

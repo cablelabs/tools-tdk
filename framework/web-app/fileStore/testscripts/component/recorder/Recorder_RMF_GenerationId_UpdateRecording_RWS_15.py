@@ -62,10 +62,13 @@ recObj.setLoadModuleStatus(recLoadStatus);
 if "SUCCESS" in recLoadStatus.upper():
 
 	print "Rebooting box for setting configuration"
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 
         print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);

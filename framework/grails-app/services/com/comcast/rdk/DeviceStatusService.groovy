@@ -64,6 +64,9 @@ public class DeviceStatusService {
 					else if(outData.equals( Status.HANG.toString() )){
 						deviceStatus = Status.HANG
 					}
+					else if(outData.equals(Status.TDK_DISABLED.toString())){
+						deviceStatus = Status.TDK_DISABLED	
+					}
 					else{
 						deviceStatus = Status.NOT_FOUND
 					}			
@@ -105,6 +108,9 @@ public class DeviceStatusService {
 				}
 				else if(outData.equals( Status.HANG.toString() )){
 					deviceStatus = Status.HANG
+				}
+				else if(outData.equals(Status.TDK_DISABLED.toString())){
+					deviceStatus = Status.TDK_DISABLED
 				}
 				else{
 					deviceStatus = Status.NOT_FOUND

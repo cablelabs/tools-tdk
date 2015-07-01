@@ -61,10 +61,13 @@ recObj.setLoadModuleStatus(recLoadStatus);
 if "SUCCESS" in recLoadStatus.upper():
 
         print "Rebooting box for setting configuration"
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 
         print "Waiting for the recoder to be up"
-        sleep(300);
+
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');

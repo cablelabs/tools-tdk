@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
@@ -145,11 +148,14 @@ if "SUCCESS" in recLoadStatus.upper():
                                 recordingData = recorderlib.getRecordingFromRecId(response,recordingID)
                                 print recordingData
                                 if 'NOTFOUND' in recordingData:
-                                        tdkTestObj.setResultStatus("SUCCESS");
+                                        tdkTestObj1.setResultStatus("SUCCESS");
                                         print "No redundant recording status retrieved from recorder"
                                 else:
-                                        tdkTestObj.setResultStatus("FAILURE");
+                                        tdkTestObj1.setResultStatus("FAILURE");
                                         print "Redundant recording status retrieved from recorder"
+                             elif "BADVALUE" in in value.upper():
+                             	tdkTestObj1.setResultStatus("FAILURE");
+                                print "No error/status field for this recording Id;
                             else:
                                 tdkTestObj1.setResultStatus("FAILURE");
                                 print "Power interruption not happened properly when recording is inprogress";

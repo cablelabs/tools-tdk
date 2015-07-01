@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
@@ -136,7 +139,7 @@ if "SUCCESS" in recLoadStatus.upper():
                     if expResponse in actResponse:
                         print "No Update Schedule message post success";
                         print "Wait for 60s to get the recording list"
-                        sleep(60);
+                        sleep(120);
                         tdkTestObj1.setResultStatus("SUCCESS");
                         #Check for acknowledgement from recorder
                         tdkTestObj1.executeTestCase(expectedResult);

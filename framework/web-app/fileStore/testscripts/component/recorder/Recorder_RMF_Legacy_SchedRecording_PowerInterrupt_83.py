@@ -62,9 +62,12 @@ obj.setLoadModuleStatus(loadmodulestatus);
 if "SUCCESS" in loadmodulestatus.upper():
 
 	print "Rebooting box for setting configuration"
-	obj.initiateReboot();
+	loadmoduledetails = obj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               obj.initiateReboot();
+	       sleep(300);
 	print "Waiting for the recoder to be up"
-	sleep(300);
+
 
 	#Primitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
@@ -77,13 +80,29 @@ if "SUCCESS" in loadmodulestatus.upper():
         response = recorderlib.callServerHandler('retrieveStatus',ip);
         print "Retrieve Status Details: %s"%response;
 
+        #Complete a recording to change check sum
+        requestID = str(randint(10, 500));
+        recordingID = str(randint(10000, 500000));
+        #5mins duration
+        duration = "30000";
+        startTime = "0";
+        genIdInput = "TDK456";
+        ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
+        now = "curTime";
+
+        #Frame json message
+        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL,ip);
+        print "serverResponse : %s" %serverResponse;
+        sleep(60);
+
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
         #5mins duration
         duration = "300000";
         startTime = "60000";
-        genIdInput = "0";
+        genIdInput = "TDK456";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
 

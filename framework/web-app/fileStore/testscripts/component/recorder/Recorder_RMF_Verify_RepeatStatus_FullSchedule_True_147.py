@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
 
         #Giving no update here to get the recording list in case the previous generation id is set to zero before reboot
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
@@ -184,12 +187,18 @@ if "SUCCESS" in recLoadStatus.upper():
                                                                 else:
                                                                         tdkTestObj.setResultStatus("FAILURE");
                                                                         print "Repeat of same status retrieved from recorder"
+                                                        elif "BADVALUE" in value.upper():
+                                                                tdkTestObj.setResultStatus("FAILURE");
+                                                                print "No error/status field for this recording Id";
                                                         else:
                                                                 tdkTestObj.setResultStatus("FAILURE");
                                                                 print "Failed to cancel the recording the future recording";
                                                 else:
                                                         tdkTestObj.setResultStatus("FAILURE");
                                                         print "Failed to retrieve the recording list from recorder for future recording";
+                                        elif "BADVALUE" in value.upper():
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "No error/status field for this recording Id";
                                 	else:
                                 		tdkTestObj.setResultStatus("FAILURE");
                                         	print "Failed to cancel the recording in progress";

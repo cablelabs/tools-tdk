@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>15</execution_time>
+  <execution_time>30</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -71,9 +71,9 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        #recObj.initiateReboot();
+        recObj.initiateReboot();
 	print "Sleeping to wait for the recoder to be up"
-        #sleep(300);
+        sleep(300);
 
         #Giving no update here to get the recording list in case the previous generation id is set to zero before reboot
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
@@ -139,37 +139,6 @@ if "SUCCESS" in recLoadStatus.upper():
                             print "Successfully retrieved acknowledgement from recorder";
                             print "Wait for 120s for the recording to be completed";
                             sleep(240);
-
-                            #Frame json message for update recording
-                            #Id = '0'+str(maxTuner+1)
-                            #ocapId = tdkTestObj.getStreamDetails(Id).getOCAPID()
-
-                            #jsonMsgFullSchedule = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-
-                            #expResponse = "updateSchedule";
-                            #tdkTestObj.executeTestCase(expectedResult);
-                            #actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgFullSchedule,ip);
-                            #print "updateSchedule Details for rescheduling: %s"%actResponse;
-                            #if expResponse in actResponse:
-                            #    tdkTestObj.setResultStatus("SUCCESS");
-                            #    print "updateSchedule message post success";
-                            #    print "Wait for 60s to get acknowledgement"
-                            #    sleep(120);
-                                #Check for acknowledgement from recorder
-                            #    tdkTestObj.executeTestCase(expectedResult);
-                            #    print "Looping till acknowledgement is received"
-                            #    loop = 0;
-                            #    while loop < 5:
-                            #            actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                            #            print "Retrieve Status Details: %s"%actResponse;
-                            #            sleep(10);
-                            #            loop = loop+1;
-                            #    if 'acknowledgement' in actResponse:
-                            #            print "Successfully retrieved acknowledgement from recorder";
-                            #            tdkTestObj.setResultStatus("SUCCESS");
-                            #    else:
-                            #        tdkTestObj.setResultStatus("FAILURE");
-                            #        print "Failed to retrieve acknowledgement from recorder";
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve acknowledgement from recorder";

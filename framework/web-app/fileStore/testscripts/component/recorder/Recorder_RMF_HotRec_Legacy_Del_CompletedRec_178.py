@@ -62,9 +62,12 @@ obj.setLoadModuleStatus(loadmodulestatus);
 if "SUCCESS" in loadmodulestatus.upper():
 
         print "Rebooting box for setting configuration"
-        obj.initiateReboot();
+	loadmoduledetails = obj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               obj.initiateReboot();
+	       sleep(300);
         print "Waiting for the recorder to be up"
-        sleep(300);
+
 
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
@@ -89,7 +92,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Schedule Hot Legacy Recording with 1 min duration
         duration = "60000";
         startTime = "0";
-        genIdInput = "0";
+        genIdInput = "TDK456";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
 
@@ -113,7 +116,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         print "Simulator Server received the recorder acknowledgement";
                         print "Delete the recording";
                         #Frame json message for update recording
-                        jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P0\"}]}}";
+                        jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P0\"}]}}";
                         actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgUpdateRecording,ip);
                         print "updateRecordings Details: %s"%actResponse;
                         if "updateRecordings" in actResponse:

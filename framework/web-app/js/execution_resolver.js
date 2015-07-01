@@ -187,6 +187,7 @@ function showScheduler(id){
 	var reRun = "";
 	var benchmark = "false";
 	var systemDiag = "false"
+	var isLogReqd =" false"
     if ($("#rerunId").prop('checked')==true){     	
     	reRun = "true";
     }
@@ -196,6 +197,11 @@ function showScheduler(id){
 	if ($("#systemDiagId").prop('checked')==true){     	
 		systemDiag = "true";
 	}
+	if ($("#transferLogsId").prop('checked')==true){  
+		
+		isLogReqd = "true";
+	}
+	
 	
 	if( (deviceList =="" || deviceList == null ) ){
 		alert("Please select Device");
@@ -218,7 +224,7 @@ function showScheduler(id){
 		var scriptVals = scripts.toString()
 	}
 
-	$.get('showSchedular', {deviceId : id, devices : deviceList.toString(), scriptGroup : scriptGroup, scripts:scriptVals, repeatId:repeatid, rerun:reRun, systemDiagnostics : systemDiag , benchMarking : benchmark}, function(data) { $("#scheduleJobPopup").html(data); });		
+	$.get('showSchedular', {deviceId : id, devices : deviceList.toString(), scriptGroup : scriptGroup, scripts:scriptVals, repeatId:repeatid, rerun:reRun, systemDiagnostics : systemDiag , benchMarking : benchmark  ,isLogReqd :isLogReqd }, function(data) { $("#scheduleJobPopup").html(data); });		
 	$("#scheduleJobPopup").modal({ opacity : 40, overlayCss : {
 		  backgroundColor : "#c4c4c4" }, containerCss: {
 	            width: 800,
@@ -428,17 +434,58 @@ function loadXMLDoc() {
 	xmlhttp.send();
 }
 
+/**
+ * Function used to check box enabled / Disabled
+ * 
+ */
+function callFunc(select) {
+	var option =""	
+		$('#root_menu').contextMenu('enable_menu', {
+			bindings : {
+				'enable' : function(node) {
+					option = "enable"
+					deviceEnabledStatus(node.id,option,select);
+				},
+				'disable' : function(node) {
+					option = "disable"
+					deviceDisabledStatus(node.id,option,select);
+				}
+			}
+		});
+}
+
 
 /**
  * Dynamic page refresh call. First time called from the document ready of list
  * page
  */
 function deviceStatusRefresh() {
+	
 	setTimeout("loadXMLDoc1();", 5 * 1000);	
 	var selectedId = $("#selectedDevice").val();
-	var deviceInstanceTotal = $("#deviceInstanceTotal").val();
+	var deviceInstanceTotal = $("#deviceInstanceTotal").val();	
 	highlightTreeElement('deviceExecutionList_', selectedId, deviceInstanceTotal);
 }
+/**
+ * function used to change the box status as disabled 
+ * @param id
+ * @param option
+ * @param select
+ */
+function deviceDisabledStatus(id,option,select){		
+	$.get('getTDKDeviceStatus', {id:id,option:option,select:select}, function(data) {});// {refreshDevices(data);});
+}
+/**
+ * function used to change the box status as enabled 
+ * @param id
+ * @param option
+ * @param select
+ */
+
+function deviceEnabledStatus(id,option,select){
+	$.get('getTDKDeviceStatus', {id:id,option:option, select:select}, function(data) {}); //{refreshDevices(data);});
+}
+
 
 /**
  * Ajax call to refresh only the list table when dynamic refresh is enabled
@@ -459,6 +506,7 @@ function loadXMLDoc1() {
 			deviceStatusRefresh();			
 		}
 	}
+	var urltemp =  url+"/execution/create?t=" + Math.random()+"&max=10&offset=0&devicestatustable=true";
 	xmlhttp.open("GET", url+"/execution/create?t=" + Math.random()+"&max=10&offset=0&devicestatustable=true", true);
 	xmlhttp.send();
 	

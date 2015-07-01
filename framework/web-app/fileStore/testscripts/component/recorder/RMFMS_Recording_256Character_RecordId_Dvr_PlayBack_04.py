@@ -175,7 +175,6 @@ def dvr_playBack():
                         #time.sleep(40);
 
                 #Delete the Recording after testing to not mesh up with storage space.
-                #deleteRecording(mf_obj,"RMF_DVRManager_DeleteRecording",str(recordId))
                 mf_obj.unloadModule("mediaframework")
                 #--------------------Done--------------------------------
         else:
@@ -212,39 +211,24 @@ if "SUCCESS" in loadmodulestatus.upper():
         print "Record_256---->:",recording_id_256 
         duration = "180000";
         start_time = "0";
-        #utctime=tdkTestObj.getUTCTime();
-        #tdkTestObj.addParameter("UTCTime",utctime);
-        #tdkTestObj.addParameter("Duration",duration);
-        #tdkTestObj.addParameter("Recording_Id",recording_id_256);
-        #tdkTestObj.addParameter("Start_time",start_time);
         streamDetails = tdkTestObj.getStreamDetails('01');
         #Adding ocapid parameter
         validid = streamDetails.getOCAPID();
         Id = re.search(r"\w\w\w\w",validid);
         if Id:
                 print "ocapid : %s" %validid;
-                #tdkTestObj.addParameter("Source_id",validid);
                 #Execute the test case in STB
                 expectedresult="SUCCESS";
                 tdkTestObj.executeTestCase(expectedresult);
                 #Get the Actual result of streaming Interface
                 actualresult = tdkTestObj.getResult();
-                #Jsonurldetails = tdkTestObj.getResultDetails();
-                #print "Result of scheduling : %s" %actualresult;
-                #print "Jsonurldetails is : %s" %Jsonurldetails;
-                #RequestURL = Jsonurldetails.replace("\\","");
-                #RequestURL = Jsonurldetails.replace("${now}","curTime");
-                #RequestURL = RequestURL.replace(" ","");
      	        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"schedule\":[{\"recordingId\":\""+recording_id_256+"\",\"locator\":[\"ocap://0x125d\"],\"epoch\":curTime,\"start\":0,\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recording_id_256+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
                 print "RequestURL  is : %s" %RequestURL ;
                 #compare the actual result with expected result
                 if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "Requested recording url is formed";
-                        #status_expected = "acknowledgement";
                         status_expected = "updateSchedule";
-                        #time.sleep(30);
-                        #status_actual =tdkTestObj.initiateRecorderApp(RequestURL);
         		expectedResult="SUCCESS";
 			tdkTestObj.executeTestCase(expectedResult);
 			sleep(5);

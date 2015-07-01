@@ -62,9 +62,12 @@ obj.setLoadModuleStatus(loadmodulestatus);
 if "SUCCESS" in loadmodulestatus.upper():
 
         print "Rebooting box for setting configuration"
-        obj.initiateReboot();
+	loadmoduledetails = obj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               obj.initiateReboot();
+	       sleep(300);
         print "Waiting for the recoder to be up"
-        sleep(300);
+
 
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
@@ -89,7 +92,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Schedule Future Inline Recording with 3 mins duration
         duration = "180000";
         startTime = "60000";
-        genIdInput = "0";
+        genIdInput = "TDK456";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
 

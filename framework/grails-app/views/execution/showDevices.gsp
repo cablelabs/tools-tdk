@@ -89,6 +89,7 @@ $(document).ready(function() {
 			<td>Execution Options</td>
 			<td><g:checkBox id="benchmarkId" name="benchMarking" checked="false" />&nbsp;Timing Info 
 			&emsp;&emsp;<g:checkBox id="systemDiagId" name="systemDiagnostics" checked="false"  />&nbsp;Performance Data
+			&emsp;&emsp;<g:checkBox id="transferLogsId" name="transferLogs" checked="false"  />&nbsp;Transfer STB logs
 			</td>
 		</tr>	
 		<tr>

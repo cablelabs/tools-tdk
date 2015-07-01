@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_50 - Recorder to send error TRM_CANCELLED if future recording is cancelled by TRM message via inline</synopsis>
+  <synopsis>CT_Recoder_DVR_Protocol_50 - Recorder not to send error TRM_CANCELLED if current anf future recording is scheduled with same ocap id via inline</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
 
         #Giving no update here to get the recording list in case the previous generation id is set to zero before reboot
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
@@ -131,15 +134,18 @@ if "SUCCESS" in recLoadStatus.upper():
                                 value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                                 print "key: ",key," value: ",value
                                 print "Successfully retrieved the recording list from recorder for inprogress recording";
-                                if "TRM_CANCELLED" in value.upper():
+                                if "TRM_CANCELLED" not in value.upper():
                                         tdkTestObj.setResultStatus("SUCCESS");
-					print "Recording got cancelled";
+                                        print "No TRM_CANCELLED error received";
+                                elif "BADVALUE" in value.upper():
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        print "No error field for this recording Id";
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
-					print "Recording scheduled successfully";
+                                        print "Received TRM_CANCELLED error";
                         else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "Failed to retrieve the recording list from recorder for inprogress recording";
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                print "No failure message received for this recording Id";
                 else:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Failed to retrieve acknowledgement from recorder";

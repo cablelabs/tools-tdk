@@ -10,33 +10,39 @@
   ============================================================================
 -->
 <% int deviceStatusCount = 0; %>
+
 <g:each in="${deviceList}" var="device">
 	<% deviceStatusCount++; %>
 	<li id="deviceExecutionList_${deviceStatusCount}">
-	
-		<g:if test="${device.deviceStatus.toString()=="NOT_FOUND" }">
-			<span class="filedevicenotfound" id="${device.id}"><a href="#"
+	<g:if test="${device.deviceStatus.toString()=="NOT_FOUND" }">
+		<span class="filedevicenotfound" id="${device.id}"><a href="#" oncontextmenu="callFunc(${device.id})"
 				    onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">
 					${device.stbName}
 			</a></span>
 		</g:if> <g:if test="${device.deviceStatus.toString()=="FREE" }">
-			<span class="filedevicefree" id="${device.id}"><a href="#"
+			<span class="filedevicefree" id="${device.id}"><a href="#" oncontextmenu="callFunc(${device.id})"
 				onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">
 					${device.stbName}
 			</a></span>
 		</g:if> <g:if test="${device.deviceStatus.toString()=="BUSY" }">
-			<span class="filedevicebusy" id="${device.id}"><a href="#"
+			<span class="filedevicebusy" id="${device.id}"><a href="#" oncontextmenu="callFunc(${device.id})"
 				onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">
 					${device.stbName}
 			</a></span>
 		</g:if> <g:if test="${device.deviceStatus.toString()=="HANG" }">
-			<span class="filedevicehang" id="${device.id}"><a href="#"
+			<span class="filedevicehang" id="${device.id}"><a href="#" oncontextmenu="callFunc(${device.id})"
 				onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">
 					${device.stbName}
 			</a></span>
-		</g:if>
+		</g:if>		
+		 <g:if test="${device.deviceStatus.toString()=="TDK_DISABLED" }">
+			<span class="filedevicetdkdisabled" id="${device.id}"><a href="#" oncontextmenu="callFunc(${device.id})"
+				onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">
+					${device.stbName}
+			</a></span>
+		</g:if>		
 		<g:if test="${device.deviceStatus.toString()=="ALLOCATED" }">
-			<span class="filedevicebusy" id="${device.id}"><a href="#"
+			<span class="filedevicebusy" id="${device.id}"><a href="#" oncontextmenu="callFunc(${device.id})"
 				onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">
 					${device.stbName}
 			</a></span>

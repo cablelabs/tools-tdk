@@ -42,6 +42,7 @@ import tdklib;
 import mediaframework;
 import time;
 import recorderlib
+from sys import exit
 from random import randint
 from time import sleep
 
@@ -62,7 +63,17 @@ setsource_parameter_name=["rmfSourceElement","rmfSinkElement"]
 setsource_parameter_value=["HNSrc","MPSink"]
 ip = <ipaddress>
 port = <port>
-def ScheduleRec(recObj):
+
+recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
+recObj.configureTestCase(ip,port,'Recorder_RMF_RecStartedEarly_StartedIncomplete_Inline_86');
+
+obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+obj.configureTestCase(ip,port,'SampleTest');
+
+loadModuleStatus = obj.getLoadModuleResult();
+print "Load Module Status :  %s" %loadModuleStatus;
+
+def ScheduleRec():
 
 	#Get the result of connection with test component and STB
 	recLoadStatus = recObj.getLoadModuleResult();
@@ -72,11 +83,11 @@ def ScheduleRec(recObj):
 
         	#Set the module loading status
 	        recObj.setLoadModuleStatus(recLoadStatus);
-
-        	recObj.initiateReboot();
-		print "Sleeping to wait for the recoder to be up"
-        	sleep(300);
-        
+		loadmoduledetails = recObj.getLoadModuleDetails();
+	        if "REBOOT_REQUESTED" in loadmoduledetails:
+			recObj.initiateReboot();
+			print "Sleeping to wait for the recoder to be up"
+			sleep(300);
 
 		jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         	actResponse =recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
@@ -239,14 +250,6 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 
     return result
 
-RecorderObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-RecorderObj.configureTestCase(ip,port,'Recorder_RMF_RecStartedEarly_StartedIncomplete_Inline_86');
-
-obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
-obj.configureTestCase(ip,port,'SampleTest');
-
-loadModuleStatus = obj.getLoadModuleResult();
-print "Load Module Status :  %s" %loadModuleStatus;
 
 if Expected_Result in loadModuleStatus.upper():
 
@@ -283,7 +286,6 @@ if Expected_Result in loadModuleStatus.upper():
 										print "Filling TSB for 2 minutes";
                                                                                 time.sleep(120);
 										print "Actual test starts ...";
-										ScheduleRec(RecorderObj);
                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                                                                                 if Expected_Result in result.upper():
                                                                                         Mediatime[1]=float(Mediatime[1]);
@@ -293,6 +295,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                         else:
                                                                                                 print "failure"
                                                                                                 tdkTestObj.setResultStatus("FAILURE");
+									ScheduleRec();
 
                                                 #Close the Hnsrc Element
                                                 result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,Expected_Result,src_parameter,src_element);

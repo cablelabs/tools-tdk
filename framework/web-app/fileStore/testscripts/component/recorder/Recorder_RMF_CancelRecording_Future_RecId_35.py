@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_35 - Recorder-Not to send error as USER_STOP if a future recording is cancelled</synopsis>
+  <synopsis>CT_Recoder_DVR_Protocol_35 - Recorder- To send error as USER_STOP if a future recording is cancelled</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
@@ -122,7 +125,7 @@ if "SUCCESS" in recLoadStatus.upper():
 		    print "Successfully retrieved acknowledgement from recorder";
 
                     #Frame json message for update recording
-                    jsonMsgCancelRecording = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}],\"cancelRecordings\":[\""+recordingID+"\"]}}";
+                    jsonMsgCancelRecording = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}],\"cancelRecordings\":[\""+recordingID+"\"]}}";
 
                     expResponse = "updateSchedule";
                     tdkTestObj.executeTestCase(expectedResult);
@@ -163,9 +166,12 @@ if "SUCCESS" in recLoadStatus.upper():
 				if "USER_STOP" in value.upper() and "ERASED" not in statusValue.upper():
                                 	tdkTestObj.setResultStatus("SUCCESS");
                                 	print "Cancelled future recording successfully";
+                                elif "BADVALUE" in value.upper() and "BADVALUE" not in statusValue.upper():
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        print "No error/status field in recording status";
                             	else:
                                 	tdkTestObj.setResultStatus("FAILURE");
-                                	print "Failed to cancel future recording";
+                                	print "Failed to cancel future recording/Status received as Erased";
 			    else:
                                     tdkTestObj.setResultStatus("FAILURE");
                                     print "Failed to retrieve the recording list from recorder";	

@@ -245,13 +245,17 @@ class UserController {
 				}
 			}
 		}
-		if(deleteCount  >= 1)
+		if(deleteCount  > 1)
 		{
+			flash.message = "Multiple users deleted"
+		}else{
 			flash.message = message(code: 'default.deleted.message', args: [
-				message(code: 'user.label', default: 'User'),
-				userInstance.username
+			message(code: 'user.label', default: 'User'),
+			userInstance.username
 			])
 		}
+
+		
 
 		redirect(action: "create")
 	}

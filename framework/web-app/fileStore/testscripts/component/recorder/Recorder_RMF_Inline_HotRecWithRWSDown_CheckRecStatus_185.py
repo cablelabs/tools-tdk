@@ -64,10 +64,13 @@ if "SUCCESS" in recLoadStatus.upper():
         recObj.setLoadModuleStatus(recLoadStatus);
 
         print "Rebooting box for setting configuration"
-        recObj.initiateReboot();
+        loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+               sleep(300);
 
         print "Waiting for the recoder to be up"
-        sleep(300);
+
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -90,7 +93,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 #2min duration
                 duration = "120000";
                 startTime = "0";
-                genIdInput = "0";
+                genIdInput = "TDK456";
                 ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
                 now = "curTime";
 
@@ -115,11 +118,11 @@ if "SUCCESS" in recLoadStatus.upper():
                                 print "Failed to enable RWS Status Server"
                         else:
                                 print "Enabled RWS Status Server"
-				print "Wait for recorder to connect to RWS"
+                                print "Wait for recorder to connect to RWS"
                                 sleep (150)
-				recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                                recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 print "Retrieve Status Details: ",recResponse;
-				response = recorderlib.callServerHandler('clearStatus',ip);
+                                response = recorderlib.callServerHandler('clearStatus',ip);
                                 print "Rebooting the box to get full sync..."
                                 recObj.initiateReboot();
                                 print "Waiting for the recoder to be up"
@@ -160,3 +163,4 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+

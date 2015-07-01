@@ -86,41 +86,59 @@ $(document).ready(function() {
 				</td>
 			</tr>
 			<tr>
-				<td style="width: 16%;" class="treeborder">
+				<td style="width: 20%;" class="treeborder">
 				   
-					<div class="" style="width: 180px; height: 400px; overflow: auto;">
+				<div id = "root_menu" class="" style="width: 100%; height: 400px; overflow: auto;">
 						<ul id="browser" class="filetree">
 							<li class="" id="root"><span class="folder" id="addconfId">Device</span>
 								<ul> <% int deviceStatusCount = 0; %>
 								<span id="device_status">								
 									<g:each in="${deviceList}" var="device">
-									<% deviceStatusCount++; %>
-										<li id="deviceExecutionList_${deviceStatusCount}" ><g:if test="${device.deviceStatus.toString()=="NOT_FOUND" }">
-										<span class="filedevicenotfound" id="${device.id}"><a href="#" onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
+							<% deviceStatusCount++; %>
+										<li id="deviceExecutionList_${deviceStatusCount}"  >
+										<g:if test="${device.deviceStatus.toString()=="NOT_FOUND" }">
+										<span class="filedevicenotfound" id="${device.id}">
+										<a href="#" onclick="showScript('${device.id}');  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
 										</g:if>
 										<g:if test="${device.deviceStatus.toString()=="FREE" }">
-										<span class="filedevicefree" id="${device.id}"><a href="#" onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
+										<span class="filedevicefree" id="${device.id}">
+										<a href="#" onclick="showScript('${device.id}');  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
 										</g:if>
 										<g:if test="${device.deviceStatus.toString()=="BUSY" }">
-										<span class="filedevicebusy" id="${device.id}"><a href="#" onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
+										<span class="filedevicebusy" id="${device.id}">
+	          							<a href="#" onclick="showScript('${device.id}');  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
 										</g:if>
 										<g:if test="${device.deviceStatus.toString()=="HANG" }">
-										<span class="filedevicehang" id="${device.id}"><a href="#" onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
+										<span class="filedevicehang" id="${device.id}">
+	          							<a href="#" onclick="showScript('${device.id}');  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
+										</g:if>
+										<g:if test = "${device.deviceStatus.toString()=="TDK_DISABLED" }">
+											<span class="filedevicetdkenabled" id="${device.id}">	
+	          							<a href="#" onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
 										</g:if>
 										<g:if test="${device.deviceStatus.toString()=="ALLOCATED" }">
-											<span class="filedevicebusy" id="${device.id}"><a href="#"
+											<span class="filedevicebusy"><a href="#"
 												onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">
 													${device.stbName}
 											</a></span>
 										</g:if>
+										
 										</li>
 									</g:each>
+										
 									</span>	
 								</ul>
 							</li>
-						</ul>
+						</ul>	
+										
 					</div>
-				</td> 
+					<div class="contextMenu" id="enable_menu">
+										<ul>
+											<li id="enable"  >EnableTDK</li>
+	          								<li id="disable" >DisableTDK</li>
+	        							</ul>
+	      			</div>									
+	  		</td> 
 				<td style="width: 84%;">	
 					<div style="width: 100%; overflow: auto;">
 					 <div id="minSearch" style="width: 96%;overflow: auto;text-align: right;vertical-align: top;">					

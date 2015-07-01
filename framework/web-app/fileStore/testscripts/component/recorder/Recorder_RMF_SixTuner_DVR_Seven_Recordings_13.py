@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>15</execution_time>
+  <execution_time>30</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -71,9 +71,9 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        #recObj.initiateReboot();
+        recObj.initiateReboot();
 	print "Sleeping to wait for the recoder to be up"
-        #sleep(300);
+        sleep(300);
 
         #Giving no update here to get the recording list in case the previous generation id is set to zero before reboot
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        

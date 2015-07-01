@@ -28,15 +28,15 @@ $('#scheduletable').dataTable({
    		<tr>
      		<th colspan="9" align="center" style="background-color: white">Scheduled Jobs</th>            
         </tr>   
-         <col width="4%">
-        <col width= "20%">
-        <col width ="13%">
-        <col width ="30%">
-        <col width ="20%">
-        <col width ="20%">
-        <col width ="15%">
-        <col width ="15%">
-        <col width ="4%">			
+       <col width="1%">
+        <col width= "6%">
+        <col width ="4%">
+        <col width ="7%">
+        <col width ="4%">
+        <col width ="5%">
+        <col width ="2%">
+        <col width ="4%">
+        <col width ="2%">		
         <tr>
      		<th ></th>
      		<th >Job Name</th>    

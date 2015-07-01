@@ -289,12 +289,19 @@ function hideParameters(k){
 		<g:each in="${executionresults.get(executionDeviceInstance)}" status="i"  var="executionResultInstance">
 		
 			<table>
-				<tr class="scripthead">
+				<%-- <tr class="scripthead">
 					<td class="tdhead">Test Script </td>
 					<td>${executionResultInstance?.script}</td>					
 					<td class="tdhead">Status</td>
 					<td>${executionResultInstance?.status}</td>					
 					<td><a href="#" id="expander${k}_${i}" onclick="this.innerHTML='Hide';viewOnClick(this,${k},${i}); return false;">Details</a></td>
+				</tr> --%>
+				<tr class="scripthead">
+					<td style="width:10%;font-weight: bold;">Test Script </td>
+					<td style="width:50%">${executionResultInstance?.script}</td>					
+					<td style="width:10%;font-weight: bold;">Status</td>
+					<td style="width:10%;">${executionResultInstance?.status}</td>					
+					<td style="width:10%;"><a href="#" id="expander${k}_${i}" onclick="this.innerHTML='Hide';viewOnClick(this,${k},${i}); return false;">Details</a></td>
 				</tr>
 				<tbody id="allmessages${k}_${i}"  style="display: none;">
 				<tr>
@@ -320,7 +327,8 @@ function hideParameters(k){
 				</tr>
 				</g:each>
 				<tr>
-					<td>Log Data </td>
+					<td>Log Data <br>
+					<g:link action ="showExecutionResult" params="[execResult : "${executionResultInstance?.executionOutput}"]" target="_blank"> Log link </g:link> </td>
 					<td colspan="6"><div style="overflow : auto; height : 180px;">${executionResultInstance?.executionOutput}</div></td>				
 				</tr>
 				
@@ -330,9 +338,9 @@ function hideParameters(k){
 					</td>	
 					<td colspan="4">
 						&emsp;<span id="showconsolelink${k}_${i}" >
-						<g:remoteLink action="showAgentLogFiles" update="consoleLog${k}_${i}" onSuccess="showConsoleHideLink(${k},${i});" params="[execResId : "${executionResultInstance?.id}", execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}"]">Show</g:remoteLink>						
+						<g:remoteLink action="showAgentLogFiles" update="consoleLog${k}_${i}" onSuccess="showConsoleHideLink(${k},${i});" params="[execResId : "${executionResultInstance?.id}", execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}"]">Show</g:remoteLink>
+						<g:link action="showAgentLogFiles" update="consoleLog${k}_${i}" onSuccess="showConsoleHideLink(${k},${i});" params="[execResId : "${executionResultInstance?.id}", execDeviceId:"${executionDeviceInstance?.id}", execId:"${executionInstance?.id}"]"  target="_blank"> Agent Console Log Link</g:link>						
 						</span>
-
 						<span id="hideconsolelink${k}_${i}" style="display:none;"><a style="color:#7E2217;" href="#" onclick="hideConsoleLogs(${k},${i})">Hide</a></span>
 						<br>
 						<div id="consoleLog${k}_${i}"></div>	

@@ -25,6 +25,9 @@ import socket
 import fcntl
 import struct
 import json
+import tdklib
+from random import randint
+from time import sleep
 
 def startRecorderApp(realpath,arg):
 
@@ -97,6 +100,8 @@ def get_ip_address(ifname):
         struct.pack('256s', ifname[:15])
     )[20:24])
 
+LOIPADDR = '127.0.0.1'
+
 def callServerHandler(methodName,gwIp):
 
         # To invoke and fetch status of REST API in the simulator for a particular box
@@ -111,7 +116,9 @@ def callServerHandler(methodName,gwIp):
         # Return Value : Console output of the curl command
 
         try:
-                serverIp = get_ip_address('eth0')
+                #serverIp = get_ip_address('eth0')
+                serverIp = LOIPADDR
+	
         except:
                 print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
 		outdata = "ERROR: Unable to fetch recorder server IP"
@@ -132,7 +139,7 @@ def callServerHandler(methodName,gwIp):
 
         # Executing request command
         try:
-                print "Query cmd: ",cmd
+                print "Executing \"",cmd," \""
                 sys.stdout.flush()
                 byteStr = subprocess.check_output(cmd, shell=True)
                 outdata = unicode(byteStr, errors='ignore')
@@ -165,7 +172,8 @@ def callServerHandlerWithMsg(methodName,jsonMsg,gwIp):
         # Return Value : Console output of the curl command
 
         try:
-                serverIp = get_ip_address('eth0')
+                #serverIp = get_ip_address('eth0')
+                serverIp = LOIPADDR
         except:
                 print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
 		outdata = "ERROR: Unable to fetch recorder server IP"
@@ -186,11 +194,10 @@ def callServerHandlerWithMsg(methodName,jsonMsg,gwIp):
 
         # Executing request command
         try:
-                print "Query cmd: ",cmd
+		print "Executing \"",cmd," \""
                 sys.stdout.flush()
                 byteStr = subprocess.check_output(cmd, shell=True)
                 outdata = unicode(byteStr, errors='ignore')
-                #outdata = subprocess.check_output(cmd, shell=True)
                 signal.alarm(0)  # reset the alarm
         except Timout:
                 print "#TDK_@error-ERROR : Timeout!! Taking too long"
@@ -203,6 +210,7 @@ def callServerHandlerWithMsg(methodName,jsonMsg,gwIp):
                 sys.stdout.flush()
 		return outdata
 
+	print "JSON request: ",outdata
         return outdata
 
 ########## End of Function callServerHandlerWithMsg ##########
@@ -223,7 +231,8 @@ def callServerHandlerWithType(methodName,type,gwIp):
         # Return Value : Console output of the curl command
 
         try:
-                serverIp = get_ip_address('eth0')
+                #serverIp = get_ip_address('eth0')
+                serverIp = LOIPADDR
         except:
                 print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
                 outdata = "ERROR: Unable to fetch recorder server IP"
@@ -244,7 +253,7 @@ def callServerHandlerWithType(methodName,type,gwIp):
 
         # Executing request command
         try:
-                print "Executing cmd: ",cmd
+		print "Executing \"",cmd," \""
                 sys.stdout.flush()
                 byteStr = subprocess.check_output(cmd, shell=True)
                 outdata = unicode(byteStr, errors='ignore')
@@ -278,7 +287,8 @@ def callScheduleHandler(methodName,params,gwIp):
         # Return Value : Console output of the curl command
 
         try:
-                serverIp = get_ip_address('eth0')
+                #serverIp = get_ip_address('eth0')
+                serverIp = LOIPADDR
         except:
                 print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
 		outdata = "ERROR : Unable to fetch recorder server IP"
@@ -299,7 +309,7 @@ def callScheduleHandler(methodName,params,gwIp):
 
         # Executing request command
         try:
-                print "Query cmd: ",cmd
+		print "Executing \"",cmd," \""
                 sys.stdout.flush()
                 byteStr = subprocess.check_output(cmd, shell=True)
                 outdata = unicode(byteStr, errors='ignore')
@@ -520,10 +530,10 @@ def getRecordingFromRecId(jsonData,recordingId):
                         recordings = my_item['statusMessage']
                         for i in range(0, len(recordings['recordingStatus']['recordings'])):
                                 if (str(recordings['recordingStatus']['recordings'][i]['recordingId'])) == str(recordingId):
-                                        print "Found Recording with recordingId %s: "%recordingId
+                                        #print "Found Recording with recordingId ",recordingId
                                         return (recordings['recordingStatus']['recordings'][i])
 
-        print "ERROR: Recording not found!"
+        print "RecordingID not found in status message!"
         return ret
 
 ########## End of Function getRecordingFromRecId ##########
@@ -576,3 +586,121 @@ def getRecordings(jsonData):
         return recordings
 
 ########## End of Function getRecordings ##########
+
+#numOfTuners = no of tuners on STB
+#recDuration = recording duration in millisec
+#priority = priority of recording to be created
+def checkDiskFullWithRecordings(gwIp,tdkTestObj,numOfTuners,recDuration,priority):
+
+	print "Enter Disk Full..."
+	print "tuners: ",numOfTuners," recording duration: ",recDuration," priority: ",priority
+        diskFull = 0
+        inProgress = 0
+
+        #Start hot recording on all the tuners
+        for n in range(0,numOfTuners):
+                requestID = str(randint(10, 500))
+                recordingID = str(randint(10000, 500000))
+                startTime = "0"
+                duration = str(recDuration)
+                streamId = '0'+str(n+1)
+                ocapId = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+                now = "curTime"
+
+                #Frame json message to schedule recording
+                jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"RecordingTitle_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\""+priority+"\"}]}}"
+
+                #Send update msg to simulator server
+                callServerHandler('clearStatus',gwIp)
+                callServerHandlerWithMsg('updateMessage',jsonMsg,gwIp)
+                #Wait to send next request
+                sleep(30)
+                #Get recordings list and check for error code of scheduled recording
+                callServerHandler('clearStatus',gwIp)
+                callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',gwIp)
+                #Wait to get response from recorder
+                sleep(120)
+                recResponse = callServerHandler('retrieveStatus',gwIp)
+                #Look for recordings field in response
+                recordings = getRecordings(recResponse)
+                if [] == recordings:
+                        print "No recordings found in response: ",recResponse
+                else:
+			print "recordings found in response: ",recResponse
+
+                        recordingData = getRecordingFromRecId(recResponse,recordingID)
+                        print "Recording Details: ",recordingData
+                        if "NOTFOUND" == recordingData:
+                                print "Recording ",recordingID," not found in recording list: ",recResponse
+				#TODO: Remove later
+				#RDKTT-404 (only failed recordings shown so may be recording actually started)
+				print "Assuming recording ",recordingID," scheduled successfully"
+				inProgress = 1
+                        else:
+                                status = getValueFromKeyInRecording(recordingData,'status')
+				error = getValueFromKeyInRecording(recordingData,'error')
+				if "BADVALUE" == error:
+					print "No error in scheduled recording"
+					if "PENDING" == status.upper():
+						print "Recording ",recordingID," in pending state"
+						print "Not waiting for recording to complete"
+					else:
+						print "Recording ",recordingID," scheduled successfully"
+						inProgress = 1
+				else:
+					print "Failed to record due to error: ",error,"status: ",status
+					if "SPACE_FULL" == error:
+						print "DiskFull!! Could not schedule recording ",recordingID
+						diskFull = 1
+						break
+        #hot recording on all the tuners - End
+
+        if 1 == inProgress:
+                print "Started ",priority," recordings of duration ",recDuration
+                print "Wait for recordings to complete"
+		#sleep(150)
+		sleep(numOfTuners*150)
+                sleep(recDuration/1000)
+        else:
+                print "No ",priority," recordings started of duration ",recDuration
+
+	print "Exit Disk Full..."
+
+        return diskFull
+
+############  checkDiskFullWithRecordings End ###########################
+
+def getRecordingFromField(jsonData,field,value):
+        ret = "NOTFOUND"
+        try:
+                #jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
+                jsonList = json.loads(jsonData, strict=False)
+        except ValueError, e:
+                print e
+                return ret
+        except:
+                print "Unexpected error:", sys.exc_info()[0]
+                return ret
+
+        #Check if status is not empty
+        if jsonList == []:
+                print "ERROR: No status available"
+                return ret
+
+        #Get statusMessage from status list
+        for my_item in jsonList:
+                recordings = {}
+                if 'recordingStatus' in my_item['statusMessage']:
+                        recordings = my_item['statusMessage']
+                        for i in range(0, len(recordings['recordingStatus']['recordings'])):
+				if field in (str(recordings['recordingStatus']['recordings'][i])):
+                                	if (str(recordings['recordingStatus']['recordings'][i][field])) == str(value):
+                                        	print "Found Recording with value ",value
+                                        	return (recordings['recordingStatus']['recordings'][i])
+
+        print "Expected field not found in status message!"
+        return ret
+
+########## End of Function getRecordingFromField ##########
+
+

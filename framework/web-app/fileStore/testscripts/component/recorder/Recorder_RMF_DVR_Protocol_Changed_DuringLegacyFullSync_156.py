@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
@@ -149,7 +152,7 @@ if "SUCCESS" in recLoadStatus.upper():
                             print "Successfully advertised DVR protocol version Changed as false"
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
-                            print "Failed to advertise DVR protocol version changed parameter"
+                            print "Failed to advertise DVR protocol version changed parameter as false"
                     else:
                             print "No Update Schedule message post failed";
                             tdkTestObj1.setResultStatus("FAILURE");

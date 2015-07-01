@@ -67,10 +67,12 @@ class JobDetails {
     
     String queryString   
 	
-	
 	String isSystemDiagnostics
 	
 	String isBenchMark
+	
+	String isStbLogRequired
+	
 	
 	String rerun
 	
@@ -99,6 +101,7 @@ class JobDetails {
         queryString(nullable:true, blank:true)
 		isSystemDiagnostics(nullable:true, blank:true)
 		isBenchMark(nullable:true, blank:true)
+		isStbLogRequired(nullable:true, blank:true)
 		rerun(nullable:true, blank:true)
 		repeatCount(nullable:true, blank:true)
 		groups(nullable:true, blank:true)

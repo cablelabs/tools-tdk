@@ -71,27 +71,21 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #Set the module loading status
         obj.setLoadModuleStatus("SUCCESS");
-#	obj.initiateReboot();
+	obj.initiateReboot();
 	print "Sleeping to wait for the recoder to be up"
-#	sleep(300);
+	sleep(300);
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
         rec_id = random.randrange(10**9, 10**258)
         recording_id = str(rec_id);
         duration = "180000";
         start_time = "0";
-        #utctime=tdkTestObj.getUTCTime();
-        #tdkTestObj.addParameter("UTCTime",utctime);
-        #tdkTestObj.addParameter("Duration",duration);
-        #tdkTestObj.addParameter("Recording_Id",recording_id);
-        #tdkTestObj.addParameter("Start_time",start_time);
         streamDetails = tdkTestObj.getStreamDetails('01');
         #Adding ocapid parameter
         validid = streamDetails.getOCAPID();
         Id = re.search(r"\w\w\w\w",validid);
         if Id:
                 print "ocapid : %s" %validid;
-                #tdkTestObj.addParameter("Source_id",validid);
                 #Execute the test case in STB
                 expectedresult="SUCCESS";
                 tdkTestObj.executeTestCase(expectedresult);
@@ -100,16 +94,12 @@ if "SUCCESS" in loadmodulestatus.upper():
                 Jsonurldetails = tdkTestObj.getResultDetails();
                 print "Result of scheduling : %s" %actualresult;
                 print "Jsonurldetails is : %s" %Jsonurldetails;
-#                RequestURL = Jsonurldetails.replace("\\","");
 		RequestURL = Jsonurldetails.replace("${now}","curTime");
-#		RequestURL = RequestURL.replace(" ","");
-#		RequestURL = RequestURL.replace("\\","");
                 print "RequestURL (DEFAULT) is : %s" %RequestURL ;
                 #compare the actual result with expected result
                 if expectedresult in actualresult:
                         print "Recorder received the requested recording url";
                         time.sleep(10);
-                        #status_actual =tdkTestObj.initiateRecorderApp(RequestURL);
 			RequestURL="{\"updateSchedule\":{\"requestId\":\"7\",\"generationId\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recording_id))+"\",\"locator\":[\"ocap://"+validid+"\"],\"epoch\":curTime,\"start\":"+start_time+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recording_id))+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 			print "RequestURL (HARD CODED) is : %s" %RequestURL ;
 			serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
@@ -129,7 +119,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 					time.sleep(200);
 					print "TDK_Server received the Json Message";
 					#Prmitive test case which associated to this Script
-
 					tdkTestObj = obj.createTestStep('Recorder_checkRecording_status');
 					PATTERN = recording_id;
 					tdkTestObj.addParameter("Recording_Id",recording_id);

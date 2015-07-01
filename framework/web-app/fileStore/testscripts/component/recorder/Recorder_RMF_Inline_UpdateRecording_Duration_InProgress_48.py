@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_48 - Recorder- To update duration upon receiving updateRecordings message via inline</synopsis>
+  <synopsis>CT_Recoder_DVR_Protocol_48 - Recorder- Not to update duration upon receiving updateRecordings message via inline</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
@@ -175,15 +178,18 @@ if "SUCCESS" in recLoadStatus.upper():
                                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
                                 print recordingData
                                 if 'NOTFOUND' not in recordingData:
-                                    key = 'duration'
+                                    key = 'expectedDuration'
                                     statusKey = 'status'
                                     value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                    statusValue = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                                    statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
                                     print "key: ",key," value: ",value
                                     print "Successfully retrieved the recording list from recorder";
-                                    if newDuration == value and "COMPLETE" in statusValue.upper():
+                                    if int(newDuration) != int(value) and "COMPLETE" in statusValue.upper():
                                         tdkTestObj1.setResultStatus("SUCCESS");
                                         print "Duration updated successfully";
+                                    elif "BADVALUE" in statusValue.upper():
+                                        tdkTestObj1.setResultStatus("FAILURE");
+                                        print "No error/status field for this recording Id";
                                     else:
                                         tdkTestObj1.setResultStatus("FAILURE");
                                         print "Duration updation not completed successfully";

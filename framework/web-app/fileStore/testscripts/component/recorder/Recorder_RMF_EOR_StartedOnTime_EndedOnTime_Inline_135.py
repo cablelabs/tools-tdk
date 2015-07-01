@@ -59,9 +59,13 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
+        
 
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         actResponse =recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
@@ -160,12 +164,12 @@ if "SUCCESS" in recLoadStatus.upper():
                 	            			if "" != value.upper():
 	                		                	print "Recording status set";
                         	        			tdkTestObj1.setResultStatus("SUCCESS");
-                	            				if "COMPLETE" in value.upper():
-                        	        				tdkTestObj1.setResultStatus("SUCCESS");
-		                	                		print "Recording marked as COMPLETE ";
-        		                    			else:
-                		                			tdkTestObj1.setResultStatus("FAILURE");
-	                		                		print "Recording not marked as COMPLETE";
+	                	            			if "COMPLETE" in value.upper():
+        	                	        			tdkTestObj1.setResultStatus("SUCCESS");
+	        	        	                		print "Recording marked as COMPLETE ";
+        	        	            			else:
+                	        	        			tdkTestObj1.setResultStatus("FAILURE");
+	                	        	        		print "Recording not marked as COMPLETE";
         		                    		else:
 	                		                	print "Recording status not set";
                 		                		tdkTestObj1.setResultStatus("FAILURE");

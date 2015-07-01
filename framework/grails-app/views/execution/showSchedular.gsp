@@ -19,9 +19,13 @@
 	<g:hiddenField name="rerun" id="rerun" value="${rerun}" />
 	<g:hiddenField name="repeatCount" id="repeatCount" value="${repeatCount}" />
 	<g:hiddenField name="devices" id="repeatCount" value="${devices}" />
+	<g:hiddenField name="isStbLogRequired" id="transferLogs" value="${isStbLogRequired}" />
+	
 	
 	<table id="scheduletable">
 	<tr>
+	
+	
 	<th>Schedule Job</th>		
 	</tr>
 	<tr>

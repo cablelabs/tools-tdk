@@ -50,6 +50,8 @@ def getStatus(deviceIP,managerIP,boxName,statusPort):
         			return "FREE"
 			if "Busy" in result:
         			return "BUSY"
+			if "TDK Disabled" in result:
+				return "TDK_DISABLED"
 
 		else:
 			tcpClient.close()

@@ -224,6 +224,7 @@ class JobSchedulerService implements Job{
 									execution.groups = jobDetails?.groups
 									execution.isBenchMarkEnabled = jobDetails?.isBenchMark?.equals("true")
 									execution.isSystemDiagnosticsEnabled = jobDetails?.isSystemDiagnostics?.equals("true")
+									execution.isStbLogRequired= jobDetails.isStbLogRequired?.equals("true")
 									execution.scriptCount = scriptCnt
 									if(! execution.save(flush:true)) {
 										log.error "Error saving Execution instance : ${execution.errors}"
@@ -363,7 +364,7 @@ class JobSchedulerService implements Job{
 									
 									
 									if(!aborted && !(deviceStatus.equals(Status.NOT_FOUND.toString()) || deviceStatus.equals(Status.HANG.toString())) && !pause){
-										htmlData = executeScript(execName, executionDevice, scriptObj , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,executionName,isMultiple)
+										htmlData = executeScript(execName, executionDevice, scriptObj , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark,jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple)
 										output.append(htmlData)
 										Thread.sleep(6000)
 									}else{
@@ -427,7 +428,6 @@ class JobSchedulerService implements Job{
 									ExecutionService.abortList.remove(ex?.id?.toString())
 								}
 								if(!aborted && pause && pendingScripts.size() > 0 ){
-									println "here  going to save pauseeee "
 									def exeInstance = Execution.findByName(execName)
 									savePausedExecutionStatus(exeInstance?.id)
 									saveExecutionDeviceStatusData(PAUSED, executionDevice?.id)
@@ -442,7 +442,7 @@ class JobSchedulerService implements Job{
 									scriptInstance = getScript(realpath,moduleName, scripts)
 									
 									isMultiple = "false"
-									htmlData = executeScript(execName, executionDevice, scriptInstance , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,executionName,isMultiple)
+									htmlData = executeScript(execName, executionDevice, scriptInstance , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple)
 									output.append(htmlData)
 								}
 								else{
@@ -513,7 +513,7 @@ class JobSchedulerService implements Job{
 											isMultiple = "false"
 										}
 
-										htmlData = executeScript(execName, executionDevice, script , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics, executionName,isMultiple)
+										htmlData = executeScript(execName, executionDevice, script , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired, executionName,isMultiple)
 
 										output.append(htmlData)
 										Thread.sleep(6000)
@@ -557,6 +557,7 @@ class JobSchedulerService implements Job{
 				   execution1.isRerunRequired = jobDetails?.rerun?.equals("true")
 				   execution1.isBenchMarkEnabled = jobDetails?.isBenchMark?.equals("true")
 				   execution1.isSystemDiagnosticsEnabled = jobDetails?.isSystemDiagnostics?.equals("true")
+				   execution1.isStbLogRequired= jobDetails.isStbLogRequired?.equals("true")
 				   execution1.outputData = "Execution failed due to the unavailability of box"
 				   if(! execution1.save(flush:true)) {
 					   log.error "Error saving Execution instance : ${execution1.errors}"
@@ -622,7 +623,7 @@ class JobSchedulerService implements Job{
 
 
 	def reRunOnFailure(final String realPath, final String filePath, String url, final String execName,final String uniqueExecutionName,
-			final String isBenchMark, final String isSystemDiagnostics, final def groups){
+			final String isBenchMark, final String isSystemDiagnostics,final String islogReqd, final def groups){
 		Thread.sleep(10000)
 
 		Execution executionInstance = Execution.findByName(execName)
@@ -709,7 +710,7 @@ class JobSchedulerService implements Job{
 								Execution exec = Execution.findByName(newExecName)
 								aborted = ExecutionService.abortList.contains(exec?.id?.toString())
 								if(!aborted){
-									htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, url, filePath, realPath,isBenchMark,isSystemDiagnostics,uniqueExecutionName,isMultiple)
+									htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, url, filePath, realPath,isBenchMark,isSystemDiagnostics,islogReqd,uniqueExecutionName,isMultiple)
 									Thread.sleep(6000)
 								}
 							}
@@ -802,8 +803,7 @@ class JobSchedulerService implements Job{
 	 */
 
 	def String executeScript(final String executionName, final ExecutionDevice executionDevice, final def scriptInstance,
-			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String uniqueExecutionName,final String isMultiple) {
-
+			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String isLogReqd,final String uniqueExecutionName,final String isMultiple) {
 		String htmlData = ""
 
 		String scriptData = convertScriptFromHTMLToPython(scriptInstance.scriptContent)
@@ -951,6 +951,11 @@ class JobSchedulerService implements Job{
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 			callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 			Thread.sleep(4000)
+		}else if(htmlData.contains("Pre-Condition not met")){
+			if(htmlData.contains(KEY_SCRIPTEND)){
+				htmlData = htmlData.replaceAll(KEY_SCRIPTEND,"")
+			}
+			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 		}
 		else{
 			if(htmlData.contains("SCRIPTEND#!@~")){
@@ -1037,8 +1042,102 @@ class JobSchedulerService implements Job{
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 			htmlData += scriptExecutor.executeScript(cmd,1)
 		}
+		def logTransferFileName1 = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
+		def logTransferFilePath1 = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
+
+		new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1)
+		if(isLogReqd){
+			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
+		}
 		return htmlData
 	}
+			
+			
+			
+			/**
+			 * Refreshes the status in agent as it is called with flag false
+			 * @param deviceInstance
+			 * @return
+			 */
+			def logTransfer1(def deviceInstance, def logTransferFilePath, def logTransferFileName){
+				Thread.sleep(4000)
+				try{
+					File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callConsoleLogTransfer.py").file
+					def absolutePath = layoutFolder.absolutePath
+					String[] cmd = [
+						PYTHON_COMMAND,
+						absolutePath,
+						deviceInstance?.stbIp,
+						deviceInstance?.agentMonitorPort,
+						deviceInstance?.logTransferPort,
+						"AgentConsole.log",
+						logTransferFilePath
+					]
+					ScriptExecutor scriptExecutor = new ScriptExecutor()
+					def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+					Thread.sleep(4000)
+				}
+				catch(Exception e){
+					println " error > "+e.getMessage()
+				}
+			}
+		
+			
+			def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId){
+				try {
+					def module
+					Module.withTransaction {
+						module = Module.findByName(moduleName)
+					}
+		
+					def destFolder = grailsApplication.parentContext.getResource("//logs//stblogs//execId_logdata.txt").file
+					def destPath = destFolder.absolutePath
+					
+					
+					def filePath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
+					def directoryPath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
+					new File(directoryPath).mkdirs()
+					
+					module?.logFileNames?.each{ name ->
+					
+					File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+		
+					File fileStore = grailsApplication.parentContext.getResource("//fileStore//").file
+					def fileStorePath = fileStore.absolutePath
+		
+					def absolutePath = layoutFolder.absolutePath
+					String fName = name?.replaceAll("//", "_")
+					fName = fName?.replaceAll("/", "_")
+					if((absolutePath) && !(absolutePath.isEmpty())){
+		
+						String[] cmd = [
+							"python",
+							absolutePath,
+							dev?.stbIp,
+							dev?.logTransferPort,
+							name,
+							directoryPath+"//"+fName
+						]
+						try {
+							ScriptExecutor scriptExecutor = new ScriptExecutor()
+							def outputData = scriptExecutor.executeScript(cmd,1)
+						}catch (Exception e) {
+						println " error >> "+e.getMessage()
+							e.printStackTrace()
+						}
+					}
+					
+					}
+				} catch (Exception e) {
+					println " ERROR "+e.getMessage()
+				}
+			}
+			
+			
+			
+			
+			
 
 
 	/**
@@ -1404,7 +1503,7 @@ class JobSchedulerService implements Job{
 			absolutePath,
 			device?.stbIp,
 			logTransferPort,
-			"/opt/TDK/trDetails.log",
+			"/var/TDK/trDetails.log",
 			filePath+"${device?.stbName}.txt"
 		]
 

@@ -70,18 +70,12 @@ def schdule_Recording(testStep,testObject,recordId):
         recording_id = str(rec_id);
         duration = "180000";
         start_time = "0";
-        #utctime=tdkTestObj.getUTCTime();
-        #tdkTestObj.addParameter("UTCTime",utctime);
-        #tdkTestObj.addParameter("Duration",duration);
-        #tdkTestObj.addParameter("Recording_Id",recording_id);
-        #tdkTestObj.addParameter("Start_time",start_time);
         streamDetails = tdkTestObj.getStreamDetails('01');
         #Adding ocapid parameter
         validid = streamDetails.getOCAPID();
         Id = re.search(r"\w\w\w\w",validid);
         if Id:
                 print "ocapid : %s" %validid;
-                #tdkTestObj.addParameter("Source_id",validid);
                 #Execute the test case in STB
                 expectedresult="SUCCESS";
                 tdkTestObj.executeTestCase(expectedresult);
@@ -90,16 +84,12 @@ def schdule_Recording(testStep,testObject,recordId):
                 Jsonurldetails = tdkTestObj.getResultDetails();
                 print "Result of scheduling : %s" %actualresult;
                 print "Jsonurldetails is : %s" %Jsonurldetails;
-#                RequestURL = Jsonurldetails.replace("\\","");
 		RequestURL = Jsonurldetails.replace("${now}","curTime");
-#		RequestURL = RequestURL.replace(" ", "");
-#		RequestURL = RequestURL.replace("\\", "");
                 print "RequestURL (DEFAULT) is : %s" %RequestURL ;
                 #compare the actual result with expected result
                 if expectedresult in actualresult:
                         print "Recorder received the requested recording url";
                         time.sleep(10);
-                        #status_actual =tdkTestObj.initiateRecorderApp(RequestURL);
 			RequestURL="{\"updateSchedule\":{\"requestId\":\"TDK123\",\"generationId\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recording_id))+"\",\"locator\":[\"ocap://"+validid+"\"],\"epoch\":curTime,\"start\":"+start_time+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recording_id))+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 			print "RequestURL (HARD CODED) is : %s" %RequestURL ;
 			serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
@@ -164,12 +154,12 @@ def schdule_Recording(testStep,testObject,recordId):
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Recorder NOT received the requested recording url";
-                #unloading Recorder module
-                #obj.unloadModule("Recorder");
         else:
                 print "getSourceId is failed";
                 tdkTestObj.setResultStatus("FAILURE");
 
+        #unloading Recorder module
+        obj.unloadModule("Recorder");
         return 1
 
 

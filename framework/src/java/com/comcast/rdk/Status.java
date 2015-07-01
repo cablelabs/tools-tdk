@@ -24,5 +24,6 @@ public enum Status
     ALLOCATED,
     BUSY,
     NOT_FOUND,
-    HANG
+    HANG,
+   TDK_DISABLED
 }

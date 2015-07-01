@@ -267,7 +267,7 @@ class ScriptexecutionService {
 					}
 				}
 				
-				if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString())) && !pause){
+				if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()) || devStatus.equals(Status.TDK_DISABLED.toString())) && !pause){
 					try {
 						executionStarted = true
 								def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple)
@@ -282,7 +282,7 @@ class ScriptexecutionService {
 						e.printStackTrace()
 					}
 				}else{
-					if(!aborted && (devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()))){
+					if(!aborted && (devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()) || devStatus.equals(Status.TDK_DISABLED.toString()))){
 						pause = true
 					}
 					

@@ -58,8 +58,9 @@ print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
 recObj.setLoadModuleStatus(recLoadStatus);
 
-#genIdInput = "Aa&amp;&quot;'> <-`~!@#$%^&*(){}[]\|;:,.?/Zz";
-genIdInput = "Aa&amp;&quot;'> <-`~!@#$%^&*(){}[];:,.?Zz";
+#"Aa&amp;&quot;'> <-`~!@#$%^&*(){}[]\|;:,.?/Zz";
+genIdExpect = "Aa&;&;'> <-`~!@#$%^&*(){}[]|;:,.?/Zz";
+genIdInput="Aa%26%3b%26%3b%27%3e%20%3c%2d%60%7e%21%40%23%24%25%5e%26%2a%28%29%7b%7d%5b%5d%7c%3b%3a%2c%2e%3f%2fZz";
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
@@ -67,10 +68,13 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 
         print "Sleeping to wait for the recoder to be up"
-	sleep(300);
+
 
         jsonMsgNoUpdate = "{\"noUpdate\":{\"generationId\":\""+genIdInput+"\"}}";
 
@@ -121,12 +125,12 @@ if "SUCCESS" in recLoadStatus.upper():
                     print "Received Empty/Error status";
                 else:
 		    genOut = recorderlib.getGenerationId(actResponse)
-                    if genOut == genIdInput:
+                    if genOut == genIdExpect:
                     	tdkTestObj.setResultStatus("SUCCESS");
                         print "GenerationId matches with the expected one";
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
-                    	print "GenerationId retrieved (%s) does not match with the expected (%s)"%(genOut,genIdInput);
+                    	print "GenerationId retrieved (%s) does not match with the expected (%s)"%(genOut,genIdExpect);
 
         else:
             tdkTestObj.setResultStatus("FAILURE");

@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
 
         #Giving no update here to get the recording list in case the previous generation id is set to zero before reboot
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
@@ -152,9 +155,6 @@ if "SUCCESS" in recLoadStatus.upper():
                             print "Successfully retrieved acknowledgement from recorder";
 		            print "Wait till all the recording gets complete";	
 		            sleep(180);	
-			    jsonMsgGenIdUpdate = "{\"updateSchedule\":{\"generationId\":\"0\"}}";
-                    	    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgGenIdUpdate,ip);
-                    	    sleep(10);
                             # Reboot the STB
                             print "Rebooting the STB to get the recording list from full sync"
                             recObj.initiateReboot();
@@ -172,7 +172,7 @@ if "SUCCESS" in recLoadStatus.upper():
                             if expResponse in actResponse:
                                 print "No Update Schedule message post success";
                                 print "Wait for 60s to get the recording list"
-                                sleep(60);
+                                sleep(120);
                                 tdkTestObj1.setResultStatus("SUCCESS");
                                 #Check for acknowledgement from recorder
                                 tdkTestObj1.executeTestCase(expectedResult);

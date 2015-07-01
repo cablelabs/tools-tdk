@@ -3,8 +3,7 @@
 ACLOCAL_AMFLAGS = -Im4 --install
 
 AM_CPPFLAGS = -Wall -g -DGCC4_XXX -Wno-format -Wunused -DUSE_CC_GETTIMEOFDAY -DRMF_OSAL_FEATURE_IPV6 -DRMF_OSAL_LITTLE_ENDIAN \
-              -DRDK_BR_2DOT0 ${COPTS} -DDEBUG_CONF_FILE="\"/etc/debug.ini\""
-
+              -DRDK_BR_2DOT0 ${COPTS} -DDEBUG_CONF_FILE="\"/etc/debug.ini\"" -DNUM_OF_TUNERS=$(MAX_NUM_TUNERS)
 
 AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/trm \

@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
 
         #Giving no update here to get the recording list in case the previous generation id is set to zero before reboot
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
@@ -157,15 +160,19 @@ if "SUCCESS" in recLoadStatus.upper():
                             		key = 'status'
                                 	value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                                 	print "key: ",key," value: ",value
-                                	print "Successfully retrieved the recording list from recorder for inprogress recording";
-                                	if "ERASED" not in value.upper():
-                                        	print "Recording in progress cancelled successfully";
-                                	else:
-                                		tdkTestObj.setResultStatus("FAILURE");
-                                        	print "Failed to cancel the recording in progress";
+                                	print "Successfully retrieved the recording list from recorder for future recording";
+                                        if "ERASED" not in value.upper():
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                print "Not received "Erased" messsage";
+                                        elif:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "No status field for this recording Id";
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "Received "erased" failure message";
                               	else:
                               		tdkTestObj.setResultStatus("FAILURE");
-                                	print "Failed to retrieve the recording list from recorder for inprogress recording";
+                                	print "Failed to retrieve the recording list from recorder for future recording";
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve acknowledgement from recorder";

@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_47 - Recorder- To update duration upon receiving updateRecordings message</synopsis>
+  <synopsis>CT_Recoder_DVR_Protocol_47 - Recorder- Not to update duration upon receiving updateRecordings message</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
@@ -119,11 +122,9 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
-		    jsonMsgNoUpdate = "{\"updateSchedule\":{\"generationId\":\"0\"}}";
-		    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
 
                     #Frame json message for update recording
-                    jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P3\",\"duration\":"+newDuration+"}]}}";
+                    jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P3\",\"duration\":"+newDuration+"}]}}";
 
                     expResponse = "updateRecordings";
                     tdkTestObj.executeTestCase(expectedResult);
@@ -166,7 +167,7 @@ if "SUCCESS" in recLoadStatus.upper():
                             if expResponse in actResponse:
                                 print "No Update Schedule message post success";
                                 print "Wait for 60s to get the recording list"
-                                sleep(60);
+                                sleep(120);
                                 tdkTestObj1.setResultStatus("SUCCESS");
                                 #Check for acknowledgement from recorder
                                 tdkTestObj1.executeTestCase(expectedResult);
@@ -175,15 +176,18 @@ if "SUCCESS" in recLoadStatus.upper():
                                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
                                 print recordingData
                                 if 'NOTFOUND' not in recordingData:
-                                    key = 'duration'
+                                    key = 'expectedDuration'
                                     statusKey = 'status'
                                     value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                    statusValue = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                                    statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
                                     print "key: ",key," value: ",value
                                     print "Successfully retrieved the recording list from recorder";
-                                    if newDuration == value and "COMPLETE" in statusValue.upper():
+                                    if int(newDuration) != int(value) and "COMPLETE" in statusValue.upper():
                                         tdkTestObj1.setResultStatus("SUCCESS");
                                         print "Duration updated successfully";
+                                    elif "BADVALUE" in statusValue.upper():
+                                        tdkTestObj1.setResultStatus("FAILURE");
+                                        print "No error/status field for this recording Id";
                                     else:
                                         tdkTestObj1.setResultStatus("FAILURE");
                                         print "Duration updation not completed successfully";

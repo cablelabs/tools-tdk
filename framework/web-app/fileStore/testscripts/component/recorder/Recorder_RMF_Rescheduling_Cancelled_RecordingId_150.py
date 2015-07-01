@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
@@ -182,18 +185,21 @@ if "SUCCESS" in recLoadStatus.upper():
                                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
                                 print recordingData
                                 if 'NOTFOUND' not in recordingData:
-                                    key = 'status'
-                                    durationkey = 'expectedDuration'
+				    key = 'status'
+                                    errorkey = 'error'
                                     value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                    durationvalue = recorderlib.getValueFromKeyInRecording(recordingData,durationkey)
+                                    errorvalue = recorderlib.getValueFromKeyInRecording(recordingData,errorkey)
                                     print "key: ",key," value: ",value
                                     print "Successfully retrieved the recording list from recorder";
-                                    if "USER_STOP" in value.upper() and durationvalue == str(duration):
+                                    if "INCOMPLETE" in value.upper() and "USER_STOP" in errorvalue.upper():
                                         tdkTestObj1.setResultStatus("SUCCESS");
-                                        print "Scheduled recording completed successfully";
+                                        print "Rescheduling with cancelled recording Id failed";
+                                    elif ""BADVALUE"" in value.upper() and "BADVALUE" in errorvalue.upper():
+                                        tdkTestObj1.setResultStatus("FAILURE");
+                                        print "No error/status field for this recording Id";
                                     else:
                                         tdkTestObj1.setResultStatus("FAILURE");
-                                        print "Scheduled recording not completed successfully";
+                                        print "Rescheduling with cancelled recording Id completed";
                                 else:
                                     tdkTestObj1.setResultStatus("FAILURE");
                                     print "Failed to retrieve the recording list from recorder";

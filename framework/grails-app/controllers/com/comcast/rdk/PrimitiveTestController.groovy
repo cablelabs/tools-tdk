@@ -491,8 +491,8 @@ class PrimitiveTestController {
 		Device device = Device.findByStbIp(stbIp?.trim())
 		JsonObject outData = new JsonObject()
 		String boxtype = device?.boxType?.type?.toLowerCase()
-
-
+		String deviceNotFound = "Device not found"
+		if(device){
 		if(boxtype?.equals( BOXTYPE_CLIENT ) ) {
 			String gateway = device?.gatewayIp.toString()
 			Device gatewayDevice =  Device.findByStbName(gateway.trim())
@@ -574,6 +574,9 @@ class PrimitiveTestController {
 			}
 		}
 		render outData
+		}else{
+			render deviceNotFound
+		}
 	}
 	
 	

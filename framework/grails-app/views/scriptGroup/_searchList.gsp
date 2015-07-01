@@ -34,6 +34,7 @@
 							<th width = "45%">Script Name</th>
 							<th>PrimitiveTest</th>
 							<th width = "10%" >BoxTypes</th>
+							<th width = "1%"></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -52,6 +53,9 @@
 
 								<td>
 									${scriptListInstance?.boxTypes}
+								</td>
+								<td>
+									<g:link action="exportScriptContent" id="${scriptListInstance?.name}" ><img src="../images/script-py.png" /></g:link>
 								</td>
 							</tr>
 						</g:each>

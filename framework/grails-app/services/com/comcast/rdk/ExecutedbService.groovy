@@ -422,6 +422,7 @@ class ExecutedbService {
 	 * Method to get the data for creating the consolidated report in excel format.
 	 */
 	def getDataForConsolidatedListExcelExport(Execution executionInstance, String realPath,String appUrl) {
+
 		List executionDeviceList = []
 		List executionResultInstanceList = []
 		List columnWidthList = []
@@ -433,13 +434,15 @@ class ExecutedbService {
 		def deviceName = ""
 		def deviceIp = ""
 		def executionTime = ""
+		int totalCount = 0
+		int testCount =0
 
 		String filePath = ""
 		def executionDeviceId
 
 		Map summaryHead = [:]
 		Map statusValue = [:]
-		List fieldList = ["C1", "C2", "C3", "C4", "C5","C6"]
+		List fieldList = ["C1", "C2", "C3", "C4", "C5","C6","C7","C8","C9","C10"]
 
 
 		executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
@@ -458,7 +461,6 @@ class ExecutedbService {
 					file.eachLine { line ->
 						if(!(line.isEmpty())){
 							if(!(line.startsWith( LINE_STRING ))){
-
 								fileContents = fileContents + line + HTML_BR
 							}
 						}
@@ -496,69 +498,88 @@ class ExecutedbService {
 			} catch (Exception e) {
 				e.printStackTrace()
 			}
+			
+		
 
 			executionResultInstanceList =  ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance,executionDeviceInstance)//,[sort: "script",order: "asc"])
-
 			def summaryMap = getStatusList(executionInstance,executionDeviceInstance,executionResultInstanceList?.size()?.toString())
-
+			
 			int counter = 1
+			int counter1=1
 			Date date = new Date()
 			executionResultInstanceList.each{ executionResultInstance ->
+				println ""
+				counter1= counter1+1
+			
 				String scriptName = executionResultInstance?.script
 				String status = executionResultInstance?.status
 				String output = executionResultInstance?.executionOutput
 				String executionOutput
 				String moduleName = ""
+				int  execution = executionResultInstance?.script?.count
 //				Script.withTransaction {
 //					Script scrpt = Script.findByName(scriptName)
 //					moduleName = scrpt?.primitiveTest?.module?.name
+				
 //				}
+				
 				
 				def sMap = scriptService.getScriptNameModuleNameMapping(realPath)
 				moduleName = sMap.get(scriptName)
 				
-				if(!moduleName.equals("")){
+				int i = 0
+				
+				if(!moduleName.equals("")){	
+		//			def scriptObj1 = ScriptFile.findByModuleName(moduleName)
+		
+	
 					def scriptObj = ScriptFile.findByScriptNameAndModuleName(scriptName,moduleName)
 					if(scriptObj){
-					def dataList
-					Map dataMapList = detailDataMap.get(moduleName)
-					if(dataMapList == null){
-						dataMapList = [:]
-						detailDataMap.put(moduleName,dataMapList)
-					}
-
-					if(dataMapList != null){
-						dataList = dataMapList.get("dataList")
-						if(dataList == null){
-							dataList = []
-							dataMapList.put("dataList",dataList)
-							dataMapList.put("fieldsList",fieldList)
-
-							counter = 1
+						def dataList					
+						Map dataMapList = detailDataMap.get(moduleName)
+							if(dataMapList == null){
+								dataMapList = [:]
+								detailDataMap.put(moduleName,dataMapList)
+								//detailDataMap.put("total", summaryMap.get("Total Scripts"))
+							}				
+						
+						if(dataMapList != null){
+							dataList = dataMapList.get("dataList")
+							if(dataList == null){
+								dataList = []
+								dataMapList.put("dataList",dataList)
+								dataMapList.put("fieldsList",fieldList)
+								counter = 1
 						}else{
 							counter =  dataMapList.get("counter")
 						}
 						if(dataList != null){
+							
 							if(output){
 								executionOutput = output.replace(HTML_BR, NEW_LINE)
 								if(executionOutput && executionOutput.length() > 10000){
 									executionOutput = executionOutput.substring(0, 10000)
 								}
 							}
-
-							
-							Map dataMap 	= ["C1":counter,"C2":scriptName,"C3":status,"C4":executionOutput,"C5":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id,,"C6":parseTime(executionInstance?.dateOfExecution)]
+								
+							String executed
+							if( "PENDING".equals(status)){
+								executed = "NO"
+							}			
+							else{
+								executed = "YES"
+							}
+							//Map dataMap = ["C1":counter,"C2":scriptName,"C3":status,"C4":executionOutput,"C5":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id,,"C6":parseTime(executionInstance?.dateOfExecution)] 						
+							Map dataMap =["C1":counter,"C2":scriptName,"C3":executed,"C4":status,"C5":parseTime(executionInstance?.dateOfExecution),"C6":executionOutput,"C7":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id,,"C8":"","C9":"","C10":""] //,"total":summaryMap.get("Total Scripts")]
 							dataList.add(dataMap)
 							counter ++
 							dataMapList.put("counter",counter)
 						}
 					}
-				
-					}
 				}
 			}
 		}
-
+	}			
 		prepareStatusList(detailDataMap)
 		return detailDataMap
 	}
@@ -582,7 +603,6 @@ class ExecutedbService {
 	 */
 	def prepareStatusList(Map detailDataMap){
 		Set keySet = detailDataMap.keySet();
-
 		int counter = 1
 		int totalScripts = 0
 		int tSuccess = 0
@@ -590,38 +610,45 @@ class ExecutedbService {
 		int tNa = 0
 		int tSkip = 0
 		int tTimeOut =0
+		int scriptCount = 0;
+		int totalScript = 0
+		
 		keySet.each { key ->
-			if(!key.equals("CoverPage")){
+			if(!key.equals("CoverPage")){	
 				int success = 0
 				int failure = 0
 				int na = 0
 				int skip = 0
 				int total = 0
 				int timeOut = 0
+			
 				Map dataMap = detailDataMap.get(key)
 				List dataList = dataMap.get("dataList")
 				dataList.each { dMap ->
 					
-					if(!dMap.get("C3").equals("PENDING")){
+					if(!dMap.get("C4").equals("PENDING")){
 						total ++
 					}
 					
-					if(dMap.get("C3").equals(Constants.SUCCESS_STATUS)){
+					if(dMap.get("C4").equals(Constants.SUCCESS_STATUS)){
 						success ++
-					}else if(dMap.get("C3").equals(Constants.FAILURE_STATUS)){
+					}else if(dMap.get("C4").equals(Constants.FAILURE_STATUS)){
 						failure ++
-					}else if(dMap.get("C3").equals(Constants.NOT_APPLICABLE_STATUS)){
+					}else if(dMap.get("C4").equals(Constants.NOT_APPLICABLE_STATUS)){
 						na ++
-					}else if(dMap.get("C3").equals(Constants.SKIPPED_STATUS)){
+					}else if(dMap.get("C4").equals(Constants.SKIPPED_STATUS)){
 						skip ++
-					}else if(dMap.get("C3").equals("SCRIPT TIME OUT")){
+					}else if(dMap.get("C4").equals("SCRIPT TIME OUT")){
 						timeOut ++
 					}
+					//scriptCount = Integer.parseInt(dMap.get("total"))
+					//scriptCount =dMap.get("total")
 				}
 				Map coverPageMap = detailDataMap.get("CoverPage")
 				Map resultMap = [:]
 				resultMap.put("Sl No", counter)
 				resultMap.put("Module", key)
+				//resultMap.put("Total",	scriptCount)
 				resultMap.put("Executed", total)
 				resultMap.put(Constants.SUCCESS_STATUS, success)
 				resultMap.put(Constants.FAILURE_STATUS, failure)
@@ -638,20 +665,31 @@ class ExecutedbService {
 				tSkip += skip
 				totalScripts += total
 				tTimeOut += timeOut
+				//totalScript +=scriptCount
 
 			}
 		}
-
+		//scriptCount=Integer.parseInt(resultMap.getAt("total"))
 		Map coverPageMap = detailDataMap.get("CoverPage")
 		Map resultMap = [:]
+		
 		resultMap.put("Sl No", "")
 		resultMap.put("Module", "Total")
+		//resultMap.put("Total", 	totalScript)
 		resultMap.put("Executed", totalScripts)
 		resultMap.put(Constants.SUCCESS_STATUS, tSuccess)
 		resultMap.put(Constants.FAILURE_STATUS, tFailure)
 		resultMap.put("SCRIPT TIME OUT", tTimeOut)
 		resultMap.put(Constants.NOT_APPLICABLE_STATUS, tNa)
 		resultMap.put(Constants.SKIPPED_STATUS, tSkip)
+		//resultMap.put("Number of failed scripts linked with open defects","")
+		//resultMap.put("Script Issue", "")
+		//resultMap.put("Existing Issue", "")
+		//resultMap.put("New Issue","")
+		//resultMap.put("Environment Issue", "")
+		//resultMap.put("Interface Change","")
+		//resultMap.put("Remarks","")
+		
 		coverPageMap.put("Total", resultMap)
 	}
 	/**

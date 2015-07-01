@@ -57,6 +57,7 @@ class StreamingDetailsController {
         def streamingDetailsInstance = new StreamingDetails(params)
 		streamingDetailsInstance.groups = utilityService.getGroup()
         if (!streamingDetailsInstance.save(flush: true)) {
+			flash.message = " StreamId should be  Unique "
           // render(view: "create", model: [streamingDetailsInstance: streamingDetailsInstance])
             redirect(action: "list")
             return
@@ -71,6 +72,7 @@ class StreamingDetailsController {
 		if(params?.streamId?.startsWith("R")){
 		streamingDetailsInstance.groups = utilityService.getGroup()
 		if (!streamingDetailsInstance.save(flush: true)) {
+		flash.message = " Radio StreamId should be  Unique "
 		  // render(view: "create", model: [streamingDetailsInstance: streamingDetailsInstance])
 			redirect(action: "list")
 			return
@@ -150,6 +152,7 @@ class StreamingDetailsController {
         streamingDetailsInstance.properties = params
 
         if (!streamingDetailsInstance.save(flush: true)) {
+			flash.message = " StreamId should be  Unique "
            // render(view: "edit", model: [streamingDetailsInstance: streamingDetailsInstance])
             redirect(action: "list")
             return
@@ -185,6 +188,7 @@ class StreamingDetailsController {
 			}
 			radioStreamingDetailsInstance.properties = params
 			if (!radioStreamingDetailsInstance.save(flush: true)) {
+				flash.message = " Radio StreamId should be  Unique "
 				// render(view: "edit", model: [streamingDetailsInstance: streamingDetailsInstance])
 				 redirect(action: "list")
 				 return

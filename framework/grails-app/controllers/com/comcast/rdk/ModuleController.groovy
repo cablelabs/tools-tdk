@@ -85,6 +85,59 @@ class ModuleController {
 		}				
 		redirect(action: "crashlog")		
 	}
+	/**
+	 * Function transfer the moduleList to the view page
+	 *   
+	 */
+	def logFileNames(){
+		def moduleInstanceList = Module.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])
+		[moduleInstanceList: moduleInstanceList]
+	}
+
+	/**
+	 *The Function transfer the stbLogFiles in view page configureStbLogs
+	 * @return
+	 */
+	def getLogList(){
+		Module module = Module.findById(params?.moduleid)
+		render(template:"configureStbLogs", model:[ stbLogFiles : module?.stbLogFiles])	
+	}
+	
+	/**
+	 * The function used to save the current StbLogFiles in database
+	 * @return
+	 */
+	
+	def saveLogsFiles(){
+		List lst = []
+		if(params?.stbLogFiles){
+			if((params?.stbLogFiles) instanceof String){
+				lst.add(params?.stbLogFiles)
+			}
+			else{
+				params?.stbLogFiles.each{ stblogfilename ->
+					if(!(stblogfilename.isEmpty())){
+						lst.add(stblogfilename)
+					}
+				}
+			}
+			Module module = Module.findById(params?.module.id)
+			module.stbLogFiles = lst 
+			if(module.save(flush:true)){
+				flash.message = "Updated Log Files to the Module "+module?.name
+			}
+			else{
+				flash.message = "Error in saving. Please retry "
+			}
+		}
+		redirect(action: "logFileNames")
+	}
+	
+	
+	
+	
+	
+	
 	
     def configuration() {    
         // Redirect to show page without any parameters

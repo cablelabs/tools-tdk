@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_52 -  Recorder to send error TRM_CANCELLED if two current recording with same ocap id is scheduled via inline. Second current recording should be cancelled by TRM message</synopsis>
+  <synopsis>CT_Recoder_DVR_Protocol_52 -  Recorder not to send error TRM_CANCELLED if two current recording with same ocap id is scheduled via inline. Second current recording should not be cancelled by TRM message</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
 
         #Giving no update here to get the recording list in case the previous generation id is set to zero before reboot
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
@@ -91,7 +94,7 @@ if "SUCCESS" in recLoadStatus.upper():
         now = "curTime"
 
         #Frame json message
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"},{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"},{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -102,6 +105,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
                 print "Wait for 60s to get acknowledgement"
+		sleep(60);
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
@@ -129,15 +133,18 @@ if "SUCCESS" in recLoadStatus.upper():
                                 value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                                 print "key: ",key," value: ",value
                                 print "Successfully retrieved the recording list from recorder for inprogress recording";
-                                if "TRM_CANCELLED" in value.upper():
+                                if "TRM_CANCELLED" not in value.upper():
                                         tdkTestObj.setResultStatus("SUCCESS");
-                                        print "Recording got cancelled";
+                                        print "No TRM_CANCELLED error received";
+                                elif "BADVALUE" in value.upper():
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        print "No error field for this recording Id";
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "Recording scheduled successfully";
+                                        print "Received TRM_CANCELLED error";
                         else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "Failed to retrieve the recording list from recorder for inprogress recording";
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                print "No failure message received for this recording Id";
                 else:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Failed to retrieve acknowledgement from recorder";

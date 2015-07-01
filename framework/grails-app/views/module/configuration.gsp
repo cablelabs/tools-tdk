@@ -29,6 +29,11 @@
 					<td><g:link controller="module" action="crashlog"><span>Link Crash Files</span></g:link></td>
 					<td>Link Crash Files to Modules</td>
 				</tr>
+					
+				<tr>
+					<td><g:link controller="module" action="logFileNames"><span>Link logs files</span></g:link></td>
+					<td>Link Configure STB logs to Module</td>
+				</tr>
 				<tr>					
 					<td><g:link controller="streamingDetails" action="list"><span>Streaming Details</span></g:link></td>
 					<td>Option to add streaming details</td>

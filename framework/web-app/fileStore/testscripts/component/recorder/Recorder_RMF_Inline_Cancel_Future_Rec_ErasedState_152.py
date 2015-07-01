@@ -62,9 +62,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
@@ -157,12 +160,15 @@ if "SUCCESS" in recLoadStatus.upper():
 				statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
 				print "statusKey: ",statusKey," statusValue: ",statusValue
                                 print "Successfully retrieved the recording list from recorder";
-				if "ERASED" not in statusValue.upper():
-                                	tdkTestObj.setResultStatus("SUCCESS");
-                                	print "Cancelled future recording successfully";
-                            	else:
-                                	tdkTestObj.setResultStatus("FAILURE");
-                                	print "Failed to cancel future recording";
+                                if "ERASED" not in statusValue.upper():
+                                        tdkTestObj.setResultStatus("SUCCESS");
+                                        print "Not received "Erased" messsage";
+                                elif "BADVALUE" in statusValue.upper():
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        print "No status field for this recording Id";
+                                else:
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        print "Received "erased" failure message";
 			    else:
                                     tdkTestObj.setResultStatus("FAILURE");
                                     print "Failed to retrieve the recording list from recorder";	

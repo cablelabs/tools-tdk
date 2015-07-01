@@ -76,7 +76,7 @@ class ExecutescriptService {
 	 */
 	
 	def String executeScript(final String executionName, final ExecutionDevice executionDevice, final def scriptInstance,
-			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String uniqueExecutionName,final String isMultiple, def executionResult) {
+			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String uniqueExecutionName,final String isMultiple, def executionResult,def isLogReqd) {
 		String htmlData = ""
 		String scriptData = executionService.convertScriptFromHTMLToPython(scriptInstance.scriptContent)
 		String stbIp = STRING_QUOTES + deviceInstance.stbIp + STRING_QUOTES
@@ -189,6 +189,13 @@ class ExecutescriptService {
 			if(htmlData.contains(KEY_SCRIPTEND)){
 				htmlData = htmlData.replaceAll(KEY_SCRIPTEND,"")
 			}
+			def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
+			def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
+			new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+			logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
+			if(isLogReqd){
+				transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
+			}
 			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 			Thread.sleep(4000)
 			hardResetAgent(deviceInstance)
@@ -204,6 +211,11 @@ class ExecutescriptService {
 					}
 				}
 			}
+		}else if(htmlData.contains("Pre-Condition not met")){
+			if(htmlData.contains(KEY_SCRIPTEND)){
+				htmlData = htmlData.replaceAll(KEY_SCRIPTEND,"")
+			}
+			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 		}
 		else{
 			if(htmlData.contains(KEY_SCRIPTEND)){
@@ -291,6 +303,9 @@ class ExecutescriptService {
 
 		new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
 		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
+		if(isLogReqd){
+			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
+		}
 		
 		return htmlData
 	}
@@ -370,6 +385,7 @@ class ExecutescriptService {
 		}
 		catch(Exception e){			
 		}
+		
 	}
 
 	/**
@@ -524,7 +540,7 @@ class ExecutescriptService {
 								if(executionService.validateScriptBoxTypes(scriptInstance,deviceInstance)){
 									aborted = executionService.abortList.contains(exeId?.toString())
 									if(!aborted){
-										htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null)
+										htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null,"false")
 										
 									}
 								}
@@ -662,7 +678,7 @@ class ExecutescriptService {
 	 * @return
 	 */
 	def executescriptsOnDevice(String execName, String device, ExecutionDevice executionDevice, def scripts, def scriptGrp,
-			def executionName, def filePath, def realPath, def groupType, def url, def isBenchMark, def isSystemDiagnostics, def rerun)
+			def executionName, def filePath, def realPath, def groupType, def url, def isBenchMark, def isSystemDiagnostics, def rerun,def isLogReqd)
 	{
 		
 		boolean aborted = false
@@ -782,7 +798,7 @@ class ExecutescriptService {
 				if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString())) && !pause){
 					executionStarted = true
 					try {
-						htmlData = executeScript(execName, executionDevice, scriptObj, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics, executionName, isMultiple,null)
+						htmlData = executeScript(execName, executionDevice, scriptObj, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics, executionName, isMultiple,null,isLogReqd)
 
 					} catch (Exception e) {
 					
@@ -868,7 +884,7 @@ class ExecutescriptService {
 				def script1 = scriptService.getScript(realPath,moduleName, scripts)
 				isMultiple = FALSE
 				try {
-					htmlData = executeScript(execName, executionDevice, script1, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics,executionName,isMultiple,null)
+					htmlData = executeScript(execName, executionDevice, script1, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics,executionName,isMultiple,null,isLogReqd)
 
 				} catch (Exception e) {
 					e.printStackTrace()
@@ -946,7 +962,7 @@ class ExecutescriptService {
 					}
 					
 					try {
-						htmlData = executeScript(execName, executionDevice, script, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics,executionName,isMultiple,null)
+						htmlData = executeScript(execName, executionDevice, script, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics,executionName,isMultiple,null,isLogReqd)
 						output.append(htmlData)
 					} catch (Exception e) {
 					
@@ -1036,12 +1052,14 @@ class ExecutescriptService {
 	 * @return
 	 */
 	def executeScriptInThread(String execName, String device, ExecutionDevice executionDevice, def scripts, def scriptGrp,
-			def executionName, def filePath, def realPath, def groupType, def url, def isBenchMark, def isSystemDiagnostics, def rerun){
+			def executionName, def filePath, def realPath, def groupType, def url, def isBenchMark, def isSystemDiagnostics, def rerun,def isLogReqd){
 
 		Future<String> future =  executorService.submit( {
 			executescriptsOnDevice(execName, device, executionDevice, scripts, scriptGrp,
-					executionName, filePath, realPath, groupType, url, isBenchMark, isSystemDiagnostics, rerun)} as Callable< String > )
+					executionName, filePath, realPath, groupType, url, isBenchMark, isSystemDiagnostics, rerun,isLogReqd)} as Callable< String > )
+		
 	}
+
 
 	/**
 	 * Restart the script execution in case of device unavailablity
@@ -1127,7 +1145,7 @@ class ExecutescriptService {
 												if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()))&& !pause){
 													
 													
-													htmlData = executeScript(exResult?.execution?.name, execDevice, script1 , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple,exResult)
+													htmlData = executeScript(exResult?.execution?.name, execDevice, script1 , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple,exResult,execution?.isStbLogRequired)
 															output.append(htmlData)
 															if(!thirdParyExecution){
 																Thread.sleep(6000)
@@ -1225,6 +1243,7 @@ class ExecutescriptService {
 		def groups = execution?.groups
 		def isBenchMark = execution.isBenchMarkEnabled ? "true" : "false"
 		def isSystemDiagnostics = execution.isSystemDiagnosticsEnabled ? "true" : "false"
+		def isLogReqd = execution.isStbLogRequired ? "true" : "false"
 		def rerun = execution.isRerunRequired ? "true" : "false"
 		def htmlData
 		int scriptCnt
@@ -1246,7 +1265,7 @@ class ExecutescriptService {
 
 		boolean executionSaveStatus 
 		
-			executionSaveStatus = saveRepeatExecutionDetails(execName, "", deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,groups,scriptCnt)
+			executionSaveStatus = saveRepeatExecutionDetails(execName, "", deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,groups,scriptCnt,isLogReqd)
 		
 		def executionDevice
 		if(executionSaveStatus){
@@ -1270,7 +1289,7 @@ class ExecutescriptService {
 			executionService.executeVersionTransferScript(realPath,filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
 			try {
 				htmlData = repeatExecutionOnDevice(execName,deviceID , executionDevice, "", scriptGroupInstance?.id, execName,
-					filePath, realPath, TEST_SUITE, url, isBenchMark, isSystemDiagnostics, rerun)
+					filePath, realPath, TEST_SUITE, url, isBenchMark, isSystemDiagnostics, rerun,isLogReqd)
 
 			} catch (Exception e) {
 				e.printStackTrace()
@@ -1288,7 +1307,7 @@ class ExecutescriptService {
 	 * Method to save the repeat execution details
 	 */
 	public boolean saveRepeatExecutionDetails(final String execName, String scriptName, String deviceName,
-		ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,Groups groups, int scriptCnt){
+		ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,Groups groups, int scriptCnt, String isLogReqd){
 		   def executionSaveStatus = true
 		   try {
 			   Execution.withTransaction {
@@ -1306,6 +1325,7 @@ class ExecutescriptService {
 			   execution.isRerunRequired = rerun?.equals("true")
 			   execution.isBenchMarkEnabled = isBenchMark?.equals("true")
 			   execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
+			   execution.isStbLogRequired = isLogReqd?.equals("true")
 			   if(! execution.save(flush:true)) {
 				   executionSaveStatus = false
 			   }
@@ -1324,7 +1344,7 @@ class ExecutescriptService {
 	 * @return
 	 */
 	def repeatExecutionOnDevice(String execName, String device, ExecutionDevice executionDevice, def scripts, def scriptGrp,
-			def executionName, def filePath, def realPath, def groupType, def url, def isBenchMark, def isSystemDiagnostics, def rerun)
+			def executionName, def filePath, def realPath, def groupType, def url, def isBenchMark, def isSystemDiagnostics, def rerun, def isLogReqd)
 	{
 		boolean aborted = false
 		boolean pause = false
@@ -1437,7 +1457,7 @@ class ExecutescriptService {
 				
 				if(!aborted && !devStatus.equals(Status.NOT_FOUND.toString()) && !pause){
 					executionStarted = true
-					htmlData = executeScript(execName, executionDevice, scriptObj, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics, executionName, isMultiple,null)
+					htmlData = executeScript(execName, executionDevice, scriptObj, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics, executionName, isMultiple,null,isLogReqd)
 					output.append(htmlData)
 					Thread.sleep(6000)
 				}else{
@@ -1537,6 +1557,57 @@ class ExecutescriptService {
 		deleteOutputFile(executionName)
 		htmlData = output.toString()
 		return htmlData
+	}
+	
+	def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId){
+		try {
+			def module
+			Module.withTransaction {
+				module = Module.findByName(moduleName)
+			}
+
+			def destFolder = grailsApplication.parentContext.getResource("//logs//stblogs//execId_logdata.txt").file
+			def destPath = destFolder.absolutePath
+			
+			
+			def filePath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
+			def directoryPath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
+			new File(directoryPath).mkdirs()
+		
+			
+			module?.stbLogFiles?.each{ name -> 
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+
+			File fileStore = grailsApplication.parentContext.getResource("//fileStore//").file
+			def fileStorePath = fileStore.absolutePath
+
+			def absolutePath = layoutFolder.absolutePath
+			String fName = name?.replaceAll("//", "_")
+			fName = fName?.replaceAll("/", "_")
+			
+			if((absolutePath) && !(absolutePath.isEmpty())){
+
+				String[] cmd = [
+					"python",
+					absolutePath,
+					dev?.stbIp,
+					dev?.logTransferPort,
+					name,
+					directoryPath+"//"+fName
+				]
+				try {
+					ScriptExecutor scriptExecutor = new ScriptExecutor()
+					def outputData = scriptExecutor.executeScript(cmd,1)
+				}catch (Exception e) {
+				println " error >> "+e.getMessage()
+					e.printStackTrace()
+				}
+			}
+			
+			}
+		} catch (Exception e) {
+			println " ERROR "+e.getMessage()
+		}
 	}
 
 }

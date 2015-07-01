@@ -395,7 +395,10 @@ class ScriptService {
 				status = Status.FREE
 			}else if(statusText == Status.HANG){
 				status = Status.HANG
-			}else{
+			}else if(statusText == Status.TDK_DISABLED){
+				status =  Status.TDK_DISABLED
+			}
+			else{
 				status = Status.NOT_FOUND
 			}
 		}

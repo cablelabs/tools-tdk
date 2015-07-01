@@ -47,7 +47,8 @@ $(document).ready(function() {
 	
 	$("#scriptgrpbrowser").treeview({
 		animated:"normal",
-		persist: "cookie"
+		persist: "cookie",
+		collapsed: true
 	});
 	
 	$("#scriptgrpbrowser").bind("contextmenu", function(e) {

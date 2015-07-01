@@ -62,19 +62,30 @@ recObj.setLoadModuleStatus(recLoadStatus);
 if "SUCCESS" in recLoadStatus.upper():
 
         print "Rebooting box for setting configuration"
-        recObj.initiateReboot();
+	loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+	       sleep(300);
 
         print "Waiting for the recoder to be up"
-        sleep(300);
+
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
 
+	print "Sending noUpdate to get the recording list after full sync"
+	serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
+	sleep(10);
+	response = recorderlib.callServerHandler('retrieveStatus',ip);
+        print "Retrieve Status Details: %s"%response;
+
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
         print "Clear Status Details: %s"%response;
+        response = recorderlib.callServerHandler('retrieveStatus',ip);
+        print "Retrieve Status Details: %s"%response;
 
         genIdInput = "test6b";
 

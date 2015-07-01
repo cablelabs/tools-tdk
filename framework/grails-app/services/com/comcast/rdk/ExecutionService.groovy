@@ -139,6 +139,7 @@ class ExecutionService {
 			File directory = new File(summaryFilePath);
 			List<File> foundFiles = new ArrayList<File>()
 			
+			if(directory?.exists()){
 			directory.eachFile {
 				if (it.isFile()) {
 					String fileName = it.getName()
@@ -147,7 +148,7 @@ class ExecutionService {
 					}
 				}
 			}
-		
+			}
 			if(foundFiles?.size() > 0){
 			   def fileAppendTimestamp
 			   def summaryFileName
@@ -185,10 +186,55 @@ class ExecutionService {
 				}
 			}
 		}catch(FileNotFoundException fnf){
-			mapVals = []
+			mapVals = [:]
 		}
 		catch(Exception ex){
-			mapVals = []
+			mapVals = [:]
+		}
+		
+		try{
+			
+			List<File> foundFiles = new ArrayList<File>()
+			def summaryFilePath1 = "${realPath}//logs//stblogs//${executionId}//${executionDeviceId}//${executionResId}"
+			File directory = new File(summaryFilePath1);
+			if(directory?.exists()){
+			directory.eachFile {
+				if (it.isFile()) {
+					String fileName = it.getName()
+						foundFiles << new File("${realPath}//logs//stblogs//${executionId}//${executionDeviceId}//${executionResId}//${fileName}")
+				}
+			}
+			}
+			
+			
+	
+			if(foundFiles?.size() > 0){
+			   def fileAppendTimestamp
+			   def summaryFileName
+				
+				for (File filename : foundFiles) {
+					summaryFileName = filename.getName()
+					mapVals.put( summaryFileName.trim(), summaryFileName.trim() )
+				}
+			}
+			else{
+			  String filePath = "${realPath}//logs//${executionId}//${executionDeviceId}//${executionResId}"
+				def dir = new File(filePath)
+				dir.eachFile {
+					if (it.isFile()) {
+						String fileName = it.getName()
+						if(fileName.startsWith( executionId )){
+							fileName = fileName.replaceFirst( executionId+UNDERSCORE, "" )
+							mapVals.put( fileName.trim(), "" )
+						}
+					}
+				}
+			}
+		}catch(FileNotFoundException fnf){
+		println "ee> "+fnf.getMessage()
+		}
+		catch(Exception ex){
+			println "eee> "+ex.getMessage()
 		}
 		return mapVals
 	}
@@ -550,7 +596,7 @@ class ExecutionService {
 			absolutePath,
 			device?.stbIp,
 			logTransferPort,
-			"/opt/TDK/trDetails.log",
+			"/var/TDK/trDetails.log",
 			filePath+"${device?.stbName}.txt"
 		]
 
@@ -1174,7 +1220,7 @@ class ExecutionService {
 	 * @return
 	 */
 	public boolean saveExecutionDetails(final String execName, String scriptName, String deviceName,
-	 ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun){
+	 ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,String isLogReqd){
 		def executionSaveStatus = true
 		int scriptCnt = 0
 		if(scriptGroupInstance?.scriptList?.size() > 0){
@@ -1194,6 +1240,7 @@ class ExecutionService {
 			execution.applicationUrl = appUrl
 			execution.isRerunRequired = rerun?.equals("true")
 			execution.isBenchMarkEnabled = isBenchMark?.equals("true")
+			execution.isStbLogRequired = isLogReqd?.equals("true")
 			execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
 			execution.scriptCount = scriptCnt
 			if(! execution.save(flush:true)) {				

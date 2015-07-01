@@ -156,6 +156,7 @@ class ExecutionController {
      * schedule type in the gsp page by the user
      */    
     def createCronScheduleTab(def params) {
+		
         String status = SUCCESS_STATUS
         String cronschedule = ""
         String queryString = ""
@@ -253,7 +254,8 @@ class ExecutionController {
      * @return
      */
     def scheduleOneOff() {
-        		
+	
+		
          String cronschedule
          String startDateString = (params?.startdate).toString()
          String endDateString = (params?.enddate).toString()
@@ -328,7 +330,8 @@ class ExecutionController {
              }
 			 			 
 			 int repeatCount = (params?.repeatCount).toInteger()
-			 
+						 
+			
              JobDetails jobDetails = new JobDetails()
              jobDetails.jobName = jobName
              jobDetails.triggerName = triggerName
@@ -345,6 +348,7 @@ class ExecutionController {
              jobDetails.oneTimeScheduleDate = date
 			 jobDetails.isSystemDiagnostics = params?.isSystemDiagnostics
 			 jobDetails.isBenchMark = params?.isBenchMark
+			 jobDetails.isStbLogRequired=params?.isStbLogRequired
 			 jobDetails.rerun = params?.rerun
 			 jobDetails.repeatCount = repeatCount
 			 jobDetails.groups = utilityService.getGroup()
@@ -353,6 +357,7 @@ class ExecutionController {
              render(template: "scheduleTable", model: [jobDetailList : jobDetailList])
              return
          }
+		 
      }
 
     /**
@@ -365,8 +370,9 @@ class ExecutionController {
         params.max = Math.min(max ?: 10, 100)	
 		def repeatCount = (params?.repeatId)
 		def rerun = params?.rerun
+		
         [scripts : params?.scripts, devices : params?.devices, device : params?.deviceId, scriptGroup : params?.scriptGroup, jobDetailList : JobDetails.list(), 
-			jobInstanceTotal : JobDetails.count(), isSystemDiagnostics : params?.systemDiagnostics, isBenchMark : params?.benchMarking, rerun : rerun, repeatCount : repeatCount]
+				jobInstanceTotal : JobDetails.count(), isSystemDiagnostics : params?.systemDiagnostics, isBenchMark : params?.benchMarking, rerun : rerun, repeatCount : repeatCount,isStbLogRequired : params?.isLogReqd]
     }
 	
     /**
@@ -669,6 +675,10 @@ class ExecutionController {
 									else if(status.equals( Status.BUSY.toString() )){
 										deviceNotExistCnt++
 										outData = outData + " Device ${deviceInstance?.stbName} is not free to execute Scripts"
+									}else if(status.equals( Status.TDK_DISABLED.toString() )){
+										deviceNotExistCnt++
+										outData = outData + "TDK is not enabled  in the Device to execute scripts"
+										
 									}
 									else{
 										deviceNotExistCnt++
@@ -740,6 +750,32 @@ class ExecutionController {
 		} catch (Exception e) {
 		}
 		render device		
+	}
+	
+	def getRealtimeDeviceStatus(final String stbName, final String boxType){
+		JsonObject device = new JsonObject()
+		try {
+			def deviceInstance = Device.findByStbName(stbName)
+			def status = Status.NOT_FOUND?.toString()
+			if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+				status = Status.BUSY?.toString()
+			}
+			else{
+				status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+			}
+
+			if(stbName && boxType)	{
+				device.addProperty(deviceInstance.stbName.toString()+LEFT_PARANTHESIS+deviceInstance.stbIp.toString()+RIGHT_PARANTHESIS, status)
+			}
+			if(!deviceInstance?.deviceStatus.equals(status)){
+				Thread.start{
+					deviceStatusService.updateOnlyDeviceStatus(deviceInstance, status)
+				}
+			}
+		} catch (Exception e) {
+			
+		}
+		render device
 	}
 	
 	def thirdPartyJsonResult(final String execName, final String appurl ){		
@@ -815,7 +851,9 @@ class ExecutionController {
 		}
 		else if(deviceInstance?.deviceStatus.toString().equals(Status.HANG.toString())){
 			htmlData = deviceName+ " : "+message(code: 'execution.device.notfree')
-		}		
+		}else if(deviceInstance?.deviceStatus.toString().equals(Status.TDK_DISABLED.toString()))	{
+			htmlData= deviceName+ " : "+message(code: 'execution.device.notfree')
+		}
 		else if(repeatCount == 0){
 			htmlData = "Give a valid entry in repeat"
 		}	
@@ -829,13 +867,19 @@ class ExecutionController {
 			try{
 			def isBenchMark = FALSE
 			def isSystemDiagnostics = FALSE
+			def isLogReqd = FALSE
 			def rerun = FALSE
 			if(params?.systemDiagnostics.equals(KEY_ON)){
 				isSystemDiagnostics = TRUE
 			}
 			if(params?.benchMarking.equals(KEY_ON)){
 				isBenchMark = TRUE
-			} 
+			}
+			
+			if(params?.transferLogs.equals(KEY_ON)){
+				isLogReqd = TRUE
+			}
+			
 			if(params?.rerun.equals(KEY_ON)){
 				rerun = TRUE
 			}
@@ -1003,7 +1047,9 @@ class ExecutionController {
 							else{
 								execName = exName
 							}
-							executionSaveStatus = executionService.saveExecutionDetails(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun)
+							
+							executionSaveStatus = executionService.saveExecutionDetails(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,isLogReqd)
+			
 							if(deviceList.size() > 0 ){
 								executionNameForCheck = execName
 							}
@@ -1035,14 +1081,15 @@ class ExecutionController {
 							}
 							if(deviceList.size() > 1){
 								executescriptService.executeScriptInThread(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
-										filePath, getRealPath(), params?.myGroup, url, isBenchMark, isSystemDiagnostics, params?.rerun)
+										filePath, getRealPath(), params?.myGroup, url, isBenchMark, isSystemDiagnostics, params?.rerun,isLogReqd)
 								htmlData=" <br> " + deviceName+"  :   Execution triggered "															
 								output.append(htmlData)
 												
 								
 							}else{
+										
 										htmlData = executescriptService.executescriptsOnDevice(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
-												filePath, getRealPath(), params?.myGroup, url, isBenchMark, isSystemDiagnostics, params?.rerun)
+												filePath, getRealPath(), params?.myGroup, url, isBenchMark, isSystemDiagnostics, params?.rerun,isLogReqd)
 										output.append(htmlData)
 										Execution exe = Execution.findByName(execName)
 										if(exe){
@@ -1123,6 +1170,7 @@ class ExecutionController {
 										execution.isRerunRequired = rerun?.equals("true")
 										execution.isBenchMarkEnabled = isBenchMark?.equals("true")
 										execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
+										execution.isStbLogRequired = isLogReqd?.equals("true")
 										execution.outputData = "Execution failed due to the unavailability of box"
 										if(! execution.save(flush:true)) {
 											log.error "Error saving Execution instance : ${execution.errors}"
@@ -1164,7 +1212,15 @@ class ExecutionController {
         }
 		render htmlData
     }
-
+	/**
+	 * show execution result via link 
+	 * @return
+	 */
+	def showExecutionResult(){		
+	    render params?.execResult
+	}
+	
+	
 	def showAgentLogFiles(){
 		def agentConsoleFileData = executionService.getAgentConsoleLogData( request.getRealPath('/'), params?.execId, params?.execDeviceId,params?.execResId)
 		if(agentConsoleFileData.isEmpty()){
@@ -1173,7 +1229,8 @@ class ExecutionController {
 		render(template: "agentConsoleLog", model: [agentConsoleFileData : agentConsoleFileData])
 	}
 
-	def showLogFiles(){		
+	def showLogFiles(){	
+	
 		def logFileNames = executionService.getLogFileNames(request.getRealPath('/'), params?.execId, params?.execDeviceId, params?.execResId )
 		render(template: "logFileList", model: [execId : params?.execId, execDeviceId : params?.execDeviceId, execResId : params?.execResId, logFileNames : logFileNames])
 	}
@@ -1245,6 +1302,11 @@ class ExecutionController {
             String filePath = "${request.getRealPath('/')}//logs//${params?.execId}//${params?.execDeviceId}//${params?.execResultId}//"+params?.id
 		
             def file = new File(filePath)
+			if(!file?.exists()){
+				String name =  params?.id.substring(index+1, params?.id?.length())
+				filePath = "${request.getRealPath('/')}//logs//stblogs//${params?.execId}//${params?.execDeviceId}//${params?.execResultId}//"+name
+				file = new File(filePath)
+			}
             response.setContentType("html/text")
             response.setHeader("Content-disposition", "attachment;filename=${file.getName()}")
             response.outputStream << file.newInputStream()
@@ -1301,6 +1363,34 @@ class ExecutionController {
             }
         }
     }  
+	/**
+	 * Check device is enable or not
+	 * 
+	 */
+	
+	
+	def resetDeviceStatus(Long id){
+	
+		def deviceInstance = Device.get(id)
+		 if (!deviceInstance) {
+            flash.message = message(code: 'default.not.found.message', args: [message(code: 'device.label', default: 'Device'), deviceInstance.stbName])
+            redirect(action: "list")
+            return
+        }
+		else{
+			 Device.withTransaction { status ->
+				 try {
+					 deviceInstance.deviceStatus = Status.TDK_DISABLED
+					 deviceInstance.save(flush:true)
+					 status.flush()
+				 }
+				 catch(Throwable th) {
+					 status.setRollbackOnly()
+				 }
+			 }
+		 }
+	}
+	
 	
 	/**
 	 * REST API : To save the load module status
@@ -1517,12 +1607,12 @@ class ExecutionController {
 				List fieldLabels = []
 				Map fieldMap = [:]
 				Map parameters = [:]
-				List columnWidthList = [0.08,0.4,0.15,0.4,0.15,0.4]
+				List columnWidthList = [0.08,0.4,0.15,0.2,0.15,0.6,0.8,0.2,0.2,0.2]
 		
 				Execution executionInstance = Execution.findById(params.id)
 				if(executionInstance){
 					dataMap = executedbService.getDataForConsolidatedListExcelExport(executionInstance, getRealPath(),getApplicationUrl())
-					fieldMap = ["C1":" Sl.No ", "C2":" Script Name ","C3":" Status ", "C4":" Log Data ","C5":"AgentConsole log","C6":" Date of Execution "]
+					fieldMap = ["C1":" Sl.No ", "C2":" Script Name ","C3":"Executed","C4":" Status ", "C5":"Executed On ","C6":"Log Data","C7":" Agent Console Log","C8":"Jira #","C9":"Issue Type","C10":"Remarks"]
 					parameters = [ title: EXPORT_SHEET_NAME, "column.widths": columnWidthList]
 				}
 				else{
@@ -1719,9 +1809,34 @@ class ExecutionController {
 			}
 		}
 		render resultNode
+		}
+/**
+	 * check the box is enabled/disabled
+	 */
+	def getTDKDeviceStatus()
+	{
+		try{			
+		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//setTDKStatus.py").file
+		def absolutePath = layoutFolder.absolutePath
+		Device device = Device.get(params?.select)
+		def option = params?.option
+		String[] cmd= [
+			"python",
+			absolutePath,
+			device,
+			device?.statusPort,
+			option
+			]
+		
+		ScriptExecutor scriptExecutor = new ScriptExecutor()
+		def outputData = scriptExecutor.executeScript(cmd,1)
+		}
+		
+		catch(Exception e){
+			println e.getMessage()
+			e.printStackTrace()
+		}
 	}
-	
-	
 	
 	/**
 	 * method to stop the execution through ui request
@@ -1802,8 +1917,12 @@ class ExecutionController {
 		} catch (Exception e) {
 		}
 	}
+	/*
+	 * Date based execution History table clean up
+	 */
 	
 	def deleteExecutions(){
+	
 		def deleteCount = 0
 		try {
 			
@@ -1812,9 +1931,14 @@ class ExecutionController {
 			List executionMethodResultInstanceList = []
 			List performanceList = []
 			executionList?.each{ executionInstance ->
+			
+				if(!executionInstance?.executionStatus?.equals(INPROGRESS_STATUS) ){
+					if( !executionInstance?.executionStatus?.equals(PAUSED)){
 				if(executionInstance){
 					executionResultList  = ExecutionResult.findAllByExecution(executionInstance)
+					
 					executionResultList.each { executionResultInstance ->
+						
 						if(executionResultInstance){
 							executionMethodResultInstanceList = ExecuteMethodResult.findAllByExecutionResult(executionResultInstance)
 							if(executionMethodResultInstanceList){
@@ -1829,6 +1953,7 @@ class ExecutionController {
 							executionResultInstance.delete(flush:true)
 						}
 					}
+				
 
 					def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
 					executionDeviceList.each{ executionDeviceInstance ->
@@ -1871,6 +1996,9 @@ class ExecutionController {
 					log.info "Invalid executionInstance"
 				}				
 			}
+		}
+	}
+			
 							
 		} catch (Exception e) {
 			e.printStackTrace()
