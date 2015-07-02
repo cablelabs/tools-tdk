@@ -488,7 +488,7 @@ class PrimitiveTestController {
      */
 	def getStreamDetails(final String idVal, final String stbIp) {
 		
-		Device device = Device.findByStbIp(stbIp?.trim())
+		Device device = Device.findByStbIpAndIsChild(stbIp?.trim(),STAND_ALONE_DEVICE);
 		JsonObject outData = new JsonObject()
 		String boxtype = device?.boxType?.type?.toLowerCase()
 		String deviceNotFound = "Device not found"

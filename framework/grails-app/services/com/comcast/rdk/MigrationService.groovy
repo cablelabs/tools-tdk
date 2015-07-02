@@ -106,6 +106,7 @@ class MigrationService {
 		migrateModules()
 		migrateFunctions()
 		migrateParameterTypes()
+		
 //		migrateParameters()
 //		migratePrimitiveTests()
 //		migrateScripts()
@@ -1309,14 +1310,12 @@ class MigrationService {
 		}
 
 		List migrationList = moduleTempList
-
 		List savedList = []
 		migrationList.each{ mModule ->
 			def groups
 			Groups.withSession {
 				groups = Groups.findByName(mModule?.groups?.name)
 			}
-
 			Module module
 			Module.withSession {
 				try{
@@ -1331,6 +1330,7 @@ class MigrationService {
 					}
 					module.properties = mModule.getProperties()
 					module.properties.put("logFileNames", [:])
+					module.properties.put("stbLogFiles", [:])
 					module.groups = null
 					if(groups){
 						module.groups = groups

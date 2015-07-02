@@ -195,7 +195,7 @@ public final class Constants
     public static final String  MEMORY_AVAILABLE_END = "%MEMORY_AVAILABLE_END";
     public static final String  MEMORY_USED_END = "%MEMORY_USED_END";
     public static final String  MEMORY_PERC_END = "%MEMORY_PERC_END";
-    
+    public static final int STAND_ALONE_DEVICE = 0;
     
     
 }
