@@ -168,7 +168,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                 	print "Cancelled future recording successfully";
                             	else:
                                 	tdkTestObj.setResultStatus("FAILURE");
-                                	print "Failed to cancel future recording/Status received as Erased
+                                	print "Failed to cancel future recording/Status received as Erased";
 			    else:
                                     tdkTestObj.setResultStatus("FAILURE");
                                     print "Failed to retrieve the recording list from recorder";	

@@ -194,7 +194,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                     if "INCOMPLETE" in value.upper() and "USER_STOP" in errorvalue.upper():
                                         tdkTestObj1.setResultStatus("SUCCESS");
                                         print "Rescheduling with cancelled recording Id failed";
-                                    elif ""BADVALUE"" in value.upper() and "BADVALUE" in errorvalue.upper():
+                                    elif "BADVALUE" in value.upper() and "BADVALUE" in errorvalue.upper():
                                         tdkTestObj1.setResultStatus("FAILURE");
                                         print "No error/status field for this recording Id";
                                     else:

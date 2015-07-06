@@ -163,13 +163,13 @@ if "SUCCESS" in recLoadStatus.upper():
                                 	print "Successfully retrieved the recording list from recorder for future recording";
                                         if "ERASED" not in value.upper():
                                                 tdkTestObj.setResultStatus("SUCCESS");
-                                                print "Not received "Erased" messsage";
-                                        elif:
+                                                print "Not received Erased messsage";
+                                        elif "BADVALUE" in value.upper():
                                                 tdkTestObj.setResultStatus("FAILURE");
                                                 print "No status field for this recording Id";
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
-                                                print "Received "erased" failure message";
+                                                print "Received erased failure message";
                               	else:
                               		tdkTestObj.setResultStatus("FAILURE");
                                 	print "Failed to retrieve the recording list from recorder for future recording";

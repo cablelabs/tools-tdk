@@ -175,9 +175,9 @@ if "SUCCESS" in recLoadStatus.upper():
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
                                                 print "Redundant recording status retrieved from recorder"
-				elif "BADVALUE" in in value.upper() and "BADVALUE" in statusValue.upper():
+				elif "BADVALUE" in value.upper() and "BADVALUE" in statusValue.upper():
                                        	tdkTestObj.setResultStatus("FAILURE");
-                                       	print "No error/status field for this recording Id;
+                                       	print "No error/status field for this recording Id"
                             	else:
                                 	tdkTestObj.setResultStatus("FAILURE");
                                 	print "Scheduled recording error not received";

@@ -153,9 +153,9 @@ if "SUCCESS" in recLoadStatus.upper():
                                 else:
                                         tdkTestObj1.setResultStatus("FAILURE");
                                         print "Redundant recording status retrieved from recorder"
-                             elif "BADVALUE" in in value.upper():
+                            elif "BADVALUE" in value.upper():
                              	tdkTestObj1.setResultStatus("FAILURE");
-                                print "No error/status field for this recording Id;
+                                print "No error/status field for this recording Id"
                             else:
                                 tdkTestObj1.setResultStatus("FAILURE");
                                 print "Power interruption not happened properly when recording is inprogress";
