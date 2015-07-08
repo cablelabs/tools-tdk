@@ -56,24 +56,32 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_SixTuner_DVR_Future_11');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
+#Set the module loading status
+recObj.setLoadModuleStatus(recLoadStatus);
 
 trmObj = tdklib.TDKScriptingLibrary("trm","2.0");
 trmObj.configureTestCase(ip,port,'Recorder_RMF_SixTuner_DVR_Future_11');
 #Get the result of connection with test component and STB
-result = trmObj.getLoadModuleResult();
-print "[TRM LIB LOAD STATUS]  :  %s" %result;
+trmLoadStatus = trmObj.getLoadModuleResult();
+print "[TRM LIB LOAD STATUS]  :  %s" %trmLoadStatus;
 #Set the module loading status
-trmObj.setLoadModuleStatus(result);
+trmObj.setLoadModuleStatus(trmLoadStatus);
 
+maxTuner = 0
+
+#Check for SUCCESS/FAILURE of trm module
+if "SUCCESS" in trmLoadStatus.upper():
+        #Fetch max tuner supported
+        maxTuner = getMaxTuner(trmObj,'SUCCESS')
+        trmObj.unloadModule("trm")
+        
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        #Set the module loading status
-        recObj.setLoadModuleStatus(recLoadStatus);
-
-        recObj.initiateReboot();
-	print "Sleeping to wait for the recoder to be up"
-        sleep(300);
+        loadmoduledetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               recObj.initiateReboot();
+               sleep(300);
 
         #Giving no update here to get the recording list in case the previous generation id is set to zero before reboot
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
@@ -98,15 +106,9 @@ if "SUCCESS" in recLoadStatus.upper():
         startTime = "120000";
         now = "curTime"
 
-        tdkTestObj.executeTestCase(expectedResult);
-
-        maxTuner = getMaxTuner(trmObj,'SUCCESS')
         if ( 0 == maxTuner ):
                 print "Exiting without executing the script"
-                tdkTestObj.setResultStatus("FAILURE");
         else:
-                tdkTestObj.setResultStatus("SUCCESS");
-                print "MaxTuner: %d"%maxTuner;
                 for deviceNo in range(0,maxTuner):
                 	Id = '0'+str(deviceNo+1)
 	                recId = str(randint(10000, 500000));
@@ -148,7 +150,6 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
-        trmObj.unloadModule("trm");
 else:
     print "Failed to load Recorder module";
     #Set the module loading status

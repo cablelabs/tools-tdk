@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>RMF_QAMSrc – To Get TS Id from PAT when factory method flag is set to true.
+  <synopsis>RMF_QAMSrc . To Get TS Id from PAT when factory method flag is set to true.
 Test Case ID: CT_RMF_QAMSrc_MPSink_05.</synopsis>
   <!--  -->
   <groups_id />
@@ -97,20 +97,9 @@ print "Load Module Status :  %s" %loadModuleStatus;
 if expected_Result in loadModuleStatus.upper():
 
         #Pre-requsite to kill the rmfStreamer Gthread instance and to start new gthread instance.
-
-        src_parameter=[];
-        src_element=[];
-        #result=Create_and_ExecuteTestStep('RMF_QAMSrc_CommentRmfStreamer',obj,expected_Result,src_parameter,src_element);
-        if expected_Result in result.upper():
-                print "rmf-streamer script commented and initiating reboot"
-                obj.initiateReboot();
-        else:
-                print "rmf-streamer script commenting failed."
-                print "Pre-requisite failure: Exiting script"
-                exit()
-
+        obj.initiateReboot();
         #To get started with streaming, wait for few secs.
-        time.sleep(15)
+        time.sleep(10)
 
         #Prmitive test case which associated to this Script
         #Change the List according to Prmitive test case
@@ -142,18 +131,9 @@ if expected_Result in loadModuleStatus.upper():
         else:
                 print "Status of RmfElement_QAMSrc_RmfPlatform_Init:  %s" %loadModuleStatus;
 
-        src_parameter=[];
-        src_element=[];
-        #result=Create_and_ExecuteTestStep('RMF_QAMSrc_UnCommentRmfStreamer',obj,expected_Result,src_parameter,src_element);
-        if expected_Result in result.upper():
-                print "rmf-streamer script uncommented and initiating reboot"
-        else:
-                print "rmf-streamer script uncommenting failed."
-                print "Post-requisite failure."
-
         obj.initiateReboot();
         time.sleep(5)
         obj.unloadModule("mediaframework");
 else:
         print "Load Module Failed"
-        obj.setLoadModuleStatus("FAILURE");
+        obj.setLoadModuleStatus("FAILURE")
