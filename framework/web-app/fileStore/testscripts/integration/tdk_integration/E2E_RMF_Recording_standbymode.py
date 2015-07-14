@@ -88,7 +88,6 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
         
             # Calling IARM_Bus_DisConnect API
             actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});                                 
-        
         else:
             print "FAILURE: IARM_Bus_Connect failed. %s" %details;
         #calling IARMBUS API "IARM_Bus_Term"
@@ -96,6 +95,33 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
         
     else:
         print "FAILURE: IARM_Bus_Init failed. %s " %details;             
+
+
+    #After end of the test execution. Making final power mode status to ON (2)
+    actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Init', 'SUCCESS',verifyList ={});
+    print "IARMBUS_Init result: [%s]"%actualresult;
+
+    #Check for return value of IARMBUS_Init
+    if expectedresult in actualresult:
+        #Calling "IARM_Bus_Connect"
+        actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Connect', 'SUCCESS',verifyList ={});
+        print "IARMBUS_Connect result: [%s]"%actualresult;
+
+        #Check for return value of IARMBUS_Connect
+        if expectedresult in actualresult:
+                #Calling change_powermode
+		print "Resetting the power mode to ON (2)"
+                powermode = 2
+                result = change_powermode(iarm_obj,powermode);
+                print "Set PowerMode to %d: %s"%(powermode,result);
+
+                #Calling IARMBus_DisConnect API
+                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});
+                print "IARMBUS_DisConnect result: [%s]"%actualresult;
+
+        #calling IARMBUS API "IARM_Bus_Term"
+        actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={});
+        print "IARMBUS_Term result: [%s]"%actualresult;
 
     #Unload the modules
     iarm_obj.unloadModule("iarmbus");

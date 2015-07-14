@@ -288,9 +288,11 @@ bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::V
             DEBUG_PRINT(DEBUG_TRACE, "IARM_Bus_Call to GetXUPNPDeviceInfo successful\n");
 
             char upnpResults[MAX_DATA_LEN+1] = {'\0'};
-#ifdef IARM_USE_DBUS
+//RDKTT-469::Both BCM & Intel platforms using DBUS & no need of IARM_USE_DBUS condition. So commenting out. 
+//#ifdef IARM_USE_DBUS
             memcpy(upnpResults, ((char *)param + sizeof(IARM_Bus_SYSMGR_GetXUPNPDeviceInfo_Param_t)), param->bufLength);
-#else
+#if 0
+//#else
             memcpy(upnpResults, param->pBuffer, param->bufLength);
 #endif
             upnpResults[param->bufLength] = '\0';
@@ -593,13 +595,16 @@ bool XUPNPAgent::XUPNPAgent_ReadXcalDeviceLogFile(IN const Json::Value& req, OUT
     xcalLogFile.close();
     DEBUG_PRINT(DEBUG_TRACE, "xcal-device log file %s found\n",XCALDEV_LOG_FILE);
 
+    //RDKTT-366::This check holds valid only in case of local boxes. So commenting out.
+    #if 0
     if (false == readLogFile(XCALDEV_LOG_FILE, "WareHouse Mode recvid"))
     {
         DEBUG_PRINT(DEBUG_TRACE, "WareHouse Mode not updated in %s\n", XCALDEV_LOG_FILE);
         response["result"] = "FAILURE";
         response["details"] = "WareHouse Mode not updated in xcal-device log";
     }
-    else if(false == readLogFile(XCALDEV_LOG_FILE, "Received Serial Number"))
+    #endif
+    if(false == readLogFile(XCALDEV_LOG_FILE, "Received Serial Number"))
     {
         DEBUG_PRINT(DEBUG_TRACE, "Serial Number not updated in %s\n", XCALDEV_LOG_FILE);
         response["result"] = "FAILURE";

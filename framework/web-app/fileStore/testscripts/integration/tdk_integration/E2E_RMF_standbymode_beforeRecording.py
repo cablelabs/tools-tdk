@@ -92,6 +92,22 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
         
     else:
         print "FAILURE: IARM_Bus_Init failed. %s " %details;             
+	
+    #iarm_obj.resetConnectionAfterReboot()
+    #calling IARMBUS API "IARM_Bus_Init"
+    actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Init', 'SUCCESS',verifyList ={});
+
+    #calling IARMBUS API "IARM_Bus_Connect"
+    actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Connect', 'SUCCESS',verifyList ={});
+
+    #Setting Power mode to ON
+    change_powermode(iarm_obj,2);
+
+    #Calling IARM_Bus_DisConnect API
+    actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});                      
+
+    #calling IARMBUS API "IARM_Bus_Term"
+    actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={});
 
     #Unload the modules
     iarm_obj.unloadModule("iarmbus");

@@ -85,7 +85,16 @@ if "SUCCESS" in loadmodulestatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
             #Check for SUCCESS/FAILURE return value of IARMBUS_Connect
             if expectedresult in actualresult:                    
                 print "SUCCESS: Querying STB power state -RPC method invoked successfully";
+		#Setting Power mode to STANDBY
                 result1 = change_powermode(iarm_obj,1);
+		
+		#Calling IARM_Bus_DisConnect API
+                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={}); 
+
+                #calling IARMBUS API "IARM_Bus_Term"
+                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={});
+
+
                 if "SUCCESS" in result1.upper():
                     #Prmitive test case which associated to this Script
                     tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
@@ -111,20 +120,28 @@ if "SUCCESS" in loadmodulestatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
                        #fetch recording id from list matchList.
                        recordID = matchList[1]
                     
-
-                    
                        #Calling DvrPlay_rec to play the recorded content
-                       #result2 = dvr_playback(tdkTestObj,recording_id);
+                       result2 = dvr_playback(tdkTestObj,recordID[:-1]);
 
-                       change_powermode(iarm_obj,2);                    
-                    
-            
-                       # Calling IARM_Bus_DisConnect API
-                       actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});                                 
-					   
 		    else:
                         print "No Matching recordings list found"
-            
+
+                    iarm_obj.resetConnectionAfterReboot()
+                    #calling IARMBUS API "IARM_Bus_Init"
+                    actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Init', 'SUCCESS',verifyList ={});
+
+                    #calling IARMBUS API "IARM_Bus_Connect"
+                    actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Connect', 'SUCCESS',verifyList ={});
+
+                    #Setting Power mode to ON
+                    change_powermode(iarm_obj,2);
+
+                    #Calling IARM_Bus_DisConnect API
+                    actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});                      
+
+                    #calling IARMBUS API "IARM_Bus_Term"
+                    actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={});
+           	     
             else:
                 print "FAILURE: IARM_Bus_Connect failed. %s" %details;
                 #calling IARMBUS API "IARM_Bus_Term"
@@ -133,8 +150,8 @@ if "SUCCESS" in loadmodulestatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
         else:
             print "FAILURE: IARM_Bus_Init failed. %s " %details;
             print "Tdkintegration module loaded successfully";
-            obj.unloadModule("tdkintegration");
-            iarm_obj.unloadModule("iarmbus");
+        obj.unloadModule("tdkintegration");
+        iarm_obj.unloadModule("iarmbus");
 else:
          print "Failed to load TDKIntegration module";
          obj.setLoadModuleStatus("FAILURE");
