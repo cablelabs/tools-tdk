@@ -1,126 +1,172 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xml>
-  <module name='servicemanager' testGroup='Component'>
+  <module name="servicemanager" testGroup="Component">
     <primitiveTests>
-      <primitiveTest name='SM_RegisterService' id='106' version='1'>
+      <primitiveTest id="106" name="SM_RegisterService" version="1">
         <function>TestMgr_SM_RegisterService</function>
         <parameters>
-          <parameter name='service_name' value='homeNetworkingService' />
+          <parameter name="service_name" value="homeNetworkingService"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_DoesServiceExist' id='107' version='1'>
+      <primitiveTest id="107" name="SM_DoesServiceExist" version="1">
         <function>TestMgr_SM_DoesServiceExist</function>
         <parameters>
-          <parameter name='service_name' value='homeNetworkingService' />
+          <parameter name="service_name" value="homeNetworkingService"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_UnRegisterService' id='108' version='1'>
+      <primitiveTest id="108" name="SM_UnRegisterService" version="1">
         <function>TestMgr_SM_UnRegisterService</function>
         <parameters>
-          <parameter name='service_name' value='asd' />
+          <parameter name="service_name" value="asd"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_GetRegisteredServices' id='114' version='0'>
+      <primitiveTest id="114" name="SM_GetRegisteredServices" version="0">
         <function>TestMgr_SM_GetRegisteredServices</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='SM_GetGlobalService' id='133' version='1'>
+      <primitiveTest id="133" name="SM_GetGlobalService" version="1">
         <function>TestMgr_SM_GetGlobalService</function>
         <parameters>
-          <parameter name='service_name' value='homeNetworkingService' />
+          <parameter name="service_name" value="homeNetworkingService"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_SetAPIVersion' id='134' version='2'>
+      <primitiveTest id="134" name="SM_SetAPIVersion" version="2">
         <function>TestMgr_SM_SetAPIVersion</function>
         <parameters>
-          <parameter name='service_name' value='homeNetworkingService' />
-          <parameter name='apiVersion' value='123' />
+          <parameter name="service_name" value="homeNetworkingService"/>
+          <parameter name="apiVersion" value="123"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_RegisterForEvents' id='135' version='1'>
+      <primitiveTest id="135" name="SM_RegisterForEvents" version="1">
         <function>TestMgr_SM_RegisterForEvents</function>
         <parameters>
-          <parameter name='event_name' value='homeNetworkingService' />
-          <parameter name='service_name' value='deviceDiscoveryUpdate' />
+          <parameter name="event_name" value="homeNetworkingService"/>
+          <parameter name="service_name" value="deviceDiscoveryUpdate"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_HN_EnableVPOP' id='136' version='1'>
+      <primitiveTest id="136" name="SM_HN_EnableVPOP" version="1">
         <function>TestMgr_SM_HN_EnableVPOP</function>
         <parameters>
-          <parameter name='enable' value='1' />
+          <parameter name="enable" value="1"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_HN_EnableMDVR' id='137' version='1'>
+      <primitiveTest id="137" name="SM_HN_EnableMDVR" version="1">
         <function>TestMgr_SM_HN_EnableMDVR</function>
         <parameters>
-          <parameter name='enable' value='1' />
+          <parameter name="enable" value="1"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_HN_SetDeviceName' id='138' version='2'>
+      <primitiveTest id="138" name="SM_HN_SetDeviceName" version="2">
         <function>TestMgr_SM_HN_SetDeviceName</function>
         <parameters>
-          <parameter name='device_name' value='DeviceName123' />
+          <parameter name="device_name" value="DeviceName123"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_DisplaySetting_SetCurrentResolution' id='141' version='1'>
+      <primitiveTest id="141" name="SM_DisplaySetting_SetCurrentResolution" version="1">
         <function>TestMgr_SM_DisplaySetting_SetCurrentResolution</function>
         <parameters>
-          <parameter name='videoDisplay' value='videodisplay' />
-          <parameter name='resolution' value='resolution' />
+          <parameter name="videoDisplay" value="videodisplay"/>
+          <parameter name="resolution" value="resolution"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_DisplaySetting_SetZoomSettings' id='142' version='1'>
+      <primitiveTest id="142" name="SM_DisplaySetting_SetZoomSettings" version="1">
         <function>TestMgr_SM_DisplaySetting_SetZoomSettings</function>
         <parameters>
-          <parameter name='zoomLevel' value='zoomlevel' />
-          <parameter name='videoDisplay' value='videodisplay' />
+          <parameter name="zoomLevel" value="zoomlevel"/>
+          <parameter name="videoDisplay" value="videodisplay"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_DeviceSetting_GetDeviceInfo' id='646' version='0'>
+      <primitiveTest id="646" name="SM_DeviceSetting_GetDeviceInfo" version="0">
         <function>TestMgr_SM_DeviceSetting_GetDeviceInfo</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='SM_ScreenCapture_Upload' id='647' version='1'>
+      <primitiveTest id="647" name="SM_ScreenCapture_Upload" version="1">
         <function>TestMgr_SM_ScreenCapture_Upload</function>
         <parameters>
-          <parameter name='url' value='' />
+          <parameter name="url" value=""/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_WebSocket_GetUrl' id='648' version='0'>
+      <primitiveTest id="648" name="SM_WebSocket_GetUrl" version="0">
         <function>TestMgr_SM_WebSocket_GetUrl</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='SM_WebSocket_GetReadyState' id='649' version='0'>
+      <primitiveTest id="649" name="SM_WebSocket_GetReadyState" version="0">
         <function>TestMgr_SM_WebSocket_GetReadyState</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='SM_WebSocket_GetBufferedAmount' id='650' version='0'>
+      <primitiveTest id="650" name="SM_WebSocket_GetBufferedAmount" version="0">
         <function>TestMgr_SM_WebSocket_GetBufferedAmount</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='SM_WebSocket_GetProtocol' id='651' version='0'>
+      <primitiveTest id="651" name="SM_WebSocket_GetProtocol" version="0">
         <function>TestMgr_SM_WebSocket_GetProtocol</function>
-        <parameters />
+        <parameters/>
       </primitiveTest>
-      <primitiveTest name='SM_GetSetting' id='652' version='0'>
+      <primitiveTest id="652" name="SM_GetSetting" version="0">
         <function>TestMgr_SM_GetSetting</function>
         <parameters>
-          <parameter name='service_name' value='screenCaptureService' />
-          <parameter name='service_name' value='deviceSettingService' />
+          <parameter name="service_name" value="screenCaptureService"/>
+          <parameter name="service_name" value="deviceSettingService"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_CreateService' id='653' version='0'>
+      <primitiveTest id="653" name="SM_CreateService" version="0">
         <function>TestMgr_SM_CreateService</function>
         <parameters>
-          <parameter name='service_name' value='screenCaptureService' />
-          <parameter name='service_name' value='deviceSettingService' />
+          <parameter name="service_name" value="screenCaptureService"/>
+          <parameter name="service_name" value="deviceSettingService"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name='SM_Services_GetName' id='654' version='0'>
+      <primitiveTest id="654" name="SM_Services_GetName" version="0">
         <function>TestMgr_Services_GetName</function>
         <parameters>
-          <parameter name='service_name' value='screenCaptureService' />
-          <parameter name='service_name' value='deviceSettingService' />
+          <parameter name="service_name" value="screenCaptureService"/>
+          <parameter name="service_name" value="deviceSettingService"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_HdmiCec_SetEnabled" version="2">
+        <function>TestMgr_SM_HdmiCec_SetEnabled</function>
+        <parameters>
+          <parameter name="valueToSetEnabled" value="1"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HdmiCec_GetEnabled" version="1">
+        <function>TestMgr_SM_HdmiCec_GetEnabled</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_HdmiCec_SetName" version="2">
+        <function>TestMgr_SM_HdmiCec_SetName</function>
+        <parameters>
+          <parameter name="nameToSet" value="tdk_cec_name"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HdmiCec_GetName" version="1">
+        <function>TestMgr_SM_HdmiCec_GetName</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HdmiCec_GetConnectedDevices" version="1">
+        <function>TestMgr_SM_HdmiCec_GetConnectedDevices</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_HdmiCec_SendMessage" version="2">
+        <function>TestMgr_SM_HdmiCec_SendMessage</function>
+        <parameters>
+          <parameter name="messageToSend" value="308F"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_HdmiCec_OnMessage" version="1">
+        <function>TestMgr_SM_HdmiCec_OnMessage</function>
+        <parameters>
+          <parameter name="onMessage" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HdmiCec_ClearCecLog" version="1">
+        <function>TestMgr_SM_HdmiCec_ClearCecLog</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest name="SM_HdmiCec_CheckStatus" id=" " version="2">
+        <function>TestMgr_SM_HdmiCec_CheckStatus</function>
+        <parameters>
+          <parameter name="pattern" value="308F"/>
         </parameters>
       </primitiveTest>
     </primitiveTests>

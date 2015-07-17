@@ -12,8 +12,6 @@ INCLUDES = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs-hal/ \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/sysmgr/ \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/disk/ \
-           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
-           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
            -I${top_srcdir}/IARMBUS_stub/include -I${top_srcdir}/agent/include
 
 
@@ -24,9 +22,6 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmbus/ \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/power \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/sysmgr/ \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/disk/ \
-              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
-              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
-              -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/curl \
               -I${top_srcdir}/IARMBUS_stub/include -I${top_srcdir}/agent/include
 
 

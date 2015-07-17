@@ -14,10 +14,7 @@ INCLUDES = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/generic/sysmgr/include \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/xupnp/generic/include
 
-AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
-	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
-	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/curl \
-              -I${top_srcdir}/XUPNP_stub/include -I${top_srcdir}/agent/include
+AM_CXXFLAGS = -I${top_srcdir}/XUPNP_stub/include -I${top_srcdir}/agent/include
 
 lib_LTLIBRARIES = libxupnpstub.la
 libxupnpstub_la_SOURCES = src/xupnpAgent.cpp

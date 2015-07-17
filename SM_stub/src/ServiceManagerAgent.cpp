@@ -1579,9 +1579,12 @@ bool ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json
 	if(ptr_service != NULL)
         {
                 ptr_service->setName(nameToSet);
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setName called.\n");
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setName called.\n");		
 
                 getNameResult = ptr_service->getName();
+
+		DEBUG_PRINT(DEBUG_TRACE,"Name Passed to setName(): %s \n",nameToSet.toUtf8().constData());
+                DEBUG_PRINT(DEBUG_TRACE,"Name returned from getName(): %s \n",getNameResult.toUtf8().constData());
                 if (nameToSet == getNameResult)
                 {
                         DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setName() call Success.\n");

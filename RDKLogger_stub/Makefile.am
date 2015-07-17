@@ -6,10 +6,7 @@ AM_CPPFLAGS = -g -Wall -std=c++0x -DGCC4_XXX \
 	      -DDEBUG_CONF_FILE="\"$(CONFIG_PREFIX)debug.ini\"" \
 	      -fPIC ${COPTS}
 
-AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
-	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
-	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/curl \
-	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
+AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
               -I${top_srcdir}/RDKLogger_stub/include -I${top_srcdir}/agent/include
 
 lib_LTLIBRARIES = librdkloggerstub.la

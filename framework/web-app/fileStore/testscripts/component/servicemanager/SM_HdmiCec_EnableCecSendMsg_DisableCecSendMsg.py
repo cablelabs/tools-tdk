@@ -100,16 +100,21 @@ else:
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
+iarm_obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
 obj.configureTestCase(ip,port,'SM_HdmiCec_EnableCecSendMsg_DisableCecSendMsg');
+iarm_obj.configureTestCase(ip,port,'SM_HdmiCec_EnableCecSendMsg_DisableCecSendMsg');
 
 #Get the result of connection with test component and STB
 loadModuleStatus =obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadModuleStatus;
+
+loadModuleStatus_iarm = iarm_obj.getLoadModuleResult();
+print "[LIB LOAD STATUS]  :  %s" %loadModuleStatus_iarm;
 
 expected_Result = "SUCCESS"
 

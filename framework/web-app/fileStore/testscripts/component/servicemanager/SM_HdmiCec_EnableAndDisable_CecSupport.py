@@ -99,16 +99,21 @@ else:
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("servicemanager","1.3");
+iarm_obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
 obj.configureTestCase(ip,port,'SM_HdmiCec_EnableAndDisable_CecSupport');
+iarm_obj.configureTestCase(ip,port,'SM_HdmiCec_EnableAndDisable_CecSupport');
 
 #Get the result of connection with test component and STB
 loadModuleStatus =obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadModuleStatus;
+
+loadModuleStatus_iarm = iarm_obj.getLoadModuleResult();
+print "[LIB LOAD STATUS]  :  %s" %loadModuleStatus_iarm;
 
 expected_Result = "SUCCESS"
 
@@ -142,6 +147,16 @@ if expected_Result in loadModuleStatus.upper():
                         if "PRESENT" in existdetails:
                                 tdkTestObj.setResultStatus("SUCCESS");
 
+                                #Call IARM Bus API's
+                                #Calling IARM Bus Init
+                                iarm_obj.setLoadModuleStatus("SUCCESS");
+                                actualresult,Obj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Init', 'SUCCESS',verifyList ={});
+                                print "Status of IARM Init: ",actualresult
+
+                                #calling IARMBUS API IARM_Bus_Connect
+                                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Connect', 'SUCCESS',verifyList ={});
+                                print "Status of IARM Connect: ",actualresult
+
                                 #Enable the cec support setting it true.
                                 tdkTestObj = obj.createTestStep('SM_HdmiCec_SetEnabled');
                                 expectedresult = "SUCCESS"
@@ -174,7 +189,16 @@ if expected_Result in loadModuleStatus.upper():
 						print "setEnabled FAILURE";	
 				else:
 					tdkTestObj.setResultStatus("FAILURE");
-					print "setEnabled FAILURE";	
+					print "setEnabled FAILURE";
+
+                                #Calling IARM_Bus_DisConnect API
+                                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});
+                                print "Status of IARM DisConnect: ",actualresult
+
+                                #calling IARMBUS API "IARM_Bus_Term"
+                                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={});
+                                print "Status of IARM Term: ",actualresult	
+
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "HDMICEC service is not supported: FAILURE"
@@ -206,6 +230,7 @@ if expected_Result in loadModuleStatus.upper():
 	
         #Unload the servicemanager module
         obj.unloadModule("servicemanager");
+        iarm_obj.unloadModule("iarmbus");
 else:
         print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");			
