@@ -99,11 +99,12 @@
         <function>TestMgr_IARMBUS_GetLastReceivedEventDetails</function>
         <parameters/>
       </primitiveTest>
-      <primitiveTest id="209" name="IARMBUS_InvokeSecondApplication" version="1">
+      <primitiveTest id=" " name="IARMBUS_InvokeSecondApplication" version="2">
         <function>TestMgr_IARMBUS_InvokeSecondApplication</function>
         <parameters>
-          <parameter name="argv1" value="ON"/>
           <parameter name="appname" value="/tst_iarmbus"/>
+          <parameter name="argv1" value="ON"/>
+          <parameter name="apptype" value="normal"/>
         </parameters>
       </primitiveTest>
       <primitiveTest id="" name="IARMBUSPERF_Disconnect" version="1">
@@ -171,9 +172,15 @@
           <parameter name="owner_name" value="IRMgr"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name="IARMBUSPERF_GetLastReceivedEventDetails" id="" version="1">
+      <primitiveTest id="" name="IARMBUSPERF_GetLastReceivedEventDetails" version="1">
         <function>TestMgr_IARMBUSPERF_GetLastReceivedEventDetails</function>
         <parameters/>
+      </primitiveTest>
+      <primitiveTest name="IARMBUS_SyncSecondApplication" id=" " version="1">
+        <function>TestMgr_IARMBUS_SyncSecondApplication</function>
+        <parameters>
+          <parameter name="lockenabled" value=""/>
+        </parameters>
       </primitiveTest>
     </primitiveTests>
   </module>

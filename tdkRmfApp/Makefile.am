@@ -2,7 +2,7 @@
 
 ACLOCAL_AMFLAGS = -Im4 --install
 
-AM_CPPFLAGS = -g -Wall -DGCC4_XXX -DBUILD_DVRSOURCE -DRMF_STREAMER -DENABLE_DVRSRC_MPSINK -fPIC -DRMF_OSAL_LITTLE_ENDIAN
+AM_CPPFLAGS = -g -Wall -DGCC4_XXX -DBUILD_DVRSOURCE -DRMF_STREAMER -DENABLE_DVRSRC_MPSINK -fPIC -DRMF_OSAL_LITTLE_ENDIAN ${SOC_FLAGS}
 
 AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/trm \
@@ -19,5 +19,5 @@ tdkRmfAppdir = ${bindir}
 tdkRmfApp_SOURCES = tdkRmfApp.cpp
 tdkRmfApp_LDFLAGS = -ldvrmgr -ltinyxml -luuid -lcrypto -lTasseograph -lssl -lreadline -lnetsnmp -lnetsnmpagent -lnetsnmphelpers \
 -lssl -lhistory -lgstreamer-0.10 -lgio-2.0 -lglib-2.0 -llog4c -lgobject-2.0 -lrmfinit -lrdkloggers -lrmfbase -lncurses -ldvrmgrsoc \
--lgstbase-0.10 -lhnsource -lrmfosal -lrmfosalutils -ltrm -ljansson -ldvrsink -lmediaplayersink -lIARMBus
+-lgstbase-0.10 -lhnsource -lrmfosal -lrmfosalutils -ltrm -ljansson -ldvrsink -lmediaplayersink -lIARMBus ${SOC_LIBS}
 tdkRmfApp_includedir = ${includedir}

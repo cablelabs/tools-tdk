@@ -2,4 +2,3 @@
 host=gerrit.teamccp.com
 port=29418
 project=rdk/components/generic/tdk/generic.git
-

@@ -90,7 +90,7 @@ if expected_Result in loadModuleStatus.upper():
 
         #Pre-requsite to kill the rmfStreamer Gthread instance and to start new gthread instance.
         obj.initiateReboot();
-
+	time.sleep(5)
         #Prmitive test case which associated to this Script
         #Change the List according to Prmitive test case
         src_parameter=[];
