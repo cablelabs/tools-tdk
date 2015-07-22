@@ -20,24 +20,26 @@
         <function>TestMgr_TRM_GetVersion</function>
         <parameters/>
       </primitiveTest>
-      <primitiveTest id="613" name="TRM_TunerReserveForRecord" version="1">
+      <primitiveTest id=" " name="TRM_TunerReserveForRecord" version="2">
         <function>TestMgr_TRM_TunerReserveForRecord</function>
         <parameters>
-          <parameter name="hot" value="0"/>
-          <parameter name="deviceNo" value="0"/>
-          <parameter name="locator" value="ocap://0xCNN"/>
           <parameter name="recordingId" value="CNN"/>
           <parameter name="duration" value="0"/>
+          <parameter name="locator" value="ocap://0xCNN"/>
           <parameter name="startTime" value="0"/>
+          <parameter name="deviceNo" value="0"/>
+          <parameter name="hot" value="0"/>
+          <parameter name="selectOnConflict" value="0"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest id="620" name="TRM_TunerReserveForLive" version="1">
+      <primitiveTest id=" " name="TRM_TunerReserveForLive" version="2">
         <function>TestMgr_TRM_TunerReserveForLive</function>
         <parameters>
-          <parameter name="locator" value="ocap://0xCNN"/>
-          <parameter name="deviceNo" value="0"/>
-          <parameter name="startTime" value="0"/>
           <parameter name="duration" value="0"/>
+          <parameter name="locator" value="ocap://0xCNN"/>
+          <parameter name="startTime" value="0"/>
+          <parameter name="deviceNo" value="0"/>
+          <parameter name="selectOnConflict" value="0"/>
         </parameters>
       </primitiveTest>
       <primitiveTest id=" " name="TRM_ValidateTunerReservation" version="3">
@@ -57,13 +59,6 @@
           <parameter name="locator" value=""/>
         </parameters>
       </primitiveTest>
-      <primitiveTest id="637" name="TRM_CancelLive" version="1">
-        <function>TestMgr_TRM_CancelLive</function>
-        <parameters>
-          <parameter name="locator" value=""/>
-          <parameter name="duration" value="0"/>
-        </parameters>
-      </primitiveTest>
       <primitiveTest id=" " name="TRM_ReleaseTunerReservation" version="5">
         <function>TestMgr_TRM_ReleaseTunerReservation</function>
         <parameters>
@@ -73,7 +68,7 @@
           <parameter name="activity" value="1"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name="TRM_GetMaxTuners" id="" version="1">
+      <primitiveTest id="" name="TRM_GetMaxTuners" version="1">
         <function>TestMgr_TRM_GetMaxTuners</function>
         <parameters/>
       </primitiveTest>

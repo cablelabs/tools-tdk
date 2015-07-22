@@ -54,7 +54,6 @@ public:
     bool TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json::Value& response);
     bool TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT Json::Value& response);
     bool TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT Json::Value& response);
-    bool TRMAgent_CancelLive(IN const Json::Value& req, OUT Json::Value& response);
     bool TRMAgent_CancelRecording(IN const Json::Value& req, OUT Json::Value& response);
 
 };

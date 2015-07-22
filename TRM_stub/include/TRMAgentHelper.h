@@ -58,8 +58,6 @@ public:
     bool releaseTunerReservation(std::string device, std::string locator, int activityType);
     bool cancelledRecording(std::string reservationToken); /*This function shall be called by the application once cancelRecording event is handled*/
     bool cancelRecording(std::string locator);
-    bool cancelledLive(std::string reservationToken, std::string locator); /*This function shall be called by the application once cancelRecording event is handled*/
-    bool cancelLive(std::string locator);
 
     static void init();
 

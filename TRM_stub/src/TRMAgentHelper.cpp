@@ -33,21 +33,22 @@ static int connect_to_trm()
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Entry %s():%d : Connection status (%d)\n",__FUNCTION__, __LINE__, isConnectedToTRM);
 
     rmf_osal_mutexAcquire( g_mutex);
-    if (trm_socket_fd == -1 )
-    {
-        trm_address.sin_family = AF_INET;
-        trm_address.sin_addr.s_addr = inet_addr(ip);
-        trm_address.sin_port = htons(port);
-
-        socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-    }
-    else
-    {
-        socket_fd = trm_socket_fd;
-    }
 
     if (isConnectedToTRM == 0)
     {
+        if (trm_socket_fd == -1 )
+        {
+            trm_address.sin_family = AF_INET;
+            trm_address.sin_addr.s_addr = inet_addr(ip);
+            trm_address.sin_port = htons(port);
+
+            socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+        }
+        else
+        {
+            socket_fd = trm_socket_fd;
+        }
+
         RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s():%d : Connecting to remote...\n" , __FUNCTION__, __LINE__);
         while(1)
         {
@@ -93,8 +94,6 @@ static int connect_to_trm()
 static bool url_request_post( const char *payload, int payload_length)
 {
     bool ret = false;
-
-  try {
 
     unsigned char *buf = NULL;
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
@@ -173,10 +172,6 @@ static bool url_request_post( const char *payload, int payload_length)
     else {
 	RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s():%d : Not Connected to TRM Server\n", __FUNCTION__, __LINE__);
     }
-  }
-  catch (...) {
-      RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s():%d : Error occured\n", __FUNCTION__, __LINE__);
-  }
 
     return ret;
 }
@@ -197,9 +192,6 @@ static void formatResponse(const char* buf, int len)
 
 void processBuffer( const char* buf, int len)
 {
-
-  try {
-
     if (buf != NULL)
     {
 	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST","Response: \n%s\n", buf);
@@ -210,18 +202,11 @@ void processBuffer( const char* buf, int len)
         TRM::JsonDecoder jdecoder( recProc);
         jdecoder.decode( response);
     }
-  }
-  catch (...) {
-        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s():%d : Error occured\n", __FUNCTION__, __LINE__);
-  }
 }
 
 // Helper function to get Response from TRM server
 static void get_response (void* arg)
 {
-
-  try {
-
     int read_trm_count = 0;
     char *buf = NULL;
     const int header_length = 16;
@@ -293,7 +278,6 @@ static void get_response (void* arg)
                     free(buf);
                     buf = NULL;
                     RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s():%d : read_trm_count = 0\n", __FUNCTION__, __LINE__);
-
                 }
             }
             else
@@ -313,15 +297,10 @@ static void get_response (void* arg)
     }
 
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
-  }
-  catch (...) {
-        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s():%d : Error occured\n", __FUNCTION__, __LINE__);
-  }
 }
 
 bool waitForTRMResponse()
 {
-  try {
     int retry_count = 30;
     while ((false == responseReceived) && (retry_count >0))
     {
@@ -336,11 +315,6 @@ bool waitForTRMResponse()
 	responseSuccess = false;
     }
     rmf_osal_mutexRelease( g_mutex);
-
-  }
-  catch (...) {
-        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s():%d : Error occured\n", __FUNCTION__, __LINE__);
-  }
 
     return responseSuccess;
 }
@@ -368,7 +342,7 @@ void TRMClient::init()
             rmf_osal_ThreadId threadId;
             rmf_osal_threadCreate( get_response, NULL,
                                RMF_OSAL_THREAD_PRIOR_DFLT, RMF_OSAL_THREAD_STACK_SIZE,
-                               &threadId,"TunerRes" );
+                               &threadId,"TunerRsv" );
 
             RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s():%d Created thread to get response from TRM\n" , __FUNCTION__, __LINE__);
         }
@@ -569,6 +543,11 @@ bool TRMClient::validateTunerReservation(string device, string locator, int acti
         }
     }
 
+    if ( reservationToken.empty() )
+    {
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Validating Null Reservation Token\n");
+    }
+
     TRM::ValidateTunerReservation msg( guid, device, reservationToken);
     JsonEncode(msg, out);
     out.push_back(0);
@@ -696,6 +675,11 @@ bool TRMClient::releaseTunerReservation(string device, string locator, int activ
         }
     }
 
+    if ( reservationToken.empty() )
+    {
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Releasing Null Reservation Token\n");
+    }
+
     TRM::ReleaseTunerReservation msg(guid, device, reservationToken);
     JsonEncode(msg, out);
     out.push_back(0);
@@ -762,82 +746,16 @@ bool TRMClient::cancelRecording(string locator)
         if (((*it).second.getActivity() == TRM::Activity::kRecord) && (locator.compare((*it).second.getServiceLocator()) == 0))
         {
             reservationToken = (*it).second.getReservationToken();
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Cancel Recording Token: %s\n" ,reservationToken.c_str());
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Found token: %s\n" ,reservationToken.c_str());
         }
+    }
+
+    if ( reservationToken.empty() )
+    {
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Canceling Null Reservation Token\n");
     }
 
     TRM::CancelRecording msg(guid, reservationToken);
-    TRM::JsonEncode(msg, out);
-    out.push_back(0);
-    int len = strlen((const char*)&out[0]);
-    int retry_count = 10;
-    responseReceived = false;
-    responseSuccess = false;
-
-    do
-    {
-        ret = url_request_post( (char *) &out[0], len);
-        retry_count --;
-    } while ((ret == false) && (retry_count >0));
-
-    if (ret == true)
-    {
-        ret = waitForTRMResponse();
-    }
-
-    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
-
-    return ret;
-}
-
-bool TRMClient::cancelledLive(string reservationToken, string locator)
-{
-    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
-    bool ret = false;
-    std::vector<uint8_t> out;
-    uuid_t value;
-    uuid_generate(value);
-    uuid_unparse(value, guid);
-
-    TRM::ResponseStatus status(TRM::ResponseStatus::kOk, "Live Canceled Successfully");
-    TRM::CancelLiveResponse msg(guid, status, reservationToken, locator, true);
-    TRM::JsonEncode(msg, out);
-    out.push_back(0);
-    int len = strlen((const char*)&out[0]);
-    int retry_count = 10;
-
-    do
-    {
-        ret = url_request_post( (char *) &out[0], len);
-        retry_count --;
-    } while ((ret == false) && (retry_count >0));
-
-    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
-    return ret;
-}
-
-bool TRMClient::cancelLive(string locator)
-{
-    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
-
-    bool ret = false;
-    std::vector<uint8_t> out;
-    uuid_t value;
-    uuid_generate(value);
-    uuid_unparse(value, guid);
-
-    string reservationToken = "";
-    std::map<int, TRM::TunerReservation >::iterator it;
-    for(it = tunerReservationDb.begin(); it != tunerReservationDb.end(); it++)
-    {
-        if (((*it).second.getActivity() == TRM::Activity::kLive) && (locator.compare((*it).second.getServiceLocator()) == 0))
-        {
-            reservationToken = (*it).second.getReservationToken();
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Cancel Live Token: %s\n" ,reservationToken.c_str());
-        }
-    }
-
-    TRM::CancelLive msg(guid, locator, reservationToken);
     TRM::JsonEncode(msg, out);
     out.push_back(0);
     int len = strlen((const char*)&out[0]);
@@ -868,13 +786,13 @@ void TRMClient::setToken( const string& token)
 
 bool TRMClient::addToReservationDb(TRM::TunerReservation resv)
 {
-	//Workaround for RDKTT-162
 	if (resv.getReservationToken().empty())
 	{
-	    RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s() - Invalid reservation token. Skipping DB update\n",__FUNCTION__);
+	    RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s() - Invalid reservation entry. Skipping DB update\n",__FUNCTION__);
 	    return false;
 	}
 
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Adding token: [%s]\n", __FUNCTION__, resv.getReservationToken().c_str());
         TRM::TunerReservation *copyReservation = new TRM::TunerReservation();
         *copyReservation = resv;
         tunerReservationDb[j]=*copyReservation;
@@ -901,7 +819,7 @@ bool TRMClient::removeFromReservationDb(const string reservationToken)
         {
             if ((*it).second.getReservationToken() == reservationToken)
             {
-		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Releasing token: [%s]\n", __FUNCTION__, reservationToken.c_str());
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Removing token: [%s]\n", __FUNCTION__, reservationToken.c_str());
                 tunerReservationDb.erase(it++);
                 j--;
                 bRetValue = true;
@@ -984,17 +902,7 @@ void CTRMMonitor::operator() (const TRM::CancelRecording &msg)
 
 void CTRMMonitor::operator() (const TRM::CancelLive &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
-    if ( NULL == trmClient )
-    {
-        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(CancelLive) - Matching TRM client not found\n", __FUNCTION__);
-    }
-    else
-    {
-	RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(CancelLive) - Sending cancelledLive response\n", __FUNCTION__);
-	trmClient->cancelledLive(msg.getReservationToken(), msg.getServiceLocator());
-    }
-    rmf_osal_mutexRelease( g_mutex);
+    RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(CancelLive called)\n", __FUNCTION__);
 }
 
 void CTRMMonitor::operator() (const TRM::NotifyTunerReservationRelease &msg)
@@ -1071,23 +979,7 @@ void CTRMMonitor::operator() (const TRM::CancelRecordingResponse &msg)
 
 void CTRMMonitor::operator() (const TRM::CancelLiveResponse &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
-    bool isCanceled = msg.isCanceled();
-
-    responseReceived = true;
-    responseSuccess = isCanceled;
-
-    if ( true == isCanceled )
-    {
-        responseSuccess = TRMClient::removeFromReservationDb(msg.getReservationToken());
-        RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(CancelLiveResponse) - Live Canceled\n", __FUNCTION__);
-    }
-    else
-    {
-        int statusCode = msg.getStatus().getStatusCode();
-        RDK_LOG( RDK_LOG_WARN, "LOG.RDK.TEST", "%s(CancelLiveResponse) - Cancellation failed. statusCode = %d\n", __FUNCTION__,statusCode);
-    }
-    rmf_osal_mutexRelease( g_mutex);
+    RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(CancelLiveResponse called)\n", __FUNCTION__);
 }
 
 void CTRMMonitor::operator() (const TRM::GetAllTunerIdsResponse &msg)
@@ -1223,5 +1115,5 @@ void CTRMMonitor::operator() (const TRM::NotifyTunerStatesUpdate &msg)
 
 void CTRMMonitor::operator() (const TRM::NotifyTunerPretune &msg)
 {
-    RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(NotifyTunerStatesUpdate called)\n", __FUNCTION__);
+    RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(NotifyTunerPretune called)\n", __FUNCTION__);
 }

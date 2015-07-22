@@ -1,22 +1,22 @@
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
-  <id>1731</id>
+  <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TRM_CT_41</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id>637</primitive_test_id>
+  <primitive_test_id> </primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
-  <primitive_test_name>TRM_CancelLive</primitive_test_name>
+  <primitive_test_name>TRM_ReleaseTunerReservation</primitive_test_name>
   <!--  -->
-  <primitive_test_version>1</primitive_test_version>
+  <primitive_test_version>5</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>This tests cancel live on channel 3 when current state of reservation is L1-L2-L3-L4-L5.  
-Test Case ID: CT_TRM_41 
+  <synopsis>This tests releasing live reservation on channel 3 when current state of reservation is L1-L2-L3-L4-L5.
+Test Case ID: CT_TRM_41
 Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />

@@ -74,7 +74,6 @@ bool TRMAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_TunerReserveForLive, "TestMgr_TRM_TunerReserveForLive");
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_ReleaseTunerReservation, "TestMgr_TRM_ReleaseTunerReservation");
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_ValidateTunerReservation, "TestMgr_TRM_ValidateTunerReservation");
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_CancelLive, "TestMgr_TRM_CancelLive");
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_CancelRecording, "TestMgr_TRM_CancelRecording");
 
     return TEST_SUCCESS;
@@ -538,46 +537,6 @@ bool TRMAgent::TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT 
 }
 
 /**************************************************************************
-Function name : TRMAgent::TRMAgent_CancelLive
-
-Arguments     : Input argument is locator. Output argument is "SUCCESS" or "FAILURE".
-
-Description   : Receives the request from Test Manager to cancel live viewing.
-                Gets the response from TRM server and sent to the Test Manager.
-**************************************************************************/
-bool TRMAgent::TRMAgent_CancelLive(IN const Json::Value& req, OUT Json::Value& response)
-{
-    DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_CancelLive --->Entry\n");
-
-    string locator = req["locator"].asString();
-
-    try
-    {
-        if (!pTrmClient->cancelLive(locator))
-        {
-            response["result"] = "FAILURE";
-            response["details"] = "TRM failed to cancel live";
-            DEBUG_PRINT(DEBUG_ERROR,"TRM failed to cancel live\n");
-            DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_CancelLive --->Exit\n");
-            return TEST_FAILURE;
-        }
-    }
-    catch(...)
-    {
-        response["result"] = "FAILURE";
-        response["details"] = "Exception occured while cancelling live";
-        DEBUG_PRINT(DEBUG_ERROR,"Exception occured while cancelling live\n");
-        DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_CancelLive --->Exit\n");
-        return TEST_FAILURE;
-    }
-
-    response["result"] = "SUCCESS";
-    response["details"] = "TRM cancel live success";
-    DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_CancelLive --->Exit\n");
-    return TEST_SUCCESS;
-}
-
-/**************************************************************************
 Function name : TRMAgent::TRMAgent_CancelRecording
 
 Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE".
@@ -642,7 +601,6 @@ bool TRMAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
     ptrAgentObj->UnregisterMethod("TestMgr_TRM_TunerReserveForLive");
     ptrAgentObj->UnregisterMethod("TestMgr_TRM_ReleaseTunerReservation");
     ptrAgentObj->UnregisterMethod("TestMgr_TRM_ValidateTunerReservation");
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_CancelLive");
     ptrAgentObj->UnregisterMethod("TestMgr_TRM_CancelRecording");
 
     return TEST_SUCCESS;
