@@ -37,7 +37,7 @@
 #include "trm/JsonDecoder.h"
 
 #define OUTPUT_LEN 2040 // max limit in TDK framework is 2048
-
+#define GUID_LEN   64
 enum Type {
     REQUEST = 0x1234,
     RESPONSE = 0x1800,
@@ -53,8 +53,9 @@ public:
     bool getAllReservations(std::string filterDevice, char *output);
     bool getVersion(void);
     bool validateTunerReservation(std::string device, std::string locator, int activityType);
-    bool reserveTunerForRecord( std::string device, std::string recordingId, std::string locator, uint64_t startTime=0, uint64_t duration=0, bool hot=false);
-    bool reserveTunerForLive( std::string device, std::string locator, uint64_t startTime=0, uint64_t duration=0);
+    bool reserveTunerForRecord( std::string device, std::string recordingId, std::string locator, uint64_t startTime=0, uint64_t duration=0,
+                                bool hot=false, bool conflict = false);
+    bool reserveTunerForLive( std::string device, std::string locator, uint64_t startTime=0, uint64_t duration=0, bool conflict = false);
     bool releaseTunerReservation(std::string device, std::string locator, int activityType);
     bool cancelledRecording(std::string reservationToken); /*This function shall be called by the application once cancelRecording event is handled*/
     bool cancelRecording(std::string locator);
@@ -72,7 +73,7 @@ public:
 private:
     TRMClient* impl;
     static bool inited;
-    char guid[64];
+    char guid[GUID_LEN];
     std::string token;
     bool waitForResrvResponse();
     GCond* tunerStopCond;

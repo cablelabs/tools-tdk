@@ -332,6 +332,7 @@ bool TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Jso
     duration = req["duration"].asDouble();
     unsigned long long startTimeAdd = req["startTime"].asDouble();
     bool hot = req["hot"].asInt();
+    bool select= req["selectOnConflict"].asInt();
 
     if (TOTAL_DEVICE_NUMBER < deviceNo)
     {
@@ -347,7 +348,7 @@ bool TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Jso
 
     try
     {
-        if (!pTrmClient->reserveTunerForRecord(deviceNames[deviceNo], recordingId, locator, startTime, duration, hot))
+        if (!pTrmClient->reserveTunerForRecord(deviceNames[deviceNo], recordingId, locator, startTime, duration, hot, select))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to reserve tuner for record";
@@ -393,6 +394,7 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
     string locator = req["locator"].asString();
     duration = req["duration"].asDouble();
     unsigned long long startTimeAdd = req["startTime"].asDouble();
+    bool select= req["selectOnConflict"].asInt();
 
     if (TOTAL_DEVICE_NUMBER < deviceNo)
     {
@@ -408,7 +410,7 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
 
     try
     {
-        if (!pTrmClient->reserveTunerForLive(deviceNames[deviceNo], locator, startTime, duration))
+        if (!pTrmClient->reserveTunerForLive(deviceNames[deviceNo], locator, startTime, duration, select))
         {
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to reserve tuner for live";
