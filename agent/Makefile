@@ -4,7 +4,7 @@ include ../def.inc
 
 default: build
 
-SCRIPTS += scripts/output_json_parser.sh
+SCRIPTS += scripts/output_json_parser.sh scripts/file_copy.sh scripts/RemoveLogs.sh
 
 COPTS     += -rdynamic
 

@@ -83,7 +83,8 @@ class RpcMethods
         bool RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Value& response);
         bool RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response);
         bool RPCPerformanceBenchMarking (const Json::Value& request, Json::Value& response);
-
+        bool RPCExecuteLoggerScript (const Json::Value& request, Json::Value& response);
+	 bool RPCRemoveLogs (const Json::Value& request, Json::Value& response);
 
         /* Below methods are applicable only for Gateway boxes */
         #ifdef PORT_FORWARD

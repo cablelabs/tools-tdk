@@ -655,6 +655,8 @@ void *CheckStatus (void *)
     o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetHostStatus, std::string("getHostStatus")));
     o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCCallEnableTDK, std::string("callEnableTDK")));
     o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCCallDisableTDK, std::string("callDisableTDK")));
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCExecuteLoggerScript, std::string("executeLoggerScript")));
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCRemoveLogs, std::string("executeRemoveLogsScript")));
 
     /* To set route to client devices. For gateway boxes only */
     #ifdef PORT_FORWARD

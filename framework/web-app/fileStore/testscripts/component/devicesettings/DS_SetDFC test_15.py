@@ -37,10 +37,6 @@ Test Case ID : CT_DS_15</synopsis>
     <!--  -->
     <box_type>IPClient-4</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>

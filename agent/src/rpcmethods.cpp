@@ -57,6 +57,8 @@ bool   	     bBenchmarkEnabled;
 
 #define ENABLE_TDK_SCRIPT   "$TDK_PATH/EnableTDK.sh"      // Script to enable TDK
 #define DISABLE_TDK_SCRIPT   "$TDK_PATH/DisableTDK.sh"      // Script to disable TDK
+#define EXECUTE_LOGGER_SCRIPT   "$TDK_PATH/file_copy.sh"      // Script to package log files
+#define LOG_REMOVAL_SCRIPT "$TDK_PATH/RemoveLogs.sh"       // Script to remove obsolete log files
 #define GET_DEVICES_SCRIPT   "$TDK_PATH/get_moca_devices.sh"      // Script to find connected devices
 #define SET_ROUTE_SCRIPT     "$TDK_PATH/configure_iptables.sh"    // Script to set port forwarding rules to connected devices
 #define SYSSTAT_SCRIPT       "sh $TDK_PATH/runSysStat.sh"	  // Script to get system diagnostic info from sar command
@@ -1742,6 +1744,83 @@ bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Js
 	
 } /* End of RPCPerformanceSystemDiagnostics */
 
+
+/********************************************************************************************************************
+ Purpose:               RPC Method to trigger logger shell script on request from test manager
+
+ Parameters:
+                             request [IN]       - Json request.
+                             response [OUT]  - Json response with result "SUCCESS/FAILURE".
+
+ Return:                 bool  -      Always returning true from this function, with details in response[result].
+
+*********************************************************************************************************************/
+bool RpcMethods::RPCExecuteLoggerScript (const Json::Value& request, Json::Value& response)
+{
+    bool bRet = true;
+    char szCommand[COMMAND_SIZE];
+    const char* pszArgument = NULL;
+
+    cout << "Received query: \n" << request << endl;
+
+    if (request["argument"] != Json::Value::null)
+    {
+        pszArgument = request["argument"].asCString();
+    }
+
+    /* Constructing JSON response */
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+    response["result"] = "SUCCESS";
+
+    /* Constructing the command to invoke script */
+    sprintf (szCommand, "%s %s", SHOW_DEFINE(EXECUTE_LOGGER_SCRIPT),pszArgument); //Constructing Command
+
+    system (szCommand); //Calling the getdevices script
+    sleep (2);
+
+    return bRet;
+
+} /* End of RPCExecuteLoggerScript */
+
+
+/********************************************************************************************************************
+ Purpose:               RPC Method to execute script which will log files given as argument
+
+ Parameters:
+                             request [IN]       - Json request.
+                             response [OUT]  - Json response with result "SUCCESS/FAILURE".
+
+ Return:                 bool  -      Always returning true from this function, with details in response[result].
+
+*********************************************************************************************************************/
+bool RpcMethods::RPCRemoveLogs (const Json::Value& request, Json::Value& response)
+{
+    bool bRet = true;
+    char szCommand[COMMAND_SIZE];
+    const char* pszArgument = NULL;
+
+    cout << "Received query: \n" << request << endl;
+
+    if (request["argument"] != Json::Value::null)
+    {
+        pszArgument = request["argument"].asCString();
+    }
+
+    /* Constructing JSON response */
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+    response["result"] = "SUCCESS";
+
+    /* Constructing the command to invoke script */
+    sprintf (szCommand, "%s %s", SHOW_DEFINE(LOG_REMOVAL_SCRIPT), pszArgument); //Constructing Command
+
+    system (szCommand); //Calling the script to remove unwanted logs
+    sleep (2);
+
+    return bRet;
+
+} /* End of RPCRemoveLogs */
 
 
 /* To enable port forwarding. In gateway boxes only  */
