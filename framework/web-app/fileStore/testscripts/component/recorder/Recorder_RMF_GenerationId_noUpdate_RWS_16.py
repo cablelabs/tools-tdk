@@ -59,14 +59,12 @@ recObj.setLoadModuleStatus(recLoadStatus);
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+               print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+               print "Waiting for the recoder to be up"
 	       sleep(300);
-
-        print "Waiting for the recoder to be up"
-
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -75,64 +73,59 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
 
         genIdInput = "test2c";
 
-        #Execute Inline noUpdate
+        #Execute Legacy noUpdate
         jsonMsgNoUpdate = "{\"noUpdate\":{\"generationId\":\""+genIdInput+"\"}}";
-        serverResponse =recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
-        print "Server response for Inline NoUpdate: %s"%serverResponse;
+        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
 
         if 'noUpdate' in serverResponse:
-        	print "Inline noUpdate message post success";
-                #Check that no status is POST is received from recorder for noupdate
+        	print "Legacy noUpdate message post success";
+		# Verify that Recorder does not make any POST request to RWS
                 sleep(30)
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                print "Retrieve Status Details: %s"%recResponse;
+                print "Retrieve Status for legacy noUpdate message: ",recResponse;
 
-		if 'ERROR' in recResponse:
-			print "Received Error status";
-			tdkTestObj.setResultStatus("FAILURE");
-		elif '[]' in recResponse:
-			print "Recorder did not make any POST request to RWS with noUpdate"
-                        #Execute updateSchedule
-                        requestID = str(randint(10, 500));
-                        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\"}}";
-                        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-                        print "Server response for UpdateSchedule: %s"%serverResponse;
+		if 'generationId' in recResponse:
+			print "Recorder sent POST request to RWS for genId update through legacy noUpdate"
+		else:
+			print "Recorder did not make any POST request to RWS as expected"
 
-                        if 'updateSchedule' in serverResponse:
+		response = recorderlib.callServerHandler('clearStatus',ip);
+		#Execute updateSchedule
+		requestID = str(randint(10, 500));
+		jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\"}}";
+		serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
+
+                if 'updateSchedule' in serverResponse:
                                 print "updateSchedule message post success";
                                 sleep(20)
                                 retry = 0;
                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                while ( ('[]' in recResponse) and ('ERROR' not in recResponse) and (retry < 15)):
+                                while ( ('generationId' not in recResponse) and (retry < 15)):
                                         sleep(10);
                                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                         retry += 1
                                 print "Retrieve Status Details: %s"%recResponse;
 
-                                if (('[]' in recResponse) or ('ERROR' in recResponse)):
-                                        print "Received Empty/Error status";
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                else:
+                                if 'generationId' in recResponse:
                                         genOut = recorderlib.getGenerationId(recResponse)
                                         if genOut == genIdInput:
                                                 tdkTestObj.setResultStatus("SUCCESS");
-                                                print "GenerationId retrieved (%s) matches with expected (%s)"%(genOut,genIdInput);
+                                                print "GenerationId retrieved matches with expected value ",genIdInput;
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
-                                                print "GenerationId retrieved (%s) does not match with expected (%s)"%(genOut,genIdInput);
-                        else:
+                                                print "GenerationId retrieved does not match with expected value ",genIdInput;
+                                else:
+                                        print "Failed to receive response from recorder for legacy longpoll notification";
+                                        tdkTestObj.setResultStatus("FAILURE");
+                else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "updateSchedule message post failed";
-		else:
-			tdkTestObj.setResultStatus("FAILURE");
-			print "Recorder sent POST request to RWS with noUpdate"
         else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                        print "Inline noUpdate message post failed";
+                tdkTestObj.setResultStatus("FAILURE");
+                print "Legacy noUpdate message post failed";
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");

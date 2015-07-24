@@ -80,6 +80,7 @@ if ('SUCCESS' in mfLoadStatus.upper()) and ('SUCCESS' in tdkIntLoadStatus.upper(
 
         #Reboot the box
         mfObj.initiateReboot();
+	tdkIntObj.resetConnectionAfterReboot()
 
         #Playback recorded content
         result = dvrPlayUrl(tdkIntObj, kwargs={"ID":recordingId,"STREAMID":streamId})

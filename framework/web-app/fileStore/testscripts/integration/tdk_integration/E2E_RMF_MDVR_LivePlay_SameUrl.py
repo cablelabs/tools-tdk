@@ -144,7 +144,7 @@ if "SUCCESS" in result.upper():
 
         # Frame the URL
         streamDetails = tdkTestObj.getStreamDetails('01');
-        URL = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        URL = tdkintegration.E2E_getStreamingURL(globalObj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
         if URL == "NULL":
             print "Failed to generate the Streaming URL";
             tdkTestObj.setResultStatus("FAILURE");

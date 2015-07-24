@@ -82,7 +82,8 @@ recObj.setLoadModuleStatus(recLoadStatus);
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        if "REBOOT_REQUESTED" in recLoadStatus:
+        recLoadDetails = recObj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in recLoadDetails:
                print "Rebooting box for setting configuration"
                recObj.initiateReboot()
                print "Waiting for 5min for recoder to be up"

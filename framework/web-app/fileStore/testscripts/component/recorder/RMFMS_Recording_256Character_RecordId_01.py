@@ -50,15 +50,14 @@ import recorderlib
 from random import randint
 from time import sleep
 
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'RMFMS_Recording_256Character_RecordId_01');
 
+#Test component to be tested
+obj = tdklib.TDKScriptingLibrary("Recorder","2.0");
+obj.configureTestCase(ip,port,'RMFMS_Recording_256Character_RecordId_01');
 #Get the result of connection with test component and STB
 loadmodulestatus =obj.getLoadModuleResult();
 print "Recorder module loading status :%s" %loadmodulestatus ;
@@ -68,12 +67,11 @@ obj.setLoadModuleStatus(loadmodulestatus);
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in loadmodulestatus.upper():
 
-        #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
-	obj.initiateReboot();
-	print "Sleeping to wait for the recoder to be up"
-	sleep(300);
-        #Prmitive test case which associated to this Script
+        loadmoduledetails = obj.getLoadModuleDetails();
+        if "REBOOT_REQUESTED" in loadmoduledetails:
+               obj.initiateReboot();
+               print "Sleeping to wait for the recoder to be up"
+               sleep(300);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -81,6 +79,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         response = recorderlib.callServerHandler('retrieveStatus',ip);
         print "Retrieve Status Details: %s"%response;
 
+	#Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
         rec_id = random.randrange(10**9, 10**256)
         recording_id = str(rec_id);

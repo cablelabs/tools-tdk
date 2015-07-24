@@ -34,8 +34,6 @@ TestType: Positive</synopsis>
     <!--  -->
     <box_type>IPClient-4</box_type>
     <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>

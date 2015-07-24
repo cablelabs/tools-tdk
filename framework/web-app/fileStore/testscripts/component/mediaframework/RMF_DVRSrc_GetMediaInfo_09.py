@@ -83,7 +83,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         print dvrLocator
         parametervalue.append(dvrLocator);
         global duration
-        #duration = matchList[3]
+        duration = matchList[3]
         
 
     for item in range(len(parametername)):

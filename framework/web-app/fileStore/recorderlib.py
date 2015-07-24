@@ -92,14 +92,6 @@ def startRecorderApp(realpath,arg):
 	
 ########## End of Function startRecorderApp ##########
 
-def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
-
 LOIPADDR = '127.0.0.1'
 
 def callServerHandler(methodName,gwIp):
@@ -116,7 +108,6 @@ def callServerHandler(methodName,gwIp):
         # Return Value : Console output of the curl command
 
         try:
-                #serverIp = get_ip_address('eth0')
                 serverIp = LOIPADDR
 	
         except:
@@ -143,7 +134,6 @@ def callServerHandler(methodName,gwIp):
                 sys.stdout.flush()
                 byteStr = subprocess.check_output(cmd, shell=True)
                 outdata = unicode(byteStr, errors='ignore')
-                #outdata = subprocess.check_output(cmd, shell=True)
                 signal.alarm(0)  # reset the alarm
         except Timout:
                 print "#TDK_@error-ERROR : Timeout!! Taking too long"
@@ -172,7 +162,6 @@ def callServerHandlerWithMsg(methodName,jsonMsg,gwIp):
         # Return Value : Console output of the curl command
 
         try:
-                #serverIp = get_ip_address('eth0')
                 serverIp = LOIPADDR
         except:
                 print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
@@ -210,7 +199,7 @@ def callServerHandlerWithMsg(methodName,jsonMsg,gwIp):
                 sys.stdout.flush()
 		return outdata
 
-	print "JSON request: ",outdata
+	print "Server response: ",outdata
         return outdata
 
 ########## End of Function callServerHandlerWithMsg ##########
@@ -231,7 +220,6 @@ def callServerHandlerWithType(methodName,type,gwIp):
         # Return Value : Console output of the curl command
 
         try:
-                #serverIp = get_ip_address('eth0')
                 serverIp = LOIPADDR
         except:
                 print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
@@ -257,7 +245,6 @@ def callServerHandlerWithType(methodName,type,gwIp):
                 sys.stdout.flush()
                 byteStr = subprocess.check_output(cmd, shell=True)
                 outdata = unicode(byteStr, errors='ignore')
-                #outdata = subprocess.check_output(cmd, shell=True)
                 signal.alarm(0)  # reset the alarm
         except Timout:
                 print "#TDK_@error-ERROR : Timeout!! Taking too long"
@@ -275,65 +262,9 @@ def callServerHandlerWithType(methodName,type,gwIp):
 ########## End of Function callServerHandlerWithType ##########
 
 
-def callScheduleHandler(methodName,params,gwIp):
-
-        # To invoke and fetch status of updateSchedule REST API in the simulator for a particular box
-
-        # Parameters   : methodName, params, gwIp
-        # methodName   : REST API name. e.g., updateSchedule, updateInlineSchedule.
-        #                updateSchedule : To send updateSchedule query to box
-        #                updateInlineSchedule : To send updateSchedule as inline message to box
-        # gwIp         : IP address of gateway box
-        # Return Value : Console output of the curl command
-
-        try:
-                #serverIp = get_ip_address('eth0')
-                serverIp = LOIPADDR
-        except:
-                print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
-		outdata = "ERROR : Unable to fetch recorder server IP"
-                sys.stdout.flush()
-		return outdata
-
-        # Constructing Query Command
-        cmd = 'curl '+'-g '+'\''+'http://'+serverIp+':8080/DVRSimulator/'+methodName+'?boxIp='+gwIp+'&'+params+'\''
-
-        class Timout(Exception):
-                pass
-
-        def timeoutHandler(signum, frame):
-                raise Timout
-
-        signal.signal(signal.SIGALRM, timeoutHandler)
-        signal.alarm(20)
-
-        # Executing request command
-        try:
-		print "Executing \"",cmd," \""
-                sys.stdout.flush()
-                byteStr = subprocess.check_output(cmd, shell=True)
-                outdata = unicode(byteStr, errors='ignore')
-                #outdata = subprocess.check_output(cmd, shell=True)
-                signal.alarm(0)  # reset the alarm
-        except Timout:
-                print "#TDK_@error-ERROR : Timeout!! Taking too long"
-		outdata = "ERROR : Timeout!! Taking too long"
-                sys.stdout.flush()
-		return outdata
-        except:
-                print "#TDK_@error-ERROR : Unable to execute curl command"
-		outdata = "ERROR: Unable to execute query command"
-                sys.stdout.flush()
-		return outdata
-
-        return outdata
-
-########## End of Function callScheduleHandler ##########
-
 def getGenerationId(jsonData):
         ret = "NOID"
         try:
-                #jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
 		jsonList = json.loads(jsonData, strict=False)
         except ValueError, e:
                 print e
@@ -359,7 +290,6 @@ def getGenerationId(jsonData):
 def getStatusMessage(jsonData):
         ret = "NOSTATUS"
         try:
-		#jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
 		jsonList = json.loads(jsonData, strict=False)
         except ValueError, e:
                 print e
@@ -385,7 +315,6 @@ def getStatusMessage(jsonData):
 def getTimeFromStatus(jsonData):
         ret = 0
         try:
-                #jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
                 jsonList = json.loads(jsonData, strict=False)
         except ValueError, e:
                 print e
@@ -416,7 +345,6 @@ def getTimeFromStatus(jsonData):
 def getTimeStampFromStatus(jsonData):
         ret = 0
         try:
-                #jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
                 jsonList = json.loads(jsonData, strict=False)
         except ValueError, e:
                 print e
@@ -449,7 +377,6 @@ def getTimeStampFromStatus(jsonData):
 def getTimeStampListFromStatus(jsonData):
         ret = []
         try:
-                #jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
                 jsonList = json.loads(jsonData, strict=False)
         except ValueError, e:
                 print e
@@ -509,7 +436,6 @@ def getTimeListFromStatus(jsonData):
 def getRecordingFromRecId(jsonData,recordingId):
         ret = "NOTFOUND"
         try:
-		#jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
 		jsonList = json.loads(jsonData, strict=False)
         except ValueError, e:
                 print e
@@ -673,7 +599,6 @@ def checkDiskFullWithRecordings(gwIp,tdkTestObj,numOfTuners,recDuration,priority
 def getRecordingFromField(jsonData,field,value):
         ret = "NOTFOUND"
         try:
-                #jsonList = json.loads(unicode(jsonData, errors='ignore'), strict=False)
                 jsonList = json.loads(jsonData, strict=False)
         except ValueError, e:
                 print e
@@ -703,4 +628,131 @@ def getRecordingFromField(jsonData,field,value):
 
 ########## End of Function getRecordingFromField ##########
 
+#Input  	reqRecording = ["recordingId","duration","deletePriority"]
+#               recording is the output of getRecordingFromRecId containing following fields:
+		#recordingId      [String] is a unique recording identifier.
+		#status           [String] is the state of the recording.
+		#error            [String] (optional) is the error code.
+		#deletePriority   [String]
+		#expectedStart    [long] is the expected start time of the recording in UTC milliseconds.
+		#expectedDuration [long] is the recording length in milliseconds.
+		#estimatedSize    [long] is the estimated size of the recording in bytes.
+		#size             [long] is the size of the recording in bytes.
+		#start            [long] is the recording start time, specified in UTC milliseconds since epoch.
+		#duration         [long] is the recording duration, specified in milliseconds.
+		#volume           [String] is the unique id of the media volume where the content is stored.
+		#playbackLocator  [String]
 
+def verifyCompletedRecording(recording,reqRecording):
+
+        MAX_DEVIATION_THRESHOLD = 30000
+
+        ret = "TRUE"
+
+        try:
+                if 'recordingId' not in recording:
+                        print "Invalid recording ",recording
+                        return "FALSE"
+                recordingId = recording['recordingId']
+                deletePriority = recording["deletePriority"]
+                status = recording['status']
+                expectedStart = recording["expectedStart"]
+                expectedDuration = recording["expectedDuration"]
+                estimatedSize = recording["estimatedSize"]
+                size = recording["size"]
+
+                #Check if recordingId,duration and deletePriority is set as expected
+                if str(recordingId) != str(reqRecording["recordingId"]):
+                        print "recordingId ",recordingId," not matching value set ",reqRecording["recordingId"]
+                        ret = "FALSE"
+                elif expectedDuration != reqRecording['duration']:
+                        print "expectedDuration ",expectedDuration," not matching value set ",reqRecording['duration']
+                        ret = "FALSE"
+                elif deletePriority != reqRecording["deletePriority"]:
+                        print "deletePriority ",deletePriority," not matching value set ",reqRecording["deletePriority"]
+                        ret = "FALSE"
+                #Check if status is complete
+                elif "Complete" != status:
+                        print "Recording is not in complete state ",status
+                        ret = "FALSE"
+                #Check there is no error status
+                elif 'error' in recording:
+                        print "Error found in recording ",recording['error']
+                        ret = "FALSE"
+                #Check if size,expectedStart,expectedDuration,estimatedSize is valid
+                elif 0 >= size:
+                        print "Recording size not valid ",size
+                        ret = "FALSE"
+                elif 0 >= expectedStart:
+                        print "Recording expectedStart not valid ",expectedStart
+                        ret = "FALSE"
+                elif 0 >= estimatedSize:
+                        print "Recording estimatedSize not valid ",estimatedSize
+                        ret = "FALSE"
+                elif 0 >= expectedDuration:
+                        print "Recording expectedDuration not valid ",expectedDuration
+                        ret = "FALSE"
+                #Check if content field is present and is not empty
+                elif 'content' in recording:
+                        if [] == recording['content']:
+                                print "Recording has empty content field ",recording['content']
+                                ret = "FALSE"
+                        else:
+                                #Multiple segments recordings are not expected
+                                #Extract content as dictionary from content as list of dictionaries
+                                content = {}
+                                for contentDict in recording['content']:
+                                        content.update(contentDict)
+                                        #print "content: ",content
+
+                                start = content['start']
+                                duration = content['duration']
+                                volume = content['volume']
+                                playbackLocator = content['playbackLocator']
+
+                                #Check if start,duration is valid
+                                if 0 >= start:
+                                        print "Recording actual start time is not valid ",start
+                                        ret = "FALSE"
+                                elif 0 >= duration:
+                                        print "Recording actual duration is not valid ",duration
+                                        ret = "FALSE"
+                                #Check if volume,playbackLocator is valid
+                                elif "" == volume:
+                                        print "Recording media volume location is null"
+                                        ret = "FALSE"
+                                elif "" == playbackLocator:
+                                        print "Recording playbackLocator is null"
+                                        ret = "FALSE"
+                                #Check value of volume
+                                elif "/opt" not in volume:
+                                        print "Recording media volume location is not /opt"
+                                        ret = "FALSE"
+                                #Check playbackLocator value contains recordingId
+                                elif str(recordingId) not in playbackLocator:
+                                        print "Recording playbackLocator does not contain recordingId ",playbackLocator
+                                        ret = "FALSE"
+                                #Check actual start and expected start time values
+                                elif expectedStart > start:
+                                        print "Recording expected start time is greater than actual start time ",expectedStart,start
+                                        ret = "FALSE"
+                                #Check that actualStart and requestedStart is not more than max deviation threshold (30sec)
+                                elif start - expectedStart > MAX_DEVIATION_THRESHOLD:
+                                        print "Recording actualStart and requestedStart is more than max deviation threshold"
+                                        ret = "FALSE"
+                                #Check that difference between actual duration and requested duration is not more than max deviation threshold (30sec)
+                                elif abs (expectedDuration - duration) > MAX_DEVIATION_THRESHOLD:
+                                        print "Difference between actual duration and requested duration in millisec ",abs (expectedDuration - duration)
+                                        ret = "FALSE"
+                                else:
+                                        print "No issues found in content field"
+                else:
+                        print "Recording missing content field"
+                        ret = "FALSE"
+        except KeyError, e:
+                print "key %s not found in recording" % str(e)
+                ret = "FALSE"
+
+        return ret
+
+########## End of Function verifyCompletedRecording ##########

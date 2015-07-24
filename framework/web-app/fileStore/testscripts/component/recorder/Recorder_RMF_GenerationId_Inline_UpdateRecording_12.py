@@ -61,18 +61,15 @@ recObj.setLoadModuleStatus(recLoadStatus);
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-	print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+               print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+	       print "Waiting for the recoder to be up"
 	       sleep(300);
-
-        print "Sleeping to wait for the recoder to be up"
-
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: ",response;
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -93,10 +90,9 @@ if "SUCCESS" in recLoadStatus.upper():
 
         expResponse = "updateSchedule";
         actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
-        print "Update Schedule Details: %s"%actResponse;
 
         if expResponse in actResponse:
-                print "updateSchedule message post success";
+                print "Inline updateSchedule message post success";
                 print "Waiting to get status"
                 sleep(120);
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
@@ -205,7 +201,7 @@ if "SUCCESS" in recLoadStatus.upper():
                         print "Failed to retrieve generationId from recorder";
         else:
                 tdkTestObj.setResultStatus("FAILURE");
-                print "updateSchedule message post failed";
+                print "Inline updateSchedule message post failed";
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
