@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TWC_IRKEY_KEYGROUP2_ITER</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -15,7 +15,22 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis></synopsis>
+  <synopsis>Test case Id -
+IRKEY_KEYGROUP2_ITER_TC_01
+IRKEY_KEYGROUP2_ITER_TC_02
+IRKEY_KEYGROUP2_ITER_TC_03
+IRKEY_KEYGROUP2_ITER_TC_04
+IRKEY_KEYGROUP2_ITER_TC_05
+IRKEY_KEYGROUP2_ITER_TC_06
+IRKEY_KEYGROUP2_ITER_TC_07
+IRKEY_KEYGROUP2_ITER_TC_08
+IRKEY_KEYGROUP2_ITER_TC_09
+IRKEY_KEYGROUP2_ITER_TC_10
+IRKEY_KEYGROUP2_ITER_TC_11
+IRKEY_KEYGROUP2_ITER_TC_12
+IRKEY_KEYGROUP2_ITER_TC_13
+IRKEY_KEYGROUP2_ITER_TC_14
+IRKEY_KEYGROUP2_ITER_TC_15</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->

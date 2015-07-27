@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>5</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TWC_IRKEY_NUMERICKEYS_ITER</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -15,7 +15,37 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis></synopsis>
+  <synopsis>Test case Id -
+IRKEY_NUMERICKEYS_ITER_TC_01
+IRKEY_NUMERICKEYS_ITER_TC_02
+IRKEY_NUMERICKEYS_ITER_TC_03
+IRKEY_NUMERICKEYS_ITER_TC_04
+IRKEY_NUMERICKEYS_ITER_TC_05
+IRKEY_NUMERICKEYS_ITER_TC_06
+IRKEY_NUMERICKEYS_ITER_TC_07
+IRKEY_NUMERICKEYS_ITER_TC_08
+IRKEY_NUMERICKEYS_ITER_TC_09
+IRKEY_NUMERICKEYS_ITER_TC_10
+IRKEY_NUMERICKEYS_ITER_TC_11
+IRKEY_NUMERICKEYS_ITER_TC_12
+IRKEY_NUMERICKEYS_ITER_TC_13
+IRKEY_NUMERICKEYS_ITER_TC_14
+IRKEY_NUMERICKEYS_ITER_TC_15
+IRKEY_NUMERICKEYS_ITER_TC_16
+IRKEY_NUMERICKEYS_ITER_TC_17
+IRKEY_NUMERICKEYS_ITER_TC_18
+IRKEY_NUMERICKEYS_ITER_TC_19
+IRKEY_NUMERICKEYS_ITER_TC_20
+IRKEY_NUMERICKEYS_ITER_TC_21
+IRKEY_NUMERICKEYS_ITER_TC_22
+IRKEY_NUMERICKEYS_ITER_TC_23
+IRKEY_NUMERICKEYS_ITER_TC_24
+IRKEY_NUMERICKEYS_ITER_TC_25
+IRKEY_NUMERICKEYS_ITER_TC_26
+IRKEY_NUMERICKEYS_ITER_TC_27
+IRKEY_NUMERICKEYS_ITER_TC_28
+IRKEY_NUMERICKEYS_ITER_TC_29
+IRKEY_NUMERICKEYS_ITER_TC_30</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
