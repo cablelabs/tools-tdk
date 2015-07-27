@@ -3,10 +3,10 @@
 <xml>
   <id>1584</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSource_ChangeChannel_FourTimes_16</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>494</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Create_Instance</primitive_test_name>
@@ -21,7 +21,7 @@ Test Case Type: Positive.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>10</execution_time>
+  <execution_time>13</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -260,3 +260,8 @@ if expected_Result in loadModuleStatus.upper():
 else:
         print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();

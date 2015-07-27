@@ -3,7 +3,7 @@
 <xml>
   <id>1118</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>5</version>
+  <version>7</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSource_Play_12</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -20,7 +20,7 @@ Test Case ID: CT_RMF_QAMSrc_MPSink_12.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>15</execution_time>
+  <execution_time>25</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -31,9 +31,9 @@ Test Case ID: CT_RMF_QAMSrc_MPSink_12.</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -74,7 +74,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         print "OcapLocator:",ocapLocator
 
     for item in range(len(parametername)):
-        tdkTestObj.addParameter(parametername[item],parametervalue[item]);
+    	tdkTestObj.addParameter(parametername[item],parametervalue[item]);
 
     #Execute the test case in STB
     tdkTestObj.executeTestCase(expectedresult);
@@ -115,7 +115,7 @@ if expected_Result in loadModuleStatus.upper():
                         time.sleep(20)
                         result=Create_and_ExecuteTestStep('RMF_Element_Create_Instance',obj,expected_Result,src_parameter,src_element);
                         if expected_Result in result.upper():
-                                src_parameter=["rmfElement"]
+                        	src_parameter=["rmfElement"]
                                 src_element=["MPSink"]
                                 result=Create_and_ExecuteTestStep('RMF_Element_Create_Instance',obj,expected_Result,src_parameter,src_element);
                                 if expected_Result in result.upper():
@@ -171,3 +171,8 @@ if expected_Result in loadModuleStatus.upper():
 else:
         print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();

@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -168,6 +168,14 @@ def getRecordList():
      else:
           print "Failed to load mediaframework module";
           obj.setLoadModuleStatus("FAILURE");
+	  loadmoduledetails = obj.getLoadModuleDetails();
+          print "loadmoduledetails %s" %loadmoduledetails;
+          if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+               print "Rebooting the STB"
+               obj.initiateReboot();
+	  else:
+     	       return 0
+          exit()
 
      return 0
 

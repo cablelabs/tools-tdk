@@ -39,7 +39,7 @@
 #define OUT
 
 #define TEST_SUCCESS true
-#define TEST_FAILURE false 
+#define TEST_FAILURE false
 #define EVTDATA_MAX_SIZE 3
 #define PRE_REQ_CHECK "pre_requisite_chk.txt"
 #define DAEMON_EXE "IARMDaemonMain"
@@ -81,19 +81,11 @@ class IARMBUSAgent : public RDKTestStubInterface
 		bool InvokeSecondApplication(IN const Json::Value& req, OUT Json::Value& response);
 		bool SyncSecondApplication(IN const Json::Value& req, OUT Json::Value& response);
 		/*IARMBus Performance test Wrapper functions*/
-                bool BUSAgent_Init(IN const Json::Value& req, OUT Json::Value& response);
-                bool BUSAgent_Term(IN const Json::Value& req, OUT Json::Value& response);
-                bool BUSAgent_BusConnect(IN const Json::Value& req, OUT Json::Value& response);
-                bool BUSAgent_BusDisconnect(IN const Json::Value& req, OUT Json::Value& response);
-                bool RegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response);
-                bool GetLastReceivedEventDetails(IN const Json::Value& req, OUT Json::Value& response);
-                bool UnRegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response);
                 bool RegisterMultipleEventHandlers (IN const Json::Value& req, OUT Json::Value& response);
-                bool UnRegisterMultipleEventHandlers(IN const Json::Value& req, OUT Json::Value& response);
+                bool GetLastReceivedEventPerformanceDetails(IN const Json::Value& req, OUT Json::Value& response);
                 bool InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json::Value& response);
                 std::string testenvPath;
                 int keyCode, keyType;
 
-		
 };
 #endif //__IARM_STUB_H__

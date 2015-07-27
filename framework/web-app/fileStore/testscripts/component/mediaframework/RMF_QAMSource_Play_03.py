@@ -3,7 +3,7 @@
 <xml>
   <id>1123</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>14</version>
+  <version>17</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSource_Play_03</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -20,7 +20,7 @@ Test Case ID: CT_RMF_QAMSrc_MPSink_03.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>8</execution_time>
+  <execution_time>11</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -31,9 +31,9 @@ Test Case ID: CT_RMF_QAMSrc_MPSink_03.</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -207,3 +207,8 @@ if expected_Result in loadModuleStatus.upper():
 else:
         print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();

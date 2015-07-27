@@ -20,7 +20,7 @@ TestCase ID: CT_RMF_DVRMgr_19</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>15</execution_time>
+  <execution_time>18</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -95,7 +95,12 @@ if ('SUCCESS' in mfLoadStatus.upper()) and ('SUCCESS' in tdkIntLoadStatus.upper(
         tdkIntObj.unloadModule('tdkintegration');
         mfObj.unloadModule('mediaframework');
 
-elif ('SUCCESS' not in mfLoadStatus.upper()) and ('SUCCESS' in tdkIntLoadStatus.upper()):
-        tdkIntObj.unloadModule('tdkintegration');
 elif ('SUCCESS' in mfLoadStatus.upper()) and ('SUCCESS' not in tdkIntLoadStatus.upper()):
         mfObj.unloadModule('mediaframework');
+elif ('SUCCESS' not in mfLoadStatus.upper()) and ('SUCCESS' in tdkIntLoadStatus.upper()):
+        tdkIntObj.unloadModule('tdkintegration');
+        loadmoduledetails = mfObj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();

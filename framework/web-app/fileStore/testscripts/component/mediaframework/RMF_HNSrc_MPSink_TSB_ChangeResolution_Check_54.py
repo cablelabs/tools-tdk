@@ -20,7 +20,7 @@ Test CaseID: CT_RMF_HNSRC_MPSink_54</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>15</execution_time>
+  <execution_time>18</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -314,3 +314,8 @@ else:
         print "Load Module Failed"
         mediaframework_obj.setLoadModuleStatus("FAILURE");
         ds_obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = mediaframework_obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();

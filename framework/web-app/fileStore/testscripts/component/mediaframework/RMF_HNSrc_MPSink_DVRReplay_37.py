@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>18</execution_time>
+  <execution_time>21</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -118,14 +118,15 @@ print "Load Module Status :  %s" %loadModuleStatus;
 #Pre-requisite to Check and verify required recording is present or not.
 
 
-tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
+if Expected_Result in loadModuleStatus.upper():
+	tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
 #Pre-requisite to Check and verify required recording is present or not.
 #---------Start-----------------
 
-duration = 3
+	duration = 3
   
-matchList = tdkTestObj.getRecordingDetails(duration);
-obj.resetConnectionAfterReboot()
+	matchList = tdkTestObj.getRecordingDetails(duration);
+	obj.resetConnectionAfterReboot()
 
 #---------End-------------------
 
@@ -191,3 +192,8 @@ if Expected_Result in loadModuleStatus.upper():
 else:
         print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();

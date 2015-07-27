@@ -3,7 +3,7 @@
 <xml>
   <id>565</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>95</version>
+  <version>98</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRManager_DeleteRecording</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -21,7 +21,7 @@ Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>3</execution_time>
+  <execution_time>6</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -68,7 +68,8 @@ if "SUCCESS" in result.upper():
     tdkTestObj = obj.createTestStep('RMF_DVRManager_DeleteRecording');
 
     expectedRes = "SUCCESS"
-    recordingId = "42171"
+    #recordingId = "42171"
+    recordingId = "88043"
 
     print "Requested record ID: %s"%recordingId
     tdkTestObj.addParameter("recordingId",recordingId);
@@ -101,3 +102,8 @@ if "SUCCESS" in result.upper():
 else:
     print "Failed to load mediaframework module";
     obj.setLoadModuleStatus("FAILURE");
+    loadmoduledetails = obj.getLoadModuleDetails();
+    print "loadmoduledetails %s" %loadmoduledetails;
+    if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+        print "Rebooting the STB"
+        obj.initiateReboot();

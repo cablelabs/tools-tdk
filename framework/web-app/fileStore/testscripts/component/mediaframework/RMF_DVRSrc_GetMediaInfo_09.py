@@ -21,7 +21,7 @@ Test Type: Positive.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>20</execution_time>
+  <execution_time>25</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -60,7 +60,7 @@ expected_Failure = "FAILURE"
 
 def compareGetMediaInfo(tdkObj,sTime,tDuration):
         global duration
-		
+
         if tDuration == duration:
                 print "DVRSrc getMediaInfo() success"
                 tdkObj.setResultStatus("SUCCESS");
@@ -84,7 +84,6 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         parametervalue.append(dvrLocator);
         global duration
         duration = matchList[3]
-        
 
     for item in range(len(parametername)):
         tdkTestObj.addParameter(parametername[item],parametervalue[item]);
@@ -114,6 +113,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     print "[Execution Details]:  %s" %details;
     
     return result
+
 tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
@@ -121,10 +121,10 @@ print "Load Module Status :  %s" %loadModuleStatus;
 #Pre-requisite to Check and verify required recording is present or not.
 #---------Start-----------------
 
-duration = 3
-
-matchList = tdkTestObj.getRecordingDetails(duration);
-obj.resetConnectionAfterReboot()
+if expected_Result in loadModuleStatus.upper():
+	duration = 3
+	matchList = tdkTestObj.getRecordingDetails(duration);
+	obj.resetConnectionAfterReboot()
 #---------End-------------------
 
 if expected_Result in loadModuleStatus.upper():
@@ -153,3 +153,8 @@ if expected_Result in loadModuleStatus.upper():
 else:
         print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();

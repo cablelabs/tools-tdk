@@ -20,7 +20,7 @@ Test Case ID: CT_RMF_HNSrc_05.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>4</execution_time>
+  <execution_time>6</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -93,3 +93,8 @@ else:
         print "Failed to load mediaframework module";
         #Set the module loading status
         obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();

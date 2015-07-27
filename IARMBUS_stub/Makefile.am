@@ -26,12 +26,12 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmbus/ \
 
 
 lib_LTLIBRARIES = libiarmbusstub.la
-libiarmbusstub_la_SOURCES = src/IARMBUSStub.cpp src/IARMBUSPerfStub.cpp
+libiarmbusstub_la_SOURCES = src/IARMBUSStub.cpp
 libiarmbusstub_la_LIBADD = -lglib-2.0 -lIARMBus -ldirect -lfusion -ldbus-1 -lz
 libiarmbusstub_la_includedir = ${includedir}
 libiarmbusstub_la_include_HEADERS = ${top_srcdir}/IARMBUS_stub/include/IARMBUSAgent.h
 
-bin_PROGRAMS = tst_iarmbus Test_Event_Mgr gen_single_event gen_multiple_events
+bin_PROGRAMS = tst_iarmbus Test_Event_Mgr gen_single_event gen_multiple_events gen_irevent
 tst_iarmbusdir = ${bindir}
 tst_iarmbus_SOURCES = src/tst_iarmbus.c
 tst_iarmbus_LDADD = -lIARMBus -lz -lglib-2.0
@@ -51,3 +51,8 @@ gen_multiple_eventsdir = ${bindir}
 gen_multiple_events_SOURCES = src/gen_multiple_events.cpp
 gen_multiple_events_LDADD = -lrt -lIARMBus -lz -lglib-2.0
 gen_multiple_events_includedir = ${includedir}
+
+gen_ireventdir = ${bindir}
+gen_irevent_SOURCES = src/gen_irevent.cpp
+gen_irevent_LDADD = -lrt -lIARMBus -lz -lglib-2.0
+gen_irevent_includedir = ${includedir}

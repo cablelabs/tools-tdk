@@ -21,7 +21,7 @@ Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>15</execution_time>
+  <execution_time>20</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -106,10 +106,11 @@ print "Load Module Status :  %s" %loadModuleStatus;
 #Pre-requisite to Check and verify required recording is present or not.
 #---------Start-----------------
 
-duration = 3
-matchList = []
-matchList = tdkTestObj.getRecordingDetails(duration);
-obj.resetConnectionAfterReboot()
+if expected_Result in loadModuleStatus.upper():
+	duration = 3
+	matchList = []
+	matchList = tdkTestObj.getRecordingDetails(duration);
+	obj.resetConnectionAfterReboot()
 
 #---------End-------------------
 
@@ -196,3 +197,8 @@ if expected_Result in loadModuleStatus.upper():
 else:
         print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();

@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>8</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -68,6 +68,10 @@ if "SUCCESS" in loadmodulestatus.upper():
             tdkTestObj.setResultStatus("FAILURE");
         print "PLAY URL : %s" %url;
         tdkTestObj.addParameter("playuri",url);
+
+	volume = 1.0
+	tdkTestObj.addParameter("Volume",volume);
+
 	#Execute the test case in STB
 	expectedresult="SUCCESS";
 	tdkTestObj.executeTestCase(expectedresult);
@@ -91,3 +95,8 @@ if "SUCCESS" in loadmodulestatus.upper():
 else:
 	print "Failed to load mediaframework module";
 	obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();
