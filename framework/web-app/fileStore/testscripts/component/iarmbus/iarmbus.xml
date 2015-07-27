@@ -182,6 +182,29 @@
           <parameter name="lockenabled" value=""/>
         </parameters>
       </primitiveTest>
+      <primitiveTest id=" " name="IARMBUS_InvokeEventTransmitterApp" version="1">
+        <function>TestMgr_IARMBUS_InvokeEventTransmitterApp</function>
+        <parameters>
+          <parameter name="event_id" value="0"/>
+          <parameter name="evttxappname" value="gen_single_event"/>
+          <parameter name="keyCode" value="300"/>
+          <parameter name="keyType" value="32768"/>
+          <parameter name="newState" value="1"/>
+          <parameter name="owner_name" value="IRMgr"/>
+          <parameter name="resource_type" value="1"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="IARMBUS_GetLastReceivedEventPerformanceDetails" version="1">
+        <function>TestMgr_IARMBUS_GetLastReceivedEventPerformanceDetails</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="IARMBUS_RegisterMultipleEvtHandlersForSingleEvt" version="1">
+        <function>TestMgr_IARMBUS_RegisterMultipleEventHandlers</function>
+        <parameters>
+          <parameter name="event_id" value="0"/>
+          <parameter name="owner_name" value="IRMgr"/>
+        </parameters>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>
