@@ -5,7 +5,7 @@
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Recorder_RMF_FullSchedule_False_Update_StartTime_196</name>
+  <name>Recorder_RMF_FullSchedule_False_Update_Past_StartTime_231</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -15,11 +15,11 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_196 - Recorder to update the start time of a future recording when a updateschedule is done with fullschedule false</synopsis>
+  <synopsis>CT_Recoder_DVR_Protocol_231 - Recorder to update the start time to a past time of a future recording when a updateschedule is done with fullschedule false to start as a hot recording</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>70</execution_time>
+  <execution_time>100</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -29,6 +29,8 @@
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Hybrid-5</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -51,7 +53,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_FullSchedule_False_Update_StartTime_196');
+recObj.configureTestCase(ip,port,'Recorder_RMF_FullSchedule_False_Update_Past_StartTime_231');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
@@ -88,7 +90,7 @@ if "SUCCESS" in recLoadStatus.upper():
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
         duration = "180000";
-        newStartTime = "300000";
+        newStartTime = "-180000";
         startTime = "180000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime"

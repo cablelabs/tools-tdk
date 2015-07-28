@@ -5,7 +5,7 @@
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Recorder_RMF_PowerInterrupt_CheckRecRestart_228</name>
+  <name>Recorder_RMF_VerifyRecording_Playback_232</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -15,11 +15,11 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>To verify that recording will restart/resume after a power interruption</synopsis>
+  <synopsis>To verify successful playback of recorded content</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>90</execution_time>
+  <execution_time>60</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -39,10 +39,10 @@
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-import time;
 import recorderlib
 from random import randint
 from time import sleep
+from tdkintegration import dvr_playback;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -50,26 +50,29 @@ ip = <ipaddress>
 port = <port>
 
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-obj.configureTestCase(ip,port,'Recorder_RMF_PowerInterrupt_CheckRecRestart_228');
+recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
+recObj.configureTestCase(ip,port,'Recorder_RMF_VerifyRecording_Playback_232');
 #Get the result of connection with test component and STB
-recLoadStatus = obj.getLoadModuleResult();
+recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status :%s" %recLoadStatus ;
 #Set the module loading status
-obj.setLoadModuleStatus(recLoadStatus);
+recObj.setLoadModuleStatus(recLoadStatus);
+
+recordingSuccess = 'FALSE'
+recordingID = str(randint(10000, 500000))
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        recLoadDetails = obj.getLoadModuleDetails();
+        recLoadDetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in recLoadDetails:
                print "Rebooting box for setting configuration"
-               obj.initiateReboot();
-               print "Waiting for 5min for the recoder to be up"
-	       sleep(300);
+               recObj.initiateReboot();
+               print "Waiting for the recoder to be up"
+               sleep(300);
 
-	#Primitive test case which associated to this Script
-        tdkTestObj = obj.createTestStep('Recorder_SendRequest');
+        #Primitive test case which associated to this Script
+        tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult = "SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
 
@@ -78,9 +81,8 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #Execute updateSchedule
         requestID = str(randint(10, 500));
-        recordingID = str(randint(10000, 500000));
-        #25mins duration
-        duration = "1500000"
+        #2mins duration
+        duration = "120000"
         startTime = "0"
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime"
@@ -94,50 +96,70 @@ if "SUCCESS" in recLoadStatus.upper():
                 sleep(15);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
-                while ( (len(recResponse) == 5) and (retry < 10 ) ):
+                while ( ('acknow' not in recResponse) and (retry < 10 ) ):
                         sleep(10);
                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                         retry += 1
-                print "Retrieve Status Details: ",recResponse
-                if len(recResponse) > 5:
+                print "Retrieve Status Details: ",recResponse;
+                if "acknow" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
                         response = recorderlib.callServerHandler('clearStatus',ip)
-                        print "Wait for 10 min before causing power interrupt"
-                        sleep(600)
-                        obj.initiateReboot();
-                        print "Waiting for 5min for recoder to be up"
-                        sleep(300);
-                        print "Wait for remaining 15 min recording to complete"
-                        sleep(900)
+                        print "Wait for 2 min for recording to complete"
+                        sleep(120)
                         print "Sending getRecordings to get the recording list"
                         recorderlib.callServerHandler('clearStatus',ip)
                         recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
-                        #Wait to get response from recorder
-                        sleep(240)
+                        print "Wait for 3 min to get response from recorder"
+                        sleep(180)
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                        print "Recording List: %s" %actResponse
-                        recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
+                        print "Recording List: %s" %actResponse;
+                        recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                        print recordingData
                         if ('NOTFOUND' in recordingData):
-                                tdkTestObj.setResultStatus("FAILURE")
-                                print "RecordingId not found in list"
-			else:
-                                print "Recording data for recordingID ",recordingID, " is ",recordingData
-				reqRecording = {"recordingId":recordingID,"duration":1500000,"deletePriority":"P3"}
-				result = recorderlib.verifyCompletedRecording(recordingData,reqRecording)
-				print "Recording verification result: ",result
-                        	if "FALSE" in result:
+                                tdkTestObj.setResultStatus("FAILURE");
+                                print "Failed to get recording info"
+                        else:
+                                reqRecording = {"recordingId":recordingID,"duration":120000,"deletePriority":"P3"}
+                                ret = recorderlib.verifyCompletedRecording(recordingData,reqRecording)
+                                if "FALSE" in ret:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        errorValue = recorderlib.getValueFromKeyInRecording(recordingData,'error')
-                                        print "Recording failed with error: ",errorValue
+                                        print "Recording failed verification"
                                 else:
+                                        recordingSuccess = 'TRUE'
                                         tdkTestObj.setResultStatus("SUCCESS");
-					print "Recording passed verification after power interruption"
+                                        print "Recording passed verification"
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "Simulator Server failed to receive acknowledgement from recorder";
+                        print "Failed to receive acknowledgement from recorder";
         else:
                 print "updateSchedule message post failure";
                 tdkTestObj.setResultStatus("FAILURE");
 
         #unloading Recorder module
-        obj.unloadModule("Recorder");
+        recObj.unloadModule("Recorder");
+
+if 'TRUE' == recordingSuccess:
+        # Playback the recorded content
+        tdkIntObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+        tdkIntObj.configureTestCase(ip,port,'Recorder_RMF_VerifyRecording_Playback_232');
+        tdkIntLoadStatus = tdkIntObj.getLoadModuleResult();
+        print "TDKINTEGRATION module loading status : %s" %tdkIntLoadStatus;
+        #Set the module loading status
+        tdkIntObj.setLoadModuleStatus(tdkIntLoadStatus);
+
+        #Check for SUCCESS/FAILURE of tdkintegration module
+        if "SUCCESS" in tdkIntLoadStatus.upper():
+
+                #Primitive test case which associated to this script
+                tdkTestObj = tdkIntObj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
+                result = dvr_playback(tdkTestObj,recordingID);
+
+                if "SUCCESS" in result.upper():
+                        print "Recording playback Success"
+                else:
+                        print "Recording playback Failed"
+
+                #unloading tdkintegration module
+                tdkIntObj.unloadModule("tdkintegration");
+else:
+        print "Skipping playback for failed recording"

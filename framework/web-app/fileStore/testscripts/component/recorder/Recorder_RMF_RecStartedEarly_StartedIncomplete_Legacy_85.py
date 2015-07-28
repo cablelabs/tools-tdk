@@ -20,7 +20,7 @@ more than 30 seconds from requested (note: not to be confused with expectedStart
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>60</execution_time>
+  <execution_time>100</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->

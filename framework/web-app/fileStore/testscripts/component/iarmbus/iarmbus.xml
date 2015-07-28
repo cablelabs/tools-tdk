@@ -31,6 +31,8 @@
           <parameter name="newState" value="0"/>
           <parameter name="mfr_param_type" value="0"/>
           <parameter name="method_name" value="GetRepeatInterval"/>
+          <parameter name="imagename" value="name.bin"/>
+          <parameter name="imagepath" value="/opt/"/>
         </parameters>
       </primitiveTest>
       <primitiveTest id="9" name="IARMBUS_RegisterCall" version="1">
