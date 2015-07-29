@@ -2,7 +2,7 @@
 
 ACLOCAL_AMFLAGS = -Im4 --install
 
-AM_CPPFLAGS = -Wall -fPIC ${COPTS} -DGCC4_XXX -DRMFAGENT -DRMF_OSAL_LITTLE_ENDIAN ${TDKINTEGRATION_FLAGS} ${SOC_FLAGS}
+AM_CPPFLAGS = -Wall -fPIC ${COPTS} -DGCC4_XXX -DRMFAGENT -DRMF_OSAL_LITTLE_ENDIAN ${TDKINTEGRATION_FLAGS}
 
 AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
 	      -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
@@ -14,6 +14,5 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
 
 lib_LTLIBRARIES = libtdkintegrationstub.la
 libtdkintegrationstub_la_SOURCES = src/TDKIntegrationStub.cpp
-libtdkintegrationstub_la_LIBADD = -lrdkloggers -lmediaplayersink -lhnsource -lrmfbase ${TDKINTEGRATION_HYBRID_LIBS} ${SOC_LIBS}
+libtdkintegrationstub_la_LIBADD = -lrdkloggers -lmediaplayersink -lhnsource -lrmfbase ${TDKINTEGRATION_HYBRID_LIBS} -lrmfinit -lglib-2.0  -lrmfosalutils -lrmfosal -lrdkloggers -llog4c
 libtdkintegrationstub_la_includedir = ${includedir}
-#libtdkintegrationstub_la_include_HEADERS = ${top_srcdir}/TDKIntegration_Stub/include/TDKIntegrationStub.h
