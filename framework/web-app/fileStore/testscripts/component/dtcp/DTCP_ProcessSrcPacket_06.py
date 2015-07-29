@@ -69,10 +69,10 @@ if "SUCCESS" in loadmodulestatus.upper():
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
   dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5003})
-  #Enable uniqueKey flag to request unique exchange key
-  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':1,'maxPacketSize':4096})
-  #Provide session exchange key sink generates (decimal 87 or 0x57)
-  dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':87,'pcpPacketSize':0,'maxPacketSize':4096})
+  #Disable unique key exchange
+  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
+  #No session exchange key
+  dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
   #Calling Process Packet
   dtcp.processPacket(tdkTestObj,expectedresult,kwargs={"index":0})
   #Post-Cond: DeleteSinkSession,DeleteSrcSession,StopSource

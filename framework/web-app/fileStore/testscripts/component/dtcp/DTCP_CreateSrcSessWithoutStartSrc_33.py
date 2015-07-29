@@ -71,12 +71,10 @@ if "SUCCESS" in loadmodulestatus.upper():
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
   #Make sure no DTCP source is listening for AKE requests
   dtcp.stopSource(tdkTestObj,expectedresult)
-  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
   result = dtcp.createSourceSession(tdkTestObj,'FAILURE',kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
   #If source session creation is allowed in failure case call DeleteDTCPSession
   if expectedresult not in result:
       dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
-  dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
   #Unload the dtcp module
   obj.unloadModule("dtcp");
 else:

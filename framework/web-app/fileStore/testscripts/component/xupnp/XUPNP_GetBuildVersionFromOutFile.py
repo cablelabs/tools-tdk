@@ -50,7 +50,6 @@ Testcase ID: CT_XUPNP_06</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-from iarmbus import IARMBUS_Init,IARMBUS_Connect,IARMBUS_DisConnect,IARMBUS_Term;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -58,52 +57,29 @@ ip = <ipaddress>
 port = <port>
 
 #Test component to be tested
-iarmObj = tdklib.TDKScriptingLibrary("iarmbus","2.0");
-iarmObj.configureTestCase(ip,port,'XUPNP_GetBuildVersionFromOutFile');
+xUpnpObj = tdklib.TDKScriptingLibrary("xupnp","2.0");
+xUpnpObj.configureTestCase(ip,port,'XUPNP_GetBuildVersionFromOutFile');
 #Get the result of connection with test component and STB
-iarmLoadStatus = iarmObj.getLoadModuleResult();
-print "Iarmbus module loading status : %s" %iarmLoadStatus ;
+xupnpLoadStatus = xUpnpObj.getLoadModuleResult();
+print "XUPNP module loading status : %s" %xupnpLoadStatus;
 #Set the module loading status
-iarmObj.setLoadModuleStatus(iarmLoadStatus);
+xUpnpObj.setLoadModuleStatus(xupnpLoadStatus);
 
-if "SUCCESS" in iarmLoadStatus.upper():
-        #Calling IARMBUS API "IARM_Bus_Init"
-        result = IARMBUS_Init(iarmObj,"SUCCESS")
-        #Check for SUCCESS/FAILURE return value of IARMBUS_Init
-        if "SUCCESS" in result:
-                #Calling IARMBUS API "IARM_Bus_Connect"
-                result = IARMBUS_Connect(iarmObj,"SUCCESS")
-                #Check for SUCCESS/FAILURE return value of IARMBUS_Connect
-                if "SUCCESS" in result:
-                        xUpnpObj = tdklib.TDKScriptingLibrary("xupnp","2.0");
-                        xUpnpObj.configureTestCase(ip,port,'XUPNP_GetBuildVersionFromOutFile');
-                        #Get the result of connection with test component and STB
-                        xupnpLoadStatus = xUpnpObj.getLoadModuleResult();
-                        print "XUPNP module loading status : %s" %xupnpLoadStatus;
-                        #Set the module loading status
-                        xUpnpObj.setLoadModuleStatus(xupnpLoadStatus);
+if "SUCCESS" in xupnpLoadStatus.upper():
+        tdkTestObj = xUpnpObj.createTestStep('XUPNP_ReadXDiscOutputFile');
+        expectedresult="SUCCESS";
+        #Configuring the test object for starting test execution
+        tdkTestObj.addParameter("paramName","buildVersion");
+        tdkTestObj.executeTestCase(expectedresult);
+        actualresult = tdkTestObj.getResult();
+        details = tdkTestObj.getResultDetails();
+        print "GetBuildVersion Result : %s"%actualresult;
+        print "GetBuildVersion Details : %s"%details;
+        #Check for SUCCESS return value of XUPNP_ReadXDiscOutputFile
+        if "SUCCESS" in actualresult.upper():
+                tdkTestObj.setResultStatus("SUCCESS");
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
 
-                        if "SUCCESS" in xupnpLoadStatus.upper():
-                                tdkTestObj = xUpnpObj.createTestStep('XUPNP_ReadXDiscOutputFile');
-                                expectedresult="SUCCESS";
-                                #Configuring the test object for starting test execution
-                                tdkTestObj.addParameter("paramName","buildVersion");
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                details = tdkTestObj.getResultDetails();
-                                print "GetBuildVersion Result : %s"%actualresult;
-                                print "GetBuildVersion Details : %s"%details;
-                                #Check for SUCCESS return value of XUPNP_ReadXDiscOutputFile
-                                if "SUCCESS" in actualresult.upper():
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                #Unload xupnp module
-                                xUpnpObj.unloadModule("xupnp");
-
-                        #Calling IARM_Bus_DisConnect API
-                        result = IARMBUS_DisConnect(iarmObj,"SUCCESS")
-                #calling IARMBUS API "IARM_Bus_Term"
-                result = IARMBUS_Term(iarmObj,"SUCCESS")
-        #Unload iarmbus module
-        iarmObj.unloadModule("iarmbus");
+        #Unload xupnp module
+        xUpnpObj.unloadModule("xupnp");

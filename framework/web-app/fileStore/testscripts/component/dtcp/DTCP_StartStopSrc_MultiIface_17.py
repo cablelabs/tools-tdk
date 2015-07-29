@@ -70,7 +70,8 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: DTCPMgrInit
   init(tdkTestObj,expectedresult);
   setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  ifNames = ["lan0","lo"]
+  #ifNames = ["lan0","wan","lo"]
+  ifNames = ["lo"]
   ports = [5000,8000]
   for ifName in ifNames:
       for port in ports:
