@@ -74,7 +74,7 @@ if "SUCCESS" in loadmodulestatus.upper():
           dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
       dtcp.stopSource(tdkTestObj,expectedresult)
   #If stopSource is successful, DTCPMgrCreateSinkSession should fail with socket connection error
-  dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'127.0.0.1','srcPort':5000,'uniqueKey':0,'maxPacketSize':4096})
+  dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'127.0.0.1','srcPort':8000,'uniqueKey':0,'maxPacketSize':4096})
   #Unload the dtcp module
   obj.unloadModule("dtcp");
 else:

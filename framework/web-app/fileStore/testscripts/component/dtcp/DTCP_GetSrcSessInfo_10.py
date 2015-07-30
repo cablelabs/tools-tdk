@@ -70,8 +70,8 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: DTCPMgrInit,StartSource,CreateSourceSession
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
-  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5000,'uniqueKey':0,'maxPacketSize':4096})
+  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5003})
+  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
   dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={"sinkIp":'127.0.0.1',"keyLabel":0,"pcpPacketSize":0,"maxPacketSize":4096})
   #Calling Get Src SessionInfo
   dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})

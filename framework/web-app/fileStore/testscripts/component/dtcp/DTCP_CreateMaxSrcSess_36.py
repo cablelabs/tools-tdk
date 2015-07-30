@@ -73,8 +73,8 @@ if "SUCCESS" in loadmodulestatus.upper():
   sinkNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1}))
   print "Total sessions present: %d"%(srcNum+sinkNum)
   #Creating max of 8 source sessions are allowed if no sink sessions are there
-  maxNum = 5000+(8-srcNum-sinkNum)
-  for port in range (5000,maxNum):
+  maxNum = 5003+(8-srcNum-sinkNum)
+  for port in range (5003,maxNum):
       dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
       dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
   #Creating 8th source session should be denied

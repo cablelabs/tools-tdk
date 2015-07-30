@@ -68,10 +68,10 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: Init,SetLoglevel,StartSource,CreateSinkSession
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
+  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5003})
   prevNum = dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
   print "num of sink sessions before creating new session: [%s]"%prevNum
-  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5000,'uniqueKey':0,'maxPacketSize':4096})
+  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
   #Calling DeleteSinkSession
   dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
   #Check if session is deleted successfully

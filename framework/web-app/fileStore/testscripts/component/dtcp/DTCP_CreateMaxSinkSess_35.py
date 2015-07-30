@@ -70,7 +70,7 @@ if "SUCCESS" in loadmodulestatus.upper():
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
   #Creating 10 instances of StartSource,CreateSinkSession
-  for port in range (5000,5010):
+  for port in range (5003,5013):
       dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
       dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':port,'uniqueKey':0,'maxPacketSize':4096})
   #Post-Cond: Stop all source after deleting all sink sessions

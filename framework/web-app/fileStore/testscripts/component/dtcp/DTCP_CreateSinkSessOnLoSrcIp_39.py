@@ -68,10 +68,10 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: DTCPMgrInit,setLoglevel,DTCPMgrStartSource
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5000})
+  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5003})
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
   #Calling CreateSinkSession
-  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5000,'uniqueKey':0,'maxPacketSize':4096})
+  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
   #Post-Cond: DeleteSinkSession,StopSrc
   dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
