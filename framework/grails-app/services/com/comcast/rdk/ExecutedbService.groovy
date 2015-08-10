@@ -162,6 +162,16 @@ class ExecutedbService {
 					executionDeviceList.each{ executionDeviceInstance ->
 						executionDeviceInstance.delete(flush:true)
 					}
+					
+					if(executionInstance?.thirdPartyExecutionDetails){
+						executionInstance?.thirdPartyExecutionDetails = null;
+						executionInstance?.save();
+					}
+					
+					def thirdPartyExecutionDetailsList = ThirdPartyExecutionDetails.findAllByExecution(executionInstance)
+					thirdPartyExecutionDetailsList?.each{ thirdPartyExecution ->
+						thirdPartyExecution?.delete(flush:true)
+					}
 
 					def execId = executionInstance?.id
 
@@ -516,7 +526,7 @@ class ExecutedbService {
 				String output = executionResultInstance?.executionOutput
 				String executionOutput
 				String moduleName = ""
-				int  execution = executionResultInstance?.script?.count
+//				int  execution = executionResultInstance?.script?.count
 //				Script.withTransaction {
 //					Script scrpt = Script.findByName(scriptName)
 //					moduleName = scrpt?.primitiveTest?.module?.name
@@ -569,8 +579,18 @@ class ExecutedbService {
 							else{
 								executed = "YES"
 							}
-							//Map dataMap = ["C1":counter,"C2":scriptName,"C3":status,"C4":executionOutput,"C5":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id,,"C6":parseTime(executionInstance?.dateOfExecution)] 						
-							Map dataMap =["C1":counter,"C2":scriptName,"C3":executed,"C4":status,"C5":parseTime(executionInstance?.dateOfExecution),"C6":executionOutput,"C7":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id,,"C8":"","C9":"","C10":""] //,"total":summaryMap.get("Total Scripts")]
+							/*Map dataMap = ["C1":counter,"C2":scriptName,"C3":status,"C4":executionOutput,"C5":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id,,"C6":parseTime(executionInstance?.dateOfExecution)] 						
+							Map dataMap =["C1":counter,"C2":scriptName,"C3":executed,"C4":status,"C5":parseTime(executionInstance?.dateOfExecution),"C6":appUrl+"/execution/getExecutionOutput?execResId="+executionResultInstance?.id,"C7":"","C8":"","C9":"","C10":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id]*/
+							Map dataMap
+							def countOfExecutionOutput = executionOutput?.size()
+							//For CGRTS-521 
+							String executionLogData = executionOutput
+							if(countOfExecutionOutput >= 1000 ){
+								executionLogData = executionOutput+"\n More data use this link ....... \n " +appUrl+"/execution/getExecutionOutput?execResId="+executionResultInstance?.id
+							}
+							
+							dataMap =["C1":counter,"C2":scriptName,"C3":executed,"C4":status,"C5":parseTime(executionInstance?.dateOfExecution),"C6":executionLogData,"C7":"","C8":"","C9":"","C10":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id]
+							
 							dataList.add(dataMap)
 							counter ++
 							dataMapList.put("counter",counter)

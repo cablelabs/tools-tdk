@@ -35,7 +35,7 @@
 	$(document).ready(function() {
 
 		var scriptId = $("#currentScriptId").val();
-		if(scriptId!=null || scriptId!=""){
+		if(scriptId!=null && scriptId!=""){
 			editScript(scriptId);
 		}
 

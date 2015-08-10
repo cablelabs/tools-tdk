@@ -50,6 +50,19 @@ class ScriptService {
 	def updateScriptNameChange(def oldName , def newScript){
 		scriptNameList.add(oldName)
 		scriptNameList.add(newScript?.scriptName)
+		boolean removedOld = false
+		Iterator<ScriptFile> iter = scriptsList.iterator()
+		while(iter.hasNext()){
+			def obj = iter.next()
+			if(oldName.equals(obj.scriptName)){
+				iter.remove()
+				removedOld = true
+			}
+		}
+
+		if(removedOld){
+			scriptsList.add(newScript)
+		}
 		def list = scriptGroupMap.get(newScript?.moduleName)
 		if(list == null){
 			list = []

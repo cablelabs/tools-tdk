@@ -411,8 +411,8 @@ class DeviceGroupController {
 			BoxType boxType = BoxType.findById(params?.boxType?.id)
 			
 			String newBoxType = boxType?.type?.toLowerCase()
-			
-			if (newBoxType.equals( BOXTYPE_GATEWAY )){
+			//CGRTS - 527 defect fixing 
+			if (newBoxType.equals( BOXTYPE_GATEWAY )  || newBoxType.equals(BOXTYPE_STANDALONE_CLIENT) ){
 				String recId = ""
 				if(currentBoxType.equals( BOXTYPE_GATEWAY) || currentBoxType.equals( BOXTYPE_STANDALONE_CLIENT)){
 					recId = params?.recorderIdedit

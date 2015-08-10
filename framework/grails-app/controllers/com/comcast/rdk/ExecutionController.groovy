@@ -386,13 +386,13 @@ class ExecutionController {
 
 		def deviceInstanceList = Device.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(),[order: 'asc', sort: 'stbName'])
 		def executionInstanceList = Execution.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(),params)
-		def executionInstanceListCnt = Execution.findAllByGroupsOrGroupsIsNull(utilityService.getGroup())
+		def executionInstanceListCnt = Execution.countByGroupsOrGroupsIsNull(utilityService.getGroup())
 	
         def devices = Device.list([order: 'asc', sort: 'stbName'])
         
         if(params?.devicetable) {
             // This is called from execution-resolver.js loadXmlDoc. This is for automatic page refresh.
-            def result = [executionInstanceList : executionInstanceList, executorInstanceTotal: executionInstanceListCnt?.size()]
+            def result = [executionInstanceList : executionInstanceList, executorInstanceTotal: executionInstanceListCnt]
             render view:"executionhistorytable", model:result
             return
         }       
@@ -411,7 +411,7 @@ class ExecutionController {
 			}
 			deviceInstanceList = Device.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(),[order: 'asc', sort: 'stbName'])
 		}
-        [url : getApplicationUrl(), deviceList : deviceInstanceList, error: params.error, executionInstanceList : executionInstanceList, executorInstanceTotal: executionInstanceListCnt?.size(),
+        [url : getApplicationUrl(), deviceList : deviceInstanceList, error: params.error, executionInstanceList : executionInstanceList, executorInstanceTotal: executionInstanceListCnt,
             jobDetailList : JobDetails?.list(), jobInstanceTotal: JobDetails?.count(), deviceInstanceTotal: deviceInstanceList?.size()]
     
     }
@@ -1597,6 +1597,17 @@ class ExecutionController {
 		}
 	}
 	
+	// For CGRTS-521
+	def getExecutionOutput(final String execResId){
+		ExecutionResult executionResult = ExecutionResult.findById(execResId)
+		def data	
+	
+		if(executionResult){	
+			data = executionResult?.executionOutput
+		}
+	render data
+	}
+	
 	
 	/**
 	 * Method to export the consolidated report in excel format.
@@ -1607,12 +1618,13 @@ class ExecutionController {
 				List fieldLabels = []
 				Map fieldMap = [:]
 				Map parameters = [:]
-				List columnWidthList = [0.08,0.4,0.15,0.2,0.15,0.6,0.8,0.2,0.2,0.2]
+				List columnWidthList = [0.08,0.4,0.15,0.2,0.15,0.8,0.2,0.2,0.2,0.8]
 		
 				Execution executionInstance = Execution.findById(params.id)
 				if(executionInstance){
 					dataMap = executedbService.getDataForConsolidatedListExcelExport(executionInstance, getRealPath(),getApplicationUrl())
-					fieldMap = ["C1":" Sl.No ", "C2":" Script Name ","C3":"Executed","C4":" Status ", "C5":"Executed On ","C6":"Log Data","C7":" Agent Console Log","C8":"Jira #","C9":"Issue Type","C10":"Remarks"]
+					fieldMap = ["C1":" Sl.No ", "C2":" Script Name ","C3":"Executed","C4":" Status ", "C5":"Executed On ","C6":"Log Data","C7":"Jira #","C8":"Issue Type","C9":"Remarks","C10":" Agent Console Log"]
+					
 					parameters = [ title: EXPORT_SHEET_NAME, "column.widths": columnWidthList]
 				}
 				else{
@@ -1955,6 +1967,16 @@ class ExecutionController {
 					}
 				
 
+					if(executionInstance?.thirdPartyExecutionDetails){
+						executionInstance?.thirdPartyExecutionDetails = null;
+						executionInstance?.save();
+					}
+					
+					def thirdPartyExecutionDetailsList = ThirdPartyExecutionDetails.findAllByExecution(executionInstance)
+					thirdPartyExecutionDetailsList.each{ thirdPartyExecution ->
+						thirdPartyExecution.delete(flush:true)
+					}
+					
 					def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
 					executionDeviceList.each{ executionDeviceInstance ->
 						executionDeviceInstance.delete(flush:true)

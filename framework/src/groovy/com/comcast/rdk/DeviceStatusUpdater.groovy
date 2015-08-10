@@ -43,7 +43,11 @@ public class DeviceStatusUpdater {
 		String filePath = absolutePath//"${RequestContextHolder.currentRequestAttributes().currentRequest.getRealPath("/")}//fileStore//calldevicestatus_cmndline.py"
 		def deviceList 
 		Device.withTransaction {
+			try{
 			deviceList = Device.getAll()
+			}catch(Exception e){
+				e.printStackTrace()
+			}
 		}
 		
 		def ipAddress

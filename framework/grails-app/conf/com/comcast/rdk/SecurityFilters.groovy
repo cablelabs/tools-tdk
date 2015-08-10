@@ -20,7 +20,7 @@ class SecurityFilters {
     def publicActions = [     
 		user: ['changePassword','registerUser','saveUser'],
 		primitiveTest : ['getJson','getStreamDetails'],
-		execution : ['saveLoadModuleStatus','saveResultDetails','getDeviceStatusList','getDeviceStatus','thirdPartyJsonResult','thirdPartyTest','showResult','getDetailedTestResult','getClientPort','stopThirdPartyTestExecution','getAgentConsoleLog','getRealtimeDeviceStatus'],
+		execution : ['saveLoadModuleStatus','saveResultDetails','getDeviceStatusList','getDeviceStatus','thirdPartyJsonResult','thirdPartyTest','showResult','getDetailedTestResult','getClientPort','stopThirdPartyTestExecution','getAgentConsoleLog','getRealtimeDeviceStatus','getExecutionOutput'],
 		deviceGroup : ['uploadAgentBinaries'],
     ];
 

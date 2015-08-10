@@ -3,7 +3,7 @@
 <xml>
   <id>495</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>11</version>
+  <version>12</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrcMPSink_SkipNumOfSeconds_SkipBack_06</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -184,6 +184,10 @@ if expected_Result in loadModuleStatus.upper():
                                                                                                         else:
                                                                                                                 tdkTestObj.setResultStatus(expected_Failure);
                                                                                                                 print "DVRSource skiping back number of seconds Failed";
+										
+                                                                		src_parameter=["rmfElement"];
+			                                                        src_element=["DVRSrc"];
+        	        		                                        result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,expected_Result,src_parameter,src_element);
                                                                         else:
                                                                                 tdkTestObj.setResultStatus(expected_Failure);
                                                 src_parameter=["rmfElement"]

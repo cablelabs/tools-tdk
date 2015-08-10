@@ -11,9 +11,13 @@
  */
 package rdk.test.tool
 
+import java.io.InputStream;
+import java.net.URLConnection;
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher
 
 import org.quartz.Job
@@ -45,6 +49,8 @@ class JobSchedulerService implements Job{
 
 	def grailsApplication
 	boolean transactional = false
+	
+	static ExecutorService executorService = Executors.newCachedThreadPool()
 	
 	static triggers ={}
 
@@ -90,6 +96,7 @@ class JobSchedulerService implements Job{
 		def realpath
 		def url
 		def deviceList = []
+		List pendingScripts = []
 		boolean allocated = false
 		def deviceInstance //= Device.findById(jobDetails?.device, [lock: true])
 		try {
@@ -164,12 +171,11 @@ class JobSchedulerService implements Job{
 								}
 							}
 						}
-						
-				   }
-				   catch(Exception eX){
-				   }
 
-			  
+					}
+					catch(Exception eX){
+					   eX.printStackTrace()
+					}
 					if(scripts){
 						if(scripts.size() > 1){
 							scriptName = MULTIPLESCRIPT
@@ -188,7 +194,6 @@ class JobSchedulerService implements Job{
 					}else if(scriptGrpId){
 						scriptGroupInstance = ScriptGroup.findById(scriptGrpId,[lock: true])
 					}
-					
 					if( devStatus.equals( Status.FREE.toString() )){
 						
 						
@@ -274,7 +279,7 @@ class JobSchedulerService implements Job{
 								scriptGroupInstance = ScriptGroup.findById(jobDetails?.scriptGroup,[lock: true])
 								scriptCounter = 0
 								List validScriptList = new ArrayList()
-								List pendingScripts = []
+
 								boolean skipStatus = false
 								boolean notApplicable = false
 
@@ -338,6 +343,30 @@ class JobSchedulerService implements Job{
 								}
 
 								Execution ex = Execution.findByName(execName)
+								Properties props = new Properties()
+								try {
+									// rest call for log transfer starts
+									props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
+										if(validScriptList.size() > 0){
+											if(props.get("logServerUrl")){
+												Runnable runnable = new Runnable(){
+															public void run(){
+																def startStatus = initiateLogTransfer(execName, props.get("logServerUrl"), props.get("logServerAppName"), deviceInstance)
+																if(startStatus){
+																	println "Log transfer job created for $execName"
+																}
+																else{
+																	println "Cannot create Log transfer job for $execName"
+																}
+															}
+														}
+												executorService.execute(runnable);
+											}
+										}
+								} catch (Exception e) {
+									e.printStackTrace()
+								}
+								
 								validScriptList.each{ scriptObj ->
 									scriptCounter++
 									if(scriptCounter == scriptGrpSize){
@@ -423,6 +452,27 @@ class JobSchedulerService implements Job{
 					}
 				}
 								}
+								
+								try {
+									if(validScriptList.size() > 0){
+										if(props.get("logServerUrl")){
+											Runnable runnable = new Runnable(){
+												void run() {
+													def status = stopLogTransfer(execName, props.get("logServerUrl"), props.get("logServerAppName"))
+															if(status){
+																println "Stopped Log transfer job for $execName"
+															}
+															else{
+																println "Log transfer job scheduled for $execName failed to stop"
+															}
+												};
+											}
+											executorService.execute(runnable);
+										}
+									}
+								} catch (Exception e) {
+									e.printStackTrace()
+								}
 
 								if(aborted && ExecutionService.abortList.contains(ex?.id?.toString())){
 									ExecutionService.abortList.remove(ex?.id?.toString())
@@ -500,21 +550,91 @@ class JobSchedulerService implements Job{
 									scriptGrpSize = validScripts?.size()
 									
 									if((skipStatus || notApplicable )&& scriptGrpSize == 0){
-									Execution ex = Execution.findByName(execName)
-									if(ex){
-										updateExecutionStatus(FAILURE_STATUS, ex?.id)
-										updateExecutionDeviceSkipStatus(FAILURE_STATUS, executionDevice?.id)
+											Execution ex = Execution.findByName(execName)
+											if(ex){
+												updateExecutionStatus(FAILURE_STATUS, ex?.id)
+												updateExecutionDeviceSkipStatus(FAILURE_STATUS, executionDevice?.id)
+											}
 									}
-								}
-									
+										Execution ex = Execution.findByName(execName)
+										String deviceStatus
+										def exeId = ex?.id
 									validScripts.each{ script ->
 										scriptCounter++
 										if(scriptCounter == scriptGrpSize){
 											isMultiple = "false"
 										}
-
+											aborted = ExecutionService.abortList.contains(exeId?.toString())
+											if(!aborted && !pause)
+											{
+												try{
+													deviceStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+												}catch(Exception e){
+													e.printStackTrace()
+												}
+											}
+											if(!aborted && !(deviceStatus.equals(Status.NOT_FOUND.toString()) || deviceStatus.equals(Status.HANG.toString()))){
 										htmlData = executeScript(execName, executionDevice, script , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired, executionName,isMultiple)
+											}else {
+												if(!aborted && deviceStatus.equals(Status.NOT_FOUND.toString())){
+													pause = true
+												}
+												if(!aborted && pause){
+													try{
+														pendingScripts.add(script)
+														def execInstance
+														Execution.withTransaction {
+															def execInstance1 = Execution.findByName(execName)
+															execInstance = execInstance1
+														}
+														def scriptInstanceObj
+														scriptInstanceObj = script
+														Device deviceInstanceObj
+														def devId = deviceInstance?.id
+														Device.withTransaction {
+															Device deviceInstance1 = Device.findById(devId)
+															deviceInstanceObj = deviceInstance1
+														}
+														ExecutionDevice executionDevice1
+														ExecutionDevice.withTransaction {
+															def exDev = ExecutionDevice.findById(executionDevice?.id)
+															executionDevice1 = exDev
+														}
+														ExecutionResult.withTransaction { resultstatus ->
+															try {
+																def executionResult = new ExecutionResult()
+																executionResult.execution = execInstance
+																executionResult.executionDevice = executionDevice1
+																executionResult.script = scriptInstanceObj?.name
+																executionResult.device = deviceInstanceObj?.stbName
+																executionResult.execDevice = null
+																executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
+																executionResult.status = PENDING
+																executionResult.dateOfExecution = new Date()
+																if(! executionResult.save(flush:true)) {
+																}
+																resultstatus.flush()
+															}
+															catch(Throwable th) {
+																resultstatus.setRollbackOnly()
+															}
 
+														}
+
+													}catch(Exception e){
+														e.printStackTrace()
+													}
+												}
+
+											}
+											if(aborted && ExecutionService.abortList.contains(exeId?.toString())){
+												ExecutionService.abortList.remove(ex?.toString())
+											}
+											if(!aborted && pause && pendingScripts.size() > 0 ){
+												def exeInstance = Execution.findByName(execName)
+												savePausedExecutionStatus(exeInstance?.id)
+												saveExecutionDeviceStatusData(PAUSED, executionDevice?.id)
+											}
 										output.append(htmlData)
 										Thread.sleep(6000)
 									}
@@ -543,9 +663,9 @@ class JobSchedulerService implements Job{
 						output.append(htmlData)
 					}
 			   }else{
-			   
 			   try {
-				   Execution execution1 = new Execution()
+							Execution.withTransaction{ 
+							def execution1 = new Execution()
 				   execution1.name = executionName
 				   execution1.script = scriptName
 				   execution1.device = deviceName
@@ -561,11 +681,12 @@ class JobSchedulerService implements Job{
 				   execution1.outputData = "Execution failed due to the unavailability of box"
 				   if(! execution1.save(flush:true)) {
 					   log.error "Error saving Execution instance : ${execution1.errors}"
-				   }
+							}
 			   }
-			   catch(Exception th) {
-				   th.printStackTrace()
-			   }
+						}
+						catch(Exception th) {
+							th.printStackTrace()
+						}
 			   
 			   }
 
@@ -699,6 +820,32 @@ class JobSchedulerService implements Job{
 						def resultSize = executionResultList.size()
 						int counter = 0
 						def isMultiple = "true"
+						
+						// adding log transfer to server for reruns
+						
+						Properties props = new Properties()
+						try {
+							props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
+							// initiating log transfer
+							if(executionResultList.size() > 0){
+								if(props.get("logServerUrl")){
+									Runnable runnable = new Runnable(){
+										public void run(){
+											def startStatus = initiateLogTransfer(newExecName, props.get("logServerUrl"), props.get("logServerAppName"), deviceInstance)
+													if(startStatus){
+														println "Log transfer job created for $execName"
+													}
+													else{
+														println "Cannot create Log transfer job for $execName"
+													}
+										}
+									}
+									executorService.execute(runnable);
+								}
+							}
+						} catch (Exception e) {
+							e.printStackTrace()
+						}
 						executionResultList.each{ executionResult ->
 							scriptInstance = Script.findByName(executionResult?.script,[lock: true])
 							counter++
@@ -715,6 +862,27 @@ class JobSchedulerService implements Job{
 								}
 							}
 
+						}
+						// stopping log transfer
+						try {
+							if(executionResultList.size() > 0){
+								if(props.get("logServerUrl")){
+									Runnable runnable = new Runnable(){
+										void run() {
+											def status = stopLogTransfer(newExecName, props.get("logServerUrl"), props.get("logServerAppName"))
+													if(status){
+														println "Stopped Log transfer job for $execName"
+													}
+													else {
+														println "Log transfer job scheduled for $execName failed to stop"
+													}
+										};
+									}
+									executorService.execute(runnable);
+								}
+							}
+						} catch (Exception e) {
+							e.printStackTrace()
 						}
 
 						if(aborted){
@@ -1079,7 +1247,6 @@ class JobSchedulerService implements Job{
 					Thread.sleep(4000)
 				}
 				catch(Exception e){
-					println " error > "+e.getMessage()
 				}
 			}
 		
@@ -1123,14 +1290,12 @@ class JobSchedulerService implements Job{
 							ScriptExecutor scriptExecutor = new ScriptExecutor()
 							def outputData = scriptExecutor.executeScript(cmd,1)
 						}catch (Exception e) {
-						println " error >> "+e.getMessage()
 							e.printStackTrace()
 						}
 					}
 					
 					}
 				} catch (Exception e) {
-					println " ERROR "+e.getMessage()
 				}
 			}
 			
@@ -1852,4 +2017,88 @@ class JobSchedulerService implements Job{
 		}
 	}
 	
+	def initiateLogTransfer(String executionName, String server, String logAppName, Device device){
+		int count = 3
+		boolean logTransferInitiated = false
+
+		while(count > 0 && !logTransferInitiated){
+			HttpURLConnection connection = null
+			try{
+				println "initiating transaction"
+				connection = new URL("http://$server/$logAppName/startScheduler/$executionName/$device.stbName/$device.stbIp/$device.statusPort/$device.logTransferPort").openConnection()
+				connectToLogServerAndExecute(connection)
+				println "Initiated log transfer for $executionName"
+				logTransferInitiated = true
+			}
+			catch(Exception e) {
+				e.printStackTrace()
+				--count
+			}
+			finally{
+				if(connection != null){
+					connection.disconnect()
+				}
+			}
+		}
+		println "logTransferInitiated : $logTransferInitiated"
+		logTransferInitiated
+
+	}
+
+	def stopLogTransfer(String executionName, String server, String logAppName){
+
+		int count = 3
+		boolean logTransferStopInitiated = false
+		while(count > 0 && !logTransferStopInitiated){
+			HttpURLConnection connection = null
+			try{
+				String url = "http://$server/$logAppName/stopScheduler/$executionName"
+				print "url : $url"
+				connection = new URL(url).openConnection()
+				connectToLogServerAndExecute(connection)
+				logTransferStopInitiated = true
+			}
+			catch(Exception e){
+				e.printStackTrace()
+				--count
+			}
+			finally{
+				if(connection != null){
+					connection.disconnect()
+				}
+			}
+		}
+		logTransferStopInitiated
+	}
+
+	def void connectToLogServerAndExecute(URLConnection connection) {
+		connection.setConnectTimeout(120000)
+		int responseCode = connection.getResponseCode()
+		if(responseCode == 200){
+			String finalresp = getResponse(connection.getInputStream())
+			println finalresp
+		}
+		else{
+			String finalresp = getResponse(connection.getErrorStream())
+			try{
+				String resp = finalresp.substring(finalresp.indexOf("<body><h1>")+"<body><h1>".length(), finalresp.indexOf("</h1>"))
+				println resp.split("-")[1].trim()
+			}
+			catch(Exception e){
+				println finalresp
+			}
+		}
+	}
+
+	def String getResponse(InputStream inputStream){
+		BufferedReader buf = new BufferedReader(new InputStreamReader(inputStream))
+		StringBuilder build = new StringBuilder()
+		String x = null
+		while( (x = buf.readLine())!= null){
+			build.append(x).append("\n")
+		}
+		buf.close()
+		String finalresp = build.toString()
+		finalresp
+	}
 }

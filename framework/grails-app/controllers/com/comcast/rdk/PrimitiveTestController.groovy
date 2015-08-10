@@ -472,13 +472,21 @@ class PrimitiveTestController {
      * @param idVal
      * @return
      */
-    def getJson(final String testName, final String idVal) {
+	def getJson(final String testName, final String idVal) {
+		def scriptDirName
+		def primitiveTest
 		def moduleMap = primitiveService.getPrimitiveModuleMap(getRealPath())
 		def mName= moduleMap.get(testName)
-		def scriptDirName = primitiveService.getScriptDirName(mName)
-		def primitiveTest = primitiveService.getPrimitiveTest(getRealPath()+"/fileStore/testscripts/"+scriptDirName+"/"+mName+"/"+mName+".xml", testName)
+		try{
+			if(mName){
+				scriptDirName = primitiveService.getScriptDirName(mName)
+				primitiveTest = primitiveService.getPrimitiveTest(getRealPath()+"/fileStore/testscripts/"+scriptDirName+"/"+mName+"/"+mName+".xml", testName)
+			}
+		}catch(Exception e){
+			println e.getMessage()
+		}
 		render primitivetestService.getJsonData( primitiveTest, idVal )
-    }
+	}
     
        /**
      * Returns JSON data of stream details based on the

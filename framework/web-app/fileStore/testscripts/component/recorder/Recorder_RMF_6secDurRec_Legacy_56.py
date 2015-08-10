@@ -144,7 +144,7 @@ if "SUCCESS" in recLoadStatus.upper():
 				print actResponse;
 				msg = recorderlib.getStatusMessage(actResponse);
 				print "Get Status Message Details: %s"%msg;
-                        	if "" == msg:
+                        	if "" == msg or "recordingStatus" not in msg:
                                 	value = "FALSE";
 	                                print "No status message retrieved"
 	        			tdkTestObj.setResultStatus("FAILURE");

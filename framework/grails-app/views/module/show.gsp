@@ -69,6 +69,12 @@
 					<span id="name-label" class="property-label"><g:message code="module.name.label" default="Crash FileNames" />&emsp;</span>			
 					<span class="property-value" aria-labelledby="name-label"><g:fieldValue bean="${moduleInstance}" field="logFileNames"/></span>					
 				</li>
+				<%-- CGRTS - 426 --%>
+				<li class="fieldcontain">
+					<span id="name-label" class="property-label"><g:message code="module.name.label" default="Logs FileNames" />&emsp;</span>			
+					<span class="property-value" aria-labelledby="name-label"><g:fieldValue bean="${moduleInstance}" field="logFileNames"/></span>					
+				</li>
+				
 				
 				<li class="fieldcontain">
 					<span id="name-label" class="property-label"><g:message code="module.name.label" default="Execution TimeOut" />&emsp;</span>			

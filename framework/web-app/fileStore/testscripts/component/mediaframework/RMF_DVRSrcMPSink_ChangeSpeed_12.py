@@ -3,7 +3,7 @@
 <xml>
   <id>501</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>22</version>
+  <version>23</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrcMPSink_ChangeSpeed_12</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -174,6 +174,10 @@ if expected_Result in loadModuleStatus.upper():
                                                                                                 tdkTestObj.setResultStatus(expected_Failure);
                                                                         else:
                                                                                 tdkTestObj.setResultStatus(expected_Failure);
+                                                                	
+									src_parameter=["rmfElement"];
+			                                                src_element=["DVRSrc"];
+        	        		                                result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,expected_Result,src_parameter,src_element);
 
                                                 src_parameter=["rmfElement"]
                                                 src_element=["MPSink"]

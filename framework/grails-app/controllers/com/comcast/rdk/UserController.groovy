@@ -217,6 +217,7 @@ class UserController {
 		def countVariable = 0
 		def userInstance
 		int deleteCount = 0
+		String currentUser = ""
 		if(params?.listCount){
 			// to delete record(s) from list.gsp
 			for (iterateVariable in params?.listCount){
@@ -227,10 +228,10 @@ class UserController {
 					if (userInstance) {
 						User userInst = User.findByUsername(SecurityUtils.subject.principal)
 						if(userInst && userInst?.id == idDb ){
-							flash.message = "Cannot delete the current user..."
+							currentUser = "ADMINISTRATOR"
+							//flash.message = "Cannot delete the current user..."
 						}else{
-							try
-							{
+							try{							
 								userInstance.delete(flush:true)
 								deleteCount++
 							}
@@ -245,10 +246,12 @@ class UserController {
 				}
 			}
 		}
-		if(deleteCount  > 1)
-		{
+		if(deleteCount  > 1){
 			flash.message = "Multiple users deleted"
-		}else{
+		}else if (currentUser.toString().equals("ADMINISTRATOR")){
+			flash.message = "Cannot delete the current user..."
+		}
+		else{
 			flash.message = message(code: 'default.deleted.message', args: [
 			message(code: 'user.label', default: 'User'),
 			userInstance.username

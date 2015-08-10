@@ -19,6 +19,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Future
 import java.util.concurrent.Executors
+import java.util.concurrent.FutureTask;
 
 
 /**
@@ -527,6 +528,34 @@ class ExecutescriptService {
 						def resultSize = executionResultList.size()
 						int counter = 0
 						def isMultiple = TRUE
+						
+						
+						// adding log transfer to server for reruns 
+						
+						try {
+							Properties props = new Properties()
+							props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
+							// initiating log transfer 
+							if(executionResultList.size() > 0){
+								if(props.get("logServerUrl")){
+									Runnable runnable = new Runnable(){
+										public void run(){
+											def startStatus = initiateLogTransfer(newExecName, props.get("logServerUrl"), props.get("logServerAppName"), deviceInstance)
+													if(startStatus){
+														println "Log transfer job created for $execName"
+													}
+													else{
+														println "Cannot create Log transfer job for $execName"
+													}
+										}
+									}
+									executorService.execute(runnable);
+								}
+							}
+						} catch (Exception e) {
+							e.printStackTrace()
+						}
+						
 						executionResultList.each{ executionResult ->
 							if(!executionResult.status.equals(SKIPPED)){
 //								scriptInstance = Script.findByName(executionResult?.script)
@@ -546,6 +575,28 @@ class ExecutescriptService {
 								}
 								}
 							}
+						}
+						
+						try {
+							// stopping log transfer
+								if(executionResultList.size() > 0){
+									if(props.get("logServerUrl")){
+										Runnable runnable = new Runnable(){
+													void run() {
+														def status = stopLogTransfer(newExecName, props.get("logServerUrl"), props.get("logServerAppName"))
+														if(status){
+															println "Stopped Log transfer job for $execName"
+														}
+														else {
+															println "Log transfer job scheduled for $execName failed to stop"
+														}
+													};
+												}
+										executorService.execute(runnable);
+									}
+								}
+						} catch (Exception e) {
+							e.printStackTrace()
 						}
 					}
 				}
@@ -694,6 +745,7 @@ class ExecutescriptService {
 		int scriptGrpSize = 0
 		int scriptCounter = 0
 		def isMultiple = TRUE
+		List pendingScripts = []
 		
 		try{
 		
@@ -769,10 +821,35 @@ class ExecutescriptService {
 			
 			
 			boolean executionStarted = false
-			List pendingScripts = []
+			
+			Properties props = new Properties()
+			
+			try {
+				// rest call for log transfer starts
+				
+				props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
+				if(validScriptList.size() > 0){
+					if(props.get("logServerUrl")){
+						Runnable runnable = new Runnable(){
+							public void run(){
+								def startStatus = initiateLogTransfer(execName, props.get("logServerUrl"), props.get("logServerAppName"), deviceInstance)
+										if(startStatus){
+											println "Log transfer job created for $execName"
+										}
+										else{
+											println "Cannot create Log transfer job for $execName"
+										}
+							}
+						}
+						executorService.execute(runnable);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
 			validScriptList.each{ scriptObj ->
 				
-				
+				executionStarted = true
 				scriptCounter++
 				if(scriptCounter == scriptGrpSize){
 					isMultiple = FALSE
@@ -862,6 +939,24 @@ class ExecutescriptService {
 					}
 				}
 			}
+			
+				if(validScriptList.size() > 0){
+					if(props.get("logServerUrl")){
+						Runnable runnable = new Runnable(){
+									void run() {
+										def status = stopLogTransfer(execName, props.get("logServerUrl"), props.get("logServerAppName"))
+										if(status){
+											println "Stopped Log transfer job for $execName"
+										}
+										else{
+											println "Log transfer job scheduled for $execName failed to stop"
+										}
+									};
+								}
+						executorService.execute(runnable);
+					}
+				}
+			
 			if(aborted && executionService.abortList.contains(exeId?.toString())){
 				executionService.abortList.remove(exeId?.toString())
 			}
@@ -954,22 +1049,94 @@ class ExecutescriptService {
 					executionService.updateExecutionSkipStatusWithTransaction(FAILURE_STATUS, exeId)
 					executionService.updateExecutionDeviceSkipStatusWithTransaction(FAILURE_STATUS, executionDevice?.id)
 				}
-				validScripts.each{ script ->
-					
-					scriptCounter++
-					if(scriptCounter == scriptGrpSize){
-						isMultiple = FALSE
-					}
-					
-					try {
-						htmlData = executeScript(execName, executionDevice, script, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics,executionName,isMultiple,null,isLogReqd)
+				String devStatus = ""
+					validScripts.each{ script ->
+						scriptCounter++
+						if(scriptCounter == scriptGrpSize){
+							isMultiple = FALSE
+						}
+						try {
+							// This code for issue fix . while  selecting multiple script the  box is not up then the pending script not executed
+							aborted = executionService.abortList.contains(exeId?.toString())							
+							devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)	
+							
+							if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()))){
+								
+							
+								try{
+									htmlData = executeScript(execName, executionDevice, script, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics,executionName,isMultiple,null,isLogReqd)
+								}catch(Exception e){
+									e.printStackTrace()
+								}
+								
+
+							}else 	{
+								if(!aborted && devStatus.equals(Status.NOT_FOUND.toString())){
+									pause = true
+								}
+
+								if(!aborted && pause) {
+									try {
+										pendingScripts.add(script)
+										def execInstance
+										Execution.withTransaction {
+											def execInstance1 = Execution.findByName(execName)
+											execInstance = execInstance1
+										}
+										Script scriptInstanceObj
+										scriptInstanceObj = scriptInstance
+										Device deviceInstanceObj
+										def devId = deviceInstance?.id
+										Device.withTransaction {
+											Device deviceInstance1 = Device.findById(devId)
+											deviceInstanceObj = deviceInstance1
+										}
+										ExecutionDevice executionDevice1
+										ExecutionDevice.withTransaction {
+											def exDev = ExecutionDevice.findById(executionDevice?.id)
+											executionDevice1 = exDev
+										}
+
+										ExecutionResult.withTransaction { resultstatus ->
+											try {
+												def executionResult = new ExecutionResult()
+												executionResult.execution = execInstance
+												executionResult.executionDevice = executionDevice1
+												executionResult.script = scriptInstanceObj?.name
+												executionResult.device = deviceInstanceObj?.stbName
+												executionResult.execDevice = null
+												executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
+												executionResult.status = PENDING
+												executionResult.dateOfExecution = new Date()
+												if(! executionResult.save(flush:true)) {
+												}
+												resultstatus.flush()
+											}
+											catch(Throwable th) {
+												resultstatus.setRollbackOnly()
+											}
+										}
+									} catch (Exception e) {
+										e.printStackTrace()
+
+									}
+								}
+							}
+							if(aborted && executionService.abortList.contains(exeId?.toString())){
+							
+								executionService.abortList.remove(ex?.toString())
+							}
+							if(!aborted && pause && pendingScripts.size() > 0 ){
+								def exeInstance = Execution.findByName(execName)
+								executionService.savePausedExecutionStatus(exeInstance?.id)
+								executionService.saveExecutionDeviceStatusData(PAUSED, executionDevice?.id)
+							}
+						} catch (Exception e) {
+							e.printStackTrace()
+						}
 						output.append(htmlData)
-					} catch (Exception e) {
-					
-						e.printStackTrace()
+						Thread.sleep(6000)						
 					}
-					Thread.sleep(6000)
-				}
 			}
 		}
 
@@ -1104,6 +1271,37 @@ class ExecutescriptService {
 			executionService.updateExecutionStatusData(INPROGRESS_STATUS, execution?.id)
 			String isMultiple = TRUE
 			int totalSize = exResults.size()
+			
+			Properties props = new Properties()
+			try {
+				try{
+					props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
+				}
+				catch(Exception e){
+					println e.getMessage()
+				}
+				if(props.get("logServerUrl")){
+					Runnable runnableStart = new Runnable(){
+						public void run(){
+							def device = null
+									ExecutionDevice.withTransaction {
+								def exeDev = ExecutionDevice.findByExecution(execution)
+										device = Device.findByStbIp(exeDev?.deviceIp)
+							}
+							def startStatus = initiateLogTransfer(exName, props.get("logServerUrl"), props.get("logServerAppName"), device)
+									if(startStatus){
+										println "Log transfer job created for $exName"
+									}
+									else{
+										println "Cannot create Log transfer job for $exName"
+									}
+						}
+					}
+					executorService.execute(runnableStart);
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
 			exResults.each {
 				try {
 					scriptCounter++
@@ -1174,6 +1372,27 @@ class ExecutescriptService {
 				} catch (Exception e) {
 					e.printStackTrace()
 				}
+			}
+			
+			try {
+				if(props.get("logServerUrl")){
+					Runnable runnableEnd = new Runnable(){
+						void run() {
+							def status = stopLogTransfer(exName, props.get("logServerUrl"), props.get("logServerAppName"))
+									if(status){
+										println "Stopped Log transfer job for $exName"
+									}
+									else {
+										println "Log transfer job scheduled for $exName failed to stop"
+									}
+						};
+					}
+					executorService.execute(runnableEnd);
+					
+					println "stopping exe with $exName"
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
 			}
 						
 			if(aborted && executionService.abortList.contains(execution?.id?.toString())){				
@@ -1435,6 +1654,30 @@ class ExecutescriptService {
 			}
 			boolean executionStarted = false
 			List pendingScripts = []
+			// rest call for log transfer starts
+			try {
+				Properties props = new Properties()
+				props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
+				println props
+				if(validScriptList.size() > 0){
+					if(props.get("logServerUrl")){
+					Runnable runnable = new Runnable(){
+						public void run(){
+							def startStatus = initiateLogTransfer(execName, props.get("logServerUrl"), props.get("logServerAppName"), deviceInstance)
+									if(startStatus){
+										println "Log transfer job created for $execName"
+									}
+									else{
+										println "Cannot create Log transfer job for $execName"
+									}
+						}
+					}
+					executorService.execute(runnable);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
 			validScriptList.each{ scriptObj ->
 
 				scriptCounter++
@@ -1517,6 +1760,28 @@ class ExecutescriptService {
 					}
 				}
 			}
+			
+			try {
+				if(validScriptList.size() > 0){
+					if(props.get("logServerUrl")){
+						Runnable runnable = new Runnable(){
+							void run() {
+								def status = stopLogTransfer(execName, props.get("logServerUrl"), props.get("logServerAppName"))
+										if(status){
+											println "Stopped Log transfer job for $execName"
+										}
+										else{
+											println "Log transfer job scheduled for $execName failed to stop"
+										}
+							};
+						}
+						executorService.execute(runnable);
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+			
 			if(aborted && executionService.abortList.contains(exeId?.toString())){
 				executionService.abortList.remove(exeId?.toString())
 			}
@@ -1609,5 +1874,96 @@ class ExecutescriptService {
 			println " ERROR "+e.getMessage()
 		}
 	}
+	
+	
+	def initiateLogTransfer(String executionName, String server, String logAppName, Device device){
+				int count = 3
+				boolean logTransferInitiated = false
+				try{
+					println "start url : http://$server/$logAppName/startScheduler/$executionName/$device.stbName/$device.stbIp/$device.statusPort/$device.logTransferPort"
+				}
+				catch(Exception e){
+					println e.getMessage()
+				}
+				
+				while(count > 0 && !logTransferInitiated){
+					HttpURLConnection connection = null
+					try{
+							println "initiating transaction"
+							connection = new URL("http://$server/$logAppName/startScheduler/$executionName/$device.stbName/$device.stbIp/$device.statusPort/$device.logTransferPort").openConnection()
+							connectToLogServerAndExecute(connection)
+							println "Initiated log transfer for $executionName"
+							logTransferInitiated = true
+						}
+						catch(Exception e) {
+							e.printStackTrace()
+							--count
+						}
+						finally{
+							if(connection != null){
+								connection.disconnect()
+							}
+						}
+					}
+				println "logTransferInitiated : $logTransferInitiated"
+				logTransferInitiated
 
+	}
+
+	def stopLogTransfer(String executionName, String server, String logAppName){
+
+				int count = 3
+				boolean logTransferStopInitiated = false
+				while(count > 0 && !logTransferStopInitiated){
+					HttpURLConnection connection = null
+					try{
+						String url = "http://$server/$logAppName/stopScheduler/$executionName"
+						print "url : $url"
+						connection = new URL(url).openConnection()
+						connectToLogServerAndExecute(connection)
+						logTransferStopInitiated = true
+					}
+					catch(Exception e){
+						e.printStackTrace()
+						--count
+					}
+					finally{
+						if(connection != null){
+							connection.disconnect()
+						}
+					}
+				}
+				logTransferStopInitiated
+	}
+	
+	def void connectToLogServerAndExecute(URLConnection connection) {
+		connection.setConnectTimeout(120000)
+		int responseCode = connection.getResponseCode()
+		if(responseCode == 200){
+			String finalresp = getResponse(connection.getInputStream())
+			println finalresp
+		}
+		else{
+			String finalresp = getResponse(connection.getErrorStream())
+			try{
+				String resp = finalresp.substring(finalresp.indexOf("<body><h1>")+"<body><h1>".length(), finalresp.indexOf("</h1>"))
+				println resp.split("-")[1].trim()
+			}
+			catch(Exception e){
+				println finalresp
+			}
+		}
+	}
+	
+	def String getResponse(InputStream inputStream){
+		BufferedReader buf = new BufferedReader(new InputStreamReader(inputStream))
+		StringBuilder build = new StringBuilder()
+		String x = null
+		while( (x = buf.readLine())!= null){
+			build.append(x).append("\n")
+		}
+		buf.close()
+		String finalresp = build.toString()
+		finalresp
+	}
 }

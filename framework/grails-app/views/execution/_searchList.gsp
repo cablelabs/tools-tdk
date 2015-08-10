@@ -88,6 +88,18 @@
 									<g:if test="${executionInstance?.scriptGroup}">
 										<img src="../images/execution_stop.png" onclick="stopExecution(${executionInstance.id})" id="${executionInstance.id}" />
 									</g:if>
+									<g:elseif test="${executionInstance?.script }">
+						 			<%
+									 String scriptName = executionInstance?.script.toString();
+									 String multiple = "FALSE"
+									 if(scriptName.toString().equals("Multiple Scripts")){
+										multiple = "TRUE" 							
+						 			}
+						  			%>
+									<g:if test ="${multiple == "TRUE" }">
+								   		 <img src="../images/execution_stop.png" onclick="stopExecution(${executionInstance.id})" id="${executionInstance.id}" />
+									</g:if>
+						          </g:elseif>
 								</g:if>
 							</g:if>
 							<g:link action="exportConsolidatedToExcel" id="${executionInstance.id}" ><img src="../images/excel.png" /></g:link>

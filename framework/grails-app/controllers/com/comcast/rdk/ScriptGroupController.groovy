@@ -54,6 +54,7 @@ class ScriptGroupController {
 		def scriptNameList = scriptService.getScriptNameList(requestGetRealPath)
 		def scriptGroupMap = scriptService.getScriptsMap(requestGetRealPath)
 		scriptGroupMap?.keySet()?.sort{a,b -> a <=> b}
+		scriptGroupMap = new TreeMap(scriptGroupMap)
 		def scriptGrpInstanceList = ScriptGroup.findAllByGroupsOrGroupsIsNull(groupsInstance)
 		[scriptGroupInstanceList: scriptGrpInstanceList, scriptGroupInstanceTotal: scriptGrpInstanceList.size(),error: params.error, scriptId: params.scriptId, scriptGroupId:params.scriptGroupId, scriptInstanceTotal: scriptNameList.size(), scriptGroupMap:scriptGroupMap]
 	}
@@ -1121,7 +1122,12 @@ class ScriptGroupController {
 			params.name
 		])
 		}
-		redirect(action: "list", params: [scriptId: params.id])
+		def newid= params?.id
+		if(params?.id?.contains("@")){
+			newid = params?.id?.split("@")[0]+"@"+params?.name
+		}
+		
+		redirect(action: "list", params: [scriptId: newid])
 	}	
     
     /**

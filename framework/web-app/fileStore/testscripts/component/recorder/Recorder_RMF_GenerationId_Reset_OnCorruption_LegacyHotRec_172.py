@@ -154,14 +154,17 @@ if "SUCCESS" in recLoadStatus.upper():
                                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                         retry += 1
                                 print "Retrieve Status Details: ",recResponse;
-                                genIdOut = recorderlib.getGenerationId(recResponse)
-                                print "GenerationId retrieved after reboot: ",genIdOut
-                                if "0" == genIdOut:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        print "GenerationId is successfully reset to 0"
-                                else:
+				if 'generationId' in recResponse:
+	                                genIdOut = recorderlib.getGenerationId(recResponse)
+        	                        if "0" == genIdOut:
+                	                        tdkTestObj.setResultStatus("SUCCESS");
+                        	                print "GenerationId is successfully reset to 0"
+                                	else:
+                                       	        tdkTestObj.setResultStatus("FAILURE");
+	                                        print "GenerationId failed to reset to 0"
+				else:
+				        print "No GenerationId in status"
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "GenerationId failed to reset to 0"
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "noUpdate message post failed";

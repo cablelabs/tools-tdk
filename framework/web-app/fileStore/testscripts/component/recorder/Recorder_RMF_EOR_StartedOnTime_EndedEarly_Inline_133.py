@@ -111,10 +111,7 @@ if "SUCCESS" in recLoadStatus.upper():
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 			retry += 1
 		print "Retrieve Status Details: %s"%actResponse;
-                if (('[]' in actResponse) or ('ERROR' in actResponse)):
-	                tdkTestObj.setResultStatus("FAILURE");
-        	        print "Received Empty/Error status";
-                elif 'acknowledgement' in actResponse:
+                if 'acknowledgement' in actResponse:
                 	tdkTestObj.setResultStatus("SUCCESS");
 	                print "Successfully retrieved acknowledgement from recorder";
                     	# Reboot the STB
@@ -145,7 +142,7 @@ if "SUCCESS" in recLoadStatus.upper():
 				print actResponse;
 				msg = recorderlib.getStatusMessage(actResponse);
 				print "Get Status Message Details: %s"%msg;
-                        	if "" == msg:
+                        	if "" == msg or "recordingStatus" not in msg:
                                 	value = "FALSE";
 	                                print "No status message retrieved"
 	        			tdkTestObj.setResultStatus("FAILURE");
