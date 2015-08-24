@@ -14,7 +14,6 @@
 
 char *rdkLogP = getenv("RDK_LOG_PATH");
 char *tdkP = getenv("TDK_PATH");
-
 string rdkLogPath = "NULL";
 string tdkPath = "NULL";
 #ifdef USE_SOC_INIT
@@ -294,10 +293,12 @@ Description   : Setting Pre-requisites needed to execute Mediaframework tests
 ***************************************************************************/
 std::string MediaframeworkAgent::testmodulepre_requisites()
 {
-	#ifdef USE_SOC_INIT
+	
+/*	#ifdef USE_SOC_INIT
         //Initialize SOC
         soc_init(1, "tdk_agent", 1);
 	#endif
+*/
         DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Entry\n");
         ifstream logfile;
         string MF_testmodule_PR_cmd, MF_testmodule_PR_log,line;
@@ -641,6 +642,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckRmfStreamerCrash(IN const Jso
 bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementCreateInstance -->Entry\n");
+
+	#ifdef USE_SOC_INIT
+        //Initialize SOC
+        soc_init(1, "tdk_agent", 1);
+	#endif
 	
 	string rmfInstance = req["rmfElement"].asCString();	
 	string factoryFlag = req["factoryEnable"].asCString();
@@ -868,11 +874,20 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const 
 		DEBUG_PRINT(DEBUG_ERROR, "Error: Enter the Src/Sink element to be deleted\n");
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to be deleted";
-
+		#ifdef USE_SOC_INIT
+        	// Uninitialize SOC
+        	DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        	soc_uninit();
+		#endif
                 return TEST_FAILURE;
 	}
 
 	response["result"] = "SUCCESS";
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        soc_uninit();
+	#endif
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementRemoveInstance -->Exit\n");
 	return TEST_SUCCESS;
@@ -2934,6 +2949,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrc_Getbufferrange --->Entry\n");
 
 #ifdef ENABLE_DVRSRC_MPSINK
+	#ifdef USE_SOC_INIT
+        //Initialize SOC
+        soc_init(1, "tdk_agent", 1);
+	#endif
 
         int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcClose, res_HNSrcPlay;
         int res_HNSrcGetState, res_MPSinksetrect, res_MPSinksetsrc, res_MPSinkInit, res_MPSinkTerm;
@@ -2972,6 +2991,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
         {
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to Initialize hnsource";
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
                 return TEST_FAILURE;
         }
 		string streaming_interface;
@@ -2989,6 +3013,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                         }
                         response["result"] = "FAILURE";
                         response["details"] = token;
+	                #ifdef USE_SOC_INIT
+                        // Uninitialize SOC
+                        DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                        soc_uninit();
+	                #endif
                         return TEST_FAILURE;
                 }
 
@@ -3016,6 +3045,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 pSource->term();
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to open hnsource";
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
                 return TEST_FAILURE;
         }
 
@@ -3028,6 +3062,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 pSource->term();
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to Initialize MPSink";
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
                 return TEST_FAILURE;
         }
 
@@ -3041,6 +3080,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 pSource->term();
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to set video resolution";
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
                 return TEST_FAILURE;
         }
 
@@ -3054,6 +3098,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 pSource->term();
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to set source";
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
                 return TEST_FAILURE;
         }
 
@@ -3067,6 +3116,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 pSource->term();
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to play hnsource";
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
                 return TEST_FAILURE;
         }
 
@@ -3082,6 +3136,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 pSource->term();
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to Get Video State";
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
                 return TEST_FAILURE;
         }
 
@@ -3093,6 +3152,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 DEBUG_PRINT(DEBUG_ERROR, "Get State API is returning Success, but current state is not RMF_STATE_PLAYING");
                 response["result"] = "FAILURE";
                 response["details"] = "Get State API is returning Success, but current state is not RMF_STATE_PLAYING";
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
                 return TEST_FAILURE;
         }
 
@@ -3107,20 +3171,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 pSource->term();
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to Get Video State";
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
                 return TEST_FAILURE;
          }
         DEBUG_PRINT(DEBUG_LOG, "Result of Get buffered ranges is %d\n", res_HNSrcGetbuffrange);
-/*
-        int retValue;
-        double mediaTime;
-        retValue=pSource->setMediaTime(0);
-        cout<<"Return of Set Media time "<<retValue<<endl;
-        sleep(5);
-        retValue = pSource->getMediaTime(mediaTime);
-        cout<<"Return of get Media time "<<retValue<<endl;
-        cout<<"get Media time value"<<mediaTime<<endl;
-*/
-
         res_MPSinkTerm = pSink->term();
         DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);
 
@@ -3129,7 +3187,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
 
         res_HNSrcTerm = pSource->term();
         DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Termination is %d\n", res_HNSrcTerm);
-
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        soc_uninit();
+	#endif
         if(0 != res_MPSinkTerm)
         {
                 response["result"] = "FAILURE";
@@ -3175,6 +3237,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrcMPSink_Video_State --->Entry\n");
 
 #ifdef ENABLE_DVRSRC_MPSINK
+	#ifdef USE_SOC_INIT
+        //Initialize SOC
+        soc_init(1, "tdk_agent", 1);
+	#endif
 
 	int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcClose, res_HNSrcPlay;
 	int res_HNSrcGetState, res_MPSinksetrect, res_MPSinksetsrc, res_MPSinkInit, res_MPSinkTerm;
@@ -3213,6 +3279,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to Initialize hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 	string streaming_interface;
@@ -3231,6 +3302,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
                  }
                  response["result"] = "FAILURE";
                  response["details"] = token;
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
                  return TEST_FAILURE;
          }
 
@@ -3259,6 +3335,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to open hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3272,6 +3353,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to Initialize MPSink";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3286,6 +3372,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to set video resolution";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3300,6 +3391,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to set source";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}	
 
@@ -3314,6 +3410,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to play hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3330,6 +3431,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to Get Video State";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3342,6 +3448,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
 		response["result"] = "FAILURE";
 		response["details"] = "Get State API is returning Success, but current state is not RMF_STATE_PLAYING";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3365,6 +3476,11 @@ int retValue;
 
 	res_HNSrcTerm = pSource->term();
 	DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Termination is %d\n", res_HNSrcTerm);
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        soc_uninit();
+	#endif
 
 	if(0 != res_MPSinkTerm)
 	{
@@ -3415,6 +3531,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute --->Entry\n");
 
 #ifdef ENABLE_DVRSRC_MPSINK
+	#ifdef USE_SOC_INIT
+        //Initialize SOC
+        soc_init(1, "tdk_agent", 1);
+	#endif
 
 	int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcClose, res_HNSrcPlay, res_HNSrcGetState; 
 	int res_MPSinksetrect, res_MPSinksetsrc, res_MPSinkInit, res_MPSinkTerm;
@@ -3454,6 +3574,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to Initialize hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 	string streamingip;
@@ -3501,6 +3626,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to open hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3515,6 +3645,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["details"] = "Failed to Initialize MPSink";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
 		return TEST_FAILURE;
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 	}
 
 	res_MPSinksetrect = pSink->setVideoRectangle(x, y, height, width, applyNow);
@@ -3528,6 +3663,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to set video resolution";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3542,6 +3682,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to set source";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3556,6 +3701,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to play hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3571,6 +3721,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Play API call is Success, but Video is not playing";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}						
 
@@ -3597,22 +3752,15 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to do Mute and Unmute";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
 	DEBUG_PRINT(DEBUG_LOG, "Mute Unmute is success\n");
-
-/*
-	int retValue;
-        double mediaTime;
-        retValue=pSource->setMediaTime(0);
-        cout<<"Return of Set Media time "<<retValue<<endl;
-        sleep(5);
-        retValue = pSource->getMediaTime(mediaTime);
-        cout<<"Return of get Media time "<<retValue<<endl;
-        cout<<"Media time value "<<mediaTime<<endl;
-*/
-
 	res_MPSinkTerm = pSink->term();
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);
 
@@ -3621,6 +3769,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 
 	res_HNSrcTerm = pSource->term();
 	DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Termination is %d\n", res_HNSrcTerm);
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        soc_uninit();
+	#endif
 
 	if(0 != res_MPSinkTerm)
 	{
@@ -3670,6 +3823,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrcMPSink_Video_Volume --->Entry\n");
 
 #ifdef ENABLE_DVRSRC_MPSINK
+	#ifdef USE_SOC_INIT
+        //Initialize SOC
+        soc_init(1, "tdk_agent", 1);
+	#endif
 
 	int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcClose, res_HNSrcPlay, res_HNSrcGetState; 
 	int res_MPSinksetrect, res_MPSinksetsrc, res_MPSinkInit, res_MPSinkTerm;
@@ -3710,6 +3867,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to Initialize hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                 // Uninitialize SOC
+                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                 soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3730,6 +3892,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                  }
                  response["result"] = "FAILURE";
                  response["details"] = token;
+	         #ifdef USE_SOC_INIT
+                 // Uninitialize SOC
+                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                 soc_uninit();
+	         #endif
                  return TEST_FAILURE;
 	}
 
@@ -3758,6 +3925,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to open hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3771,6 +3943,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to Initialize MPSink";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3785,6 +3962,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to set video resolution";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3799,6 +3981,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to set source";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3813,6 +4000,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to play hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
@@ -3830,6 +4022,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Play API call is Success, but Video is not playing";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}							
 
@@ -3844,6 +4041,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Volime entered is same as the existing Volume, Please enter a different value";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 
 	}
@@ -3857,22 +4059,15 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to do set get volume";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+                soc_uninit();
+	        #endif
 		return TEST_FAILURE;
 	}
 
 	DEBUG_PRINT(DEBUG_LOG, "Set Get Volume is Success\n");
-
-/*	
-	int retValue;
-        double mediaTime;
-        retValue=pSource->setMediaTime(0);        
-        cout<<"Return of Set Media time "<<retValue<<endl;
-        sleep(5);
-        retValue = pSource->getMediaTime(mediaTime);
-        cout<<"Return of get Media time "<<retValue<<endl;
-        cout<<"Media time Value"<<mediaTime<<endl;
-*/
-
 	res_MPSinkTerm = pSink->term();
 	DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPSink Termination is %d\n", res_MPSinkTerm);
 
@@ -3882,6 +4077,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 	res_HNSrcTerm = pSource->term();
 	DEBUG_PRINT(DEBUG_LOG, "Result of HNSrc Termination is %d\n", res_HNSrcTerm);
 
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        soc_uninit();
+	#endif
 	if(0 != res_MPSinkTerm)
 	{
 		response["result"] = "FAILURE";
@@ -4028,6 +4228,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 {
 	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm --->Entry\n");
 
+	#ifdef USE_SOC_INIT
+        //Initialize SOC
+        soc_init(1, "tdk_agent", 1);
+	#endif
 	RMFResult res_DVRSinkterm = RMF_RESULT_FAILURE;
 	RMFResult res_DVRSinkinit = RMF_RESULT_FAILURE;
 	RMFResult res_DVR = RMF_RESULT_FAILURE;
@@ -4048,6 +4252,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 			response["result"] = "FAILURE";
 			response["details"] = "Failed to create HNSrc for recording";
 			DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm ---> Failed to create HNSrc. Exit\n");
+			#ifdef USE_SOC_INIT
+        		// Uninitialize SOC
+        		DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        		soc_uninit();
+			#endif
 			return TEST_FAILURE;
 		}		
 	}
@@ -4056,6 +4265,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 		response["result"] = "FAILURE";
 		response["details"] = "Unsupported src locator type";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm ---> Exit\n");
+		#ifdef USE_SOC_INIT
+        	// Uninitialize SOC
+        	DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        	soc_uninit();
+		#endif
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm --->Source creation success\n");
@@ -4079,6 +4293,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 		}
 
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm ---> Exit\n");
+		#ifdef USE_SOC_INIT
+        	// Uninitialize SOC
+        	DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        	soc_uninit();
+		#endif
 		return TEST_FAILURE;
 	}
 
@@ -4141,10 +4360,20 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 						src = 0;
 
                                         	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRSink_InitTerm --> Exit\n");
+						#ifdef USE_SOC_INIT
+        					// Uninitialize SOC
+        					DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        					soc_uninit();
+						#endif
                                         	return TEST_FAILURE;
                                 	}
 
 					DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_Init&term --->Exit\n");
+					#ifdef USE_SOC_INIT
+        				// Uninitialize SOC
+        				DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        				soc_uninit();
+					#endif
 					return TEST_SUCCESS;	
 				}
 				else
@@ -4174,6 +4403,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 		src = 0;
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm --->source termination success\n");
 	}
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
+        soc_uninit();
+	#endif
 
 	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_Init&term --->Exit\n");
 	return TEST_FAILURE;
@@ -5683,10 +5917,11 @@ Description   : Re-Setting the Pre-requisites which was set after execution
 ***************************************************************************/
 bool MediaframeworkAgent::testmodulepost_requisites()
 {
-	#ifdef USE_SOC_INIT
+/*	#ifdef USE_SOC_INIT
         // Uninitialize SOC
+        DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
         soc_uninit();
-	#endif
+	#endif*/
         DEBUG_PRINT(DEBUG_TRACE, "testmodulepost_requisites --> Entry\n");
         ifstream logfile;
         string MF_testmodule_POST_cmd, MF_testmodule_POST_log,line;

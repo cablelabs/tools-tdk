@@ -199,10 +199,11 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
 {
 	DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Entry\n");
 	int sysRetValScript;
- 	#ifdef USE_SOC_INIT
+/* 	#ifdef USE_SOC_INIT
 		//Initialize SOC
 		soc_init(1, "tdk_agent", 1);
         #endif
+*/
 // Need to fix the hang happening while stoping the xre service
 #if 0
         string TDK_testmodule_PR_cmd;
@@ -238,11 +239,11 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
 
 bool TDKIntegrationStub::testmodulepost_requisites()
 {
-	#ifdef USE_SOC_INIT
+/*	#ifdef USE_SOC_INIT
         // Uninitialize SOC
         soc_uninit();
         #endif
-
+*/
         return TEST_SUCCESS;
 }
 /********************************************************************************************************************
@@ -933,6 +934,10 @@ Description   : Helper function to initialize, open HnSrc and MpSink component.
 int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, " Entered into %s\n",__FUNCTION__);
+ 	#ifdef USE_SOC_INIT
+		//Initialize SOC
+		soc_init(1, "tdk_agent", 1);
+        #endif
 
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 	RMFResult retMPSinkValue = RMF_RESULT_SUCCESS;
@@ -1234,6 +1239,10 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
 
 		delete pSink;
 		delete pSource;
+		#ifdef USE_SOC_INIT
+        	// Uninitialize SOC
+        	soc_uninit();
+        	#endif
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed Hnsrc close\n");
@@ -1247,6 +1256,10 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
 
 		pSource->term();
 		delete pSource;
+		#ifdef USE_SOC_INIT
+        	// Uninitialize SOC
+        	soc_uninit();
+        	#endif
 
 		return TEST_FAILURE;
 	}
@@ -1261,7 +1274,10 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
 
 		retMPSinkValue = pSink->term();
 		delete pSink;
-
+		#ifdef USE_SOC_INIT
+        	// Uninitialize SOC
+        	soc_uninit();
+        	#endif
 		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed Hnsrc term\n");
@@ -1270,6 +1286,11 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
 	delete pSink;
 
 	DEBUG_PRINT(DEBUG_TRACE, "Passed %s\n",__FUNCTION__);
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        soc_uninit();
+        #endif
+
 
 	return TEST_SUCCESS;
 }
@@ -3530,6 +3551,10 @@ Return the SUCCESS or FAILURE  to the testFramework.
 bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegration::TDKIntegration_TSB --Entry\n");
+ 	#ifdef USE_SOC_INIT
+		//Initialize SOC
+		soc_init(1, "tdk_agent", 1);
+        #endif
         int res_HNSrcGetState;
         float SpeedRate = request["SpeedRate"].asFloat();
         int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcPlay, res_MPSinksetrect, res_HNSrcSetSpeed, res_HNSrcPause;
@@ -3545,6 +3570,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 		response["result"] = "FAILURE";
 		response["details"] = "HNSource instance creation failed";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource instance creation failed\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
 
 		return TEST_FAILURE;
 	}
@@ -3554,6 +3583,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 		response["result"] = "FAILURE";
 		response["details"] = "MPSink instance creation failed";
 		DEBUG_PRINT(DEBUG_ERROR, "MPSink instance creation failed\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
 
 		return TEST_FAILURE;
 	}
@@ -3567,6 +3600,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to Initialize hnsource";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
         DEBUG_PRINT(DEBUG_LOG, "URL From TM is %s\n", playuri);
@@ -3580,6 +3617,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to Open hnsource";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
 
@@ -3595,6 +3636,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to Initialze Mpsink";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
 
@@ -3612,6 +3657,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to set Video resolution";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
 
@@ -3628,6 +3677,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to do set source";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
 
@@ -3644,6 +3697,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 		pSource->term();
 		delete pSource;
 		delete pSink;
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
 
 		return TEST_FAILURE;
 	}
@@ -3656,6 +3713,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 		pSource->term();
 		delete pSource;
 		delete pSink;
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
 
 		return TEST_FAILURE;
 	}
@@ -3672,6 +3733,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to play video using Hnsource and Mpsink pipeline";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
 
@@ -3689,6 +3754,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "Play API call is Success, but Video is not playing";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
         //SpeedRate = 0.5;
@@ -3724,6 +3793,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         	                response["result"] = "FAILURE";
                 	        response["details"] = "Video not paused";
 	                        DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	                        #ifdef USE_SOC_INIT
+                                // Uninitialize SOC
+                                soc_uninit();
+                                #endif
         	                return TEST_FAILURE;
 			}
                 }
@@ -3743,6 +3816,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "HNSrc setSpeed() FAILURE";
                 DEBUG_PRINT(DEBUG_ERROR, "HNSrc setSpeed() FAILURE\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
         response["details"] = "HNSrc setSpeed() successful";
@@ -3758,6 +3835,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "FAILURE:Video is not playing for Requested Trickrate in Live ";
                 DEBUG_PRINT(DEBUG_ERROR, "HNSrc setSpeed() FAILURE\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
         details << "HNSrc getSpeed() successful, Speed:" << SpeedRate;
@@ -3779,6 +3860,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "Video played successfully, but failed to terminate MPSink";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
         if(0 != res_HNSrcClose)
@@ -3789,6 +3874,10 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "Video played successfully, but failed to close Hnsource";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
         if(0 != res_HNSrcTerm)
@@ -3799,12 +3888,20 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 response["result"] = "FAILURE";
                 response["details"] = "Video played successfully, but failed to terminate Hnsource";
                 DEBUG_PRINT(DEBUG_ERROR, "TDKIntegration_Player--->Exit\n");
+	        #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
                 return TEST_FAILURE;
         }
 
 	delete pSource;
 	delete pSink;
 
+	#ifdef USE_SOC_INIT
+        // Uninitialize SOC
+        soc_uninit();
+        #endif
         response["result"] = "SUCCESS";
         response["details"] = "Video played with TSB successfully";
         DEBUG_PRINT(DEBUG_TRACE, "TDKIntegration_Player--->Exit\n");

@@ -53,12 +53,11 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_Rec_Erased_Orphaned_Legacy_201');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
+#Set the module loading status
+recObj.setLoadModuleStatus(recLoadStatus);
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
-
-        #Set the module loading status
-        recObj.setLoadModuleStatus(recLoadStatus);
 
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
@@ -69,15 +68,12 @@ if "SUCCESS" in recLoadStatus.upper():
         
 
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
-        actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
+        actResponse =recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
  	print "No Update Schedule Details: %s"%actResponse;
 	sleep(30);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -97,10 +93,10 @@ if "SUCCESS" in recLoadStatus.upper():
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
+        print "Schedule new recording"
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-        print "Update Schedule Details: %s"%actResponse;
 
-        if expResponse not in actResponse:
+        if "updateSchedule" not in actResponse:
 	        tdkTestObj.setResultStatus("FAILURE");
                 print "updateSchedule message post failure";
         	recObj.unloadModule("Recorder");
@@ -111,17 +107,11 @@ if "SUCCESS" in recLoadStatus.upper():
 	sleep(5);
 	retry=0
 	actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-        while (( ('[]' in actResponse) or ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
+        while (('acknowledgement' not in actResponse) and (retry < 15)):
 		sleep(5);
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 		retry += 1
 	print "Retrieve Status Details: %s"%actResponse;
-        if (('[]' in actResponse) or ('ERROR' in actResponse)):
-		tdkTestObj.setResultStatus("FAILURE");
-        	print "Received Empty/Error status";
-        	recObj.unloadModule("Recorder");
-		exit();
-        print "Received status";
       	if 'acknowledgement' not in actResponse:
         	tdkTestObj.setResultStatus("FAILURE");
                 print "Failed to retrieve acknowledgement from recorder";
@@ -137,8 +127,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	print "Sleeping to wait for the recoder to be up"
 	sleep(300);
 	response = recorderlib.callServerHandler('clearStatus',ip);
-	print "Clear Status Details: %s"%response;
-	   	#Frame json message
+	#Frame json message
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         expResponse = "noUpdate";
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -351,7 +340,3 @@ if "SUCCESS" in recLoadStatus.upper():
 		exit();
 	print "error marked as ORPHANED";
 	# end of check for status and error of 1st recording ... erased and orphaned 
-else:
-	print "Failed to load Recorder module";
-    	#Set the module loading status
-    	recObj.setLoadModuleStatus("FAILURE");

@@ -65,11 +65,11 @@ MediaStreamerAgent::MediaStreamerAgent()
  *****************************************************************************/
 std::string MediaStreamerAgent::testmodulepre_requisites()
 {
-	#ifdef USE_SOC_INIT
+/*	#ifdef USE_SOC_INIT
         //Initialize SOC
         soc_init(1, "tdk_agent", 1);
         #endif
-
+*/
         return "SUCCESS";
 }
 
@@ -81,11 +81,11 @@ std::string MediaStreamerAgent::testmodulepre_requisites()
  *****************************************************************************/
 bool MediaStreamerAgent::testmodulepost_requisites()
 {
-	#ifdef USE_SOC_INIT
+/*	#ifdef USE_SOC_INIT
         // Uninitialize SOC
         soc_uninit();
         #endif
-
+*/
         return true;
 }
 /********************************************************************************************************************
@@ -898,7 +898,12 @@ Description   : Receives the RequestURL  from Test Manager and makes to play RMF
 bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RMFStreamerAgent_Player ---> Entry\n");
-	
+
+	#ifdef USE_SOC_INIT
+        //Initialize SOC
+        soc_init(1, "tdk_agent", 1);
+        #endif
+
 	int res_HNSrcGetState;
 	int sleep_time = request["play_time"].asInt();
 	int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcPlay, res_MPSinksetrect;
@@ -1045,7 +1050,10 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
         	DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource close is %d\n", res_HNSrcClose);
         	res_HNSrcTerm = pSource->term();
         	DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource termination is %d\n", res_HNSrcTerm);
-
+		#ifdef USE_SOC_INIT
+        		// Uninitialize SOC
+        		soc_uninit();
+        	#endif
         	if(0 != res_MPSinkTerm)
         	{	
                 	response["result"] = "FAILURE";

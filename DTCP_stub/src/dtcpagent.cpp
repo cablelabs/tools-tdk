@@ -264,11 +264,11 @@ bool DTCPAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj
 
 std::string DTCPAgent::testmodulepre_requisites()
 {
-    //Initialize SOC
+/*    //Initialize SOC
     #ifdef USE_SOC_INIT
     soc_init(1, (char*)"tdk_agent", 1);
     #endif
-
+*/
     std::list<DTCP_SESSION_HANDLE>::iterator it;
     if(!srcSessionHandlerList.empty()) {
         DEBUG_PRINT(DEBUG_ERROR, "Contents of source session handler list\n");
@@ -296,11 +296,12 @@ std::string DTCPAgent::testmodulepre_requisites()
 
 bool DTCPAgent::testmodulepost_requisites()
 {
+/*
     // Uninitialize SOC
     #ifdef USE_SOC_INIT
     soc_uninit();
     #endif
-
+*/
     std::list<DTCP_SESSION_HANDLE>::iterator it;
     if(!srcSessionHandlerList.empty()) {
         DEBUG_PRINT(DEBUG_ERROR, "Contents of source session handler list\n");
@@ -331,6 +332,10 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
 {
     DEBUG_PRINT(DEBUG_TRACE, "DTCPAgent_Test_Execute --->Entry\n");
 
+    //Initialize SOC
+    #ifdef USE_SOC_INIT
+    soc_init(1, (char*)"tdk_agent", 1);
+    #endif
     string functionName = req["funcName"].asString();
     dtcp_result_t returnCode = DTCP_SUCCESS;
     DEBUG_PRINT(DEBUG_LOG,"Received function name: %s\n", functionName.c_str());
@@ -690,6 +695,11 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
         response["details"]= "Exception occured during function call";
         response["result"]="FAILURE";
     }
+
+    // Uninitialize SOC
+    #ifdef USE_SOC_INIT
+    soc_uninit();
+    #endif
 
     DEBUG_PRINT(DEBUG_TRACE, "DTCPAgent_Test_Execute -->Exit\n");
     return TEST_SUCCESS;
