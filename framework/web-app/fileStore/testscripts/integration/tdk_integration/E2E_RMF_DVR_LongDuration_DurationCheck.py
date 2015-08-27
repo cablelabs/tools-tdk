@@ -71,7 +71,8 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
     rec_duration = "600000"
     start_time = '0';
     result1,recording_id = sched_rec(rec_obj,'01',start_time,duration = rec_duration);
-
+    media_obj.initiateReboot();
+    rec_obj.resetConnectionAfterReboot()
         
     if ("SUCCESS" in result1.upper()):
         

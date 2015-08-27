@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -72,6 +72,9 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
     result1,recording_id = sched_rec(rec_obj,'01','0','120000');
     
     time.sleep(90);
+    tdk_obj.initiateReboot();
+    rec_obj.resetConnectionAfterReboot()
+
     
     #Prmitive test case which associated to this Script
     tdkTestObj = tdk_obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');

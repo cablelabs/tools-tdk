@@ -46,7 +46,7 @@ Test Case ID : CT_DS125</synopsis>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-from devicesettings import dsManagerInitialize, dsManagerDeInitialize
+import devicesettings;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
@@ -60,62 +60,30 @@ print "[DS LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
 obj.setLoadModuleStatus(loadmodulestatus);
 
 if "SUCCESS" in loadmodulestatus.upper():
-        #calling Device Settings - initialize API
-        result = dsManagerInitialize(obj)
-        #Check for return value of DS_ManagerInitialize
-        if "SUCCESS" in result:
-                tdkTestObj = obj.createTestStep('DS_SetBrightness');
-                #Pre-condition: Save the existing value of TextBrightness
-                message = "Hello"
-                tdkTestObj.addParameter("text",message);
-                tdkTestObj.addParameter("get_only",1);
+        #Calling Device Settings - initialize API
+        result = devicesettings.dsManagerInitialize(obj)
+        #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
+        if "SUCCESS" in result.upper():
+                #Primitive test case which associated to this Script
+                tdkTestObj = obj.createTestStep('DS_FP_setTextBrightness');
+                value = 100
+                tdkTestObj.addParameter("brightness",value);
                 expectedresult="SUCCESS"
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
-                copyBrightness = tdkTestObj.getResultDetails();
-                print "PRE-CONDITION: Result: [%s] Previous TextBrightness: [%s]" %(actualresult,copyBrightness);
+                details = tdkTestObj.getResultDetails();
+                print "[TEST EXECUTION RESULT] : %s" %actualresult;
+                print "Details: [%s]"%details;
+                #Set the result status of execution
                 if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");
-                        #Set TextBrightness to 100
-                        setBrightness = 100;
-                        print "Set Text=%s Brightness=%s"%(message,setBrightness);
-                        tdkTestObj.addParameter("brightness",setBrightness);
-                        tdkTestObj.addParameter("get_only",0);
-                        tdkTestObj.addParameter("text",message);
-                        expectedresult="SUCCESS"
-                        tdkTestObj.executeTestCase(expectedresult);
-                        actualresult = tdkTestObj.getResult();
-                        getBrightness = tdkTestObj.getResultDetails();
-                        print "Result: [%s] Details: [%s]" %(actualresult,getBrightness);
-                        #Check for return value of Set TextBrightness
-                        if (expectedresult in actualresult) and (str(setBrightness) in getBrightness):
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "Get TextBrightness equal to Set TextBrightness";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "Get TextBrightness not equal to Set TextBrightness";
-
-                        #Post-condition: Set to previous value of TextBrightness
-                        print "Restore Text=%s Brightness=%s"%(message,copyBrightness);
-                        tdkTestObj.addParameter("brightness",int(copyBrightness));
-                        tdkTestObj.addParameter("get_only",0);
-                        tdkTestObj.addParameter("text",message);
-                        expectedresult="SUCCESS"
-                        tdkTestObj.executeTestCase(expectedresult);
-                        actualresult = tdkTestObj.getResult();
-                        currBrightness = tdkTestObj.getResultDetails();
-                        print "POST-CONDITION: Result: [%s] Current TextBrightness: [%s]" %(actualresult,currBrightness);
-                        if (expectedresult in actualresult) and (copyBrightness in currBrightness):
-                                tdkTestObj.setResultStatus("SUCCESS");
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-
-                # Failed to save previous value of brightness
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
 
-                #calling DS_ManagerDeInitialize to DeInitialize API
-                result = dsManagerDeInitialize(obj)
+                #Calling DS_ManagerDeInitialize to DeInitialize API
+                result = devicesettings.dsManagerDeInitialize(obj)
+else :
+        print "Failed to Load Module"
 
-        #Unload the deviceSettings module
-        obj.unloadModule("devicesettings");
+obj.unloadModule("devicesettings");
+

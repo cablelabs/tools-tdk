@@ -373,6 +373,75 @@ def getURL_PlayURL(obj,streamId):
     return retValue
 
 
+# To initiate a live playback in the Gateway box using tdk
+#
+# Syntax       : getURL_PlayURL_Audio(obj,streamId)
+#
+# Parameters   : obj,streamID
+#
+# Return Value : 0 on success and 1 on failure
+
+def getURL_PlayURL_Audio(obj,streamId):
+    
+    #Prmitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('TDKE2E_RMFLinearTV_GetURL');  
+        
+    #set the dvr play url for first channel
+    streamDetails = tdkTestObj.getStreamDetails(streamId);        
+    #url="http://"+streamDetails.getGatewayIp()+":8080/videoStreamInit?live=ocap://"+streamDetails.getOCAPID()
+    url = E2E_getStreamingURL(obj, "LIVE", streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+    print "Request URL : %s" %url;
+    tdkTestObj.addParameter("Validurl",url);        
+
+    #Execute the test case in STB
+    expectedresult="SUCCESS";
+    tdkTestObj.executeTestCase(expectedresult);
+
+    #Get the result of execution
+    actualresult = tdkTestObj.getResult();
+    
+    #compare the actual result with expected result
+    if expectedresult in actualresult:
+        #Set the result status of execution
+        tdkTestObj.setResultStatus("SUCCESS");
+        details =  tdkTestObj.getResultDetails();
+        
+        #Remove unwanted part from URL
+        PLAYURL = details.split("[RESULTDETAILS]");
+        ValidURL = PLAYURL[-1];        
+
+        expectedresult="SUCCESS";
+        
+        #Prmitive test case which associated to this Script
+        tdkTestObj = obj.createTestStep('TestMgr_LinearTv_AudioChannel_Play');
+
+        print "Play Url Requested: %s"%(ValidURL);
+        tdkTestObj.addParameter("playUrl",ValidURL);
+
+        #Execute the test case in STB
+        tdkTestObj.executeTestCase(expectedresult);
+
+        #Get the result of execution
+        actualresult = tdkTestObj.getResult();        
+        print "The E2E LinearTv Play : %s" %actualresult;
+
+        #Set the result status of execution
+        if "SUCCESS" in actualresult.upper():
+            tdkTestObj.setResultStatus("SUCCESS");
+            details = tdkTestObj.getResultDetails();
+            print "E2E LinearTv Playback Successful: [%s]"%details;
+            retValue = "SUCCESS"
+            
+        else:
+            tdkTestObj.setResultStatus("FAILURE");
+            details =  tdkTestObj.getResultDetails();            
+            print "Execution Failed: [%s]"%(details);
+            retValue = "FAILURE"
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+        retValue = "FAILURE"
+    return retValue
+
 
 # To initiate a forward play in the Gateway box using tdk
 #
@@ -408,7 +477,7 @@ def skip_forward(obj):
        print "Recording Details : " , matchList
        #fetch recording id from list matchList.
        recordID = matchList[1]
-
+       recordID = recordID.strip()
        #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
        url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID[:-1]);
 
@@ -469,7 +538,8 @@ def skip_backward(obj):
     if matchList:
        print "Recording Details : " , matchList
        #fetch recording id from list matchList.
-       recordID = matchList[1]
+
+       recordID = recordID.strip()
     
 
        #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'

@@ -73,6 +73,8 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
 
     #Schedule record for the given StreamID
     result2,recording_id = sched_rec(rec_obj,'02','0','120000');
+    tdk_obj.initiateReboot();
+    rec_obj.resetConnectionAfterReboot();	
 
     #Calling getURL_PlayURL for live playback
     result3 = getURL_PlayURL(tdk_obj,'01');

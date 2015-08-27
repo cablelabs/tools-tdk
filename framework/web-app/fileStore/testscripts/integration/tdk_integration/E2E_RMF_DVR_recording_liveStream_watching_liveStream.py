@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_recording_liveStream_watching_liveStream</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>10</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -71,6 +71,8 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
     result1,recording_id = sched_rec(rec_obj,'01','0',duration = "120000");
 
     result2 = getURL_PlayURL(tdk_obj,'02');  
+    tdk_obj.initiateReboot();
+    rec_obj.resetConnectionAfterReboot();
         
     if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()):                                        
         print "Execution  Success"

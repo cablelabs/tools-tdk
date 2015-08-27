@@ -3,15 +3,15 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARMBUS_Single_IREvent_PerformanceTest</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id> </primitive_test_id>
+  <primitive_test_id>22</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
-  <primitive_test_name>IARMBUSPERF_RegisterEventHandler</primitive_test_name>
+  <primitive_test_name>IARMBUS_RegisterEventHandler</primitive_test_name>
   <!--  -->
-  <primitive_test_version>1</primitive_test_version>
+  <primitive_test_version>15</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>3</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -30,15 +30,15 @@
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
     <!--  -->
-    <box_type>Terminal-RNG</box_type>
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -72,7 +72,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         obj.setLoadModuleStatus("SUCCESS"); 
 
 	#Prmitive test case which associated to this Script
-	tdkTestObj = obj.createTestStep('IARMBUSPERF_Init');
+	tdkTestObj = obj.createTestStep('IARMBUS_Init');
         expectedresult="SUCCESS/FAILURE"
         tdkTestObj.executeTestCase(expectedresult);
         actualresult = tdkTestObj.getResult();
@@ -80,9 +80,9 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Check for SUCCESS/FAILURE return value of IARMBUS_Init
         if ("SUCCESS" in actualresult or ("FAILURE" in actualresult and "INVALID_PARAM" in details)):
                 tdkTestObj.setResultStatus("SUCCESS");
-                print "SUCCESS: Application successfully initialized with IARMBUSPERF library";
+                print "SUCCESS: Application successfully initialized with IARMBUS library";
                 #calling IARMBUS API "IARM_Bus_Connect"
-                tdkTestObj = obj.createTestStep('IARMBUSPERF_Connect');
+                tdkTestObj = obj.createTestStep('IARMBUS_Connect');
                 expectedresult="SUCCESS"
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
@@ -93,7 +93,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         print "SUCCESS: Application successfully connected with IARM-Bus Daemon";
 	
 			#Prmitive test case which associated to this Script
-			tdkTestObj = obj.createTestStep('IARMBUSPERF_RegisterEventHandler');
+			tdkTestObj = obj.createTestStep('IARMBUS_RegisterEventHandler');
 			#registering event handler for IR Key events
 			tdkTestObj.addParameter("owner_name","IRMgr");
 			tdkTestObj.addParameter("event_id",0);
@@ -108,7 +108,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 #sleep for 3 sec to receive IR key event that is broadcasted from second app.
                                 time.sleep(3);
 				#Prmitive test case which associated to this Script
-				tdkTestObj = obj.createTestStep('IARMBUSPERF_InvokeEventTransmitterApp');
+				tdkTestObj = obj.createTestStep('IARMBUS_InvokeEventTransmitterApp');
 				#registering event handler for IR Key events
 				tdkTestObj.addParameter("owner_name","IRMgr");
 				tdkTestObj.addParameter("event_id",0);
@@ -128,7 +128,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         print "FAILURE: Second application failed to execute";
                                 time.sleep(2);
 				#Prmitive test case which associated to this Script
-				tdkTestObj = obj.createTestStep('IARMBUSPERF_GetLastReceivedEventDetails');
+				tdkTestObj = obj.createTestStep('IARMBUS_GetLastReceivedEventPerformanceDetails');
 				expectedresult="SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
@@ -142,7 +142,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         tdkTestObj.setResultStatus("FAILURE");
                                         print "FAILURE: GetLastReceivedEventDetails failed";
 	
-				tdkTestObj = obj.createTestStep('IARMBUSPERF_UnRegisterEventHandler');
+				tdkTestObj = obj.createTestStep('IARMBUS_UnRegisterEventHandler');
 				#Transmit IR Key events
 				tdkTestObj.addParameter("owner_name","IRMgr");
 				tdkTestObj.addParameter("event_id",0);
@@ -168,7 +168,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "FAILURE: IARM_Bus_Init failed. %s " %details;
 
 	#calling IARMBUS API "IARM_Bus_DisConnect"
-        tdkTestObj = obj.createTestStep('IARMBUSPERF_DisConnect');
+        tdkTestObj = obj.createTestStep('IARMBUS_DisConnect');
         expectedresult="SUCCESS"
         tdkTestObj.executeTestCase(expectedresult);
         actualresult = tdkTestObj.getResult();

@@ -74,6 +74,8 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
     time.sleep(40);
     #Calling sched_rec to schedule the  record with TSB
     result2,recording_id = sched_rec(rec_obj,'01','0','120000');
+    tdk_obj.initiateReboot();
+    rec_obj.resetConnectionAfterReboot()
 
     time.sleep(120);    
     

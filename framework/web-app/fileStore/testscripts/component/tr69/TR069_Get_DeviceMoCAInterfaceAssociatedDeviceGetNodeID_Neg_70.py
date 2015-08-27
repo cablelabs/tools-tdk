@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Objective: To fetch Node ID of the associated remote device by querying tr69Hostif through curl.  Query string "Device.MoCA.Interface.1.AssociatedDevice.N.NodeID".
+  <synopsis>Objective: To fetch Node ID of the associated remote device by querying tr69Hostif through curl.  Query string "Device.MoCA.Interface.1.AssociatedDevice.N.NodeID".This feature is not implemented on RDK yet.
 Test Case ID: CT_TR69_70
 Test Case Type: Negative.</synopsis>
   <!--  -->
@@ -27,7 +27,7 @@ Test Case Type: Negative.</synopsis>
   <!-- execution_time is the time out time for test execution -->
   <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
+  <skip>true</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>

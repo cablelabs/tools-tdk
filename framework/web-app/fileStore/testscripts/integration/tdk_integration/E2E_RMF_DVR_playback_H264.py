@@ -77,6 +77,8 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
     result1,recording_id = sched_rec(rec_obj,'09','0','120000');
     
     time.sleep(180);
+    tdk_obj.initiateReboot();
+    rec_obj.resetConnectionAfterReboot()
 
     #Prmitive test case which associated to this Script
     tdkTestObj = tdk_obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');

@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Objective : To fetch number of QoS flows that this interface has from the MoCA network by querying tr69Hostif through curl. Query string "Device.MoCA.Interface.1.QoS.EgressNumFlows".
+  <synopsis>Objective : To fetch number of QoS flows that this interface has from the MoCA network by querying tr69Hostif through curl. Query string "Device.MoCA.Interface.1.QoS.EgressNumFlows".This feature not implemented on RDK yet.
 Test Case ID: CT_TR69_71
 Test Case Type: Positive.</synopsis>
   <!--  -->
@@ -27,7 +27,7 @@ Test Case Type: Positive.</synopsis>
   <!-- execution_time is the time out time for test execution -->
   <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
+  <skip>true</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>

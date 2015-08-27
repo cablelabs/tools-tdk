@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Objective: To fetch Human-readable name associated with this video decoder by querying tr69Hostif through curl.  Query string "Device.Services.STBService.1.Components.VideoDecoder.N.Name". Where N is the value greater than number of VideoDecoderNumberOfEn</synopsis>
+  <synopsis>Objective: To fetch Human-readable name associated with this video decoder by querying tr69Hostif through curl.  Query string "Device.Services.STBService.1.Components.VideoDecoder.N.Name". Where N is the value greater than number of VideoDecoderNumberOfEn</synopsis>.This feature is not implemented inn RDK yet.
   <!--  -->
   <groups_id />
   <!--  -->
@@ -25,7 +25,7 @@
   <!-- execution_time is the time out time for test execution -->
   <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
+  <skip>true</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>

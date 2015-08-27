@@ -3,7 +3,7 @@
 <xml>
   <id>1684</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>5</version>
+  <version>14</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_trickplay_recordcont_liveplayback_radiochannel</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -30,13 +30,13 @@
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
+    <!--  -->
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -49,7 +49,7 @@
 import tdklib;
 import time;
 
-from tdkintegration import getURL_PlayURL,dvr_playback;
+from tdkintegration import getURL_PlayURL_Audio,dvr_playback;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
@@ -71,7 +71,7 @@ if "SUCCESS" in result.upper():
     print "TDKIntegration module load successfuls";   
    
     #Calling getURL_PlayURL with valid Stream ID
-    result1 = getURL_PlayURL(obj,'R01');
+    result1 = getURL_PlayURL_Audio(obj,'R01');
     
     time.sleep(150);
 
@@ -84,6 +84,7 @@ if "SUCCESS" in result.upper():
     duration = 4
     matchList = []
     matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.initiateReboot();
     obj.resetConnectionAfterReboot()
     tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
 
@@ -91,28 +92,21 @@ if "SUCCESS" in result.upper():
     streamDetails = tdkTestObj.getStreamDetails("01");
 
     time.sleep(10)
-		 
     if matchList:
-		 
          print "Recording Details : " , matchList
-
          #fetch recording id from list matchList.
          recordID = matchList[1]
-
+         recordID = recordID.strip()
          #Calling getURL_PlayURL with valid Stream ID
          result2 = dvr_playback(tdkTestObj,recordID,play = 'trickplay');
-        
          if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()):                                       
-		       print "Execution Success"
-	
-	 else:            
-		     print "Execution is failure"
-		     obj.unloadModule("tdkintegration");
-			 
- 			 
+               print "Execution Success"
+               obj.unloadModule("tdkintegration");
+         else:
+               print "Execution is failure"
+               obj.unloadModule("tdkintegration");
     else:
-	     print "No Matching recordings list found"
-    
+         print "No Matching recordings list found"
 else:
     print "Failed to load tdkintegration module";
     obj.setLoadModuleStatus("FAILURE");

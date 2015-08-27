@@ -70,60 +70,26 @@ if "SUCCESS" in loadmodulestatus.upper():
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "SUCCESS :Application successfully initialized with Device Settings library";
-                i = 0;
                 for i in range(0,100):
-                        print "****************%d" %i;
+                        print "************* Iteration %d  *************" %i;
                         #calling DS_SetDFC to get and set the zoom settings
                         tdkTestObj = obj.createTestStep('DS_SetDFC');
-                        zoom="Full";
-                        print "Zoom value set to:%s" %zoom; 
-                        tdkTestObj.addParameter("zoom_setting",zoom);
-                        expectedresult="SUCCESS"
-                        tdkTestObj.executeTestCase(expectedresult);
-                        actualresult = tdkTestObj.getResult();
-                        dfcdetails = tdkTestObj.getResultDetails();
-                        setdfc="%s" %zoom;
-                        #Check for SUCCESS/FAILURE return value of DS_SetDFC
-                        if expectedresult in actualresult:
-                                print "SUCCESS :Application successfully gets and sets the zoom settingts for the video decvice";
-                                print "getdfc %s" %dfcdetails;
-                                #comparing the DFC (zoomSettings) before and after setting
-                                if setdfc in dfcdetails:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        print "SUCCESS: Both the zoomsettings values are equal";
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "FAILURE: Get and Set APi's are Success But the zoomsettings values are not equal";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "****************%d" %i;
-                                print "FAILURE :Failed to get and set the zoom settings";
-                        time.sleep(100/1000);
-                       #calling DS_SetDFC to get and set the zoom settings
-                        tdkTestObj = obj.createTestStep('DS_SetDFC');
-                        zoom="Platform";
-                        print "Zoom setting set to:%s" %zoom;  
-                        tdkTestObj.addParameter("zoom_setting",zoom);
-                        expectedresult="SUCCESS"
-                        tdkTestObj.executeTestCase(expectedresult);
-                        actualresult = tdkTestObj.getResult();
-                        dfcdetails = tdkTestObj.getResultDetails();
-                        setdfc="%s" %zoom;
-                        #Check for SUCCESS/FAILURE return value of DS_SetDFC
-                        if expectedresult in actualresult:
-                                print "SUCCESS :Application successfully gets and sets the zoom settingts for the video decvice";
-                                print "getdfc %s" %dfcdetails;
-                                #comparing the DFC (zoomSettings) before and after setting
-                                if setdfc in dfcdetails:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        print "SUCCESS: Both the zoomsettings values are equal";
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "FAILURE: Both the zoomsettings values are not equal";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "****************%d" %i;
-                                print "FAILURE :Failed to get and set the zoom settings";
+			for zoom in ["None","Full"]:
+                        	print "Zoom value set to:%s" %zoom; 
+                        	tdkTestObj.addParameter("zoom_setting",zoom);
+                        	expectedresult="SUCCESS"
+                        	tdkTestObj.executeTestCase(expectedresult);
+                        	actualresult = tdkTestObj.getResult();
+                        	dfcdetails = tdkTestObj.getResultDetails();
+				print "Details",dfcdetails
+                        	#Check for SUCCESS/FAILURE return value of DS_SetDFC
+                        	if expectedresult in actualresult:
+                                	print "SUCCESS :Application successfully gets and sets the zoom settingts for the video device";
+					tdkTestObj.setResultStatus("SUCCESS");
+                        	else:
+                                	tdkTestObj.setResultStatus("FAILURE");
+                                	print "FAILURE :Failed to get and set the zoom settings";
+                        	time.sleep(100/1000);
 
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');

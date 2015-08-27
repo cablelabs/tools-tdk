@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>18</version>
+  <version>21</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMFMS_Recording_256Character_RecordId_Dvr_PlayBack_04</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -207,7 +207,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         rec_id = random.randrange(10**9, 10**256);
 	requestID = str(rec_id);
         recording_id_256 = str(rec_id);
-	genIdInput = requestID;
+	genIdInput = "TDK12345";
         print "Record_256---->:",recording_id_256 
         duration = "180000";
         start_time = "0";
@@ -222,7 +222,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 tdkTestObj.executeTestCase(expectedresult);
                 #Get the Actual result of streaming Interface
                 actualresult = tdkTestObj.getResult();
-     	        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"schedule\":[{\"recordingId\":\""+recording_id_256+"\",\"locator\":[\"ocap://0x125d\"],\"epoch\":curTime,\"start\":0,\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recording_id_256+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
+     	        RequestURL = "{\"updateSchedule\":{\"requestId\":\"789"+"\",\"generationId\":\""+genIdInput+"\",\"schedule\":[{\"recordingId\":\""+recording_id_256+"\",\"locator\":[\"ocap://0x125d\"],\"epoch\":curTime,\"start\":0,\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_256_Dvr_PlayBack_04"+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
                 print "RequestURL  is : %s" %RequestURL ;
                 #compare the actual result with expected result
                 if expectedresult in actualresult:

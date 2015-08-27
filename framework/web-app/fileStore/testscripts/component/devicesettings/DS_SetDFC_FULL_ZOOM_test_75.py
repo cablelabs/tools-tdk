@@ -78,18 +78,11 @@ if "SUCCESS" in loadmodulestatus.upper():
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
                 dfcdetails = tdkTestObj.getResultDetails();
-                setdfc="%s" %zoom;
+		print "Details: %s" %dfcdetails;
                 #Check for SUCCESS/FAILURE return value of DS_SetDFC
                 if expectedresult in actualresult:
-                        print "SUCCESS :Application successfully gets and sets the zoom settingts as FULL for the video decvice";
-                        print "getdfc %s" %dfcdetails;
-                        #comparing the DFC (zoomSettings) before and after setting
-                        if setdfc in dfcdetails:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: Both the zoomsettings values are equal";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: Get and Set APi's are Success But the zoomsettings values are not equal";
+			tdkTestObj.setResultStatus("SUCCESS");
+                        print "SUCCESS :Application successfully gets and sets the zoom settingts as FULL for the video device";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE :Failed to get and set the FULL zoom";

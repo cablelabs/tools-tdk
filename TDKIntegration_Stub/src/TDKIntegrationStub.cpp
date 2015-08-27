@@ -159,6 +159,7 @@ bool TDKIntegrationStub::initialize(IN const char* szVersion,IN RDKTestAgent *pt
 #ifdef RMFAGENT
 	/* E2E DVR TrickPlay */
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play, "TestMgr_LinearTv_Dvr_Play");
+	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play, "TestMgr_LinearTv_AudioChannel_Play");
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_Play_Pause, "TestMgr_Dvr_Play_Pause");
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_Pause_Play, "TestMgr_Dvr_Pause_Play");
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_FF_FR, "TestMgr_Dvr_Play_TrickPlay_FF_FR");
@@ -1219,13 +1220,13 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
 	RMFResult retMPSinkValue = RMF_RESULT_SUCCESS;
 	
 	/*FIX for RDKTT-126 ticket*/
-        double mediaTime;
-        retHNSrcValue = pSource->setMediaTime(0);
-        cout<<"Return of Set Media time "<<retHNSrcValue<<endl;
-        sleep(5);
-        retHNSrcValue = pSource->getMediaTime(mediaTime);
-        cout<<"Return of get Media time "<<retHNSrcValue<<endl;
-        cout<<" Media time Value "<<mediaTime<<endl;
+        //double mediaTime;
+        //retHNSrcValue = pSource->setMediaTime(0);
+        //cout<<"Return of Set Media time "<<retHNSrcValue<<endl;
+        //sleep(5);
+        //retHNSrcValue = pSource->getMediaTime(mediaTime);
+        //cout<<"Return of get Media time "<<retHNSrcValue<<endl;
+        //cout<<" Media time Value "<<mediaTime<<endl;
 
 	retHNSrcValue = pSource->close();
 	if(RMF_RESULT_SUCCESS != retHNSrcValue)
@@ -1427,7 +1428,10 @@ bool playPause(OUT Json::Value& response)
 	}
 
 	sleep(25);
-	retHNSrcValue = pSource->pause();
+//	retHNSrcValue = pSource->pause();
+        float speed=0.0;
+        double mtime=0;
+        retHNSrcValue = pSource->play(speed,mtime);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue)
 	{
 		response["result"] = "FAILURE";
@@ -1505,6 +1509,11 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
                 	DEBUG_PRINT(DEBUG_LOG,"URL appended time: %lf\n",URLTimepos);
 			retHNSrcValue = pSource->play(URLPlaySpeed,URLTimepos);
         	}
+		else
+		{
+			DEBUG_PRINT(DEBUG_LOG,"\nDVR url playback\n");
+			retHNSrcValue = pSource->play();
+		}
         }
         else if( url.find("live")!= -1)
         {
@@ -1551,6 +1560,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	pSource->getSpeed(curSpeed);
 
 	DEBUG_PRINT(DEBUG_TRACE, "Current Speed: %f\n",curSpeed);
+	sleep(5);
 
 	RMFState curState, pendingState;
 	retHNSrcValue = pSource->getState(&curState, &pendingState);
@@ -1564,17 +1574,27 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		close_Term_HNSrc_MPSink(response);
 		return TEST_FAILURE;
 	}
-	sleep(5);
-
-	/* additional check with scripts */
-	if(TEST_FAILURE == getstreamingstatus(VIDEO_STATUS))
+	int checkcount=0;
+	bool checkresult=true;
+	// additional check with scripts 
+	while(TEST_FAILURE == getstreamingstatus(VIDEO_STATUS))
+	{
+		DEBUG_PRINT(DEBUG_ERROR, "Video playback is failing on iterative check .%d\n",checkcount);
+		checkresult=false;
+		if (checkcount == 10)
+			break;
+		sleep(5);
+		checkcount++;
+	}
+	if(checkresult == TEST_FAILURE)
 	{
 		response["result"] = "FAILURE";
 		response["details"] = "Video playback have encountered an error.";
 		close_Term_HNSrc_MPSink(response);
 		return TEST_FAILURE;
 	}
-	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS))
+
+	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS) && curSpeed == 1.0 )
 	{
 		response["result"] = "FAILURE";
 		response["details"] = "Audio playback have encountered an error.";
@@ -1582,7 +1602,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		return TEST_FAILURE;
 	}
 
-	sleep(60);
+	sleep(30);
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
@@ -2767,7 +2787,11 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value&
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Forward/Rewind success passed\n");
 	/*pause it for sometime */
-	retHNSrcValue = pSource->pause();
+	//retHNSrcValue = pSource->pause();
+
+        float speed=0.0;
+        double mtime=0;
+        retHNSrcValue = pSource->play(speed,mtime);
 	DEBUG_PRINT(DEBUG_TRACE, "HNSource pause return value: %ld \n",retHNSrcValue);
 	sleep(10);
 	retHNSrcValue = pSource->getState(&curState, &pendingState);
@@ -2865,7 +2889,10 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_FF_FR(IN const Json::Value& req,
 	sleep(20);
 
 	/*pause it for sometime */
-	retHNSrcValue = pSource->pause();
+	//retHNSrcValue = pSource->pause();
+        float speed=0.0;
+        double mtime=0;
+        retHNSrcValue = pSource->play(speed,mtime);
 	DEBUG_PRINT(DEBUG_TRACE, "HNSource pause return value: %ld \n",retHNSrcValue);
 
 	sleep(10);
@@ -2963,7 +2990,10 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 	sleep(20);
 
 	/*pause it for sometime */
-	retHNSrcValue = pSource->pause();
+	//retHNSrcValue = pSource->pause();
+        float speed=0.0;
+        double mtime=0;
+        retHNSrcValue = pSource->play(speed,mtime);
 	DEBUG_PRINT(DEBUG_TRACE, "HNSource pause return value: %ld \n",retHNSrcValue);
 
 	sleep(10);
@@ -3229,7 +3259,10 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Pause(IN const Json::Value& req,
 
 	for (int repeat = 0; repeat < 2; repeat++)
 	{
-		retHNSrcValue = pSource->pause();
+		//retHNSrcValue = pSource->pause();
+        	float speed=0.0;
+        	double mtime=0;
+        	retHNSrcValue = pSource->play(speed,mtime);
 		if(RMF_RESULT_SUCCESS != retHNSrcValue)
 		{
 			cout << "Error: " << retHNSrcValue << " returned, HNsource pause failed \n";
@@ -3687,8 +3720,22 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         res_HNSrcPlay = pSource->play();
         DEBUG_PRINT(DEBUG_LOG, "RMF Result of Play is %d\n", res_HNSrcPlay);
 	sleep(5);
+
+        int checkcount=0;
+        bool checkresult=true;
+        // additional check with scripts
+        while(TEST_FAILURE == getstreamingstatus(VIDEO_STATUS))
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "Video playback is failing on iterative check .%d\n",checkcount);
+                checkresult=false;
+                if (checkcount == 5)
+                        break;
+                sleep(5);
+                checkcount++;
+        }
 	/* Additional checkpoint for video and audio status */
-	if(TEST_FAILURE == getstreamingstatus(VIDEO_STATUS))
+	//if(TEST_FAILURE == getstreamingstatus(VIDEO_STATUS))
+	if(checkresult == TEST_FAILURE)
 	{
 		response["result"] = "FAILURE";
 		response["details"] = "Video playback have encountered an error.";
@@ -3908,6 +3955,125 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         return TEST_SUCCESS;
 }
 
+/**************************************************************************
+  Function name : TDKIntegrationStub::E2ERMFAgent_Play_AudioChannel
+
+Arguments     : Input argument is Playback URL. Output argument is "SUCCESS" or "FAILURE".
+
+Description   :Sends the URL to HYBRID to playback the Audio. URL can be Linear TV or DVR URL.
+ **************************************************************************/
+bool TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::Value& req, OUT Json::Value& response)
+{
+	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
+	string url = req["playUrl"].asCString();
+	string modurl;
+	modurl=url;
+	if(TEST_FAILURE == init_open_HNsrc_MPsink(modurl.c_str(),NULL,response))
+	{
+		return TEST_FAILURE;
+	}
+	DEBUG_PRINT(DEBUG_ERROR, "After init_open_HNsrc_MPsink------------------\n");
+	
+        int playSpeedStrPosition = url.find("play_speed");
+
+	if( url.find("recordingId")!= -1)
+        {
+                DEBUG_PRINT(DEBUG_LOG,"\nDVR url\n");
+        	int TimePosStrPosition = url.find("time_pos");
+        	float URLPlaySpeed = 0.0;
+        	double URLTimepos = 0.0;
+        	if(-1 != playSpeedStrPosition)
+       		{
+                	std::string playSpeed = url.substr(playSpeedStrPosition);
+                	int ePos = playSpeed.find("=");
+                	int aPos = playSpeed.find("&");
+                	std::string rate = playSpeed.substr(ePos + 1,(aPos - ePos) - 1);
+                	std::string Timepos = url.substr(TimePosStrPosition);
+                	ePos = Timepos.find("=");
+                	std::string time = Timepos.substr(ePos +1,string::npos );
+                	URLPlaySpeed = strtof(rate.c_str(),NULL);
+                	URLTimepos = strtod(time.c_str(),NULL);
+                	DEBUG_PRINT(DEBUG_LOG,"URL appended Rate: %f\n",URLPlaySpeed);
+                	DEBUG_PRINT(DEBUG_LOG,"URL appended time: %lf\n",URLTimepos);
+			retHNSrcValue = pSource->play(URLPlaySpeed,URLTimepos);
+        	}
+		else
+		{
+			DEBUG_PRINT(DEBUG_LOG,"\nDVR url playback\n");
+			retHNSrcValue = pSource->play();
+		}
+        }
+        else if( url.find("live")!= -1)
+        {
+                DEBUG_PRINT(DEBUG_LOG,"\nLive url\n");
+		retHNSrcValue = pSource->play();
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_LOG,"\nInvalid url\n");
+		retHNSrcValue = -1;
+        }
+
+	sleep(5);
+	if(RMF_RESULT_SUCCESS != retHNSrcValue )
+	{
+		stringstream ss;
+		string details;
+
+		ss << response["details"] << " HNSource play failed";
+		details = ss.str();
+		response["details"] = details;
+
+		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed %ld\n",retHNSrcValue);
+		close_Term_HNSrc_MPSink(response);
+
+		return TEST_FAILURE;
+	}
+	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc play\n");
+
+	/*Query the current speed */
+	float curSpeed = 0.0;
+	pSource->getSpeed(curSpeed);
+
+	DEBUG_PRINT(DEBUG_TRACE, "Current Speed: %f\n",curSpeed);
+	sleep(5);
+
+	RMFState curState, pendingState;
+	retHNSrcValue = pSource->getState(&curState, &pendingState);
+
+	if(RMF_STATE_CHANGE_SUCCESS != retHNSrcValue || RMF_STATE_PLAYING != curState)
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "HNSource play failed current state not playing.\n";
+		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed current state not playing.\n");
+
+		close_Term_HNSrc_MPSink(response);
+		return TEST_FAILURE;
+	}
+	int checkcount=0;
+	bool checkresult=true;
+	// additional check with scripts 
+	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS) && curSpeed == 1.0 )
+	{
+		response["result"] = "FAILURE";
+		response["details"] = "Audio playback have encountered an error.";
+		close_Term_HNSrc_MPSink(response);
+		return TEST_FAILURE;
+	}
+
+	sleep(30);
+
+	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
+	{
+		return TEST_FAILURE;
+	}
+
+	response["result"] = "SUCCESS";
+	response["details"] = "Playback Successful ";
+	DEBUG_PRINT(DEBUG_TRACE, "Playback Successful \n");
+
+	return TEST_SUCCESS;
+}
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult
 

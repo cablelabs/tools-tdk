@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>20</version>
+  <version>21</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVRPlayback_OFF_to_ONMode</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -30,15 +30,15 @@
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
     <!--  -->
     <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
+    <!--  -->
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -88,13 +88,13 @@ if "SUCCESS" in loadmodulestatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
                 print "SUCCESS: Querying STB power state -RPC method invoked successfully";
                 #Setting Power mode to OFF
                 result1 = change_powermode(iarm_obj,0);
-		
+
                 #Calling IARM_Bus_DisConnect API
                 actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});
 
                 #calling IARMBUS API "IARM_Bus_Term"
                 actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={});
-		
+
                 if "SUCCESS" in result1.upper():
                   #tdkTestObj = obj.createTestStep('TDKE2E_Rmf_Dvr_Play_TrickPlay_RewindFromEndPoint'); 
                   tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play'); 
@@ -107,9 +107,9 @@ if "SUCCESS" in loadmodulestatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
                   obj.resetConnectionAfterReboot()
                   #tdkTestObj = obj.createTestStep('TDKE2E_Rmf_Dvr_Play_TrickPlay_RewindFromEndPoint');
                   tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
-		 
+
                   if matchList:
-		 
+
                     print "Recording Details : " , matchList
 
                     #fetch recording id from list matchList.
@@ -138,6 +138,7 @@ if "SUCCESS" in loadmodulestatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
                             #Prmitive test case which associated to this Script
                             tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
                             recordID = matchList[1]
+                            recordID = recordID.strip()
                             
                             #Calling DvrPlay_rec to play the recorded content
                             result4 = dvr_playback(tdkTestObj,recordID);

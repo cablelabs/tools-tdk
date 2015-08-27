@@ -48,7 +48,8 @@
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 import time;
-from tdkintegration import getURL_PlayURL;
+from tdkintegration import getURL_PlayURL, getURL_PlayURL_Audio;
+#from tdkintegration import getURL_PlayURL_Audio;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
@@ -73,7 +74,7 @@ if "SUCCESS" in result.upper():
     result1 = getURL_PlayURL(obj,'02');
 
     #Calling getURL_PlayURL with valid Stream ID
-    result2 = getURL_PlayURL(obj,'R01');
+    result2 = getURL_PlayURL_Audio(obj,'R01');
         
     if ("SUCCESS" in result1.upper()) and ("SUCCESS" in result2.upper()):                                        
         print "Execution of getURL_PlayURL for same channel is Success"

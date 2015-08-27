@@ -74,6 +74,9 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
     #Schedule record for the given StreamID
     result2,recording_id = sched_rec(rec_obj,'02','0','120000');
 
+    tdk_obj.initiateReboot();
+    rec_obj.resetConnectionAfterReboot()
+
     #Prmitive test case which associated to this Script
     tdkTestObj = tdk_obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
 

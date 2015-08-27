@@ -3,7 +3,7 @@
 <xml>
   <id>1669</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>15</version>
+  <version>16</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_playback_recordcont_liveplayback_AudioChannel</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -30,13 +30,13 @@
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
+    <!--  -->
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -74,7 +74,7 @@ if "SUCCESS" in result.upper():
     result1 = getURL_PlayURL(obj,'R01');
 
     #Prmitive test case which associated to this Script
-    tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
+    tdkTestObj = obj.createTestStep('TestMgr_LinearTv_AudioChannel_Play');
 
     duration = 1
     #recInfoAsList = [index,recordingId,recordingTitle,duration,segmentName]

@@ -1317,7 +1317,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Val
 #endif
 	if(rmfComponent == "HNSrc")
 	{
-		retResult = hnSource->pause();	
+                //retResult = hnSource->pause();
+                float speed = 0.0; /* Pause is called internally when speed is called with 0 */
+                double time = 0.0; /* Time is not used when the speed is 0.0; */
+                retResult = hnSource->play(speed, time);
 		if(RMF_RESULT_SUCCESS != retResult)
 	        {
 			response["result"] = "FAILURE";

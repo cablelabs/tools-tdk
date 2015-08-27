@@ -62,34 +62,23 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
-                #calling Device Settings - Set/Get TextDisplay Brightness
-                tdkTestObj = obj.createTestStep('DS_SetBrightness');
-                #setting brightness parameter value
-                brightness = 5;
-                print "Setting text brightness to %d" %brightness;
-                message = "Hello"
-                print "Setting text to %s"%message;
-                tdkTestObj.addParameter("brightness",brightness);
-                tdkTestObj.addParameter("get_only",0);
-                tdkTestObj.addParameter("text",message);
+
+		#calling Device Settings - Set/Get TextDisplay Brightness
+                tdkTestObj = obj.createTestStep('DS_FP_setTextBrightness');
+                value = 5
+                tdkTestObj.addParameter("brightness",value);
                 expectedresult="SUCCESS"
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
-                print "[DS SetBrightness RESULT] : %s" %actualresult;
-                getBrightness = tdkTestObj.getResultDetails();
-                setBrightness = "%s" %brightness;
-                print "getBrightness:%s" %getBrightness;
-                #Check for SUCCESS/FAILURE return value of DS_SetBrightness
+                setBrightness = tdkTestObj.getResultDetails();
+                print "[TEST EXECUTION RESULT] : %s" %actualresult;
+                print "Details: [%s]"%setBrightness;
+                #Set the result status of execution
                 if expectedresult in actualresult:
-                        #comparing the brightness value before and after setting
-                        if setBrightness in getBrightness :
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: Get TextBrightness equal to Set TextBrightness";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: Get TextBrightness not equal to Set TextBrightness";
+                        tdkTestObj.setResultStatus("SUCCESS");
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
+
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
                 expectedresult="SUCCESS"
@@ -117,17 +106,14 @@ if "SUCCESS" in loadmodulestatus.upper():
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
                 #calling Device Settings - Get TextDisplay Brightness
-                tdkTestObj = obj.createTestStep('DS_SetBrightness');
-                print "Brightness before reboot: %d" %brightness;
-                tdkTestObj.addParameter("text",message);
-                tdkTestObj.addParameter("get_only",1);
+                tdkTestObj = obj.createTestStep('DS_FP_getTextBrightness');
                 expectedresult="SUCCESS"
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
-                print "[DS GetBrightness RESULT] : %s" %actualresult;
                 getBrightness = tdkTestObj.getResultDetails();
-                print "Brightness after reboot:%s" %getBrightness;
-                #Check for SUCCESS/FAILURE return value of DS_SetBrightness
+                print "[TEST EXECUTION RESULT] : %s" %actualresult;
+                print "Details: [%s]"%getBrightness;
+                #Set the result status of execution
                 if expectedresult in actualresult:
                         #comparing the brightness value before and after setting
                         if setBrightness in getBrightness :
@@ -136,8 +122,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "FAILURE: TextBrightness changed after reboot";
+
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
+
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
                 expectedresult="SUCCESS"

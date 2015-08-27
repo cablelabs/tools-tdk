@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>16</version>
+  <version>17</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_delete_recording</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -92,6 +92,7 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
          print "Recording Details : " , matchList
          #fetch recording id from list matchList.
          recording_id = matchList[1]
+         recording_id = recording_id.strip()
          result1 = dvr_playback(tdkTestObj,recording_id);
 
          result2 = deleteRecording(media_obj,'01',recording_id);

@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>13</version>
+  <version>16</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVRPlayback_Change_Zoom</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -30,13 +30,13 @@
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
+    <!--  -->
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -56,7 +56,7 @@ ip = <ipaddress>
 port = <port>
 obj.configureTestCase(ip,port,'E2E_RMF_DVRPlayback_Change_Zoom');
 
-matchList = []
+#matchList = []
 tdk_obj.configureTestCase(ip,port,'E2E_RMF_DVRPlayback_Change_Zoom');
 loadmodulestatus =obj.getLoadModuleResult();
 loadmodulestatus1 = tdk_obj.getLoadModuleResult();
@@ -82,7 +82,7 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
          print "Recording Details : " , matchList
          #fetch recording id from list matchList.
          recordID = matchList[1]
-
+         recordID = recordID.strip()
                     
          #Calling DvrPlay_rec to play the recorded content
          result = dvr_playback(tdkTestObj,recordID );

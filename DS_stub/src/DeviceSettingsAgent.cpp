@@ -36,47 +36,142 @@ bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 {
 	DEBUG_PRINT(DEBUG_TRACE,"DeviceSettingsAgent Initialize");
 	/*Register stub function for callback*/
+
+	//Manager
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::DSmanagerInitialize, "TestMgr_DS_managerInitialize");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::DSmanagerDeinitialize, "TestMgr_DS_managerDeinitialize");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setBrightness, "TestMgr_DS_FP_setBrightness");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setState, "TestMgr_DS_FP_setState");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setColor, "TestMgr_DS_FP_setColor");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setBlink, "TestMgr_DS_FP_setBlink");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setScroll, "TestMgr_DS_FP_setScroll");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_setLevel, "TestMgr_DS_AOP_setLevel");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_setDB, "TestMgr_DS_AOP_setDB");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VD_setDFC, "TestMgr_DS_VD_setDFC");
+
+	//Front Panel Indicator
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPI_setBrightness, "TestMgr_DS_FP_setBrightness");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPI_setState, "TestMgr_DS_FP_setState");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPI_setColor, "TestMgr_DS_FP_setColor");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPI_setBlink, "TestMgr_DS_FP_setBlink");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPI_getSupportedColors, "TestMgr_DS_FP_FP_getSupportedColors");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPI_getBrightnessLevels, "TestMgr_DS_FP_getBrightnessLevels");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPI_getColorMode, "TestMgr_DS_FP_getColorMode");
+
+	//Front Panel TextDisplay
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPTEXT_setText, "TestMgr_DS_FP_setText");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPTEXT_setTimeFormat, "TestMgr_DS_FP_setTimeForamt");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPTEXT_setTime, "TestMgr_DS_FP_setTime");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPTEXT_setScroll, "TestMgr_DS_FP_setScroll");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPTEXT_getTextColorMode, "TestMgr_DS_FP_getTextColorMode");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPTEXT_getTextBrightnessLevels, "TestMgr_DS_FP_getTextBrightnessLevels");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPTEXT_setTextBrightness, "TestMgr_DS_FP_setTextBrightness");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPTEXT_getTextBrightness, "TestMgr_DS_FP_getTextBrightness");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPTEXT_enableDisplay, "TestMgr_DS_FP_enableDisplay");
+
+	//Front Panel Config
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPCONFIG_getIndicatorFromName, "TestMgr_DS_FP_getIndicatorFromName");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPCONFIG_getIndicatorFromId, "TestMgr_DS_FP_getIndicatorFromId");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPCONFIG_getIndicators, "TestMgr_DS_FP_getIndicators");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPCONFIG_getTextDisplayFromName, "TestMgr_DS_FP_getTextDisplayFromName");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPCONFIG_getTextDisplayFromId, "TestMgr_DS_FP_getTextDisplayFromId");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPCONFIG_getTextDisplays, "TestMgr_DS_FP_getTextDisplays");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FPCONFIG_getColors, "TestMgr_DS_FP_getColors");
+
+	//Audio output port config
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPCONFIG_getPortType, "TestMgr_DS_AOPCONFIG_getPortType");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPCONFIG_getPortFromName, "TestMgr_DS_AOPCONFIG_getPortFromName");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPCONFIG_getPortFromId, "TestMgr_DS_AOPCONFIG_getPortFromId");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPCONFIG_getPorts, "TestMgr_DS_AOPCONFIG_getPorts");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPCONFIG_getSupportedTypes, "TestMgr_DS_AOPCONFIG_getSupportedTypes");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPCONFIG_release, "TestMgr_DS_AOPCONFIG_release");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPCONFIG_load, "TestMgr_DS_AOPCONFIG_load");
+
+	//Audio output port type
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPTYPE_getSupportedEncodings, "TestMgr_DS_AOP_getSupportedEncodings");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPTYPE_getSupportedCompressions, "TestMgr_DS_AOP_getSupportedCompressions");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPTYPE_getSupportedStereoModes, "TestMgr_DS_AOP_getSupportedStereoModes");
+	//ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPTYPE_addEncoding, "TestMgr_DS_AOP_addEncoding");
+        //ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPTYPE_addCompression, "TestMgr_DS_AOP_addCompression");
+        //ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPTYPE_addStereoMode, "TestMgr_DS_AOP_addStereoMode");
+        //ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOPTYPE_addPort, "TestMgr_DS_AOP_addPort");
+
+        //Audio output port
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_setLevel, "TestMgr_DS_AOP_setLevel");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_setDB, "TestMgr_DS_AOP_setDB");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_setEncoding, "TestMgr_DS_AOP_setEncoding");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_setCompression, "TestMgr_DS_AOP_setCompression");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_setStereoMode, "TestMgr_DS_AOP_setStereoMode");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_setPowerMode, "TestMgr_DS_HOST_setPowerMode");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_loopThru, "TestMgr_DS_AOP_loopThru");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_mutedStatus, "TestMgr_DS_AOP_mutedStatus");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_setStereoAuto, "TestMgr_DS_AOP_setStereoAuto");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_getStereoAuto, "TestMgr_DS_AOP_getStereoAuto");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_getGain, "TestMgr_DS_AOP_getGain");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_getOptimalLevel, "TestMgr_DS_AOP_getOptimalLevel");
+
+        //Video output port
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_setResolution, "TestMgr_DS_VOP_setResolution");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_getIndicators, "TestMgr_DS_FP_getIndicators");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_getSupportedColors, "TestMgr_DS_FP_FP_getSupportedColors");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_getTextDisplays, "TestMgr_DS_FP_getTextDisplays");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setText, "TestMgr_DS_FP_setText");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setTimeFormat, "TestMgr_DS_FP_setTimeForamt");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::FP_setTime, "TestMgr_DS_FP_setTime");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_loopThru, "TestMgr_DS_AOP_loopThru");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_mutedStatus, "TestMgr_DS_AOP_mutedStatus");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_getSupportedEncodings, "TestMgr_DS_AOP_getSupportedEncodings");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_getSupportedCompressions, "TestMgr_DS_AOP_getSupportedCompressions");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::AOP_getSupportedStereoModes, "TestMgr_DS_AOP_getSupportedStereoModes");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_addPowerModeListener, "TestMgr_DS_HOST_addPowerModeListener");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_removePowerModeListener, "TestMgr_DS_HOST_removePowerModeListener");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getDefaultResolution, "TestMgr_DS_VOP_getDefaultResolution");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_isDisplayConnected, "TestMgr_DS_VOP_isDisplayConnected");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_addDisplayConnectionListener, "TestMgr_DS_HOST_addDisplayConnectionListener");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_removeDisplayConnectionListener, "TestMgr_DS_HOST_removeDisplayConnectionListener");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_Resolutions, "TestMgr_DS_HOST_Resolutions");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_isHDCPSupported, "TestMgr_DS_VOPTYPE_isHDCPSupported");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_enableHDCP, "TestMgr_DS_VOPTYPE_enableHDCP");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getHDCPStatus, "TestMgr_DS_VOP_getHDCPStatus");
-	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_isDynamicResolutionSupported, "TestMgr_DS_VOPTYPE_isDynamicResolutionSupported");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getAspectRatio, "TestMgr_DS_VOP_getAspectRatio");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getDisplayDetails, "TestMgr_DS_VOP_getDisplayDetails");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_isContentProtected, "TestMgr_DS_VOP_isContentProtected");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_setEnable, "TestMgr_DS_VOP_setEnable");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_isActive, "TestMgr_DS_VOP_isActive");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_setDisplayConnected, "TestMgr_DS_VOP_setDisplayConnected");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_hasSurround, "TestMgr_DS_VOP_hasSurround");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOP_getEDIDBytes, "TestMgr_DS_VOP_getEDIDBytes");
+
+	//Video output port type
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_isHDCPSupported, "TestMgr_DS_VOPTYPE_isHDCPSupported");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_enableHDCP, "TestMgr_DS_VOPTYPE_enableHDCP");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_isDynamicResolutionSupported, "TestMgr_DS_VOPTYPE_isDynamicResolutionSupported");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_getSupportedResolutions, "TestMgr_DS_HOST_Resolutions");
+	//ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_addPort, "TestMgr_DS_VOPTYPE_addPort");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_getPorts, "TestMgr_DS_VOPTYPE_getPorts");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_setRestrictedResolution, "TestMgr_DS_VOPTYPE_setRestrictedResolution");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPTYPE_getRestrictedResolution, "TestMgr_DS_VOPTYPE_getRestrictedResolution");
+
+	//Video output port config
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPCONFIG_getPixelResolution, "TestMgr_DS_VOPCONFIG_getPixelResolution");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPCONFIG_getSSMode, "TestMgr_DS_VOPCONFIG_getSSMode");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPCONFIG_getVideoResolution, "TestMgr_DS_VOPCONFIG_getVideoResolution");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPCONFIG_getFrameRate, "TestMgr_DS_VOPCONFIG_getFrameRate");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPCONFIG_getPortType, "TestMgr_DS_VOPCONFIG_getPortType");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPCONFIG_getPortFromName, "TestMgr_DS_VOPCONFIG_getPortFromName");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPCONFIG_getPortFromId, "TestMgr_DS_VOPCONFIG_getPortFromId");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPCONFIG_getSupportedTypes, "TestMgr_DS_VOPCONFIG_getSupportedTypes");
+        //ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPCONFIG_release, "TestMgr_DS_VOPCONFIG_release");
+        //ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VOPCONFIG_load, "TestMgr_DS_VOPCONFIG_load");
+
+	//VideoDevice
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VD_setDFC, "TestMgr_DS_VD_setDFC");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VD_setPlatformDFC, "TestMgr_DS_VD_setPlatformDFC");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VD_getSupportedDFCs, "TestMgr_DS_VD_getSupportedDFCs");
+        //ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VD_addDFC, "TestMgr_DS_VD_addDFC");
+
+	//VideoDevice Config
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VDCONFIG_getDevices, "TestMgr_DS_VDCONFIG_getDevices");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VDCONFIG_getDFCs, "TestMgr_DS_VDCONFIG_getDFCs");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VDCONFIG_getDefaultDFC, "TestMgr_DS_VDCONFIG_getDefaultDFC");
+        //ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VDCONFIG_release, "TestMgr_DS_VDCONFIG_release");
+        //ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VDCONFIG_load, "TestMgr_DS_VDCONFIG_load");
+
+        //VideoResolution
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VR_isInterlaced, "TestMgr_DS_VR_isInterlaced");
+
+	//Host
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_setPowerMode, "TestMgr_DS_HOST_setPowerMode");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_addPowerModeListener, "TestMgr_DS_HOST_addPowerModeListener");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_removePowerModeListener, "TestMgr_DS_HOST_removePowerModeListener");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_addDisplayConnectionListener, "TestMgr_DS_HOST_addDisplayConnectionListener");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_removeDisplayConnectionListener, "TestMgr_DS_HOST_removeDisplayConnectionListener");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getCPUTemperature, "TestMgr_DS_HOST_getCPUTemperature");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_setVersion, "TestMgr_DS_HOST_setVersion");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_setPreferredSleepMode, "TestMgr_DS_HOST_setPreferredSleepMode");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getPreferredSleepMode, "TestMgr_DS_HOST_getPreferredSleepMode");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getAvailableSleepModes, "TestMgr_DS_HOST_getAvailableSleepModes");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getVideoOutputPorts, "TestMgr_DS_HOST_getVideoOutputPorts");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getAudioOutputPorts, "TestMgr_DS_HOST_getAudioOutputPorts");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getVideoDevices, "TestMgr_DS_HOST_getVideoDevices");
+	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getHostEDID, "TestMgr_DS_HOST_getHostEDID");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getVideoOutputPortFromName, "TestMgr_DS_HOST_getVideoOutputPortFromName");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getVideoOutputPortFromId, "TestMgr_DS_HOST_getVideoOutputPortFromId");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getAudioOutputPortFromName, "TestMgr_DS_HOST_getAudioOutputPortFromName");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getAudioOutputPortFromId, "TestMgr_DS_HOST_getAudioOutputPortFromId");
 
 	/*initializing IARMBUS library */
 	IARM_Result_t retval;
@@ -166,46 +261,30 @@ bool DeviceSettingsAgent::DSmanagerDeinitialize(IN const Json::Value& req, OUT J
 }
 
 /***************************************************************************
- *Function name	: FP_setBrightness
+ *Function name	: FPI_setBrightness
  *Descrption	: This function is to check the functionality of setBrightness and getBrightness APIs
  *@param  [in]	: req- 	indicator_name: indicator name for which the Brightness will be set and get.
-			    brightness: brightness level
+			brightness: brightness level
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPI_setBrightness(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setBrightness ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setBrightness ---->Entry\n");
 	char brightnessDetails[30] = {'\0'};
 	int setVal = req["brightness"].asInt();
 	bool getOnly = req["get_only"].asInt();
-	std::string message = req["text"].asCString();
 	int getVal;
 
 	try
 	{
-            if(message.empty()) // frontPanelConfig
-            {
-		std::string indicator_name=req["indicator_name"].asCString();
-                if (false == getOnly) {
-                    DEBUG_PRINT(DEBUG_LOG,"\nCalling setBrightness with value(%d)\n", setVal);
-                    device::FrontPanelIndicator::getInstance(indicator_name).setBrightness(setVal);
-                }
-
-                DEBUG_PRINT(DEBUG_LOG,"\nCalling getBrightness\n");
-                device::FrontPanelIndicator::getInstance(indicator_name).setState(true);
-                getVal = device::FrontPanelIndicator::getInstance(indicator_name).getBrightness();
+	    std::string indicator_name=req["indicator_name"].asCString();
+            if (false == getOnly) {
+                DEBUG_PRINT(DEBUG_LOG,"\nCalling setBrightness with value(%d)\n", setVal);
+                device::FrontPanelIndicator::getInstance(indicator_name).setBrightness(setVal);
             }
-	    else // frontPanelTextDisplay
-	    {
-		if (false == getOnly) {
-		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setText with value (%s)\n", message.c_str());
-		    device::FrontPanelTextDisplay::getInstance("Text").setText(message);
-		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setTextBrightness with value(%d)\n", setVal);
-		    device::FrontPanelTextDisplay::getInstance("Text").setTextBrightness(setVal);
-		}
 
-		DEBUG_PRINT(DEBUG_LOG,"\nCalling getTextBrightness\n");
-		getVal = device::FrontPanelTextDisplay::getInstance("Text").getTextBrightness();
-	    }
+            DEBUG_PRINT(DEBUG_LOG,"\nCalling getBrightness\n");
+            device::FrontPanelIndicator::getInstance(indicator_name).setState(true);
+            getVal = device::FrontPanelIndicator::getInstance(indicator_name).getBrightness();
 
 	    DEBUG_PRINT(DEBUG_LOG,"\nBrightness: get value(%d)\n", getVal);
 	    sprintf(brightnessDetails,"%d",getVal);
@@ -222,23 +301,49 @@ bool DeviceSettingsAgent::FP_setBrightness(IN const Json::Value& req, OUT Json::
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setBrightness\n");
-		response["details"]= "Exception Caught in FP_setBrightness";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPI_setBrightness\n");
+		response["details"]= "Exception Caught in FPI_setBrightness";
 		response["result"]= "FAILURE";
 	}
-	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setBrightness ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setBrightness ---->Exit\n");
 	return TEST_SUCCESS;	
 }
 
+bool DeviceSettingsAgent::FPI_getBrightnessLevels(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FPI_getBrightnessLevels ---->Entry\n");
+        char brightnessDetails[50] = {'\0'};
+        int levels, min, max;
+
+        try
+        {
+            std::string indicator_name=req["indicator_name"].asCString();
+            device::FrontPanelIndicator::getInstance(indicator_name).getBrightnessLevels(levels,min,max);
+
+            DEBUG_PRINT(DEBUG_LOG,"BrightnessLevels: levels(%d) min(%d) max(%d)\n", levels,min,max);
+            sprintf(brightnessDetails,"levels=%d min=%d max=%d",levels,min,max);
+            response["details"]= brightnessDetails;
+            response["result"]= "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPI_setBrightness\n");
+                response["details"]= "Exception Caught in FPI_setBrightness";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setBrightness ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
 /***************************************************************************
- *Function name : FP_setState
+ *Function name : FPI_setState
  *Descrption    : This function is to check the functionality of FrontPanel setState API
  *@param  [in]  : indicator_name: indicator name for which the state will be set.
                   state: 0 (OFF) / 1 (ON)
  *****************************************************************************/
-bool DeviceSettingsAgent::FP_setState(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPI_setState(IN const Json::Value& req, OUT Json::Value& response)
 {
-        DEBUG_PRINT(DEBUG_TRACE,"FP_setState ---->Entry\n");
+        DEBUG_PRINT(DEBUG_TRACE,"FPI_setState ---->Entry\n");
         char details[30] = {'\0'};
         bool state = req["state"].asInt();
 	std::string indicator_name = req["indicator_name"].asCString();
@@ -253,34 +358,31 @@ bool DeviceSettingsAgent::FP_setState(IN const Json::Value& req, OUT Json::Value
         }
         catch(...)
         {
-                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setState\n");
-                response["details"]= "Exception Caught in FP_setState";
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPI_setState\n");
+                response["details"]= "Exception Caught in FPI_setState";
                 response["result"]= "FAILURE";
         }
 
-        DEBUG_PRINT(DEBUG_TRACE,"FP_setState ---->Exit\n");
+        DEBUG_PRINT(DEBUG_TRACE,"FPI_setState ---->Exit\n");
         return TEST_SUCCESS;
 }
 
 /***************************************************************************
- *Function name	: FP_setColor
+ *Function name	: FPI_setColor
  *Descrption	: This function is to check the functionality of setColor and getColor APIs
  *@param  [in]	: req- 	indicator_name: indicator name for which the color will be set and get.
 				 color: color id.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FP_setColor(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPI_setColor(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setColor ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setColor ---->Entry\n");
 	if(&req["indicator_name"]==NULL || &req["color"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
 	std::string indicator_name=req["indicator_name"].asCString();
-	char colorDetails1[20]="Color:";
+	char colorDetails[20];
 	int color=req["color"].asInt();
-	DEBUG_PRINT(DEBUG_LOG,"\ncolor to set:%d\n",color);
-	char *colorDetails = (char*)malloc(sizeof(char)*20);
-	memset(colorDetails , '\0', (sizeof(char)*20));
 	int colorid;
 	/*Creating object for Color*/
 	device::FrontPanelIndicator::Color c(color);
@@ -288,30 +390,32 @@ bool DeviceSettingsAgent::FP_setColor(IN const Json::Value& req, OUT Json::Value
 	{
 		/*calling setcolor*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling setColor\n");
-		device::FrontPanelConfig::getInstance().getIndicator(indicator_name).setColor(c);
+		DEBUG_PRINT(DEBUG_LOG,"\ncolor to set:%d\n",color);
+		device::FrontPanelIndicator::getInstance(indicator_name).setColor(c);
 		/*calling getcolor*/
-		//colorid=device::FrontPanelConfig::getInstance().getIndicator(indicator_name).getColor().getId();
-		colorid=device::FrontPanelConfig::getInstance().getIndicator(indicator_name).getColor();
-		DEBUG_PRINT(DEBUG_LOG,"\ncolor id is:%d\n",colorid);
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getColor\n");
-		sprintf(colorDetails,"%d",colorid);
-		strcat(colorDetails1,colorDetails);
-		DEBUG_PRINT(DEBUG_LOG,"\ncolor details:%s\n",(char*)colorDetails1);
-		response["details"]= colorDetails1; 
-		response["result"]= "SUCCESS"; 
+		colorid = device::FrontPanelIndicator::getInstance(indicator_name).getColor();
+		DEBUG_PRINT(DEBUG_LOG,"\ncolor id retrieved is:%d\n",colorid);
+		if (c == colorid)
+			response["result"]= "SUCCESS";
+		else
+			response["result"]= "FAILURE";
+
+		sprintf(colorDetails,"Color:%d",colorid);
+		DEBUG_PRINT(DEBUG_LOG,"\ncolor details:%s\n",(char*)colorDetails);
+		response["details"]= colorDetails; 
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setColor\n");
-		response["details"]= "Exception Caught in FP_setColor";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPI_setColor\n");
+		response["details"]= "Exception Caught in FPI_setColor";
 		response["result"]= "FAILURE";
 	}
-	free(colorDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setColor ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setColor ---->Exit\n");
 	return TEST_SUCCESS;
 }
 /***************************************************************************
- *Function name	: FP_setBlink
+ *Function name	: FPI_setBlink
  *Descrption	: This function is to check the functionality of setBlink and 
  getBlink APIs
  *@param [in]	: req- 	indicator_name: indicator name for which the Blink rate 
@@ -319,56 +423,52 @@ bool DeviceSettingsAgent::FP_setColor(IN const Json::Value& req, OUT Json::Value
 			blink_interval: blink rate.
 		       blink_iteration: Number of iteration for the blink.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FP_setBlink(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPI_setBlink(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setBlink ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setBlink ---->Entry\n");
 	if(&req["indicator_name"]==NULL || &req["blink_interval"]==NULL || &req["blink_iteration"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
 	std::string indicator_name=req["indicator_name"].asCString();
-	char blinkDetails1[20]="Blink Rate:";
+	char blinkDetails[20];
 	int interval=req["blink_interval"].asInt();
 	int iteration=req["blink_iteration"].asInt();
-	char *blinkInterval = (char*)malloc(sizeof(char)*20);
-	memset(blinkInterval,'\0', (sizeof(char)*20));
-	char *blinkIteration = (char*)malloc(sizeof(char)*20);
-	memset(blinkIteration,'\0', (sizeof(char)*20));
-	/*Creating object for blink*/
+
 	try
 	{
-		/*calling setBlink*/
+		/*Creating object for blink*/
 		device::FrontPanelIndicator::Blink p(interval,iteration);
+		/*calling setBlink*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling setBlink\n");
-		device::FrontPanelConfig::getInstance().getIndicator(indicator_name).setBlink(p);
+		device::FrontPanelIndicator::getInstance(indicator_name).setBlink(p);
 		/*calling getBlink*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getBlink\n");
-		p=device::FrontPanelConfig::getInstance().getIndicator(indicator_name).getBlink();
-		sprintf(blinkInterval,"%d",p.getInterval());
-		DEBUG_PRINT(DEBUG_LOG,"\nblinkInterval:%d\n",p.getInterval());
-		sprintf(blinkIteration,"%d",p.getIteration());
-		DEBUG_PRINT(DEBUG_LOG,"\nblinkIteration:%d\n",p.getIteration());
-		strcat(blinkDetails1,blinkInterval);
-		strcat(blinkDetails1,"::");
-		strcat(blinkDetails1,blinkIteration);
-		response["details"]= blinkDetails1; 
-		response["result"]= "SUCCESS"; 
+		p = device::FrontPanelIndicator::getInstance(indicator_name).getBlink();
+		DEBUG_PRINT(DEBUG_LOG,"\nblink Interval:%d\n",p.getInterval());
+		DEBUG_PRINT(DEBUG_LOG,"\nblink Iteration:%d\n",p.getIteration());
+		sprintf(blinkDetails,"Blink Rate:%d::%d",p.getInterval(),p.getIteration());
+		response["details"]= blinkDetails;
+
+		if ((interval == p.getInterval()) && (iteration == p.getIteration()))
+			response["result"]= "SUCCESS";
+		else
+			response["result"]= "FAILURE";
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setBlink\n");
-		response["details"]= "Exception Caught in FP_setBlink";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPI_setBlink\n");
+		response["details"]= "Exception Caught in FPI_setBlink";
 		response["result"]= "FAILURE";
 	}
-	free(blinkInterval);
-	free(blinkIteration);
-	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setBlink ---->Exit\n");
+
+	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setBlink ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
 
 /***************************************************************************
- *Function name	: FP_setScroll
+ *Function name	: FPTEXT_setScroll
  *Descrption  	: This function is to check the functionality of setScroll and 
  getScroll APIs
  *@param  [in]	: req- 	text: input for scrolling the text in the 7-segment LEDs for 
@@ -377,59 +477,188 @@ bool DeviceSettingsAgent::FP_setBlink(IN const Json::Value& req, OUT Json::Value
                hiteration   : Number of Horizontal Iterations
                viteration   : Number of Vertical Iterations
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FP_setScroll(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPTEXT_setScroll(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setScroll ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\n FPTEXT_setScroll ---->Entry\n");
 	if(&req["text"]==NULL||&req["viteration"]==NULL||&req["hiteration"]==NULL||&req["hold_duration"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
-	std::string text_display=req["text"].asCString();
-	char scrollDetails1[40]="Scroll :: ";
-	int viteraion=req["viteration"].asInt();
-	int hiteraion=req["hiteration"].asInt();
+	char scrollDetails[40];
+	int vIteration=req["viteration"].asInt();
+	int hIteration=req["hiteration"].asInt();
 	int holdDuration=req["hold_duration"].asInt();
-	char *viterationDetails = (char*)malloc(sizeof(char)*20);
-	memset(viterationDetails,'\0', (sizeof(char)*20));
-	char *hIterationsDetails = (char*)malloc(sizeof(char)*20);
-	memset(hIterationsDetails,'\0', (sizeof(char)*20));
-	char *holdDurationDetails = (char*)malloc(sizeof(char)*20);
-	memset(holdDurationDetails,'\0', (sizeof(char)*20));
+
 	try
 	{
 		/*Creating object for Scroll*/
-		device::FrontPanelTextDisplay::Scroll s(viteraion,hiteraion,holdDuration);
-		device::FrontPanelTextDisplay::Scroll s_obj;
+		device::FrontPanelTextDisplay::Scroll s(vIteration,hIteration,holdDuration);
 		/*calling setScroll info*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling setScroll\n");
-		device::FrontPanelConfig::getInstance().getTextDisplay(text_display).setScroll(s);
+		device::FrontPanelTextDisplay::getInstance("Text").setScroll(s);
 		/*calling getScroll info*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getScroll\n");
-		s_obj=device::FrontPanelConfig::getInstance().getTextDisplay(text_display).getScroll();
-		sprintf(viterationDetails,"%d",s_obj.getVerticalIteration());
-		sprintf(hIterationsDetails,"%d",s_obj.getHorizontalIteration());
-		sprintf(holdDurationDetails,"%d",s_obj.getHoldDuration());
-		strcat(scrollDetails1,viterationDetails);
-		strcat(scrollDetails1,":");
-		strcat(scrollDetails1,hIterationsDetails);
-		strcat(scrollDetails1,":");
-		strcat(scrollDetails1,holdDurationDetails);
-		response["details"]= scrollDetails1; 
-		response["result"]= "SUCCESS"; 
+		s = device::FrontPanelTextDisplay::getInstance("Text").getScroll();
+		sprintf(scrollDetails,"Scroll :: %d:%d:%d",s.getVerticalIteration(),s.getHorizontalIteration(),s.getHoldDuration());
+		DEBUG_PRINT(DEBUG_LOG,"VerticalIteration:HorizontalIteration:HoldDuration: %s\n",scrollDetails);
+		response["details"]= scrollDetails;
+		if ((vIteration == s.getVerticalIteration()) && (hIteration == s.getHorizontalIteration()) && (holdDuration == s.getHoldDuration()))
+			response["result"]= "SUCCESS";
+		else
+			response["result"]= "FAILURE";
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setScroll\n");
-		response["details"]= "Exception Caught in FP_setScroll";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPTEXT_setScroll\n");
+		response["details"]= "Exception Caught in FPTEXT_setScroll";
 		response["result"]= "FAILURE";
 	}
-	free(viterationDetails);
-	free(hIterationsDetails);
-	free(holdDurationDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setScroll ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\n FPTEXT_setScroll ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
+bool DeviceSettingsAgent::FPTEXT_getTextColorMode(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_getTextColorMode ---->Entry\n");
+        try
+        {
+		char details[20];
+                int colorMode = device::FrontPanelTextDisplay::getInstance("Text").getTextColorMode();
+                sprintf(details,"%d",colorMode);
+                DEBUG_PRINT(DEBUG_LOG,"Text Color Mode: %d\n",colorMode);
+                if ( 0 <= colorMode )
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Invalid text color mode value";
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPTEXT_getTextColorMode\n");
+                response["details"]= "Exception Caught in FPTEXT_getTextColorMode";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_getTextColorMode ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::FPTEXT_getTextBrightnessLevels(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_getTextBrightnessLevels ---->Entry\n");
+        char brightnessDetails[50] = {'\0'};
+        int levels=0, min=0, max=0;
+
+        try
+        {
+                device::FrontPanelTextDisplay::getInstance("Text").getTextBrightnessLevels(levels,min,max);
+		DEBUG_PRINT(DEBUG_LOG,"Text Brightness Levels: levels(%d) min(%d) max(%d)\n", levels,min,max);
+		sprintf(brightnessDetails,"levels=%d min=%d max=%d",levels,min,max);
+		response["details"]= brightnessDetails;
+                response["result"]= "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPTEXT_getTextBrightnessLevels\n");
+                response["details"]= "Exception Caught in FPTEXT_getTextBrightnessLevels";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_getTextBrightnessLevels ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::FPTEXT_setTextBrightness(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_setTextBrightness ---->Entry\n");
+        char brightnessDetails[30] = {'\0'};
+        int setVal = req["brightness"].asInt();
+
+        try
+        {
+            DEBUG_PRINT(DEBUG_LOG,"Calling setTextBrightness with value(%d)\n", setVal);
+            device::FrontPanelTextDisplay::getInstance("Text").setTextBrightness(setVal);
+
+            DEBUG_PRINT(DEBUG_LOG,"Calling getTextBrightness\n");
+            int getVal = device::FrontPanelTextDisplay::getInstance("Text").getTextBrightness();
+
+            DEBUG_PRINT(DEBUG_LOG,"Brightness: get value(%d)\n", getVal);
+            sprintf(brightnessDetails,"%d",getVal);
+            response["details"]= brightnessDetails;
+
+            if (setVal != getVal)
+            {
+                response["result"]= "FAILURE";
+            }
+            else
+            {
+                response["result"]= "SUCCESS";
+            }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPTEXT_setTextBrightness\n");
+                response["details"]= "Exception Caught in setTextBrightness";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_setTextBrightness ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::FPTEXT_getTextBrightness(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_getTextBrightness ---->Entry\n");
+        char brightnessDetails[30] = {'\0'};
+        int getVal;
+
+        try
+        {
+            getVal = device::FrontPanelTextDisplay::getInstance("Text").getTextBrightness();
+            DEBUG_PRINT(DEBUG_LOG,"\nBrightness: get value(%d)\n", getVal);
+            sprintf(brightnessDetails,"%d",getVal);
+            response["details"]= brightnessDetails;
+            response["result"]= "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPTEXT_getTextBrightness\n");
+                response["details"]= "Exception Caught in getTextBrightness";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_getTextBrightness ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::FPTEXT_enableDisplay(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_enableDisplay ---->Entry\n");
+	bool enable = req["enable"].asInt();
+
+        try
+        {
+	    //enable or disable the display of clock on front panel
+	    DEBUG_PRINT(DEBUG_LOG,"Setting enable to %d\n", enable);
+            device::FrontPanelTextDisplay::getInstance("Text").enableDisplay(enable);
+	    response["result"]= "SUCCESS";
+	    if (true == enable)
+            	response["details"]= "Set display of clock on front panel to enable";
+	    else
+                response["details"]= "Set display of clock on front panel to disable";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in FPTEXT_enableDisplay\n");
+                response["details"]= "Exception Caught in enableDisplay";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_enableDisplay ---->Exit\n");
+        return TEST_SUCCESS;
+}
 
 /***************************************************************************
  *Function name	: AOP_setLevel
@@ -557,46 +786,225 @@ bool DeviceSettingsAgent::AOP_setDB(IN const Json::Value& req, OUT Json::Value& 
 
 bool DeviceSettingsAgent::VD_setDFC(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nVD_setDFC ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"VD_setDFC ---->Entry\n");
 	if(&req["zoom_setting"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
-	std::string zoomSetting=req["zoom_setting"].asCString();
-	char zoomDetails1[35] ="Zoom Setting:";
-	char platformDFCDetails1[25] ="Platform DFC:";
-	char *zoomDetails = (char*)malloc(sizeof(char)*20);
-	memset(zoomDetails,'\0', (sizeof(char)*20));
-	char *platformDFCDetails = (char*)malloc(sizeof(char)*20);
-	memset(platformDFCDetails,'\0', (sizeof(char)*20));
+
 	try
 	{
-		/*getting video decoder instance*/
-		device::VideoDevice decoder =device::Host::getInstance().getVideoDevices().at(0);
-		DEBUG_PRINT(DEBUG_LOG,"\nCalling setDFC\n");
+		std::string zoomSetting=req["zoom_setting"].asCString();
+		/*getting video device instance*/
+		device::VideoDevice decoder = device::Host::getInstance().getVideoDevices().at(0);
+		DEBUG_PRINT(DEBUG_LOG,"Calling setDFC\n");
 		decoder.setDFC(zoomSetting);
-		DEBUG_PRINT(DEBUG_LOG,"\nCalling getDFC\n");
-		strcpy(zoomDetails,(char*)decoder.getDFC().getName().c_str());
-		strcat(zoomDetails1,zoomDetails);
-		decoder.setPlatformDFC();
-		strcpy(platformDFCDetails,(char*)decoder.getDFC().getName().c_str());
-		strcat(platformDFCDetails1,platformDFCDetails);
-		strcat(zoomDetails1,",");
-		strcat(zoomDetails1,platformDFCDetails1);
-		response["details"]= zoomDetails1; 
-		response["result"]= "SUCCESS"; 
+		DEBUG_PRINT(DEBUG_LOG,"getDFC: %s\n", decoder.getDFC().getName().c_str());
+		if (decoder.getDFC().getName() == zoomSetting)
+		{
+			response["result"]= "SUCCESS";
+			response["details"]= "setDFC successful";	
+		}
+		else
+		{
+			response["result"]= "FAILED";
+			response["details"]= "setDFC failed";
+		}
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VD_setDFC\n");
+		DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VD_setDFC\n");
 		response["details"]= "Exception Caught in VD_setDFC";
 		response["result"]= "FAILURE";
 	}
-	free(zoomDetails);
-	free(platformDFCDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nVD_setDFC ---->Exit\n");
+
+	DEBUG_PRINT(DEBUG_TRACE,"VD_setDFC ---->Exit\n");
 	return TEST_SUCCESS;
 }
+
+bool DeviceSettingsAgent::VD_setPlatformDFC(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VD_setPlatformDFC ---->Entry\n");
+
+        try
+        {
+		char platformDFCDetails[50] = {'\0'};
+                /*getting video device instance*/
+                device::VideoDevice decoder = device::Host::getInstance().getVideoDevices().at(0);
+                decoder.setPlatformDFC();
+		sprintf(platformDFCDetails,"%s",decoder.getDFC().getName().c_str());
+                response["details"]= platformDFCDetails;
+                response["result"]= "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VD_setPlatformDFC\n");
+                response["details"]= "Exception Caught in VD_setPlatformDFC";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VD_setPlatformDFC ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VD_getSupportedDFCs(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VD_getSupportedDFCs ---->Entry\n");
+
+        try
+        {
+                char details[256] = {'\0'};
+		const device::List<device::VideoDevice> vDevices = device::VideoDeviceConfig::getInstance().getDevices();
+		DEBUG_PRINT(DEBUG_TRACE,"vDevices Size:%d\n", vDevices.size());
+		for (size_t i = 0; i < vDevices.size(); i++)
+		{
+			const device::List <device::VideoDFC> dfcs = vDevices.at(i).getSupportedDFCs();
+			DEBUG_PRINT(DEBUG_TRACE,"vDevice:%s dfcsSize:%d\n",vDevices.at(i).getName().c_str(), dfcs.size());
+                        strcat(details, vDevices.at(i).getName().c_str());
+                        strcat(details," DFCs:");
+			for (size_t j = 0; j < dfcs.size(); j++)
+			{
+				strcat(details, dfcs.at(j).getName().c_str());
+				if( j < dfcs.size()-1 )
+                         	{
+                                	strcat(details,",");
+                        	}
+			}
+			if( i < vDevices.size()-1 )
+			{
+				strcat(details,"::");
+			}
+		}
+
+                if (vDevices.at(0).getSupportedDFCs().size() != 0)
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of supported dfcs for video devices";
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VD_getSupportedDFCs\n");
+                response["details"]= "Exception Caught in VD_getSupportedDFCs";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VD_getSupportedDFCs ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VDCONFIG_getDevices(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDevices ---->Entry\n");
+
+        try
+        {
+                char details[256] = {'\0'};
+                device::List<device::VideoDevice> vDevices = device::VideoDeviceConfig::getInstance().getDevices();
+		DEBUG_PRINT(DEBUG_TRACE,"getDevices Size: %d\n", vDevices.size());
+
+                for (size_t i = 0; i < vDevices.size(); i++)
+                {
+                        strcat(details, vDevices.at(i).getName().c_str());
+                        if( i < vDevices.size()-1 )
+			{
+                                strcat(details,",");
+			}
+                }
+
+                if (vDevices.size() != 0)
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of supported video devices";
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VDCONFIG_getDevices\n");
+                response["details"]= "Exception Caught in VDCONFIG_getDevices";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDevices ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::VDCONFIG_getDFCs(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDFCs ---->Entry\n");
+
+        try
+        {
+                char details[256] = {'\0'};
+                const device::List <device::VideoDFC> dfcs = device::VideoDeviceConfig::getInstance().getDFCs();
+                DEBUG_PRINT(DEBUG_TRACE,"getDFCs Size: %d\n", dfcs.size());
+                for (size_t i = 0; i < dfcs.size(); i++)
+                {
+                        strcat(details, dfcs.at(i).getName().c_str());
+                        if( i < dfcs.size()-1 )
+                        {
+                                strcat(details,",");
+                        }
+                }
+
+                if (dfcs.size() != 0)
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of dfcs";
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VDCONFIG_getDFCs\n");
+                response["details"]= "Exception Caught in VDCONFIG_getDFCs";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDFCs ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::VDCONFIG_getDefaultDFC(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDefaultDFC ---->Entry\n");
+
+        try
+        {
+                char details[50] = {'\0'};
+                device::VideoDFC dfc = device::VideoDeviceConfig::getInstance().getDefaultDFC();
+                DEBUG_PRINT(DEBUG_TRACE,"DefaultDFC: %s\n", dfc.getName().c_str());
+                sprintf(details,"%s",dfc.getName().c_str());
+		response["details"]=details;
+		response["result"]= "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VDCONFIG_getDefaultDFC\n");
+                response["details"]= "Exception Caught in VDCONFIG_getDefaultDFC";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDefaultDFC ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
 /***************************************************************************
  *Function name	: AOP_setEncoding
  *Descrption	: This function is to check the functionality of setEncoding and 
@@ -704,18 +1112,20 @@ bool DeviceSettingsAgent::AOP_setStereoMode(IN const Json::Value& req, OUT Json:
 		return TEST_FAILURE;
 	}
 	std::string portName=req["port_name"].asCString();
-	char stereoModeDetails1[60] ="Stereo Mode:";
+	char stereoModeDetails1[60] ="Mode:";
 	std::string stereoMode=req["stereo_mode"].asCString();
 	char *stereoModeDetails = (char*)malloc(sizeof(char)*20);
 	memset(stereoModeDetails,'\0', (sizeof(char)*20));
+	bool getOnly = req["get_only"].asInt();
 	try
 	{
-		/*getting instance for video ports*/	
-		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
 		/*getting instance for audio ports*/	
-		device::AudioOutputPort aPort = vPort.getAudioOutputPort();
-		DEBUG_PRINT(DEBUG_LOG,"\nCalling setStereoMode\n");
-		aPort.setStereoMode(stereoMode);
+		device::AudioOutputPort aPort = device::Host::getInstance().getAudioOutputPort(portName);
+                if (false == getOnly)
+                {
+			DEBUG_PRINT(DEBUG_LOG,"\nCalling setStereoMode\n");
+			aPort.setStereoMode(stereoMode);
+		}
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getStereoMode\n");
 		DEBUG_PRINT(DEBUG_LOG,"\ngetStereroMode:%s\n",aPort.getStereoMode().getName().c_str());
 		sprintf(stereoModeDetails,"%s",aPort.getStereoMode().getName().c_str());
@@ -734,6 +1144,133 @@ bool DeviceSettingsAgent::AOP_setStereoMode(IN const Json::Value& req, OUT Json:
 	return TEST_SUCCESS;
 }
 
+bool DeviceSettingsAgent::AOP_setStereoAuto(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOP_setStereoAuto ---->Entry\n");
+
+        try
+        {
+		std::string portName=req["port_name"].asCString();
+		bool autoMode = req["autoMode"].asInt();
+		char details[30] = {'\0'};
+
+                //Get AudioOutputPort instance for specified port name
+                device::AudioOutputPort aPort = device::AudioOutputPort::getInstance(portName);
+		DEBUG_PRINT(DEBUG_LOG,"Calling setStereoAuto\n");
+		aPort.setStereoAuto(autoMode);
+		DEBUG_PRINT(DEBUG_LOG,"getStereoAuto:%d\n",aPort.getStereoAuto());
+		sprintf(details,"SET VALUE:%d GET VALUE:%d",autoMode,aPort.getStereoAuto());
+		response["details"] = details;
+                if ( autoMode == aPort.getStereoAuto() )
+                {
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_setStereoAuto\n");
+                response["details"]= "Exception Caught in AOP_setStereoAuto";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOP_setStereoAuto ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::AOP_getStereoAuto(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOP_getStereoAuto ---->Entry\n");
+
+        try
+        {
+                std::string portName=req["port_name"].asCString();
+                char details[30] = {'\0'};
+
+                DEBUG_PRINT(DEBUG_LOG,"Calling getStereoAuto\n");
+		int autoMode = device::AudioOutputPort::getInstance(portName).getStereoAuto();
+                DEBUG_PRINT(DEBUG_LOG,"getStereoAuto:%d\n", autoMode);
+                sprintf(details,"%d",autoMode);
+                response["details"] = details;
+                if ( (0 <= autoMode) && (autoMode <= 1) )
+                {
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_getStereoAuto\n");
+                response["details"]= "Exception Caught in AOP_getStereoAuto";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOP_getStereoAuto ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::AOP_getGain(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOP_getGain ---->Entry\n");
+
+        try
+        {
+                std::string portName=req["port_name"].asCString();
+                char details[30] = {'\0'};
+
+                DEBUG_PRINT(DEBUG_LOG,"Calling getGain\n");
+                float gain = device::AudioOutputPort::getInstance(portName).getGain();
+                DEBUG_PRINT(DEBUG_LOG,"getGain:%f\n", gain);
+                sprintf(details,"%f",gain);
+                response["details"] = details;
+		response["result"] = "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_getGain\n");
+                response["details"]= "Exception Caught in AOP_getGain";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOP_getGain ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::AOP_getOptimalLevel(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOP_getOptimalLevel ---->Entry\n");
+
+        try
+        {
+                std::string portName=req["port_name"].asCString();
+                char details[30] = {'\0'};
+
+                DEBUG_PRINT(DEBUG_LOG,"Calling getOptimalLevel\n");
+                float optimalLevel = device::AudioOutputPort::getInstance(portName).getOptimalLevel();
+                DEBUG_PRINT(DEBUG_LOG,"getOptimalLevel:%f\n", optimalLevel);
+                sprintf(details,"%f",optimalLevel);
+                response["details"] = details;
+                response["result"] = "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_getOptimalLevel\n");
+                response["details"]= "Exception Caught in AOP_getOptimalLevel";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOP_getOptimalLevel ---->Exit\n");
+        return TEST_SUCCESS;
+}
 
 
 /***************************************************************************
@@ -755,8 +1292,17 @@ bool DeviceSettingsAgent::HOST_setPowerMode(IN const Json::Value& req, OUT Json:
 	{
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling setPowerMode\n");
 		device::Host::getInstance().setPowerMode(power_state);
-		response["details"]= "Power Mode Set"; 
-		response["result"]= "SUCCESS"; 
+		int mode = device::Host::getInstance().getPowerMode();
+		if (mode == power_state)
+		{
+			response["details"]= "Power Mode Set";
+			response["result"]= "SUCCESS";
+		}
+		else
+		{
+			response["details"]= "Power Mode Not Set";
+			response["result"]= "FAILURE";
+		}
 	}
 	catch(...)
 	{
@@ -792,11 +1338,11 @@ bool DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json:
 	{	/*getting video port instance*/
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
 		if (false == getOnly) {
-		    /*setting VOP resoultion*/
+		    /*setting VOP resolution*/
 		    DEBUG_PRINT(DEBUG_LOG,"\nCalling setResolution with value (%s)\n", setValue.c_str());
 		    vPort.setResolution(setValue.c_str());
 		}
-		/*getting VOP resoultion*/
+		/*getting VOP resolution*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getResolution\n");
 		/*Need to check the return string value with test apps*/
 		sprintf(getValue,"%s",(char*)vPort.getResolution().getName().c_str());
@@ -820,171 +1366,416 @@ bool DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json:
 	DEBUG_PRINT(DEBUG_TRACE,"\n setResolution ---->Exit\n");
 	return TEST_SUCCESS;
 }
+
+
+bool DeviceSettingsAgent::FPCONFIG_getIndicatorFromName(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getIndicatorFromName  ---->Entry\n");
+	std::string indicator_name = req["indicator_name"].asCString();
+
+        try
+        {
+		//Get FrontPanelndicator instance corresponding to the name parameter
+		device::FrontPanelIndicator nameIndicator = device::FrontPanelConfig::getInstance().getIndicator(indicator_name);
+            	string outName = nameIndicator.getName();
+		DEBUG_PRINT(DEBUG_LOG,"Retrieved indicator Name: %s\n",outName.c_str());
+		if ( (indicator_name == outName) )
+		{
+			response["result"]= "SUCCESS";
+			response["details"]="Successfully retrieved FrontPanelndicator instance";
+                }
+		else
+		{
+			response["result"]= "FAILURE";
+			response["details"]="Failed to retrieve FrontPanelndicator instance";
+		}
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPCONFIG_getIndicatorFromName\n");
+                response["details"]= "Exception Caught in FPCONFIG_getIndicatorFromName";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getIndicatorFromName ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::FPCONFIG_getIndicatorFromId(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getIndicatorFromId  ---->Entry\n");
+        int indicator_id = req["indicator_id"].asInt();
+
+        try
+        {
+		//Get FrontPanelndicator instance with the specified id
+		device::FrontPanelIndicator idIndicator = device::FrontPanelConfig::getInstance().getIndicator(indicator_id);
+                string name = idIndicator.getName();
+                int id = idIndicator.getId();
+                int indicatorSize = device::FrontPanelConfig::getInstance().getIndicators().size();
+                DEBUG_PRINT(DEBUG_LOG,"Retrieved indicator Name: %s Id:%d Size:%d\n",name.c_str(),id,indicatorSize);
+                if ( (indicator_id == id) && (id <= indicatorSize) )
+                {
+                        response["result"]= "SUCCESS";
+                        response["details"]="Successfully retrieved FrontPanelndicator instance";
+                }
+                else
+                {
+                        response["result"]= "FAILURE";
+                        response["details"]="Failed to retrieve FrontPanelndicator instance";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPCONFIG_getIndicatorFromId\n");
+                response["details"]= "Exception Caught in FPCONFIG_getIndicatorFromId";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getIndicatorFromId ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
 /***************************************************************************
- *Functiion name	: FP_getIndicators
+ *Functiion name	: FPCONFIG_getIndicators
  *Descrption		: This function is wrapper function to get the list of indicators 
                           supported in the FrontPanel.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FP_getIndicators(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPCONFIG_getIndicators(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_getIndicators  ---->Entry\n");
-	/*get list of Indicators supported in the FrontPanel*/
-	char *indicatorDetails = (char*)malloc(sizeof(char)*100);
-	memset(indicatorDetails,'\0', (sizeof(char)*100));
-	char *indicator = (char*)malloc(sizeof(char)*200);
-	memset(indicator,'\0', (sizeof(char)*200));
+	DEBUG_PRINT(DEBUG_TRACE,"\nFPCONFIG_getIndicators  ---->Entry\n");
+	char indicators[200] = {'\0'};
+
 	try
 	{
-		strcpy(indicator,"Text Panel:");
-		DEBUG_PRINT(DEBUG_LOG,"\n\nindicator size:%d\n",device::FrontPanelConfig::getInstance().getIndicators().size());
-		for (size_t i = 0; i < device::FrontPanelConfig::getInstance().getIndicators().size(); i++)
-		{	
-			strcpy(indicatorDetails,(char*)device::FrontPanelConfig::getInstance().getIndicators().at(i).getName().c_str());
-			DEBUG_PRINT(DEBUG_LOG,"\nIndicator:%s\n",indicatorDetails);
-			strcat(indicator,indicatorDetails);
-			if(i< device::FrontPanelConfig::getInstance().getIndicators().size()-1)
+		/*Get list of Indicators supported in the FrontPanel*/
+		device::List<device::FrontPanelIndicator> indicatorList = device::FrontPanelConfig::getInstance().getIndicators();
+		size_t indSize = indicatorList.size();
+		DEBUG_PRINT(DEBUG_LOG,"Indicator size:%d\n", indSize);
+		for (size_t i = 0; i < indSize; i++)
+		{
+			strcat(indicators, indicatorList.at(i).getName().c_str());
+			if( i < indSize-1 )
 			{
-				strcat(indicator,",");
+				strcat(indicators,",");
 			}
+                }
+		if (indSize != 0)
+		{
+			response["details"]=indicators;
+			response["result"]= "SUCCESS";
 		}
-		response["details"]=indicator;
-		response["result"]= "SUCCESS"; 
+		else
+		{
+			response["details"]="Failed to get list of indicators";
+			response["result"]= "FAILURE";
+		}
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_getIndicators\n");
-		response["details"]= "Exception Caught in FP_getIndicators";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPCONFIG_getIndicators\n");
+		response["details"]= "Exception Caught in getIndicators";
 		response["result"]= "FAILURE";
 	}
-	free(indicatorDetails);
-	free(indicator);
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_getIndicators  ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nFPCONFIG_getIndicators  ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
+bool DeviceSettingsAgent::FPCONFIG_getTextDisplayFromName(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplayFromName  ---->Entry\n");
+        std::string text_name = req["text_name"].asCString();
+
+        try
+        {
+                //Get FrontPanelTextDisplay instance corresponding to the name parameter
+		device::FrontPanelTextDisplay instance = device::FrontPanelConfig::getInstance().getTextDisplay(text_name);
+                string outName = instance.getName();
+                DEBUG_PRINT(DEBUG_LOG,"Retrieved FrontPanelTextDisplay Name: %s\n",outName.c_str());
+                if ( (text_name == outName) )
+                {
+                        response["result"]= "SUCCESS";
+                        response["details"]="Successfully retrieved FrontPanelTextDisplay instance";
+                }
+                else
+                {
+                        response["result"]= "FAILURE";
+                        response["details"]="Failed to retrieve FrontPanelTextDisplay instance";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPCONFIG_getTextDisplayFromName\n");
+                response["details"]= "Exception Caught in FPCONFIG_getTextDisplayFromName";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplayFromName ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::FPCONFIG_getTextDisplayFromId(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplayFromId  ---->Entry\n");
+        int text_id = req["text_id"].asInt();
+
+        try
+        {
+                //Get FrontPanelTextDisplay instance corresponding to the id parameter
+		device::FrontPanelTextDisplay instance = device::FrontPanelConfig::getInstance().getTextDisplay(text_id);
+                string name = instance.getName();
+                int id = instance.getId();
+                DEBUG_PRINT(DEBUG_LOG,"Retrieved FrontPanelTextDisplay Name: %s Id:%d\n",name.c_str(),id);
+                if ( (text_id == id) )
+                {
+                        response["result"]= "SUCCESS";
+                        response["details"]="Successfully retrieved FrontPanelTextDisplay instance";
+                }
+                else
+                {
+                        response["result"]= "FAILURE";
+                        response["details"]="Failed to retrieve FrontPanelTextDisplay instance";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPCONFIG_getTextDisplayFromId\n");
+                response["details"]= "Exception Caught in FPCONFIG_getTextDisplayFromId";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplayFromId ---->Exit\n");
+        return TEST_SUCCESS;
+}
 
 /***************************************************************************
- *Function name	: FP_getSupportedColors 
+ *Function name	: FPI_getSupportedColors
  *Descrption	: This function is wrapper function to get the list of colors 
                   supported for a LED in the FrontPanel.
- *parameter[in]	: req- indicator_name: indicator name
+ *parameter[in]	: req- indicator_name: indicator name, "Text"
  *****************************************************************************/ 
 
-bool DeviceSettingsAgent::FP_getSupportedColors(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPI_getSupportedColors(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_getSupportedColors ---->Entry\n");
-	/*get list of colors supported in the FrontPanel LEDs*/
-	char *colorDetails = (char*)malloc(sizeof(char)*100);
-	memset(colorDetails,'\0', (sizeof(char)*100));
-	char *color = (char*)malloc(sizeof(char)*200);
-	memset(color,'\0', (sizeof(char)*200));
-	std::string indicator_name=req["indicator_name"].asCString();
+	DEBUG_PRINT(DEBUG_TRACE,"\nFPI_getSupportedColors ---->Entry\n");
+
 	try
 	{
-		strcpy(color,"Supported Colors:");
-		DEBUG_PRINT(DEBUG_LOG,"\nNo.of supported color:%d\n",device::FrontPanelConfig::getInstance().getIndicator(indicator_name).getSupportedColors().size());
-
-		for (size_t i = 0; i < device::FrontPanelConfig::getInstance().getIndicator(indicator_name).getSupportedColors().size(); i++)
-		{
-
-			strcpy(colorDetails,(char*)device::FrontPanelConfig::getInstance().getIndicator(indicator_name).getSupportedColors().at(i).getName().c_str());
-			strcat(color,colorDetails);
-			if(i < device::FrontPanelConfig::getInstance().getIndicator(indicator_name).getSupportedColors().size()-1)
+		char colors[512] = {'\0'};
+		std::string indicator_name=req["indicator_name"].asCString();
+		//get list of colors supported in the FrontPanel LEDs
+		const device::List<device::FrontPanelIndicator::Color> colorList = device::FrontPanelIndicator::getInstance(indicator_name).getSupportedColors();
+                size_t listSize = colorList.size();
+		DEBUG_PRINT(DEBUG_LOG,"No. of supported colors for %s indicator: %d\n",indicator_name.c_str(), listSize);
+		//sprintf(colors,"%s indicator Colors: ",indicator_name.c_str());
+                for (size_t i = 0; i < listSize; i++)
+                {
+			strcat(colors,colorList.at(i).getName().c_str());
+			if( i < listSize -1 )
 			{
-				strcat(color,",");
+				strcat(colors,",");
 			}
+                }
+		DEBUG_PRINT(DEBUG_LOG,"%s Indicator SupportedColors: %s\n",indicator_name.c_str(), colors);
+	
+		if (colorList.size() != 0)
+		{
+                	response["details"]=colors;
+                	response["result"]= "SUCCESS";
 		}
-		response["details"]=color;
-		response["result"]= "SUCCESS"; 
+		else
+		{
+                	response["details"]="Failed to get supported colors for indicator";
+                	response["result"]= "FAILURE";
+		}
+
+		char textColors[512] = {'\0'};
+		const device::List<device::FrontPanelIndicator::Color> textColorList = device::FrontPanelTextDisplay::getInstance("Text").getSupportedColors();
+		listSize = textColorList.size();
+		DEBUG_PRINT(DEBUG_LOG,"No. of supported colors for text display: %d\n",listSize);
+		strcat(textColors,"Text Supported Colors: ");
+                for (size_t i = 0; i < listSize; i++)
+                {
+                        strcat(colors,textColorList.at(i).getName().c_str());
+                        if( i < listSize -1 )
+                        {
+                                strcat(textColors,",");
+                        }
+                }
+		DEBUG_PRINT(DEBUG_LOG,"Text SupportedColors: %s\n", textColors);
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_getSupportedColors\n");
-		response["details"]= "Exception Caught in FP_getSupportedColors";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPI_getSupportedColors\n");
+		response["details"]= "Exception Caught in FPI_getSupportedColors";
 		response["result"]= "FAILURE";
 	}
-	free(colorDetails);
-	free(color);
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_getSupportedColors ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nFPI_getSupportedColors ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
 
+bool DeviceSettingsAgent::FPI_getColorMode(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FPI_getColorMode ---->Entry\n");
+        char details[20] = {'\0'};
+        std::string indicator_name = req["indicator_name"].asCString();
+
+        try
+        {
+		//Check whether single or multi color mode, default is set to 0 to indicate single color mode
+		int colorMode = device::FrontPanelIndicator::getInstance(indicator_name).getColorMode();
+                DEBUG_PRINT(DEBUG_LOG,"Color Mode: %d\n",colorMode);
+		sprintf(details,"%d",colorMode);
+		if ( 0 <= colorMode )
+		{
+                	response["details"]=details;
+                	response["result"]= "SUCCESS";
+		}
+		else
+		{
+			response["details"]="Invalid color mode value";
+			response["result"]= "FAILURE";
+		}
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in FPI_getColorMode\n");
+                response["details"]= "Exception Caught in FPI_getColorMode";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"FPI_getColorMode ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
 
 
 /***************************************************************************
- *Function name	: FP_getTextDisplays
+ *Function name	: FPCONFIG_getTextDisplays
  *Descrption	: This function is wrapper function to get a list of text display 
                   subpanels on the front panel.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FP_getTextDisplays(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPCONFIG_getTextDisplays(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_getTextDisplays ---->Entry\n");
-	/*get list of texts supported in the FrontPanel text display */
-	char *textDisplayDetails = (char*)malloc(sizeof(char)*200);
-	memset(textDisplayDetails,'\0', (sizeof(char)*200));
-	char *textDisplay = (char*)malloc(sizeof(char)*200);
-	memset(textDisplay,'\0', (sizeof(char)*200));
+	DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplays ---->Entry\n");
+	char textDisplayDetails[200] = {'\0'};
+
 	try
 	{
-		strcpy(textDisplay,"Text Panel:");
-		for (size_t i = 0; i < device::FrontPanelConfig::getInstance().getTextDisplays().size(); i++)
-		{
-			strcpy(textDisplayDetails,(char*)device::FrontPanelConfig::getInstance().getTextDisplays().at(i).getName().c_str());
-			strcat(textDisplay,textDisplayDetails);
-		}
-		response["details"]=textDisplay;
-		response["result"]= "SUCCESS"; 
+                /*Get list of text display supported by the front panel*/
+                device::List<device::FrontPanelTextDisplay> displayList = device::FrontPanelConfig::getInstance().getTextDisplays();
+                size_t listSize = displayList.size();
+                DEBUG_PRINT(DEBUG_LOG,"TextDisplays size: %d\n", listSize);
+                for (size_t i = 0; i < listSize; i++)
+                {
+                        strcat(textDisplayDetails, displayList.at(i).getName().c_str());
+                        if( i < listSize-1 )
+                        {
+                                strcat(textDisplayDetails,",");
+                        }
+                }
+                if (listSize != 0)
+                {
+                        response["details"]=textDisplayDetails;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of text displays";
+                        response["result"]= "FAILURE";
+                }
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_getTextDisplays \n");
-		response["details"]= "Exception Caught in FP_getTextDisplays";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPCONFIG_getTextDisplays\n");
+		response["details"]= "Exception Caught in FPCONFIG_getTextDisplays";
 		response["result"]= "FAILURE";
 	}
-	free(textDisplayDetails);
-	free(textDisplay);
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_getTextDisplays  ---->Exit\n");
+
+	DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplays  ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
+bool DeviceSettingsAgent::FPCONFIG_getColors(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getColors ---->Entry\n");
+
+        try
+        {
+		char details[200] = {'\0'};
+                //Get list of colors supported by front panel indicators
+                const device::List<device::FrontPanelIndicator::Color> colorList = device::FrontPanelConfig::getInstance().getColors();
+                size_t listSize = colorList.size();
+                DEBUG_PRINT(DEBUG_LOG,"Colors size: %d\n", listSize);
+		
+                for (size_t i = 0; i < listSize; i++)
+                {
+			strcat(details, colorList.at(i).getName().c_str());
+                        if( i < listSize-1 )
+                        {
+                                strcat(details,",");
+                        }
+                }
+		
+                if (listSize != 0)
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of colors supported by front panel indicators";
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPCONFIG_getColors\n");
+                response["details"]= "Exception Caught in FPCONFIG_getColors";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getColors  ---->Exit\n");
+        return TEST_SUCCESS;
+}
 
 
 /***************************************************************************
- *Function name	: FP_setText
+ *Function name	: FPTEXT_setText
  *Descrption	: This function will set text in the text panel.
  *@param [in]   : req-	text_display: Text to be displayed.
                                text : Name of the Text LED in the Front panel
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FP_setText(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPTEXT_setText(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_setText ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_setText ---->Entry\n");
 	if(&req["text_display"]==NULL || &req["text"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
-	DEBUG_PRINT(DEBUG_LOG,"\nCalling setText\n");
 	std::string textDisplay=req["text_display"].asCString();
-	std::string text=req["text"].asCString();
 	try
 	{
 		/*setting text in the Device front panel text display area*/
-		device::FrontPanelConfig::getInstance().getTextDisplay(text).setText(textDisplay);
+		device::FrontPanelTextDisplay::getInstance("Text").setText(textDisplay);
 		response["result"]= "SUCCESS"; 
 		response["details"]="setText SUCCESS";
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setText\n");
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPTEXT_setText\n");
 		response["result"]= "FAILURE";
-		response["details"]="Exception Caught in FP_setText";
+		response["details"]="Exception Caught in FPTEXT_setText";
 	}
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_setText ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_setText ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
 /***************************************************************************
- *Function name	: FP_setTimeFormat
+ *Function name	: FPTEXT_setTimeFormat
  *Descrption	: This function will check the functionality of setTimeFormat and
                   currentTimeFormat APIs.
  *@param [in]   : req-	time_format : time format (12Hrs or 24Hrs or string type)
@@ -992,69 +1783,69 @@ bool DeviceSettingsAgent::FP_setText(IN const Json::Value& req, OUT Json::Value&
  *****************************************************************************/ 
 
 
-bool DeviceSettingsAgent::FP_setTimeFormat(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPTEXT_setTimeFormat(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_setTimeFormat ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_setTimeFormat ---->Entry\n");
 	if(&req["text"]==NULL || &req["time_format"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
-	std::string text=req["text"].asCString();
 	int timeFormat=req["time_format"].asInt();
-	char TimeFormatDetails[30] ="CurrentTimeFormat:";
-	char *timeDetails = (char *)malloc(sizeof(char)*5);
-	memset(timeDetails,'\0', (sizeof(char)*5));
+	char timeFormatDetails[30];
+
 	try
 	{
-		device::FrontPanelConfig::getInstance().getTextDisplay(text).setTimeFormat(timeFormat);	
-		timeFormat=device::FrontPanelConfig::getInstance().getTextDisplay(text).getCurrentTimeForamt();
-		sprintf(timeDetails,"%d",timeFormat);
-		strcat(TimeFormatDetails,timeDetails);
-		response["details"]= TimeFormatDetails; 
-		response["result"]= "SUCCESS"; 
+		device::FrontPanelTextDisplay::getInstance("Text").setTimeFormat(timeFormat);
+		int timeFormatOut = device::FrontPanelTextDisplay::getInstance("Text").getCurrentTimeForamt();
+		sprintf(timeFormatDetails,"TimeFormat:%d",timeFormatOut);
+		response["details"]= timeFormatDetails;
+		if (timeFormat == timeFormatOut)
+			response["result"]= "SUCCESS";
+		else
+			response["result"]= "FAILURE";
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setTimeFormat\n");
-		response["details"]= "Exception Caught in FP_setTimeFormat";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPTEXT_setTimeFormat\n");
+		response["details"]= "Exception Caught in FPTEXT_setTimeFormat";
 		response["result"]= "FAILURE";
 	}
-	free(timeDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nFP_setTimeFormat ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_setTimeFormat ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
 
 /***************************************************************************
- *Function name	: FP_setTime
+ *Function name	: FPTEXT_setTime
  *Descrption	: This function will set time in the text panel.
  *@param [in]   : req-	time_hrs: Hours.
                        time_mins: Minutes
                            text : Name of the Text LED in the Front panel
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FP_setTime(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::FPTEXT_setTime(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setTime ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\n FPTEXT_setTime ---->Entry\n");
 	if(&req["time_hrs"]==NULL || &req["time_mins"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
 	int time_hrs=req["time_hrs"].asInt();
 	int time_mins=req["time_mins"].asInt();
+
 	try
 	{
 		/*setting the time in HRS:MINS format*/
 		device::FrontPanelTextDisplay::getInstance("Text").setTime(time_hrs,time_mins);
 		response["result"]= "SUCCESS"; 
-		response["details"]="setTime SUCCESS";
+		response["details"]="FrontPanel Text Display setTime success";
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FP_setTime \n");
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in FPTEXT_setTime \n");
 		response["result"]= "FAILURE";
-		response["details"]="Exception Caught in FP_setTime";
+		response["details"]="Exception Caught in FPTEXT_setTime";
 	}
-	DEBUG_PRINT(DEBUG_TRACE,"\n FP_setTime ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"\n FPTEXT_setTime ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
@@ -1192,11 +1983,11 @@ bool DeviceSettingsAgent::AOP_mutedStatus(IN const Json::Value& req, OUT Json::V
 }
 
 /***************************************************************************
- *Function name : AOP_getSupportedEncodings
+ *Function name : AOPTYPE_getSupportedEncodings
  *Descrption    : This function will list the supported encoding formats for the audio port.
  *@param [in]   : req-  port_name: name of the video port.
  *****************************************************************************/
-bool DeviceSettingsAgent::AOP_getSupportedEncodings(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::AOPTYPE_getSupportedEncodings(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_getSupportedEncodings ---->Entry\n");
 	if(&req["port_name"]==NULL)
@@ -1210,7 +2001,10 @@ bool DeviceSettingsAgent::AOP_getSupportedEncodings(IN const Json::Value& req, O
 	memset(supportedEncoding,'\0', (sizeof(char)*200));
 	try
 	{
-		strcpy(supportedEncoding,"Supported Encoding:");
+		strcpy(supportedEncoding,"Supported Encodings:");
+
+		//device::List<device::AudioEncoding> encodings  = device::AudioOutputPortType.getInstance().getSupportedEncodings();
+		
 		/*getting instance for video ports*/	
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
 		/*getting instance for audio ports*/	
@@ -1242,11 +2036,11 @@ bool DeviceSettingsAgent::AOP_getSupportedEncodings(IN const Json::Value& req, O
 
 
 /***************************************************************************
- *Function name : AOP_getSupportedCompression
+ *Function name : AOPTYPE_getSupportedCompressions
  *Descrption    : This function will list the supported compression formats for the audio port.
  *@param [in]   : req-  port_name: name of the video port.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::AOP_getSupportedCompressions(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::AOPTYPE_getSupportedCompressions(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_getSupportedCompression ---->Entry\n");
 	if(&req["port_name"]==NULL)
@@ -1260,7 +2054,7 @@ bool DeviceSettingsAgent::AOP_getSupportedCompressions(IN const Json::Value& req
 	memset(supportedCompression,'\0', (sizeof(char)*200));
 	try
 	{
-		strcpy(supportedCompression,"Supported Compression:");
+		strcpy(supportedCompression,"Supported Compressions:");
 		/*getting instance for video ports*/	
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
 		/*getting instance for audio ports*/	
@@ -1289,11 +2083,11 @@ bool DeviceSettingsAgent::AOP_getSupportedCompressions(IN const Json::Value& req
 	return TEST_SUCCESS;
 }
 /***************************************************************************
- *Function name : AOP_getSupportedStereoModes
+ *Function name : AOPTYPE_getSupportedStereoModes
  *Descrption    : This function will list the supported stereo modes for the audio port.
  *@param [in]   : req-  port_name: name of the video port.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::AOP_getSupportedStereoModes(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::AOPTYPE_getSupportedStereoModes(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_getSupportedStereoModes ---->Entry\n");
 	if(&req["port_name"]==NULL)
@@ -1308,10 +2102,8 @@ bool DeviceSettingsAgent::AOP_getSupportedStereoModes(IN const Json::Value& req,
 	try
 	{
 		strcpy(supportedStereoModes,"Supported StereoModes:");
-		/*getting instance for video ports*/	
-		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
 		/*getting instance for audio ports*/	
-		device::AudioOutputPort aPort = vPort.getAudioOutputPort();
+		device::AudioOutputPort aPort = device::Host::getInstance().getAudioOutputPort(portName);
 		for (size_t i = 0; i < aPort.getSupportedStereoModes().size(); i++)
 		{
 			strcpy(supportedStereoModesDetails,(char*)aPort.getSupportedStereoModes().at(i).getName().c_str());
@@ -1483,62 +2275,58 @@ bool DeviceSettingsAgent::HOST_removeDisplayConnectionListener(IN const Json::Va
 
 
 /***************************************************************************
- *Function name	: HOST_Resolutions
+ *Function name	: VOPTYPE_getSupportedResolutions
  *Descrption	: This function will give the supported and current resolution 
                   suppported by the given video port.
  *parameter [in]: req-	port_name - name of the video port.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::HOST_Resolutions(IN const Json::Value& req, OUT Json::Value& response)
+bool DeviceSettingsAgent::VOPTYPE_getSupportedResolutions(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_Resolutions ---->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_getSupportedResolutions ---->Entry\n");
 	std::string portName=req["port_name"].asCString();
-	char defaultResolutionDetails1[50]="Default Resolution:";
-	char *defaultResolutionDetails = (char*)malloc(sizeof(char)*20);
-	memset(defaultResolutionDetails,'\0', (sizeof(char)*20));
-	char *supportedResolutionsDetails = (char*)malloc(sizeof(char)*100);
-	memset(supportedResolutionsDetails,'\0', (sizeof(char)*100));
 	char *supportedResolutions = (char*)malloc(sizeof(char)*200);
 	memset(supportedResolutions,'\0', (sizeof(char)*200));
 	try
 	{
-		strcpy(supportedResolutions,"supported Resolutions:");
+		strcpy(supportedResolutions,"Supported Resolutions:");
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
-		strcpy(defaultResolutionDetails,(char*)vPort.getDfeaultResolution().getName().c_str());
-		DEBUG_PRINT(DEBUG_LOG,"\ndefaultResolution:%s\n",vPort.getDfeaultResolution().getName().c_str());
-		strcat(defaultResolutionDetails1,defaultResolutionDetails);
 		DEBUG_PRINT(DEBUG_LOG,"\nsupportedResolutions::size:%d\n",vPort.getType().getSupportedResolutions().size());
 		for (size_t i = 0; i < vPort.getType().getSupportedResolutions().size(); i++)
 		{
-			strcpy(supportedResolutionsDetails,(char*)vPort.getType().getSupportedResolutions().at(i).getName().c_str());
-			DEBUG_PRINT(DEBUG_LOG,"\nsupportedResolutions::%s\n",vPort.getType().getSupportedResolutions().at(i).getName().c_str());
-			strcat(supportedResolutions,supportedResolutionsDetails);
+			DEBUG_PRINT(DEBUG_LOG,"supportedResolutions::%s\n",vPort.getType().getSupportedResolutions().at(i).getName().c_str());
+			strcat(supportedResolutions,vPort.getType().getSupportedResolutions().at(i).getName().c_str());
 			if(i < vPort.getType().getSupportedResolutions().size()-1)
 			{
 				strcat(supportedResolutions,",");
 			}
 		}
-		strcat(supportedResolutions,"::");
-		strcat(supportedResolutions,defaultResolutionDetails1);
-		response["details"]= supportedResolutions; 
-		response["result"]= "SUCCESS"; 
+
+                if ( vPort.getType().getSupportedResolutions().size() != 0 )
+                {
+                        response["details"]=supportedResolutions;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of supported resolutions";
+                        response["result"]= "FAILURE";
+                }
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_Resolutions\n");
-		response["details"]= "Exception Caught in HOST_Resolutions";
+		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPTYPE_getSupportedResolutions\n");
+		response["details"]= "Exception Caught in VOPTYPE_getSupportedResolutions";
 		response["result"]= "FAILURE";
 	}
-	free(supportedResolutionsDetails);
 	free(supportedResolutions);
-	free(defaultResolutionDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_Resolutions ---->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_getSupportedResolutions ---->Exit\n");
 	return TEST_SUCCESS;
 }
 
 /***************************************************************************
  *Function name	: VOPTYPE_isHDCPSupported
  *Descrption	: This function will check if HDCP is supported for the given port.
- *parameter [in]: req-	port_id: id of the video port.
+ *parameter [in]: req-	port_name: id of the video port.
  *****************************************************************************/ 
 bool DeviceSettingsAgent::VOPTYPE_isHDCPSupported(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -1704,6 +2492,442 @@ bool DeviceSettingsAgent::VOPTYPE_enableHDCP(IN const Json::Value& req, OUT Json
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_enableHDCP ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::VOPTYPE_getPorts(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_getPorts ---->Entry\n");
+
+        try
+        {
+                char details[256] = {'\0'};
+
+		//GetPorts for all supported PortTypes
+		device::VideoOutputPortConfig & vConfig = device::VideoOutputPortConfig::getInstance();
+                device::List<device::VideoOutputPortType> vPortTypes = vConfig.getSupportedTypes();
+                for (size_t i = 0; i < vPortTypes.size(); i++)
+		{
+			strcat(details,"Type:");
+			strcat(details,vPortTypes.at(i).getName().c_str());
+			strcat(details," Ports:");
+			DEBUG_PRINT(DEBUG_LOG,"PortType:%s Ports Size:%d", vPortTypes.at(i).getName().c_str(), vPortTypes.at(i).getPorts().size());
+                	for (size_t j = 0; j < vPortTypes.at(i).getPorts().size(); j++)
+			{
+				DEBUG_PRINT(DEBUG_LOG,"PortName:%s ", vPortTypes.at(i).getPorts().at(j).getName().c_str());
+				strcat(details,vPortTypes.at(i).getPorts().at(j).getName().c_str());
+                        	if( j < vPortTypes.at(i).getPorts().size()-1 )
+                        	{
+                                	strcat(details,",");
+                        	}
+                        }
+
+                        if( i < vPortTypes.size()-1 )
+                        {
+                                strcat(details,",");
+                        }
+                }
+
+                if (vPortTypes.size() != 0)
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of supported video output ports";
+                        response["result"]= "FAILURE";
+                }
+
+		//GetPorts for specified portId
+		int portId=req["port_id"].asInt();
+		device::List<device::VideoOutputPort> vPorts = device::VideoOutputPortType::getInstance(portId).getPorts();
+                size_t listSize = vPorts.size();
+                DEBUG_PRINT(DEBUG_LOG,"PortId: %d Supported Ports size: %d\n", portId, listSize);
+                for (size_t i = 0; i < listSize; i++)
+                {
+                        strcat(details, vPorts.at(i).getName().c_str());
+                        if( i < listSize-1 )
+                        {
+                                strcat(details,",");
+                        }
+                }
+
+		/*
+                if (listSize != 0)
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of supported video output ports";
+                        response["result"]= "FAILURE";
+                }
+		*/
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPTYPE_getPorts\n");
+                response["details"]= "Exception Caught in VOPTYPE_getPorts";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_getPorts ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::VOPTYPE_setRestrictedResolution(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_setRestrictedResolution ---->Entry\n");
+
+        try
+        {
+                char details[50] = {'\0'};
+		std::string portName=req["port_name"].asCString();
+		int resolution=req["resolution"].asInt();
+
+                device::VideoOutputPortType::getInstance(portName).setRestrictedResolution(resolution);
+		int outResolution = device::VideoOutputPortType::getInstance(portName).getRestrictedResolution();
+		sprintf(details,"SETVALUE:%d GETVALUE:%d",resolution,outResolution);
+                DEBUG_PRINT(DEBUG_LOG,"RestrictedResolution %s\n", details);
+		response["details"]=details;
+                if (resolution == outResolution)
+                {
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPTYPE_setRestrictedResolution\n");
+                response["details"]= "Exception Caught in VOPTYPE_setRestrictedResolution";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_setRestrictedResolution ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VOPTYPE_getRestrictedResolution(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_getRestrictedResolution ---->Entry\n");
+
+        try
+        {
+                char details[50] = {'\0'};
+                std::string portName=req["port_name"].asCString();
+
+                //int resolution = device::VideoOutputPortType::getInstance(portName).getRestrictedResolution();
+		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
+		int resolution = vPort.getType().getRestrictedResolution();
+                sprintf(details,"%d",resolution);
+                DEBUG_PRINT(DEBUG_LOG,"PortName: %s RestrictedResolution: %s\n", portName.c_str(), details);
+		DEBUG_PRINT(DEBUG_LOG,"Min Resolution: %d Max Resolution: %d\n", device::PixelResolution::k720x480, device::PixelResolution::kMax);
+                response["details"]=details;
+		if ( (resolution < device::PixelResolution::k720x480) || (resolution >= device::PixelResolution::kMax) )
+			response["result"]= "FAILURE";
+		else
+			response["result"]= "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in VOPTYPE_getRestrictedResolution\n");
+                response["details"]= "Exception Caught in VOPTYPE_getRestrictedResolution";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_getRestrictedResolution ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VOPCONFIG_getPixelResolution(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPixelResolution ---->Entry\n");
+
+        try
+        {
+		char details[50] = {'\0'};
+		//Get PixelResolution for current resolution on given video output port
+       		std::string portName=req["port_name"].asCString();
+		std::string pixel = device::Host::getInstance().getVideoOutputPort(portName).getResolution().getPixelResolution().toString();
+		sprintf(details,"%s",pixel.c_str());
+		DEBUG_PRINT(DEBUG_LOG,"PortName:%s PixelResolution:%s\n", portName.c_str(), details);
+
+                response["details"]= details;
+                response["result"]= "SUCCESS";
+		
+		/*
+                //Get PixelResolution for given resolution value
+                if(&req["resolution"]!=NULL)
+                {
+                        std::string resolutionName=req["resolution"].asCString();
+                        std::string pixel = device::VideoResolution::getInstance(resolutionName).getPixelResolution().toString();
+                        DEBUG_PRINT(DEBUG_LOG,"Resolution: %s PixelResolution: %s\n", resolutionName.c_str(),pixel.c_str());
+                }
+		*/
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOPCONFIG_getPixelResolution\n");
+                response["details"]= "Exception Caught in VOPCONFIG_getPixelResolution";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPixelResolution  ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VOPCONFIG_getSSMode(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getSSMode ---->Entry\n");
+
+        try
+        {
+                char details[20] = {'\0'};
+                int id = req["ss_id"].asInt();
+                device::StereoScopicMode mode = device::VideoOutputPortConfig::getInstance().getSSMode(id);
+                //sprintf(details,"%d",mode.getId());
+		sprintf(details,"%s",mode.getName().c_str());
+                DEBUG_PRINT(DEBUG_LOG,"ss_id: %d SSMode Id:%d\n", id, mode.getId());
+		response["details"]=details;
+                if (mode.getId() == id)
+                {
+                        response["result"]="SUCCESS";
+                }
+                else
+                {
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VOPCONFIG_getSSMode\n");
+                response["details"]= "Exception Caught in VOPCONFIG_getSSMode";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getSSMode ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::VOPCONFIG_getVideoResolution(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getVideoResolution ---->Entry\n");
+
+        try
+        {
+                char details[50] = {'\0'};
+                //Get VideoResolution on given video output port
+                int portId=req["port_id"].asInt();
+		std::string resolution = device::VideoOutputPortConfig::getInstance().getVideoResolution(portId).toString();
+                sprintf(details,"%s",resolution.c_str());
+                DEBUG_PRINT(DEBUG_LOG,"Port Id:%d VideoResolution:%s\n", portId,resolution.c_str());
+
+		device::VideoResolution vResolution = device::VideoResolution::getInstance(portId);
+                DEBUG_PRINT(DEBUG_LOG,"VideoResolution: %s\n", vResolution.toString().c_str());
+		if (vResolution.toString() == resolution)
+		{
+                	response["details"]=details;
+                	response["result"]= "SUCCESS";
+		}
+		else
+		{
+			response["details"]="Failed to get VideoResolution";
+			response["result"]= "FAILURE";
+		}
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VOPCONFIG_getVideoResolution\n");
+                response["details"]= "Exception Caught in VOPCONFIG_getVideoResolution";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getVideoResolution ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::VOPCONFIG_getFrameRate(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getFrameRate ---->Entry\n");
+
+        try
+        {
+                char details[50] = {'\0'};
+                //Get FrameRate for current resolution on given video output port
+                std::string portName=req["port_name"].asCString();
+                std::string framerate = device::Host::getInstance().getVideoOutputPort(portName).getResolution().getFrameRate().toString();
+                sprintf(details,"%s",framerate.c_str());
+                DEBUG_PRINT(DEBUG_LOG,"PortName:%s Framerate: %s\n", portName.c_str(), details);
+
+                response["details"]=details;
+                response["result"]= "SUCCESS";
+
+		/*
+                //Get PixelResolution for given resolution value
+                if(&req["resolution"]!=NULL)
+                {
+                        std::string resolutionName=req["resolution"].asCString();
+                        std::string framerate = device::VideoResolution::getInstance(resolutionName).getFrameRate().toString();
+                        DEBUG_PRINT(DEBUG_LOG,"Resolution: %s FrameRate: %s\n", resolutionName.c_str(),framerate.c_str());
+                }
+		*/
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VOPCONFIG_getFrameRate\n");
+                response["details"]= "Exception Caught in VOPCONFIG_getFrameRate";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getFrameRate ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VOPCONFIG_getPortType(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortType ---->Entry\n");
+
+        try
+        {
+                char details[50] = {'\0'};
+                int portId = req["port_id"].asInt();
+
+                //Get VideoOutputPortType for specified port id
+                device::VideoOutputPortType type = device::VideoOutputPortConfig::getInstance().getPortType(portId);
+		sprintf(details,"%s",type.getName().c_str());
+                DEBUG_PRINT(DEBUG_TRACE,"Port Id: %d Port Name: %s\r\n", type.getId(), type.getName().c_str());
+                if (portId == type.getId())
+                {
+                        response["details"] = details;
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "Failed to fetch port video type from video port Id";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VOPCONFIG_getPortType\n");
+                response["details"]= "Exception Caught in VOPCONFIG_getPortType";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortType ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VOPCONFIG_getPortFromName(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortFromName ---->Entry\n");
+
+        try
+        {
+                std::string portName=req["port_name"].asCString();
+                //Get VideoOutputPort instance for specified port name
+                device::VideoOutputPort vPort = device::VideoOutputPortConfig::getInstance().getPort(portName);
+                if ( portName == vPort.getName() )
+                {
+                        response["details"] = "Successfully fetched Video port instance from Video port name";
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "Failed to fetch port Video instance from Video port name";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VOPCONFIG_getPortFromName\n");
+                response["details"]= "Exception Caught in VOPCONFIG_getPortFromName";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortFromName ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::VOPCONFIG_getPortFromId(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortFromId ---->Entry\n");
+
+        try
+        {
+                int portId = req["port_id"].asInt();
+                //Convert the Video port id to the corresponding port object
+                device::VideoOutputPort vPort = device::VideoOutputPortConfig::getInstance().getPort(portId);
+                DEBUG_PRINT(DEBUG_TRACE,"Port Id: %d Port Name: %s\r\n", portId, vPort.getName().c_str());
+                if (portId == vPort.getId())
+                {
+                        response["details"] = "Successfully fetched video port instance from video port Id";
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "Failed to fetch port video instance from video port Id";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VOPCONFIG_getPortFromId\n");
+                response["details"]= "Exception Caught in VOPCONFIG_getPortFromId";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortFromId ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VOPCONFIG_getSupportedTypes(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getSupportedTypes ---->Entry\n");
+
+        try
+        {
+                char details[256] = {'\0'};
+                device::List<device::VideoOutputPortType> vPortTypes = device::VideoOutputPortConfig::getInstance().getSupportedTypes();
+		DEBUG_PRINT(DEBUG_LOG,"VideoOutputPort SupportedTypes Size: %d\n", vPortTypes.size());
+                for (size_t i = 0; i < vPortTypes.size(); i++)
+                {
+                        strcat(details, vPortTypes.at(i).getName().c_str());
+                        if( i < vPortTypes.size()-1 )
+                        {
+                        	strcat(details,",");
+                        }
+                }
+
+                if (vPortTypes.size() != 0)
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of supported types for video output port";
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VOPCONFIG_getSupportedTypes\n");
+                response["details"]= "Exception Caught in VOPCONFIG_getSupportedTypes";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getSupportedTypes ---->Exit\n");
         return TEST_SUCCESS;
 }
 
@@ -1878,7 +3102,7 @@ bool DeviceSettingsAgent::VOP_getAspectRatio(IN const Json::Value& req, OUT Json
 	{
 		/*getting instance for video ports*/	
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
-		/*getting AspectRation for a given video ports*/	
+		/*getting AspectRatio for a given video ports*/
 		strcpy(aspectRatio,(char*)vPort.getDisplay().getAspectRatio().getName().c_str());
 		strcpy(aspectRatioDetails,aspectRatio);
 		strcat(aspectRatioDetails1,aspectRatioDetails);
@@ -2015,6 +3239,167 @@ bool DeviceSettingsAgent::VOP_setEnable(IN const Json::Value& req, OUT Json::Val
         return TEST_SUCCESS;
 }
 
+
+bool DeviceSettingsAgent::VOP_isActive(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_isActive  ---->Entry\n");
+
+        try
+        {
+		char details[30] = {'\0'};
+		std::string portName=req["port_name"].asCString();
+
+		bool active = device::VideoOutputPort::getInstance(portName).isActive();
+		sprintf(details,"%d",active);
+		DEBUG_PRINT(DEBUG_LOG,"Active - [%s]\r\n", active? "Yes" : "No");
+		response["details"]=details;
+		response["result"]="SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOP_isActive\n");
+                response["details"]= "Exception Caught in VOP_isActive";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_isActive ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VOP_setDisplayConnected(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_setDisplayConnected  ---->Entry\n");
+
+        try
+        {
+                char details[30] = {'\0'};
+                std::string portName=req["port_name"].asCString();
+		bool connected = req["connected"].asInt();
+
+                device::VideoOutputPort::getInstance(portName).setDisplayConnected(connected);
+		sprintf(details,"SetDisplayConnected to %d",connected);
+                response["details"]=details;
+                response["result"]="SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOP_setDisplayConnected\n");
+                response["details"]= "Exception Caught in VOP_setDisplayConnected";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_setDisplayConnected ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::VOP_hasSurround(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_hasSurround ---->Entry\n");
+
+        try
+        {
+                char details[30] = {'\0'};
+                std::string portName=req["port_name"].asCString();
+
+                bool surround = device::VideoOutputPort::getInstance(portName).getDisplay().hasSurround();
+                sprintf(details,"%d",surround);
+                DEBUG_PRINT(DEBUG_LOG,"hasSurround - [%s]\r\n", surround? "Yes" : "No");
+                response["details"]=details;
+                response["result"]="SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOP_hasSurround\n");
+                response["details"]= "Exception Caught in VOP_hasSurround";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_hasSurround ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VOP_getEDIDBytes(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_getEDIDBytes ---->Entry\n");
+
+        try
+        {
+                std::string portName=req["port_name"].asCString();
+
+                std::vector<unsigned char> bytes;
+		device::VideoOutputPort::getInstance(portName).getDisplay().getEDIDBytes(bytes);
+                DEBUG_PRINT(DEBUG_TRACE,"Display [%s] has %d bytes EDID\r\n", portName.c_str(), bytes.size());
+
+                /* Dump the bytes */
+                for (size_t i = 0; i < bytes.size(); i++)
+                {
+                        if (i % 16 == 0) {
+                                DEBUG_PRINT(DEBUG_TRACE,"\r\n");
+                        }
+                        if (i % 128 == 0) {
+                                DEBUG_PRINT(DEBUG_TRACE,"\r\n");
+                        }
+                        DEBUG_PRINT(DEBUG_TRACE,"%02X ", bytes[i]);
+                }
+
+                DEBUG_PRINT(DEBUG_TRACE,"\r\n");
+                if (bytes.size() >= 128)
+                {
+                        unsigned char sum = 0;
+                        for (int i = 0; i < 128; i++)
+                        {
+                                sum += bytes[i];
+                        }
+
+                        if (sum != 0) {
+                                response["details"] = "[EDID Sanity Warning] : Checksum is invalid";
+                                response["result"] = "FAILURE";
+                        }
+                        else {
+                                response["details"] = "EDID Checksum is valid";
+                                response["result"] = "SUCCESS";
+                        }
+                }
+                else
+                {
+                        response["details"] = "EDID value less than 128 bytes";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOP_getEDIDBytes\n");
+                response["details"]= "Exception Caught in VOP_getEDIDBytes";
+                response["result"]= "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_getEDIDBytes ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::VOP_getDefaultResolution(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_getDefaultResolution ---->Entry\n");
+
+        try
+        {
+		char details[50]={'\0'};
+		std::string portName=req["port_name"].asCString();
+		device::VideoResolution resolution = device::VideoOutputPort::getInstance(portName).getDfeaultResolution();
+                sprintf(details,"%s",resolution.getName().c_str());
+		DEBUG_PRINT(DEBUG_LOG,"Display [%s] Default Resolution: %s\n", portName.c_str(), resolution.getName().c_str());
+                response["details"]= details;
+                response["result"]= "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in VOP_getDefaultResolution\n");
+                response["details"]= "Exception Caught in VOP_getDefaultResolution";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VOP_getDefaultResolution ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
 bool DeviceSettingsAgent::HOST_getCPUTemperature(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getCPUTemperature ---->Entry\n");
@@ -2036,6 +3421,842 @@ bool DeviceSettingsAgent::HOST_getCPUTemperature(IN const Json::Value& req, OUT 
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getCPUTemperature ---->Exit\n");
         return TEST_SUCCESS;
 }
+
+bool DeviceSettingsAgent::HOST_setVersion(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setVersion ---->Entry\n");
+
+        try
+        {
+		unsigned int versionNo = req["versionNo"].asUInt();
+		DEBUG_PRINT(DEBUG_LOG,"Version number to be set: %d\n", versionNo);
+		unsigned int version = device::Host::getInstance().getVersion();
+                DEBUG_PRINT(DEBUG_LOG,"Current version number: %d\n", version);
+                device::Host::getInstance().setVersion(versionNo);
+		version = device::Host::getInstance().getVersion();
+		DEBUG_PRINT(DEBUG_LOG,"Changed version number: %d\n", version);
+                if (version == versionNo)
+                {
+             		response["details"] = "Version number retrieved is same as value set";
+	             	response["result"] = "SUCCESS";
+                }
+                else
+                {
+	             	response["details"] = "Version number retrieved is not same as value set";
+			response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in HOST_setVersion\n");
+                response["details"] = "Exception Caught in HOST_setVersion";
+                response["result"] = "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setVersion ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::HOST_setPreferredSleepMode(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setPreferredSleepMode ---->Entry\n");
+	std::string sleepModeStr = req["sleepMode"].asCString();
+	const device::SleepMode &mode= device::SleepMode::getInstance(sleepModeStr);
+
+        try
+        {
+                int ret = device::Host::getInstance().setPreferredSleepMode(mode);
+		DEBUG_PRINT(DEBUG_LOG,"Set PreferredSleepMode returned value: %d\n", ret);
+		const device::SleepMode &currMode = device::Host::getInstance().getPreferredSleepMode();
+                DEBUG_PRINT(DEBUG_LOG,"Changed PreferredSleepMode: %s\n", currMode.toString().c_str());
+                if ( currMode.getId() == mode.getId() )
+                {
+                        response["details"] = "PreferredSleepMode changed successfully";
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "PreferredSleepMode retrieved is not same as value set";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in HOST_setPreferredSleepMode\n");
+                response["details"] = "Exception Caught in HOST_setPreferredSleepMode";
+                response["result"] = "FAILURE";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setPreferredSleepMode ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::HOST_getPreferredSleepMode(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getPreferredSleepMode ---->Entry\n");
+	char details[30] = {'\0'};
+
+        try
+        {
+		const device::SleepMode &currMode = device::Host::getInstance().getPreferredSleepMode();
+                DEBUG_PRINT(DEBUG_LOG,"Current PreferredSleepMode: %s\n", currMode.toString().c_str());
+		if ( (0 <= currMode.getId()) and (currMode.getId() < 3) )
+		{
+			sprintf(details,"%s",currMode.toString().c_str());
+			response["details"] = details;
+			response["result"] = "SUCCESS";
+		}
+		else
+		{
+                	response["details"] = "PreferredSleepMode value not valid";
+                	response["result"] = "FAILURE";
+		}
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in HOST_getPreferredSleepMode\n");
+                response["details"] = "Exception Caught in HOST_getPreferredSleepMode";
+                response["result"] = "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getPreferredSleepMode ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::HOST_getAvailableSleepModes(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getAvailableSleepModes ---->Entry\n");
+        char details[100] = {'\0'};
+
+        try
+        {
+                const device::List<device::SleepMode> sleepModes = device::Host::getInstance().getAvailableSleepModes();
+                for(size_t i = 0; i < sleepModes.size(); i++)
+                {
+			strcat(details, sleepModes.at(i).toString().c_str());
+                        if( i < sleepModes.size() - 1 )
+                        {
+                                strcat(details, ",");
+                        }
+                }
+
+                if (sleepModes.size() != 0)
+                {
+                        response["details"] = details;
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "No SleepModes available";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in HOST_getAvailableSleepModes\n");
+                response["details"] = "Exception Caught in HOST_getAvailableSleepModes";
+                response["result"] = "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getAvailableSleepModes ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::HOST_getVideoOutputPorts(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getVideoOutputPorts ---->Entry\n");
+
+        try
+        {
+		char details[128] = {'\0'};
+		device::List<device::VideoOutputPort> vPorts = device::Host::getInstance().getVideoOutputPorts();
+		DEBUG_PRINT(DEBUG_TRACE, "VideoOutputPort size: %d\r\n", vPorts.size());
+
+    		for (size_t i = 0; i < vPorts.size(); i++)
+		{
+        		device::VideoOutputPort &vPort = vPorts.at(i);
+			/*
+        		DEBUG_PRINT(DEBUG_TRACE, "Port Name [%s] Enabled [%s] Active [%s] Connected [%s] Type [%s] Resolution [%s]\r\n",
+						vPort.getName().c_str(),
+						vPort.isEnabled() ? "Yes" : "No",
+						vPort.isActive() ? "Yes" : "No",
+						vPort.isDisplayConnected() ? "Yes" : "No",
+						vPort.getType().getName().c_str(),
+						vPort.getResolution().getName().c_str());
+			*/
+			strcat(details, vPort.getName().c_str());
+                        if( i < vPorts.size() - 1 )
+                        {
+                                strcat(details, ",");
+                        }
+
+        	}
+
+		if (vPorts.size() != 0)
+		{
+                	response["details"] = details;
+                	response["result"] = "SUCCESS";
+		}
+		else
+		{
+			response["details"] = "No VideoOutputPorts";
+			response["result"] = "FAILURE";
+		}
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in HOST_getVideoOutputPorts\n");
+                response["details"] = "Exception Caught in HOST_getVideoOutputPorts";
+                response["result"] = "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getVideoOutputPorts ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::HOST_getAudioOutputPorts(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getAudioOutputPorts ---->Entry\n");
+        char details[128] = {'\0'};
+
+        try
+        {
+		device::List<device::AudioOutputPort> aPorts = device::Host::getInstance().getAudioOutputPorts();
+                for (size_t i = 0; i < aPorts.size(); i++)
+                {
+			device::AudioOutputPort &aPort = aPorts.at(i);
+
+                        DEBUG_PRINT(DEBUG_TRACE, "Port Name [%s] Compression [%s] Encoding [%s] StereoMode [%s] Gain [%f] DB [%f]\r\n",
+                                                aPort.getName().c_str(),
+						aPort.getCompression().getName().c_str(),
+						aPort.getEncoding().getName().c_str(),
+						aPort.getStereoMode().getName().c_str(),
+						aPort.getGain(),
+						aPort.getDB());
+
+                        strcat(details, aPort.getName().c_str());
+                        if( i < aPorts.size() - 1 )
+                        {
+                                strcat(details, ",");
+                        }
+                }
+
+                if (aPorts.size() != 0)
+                {
+                        response["details"] = details;
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "No AudioOutputPorts available";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in HOST_getAudioOutputPorts\n");
+                response["details"] = "Exception Caught in HOST_getAudioOutputPorts";
+                response["result"] = "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getAudioOutputPorts ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::HOST_getVideoDevices(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getVideoDevices ---->Entry\n");
+        char details[100] = {'\0'};
+
+        try
+        {
+		device::List<device::VideoDevice> vDevices = device::Host::getInstance().getVideoDevices();
+		DEBUG_PRINT(DEBUG_LOG,"No of Video Devices: %d\n",vDevices.size());
+                for (size_t i = 0; i < vDevices.size(); i++)
+                {
+                        device::VideoDevice device = vDevices.at(i);
+                        DEBUG_PRINT(DEBUG_TRACE, "Device Name [%s] ZoomSettings [%s]\r\n", device.getName().c_str(), device.getDFC().getName().c_str());
+                        strcat(details, device.getName().c_str());
+                        if( i < vDevices.size() - 1 )
+                        {
+                                strcat(details, ",");
+                        }
+                }
+
+                if (vDevices.size() != 0)
+                {
+                        response["details"] = details;
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "No Video Devices available";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in HOST_getVideoDevices\n");
+                response["details"] = "Exception Caught in HOST_getVideoDevices";
+                response["result"] = "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getVideoDevices ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::HOST_getHostEDID(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getHostEDID ---->Entry\n");
+
+        try
+        {
+		std::vector<unsigned char> bytes;
+		device::Host::getInstance().getHostEDID(bytes);
+		DEBUG_PRINT(DEBUG_TRACE,"Host has %d bytes EDID\r\n", bytes.size());
+		
+            	/* Dump the bytes */
+            	for (size_t i = 0; i < bytes.size(); i++)
+		{
+                	if (i % 16 == 0) {
+				DEBUG_PRINT(DEBUG_TRACE,"\r");
+                	}
+                	if (i % 128 == 0) {
+                    		DEBUG_PRINT(DEBUG_TRACE,"\r");
+                	}
+                	DEBUG_PRINT(DEBUG_TRACE,"%02X ", bytes[i]);
+            	}
+
+		DEBUG_PRINT(DEBUG_TRACE,"\r\n");
+            	if (bytes.size() >= 128)
+		{
+                	unsigned char sum = 0;
+                	for (int i = 0; i < 128; i++)
+			{
+                    		sum += bytes[i];
+                	}
+
+                	if (sum != 0) {
+				response["details"] = "[EDID Sanity Warning] : Checksum is invalid";
+				response["result"] = "FAILURE";
+                	}
+                	else {
+				response["details"] = "EDID Checksum is valid";
+				response["result"] = "SUCCESS";
+                	}
+            	}
+                else
+                {
+                        response["details"] = "EDID value less than 128 bytes";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nException Caught in HOST_getHostEDID \n");
+                response["details"] = "Exception Caught in HOST_getHostEDID";
+                response["result"] = "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"HOST_getHostEDID ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::HOST_getVideoOutputPortFromName(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"HOST_getVideoOutputPortFromName ---->Entry\n");
+
+        try
+        {
+
+		std::string portName=req["port_name"].asCString();
+		//Convert the video port Name to the corresponding port object
+                device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
+		std::string outPortName = vPort.getName();
+		if (portName == outPortName)
+		{
+                	response["details"] = "Successfully fetched video port instance from video port Name";
+                	response["result"] = "SUCCESS";
+		}
+		else
+		{
+			response["details"] = "Failed to fetch port video instance from video port Name";
+			response["result"] = "FAILURE";
+		}
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in HOST_getVideoOutputPortFromName\n");
+                response["details"]= "Exception Caught in HOST_getVideoOutputPortFromName";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"HOST_getVideoOutputPortFromName ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::HOST_getVideoOutputPortFromId(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"HOST_getVideoOutputPortFromId ---->Entry\n");
+
+        try
+        {
+		int portId = req["port_id"].asInt();
+                //Convert the video port id to the corresponding port object
+                device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portId);
+		DEBUG_PRINT(DEBUG_TRACE,"Port Id: %d Port Name: %s\r\n", portId, vPort.getName().c_str());
+                if (portId == vPort.getId())
+                {
+                        response["details"] = "Successfully fetched video port instance from video port Id";
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "Failed to fetch port video instance from video port Id";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in HOST_getVideoOutputPortFromId\n");
+                response["details"]= "Exception Caught in HOST_getVideoOutputPortFromId";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"HOST_getVideoOutputPortFromId ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::HOST_getAudioOutputPortFromName(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"HOST_getAudioOutputPortFromName ---->Entry\n");
+
+        try
+        {
+		std::string portName=req["port_name"].asCString();
+                //Convert the audio port Name to the corresponding port object
+                device::AudioOutputPort aPort = device::Host::getInstance().getAudioOutputPort(portName);
+                std::string outPortName = aPort.getName();
+                if (portName == outPortName)
+                {
+                        response["details"] = "Successfully fetched audio port instance from audio port Name";
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "Failed to fetch port audio instance from audio port Name";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in HOST_getAudioOutputPortFromName\n");
+                response["details"]= "Exception Caught in HOST_getAudioOutputPortFromName";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"HOST_getAudioOutputPortFromName ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::HOST_getAudioOutputPortFromId(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"HOST_getAudioOutputPortFromId ---->Entry\n");
+
+        try
+        {
+		int portId = req["port_id"].asInt();
+                //Convert the audio port id to the corresponding port object
+                device::AudioOutputPort aPort = device::Host::getInstance().getAudioOutputPort(portId);
+                DEBUG_PRINT(DEBUG_TRACE,"Port Id: %d Port Name: %s\r\n", portId, aPort.getName().c_str());
+                if (portId == aPort.getId())
+                {
+                        response["details"] = "Successfully fetched audio port instance from audio port Id";
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "Failed to fetch port audio instance from audio port Id";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in HOST_getAudioOutputPortFromId\n");
+                response["details"]= "Exception Caught in HOST_getAudioOutputPortFromId";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"HOST_getAudioOutputPortFromId ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::AOPCONFIG_getPortType(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortType ---->Entry\n");
+
+        try
+        {
+		int portId = req["port_id"].asInt();
+		char details[50] = {'\0'};
+                //Get AudioOutputPortType for specified port id
+		device::AudioOutputPortType type = device::AudioOutputPortConfig::getInstance().getPortType(portId);
+                sprintf(details,"%s",type.getName().c_str());
+                DEBUG_PRINT(DEBUG_TRACE,"Port Id: %d Port Name: %s\r\n", type.getId(), type.getName().c_str());
+		if (portId == type.getId())
+                {
+                        response["details"] = details;
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "Failed to fetch port audio type from audio port Id";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in AOPCONFIG_getPortType\n");
+                response["details"]= "Exception Caught in AOPCONFIG_getPortType";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortType ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::AOPCONFIG_getPortFromName(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortFromName ---->Entry\n");
+
+        try
+        {
+		std::string portName=req["port_name"].asCString();
+                //Get AudioOutputPort instance for specified port name
+                device::AudioOutputPort aPort = device::AudioOutputPortConfig::getInstance().getPort(portName);
+                if ( portName == aPort.getName() )
+                {
+                        response["details"] = "Successfully fetched audio port instance from audio port name";
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "Failed to fetch port audio instance from audio port name";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in AOPCONFIG_getPortFromName\n");
+                response["details"]= "Exception Caught in AOPCONFIG_getPortFromName";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortFromName ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+
+bool DeviceSettingsAgent::AOPCONFIG_getPortFromId(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortFromId ---->Entry\n");
+
+        try
+        {
+                int portId = req["port_id"].asInt();
+                //Convert the audio port id to the corresponding port object
+                device::AudioOutputPort aPort = device::AudioOutputPortConfig::getInstance().getPort(portId);
+                DEBUG_PRINT(DEBUG_TRACE,"Port Id: %d Port Name: %s\r\n", portId, aPort.getName().c_str());
+                if (portId == aPort.getId())
+                {
+                        response["details"] = "Successfully fetched audio port instance from audio port Id";
+                        response["result"] = "SUCCESS";
+                }
+                else
+                {
+                        response["details"] = "Failed to fetch port audio instance from audio port Id";
+                        response["result"] = "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in AOPCONFIG_getPortFromId\n");
+                response["details"]= "Exception Caught in AOPCONFIG_getPortFromId";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortFromId ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::AOPCONFIG_getPorts(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPorts ---->Entry\n");
+
+        try
+        {
+                char details[200] = {'\0'};
+                device::List<device::AudioOutputPort> aPorts = device::AudioOutputPortConfig::getInstance().getPorts();
+                size_t listSize = aPorts.size();
+                DEBUG_PRINT(DEBUG_LOG,"AudioOutputPort Supported Ports size: %d\n", listSize);
+                for (size_t i = 0; i < listSize; i++)
+                {
+                        strcat(details, aPorts.at(i).getName().c_str());
+                        if( i < listSize-1 )
+                        {
+                                strcat(details,",");
+                        }
+                }
+                if (listSize != 0)
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of supported audio output ports";
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in AOPCONFIG_getPorts\n");
+                response["details"]= "Exception Caught in AOPCONFIG_getPorts";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPorts ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool DeviceSettingsAgent::AOPCONFIG_getSupportedTypes(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getSupportedTypes ---->Entry\n");
+
+        try
+        {
+		char details[200] = {'\0'};
+		device::List<device::AudioOutputPortType> aTypes = device::AudioOutputPortConfig::getInstance().getSupportedTypes();
+                size_t listSize = aTypes.size();
+                DEBUG_PRINT(DEBUG_LOG,"AudioOutputPort Supported Types size: %d\n", listSize);
+                for (size_t i = 0; i < listSize; i++)
+                {
+                        strcat(details, aTypes.at(i).getName().c_str());
+                        if( i < listSize-1 )
+                        {
+                                strcat(details,",");
+                        }
+                }
+                if (listSize != 0)
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Failed to get list of supported types for audio output port";
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in AOPCONFIG_getSupportedTypes\n");
+                response["details"]= "Exception Caught in AOPCONFIG_getSupportedTypes";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getSupportedTypes ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::AOPCONFIG_release(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_release ---->Entry\n");
+
+        try
+        {
+                char details[200] = {'\0'};
+                device::AudioOutputPortConfig::getInstance().release();
+
+		//Verify if API clears the instance of audio encoding, compression, stereo modes and audio port types
+		device::List<device::AudioOutputPort> audioPorts = device::AudioOutputPortConfig::getInstance().getPorts();
+                device::List<device::AudioOutputPortType> aTypes = device::AudioOutputPortConfig::getInstance().getSupportedTypes();
+                device::List<device::AudioOutputPort> aPorts = device::Host::getInstance().getAudioOutputPorts();
+                for (size_t i = 0; i < aPorts.size(); i++)
+                {
+                        device::AudioOutputPort &aPort = aPorts.at(i);
+                        DEBUG_PRINT(DEBUG_TRACE, "Port Name [%s] Compression [%s] Encoding [%s] StereoMode [%s]\r\n",
+                                                aPort.getName().c_str(),
+                                                aPort.getCompression().getName().c_str(),
+                                                aPort.getEncoding().getName().c_str(),
+                                                aPort.getStereoMode().getName().c_str());
+
+                        strcat(details, aPort.getName().c_str());
+                        if( i < aPorts.size() - 1 )
+                        {
+                                strcat(details, ",");
+                        }
+                }
+
+                if ( (audioPorts.size() != 0) || (aPorts.size() != 0) )
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "Audio output ports not reset\n");
+                }
+                if (aTypes.size() != 0)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "Audio output port types not reset\n");
+                }
+
+                if ( (aPorts.size() == 0) && (audioPorts.size() == 0) && (aTypes.size() == 0) )
+                {
+			response["details"]="Audio output ports released successfully";
+			response["result"]= "SUCCESS";
+                }
+		else
+		{
+			response["details"]=details;
+			response["result"]= "FAILURE";
+		}
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in AOPCONFIG_release\n");
+                response["details"]= "Exception Caught in AOPCONFIG_release";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_release ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::AOPCONFIG_load(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_load ---->Entry\n");
+
+        try
+        {
+                char details[200] = {'\0'};
+                device::AudioOutputPortConfig::getInstance().load();
+
+                //Verify if API loads constants first and initialize Audio portTypes, encodings, compressions and stereo modes
+                device::List<device::AudioOutputPort> audioPorts = device::AudioOutputPortConfig::getInstance().getPorts();
+                if (audioPorts.size() == 0)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "Audio output ports not loaded\n");
+                }
+
+                device::List<device::AudioOutputPortType> aTypes = device::AudioOutputPortConfig::getInstance().getSupportedTypes();
+                if (aTypes.size() == 0)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE, "Audio output port types not loaded\n");
+                }
+
+                device::List<device::AudioOutputPort> aPorts = device::Host::getInstance().getAudioOutputPorts();
+                for (size_t i = 0; i < aPorts.size(); i++)
+                {
+                        device::AudioOutputPort &aPort = aPorts.at(i);
+                        DEBUG_PRINT(DEBUG_TRACE, "Port Name [%s] Compression [%s] Encoding [%s] StereoMode [%s]\r\n",
+                                                aPort.getName().c_str(),
+                                                aPort.getCompression().getName().c_str(),
+                                                aPort.getEncoding().getName().c_str(),
+                                                aPort.getStereoMode().getName().c_str());
+
+                        strcat(details, aPort.getName().c_str());
+                        if( i < aPorts.size() - 1 )
+                        {
+                                strcat(details, ",");
+                        }
+                }
+
+
+                if ( (aPorts.size() != 0) && (audioPorts.size() != 0) && (aTypes.size() != 0) )
+                {
+                        response["details"]=details;
+                        response["result"]= "SUCCESS";
+                }
+                else
+                {
+                        response["details"]="Audio output ports not loaded successfully";
+                        response["result"]= "FAILURE";
+                }
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in AOPCONFIG_load\n");
+                response["details"]= "Exception Caught in AOPCONFIG_load";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_load ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool DeviceSettingsAgent::VR_isInterlaced(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VR_isInterlaced ---->Entry\n");
+
+        try
+        {
+                char details[512]={'\0'};
+                std::string portName=req["port_name"].asCString();
+		//Get video port instance
+		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
+                //Check video resolution of VideoOutputPort is interlaced
+                bool isInterlaced = vPort.getResolution().isInterlaced();
+		DEBUG_PRINT(DEBUG_LOG,"Port [%s] Current Resolution [%s] isInterlaced [%d]\r\n",portName.c_str(),vPort.getResolution().getName().c_str(),isInterlaced);
+
+		sprintf(details,"Port %s: ", portName.c_str());
+		//Check isInterlaced for all the supported resolutions on given video port
+		size_t listSize = vPort.getType().getSupportedResolutions().size();
+                DEBUG_PRINT(DEBUG_LOG,"PortName:%s SupportedResolutions size:%d\n",portName.c_str(), listSize);
+                for (size_t i = 0; i < listSize; i++)
+                {
+			char interlacedDetails[50]={'\0'};
+			sprintf(interlacedDetails,"Resolution:%s isInterlaced:%d",vPort.getType().getSupportedResolutions().at(i).getName().c_str(),
+									          vPort.getType().getSupportedResolutions().at(i).isInterlaced());
+			DEBUG_PRINT(DEBUG_LOG,"%s\n",interlacedDetails);
+                        strcat(details,interlacedDetails);
+                        if( i < listSize - 1 )
+                        {
+                                strcat(details, ",");
+                        }
+                }
+		
+                response["details"]= details;
+                response["result"]= "SUCCESS";
+
+		/*
+		//Check isInterlaced for given resolution value
+	        if(&req["resolution"]!=NULL)
+        	{
+			std::string resolutionName=req["resolution"].asCString();
+			bool isResolutionInterlaced = device::VideoResolution::getInstance(resolutionName).isInterlaced();
+			DEBUG_PRINT(DEBUG_LOG,"Resolution [%s] isInterlaced [%d]\n",resolutionName.c_str(),isResolutionInterlaced);
+		}
+		*/
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VR_isInterlaced\n");
+                response["details"]= "Exception Caught in VR_isInterlaced";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VR_isInterlaced ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
 
 /**************************************************************************
  * Function Name: CreateObject
@@ -2119,6 +4340,63 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_isContentProtected");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_setEnable");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getCPUTemperature");
+	ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_setVersion");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_setPreferredSleepMode");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getPreferredSleepMode");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getAvailableSleepModes");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getVideoOutputPorts");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getAudioOutputPorts");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getVideoDevices");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getHostEDID");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getVideoOutputPortFromName");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getVideoOutputPortFromId");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getAudioOutputPortFromName");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_HOST_getAudioOutputPortFromId");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_getBrightnessLevels");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_getColorMode");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_getTextColorMode");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_getTextBrightnessLevels");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_setTextBrightness");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_getTextBrightness");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_enableDisplay");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_getIndicatorFromName");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_getIndicatorFromId");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_getTextDisplayFromName");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_getTextDisplayFromId");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_getColors");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOPCONFIG_getPortType");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOPCONFIG_getPortFromName");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOPCONFIG_getPortFromId");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOPCONFIG_getPorts");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOPCONFIG_getSupportedTypes");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOPCONFIG_release");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOPCONFIG_load");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOP_setStereoAuto");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOP_getStereoAuto");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOP_getGain");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_AOP_getOptimalLevel");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_getDefaultResolution");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_isActive");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_setDisplayConnected");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_hasSurround");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOP_getEDIDBytes");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_getPorts");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_setRestrictedResolution");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPTYPE_getRestrictedResolution");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPCONFIG_getPixelResolution");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPCONFIG_getSSMode");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPCONFIG_getVideoResolution");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPCONFIG_getFrameRate");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPCONFIG_getPortType");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPCONFIG_getPortFromName");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPCONFIG_getPortFromId");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPCONFIG_getSupportedTypes");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VD_setPlatformDFC");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VD_getSupportedDFCs");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VDCONFIG_getDevices");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VDCONFIG_getDFCs");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VDCONFIG_getDefaultDFC");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VR_isInterlaced");
 
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;

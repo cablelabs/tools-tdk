@@ -12,7 +12,7 @@ COPTS     += -c -g -Wall -DGCC4_XXX -Wno-format -Wunused
 LDOPTS    +=    -L $(IMAGE_PATH)/usr/local/lib \
 		-L $(IMAGE_PATH)/mnt/nfs/bin
 	
-INCLUDES  +=	-I $(RDK_BUILD_DIR)/devicesettings/ds/include -I $(RDK_BUILD_DIR)/logger/include/ -I $(RDK_BUILD_DIR)/devicesettings/hal/include/ -I $(RDK_BUILD_DIR)/iarmbus/core/include -I $(RDK_BUILD_DIR)/iarmbus/core -I$(RDK_BUILD_DIR)/iarmmgrs/generic/ir/include -I $(RDK_BUILD_DIR)/iarmmgrs/generic/mfr/include -I $(RDK_BUILD_DIR)/iarmmgrs/generic/power/include \
+INCLUDES  +=	-I $(RDK_BUILD_DIR)/devicesettings/ds/include -I $(RDK_BUILD_DIR)/devicesettings/ds -I $(RDK_BUILD_DIR)/logger/include/ -I $(RDK_BUILD_DIR)/devicesettings/hal/include/ -I $(RDK_BUILD_DIR)/iarmbus/core/include -I $(RDK_BUILD_DIR)/iarmbus/core -I$(RDK_BUILD_DIR)/iarmmgrs/generic/ir/include -I $(RDK_BUILD_DIR)/iarmmgrs/generic/mfr/include -I $(RDK_BUILD_DIR)/iarmmgrs/generic/power/include \
  		-I$(PLATFORM_SDK)/include \
 	 	-I$(JSONRPC_PATH)/include \
                 -I$(JSONCPP_PATH)/include \

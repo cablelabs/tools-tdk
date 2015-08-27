@@ -77,7 +77,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "4-Orange";
                 i = 0;
                 for i in range(0,100):
-                        print "****************%d" %i;
+                        print "**************Iteration %d ***********************" %i;
                         tdkTestObj = obj.createTestStep('DS_SetColor');
                         #setting color parameter value
                         color = 0;
@@ -100,7 +100,6 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         print "FAILURE: Both the colors are not same";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "****************%d" %i;
                                 print "Failure: Failed to get and set color for LED";
                         tdkTestObj = obj.createTestStep('DS_SetColor');
                         #setting color parameter value
@@ -126,7 +125,6 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         print "FAILURE: Both the colors are not same";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "****************%d" %i;
                                 print "Failure: Failed to get and set color for LED";
                 time.sleep(100/1000);
                 #calling DS_ManagerDeInitialize to DeInitialize API

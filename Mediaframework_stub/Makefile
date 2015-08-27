@@ -69,7 +69,7 @@ LDOPTS    +=  -L $(IMAGE_PATH)/usr/local/lib \
 	      -ltinyxml -lIARMBus -lpodmgr -ljansson -lcanh -lrdkloggers -lrmfbase -lglib-2.0 -llog4c -lqamsrc -linbsimanager -lsectionfilter -linbsectionfilter -lhnsource -lgstreamer-0.10 -lgobject-2.0 -lgstbase-0.10
 
 ifneq ($(SINGLE_TUNER_IP_CLIENT),y)
-LDOPTS    += -ldvrmgr -lTasseograph -ltrm -ldvrsink -ldvrmgrsoc -ltrh
+LDOPTS    += -ldvrmgr -lTasseograph -ltrm -ldvrsink -ldvrmgrsoc -ltrh -lsdvsectionfilter -lrmfsdvconfiguration -lrmfsdvdiscovery -lcurl
 endif
 BOPTS   := -shared
 

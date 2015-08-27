@@ -100,6 +100,7 @@ class TDKIntegrationStub : public RDKTestStubInterface
 		/*E2ERMFAgent Wrapper functions*/
 		/* E2E DVR TrickPlay */
 		bool E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& , OUT Json::Value& );
+		bool E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::Value& , OUT Json::Value& );
 		bool E2ERMFAgent_Play_Pause(IN const Json::Value& , OUT Json::Value& );
 		bool E2ERMFAgent_Pause_Play(IN const Json::Value& , OUT Json::Value& );
 		bool E2ERMFAgent_Play_TrickPlay_FF_FR(IN const Json::Value& , OUT Json::Value& );

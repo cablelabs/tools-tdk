@@ -69,6 +69,8 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
 
     #Calling sched_rec for live recording
     result1,recording_id = sched_rec(rec_obj,'01','0','120000');
+    tdk_obj.initiateReboot();
+    rec_obj.resetConnectionAfterReboot();
     
     time.sleep(60);
 

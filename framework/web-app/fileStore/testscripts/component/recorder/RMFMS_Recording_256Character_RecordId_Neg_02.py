@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>12</version>
+  <version>14</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMFMS_Recording_256Character_RecordId_Neg_02</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -119,12 +119,12 @@ if "SUCCESS" in loadmodulestatus.upper():
 				sleep(10);
 				retry=0
 				actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-		                while ((('[]' in actResponse) or ('ack' not in actResponse)) and ('ERROR' not in actResponse) and (retry < 15)):
+		                while ((('[]' in actResponse and len(actResponse) < 3) or ('ack' not in actResponse)) and ('ERROR' not in actResponse) and (retry < 15)):
 					sleep(10);
 					actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 					retry += 1
 					print "Retrieve Status Details:\n %s \n"%actResponse;
-		                if (('[]' in actResponse) or ('ERROR' in actResponse)):
+		                if (('[]' in actResponse and len(actResponse) < 3) or ('ERROR' in actResponse)):
 	        		        tdkTestObj.setResultStatus("FAILURE");
 		        	        print "Received Empty/Error status";
 		                elif 'acknowledgement' in actResponse:

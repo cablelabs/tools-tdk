@@ -156,11 +156,12 @@
           <parameter name="text" value="Text"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest id="85" name="DS_SetStereoMode" version="1">
+      <primitiveTest id=" " name="DS_SetStereoMode" version="2">
         <function>TestMgr_DS_AOP_setStereoMode</function>
         <parameters>
           <parameter name="port_name" value="HDMI0"/>
           <parameter name="stereo_mode" value="SURROUND"/>
+          <parameter name="get_only" value="0"/>
         </parameters>
       </primitiveTest>
       <primitiveTest id="86" name="DS_SetText" version="1">
@@ -254,6 +255,311 @@
       </primitiveTest>
       <primitiveTest id=" " name="DS_GetHDCPStatus" version="2">
         <function>TestMgr_DS_VOP_getHDCPStatus</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VR_isInterlaced" version="1">
+        <function>TestMgr_DS_VR_isInterlaced</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_VDCONFIG_getDefaultDFC" version="1">
+        <function>TestMgr_DS_VDCONFIG_getDefaultDFC</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_VDCONFIG_getDFCs" version="1">
+        <function>TestMgr_DS_VDCONFIG_getDFCs</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_VDCONFIG_getDevices" version="1">
+        <function>TestMgr_DS_VDCONFIG_getDevices</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_FPCONFIG_getIndicatorFromName" version="1">
+        <function>TestMgr_DS_FP_getIndicatorFromName</function>
+        <parameters>
+          <parameter name="indicator_name" value="Message"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_VD_getSupportedDFCs" version="1">
+        <function>TestMgr_DS_VD_getSupportedDFCs</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_VD_setPlatformDFC" version="1">
+        <function>TestMgr_DS_VD_setPlatformDFC</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_Host_setVersion" version="2">
+        <function>TestMgr_DS_HOST_setVersion</function>
+        <parameters>
+          <parameter name="versionNo" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_VideOutputPort_getSupportedTypes" version="1">
+        <function>TestMgr_DS_VOPCONFIG_getSupportedTypes</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_FPCONFIG_getIndicatorFromId" version="2">
+        <function>TestMgr_DS_FP_getIndicatorFromId</function>
+        <parameters>
+          <parameter name="indicator_id" value="1"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_HOST_setPreferredSleepMode" version="1">
+        <function>TestMgr_DS_HOST_setPreferredSleepMode</function>
+        <parameters>
+          <parameter name="sleepMode" value="LIGHT_SLEEP"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_HOST_getPreferredSleepMode" version="1">
+        <function>TestMgr_DS_HOST_getPreferredSleepMode</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_FPCONFIG_getTextDisplayFromName" version="2">
+        <function>TestMgr_DS_FP_getTextDisplayFromName</function>
+        <parameters>
+          <parameter name="text_name" value="Text"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_HOST_getVideoOutputPorts" version="1">
+        <function>TestMgr_DS_HOST_getVideoOutputPorts</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_HOST_getAudioOutputPorts" version="1">
+        <function>TestMgr_DS_HOST_getAudioOutputPorts</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_HOST_getVideoDevices" version="1">
+        <function>TestMgr_DS_HOST_getVideoDevices</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_HOST_getHostEDID" version="1">
+        <function>TestMgr_DS_HOST_getHostEDID</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VideoOutputPort_getPortFromId" version="1">
+        <function>TestMgr_DS_VOPCONFIG_getPortFromId</function>
+        <parameters>
+          <parameter name="port_id" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VideoOutputPort_getPortFromName" version="1">
+        <function>TestMgr_DS_VOPCONFIG_getPortFromName</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VideoOutputPort_getPortType" version="1">
+        <function>TestMgr_DS_VOPCONFIG_getPortType</function>
+        <parameters>
+          <parameter name="port_id" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_FPCONFIG_getTextDisplayFromId" version="1">
+        <function>TestMgr_DS_FP_getTextDisplayFromId</function>
+        <parameters>
+          <parameter name="text_id" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_HOST_getVideoOutputPortFromName" version="1">
+        <function>TestMgr_DS_HOST_getVideoOutputPortFromName</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_HOST_getVideoOutputPortFromId" version="1">
+        <function>TestMgr_DS_HOST_getVideoOutputPortFromId</function>
+        <parameters>
+          <parameter name="port_id" value="1"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_HOST_getAudioOutputPortFromName" version="1">
+        <function>TestMgr_DS_HOST_getAudioOutputPortFromName</function>
+        <parameters>
+          <parameter name="port_name" value="SPDIF0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_HOST_getAudioOutputPortFromId" version="1">
+        <function>TestMgr_DS_HOST_getAudioOutputPortFromId</function>
+        <parameters>
+          <parameter name="port_id" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_FP_getBrightnessLevels" version="1">
+        <function>TestMgr_DS_FP_getBrightnessLevels</function>
+        <parameters>
+          <parameter name="indicator_name" value="Message"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_FP_getColorMode" version="1">
+        <function>TestMgr_DS_FP_getColorMode</function>
+        <parameters>
+          <parameter name="indicator_name" value="Remote"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_FP_getTextColorMode" version="1">
+        <function>TestMgr_DS_FP_getTextColorMode</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_FP_getTextBrightnessLevels" version="1">
+        <function>TestMgr_DS_FP_getTextBrightnessLevels</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_FP_setTextBrightness" version="1">
+        <function>TestMgr_DS_FP_setTextBrightness</function>
+        <parameters>
+          <parameter name="brightness" value="10"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_FP_getTextBrightness" version="1">
+        <function>TestMgr_DS_FP_getTextBrightness</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_FP_enableDisplay" version="1">
+        <function>TestMgr_DS_FP_enableDisplay</function>
+        <parameters>
+          <parameter name="enable" value="1"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_AOPCONFIG_getPortType" version="1">
+        <function>TestMgr_DS_AOPCONFIG_getPortType</function>
+        <parameters>
+          <parameter name="port_id" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_HOST_getAvailableSleepModes" version="1">
+        <function>TestMgr_DS_HOST_getAvailableSleepModes</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_AOPCONFIG_getPortFromName" version="1">
+        <function>TestMgr_DS_AOPCONFIG_getPortFromName</function>
+        <parameters>
+          <parameter name="port_name" value="IDLR"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOPCONFIG_getPixelResolution" version="1">
+        <function>TestMgr_DS_VOPCONFIG_getPixelResolution</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOPCONFIG_getSSMode" version="1">
+        <function>TestMgr_DS_VOPCONFIG_getSSMode</function>
+        <parameters>
+          <parameter name="ss_id" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOPCONFIG_getVideoResolution" version="1">
+        <function>TestMgr_DS_VOPCONFIG_getVideoResolution</function>
+        <parameters>
+          <parameter name="port_id" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOPCONFIG_getFrameRate" version="1">
+        <function>TestMgr_DS_VOPCONFIG_getFrameRate</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_AOPCONFIG_getSupportedTypes" version="1">
+        <function>TestMgr_DS_AOPCONFIG_getSupportedTypes</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_AOPCONFIG_getPortFromId" version="1">
+        <function>TestMgr_DS_AOPCONFIG_getPortFromId</function>
+        <parameters>
+          <parameter name="port_id" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_AOPCONFIG_getPorts" version="1">
+        <function>TestMgr_DS_AOPCONFIG_getPorts</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_AOPCONFIG_release" version="1">
+        <function>TestMgr_DS_AOPCONFIG_release</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_AOPCONFIG_load" version="1">
+        <function>TestMgr_DS_AOPCONFIG_load</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_AOP_setStereoAuto" version="1">
+        <function>TestMgr_DS_AOP_setStereoAuto</function>
+        <parameters>
+          <parameter name="autoMode" value="0"/>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_AOP_getStereoAuto" version="1">
+        <function>TestMgr_DS_AOP_getStereoAuto</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOPTYPE_getRestrictedResolution" version="1">
+        <function>TestMgr_DS_VOPTYPE_getRestrictedResolution</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOPTYPE_setRestrictedResolution" version="2">
+        <function>TestMgr_DS_VOPTYPE_setRestrictedResolution</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+          <parameter name="resolution" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="DS_FP_getColors" version="1">
+        <function>TestMgr_DS_FP_getColors</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_AOP_getGain" version="1">
+        <function>TestMgr_DS_AOP_getGain</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_AOP_getOptimalLevel" version="1">
+        <function>TestMgr_DS_AOP_getOptimalLevel</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOP_isActive" version="1">
+        <function>TestMgr_DS_VOP_isActive</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOPTYPE_getPorts" version="1">
+        <function>TestMgr_DS_VOPTYPE_getPorts</function>
+        <parameters>
+          <parameter name="port_id" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOP_setDisplayConnected" version="2">
+        <function>TestMgr_DS_VOP_setDisplayConnected</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+          <parameter name="connected" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOP_hasSurround" version="1">
+        <function>TestMgr_DS_VOP_hasSurround</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="DS_VOP_getEDIDBytes" version="1">
+        <function>TestMgr_DS_VOP_getEDIDBytes</function>
+        <parameters>
+          <parameter name="port_name" value="HDMI0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name="DS_VOP_getDefaultResolution" id=" " version="1">
+        <function>TestMgr_DS_VOP_getDefaultResolution</function>
         <parameters>
           <parameter name="port_name" value="HDMI0"/>
         </parameters>

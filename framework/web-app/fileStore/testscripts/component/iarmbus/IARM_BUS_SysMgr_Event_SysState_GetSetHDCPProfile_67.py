@@ -106,8 +106,8 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         set_HDCPstate = "1";
                                 else :
                                         #change to 0
-                                        tdkTestObj.addParameter("newState",2);
-                                        set_HDCPstate = "2";
+                                        tdkTestObj.addParameter("newState",0);
+                                        set_HDCPstate = "0";
                                 expectedresult="SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();

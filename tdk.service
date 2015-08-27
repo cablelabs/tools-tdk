@@ -4,7 +4,8 @@ After=irmgr.service
 Requires=irmgr.service
 
 [Service]
-ExecStart=/bin/sh -c '/var/TDK/StartTDK.sh'
+ExecStartPre=/bin/sh -c 'cp -r /var/TDK /opt/'
+ExecStart=/bin/sh -c '/opt/TDK/StartTDK.sh'
 
 [Install]
 WantedBy=multi-user.target
