@@ -81,11 +81,10 @@ if "SUCCESS" in loadmodulestatus.upper():
 			if "SUCCESS" in actualresult.upper():
 	                        #Primitive test case which associated to this Script
 				tdkTestObj = obj.createTestStep('DS_HOST_getAudioOutputPortFromName');
-				audioList1 = details.split(",")
-				for ele in audioList1:
-					audio = ele
-					print "Getting the audio output port from ", audio
-					tdkTestObj.addParameter("port_name",audio);
+				audioList = details.split(",")
+				for portName in audioList:
+					print "Getting the audio output port from ", portName
+					tdkTestObj.addParameter("port_name",portName);
 					expectedresult="SUCCESS"
 		                        tdkTestObj.executeTestCase(expectedresult);
 		                        actualresult = tdkTestObj.getResult();
@@ -103,12 +102,11 @@ if "SUCCESS" in loadmodulestatus.upper():
 				print "Failed to get the audio output ports"
 
                 else :
-                        tdkTestObj.setResultStatus("FAILURE");
                         print "Display device not connected. Skipping testcase"
 
 		#Calling DS_ManagerDeInitialize to DeInitialize API
 		result = devicesettings.dsManagerDeInitialize(obj)
+
+	obj.unloadModule("devicesettings");
 else :
 	print "Failed to Load Module"
-	
-obj.unloadModule("devicesettings");

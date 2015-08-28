@@ -3,7 +3,7 @@
 <xml>
   <id>490</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>8</version>
+  <version>11</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrcMPSink_Pause_02</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -68,7 +68,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     if teststep == 'RMF_Element_Open':
         #fetch recording id from list matchList.
         recordID = matchList[1]
-	parametername.append("url");
+        parametername.append("url");
         dvrLocator = "dvr://local/" + recordID[:-1] + "#0"
         print dvrLocator
         parametervalue.append(dvrLocator);
@@ -86,21 +86,21 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 
     print "[Execution Result]:  %s" %result;
     print "[Execution Details]:  %s" %details;
-    #Pre-requisite to Check and verify required recording is present or not.
-    #---------Start-----------------
-
-    duration = 3
-  
-    matchList = tdkTestObj.getRecordingDetails(duration);
-    obj.resetConnectionAfterReboot()
-
-    #---------End-------------------
     return result
+
+
+tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
 
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
-
+if expected_Result in loadModuleStatus.upper():
+    #Pre-requisite to Check and verify required recording is present or not.
+    #---------Start-----------------
+    duration = 3
+    matchList = tdkTestObj.getRecordingDetails(duration);
+    obj.resetConnectionAfterReboot()
+    #---------End-------------------
 
 
 if expected_Result in loadModuleStatus.upper():

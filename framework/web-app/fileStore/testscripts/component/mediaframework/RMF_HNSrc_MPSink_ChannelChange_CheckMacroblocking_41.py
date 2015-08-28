@@ -3,7 +3,7 @@
 <xml>
   <id>1634</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_ChannelChange_CheckMacroblocking_41</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -32,9 +32,9 @@ Test Type: Positive.</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
+    <!--  -->
+    <box_type>Terminal-RNG</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -140,7 +140,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                 #print "Audio check Done. Status: ",result;
 
                                                                                 checkStatusParameter=["audioVideoStatus"]
-                                                                                checkStatusFor=["/opt/TDK/CheckVideoStatus.sh"]
+                                                                                checkStatusFor=["CheckVideoStatus.sh"]
                                                                                 result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                 print "Video check Done. Status: ",result;
                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_GetState',obj,Expected_Result,src_parameter,src_element);

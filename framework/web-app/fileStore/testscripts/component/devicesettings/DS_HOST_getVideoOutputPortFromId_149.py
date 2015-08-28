@@ -82,8 +82,8 @@ if "SUCCESS" in loadmodulestatus.upper():
 			if "SUCCESS" in actualresult.upper():
 				#Primitive test case which associated to this Script
 				tdkTestObj = obj.createTestStep('DS_HOST_getVideoOutputPortFromId');
-				portList1 = details.split(",")
-				value = len(portList1)
+				portList = details.split(",")
+				value = len(portList)
 				print "Number of Video ID's supported is ", value	
 				port_id = 0
 				while(port_id < value):
@@ -105,12 +105,10 @@ if "SUCCESS" in loadmodulestatus.upper():
 				tdkTestObj.setResultStatus("FAILURE");
                                 print "Unable to get the Video output Ports"
                 else :
-                        tdkTestObj.setResultStatus("FAILURE");
                         print "Display device not connected. Skipping testcase"
 
                 #Calling DS_ManagerDeInitialize to DeInitialize API
                 result = devicesettings.dsManagerDeInitialize(obj)
+	obj.unloadModule("devicesettings");
 else :
 	print "Failed to Load Module"
-	
-obj.unloadModule("devicesettings");

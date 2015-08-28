@@ -3,7 +3,7 @@
 <xml>
   <id>885</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>11</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_FF_64x_20</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>9</execution_time>
+  <execution_time>13</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -94,6 +94,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     print "Details of "+ teststep+":  %s" %details;
     if teststep == "RMF_Element_Getmediatime":
         if "SUCCESS" in result.upper():
+            print details
             Mediatime=details.split(":");
             print Mediatime[1];
 
@@ -140,19 +141,21 @@ if Expected_Result in loadModuleStatus.upper():
 																		result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
 																		if Expected_Result in result.upper():
 																			#Get the Mediatime value
-																			time.sleep(120);
+																			time.sleep(240);
+																			result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+																			time.sleep(10);
 																			result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
 																			if Expected_Result in result.upper():
 																					initialmediatime=Mediatime[1]
 																					print initialmediatime
-																					result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
-																					time.sleep(10);
+																					#result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+																					#time.sleep(10);
 																					#FF with 32x
 																					result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
 																					if Expected_Result in result.upper():
 																							result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
 																							if Expected_Result in result.upper():
-																									time.sleep(5);
+																									time.sleep(15);
 																									result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
 																									Mediaspeed[1]=float(Mediaspeed[1]);
 																									Mediatime[1]=float(Mediatime[1]);

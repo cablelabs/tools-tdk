@@ -105,7 +105,6 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 print "Failed to get the Audio output Ports"
 
                 else :
-                        tdkTestObj.setResultStatus("FAILURE");
                         print "Display device not connected. Skipping testcase"
 
         	#Calling DS_ManagerDeInitialize to DeInitialize API

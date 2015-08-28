@@ -3,7 +3,7 @@
 <xml>
   <id>1648</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_TSB_FF_CheckMacroblocking_50</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -151,6 +151,8 @@ if Expected_Result in loadModuleStatus.upper():
                                                                         if Expected_Result in result.upper():
                                                                                 #Get the Mediatime value
                                                                                 time.sleep(300);
+                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+                                                                                time.sleep(15)
                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                                                                                 if Expected_Result in result.upper():
                                                                                         initialmediatime=Mediatime[1]
@@ -159,7 +161,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                         if Expected_Result in result.upper():
                                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
                                                                                                 if Expected_Result in result.upper():
-                                                                                                        time.sleep(15);
+                                                                                                        time.sleep(5);
 
                                                                                                         #checkStatusParameter=["audioVideoStatus"]
                                                                                                         #checkStatusFor=["CheckAudioStatus.sh"]

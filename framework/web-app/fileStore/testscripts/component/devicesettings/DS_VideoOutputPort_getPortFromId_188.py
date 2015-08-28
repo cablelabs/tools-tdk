@@ -83,7 +83,6 @@ if "SUCCESS" in dsLoadStatus.upper():
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                 else:
-			tdkTestObj.setResultStatus("FAILURE");
                         print "Display device not connected. Skipping testcase"
                 #Calling DS_ManagerDeInitialize to DeInitialize API
                 result = devicesettings.dsManagerDeInitialize(dsObj)

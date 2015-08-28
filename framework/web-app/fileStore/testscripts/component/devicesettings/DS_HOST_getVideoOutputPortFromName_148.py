@@ -102,7 +102,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 				tdkTestObj.setResultStatus("FAILURE");
 				print "Unable to get the Video output Ports"
                 else :
-                        tdkTestObj.setResultStatus("FAILURE");
                         print "Display device not connected. Skipping testcase"
 
                 #Calling DS_ManagerDeInitialize to DeInitialize API

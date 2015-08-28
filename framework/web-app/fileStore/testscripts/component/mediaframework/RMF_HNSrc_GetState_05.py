@@ -3,24 +3,24 @@
 <xml>
   <id>431</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>8</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_GetState_05</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>495</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Init</primitive_test_name>
   <!--  -->
   <primitive_test_version>1</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>These Script tests the RDK Mediaframework HNSrc element to Get the state of RMF.
 Test Case ID: CT_RMF_HNSrc_05.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>6</execution_time>
+  <execution_time>1</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -44,6 +44,7 @@ Test Case ID: CT_RMF_HNSrc_05.</synopsis>
 '''
 import tdklib;
 import mediaframework;
+import time;
 src_element=["HNSrc"]
 Expected_Result="SUCCESS"
 src_parameter=["rmfElement"]
@@ -61,6 +62,8 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         tdkTestObj.addParameter(parametername[item],parametervalue[item]);
     #Execute the test case in STB
     tdkTestObj.executeTestCase(expectedresult);
+    #time.sleep(360)
+
     #Get the result of execution
     result = tdkTestObj.getResult();
     tdkTestObj.setResultStatus(result);

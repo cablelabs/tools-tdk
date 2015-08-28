@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>8</version>
+  <version>10</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_TSB_Check_Pause_Failure_02</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -82,6 +82,12 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     tdkTestObj.executeTestCase(expectedresult);
     #Get the result of execution
     result = tdkTestObj.getResult();
+    if teststep == "CheckAudioVideoStatus":
+        if result == "SUCCESS":
+            result="FAILURE"
+        else:
+            result="SUCCESS"
+
     details = tdkTestObj.getResultDetails();
     tdkTestObj.setResultStatus(result);
     print "Status of "+ teststep+":  %s" %result;
@@ -119,7 +125,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                 #Play the HNSRC-->MPSINK pipeline
                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
                                                                 #waiting to maintain some buffer
-                                                                time.sleep(1);
+                                                                time.sleep(5);
                                                                 if Expected_Result in result.upper():
                                                                         #Check the get state of current pipeline
                                                                         result=Create_and_ExecuteTestStep('RMF_Element_GetState',obj,Expected_Result,src_parameter,src_element);
@@ -133,7 +139,8 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                             time.sleep(5);
                                                                                             checkStatusParameter=["audioVideoStatus"]
                                                                                             checkStatusFor=["CheckVideoStatus.sh"]
-                                                                                            result=Create_and_ExecuteTestStep('CheckAudioVideoStatus', obj,Expected_Result,checkStatusParameter,checkStatusFor);
+                                                                                            Pause_Expected_Result="FAILURE"
+                                                                                            result=Create_and_ExecuteTestStep('CheckAudioVideoStatus', obj,Pause_Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                             print "Video check Done. Status: ",result;
                                                 #Close the Hnsrc Element
                                                 result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,Expected_Result,src_parameter,src_element);

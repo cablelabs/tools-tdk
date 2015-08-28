@@ -154,27 +154,27 @@ if "SUCCESS" in loadmodulestatus.upper():
                         portNames = details.split(',')
                         print "Port Names: ",portNames
 
-                        for ele in portNames:
+                        for portName in portNames:
 
                                 #calling Device Settings - Get the EDID bytes for the Video port connected.
                                 tdkTestObj = obj.createTestStep('DS_VOP_getEDIDBytes');
 
-                                tdkTestObj.addParameter("port_name",ele);
+                                tdkTestObj.addParameter("port_name",portName);
                                 expectedresult="SUCCESS"
                                 print " "
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
                                 details = tdkTestObj.getResultDetails()
                                 print "[DS_VOP_getEDIDBytes RESULT] : %s" %actualresult;
-                                print "[DS_VOP_getEDIDBytes DETAILS] : %s" %details;
+                                print "[PortName: %s DETAILS] : %s" %details;
 
                                 #Check for SUCCESS/FAILURE return value of DS_VOP_getEDIDBytes
                                 if expectedresult in actualresult:
                                         tdkTestObj.setResultStatus("SUCCESS");
-                                        print "SUCCESS: Is DS_VOP_getEDIDBytes";
+                                        print "DS_VOP_getEDIDBytes successful";
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "FAILURE: Is DS_VOP_getEDIDBytes";
+                                        print "DS_VOP_getEDIDBytes failed";
 
                                 print " "
                 else:

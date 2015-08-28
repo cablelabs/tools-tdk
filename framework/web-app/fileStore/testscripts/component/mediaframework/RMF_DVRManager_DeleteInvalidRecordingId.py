@@ -89,7 +89,7 @@ if ('SUCCESS' in mfLoadStatus.upper()) and ('SUCCESS' in tdkIntLoadStatus.upper(
         result = deleteRecording(mfObj,kwargs={'ID':recordingId,'STREAMID':streamId})
 
         #Playback deleted recording
-        result = dvrPlayUrl(tdkIntObj, kwargs={"ID":recordingId,"STREAMID":streamId})
+        result = dvrPlayUrl(tdkIntObj, kwargs={"ID":recordingId,"STREAMID":streamId,"expectedResult":"FAILURE"})
 
         #unloading modules
         tdkIntObj.unloadModule('tdkintegration');

@@ -3,7 +3,7 @@
 <xml>
   <id>943</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>8</version>
+  <version>9</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_Pause&amp;FF_39</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -150,7 +150,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                         if Expected_Result in result.upper():
                                                                                                 time.sleep(10);
                                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_GetState',obj,Expected_Result,src_parameter,src_element);
-                                                                                                if Expected_Result in result.upper() and "PAUSE" in details.upper():
+                                                                                                if Expected_Result in result.upper() and "PLAYING" in details.upper():
                                                                                                         tdkTestObj.setResultStatus("SUCCESS");
                                                                                                 else:
                                                                                                         tdkTestObj.setResultStatus("FAILURE");
