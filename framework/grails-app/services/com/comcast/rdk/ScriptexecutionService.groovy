@@ -774,7 +774,7 @@ class ScriptexecutionService {
 			e.printStackTrace()
 		}
 		
-		String outData = executeScript( file.getPath(), execTime )
+		String outData = executeScript( file.getPath(), execTime , executionName )
 		
 		def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDeviceInstance?.id.toString()}"		
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}//"
@@ -816,8 +816,9 @@ class ScriptexecutionService {
 		   /* Execution.executeUpdate("update Execution c set c.outputData = :newStatus , c.executionTime = :newTime where c.id = :execId",
 				[newStatus: outputData, newTime: timeDiff, execId: executionId.toLong()])*/
 	   // }
-		
-		if(htmlData.contains(TDK_ERROR)){
+		if(executionService.abortList.contains(executionInstance?.id?.toString())){
+			executionService.resetAgent(deviceInstance,TRUE)
+		}	else if(htmlData.contains(TDK_ERROR)){
 			htmlData = htmlData.replaceAll(TDK_ERROR,"")
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
@@ -902,8 +903,9 @@ class ScriptexecutionService {
 	 * @param executionData
 	 * @return
 	 */
-	public String executeScript(final String executionData, final int executeTime) {
-		new ScriptExecutor().execute( getCommand( executionData ),executeTime)
+	public String executeScript(final String executionData, final int executeTime,final String executionName) {
+//		new ScriptExecutor().execute( getCommand( executionData ),executeTime)
+		new ScriptExecutor().execute( getCommand( executionData ), executeTime,executionName,executionService?.executionProcessMap)
 	}
 	
 	/**
@@ -1191,5 +1193,178 @@ class ScriptexecutionService {
 		}
 		return executionNode
 	}
+	def thirdPartyJsonPerformanceResultFromController(final String execName, final String appurl,def realPath ){
+		JsonArray jsonArray = new JsonArray()
+		JsonObject compNode
+		JsonObject deviceNode
+		JsonObject executionNode
+		String appUrl = appurl
+		String url
+		appUrl = appurl + "/execution/getDetailedTestResult?execResId="
+		Execution executionInstance = Execution.findByName(execName)
+		if(executionInstance){
+			ScriptGroup scriptGrp = ScriptGroup.findByName(executionInstance?.scriptGroup)
+			def executionResultStatus //= ExecutionResult.findAllByExecutionAndStatusIsNotNull(executionInstance)
+			def scriptStatus = null
+			def executionDevice = ExecutionDevice.findAllByExecution(executionInstance)
+			def executionResult //= ExecutionResult.findAllByExecution(executionInstance)
 
+			executionDevice.each{ execDevice ->
+				url = ""
+				compNode = new JsonObject()
+				deviceNode = new JsonObject()
+				executionResult = ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance, execDevice)
+		
+					List<ExecutionResult> execResult = ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance, execDevice)
+					def componentMap = [:].withDefault {[]}
+					def systemMap = [:].withDefault {[]}
+					execResult.each{ execResObj ->
+//						Script.withTransaction { scriptRes ->
+						def scriptMap = scriptService.getScriptNameModuleNameMapping(realPath)
+						def moduleName =scriptMap.get(execResObj?.script)
+						Module module= Module.findByName(moduleName)
+						def script = scriptService.getScript(realPath,moduleName, execResObj?.script)
+							if(module?.testGroup?.groupValue?.toString()?.equals("E2E") ){
+								List val1 = systemMap.get(module.toString());
+								if(!val1){
+									val1 = []
+									systemMap.put(module.toString(), val1)
+								}
+								val1.add(execResObj?.id)
+							}
+							else{
+								List val = componentMap.get(module.toString());
+								if(!val){
+									val = []
+									componentMap.put(module.toString(), val)
+								}
+								val.add(execResObj?.id)
+							}
+//						}
+					}
+					def statusVal
+					def newmap = [:]
+					JsonArray compArray = new JsonArray();
+					
+					componentMap.each{ k, v ->
+						JsonObject compObject = new JsonObject();
+						
+						compObject.addProperty("ModuleName", k.toString())
+						def lst = v
+						statusVal = SUCCESS_STATUS
+						
+						JsonArray scriptStatusArray = new JsonArray();
+						JsonObject scriptStatusNode
+						lst.each{
+							url = ""
+							scriptStatusNode = new JsonObject()
+							ExecutionResult exResult = ExecutionResult.findById(it)
+							if(!exResult.status.equals(SUCCESS_STATUS)){
+								statusVal = FAILURE_STATUS
+							}
+							scriptStatusNode.addProperty("ScriptName", exResult.script.toString())
+							scriptStatusNode.addProperty("ScriptStatus", exResult.status.toString())
+
+							url = appUrl + exResult?.id.toString()
+							scriptStatusNode.addProperty("LogUrl", url.toString())
+							def benchmarkArray = getBenchMarkJsonArray(exResult)
+							scriptStatusNode.add("TimeInfo", benchmarkArray)
+							def cpuArray = getPerformanceJsonArray(exResult,Constants.SYSTEMDIAGNOSTICS_CPU)
+							scriptStatusNode.add("CPU", cpuArray)
+							def memArray = getPerformanceJsonArray(exResult,Constants.SYSTEMDIAGNOSTICS_MEMORY)
+							scriptStatusNode.add("Memory", memArray)
+							
+							scriptStatusArray.add(scriptStatusNode)
+							
+						}
+						
+						newmap[k] = statusVal
+						compObject.addProperty("ModuleStatus", statusVal.toString())
+						compObject.add("ScriptDetails", scriptStatusArray)
+						compArray.add(compObject)
+					}
+					
+					JsonArray systemArray = new JsonArray();
+					systemMap.each{ k, v ->
+						JsonObject sysObject = new JsonObject();
+						
+						sysObject.addProperty("ModuleName", k.toString())
+						def lst = v
+						statusVal = SUCCESS_STATUS
+						
+						JsonArray scriptStatusArray = new JsonArray();
+						JsonObject scriptStatusNode
+						lst.each{
+							url = ""
+							scriptStatusNode = new JsonObject()
+							ExecutionResult exResult = ExecutionResult.findById(it)
+							if(!exResult.status.equals(SUCCESS_STATUS)){
+								statusVal = FAILURE_STATUS
+							}
+							scriptStatusNode.addProperty("ScriptName", exResult.script.toString())
+							scriptStatusNode.addProperty("ScriptStatus", exResult.status.toString())
+
+							url = appUrl + exResult?.id.toString()
+							scriptStatusNode.addProperty("LogUrl", url.toString())
+							
+							scriptStatusArray.add(scriptStatusNode)
+							
+						}
+						
+						newmap[k] = statusVal
+						sysObject.addProperty("ModuleStatus", statusVal.toString())
+						sysObject.add("ScriptDetails", scriptStatusArray)
+						systemArray.add(sysObject)
+					}
+
+					deviceNode.addProperty("Device",execDevice?.device.toString())
+					deviceNode.add("ComponentLevelDetails",compArray)
+					deviceNode.add("SystemLevelDetails",systemArray)
+					jsonArray.add(deviceNode)
+				}
+				executionNode = new JsonObject()
+				executionNode.addProperty("ExecutionName",execName)
+				
+				String execStatus
+				if(executionInstance?.executionStatus){
+					execStatus = executionInstance?.executionStatus
+				}
+				else{
+					execStatus = "IN-PROGRESS"
+				}
+								
+				executionNode.addProperty("ExecutionStatus",execStatus.toString())
+				executionNode.add("DEVICES", jsonArray)
+		}
+		return executionNode
+	}
+	
+	def getBenchMarkJsonArray(def execResult){
+		def benchMarkList = Performance.findAllByExecutionResultAndPerformanceType(execResult,"BENCHMARK")
+		JsonArray benchmarkArray = new JsonArray();
+		if(benchMarkList?.size() > 0){
+			benchMarkList?.each {  bMark ->
+				JsonObject benchmark = new JsonObject()
+				benchmark.addProperty("APIName", bMark?.processName)
+				benchmark.addProperty("ExecutionTime", bMark?.processValue)
+				benchmarkArray.add(benchmark)
+			}
+		}
+		return benchmarkArray
+	}
+	
+	def getPerformanceJsonArray(def execResult,def perfType){
+		def perfList = Performance.findAllByExecutionResultAndPerformanceType(execResult,perfType)
+		JsonArray perfArray = new JsonArray();
+		if(perfList?.size() > 0){
+			perfList?.each {  pData ->
+				JsonObject perf = new JsonObject()
+				perf.addProperty("ProcessName", pData?.processName)
+				perf.addProperty("ProcessValue", pData?.processValue)
+				perfArray.add(perf)
+			}
+		}
+		return perfArray
+	}
+	
 }

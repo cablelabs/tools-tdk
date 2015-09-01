@@ -91,6 +91,8 @@ def dsManagerDeInitialize(obj):
 # 
 def dsIsDisplayConnected(obj):
 
+	retValue = "FALSE"
+
         #Primitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('DS_IsDisplayConnectedStatus');
 
@@ -106,14 +108,14 @@ def dsIsDisplayConnected(obj):
 
         #Set the result status of execution
 	if expectedresult in result:
-                tdkTestObj.setResultStatus("SUCCESS");
+		if "FALSE" in details:
+			tdkTestObj.setResultStatus("FAILURE");
+			retValue = "FALSE"
+		else:
+			tdkTestObj.setResultStatus("SUCCESS");
+			retValue = "TRUE"
         else:
                 tdkTestObj.setResultStatus("FAILURE");
-
-        if "FALSE" in details:
-                retValue = "FALSE"
-        else:
-                retValue = "TRUE"
 
         return retValue
 

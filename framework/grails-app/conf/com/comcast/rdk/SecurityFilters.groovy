@@ -20,8 +20,9 @@ class SecurityFilters {
     def publicActions = [     
 		user: ['changePassword','registerUser','saveUser'],
 		primitiveTest : ['getJson','getStreamDetails'],
-		execution : ['saveLoadModuleStatus','saveResultDetails','getDeviceStatusList','getDeviceStatus','thirdPartyJsonResult','thirdPartyTest','showResult','getDetailedTestResult','getClientPort','stopThirdPartyTestExecution','getAgentConsoleLog','getRealtimeDeviceStatus','getExecutionOutput'],
-		deviceGroup : ['uploadAgentBinaries'],
+		execution : ['saveLoadModuleStatus','saveResultDetails','getDeviceStatusList','getDeviceStatus','thirdPartyJsonResult','thirdPartyTest','showResult','getDetailedTestResult','getClientPort','stopThirdPartyTestExecution','getAgentConsoleLog','getRealtimeDeviceStatus','getExecutionOutput','thirdPartySingleTestExecution','thirdPartyJsonPerformanceResult'],
+		deviceGroup : ['uploadAgentBinaries','getDeviceList'],
+		scriptGroup : ['getScriptNameList'],
     ];
 
     private boolean findAction(actionMap, controllerName, actionName) {

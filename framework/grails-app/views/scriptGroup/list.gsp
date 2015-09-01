@@ -106,22 +106,25 @@
 						</div>
 						<div class="" style="width: 290px; max-height: 350px;vertical-align: top;">
 							<ul id="scriptgrpbrowser" class="filetree">
-								<li class="" id="root1"><span class="folder" id="addscriptGrpId">TestSuite</span>
+								<li class=""><span class="folder" id="addscriptGrpId">TestSuite</span>
 									<ul>
 									<div class="" style="max-height: 340px;overflow: auto;vertical-align: top;">
 									<% int scriptGroupCount = 0; %>
 									
 										<g:each in="${scriptGroupInstanceList}" var="scriptGrp">
-											<li class="closed"><span class="folder" id="${scriptGrp.id}"><a href="#" onclick="editScriptGroup('${scriptGrp.id}'); return false;">${scriptGrp.name}</a></span>
+										<% def id = scriptGrp
+											if(id.contains(".")){
+												id = id.replace(".", "_")
+											}
+										 %>
+										<div id="${id}" class="${scriptGrp}" onmouseover="getScriptsList(this, '${scriptGrp}', ${scriptInstanceTotal}, ${totalScripts} )">
+											<li class="closed"><span class="folder" id="${scriptGrp}"><a href="#" onclick="editScriptGroup('${scriptGrp}'); return false;">${scriptGrp}</a></span>
 												<ul>
-													<g:each in="${scriptGrp.scriptList}" var="script">
-													<% scriptGroupCount++; %>
-													<li id="scriptGroupList_${scriptGroupCount}">
-														<span id="${script?.moduleName}@${script?.scriptName}"><a href="#" onclick="editScript('${script?.moduleName}@${script?.scriptName}'); highlightTreeElement('scriptList_', '0', '${scriptInstanceTotal}');highlightTreeElement('scriptGroupList_', '${scriptGroupCount}', '${totalScripts}'); return false;">${script?.scriptName}</a></span>
-													</li>
-													</g:each>
+												<div class="scripts_${id}">
+												</div>
 												</ul>											
 											</li>
+										</div>
 										</g:each>
 										</div>
 									</ul>

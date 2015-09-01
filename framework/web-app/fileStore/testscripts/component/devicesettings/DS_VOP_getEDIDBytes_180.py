@@ -153,6 +153,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 
                         portNames = details.split(',')
                         print "Port Names: ",portNames
+			portNames = ["HDMI0"]
 
                         for portName in portNames:
 
@@ -166,7 +167,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 actualresult = tdkTestObj.getResult();
                                 details = tdkTestObj.getResultDetails()
                                 print "[DS_VOP_getEDIDBytes RESULT] : %s" %actualresult;
-                                print "[PortName: %s DETAILS] : %s" %details;
+                                print "[PortName: %s DETAILS] : %s" %(portName,details);
 
                                 #Check for SUCCESS/FAILURE return value of DS_VOP_getEDIDBytes
                                 if expectedresult in actualresult:

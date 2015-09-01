@@ -101,6 +101,9 @@ class ScriptService {
 				File scriptsDir = new File( "${realPath}//fileStore//testscripts//"+directory+"//")
 				if(scriptsDir.exists()){
 					def modules = scriptsDir.listFiles()
+					
+					Arrays.sort(modules);
+					
 					modules.each { module ->
 
 						def start1 =System.currentTimeMillis()

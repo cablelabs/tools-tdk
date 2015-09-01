@@ -13,6 +13,7 @@
 <html>
 <head>
 <meta name="layout" content="main">
+<%@ page import="org.codehaus.groovy.grails.validation.routines.InetAddressValidator" %>
 <g:set var="entityName"
 	value="${message(code: 'ScriptExecution.label', default: 'ScriptExecution')}" />
 <link rel="stylesheet"
@@ -94,36 +95,44 @@ $(document).ready(function() {
 								<ul> <% int deviceStatusCount = 0; %>
 								<span id="device_status">								
 									<g:each in="${deviceList}" var="device">
+									<% def isNameIp = InetAddressValidator.getInstance().isValidInet4Address(device.stbName)
+										def name = device.stbName	
+										if(isNameIp) {
+											name = name.replace(".", "_")
+										}
+									 %>
 							<% deviceStatusCount++; %>
+							<div id="tooltip_${name}" class="tooltip" title="Device : ${device.stbName}  &#013;IP : ${device.stbIp}    &#013;BoxType : ${device.boxType}    &#013;Status : ${device.deviceStatus}">
 										<li id="deviceExecutionList_${deviceStatusCount}"  >
 										<g:if test="${device.deviceStatus.toString()=="NOT_FOUND" }">
 										<span class="filedevicenotfound" id="${device.id}">
-										<a href="#" onclick="showScript('${device.id}');  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
+										<a href="#" onclick="showScript('${device.id}', this);  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
 										</g:if>
 										<g:if test="${device.deviceStatus.toString()=="FREE" }">
 										<span class="filedevicefree" id="${device.id}">
-										<a href="#" onclick="showScript('${device.id}');  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
+										<a href="#" onclick="showScript('${device.id}',this);  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
 										</g:if>
 										<g:if test="${device.deviceStatus.toString()=="BUSY" }">
 										<span class="filedevicebusy" id="${device.id}">
-	          							<a href="#" onclick="showScript('${device.id}');  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
+	          							<a href="#" onclick="showScript('${device.id}',this);  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
 										</g:if>
 										<g:if test="${device.deviceStatus.toString()=="HANG" }">
 										<span class="filedevicehang" id="${device.id}">
-	          							<a href="#" onclick="showScript('${device.id}');  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
+	          							<a href="#" onclick="showScript('${device.id}',this);  highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
 										</g:if>
 										<g:if test = "${device.deviceStatus.toString()=="TDK_DISABLED" }">
 											<span class="filedevicetdkenabled" id="${device.id}">	
-	          							<a href="#" onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
+	          							<a href="#" onclick="showScript('${device.id}',this); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">${device.stbName}</a></span>
 										</g:if>
 										<g:if test="${device.deviceStatus.toString()=="ALLOCATED" }">
 											<span class="filedevicebusy"><a href="#"
-												onclick="showScript('${device.id}'); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">
+												onclick="showScript('${device.id}',this); highlightTreeElement('deviceExecutionList_', '${deviceStatusCount}', '${deviceInstanceTotal}'); return false;">
 													${device.stbName}
 											</a></span>
 										</g:if>
 										
 										</li>
+									</div>
 									</g:each>
 										
 									</span>	

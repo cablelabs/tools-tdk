@@ -19,6 +19,10 @@ import grails.converters.JSON
 import java.sql.Timestamp
 import java.util.concurrent.ExecutorService
 import org.springframework.dao.DataIntegrityViolationException
+
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject;
+
 import java.util.concurrent.Executors
 
 
@@ -856,7 +860,7 @@ class DeviceGroupController {
     def getBoxType(){
         List boxTypes = []
         BoxType boxType = BoxType.findById(params?.id)
-        boxTypes.add( boxType.type.toLowerCase().trim() )
+        boxTypes.add( boxType?.type?.toLowerCase()?.trim() )
         render boxTypes as JSON
     }
 
@@ -952,6 +956,58 @@ class DeviceGroupController {
 			deviceInstanceList.add(deviceInstance.id)
 		}
 		render deviceInstanceList as JSON
+	}
+	
+	/** REST method to retrieve the device info
+	 * @param boxType
+	 * @return
+	 */
+	def getDeviceList(String boxType){
+		JsonObject deviceJson = new JsonObject()
+		try {
+			JsonArray devArray = new JsonArray()
+			def devList
+			BoxType bb
+			if(boxType){
+				bb = BoxType.findByName(boxType)
+				if(bb){
+					devList = Device.findByBoxType(bb)
+				}
+			}else{
+				devList = Device.list()
+			}
+
+			if(boxType && !bb){
+				deviceJson.addProperty("status", "failure")
+				deviceJson.addProperty("remarks", "no box type found with name "+boxType)
+			}else{
+				if(devList){
+					devList?.each{ dev ->
+						JsonObject device = new JsonObject()
+						device.addProperty("name", dev?.stbName)
+						device.addProperty("boxtype", dev?.boxType?.name)
+						if(dev?.boxType?.type?.equals("Client")){
+							if(dev?.isChild == 1){
+								device.addProperty("macid", dev?.macId)
+								device.addProperty("mocachild", "true")
+							}else{
+								device.addProperty("ip", dev?.stbIp)
+								device.addProperty("mocachild", "false")
+							}
+							device.addProperty("gateway", dev?.gatewayIp)
+						}else{
+							device.addProperty("ip", dev?.stbIp)
+						}
+						devArray.add(device)
+					}
+				}
+				deviceJson.add("devices",devArray)
+			}
+		} catch (Exception e) {
+			println " Error getDeviceList "+e.getMessage()
+			e.printStackTrace()
+		}
+		render deviceJson
 	}
 }
 

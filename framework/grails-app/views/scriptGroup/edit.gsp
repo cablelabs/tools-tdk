@@ -203,10 +203,10 @@
 			<br><br>
 			<table name="scripttable">
 			<tr>
-				<td name="selectabletd" style="width: 40%">
+				<td name="selectabletd" style="width: 45%">
 					<div class="selectablediv" name ="selectablediv"> 
 					<label>All Scripts</label> <br>
-					<ul class= "selectable" id="selectable" name ="selectable"  title="selectable" style="max-height : 454px; max-width : 250px; overflow: auto; ">
+					<ul class= "selectable" id="selectable" name ="selectable"  title="selectable" style="max-height : 454px; max-width : 380px; overflow: auto; ">
 						<g:each in='${scripts}' var="script">
 						<% 
 							String idScript = script?.id;
@@ -218,15 +218,15 @@
 					</ul>
 					</div>
 					</td>
-				<td style="width: 10%">
+				<td style="width: 8%">
 				<br><br><br><br>
 				<input type="image" src= "../images/arrow_right.png" onclick="addScripts();return false;"  ><br><br>
 				<input type="image" src= "../images/arrow_left.png" onclick="removeScripts();return false;">
 				</td>
-				<td  style="width: 40%">
+				<td  style="width: 45%">
 				 <br>
 				 ${scriptGroupInstance}
-					<ul id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 250px; overflow: auto;">
+					<ul id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 380px; overflow: auto;">
 						<g:if test="${scriptGroupInstance}">
 						<g:each in='${scriptGroupInstance.scriptList}' var="script">
 						<% 
@@ -242,7 +242,7 @@
 							</li></g:else>
 					</ul>
 				</td>
-				<td>
+				<td style="width: 8%">
 					<br>
 					<input type="image" src= "../images/reorder_up.png" value="Move Up" onclick="moveUp();return false;" > <br><br>
 					<input type="image" src="../images/reorder_down.png" value="Move Down" onclick="moveDown();return false;">

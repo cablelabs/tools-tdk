@@ -32,6 +32,7 @@ class BootStrap {
 	def migrationService
 	def scriptService
 	def primitiveService
+	def executionService
      
 	def mailService
 	
@@ -100,6 +101,9 @@ class BootStrap {
 		def rootFile = grailsApplication.parentContext.getResource("/")
 		scriptService.initializeScriptsData(rootFile.file.getAbsolutePath())
 		primitiveService.initializePrimitiveTests(rootFile.file.getAbsolutePath())
+//		scriptService?.createSuite()
+		executionService.handleInprogressExecutionOnStartup()
+		
 		/*List<Script> scriptList = Script.list()
 		
 		scriptList.each{ scriptInstance ->

@@ -17,6 +17,8 @@ import org.apache.shiro.SecurityUtils
 import org.codehaus.groovy.grails.web.json.JSONObject
 import org.junit.After;
 import grails.converters.JSON
+
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.concurrent.FutureTask
 import java.util.regex.Matcher
@@ -44,6 +46,7 @@ class ExecutionService {
 	
 	public static volatile List deviceAllocatedList = []
 	
+	public static volatile Map executionProcessMap = [:]
 	
     
     /**
@@ -120,7 +123,9 @@ class ExecutionService {
 					String fileName = file.getName()
 					if(fileName.startsWith( "AgentConsole" )){
 						file.eachLine { line ->
-							fileContents = fileContents + "<br>"+ line
+							String lineData = line?.replaceAll("<","&lt;")
+							lineData = lineData?.replaceAll(">","&gt;")
+							fileContents = fileContents + "<br>"+ lineData
 						}						
 					}
 				}
@@ -346,7 +351,7 @@ class ExecutionService {
 	
 	public String executeScript(final String executionData , final String executionName, final String scriptName) {
 		String opFile = prepareOutputfile(executionName, scriptName)
-		String output = NEW_LINE+"Executing script : "+scriptName+NEW_LINE
+		String output = NEW_LINE+getCurrentTime()+NEW_LINE+"Executing script : "+scriptName+NEW_LINE
 		output += "======================================="+NEW_LINE
 		output += new ScriptExecutor(opFile).execute( getCommand( executionData ))
 		return output
@@ -366,6 +371,7 @@ class ExecutionService {
 			boolean append = true
 			FileWriter fileWriter = new FileWriter(opFile, append)
 			BufferedWriter buffWriter = new BufferedWriter(fileWriter)
+			buffWriter.write(NEW_LINE+getCurrentTime())
 			buffWriter.write("<br/>Executing script : "+scriptName+"<br/>"+NEW_LINE);
 			buffWriter.write("======================================<br/>"+NEW_LINE);
 			buffWriter.flush()
@@ -384,9 +390,10 @@ class ExecutionService {
      */
     public String executeScript(final String executionData, int execTime, final String executionName, final String scriptName) {
 		String opFile = prepareOutputfile(executionName, scriptName)
-		String output = NEW_LINE+"Executing script : "+scriptName+NEW_LINE;
+		String output = NEW_LINE+getCurrentTime()+NEW_LINE+"Executing script : "+scriptName+NEW_LINE;
 		output += "======================================="+NEW_LINE
-		output += new ScriptExecutor(opFile).execute( getCommand( executionData ), execTime)
+//		output += new ScriptExecutor(opFile).execute( getCommand( executionData ), execTime)
+		output += new ScriptExecutor(opFile).execute( getCommand( executionData ), execTime,executionName,executionProcessMap)
 		return output
     }
 	
@@ -1692,6 +1699,94 @@ class ExecutionService {
 		performanceInstance.save(flush:true)
 		executionresult.addToPerformance(performanceInstance)
 	}
+	boolean isOlderExecutionValid(Date now, Date prev){
+		try {
+			int daysDiff = (int)(((now?.getTime()  - prev?.getTime())) / (1000*60*60*24l));
+			if (daysDiff <= 10){
+				return true
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		return false
+	}
 	
+	def handleInprogressExecutionOnStartup(){
+		try {
+			String device
+			String exName
+			int scriptGrpSize = 0
+			def scriptGroupInstance
+			def scriptGrp
+			def execInstance
+			def deviceInstanceObj
+			List validScriptsList = new ArrayList()
+			def executionStatus = Execution.findAllByExecutionStatus(INPROGRESS_STATUS)
+			Date now = new Date()
+			executionStatus.each { execution ->
+				if (isOlderExecutionValid(now, execution?.dateOfExecution)){
+					exName = execution?.name
+					device =execution?.device?.toString()
+					def deviceInstance = Device?.findByStbName(device)
+					scriptGrp =execution?.scriptGroup
+					if( scriptGrp != null){
+						def scriptGrpName= ScriptGroup.findByName(scriptGrp)
+						def scriptGrpScriptList = scriptGrpName?.scriptList
+						scriptGrpScriptList?.scriptName.each{scriptName-> validScriptsList << scriptName }
+						execInstance = Execution.findByName(exName)
+						deviceInstanceObj = Device.findById(deviceInstance?.id)
+						def excutionDev=ExecutionDevice.findByExecution(execution)
+						def execResult =ExecutionResult.findAllByExecution(execution)
+						execResult?.script?.each{ result ->
+							if(validScriptsList?.contains(result)){
+								validScriptsList.remove(result)
+							}
+						}
+						validScriptsList?.each{ script ->
+							ExecutionResult?.withTransaction { resultstatus ->
+								try {
+									def executionResult = new ExecutionResult()
+									executionResult.execution = execInstance
+									executionResult.executionDevice = excutionDev
+									executionResult.script = script
+									executionResult.device = deviceInstance
+									executionResult.execDevice = null
+									executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
+									executionResult.status = "PENDING"
+									executionResult.dateOfExecution = new Date()
+									if(!executionResult.save(flush:true)) {
+										println "error"+executionResult?.errors
+									}
+									resultstatus.flush()
+								}
+								catch(Throwable th) {
+									resultstatus.setRollbackOnly()
+								}
+								catch(Exception e){
+									println e.getMessage()
+								}
+							}
+						}
+						if(scriptGrp ){
+							savePausedExecutionStatus(execution?.id)
+							saveExecutionDeviceStatusData("PAUSED", excutionDev?.id)
+						}
+					}else{
+						saveExecutionStatus(true, execution?.id)
+					}
+				}else{
+					saveExecutionStatus(true, execution?.id)
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+	
+	def getCurrentTime(){
+		SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy hh:mm:ss")
+		String timeString = format.format(new Date())
+		return timeString
+	}
 	
 }

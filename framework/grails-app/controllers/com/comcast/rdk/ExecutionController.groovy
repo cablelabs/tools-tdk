@@ -508,10 +508,13 @@ class ExecutionController {
      * @return
      */
     def String getRealPath(){           
-//       String s = request.getSession().getServletContext().getRealPath("/") 
-//       s = s.replace( '\\', '/' )
-//       return s
-       return request.getSession().getServletContext().getRealPath(URL_SEPERATOR) 
+		String osName = System.getProperty(OS_NAME)
+		if(osName?.startsWith(OS_WINDOWS)){
+			String s = request.getSession().getServletContext().getRealPath("/")
+			s = s.replace( '\\', '/' )
+			return s
+		}
+		return request.getSession().getServletContext().getRealPath(URL_SEPERATOR)
     }     
  
 	   
@@ -780,6 +783,11 @@ class ExecutionController {
 	
 	def thirdPartyJsonResult(final String execName, final String appurl ){		
 		JsonObject executionNode = scriptexecutionService.thirdPartyJsonResultFromController(execName, getApplicationUrl() ,getRealPath())
+		render executionNode
+	}
+	
+	def thirdPartyJsonPerformanceResult(final String execName, final String appurl ){
+		JsonObject executionNode = scriptexecutionService.thirdPartyJsonPerformanceResultFromController(execName, getApplicationUrl() ,getRealPath())
 		render executionNode
 	}
 		
@@ -1216,8 +1224,15 @@ class ExecutionController {
 	 * show execution result via link 
 	 * @return
 	 */
-	def showExecutionResult(){		
-	    render params?.execResult
+	def showExecutionResult(){
+		String data = ""
+		if(params?.execResult){
+			ExecutionResult exResult = ExecutionResult.get(params?.execResult)
+			data = exResult?.executionOutput
+		}else{
+			data = "Log data not available"
+		}
+		render data
 	}
 	
 	
@@ -1497,14 +1512,37 @@ class ExecutionController {
      * Search execution list based on the execution name
      * @return
      */
-    def searchExecutionList(){
-        def executionList = []
-		def executions = Execution.findAllByNameLike("${params?.searchName.trim()}%")
-        executions.each{ execution ->
-            executionList.add(execution)
-        }
-        render(template: "searchList", model: [executionInstanceList : executionList])
-    }
+	def searchExecutionList(){
+		def executionList = []
+		def executions = Execution.findAllByNameLike("%${params?.searchName.trim()}%")
+		if(executions?.size() > 0){
+			executions.each{ execution ->
+				executionList.add(execution)
+			}
+		}else{
+			executions = Execution.findAllByScriptGroupLike("%${params?.searchName.trim()}%")
+			if(executions?.size() >0){
+				executions.each{ execution ->
+					executionList.add(execution)
+				}
+			}
+			executions = Execution.findAllByScriptLike("%${params?.searchName.trim()}%")
+			if(executions?.size() >0){
+				executions.each{ execution ->
+					executionList.add(execution)
+				}
+			}else{
+				executions = Execution.findAllByExecutionStatus("%${params?.searchName.trim()}%")
+				if(executions?.size() >0){
+					executions.each{ execution ->
+						executionList.add(execution)
+					}
+				}
+			}
+
+		}
+		render(template: "searchList", model: [executionInstanceList : executionList])
+	}
   
     /**
      * Search execution list based on different search criterias of
@@ -1512,8 +1550,8 @@ class ExecutionController {
      * @return
      */
     def multisearch(){
-        def executionList = executionService.multisearch( params?.toDate, params?.fromDate, params?.deviceName, params?.resultStatus,
-        params?.scriptType, params?.scriptVal )
+        def executionList = executionService.multisearch( params?.toDate?.trim(), params?.fromDate?.trim(), params?.deviceName?.trim(), params?.resultStatus?.trim(),
+        params?.scriptType?.trim(), params?.scriptVal?.trim() )
         render(template: "searchList", model: [executionInstanceList : executionList])
     }
     
@@ -1881,13 +1919,45 @@ class ExecutionController {
 		try {
 			Execution execution = Execution.findByName(executionName)
 			if(execution?.executionStatus.equals(INPROGRESS_STATUS)){
-				if(!executionService.abortList.contains(execution?.id?.toString())){
-					executionService.abortList.add(execution?.id?.toString())
-					result.addProperty("Status", "Requested for abort")
+
+				if(execution?.script && !execution?.script?.equals(MULTIPLESCRIPT) ){
+					try {
+						
+						if(!executionService.abortList.contains(execution?.id?.toString())){
+							executionService.abortList.add(execution?.id?.toString())
+							result.addProperty("Status", "Requested for abort")
+						}else{
+							result.addProperty("Status", "Request to stop already in progress")
+						}
+						
+						if(executionService.executionProcessMap.containsKey(executionName)){
+							Process process = executionService.executionProcessMap.get(executionName)
+									if(process){
+										process.waitForOrKill(1)
+										process.destroy()
+									}
+						}
+					} catch (Exception e) {
+						println " Execption "+e.getMessage()
+						e.printStackTrace()
+					}
+					
 				}else{
-					result.addProperty("Status", "Request to stop already in progress")
+					if(!executionService.abortList.contains(execution?.id?.toString())){
+						executionService.abortList.add(execution?.id?.toString())
+						result.addProperty("Status", "Requested for abort")
+					}else{
+						result.addProperty("Status", "Request to stop already in progress")
+					}
+					if(executionService.executionProcessMap.containsKey(executionName)){
+						Process process = executionService.executionProcessMap.get(executionName)
+								if(process){
+									process.waitForOrKill(1)
+									process.destroy()
+								}
+					}
+					
 				}
-				
 			}else if(execution?.executionStatus.equals("PAUSED")){
 				executionService.saveExecutionStatus(true, execution?.id)
 				result.addProperty("Status", "Requested for abort")
@@ -2038,5 +2108,205 @@ class ExecutionController {
 			}
 		}
   }
+	
+	/**
+	 * REST API for single test execution .
+	 * @param stbName - name of the STB configured in Test Manager
+	 * @param boxType - boxType of the STB like Hybrid-1, IPClient-3
+	 * @param scriptName - Name if the script to be executed
+	 * @return - Return JSON with status of REST call
+	 */
+	
+	def thirdPartySingleTestExecution(final String stbName, final String boxType, final String scriptName , final String executionCount, final String reRunOnFailure, final String timeInfo,final String performance){
+		int exeCount = 1
+		if(executionCount ){
+			try {
+				exeCount = Integer.parseInt(executionCount)
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+		}
+		
+		String rerun = FALSE
+		if(reRunOnFailure && reRunOnFailure?.equals("true")){
+			rerun = TRUE
+		}
+		
+		String time = FALSE
+		if(timeInfo && timeInfo?.equals("true")){
+			time = TRUE
+		}
+		
+		String perfo = FALSE
+		if(performance && performance?.equals("true")){
+			perfo = TRUE
+		}
+		singleTestRestExecution(stbName,boxType,scriptName,exeCount,rerun,time,perfo)
+	}
+	
+//	def thirdPartySingleTestExecution(final String stbName, final String boxType, final String scriptName ){
+//		singleTestRestExecution(stbName,boxType,scriptName,1,FALSE,FALSE,FALSE)
+//	}
+	
+	def singleTestRestExecution(final String stbName, final String boxType, final String scriptName , final int repeat, final String reRunOnFailure, final String timeInfo,final String performance){
+		def moduleName= scriptService.scriptMapping.get(scriptName)
+		def deviceInstance = Device.findByStbName(stbName)
+		String  url = getApplicationUrl()
+		String htmlData = ""
+		def execName = ""
+		def newExecName = ""
+		String filePath = "${request.getRealPath('/')}//fileStore"
+		boolean executed = false
+		JsonObject jsonOutData = new JsonObject()
+		
+		if(deviceInstance){
+			
+			if(moduleName){
+				def scriptInstance1 = scriptService.getScript(getRealPath(),moduleName, scriptName)
+				if(scriptInstance1){
+					
+					//check whether the script is valid for this execution
+					if(executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
+						String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
+						if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
+							String status = ""
+							try {
+								status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
 
+								synchronized (lock) {
+									if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+										status = "BUSY"
+									}else{
+										if((status.equals( Status.FREE.toString() ))){
+											if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+												executionService.deviceAllocatedList.add(deviceInstance?.id)
+
+												Thread.start{
+													deviceStatusService.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
+												}
+											}
+										}
+									}
+								}
+							}
+							catch(Exception eX){
+							}
+							status = status.trim()
+							//execute script only if the device is free
+							if((status.equals( Status.FREE.toString() ))){
+								if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+									executionService.deviceAllocatedList.add(deviceInstance?.id)
+								}
+
+								def deviceName
+								ExecutionDevice executionDevice
+								def execution
+								def executionSaveStatus = true
+									DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT1)
+									Calendar cal = Calendar.getInstance()
+									deviceName = deviceInstance?.stbName
+									execName = CI_EXECUTION+deviceName+dateFormat.format(cal.getTime()).toString()
+									newExecName = execName
+
+								try {
+									executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptName, deviceName, null,url)
+								} catch (Exception e) {
+									executionSaveStatus = false
+								}
+
+								if(executionSaveStatus){
+									execution = Execution.findByName(execName)
+									try{
+										executionDevice = new ExecutionDevice()
+										executionDevice.execution = execution
+										executionDevice.dateOfExecution = new Date()
+										executionDevice.device = deviceInstance?.stbName
+										executionDevice.deviceIp = deviceInstance?.stbIp
+										executionDevice.status = UNDEFINED_STATUS
+										if(executionDevice.save(flush:true)){
+											String getRealPathString  = getRealPath()
+											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
+											if(repeat > 1){
+												String realPat = getRealPath()
+//												Thread.start{
+//													try {
+//														for(int i =0 ;i < repeat;i++){
+//															println "repeat "+i
+															htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
+																	filePath, realPat, SINGLE_SCRIPT, url, timeInfo, performance, reRunOnFailure,FALSE,repeat)
+//														}
+//													} catch (Exception e) {
+//													println" ERRRR "+e.getMessage()
+//														e.printStackTrace()
+//													}
+//												}
+											}else{
+											htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
+													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, reRunOnFailure,FALSE)
+											}
+											executed = true
+											url = url + "/execution/thirdPartyJsonResult?execName=${execName}"
+											jsonOutData.addProperty("status", "RUNNING")
+											jsonOutData.addProperty("result", url)
+										}
+									}
+									catch(Exception e){
+										println " ERROR "+e.getMessage()
+									}
+								}
+								else{
+									htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+								}
+							}
+							else if(status.equals( Status.ALLOCATED.toString() )){
+								htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+							}
+							else if(status.equals( Status.NOT_FOUND.toString() )){
+								htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+							}
+							else if(status.equals( Status.HANG.toString() )){
+								htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+							}
+							else if(status.equals( Status.BUSY.toString() )){
+								htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+							}else if(status.equals( Status.TDK_DISABLED.toString() )){
+								htmlData = htmlData + "TDK is not enabled  in the Device to execute scripts"
+
+							}
+							else{
+								htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+							}
+
+						}else{
+							htmlData = "RDK Version supported by the script is not matching with the RDK Version of selected Device "+deviceInstance?.stbName+"<br>"
+						}
+					}else{
+						htmlData = message(code: 'execution.boxtype.nomatch')
+					}
+				}else{
+					htmlData = "No Script is available with name ${scriptName} in module ${moduleName}"
+				}
+			}else{
+				htmlData = "No module associated with script ${scriptName}"
+			}
+		}else{
+			htmlData = "No device found with this name "+stbName
+		}
+		
+		if(!executed){
+			jsonOutData.addProperty("status", "FAILURE")
+			jsonOutData.addProperty("result", htmlData)
+		}
+		render jsonOutData
+	}
+	
+	def clearDeviceAllocatedList(final String stbName){
+		def deviceInstance = Device.findByStbName(stbName)
+		if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+			executionService.deviceAllocatedList.remove(deviceInstance?.id)
+			render "Done"
+		}
+		render "Nothing to clear"
+	}
+	
 }

@@ -114,6 +114,7 @@ class JobDetails {
     }
 	
 	static mapping = {
+		sort id : "desc"
 		datasource 'ALL'
 	}
    

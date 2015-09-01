@@ -197,5 +197,8 @@ public final class Constants
     public static final String  MEMORY_PERC_END = "%MEMORY_PERC_END";
     public static final int STAND_ALONE_DEVICE = 0;
     
+    public static final String OS_WINDOWS = "Windows";
+    public static final String OS_NAME = "os.name";
+    
     
 }

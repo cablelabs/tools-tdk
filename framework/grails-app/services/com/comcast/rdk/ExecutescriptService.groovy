@@ -184,8 +184,11 @@ class ExecutescriptService {
 		}
 						
 		timeDiff =  String.valueOf(myVal1)
-
-		if(htmlData.contains(TDK_ERROR)){
+		
+		if(executionService.abortList.contains(executionInstance?.id?.toString())){
+			
+			resetAgent(deviceInstance,TRUE)
+		}else if(htmlData.contains(TDK_ERROR)){
 			htmlData = htmlData.replaceAll(TDK_ERROR,"")
 			if(htmlData.contains(KEY_SCRIPTEND)){
 				htmlData = htmlData.replaceAll(KEY_SCRIPTEND,"")
@@ -261,6 +264,7 @@ class ExecutescriptService {
 				}
 			}
 		}
+		if(!executionService.abortList.contains(executionInstance?.id?.toString())){
 		String performanceFilePath
 		if(isBenchMark.equals(TRUE) || isSystemDiagnostics.equals(TRUE)){
 			new File("${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
@@ -307,7 +311,7 @@ class ExecutescriptService {
 		if(isLogReqd){
 			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
 		}
-		
+		}
 		return htmlData
 	}
 		
@@ -980,7 +984,11 @@ class ExecutescriptService {
 				isMultiple = FALSE
 				try {
 					htmlData = executeScript(execName, executionDevice, script1, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics,executionName,isMultiple,null,isLogReqd)
-
+				def exeInstance = Execution.findByName(execName)
+				if(executionService.abortList.contains(exeInstance?.id?.toString())){
+					aborted = true
+					executionService.abortList.remove(exeInstance?.id?.toString())
+				}
 				} catch (Exception e) {
 					e.printStackTrace()
 				}
@@ -1123,8 +1131,7 @@ class ExecutescriptService {
 								}
 							}
 							if(aborted && executionService.abortList.contains(exeId?.toString())){
-							
-								executionService.abortList.remove(ex?.toString())
+								executionService.abortList.remove(exeId?.toString())
 							}
 							if(!aborted && pause && pendingScripts.size() > 0 ){
 								def exeInstance = Execution.findByName(execName)
@@ -1225,6 +1232,18 @@ class ExecutescriptService {
 			executescriptsOnDevice(execName, device, executionDevice, scripts, scriptGrp,
 					executionName, filePath, realPath, groupType, url, isBenchMark, isSystemDiagnostics, rerun,isLogReqd)} as Callable< String > )
 		
+	}
+			
+	def executeRepeatScriptInThread(String execName, String device, ExecutionDevice executionDevice, def scripts, def scriptGrp,
+			def executionName, def filePath, def realPath, def groupType, def url, def isBenchMark, def isSystemDiagnostics, def rerun,def isLogReqd,int repeat){
+
+		Future<String> future =  executorService.submit( {
+
+			for (int i=0;i<repeat;i++){
+				executescriptsOnDevice(execName, device, executionDevice, scripts, scriptGrp,
+						executionName, filePath, realPath, groupType, url, isBenchMark, isSystemDiagnostics, rerun,isLogReqd)
+			}} as Callable< String > )
+
 	}
 
 

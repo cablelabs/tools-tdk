@@ -328,7 +328,7 @@ function hideParameters(k){
 				</g:each>
 				<tr>
 					<td>Log Data <br>
-					<g:link action ="showExecutionResult" params="[execResult : "${executionResultInstance?.executionOutput}"]" target="_blank"> Log link </g:link> </td>
+					<g:link action ="showExecutionResult" params="[execResult : "${executionResultInstance?.id}"]" target="_blank"> Log link </g:link> </td>
 					<td colspan="6"><div style="overflow : auto; height : 180px;">${executionResultInstance?.executionOutput}</div></td>				
 				</tr>
 				

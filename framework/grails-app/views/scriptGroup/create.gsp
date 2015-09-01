@@ -170,11 +170,11 @@
 	
 			<table name="scripttable">
 			<tr>
-				<td name="selectabletd" style="width: 40%">
+				<td name="selectabletd" style="width: 45%">
 					<div class="selectablediv" name ="selectablediv"> 
 					<br>
 					<label>All Scripts</label> <br>
-					<ul class= "selectable" id="selectable" name ="selectable"  title="selectable" style="max-height : 454px; max-width : 250px; overflow: auto; ">
+					<ul class= "selectable" id="selectable" name ="selectable"  title="selectable" style="max-height : 454px; max-width : 380px; overflow: auto; ">
 						<g:each in='${scriptInstanceList}' var="script">
 						<% 
 							String idScript = script?.id;
@@ -186,15 +186,15 @@
 					</ul>
 					</div>
 				</td>
-				<td style="width: 10%">
+				<td style="width: 5%">
 				<br><br><br><br>
 				<input type="image" src= "../images/arrow_right.png" onclick="addScripts();return false;"  ><br><br>
 				<input type="image" src= "../images/arrow_left.png" onclick="removeScripts();return false;">
 				</td>
-				<td name="sortabletd"style="width: 40%">
+				<td name="sortabletd"style="width: 45%">
 				<br>
 				<br>
-					<ul name ="sortable" id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 250px; overflow: auto;">
+					<ul name ="sortable" id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 380px; overflow: auto;">
 						<g:if test="${scriptGroupInstance}">
 						<g:each in='${scriptGroupInstance.scriptList}' var="script">
 							<li class="ui-state-default" title="${script.scriptName}">
@@ -207,7 +207,7 @@
 							</li></g:else>
 					</ul>
 				</td>
-				<td>
+				<td style="width: 5%">
 					<br><br>
 					<input type="image" src= "../images/reorder_up.png" onclick="moveUp();return false;" > <br><br>
 					<input type="image" src="../images/reorder_down.png" onclick="moveDown();return false;">

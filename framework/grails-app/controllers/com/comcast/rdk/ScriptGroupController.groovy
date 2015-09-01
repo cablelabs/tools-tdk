@@ -19,6 +19,10 @@ import grails.converters.JSON
 import groovy.xml.MarkupBuilder
 import org.apache.shiro.SecurityUtils
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
 /**
  * Controller class for Script and ScriptGroup domain.
  * @author sreejasuma
@@ -55,8 +59,30 @@ class ScriptGroupController {
 		def scriptGroupMap = scriptService.getScriptsMap(requestGetRealPath)
 		scriptGroupMap?.keySet()?.sort{a,b -> a <=> b}
 		scriptGroupMap = new TreeMap(scriptGroupMap)
-		def scriptGrpInstanceList = ScriptGroup.findAllByGroupsOrGroupsIsNull(groupsInstance)
-		[scriptGroupInstanceList: scriptGrpInstanceList, scriptGroupInstanceTotal: scriptGrpInstanceList.size(),error: params.error, scriptId: params.scriptId, scriptGroupId:params.scriptGroupId, scriptInstanceTotal: scriptNameList.size(), scriptGroupMap:scriptGroupMap]
+		def lists = ScriptGroup.executeQuery('select name from ScriptGroup')
+		[scriptGroupInstanceList: lists, scriptGroupInstanceTotal: lists.size(),error: params.error, scriptId: params.scriptId, scriptGroupId:params.scriptGroupId, scriptInstanceTotal: scriptNameList.size(), scriptGroupMap:scriptGroupMap]
+	}
+	
+	/**
+	 * Method to get script file list when selecting test suite 
+	 */
+	def getScriptsList(String group){
+		def scripts
+		def finalScripts = []
+		if(group){
+			def scriptGroup =  ScriptGroup.findByName(group)
+			scripts = scriptGroup?.scriptList
+			scripts.each{
+				finalScripts.add(new ScriptFileBean(scriptName:it?.scriptName, id:it?.id, moduleName:it?.moduleName))
+			}
+		}
+		if(!finalScripts.isEmpty()){
+			finalScripts.sort { a, b ->
+				a.scriptName <=> b.scriptName
+				
+			}
+		}
+		render  new Gson().toJson(finalScripts) 
 	}
 	
 	
@@ -381,7 +407,7 @@ class ScriptGroupController {
      * Edit ScriptGroup
      * @return
      */
-	def edit(Long id) {
+	/*def edit(Long id) {
 		def scriptGroupInstance = ScriptGroup.get(id)
 		if (!scriptGroupInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [
@@ -394,6 +420,26 @@ class ScriptGroupController {
 		def scripts = scriptService.getScriptNameFileList(getRealPath());   
 		
 		def time1 = System.currentTimeMillis()
+		
+		def list4 = scripts.findAll(){
+			!((scriptGroupInstance.scriptList).contains(it))
+		}
+		list4.sort{a,b -> a?.scriptName <=> b?.scriptName}
+		
+		[scripts:list4,scriptNameList:scriptGroupInstance.scriptList,scriptGroupInstance: scriptGroupInstance]
+	}*/
+	
+	def edit(String name) {
+		def scriptGroupInstance = ScriptGroup.findByName(name)
+		if (!scriptGroupInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [
+				message(code: 'scriptGroup.label', default: 'Test Suite'),
+				scriptGroupInstance.name
+			])
+			redirect(action: "list")
+			return
+		}       
+		def scripts = scriptService.getScriptNameFileList(getRealPath());   
 		
 		def list4 = scripts.findAll(){
 			!((scriptGroupInstance.scriptList).contains(it))
@@ -1170,7 +1216,7 @@ class ScriptGroupController {
 		def scriptNameList = scriptService.getScriptNameList(getRealPath())
 		def scripts = []
 		scriptNameList?.each {
-			if(it?.toLowerCase()?.contains(params?.searchName?.toLowerCase())){
+			if(it?.toLowerCase()?.contains(params?.searchName?.toLowerCase()?.trim())){
 				def moduleName = moduleMap.get(it)
 				def script = scriptService.getScript(getRealPath(), moduleName, it)
 				if(script){
@@ -1561,5 +1607,71 @@ class ScriptGroupController {
 		ScriptService.scriptLockList.remove(params?.scriptName)
 	}
 	
+	/**
+	 * REST method to retrieve the script list 
+	 * @param scriptGroup
+	 * @param moduleName
+	 * @return
+	 */
+	def getScriptNameList(String scriptGroup,String moduleName){
+		JsonObject scriptJson = new JsonObject()
+		try {
+			if(scriptGroup){
+				ScriptGroup sg = ScriptGroup.findByName(scriptGroup)
+				if(sg){
+					JsonArray scriptArray = new JsonArray()
+					scriptJson.add(scriptGroup, scriptArray)
+					sg?.scriptList?.each { scrpt ->
+						JsonObject script = new JsonObject()
+						script.addProperty("name", scrpt?.scriptName)
+						script.addProperty("module", scrpt?.moduleName)
+						scriptArray?.add(script)
+					}
+				}else{
+					scriptJson.addProperty("status", "failure")
+					scriptJson.addProperty("remarks", "No script groups found with name "+scriptGroup)
+				}
+			}else if (moduleName){
+				Map sgMap = scriptService?.getScriptsMap(getRealPath())
+				List sList = sgMap.get(moduleName)
+				if(sgMap){
+					JsonArray scriptArray = new JsonArray()
+					scriptJson.add(moduleName, scriptArray)
+					sList?.each{sname ->
+						ScriptFile scrpt = ScriptFile.findByScriptNameAndModuleName(sname,moduleName)
+						if(scrpt){
+							JsonObject script = new JsonObject()
+							script.addProperty("name", scrpt?.scriptName)
+							scriptArray?.add(script)
+						}
+					}
+				}else{
+					scriptJson.addProperty("status", "failure")
+					scriptJson.addProperty("remarks", "no module found with name "+moduleName)
+				}
+			}else{
+				Map sgMap = scriptService?.getScriptsMap(getRealPath())
+				sgMap?.keySet().each { key ->
+					List sList = sgMap.get(key)
+					if(sList){
+						JsonArray scriptArray = new JsonArray()
+						scriptJson.add(key, scriptArray)
+						sList?.each{sname ->
+							ScriptFile scrpt = ScriptFile.findByScriptNameAndModuleName(sname,key)
+							if(scrpt){
+								JsonObject script = new JsonObject()
+								script.addProperty("name", scrpt?.scriptName)
+								scriptArray?.add(script)
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			println " Error getScriptNameList "+e.getMessage()
+			e.printStackTrace()
+		}
+		render scriptJson
+	}
 
 }

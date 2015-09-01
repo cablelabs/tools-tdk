@@ -1073,7 +1073,7 @@ class JobSchedulerService implements Job{
 		fileNewPrintWriter.print( scriptData )
 		fileNewPrintWriter.flush()
 		fileNewPrintWriter.close()
-		String outData = executeScripts( file.getPath() , execTime)
+		String outData = executeScripts( file.getPath() , execTime,executionName)
 		
 		def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
@@ -1099,7 +1099,11 @@ class JobSchedulerService implements Job{
 		}
 						
 		timeDiff =  String.valueOf(myVal1)
-		if(htmlData.contains(TDK_ERROR)){
+		String singleScriptExecTime = String.valueOf(timeDifference)
+		
+		if(ExecutionService.abortList.contains(executionInstance?.id?.toString())){
+			resetAgent(deviceInstance,TRUE)
+		}else if(htmlData.contains(TDK_ERROR)){
 			htmlData = htmlData.replaceAll(TDK_ERROR,"")
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
@@ -1123,7 +1127,7 @@ class JobSchedulerService implements Job{
 			if(htmlData.contains(KEY_SCRIPTEND)){
 				htmlData = htmlData.replaceAll(KEY_SCRIPTEND,"")
 			}
-			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
+			updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 		}
 		else{
 			if(htmlData.contains("SCRIPTEND#!@~")){
@@ -1310,9 +1314,10 @@ class JobSchedulerService implements Job{
 	 * @param executionData
 	 * @return
 	 */
-	public String executeScripts(final String executionData, int execTime) {
+	public String executeScripts(final String executionData, int execTime,String executionName) {
 
-		def output = new ScriptExecutor().execute( getCommand( executionData ), execTime)
+//		def output = new ScriptExecutor().execute( getCommand( executionData ), execTime)
+		def output =  new ScriptExecutor().execute( getCommand( executionData ), execTime,executionName,ExecutionService?.executionProcessMap)
 		return output
 	}
 	
@@ -1639,6 +1644,23 @@ class JobSchedulerService implements Job{
 			deviceInstance?.stbIp,
 			deviceInstance?.agentMonitorPort,
 			FALSE
+		]
+		ScriptExecutor scriptExecutor = new ScriptExecutor()
+		def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+		callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
+		Thread.sleep(4000)
+	}
+	
+	def resetAgent(def deviceInstance,def type){
+
+		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
+		def absolutePath = layoutFolder.absolutePath
+		String[] cmd = [
+			PYTHON_COMMAND,
+			absolutePath,
+			deviceInstance?.stbIp,
+			deviceInstance?.agentMonitorPort,
+			type
 		]
 		ScriptExecutor scriptExecutor = new ScriptExecutor()
 		def resetExecutionData = scriptExecutor.executeScript(cmd,1)

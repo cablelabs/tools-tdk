@@ -82,6 +82,37 @@ $(document).ready(function() {
 	
 });
 
+var displayedGroups = [];
+
+// method returns script file list on hovering over test suite
+function getScriptsList(val, scriptGroup, scriptInstanceTotal, totalScripts){
+	var group = val.id;
+	if(displayedGroups.indexOf(group) < 0){
+		if(scriptGroup != null && ""!=scriptGroup.trim() && group != null && "" != group.trim()){
+			displayedGroups.push(group);
+			$.get('getScriptsList', {group: scriptGroup},function(data) {
+				var val = JSON.parse(data);
+				var displayHtml = "";
+				
+				var scriptGroupCount = 0;
+				
+				for(key in val){
+					
+					var elem = val[key];
+					displayHtml= displayHtml+				
+						'<li><span  id="' + elem["moduleName"] + '@' + elem["scriptName"] + '"><a href="#" onclick="editScript(' + "'" + elem["moduleName"] + '@' + 
+						elem["scriptName"]+ "'); " +
+							"highlightTreeElement(" + "'scriptList_', '0', '" + scriptInstanceTotal + "');" +
+							"highlightTreeElement('scriptGroupList_', '" + scriptGroupCount + "', '" + totalScripts + "' );"+
+							'return false;">'+elem["scriptName"]+'</a></span></li>';
+						++scriptGroupCount;
+				}
+				var displayClass = ".scripts_"+ group;
+				$(displayClass).html(displayHtml);
+			});
+		}
+	}
+}
 function addScripts() {
 	var re = document.getElementById("resultElement");
 	var selectable = document.getElementById("selectable");
@@ -310,7 +341,8 @@ function createScriptGrpForm() {
 function editScriptGroup(id) {
 	hideAllSearchoptions();
 	checkAnyEditingScript();
-	$.get('edit', {id: id}, function(data) { $("#responseDiv").html(data); });
+	$.get('edit', {name: id}, function(data) { $("#responseDiv").html(data); });
+	$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });
 }
 
 function exportScripts() {

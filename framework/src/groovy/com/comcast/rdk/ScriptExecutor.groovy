@@ -26,6 +26,8 @@ class ScriptExecutor {
 	
 	String outputFileName = null;
 	
+	ExecutionService executionService
+	
 	public ScriptExecutor(){
 	}
 	
@@ -67,6 +69,43 @@ class ScriptExecutor {
 		
 	    return outputData
     }
+	
+	public String execute(final String executionScript, final int waittime,final String execName,final Map executionProcessMap) {
+		Process process = Runtime.getRuntime().exec( executionScript )
+		String outputData = null
+		try {
+			StringBuilder dataRead = new StringBuilder( "" )
+			executionProcessMap?.put(execName, process)
+
+			StreamReaderJob dataReader = new StreamReaderJob(process.getInputStream(),outputFileName,dataRead);
+			StreamReaderJob errorReader = new StreamReaderJob(process.getErrorStream(),outputFileName,dataRead);
+
+			FutureTask< String > dataReaderTask = new FutureTask< String > (dataReader);
+			FutureTask< String > errorReaderTask = new FutureTask< String > (errorReader);
+			executorService.execute(dataReaderTask);
+			executorService.execute(errorReaderTask);
+			if(waittime == 0){
+				int exitCode = process.waitFor()
+			}
+			else{
+				process.waitForOrKill(waittime*60000)
+			}
+			
+			outputData = dataReaderTask.get()
+			if(!outputData){
+				outputData = errorReaderTask.get()
+			}
+			process.destroy()
+		}catch(Exception e){
+		} finally{
+			if(executionProcessMap?.containsKey(execName)){
+				executionProcessMap?.remove(execName)
+			}
+		}
+
+
+		return outputData
+	}
 	
 	
 	public String execute(final String executionScript) {

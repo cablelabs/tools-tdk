@@ -485,7 +485,6 @@ class ExecutedbService {
 				//println "Invalid file path"
 			}
 
-
 			Map coverPageMap = [:]
 			detailDataMap.put("CoverPage", coverPageMap)
 			Map detailsMap = [:]
@@ -499,7 +498,7 @@ class ExecutedbService {
 					String imagename = "imagename:"
 					int indx = deviceDetails.indexOf(imagename)
 					int endIndx = deviceDetails.indexOf("\n",indx)
-					if(indx >0 && endIndx > 0){
+					if(indx >=0 && endIndx > 0){
 						indx = indx + imagename.length()
 						image = deviceDetails.substring(indx, endIndx)
 					}
