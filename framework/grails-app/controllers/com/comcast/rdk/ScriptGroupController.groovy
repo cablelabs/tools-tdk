@@ -18,6 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException
 import grails.converters.JSON
 import groovy.xml.MarkupBuilder
 import org.apache.shiro.SecurityUtils
+import org.apache.shiro.subject.Subject
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -1610,10 +1611,9 @@ class ScriptGroupController {
 	/**
 	 * REST method to retrieve the script list 
 	 * @param scriptGroup
-	 * @param moduleName
 	 * @return
 	 */
-	def getScriptNameList(String scriptGroup,String moduleName){
+	def getScriptsByScriptGroup(String scriptGroup){
 		JsonObject scriptJson = new JsonObject()
 		try {
 			if(scriptGroup){
@@ -1631,7 +1631,40 @@ class ScriptGroupController {
 					scriptJson.addProperty("status", "failure")
 					scriptJson.addProperty("remarks", "No script groups found with name "+scriptGroup)
 				}
-			}else if (moduleName){
+			}else{
+				Map sgMap = scriptService?.getScriptsMap(getRealPath())
+				sgMap?.keySet().each { key ->
+					List sList = sgMap.get(key)
+					if(sList){
+						JsonArray scriptArray = new JsonArray()
+						scriptJson.add(key, scriptArray)
+						sList?.each{sname ->
+							ScriptFile scrpt = ScriptFile.findByScriptNameAndModuleName(sname,key)
+							if(scrpt){
+								JsonObject script = new JsonObject()
+								script.addProperty("name", scrpt?.scriptName)
+								scriptArray?.add(script)
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			println " Error getScriptNameList "+e.getMessage()
+			e.printStackTrace()
+		}
+		render scriptJson
+	}
+	
+	/**
+	 * REST method to retrieve the script list
+	 * @param moduleName
+	 * @return
+	 */
+	def getScriptsByModule(String moduleName){
+		JsonObject scriptJson = new JsonObject()
+		try {
+			if (moduleName){
 				Map sgMap = scriptService?.getScriptsMap(getRealPath())
 				List sList = sgMap.get(moduleName)
 				if(sgMap){
@@ -1672,6 +1705,77 @@ class ScriptGroupController {
 			e.printStackTrace()
 		}
 		render scriptJson
+	}
+	
+	/**
+	 * REST API :  The function implements for get all Script group details  
+	 * @return
+	 */
+	
+	def getAllScriptGroups(){
+		JsonObject scriptGrpObj = new JsonObject()
+		JsonArray scripts = new JsonArray()
+		def scriptCount = 0
+		try{
+			def scriptGrpList  = ScriptGroup.list()
+			scriptGrpList?.each{scriptGrpName ->
+				JsonObject scriptGrp = new JsonObject()
+				scriptCount = scriptGrpName?.scriptList?.size()
+				scriptGrp?.addProperty("name",scriptGrpName.toString())
+				scriptGrp?.addProperty("scriptcount",scriptCount.toString())			
+				scripts.add(scriptGrp)	
+			}
+			scriptGrpObj.add("scriptgroups",scripts)
+		}catch(Exception e){
+		}
+		
+		render scriptGrpObj
+	}
+	
+	/**
+	 * REST API :
+	 * function used to delete test suite
+	 * @param suiteName
+	 * @return
+	 */
+	def deleteScriptGroup(final String scriptGroup){
+
+		JsonObject scriptGrp = new JsonObject()
+		try{
+			Subject currentUser = SecurityUtils.getSubject()
+			if(currentUser?.hasRole('ADMIN')){
+				def scriptGroupInstance = ScriptGroup?.findByName(scriptGroup)
+				if(scriptGroupInstance){
+					if(scriptGroupInstance?.delete(flush :true)){
+						scriptGrp?.addProperty("status", "SUCCESS")
+						scriptGrp?.addProperty("remarks","ScriptGroup deleted successfully " )
+					}else{
+						println " err "+scriptGroupInstance?.errors
+						if(ScriptGroup?.findByName(scriptGroup)){
+							scriptGrp?.addProperty("status", "FAILURE")
+							scriptGrp?.addProperty("remarks","Error in Deleting ScriptGroup" )
+						}else{
+							scriptGrp?.addProperty("status", "SUCCESS")
+							scriptGrp?.addProperty("remarks","ScriptGroup deleted successfully " )
+						}
+					}
+
+				}else{
+					scriptGrp?.addProperty("status", "FAILURE")
+					scriptGrp?.addProperty("remarks","no script group found with name "+ scriptGroup)
+				}
+			}else{
+				scriptGrp?.addProperty("status", "FAILURE")
+				if(currentUser?.principal){
+					scriptGrp?.addProperty("remarks","current user ${currentUser?.principal} don't have permission to delete script group" )
+				}else{
+					scriptGrp?.addProperty("remarks","login as admin user to perform this operation" )
+				}
+			}
+		}catch(Exception e){
+			e.printStackTrace()
+		}
+		render scriptGrp
 	}
 
 }

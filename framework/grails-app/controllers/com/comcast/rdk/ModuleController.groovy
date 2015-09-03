@@ -12,6 +12,9 @@
 package com.comcast.rdk
 
 import static com.comcast.rdk.Constants.KEY_ON
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject
 import grails.converters.JSON
 import org.springframework.dao.DataIntegrityViolationException
 import org.apache.shiro.SecurityUtils
@@ -437,4 +440,41 @@ class ModuleController {
         def functions = Function.findAllByModule(module)
         render functions as JSON
     }
+	
+	/**
+	 * REST method to get the time out values configured for  modules
+	 * @param moduleName
+	 * @return
+	 */
+	def getModuleScriptTimeOut(final String moduleName) {
+		JsonObject moduleObj = new JsonObject()
+		if(moduleName){
+			try{
+				def moduleInstance= Module.findByName(moduleName)
+				if(moduleInstance){
+					moduleObj.addProperty("module",moduleInstance?.name?.toString())
+					moduleObj.addProperty("timeout",moduleInstance?.executionTime)
+				}else{
+					moduleObj.addProperty("status", "failure")
+					moduleObj.addProperty("remarks", "invalid module name ")
+				}
+			}
+			catch(Exception e){
+				println e.getMessage()
+				log.error("Invalid module name ")
+			}
+		}else{
+			def mList = Module.findAll()
+			JsonArray mArray = new JsonArray()
+			mList?.each { module ->
+				JsonObject mObject = new JsonObject()
+				mObject.addProperty("module",module?.name?.toString())
+				mObject.addProperty("timeout",module?.executionTime)
+				mArray.add(mObject)
+			}
+			moduleObj.add("timeoutlist", mArray)
+		}
+
+		render moduleObj
+	}
 }

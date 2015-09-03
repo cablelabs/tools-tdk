@@ -1532,12 +1532,16 @@ class ExecutionController {
 					executionList.add(execution)
 				}
 			}else{
-				executions = Execution.findAllByExecutionStatus("%${params?.searchName.trim()}%")
-				if(executions?.size() >0){
-					executions.each{ execution ->
-						executionList.add(execution)
-					}
+				String searchString = params?.searchName.trim()
+				if(searchString?.equalsIgnoreCase("SUCCESS")){
+					searchString = "COMPLETED"
 				}
+					executions = Execution.findAllByExecutionStatusLike("%${searchString}%")
+					if(executions?.size() >0){
+						executions.each{ execution ->
+							executionList.add(execution)
+						}
+					}
 			}
 
 		}
@@ -1659,6 +1663,10 @@ class ExecutionController {
 				List columnWidthList = [0.08,0.4,0.15,0.2,0.15,0.8,0.2,0.2,0.2,0.8]
 		
 				Execution executionInstance = Execution.findById(params.id)
+				String executionInstanceStatus ;
+				executionInstanceStatus =executedbService?.isValidExecutionAvailable(executionInstance)
+				if(executionInstanceStatus?.equals(Constants.SUCCESS_STATUS)){
+				
 				if(executionInstance){
 					dataMap = executedbService.getDataForConsolidatedListExcelExport(executionInstance, getRealPath(),getApplicationUrl())
 					fieldMap = ["C1":" Sl.No ", "C2":" Script Name ","C3":"Executed","C4":" Status ", "C5":"Executed On ","C6":"Log Data","C7":"Jira #","C8":"Issue Type","C9":"Remarks","C10":" Agent Console Log"]
@@ -1677,6 +1685,12 @@ class ExecutionController {
 				response.setHeader("Content-disposition", "attachment; filename="+EXPORT_FILENAME+ fileName +".${params.extension}")
 				excelExportService.export(params.format, response.outputStream,dataMap, null,fieldMap,[:], parameters)
 				log.info "Completed excel export............. "
+				}
+				else{
+					redirect(action: "create");
+					flash.message= "No valid execution reports are available."
+					return
+				}
 		
 			}
 	
@@ -2209,7 +2223,8 @@ class ExecutionController {
 									newExecName = execName
 
 								try {
-									executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptName, deviceName, null,url)
+//									executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptName, deviceName, null,url)
+									executionSaveStatus =  executionService.saveExecutionDetails(execName, scriptName, deviceName, null,url,timeInfo,performance,reRunOnFailure,FALSE)
 								} catch (Exception e) {
 									executionSaveStatus = false
 								}

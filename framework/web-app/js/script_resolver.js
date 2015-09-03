@@ -278,7 +278,7 @@ function updateSG() {
 	}else if(dataList == "" && dataList.length == 0){
 		alert("Please add scripts to the script group");
 	}else{
-		$.get('updateScriptGrp', {id: id, version:version, idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data);  });
+		$.post('updateScriptGrp', {id: id, version:version, idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data);  });
 	}
 }
 function createSG() {
@@ -502,3 +502,11 @@ function showSkipRemarksLabel(){
 	$("#skipReason123").hide();
 }
 
+function sleepIt(milliseconds) {
+	  var start = new Date().getTime();
+	  for (var i = 0; i < 1e7; i++) {
+	    if ((new Date().getTime() - start) > milliseconds){
+	      break;
+	    }
+	  }
+	}

@@ -18,6 +18,9 @@ import static com.comcast.rdk.Constants.*
 import grails.converters.JSON
 import java.sql.Timestamp
 import java.util.concurrent.ExecutorService
+
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject
 import org.springframework.dao.DataIntegrityViolationException
 
 import com.google.gson.JsonArray
@@ -415,13 +418,14 @@ class DeviceGroupController {
 			BoxType boxType = BoxType.findById(params?.boxType?.id)
 			
 			String newBoxType = boxType?.type?.toLowerCase()
-			//CGRTS - 527 defect fixing 
-			if (newBoxType.equals( BOXTYPE_GATEWAY )  || newBoxType.equals(BOXTYPE_STANDALONE_CLIENT) ){
-				String recId = ""
+		   String recId=""
+			if (newBoxType.equals( BOXTYPE_GATEWAY ) || newBoxType.equals(BOXTYPE_STANDALONE_CLIENT)){
 				if(currentBoxType.equals( BOXTYPE_GATEWAY) || currentBoxType.equals( BOXTYPE_STANDALONE_CLIENT)){
-					recId = params?.recorderIdedit
-				}else if(currentBoxType.equals( BOXTYPE_CLIENT)){
-					recId = params?.recorderId
+					recId =  params?.recorderIdedit
+				}else if(currentBoxType.equals(BOXTYPE_CLIENT) && newBoxType.equals( BOXTYPE_GATEWAY ) ){
+				recId =  params?.recorderIdedit
+				}else{
+					recId = ""
 				}
 				if(recId?.trim()?.length() ==  0 ){
 					flash.message = "Recorder id should not be blank"
@@ -443,7 +447,7 @@ class DeviceGroupController {
                 }
                 else{
                     deviceInstance.gatewayIp = ""
-                    deviceInstance.recorderId = params?.recorderId
+                    deviceInstance.recorderId = params?.recorderIdedit
                 }
             }
             else{
@@ -1008,6 +1012,138 @@ class DeviceGroupController {
 			e.printStackTrace()
 		}
 		render deviceJson
+	}
+	
+	/**
+	 * REST API used to the delete device
+	 * @param deviceName
+	 * @return
+	 */
+	
+	def deleteDeviceMethod(final String deviceName){
+		JsonObject deviceObj = new JsonObject()
+		try{
+			Subject currentUser = SecurityUtils.getSubject()
+			if(currentUser?.hasRole('ADMIN')){
+				Device dev1 = Device.findByStbName(deviceName)
+				if(dev1){
+					def deviceInstance = dev1?.id
+
+					boolean deviceInUse = devicegroupService.checkDeviceStatus(dev1)
+					if(deviceInUse){
+						deviceObj?.addProperty("STATUS","FAILURE ")
+						deviceObj?.addProperty("Remarks", "Device is busy, unable to delete")
+					}
+					else{
+						if(deleteDeviceObject(dev1)){
+							deviceObj?.addProperty("status","SUCCESS")
+							deviceObj?.addProperty("remarks", "successfully deleted the device ")
+						}else{
+							deviceObj?.addProperty("status","FAILURE")
+							deviceObj?.addProperty("remarks", "failed to delete device")
+						}
+					}
+				}else{
+					deviceObj?.addProperty("status","FAILURE")
+					deviceObj?.addProperty("remarks", "no device found with name "+deviceName)
+				}
+			}else{
+				deviceObj?.addProperty("status", "FAILURE")
+				if(currentUser?.principal){
+					deviceObj?.addProperty("remarks","current user ${currentUser?.principal} don't have permission to delete device" )
+				}else{
+					deviceObj?.addProperty("remarks","login as admin user to perform this operation" )
+				}
+			}
+		}catch(Exception e){
+			e.printStackTrace()
+		}
+		render deviceObj
+	}
+	
+	def deleteDeviceObject(Device deviceInstance){
+		try {
+			List devicesTobeDeleted = []
+			def deviceDetailsList = DeviceDetails.findAllByDevice(deviceInstance)
+			if(deviceDetailsList?.size() > 0){
+				DeviceDetails.executeUpdate("delete DeviceDetails d where d.device = :instance1",[instance1:deviceInstance])
+			}
+			deviceInstance?.childDevices?.each { childDevice -> devicesTobeDeleted << childDevice?.id }
+			DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+			DeviceRadioStream.executeUpdate("delete DeviceRadioStream d where d.device = :instance1",[instance1:deviceInstance])
+			devicegroupService.updateExecDeviceReference(deviceInstance)
+
+			if(deviceInstance.isChild == 1){
+				try {
+					def devices = Device.findAll()
+					devices?.each{ device ->
+						def devInstance = device.childDevices.find { it.id == deviceInstance }
+						if(devInstance){
+							Device.withTransaction {
+								Device parentDevice = Device.findById(device?.id)
+								parentDevice.removeFromChildDevices(deviceInstance)
+							}
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace()
+				}
+
+			}
+			try {
+				if(!deviceInstance.delete(flush: true)){
+					Device.withTransaction {
+						Device dev = Device.findById(deviceInstance?.id)
+						if(dev){
+							if(!dev?.delete(flush: true)){
+
+							}
+						}
+					}
+				}
+			} catch (Exception e) {
+				Device.withTransaction {
+					Device dev = Device.findById(deviceInstance?.id)
+					if(dev){
+						if(!dev?.delete(flush: true)){
+
+
+						}
+					}
+				}
+			}
+			devicesTobeDeleted.each { childDeviceId ->
+				Device childDevice = Device.findById(childDeviceId)
+				devicegroupService.updateExecDeviceReference(childDevice)
+
+				try {
+					def status
+					Device.withTransaction {
+						status = childDevice.delete(flush: true)
+					}
+					if(!status){
+						Device.withTransaction {
+							Device dev = Device.findById(childDevice?.id)
+							if(dev){
+								dev?.delete(flush: true)
+							}
+						}
+					}
+				} catch (Exception e) {
+					Device.withTransaction {
+						Device dev = Device.findById(childDevice?.id)
+						if(dev){
+							dev?.delete(flush: true)
+						}
+					}
+				}
+			}
+
+		}
+		catch (DataIntegrityViolationException e) {
+			return false
+		}
+		return true
 	}
 }
 

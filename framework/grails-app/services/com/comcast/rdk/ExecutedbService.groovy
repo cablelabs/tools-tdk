@@ -120,6 +120,19 @@ class ExecutedbService {
 		}
 		return writer
 	}
+	
+	/**
+	 * Method to check the Execution Instance is available or not
+	 *
+	 */
+	def isValidExecutionAvailable(Execution executionInstance ){
+		List executionDeviceList = []
+		executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
+		if(executionDeviceList){
+			return Constants.SUCCESS_STATUS
+		}
+		return Constants.FAILURE_STATUS
+	}
 
 
 	/**

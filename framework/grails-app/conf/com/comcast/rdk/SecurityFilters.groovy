@@ -21,8 +21,9 @@ class SecurityFilters {
 		user: ['changePassword','registerUser','saveUser'],
 		primitiveTest : ['getJson','getStreamDetails'],
 		execution : ['saveLoadModuleStatus','saveResultDetails','getDeviceStatusList','getDeviceStatus','thirdPartyJsonResult','thirdPartyTest','showResult','getDetailedTestResult','getClientPort','stopThirdPartyTestExecution','getAgentConsoleLog','getRealtimeDeviceStatus','getExecutionOutput','thirdPartySingleTestExecution','thirdPartyJsonPerformanceResult'],
-		deviceGroup : ['uploadAgentBinaries','getDeviceList'],
-		scriptGroup : ['getScriptNameList'],
+		deviceGroup : ['uploadAgentBinaries','getDeviceList','deleteDeviceMethod'],
+		scriptGroup : ['getScriptsByScriptGroup','getScriptsByModule','getAllScriptGroups','deleteScriptGroup'],
+		module : ['getModuleScriptTimeOut']
     ];
 
     private boolean findAction(actionMap, controllerName, actionName) {

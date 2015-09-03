@@ -1335,6 +1335,10 @@ class ScriptexecutionService {
 								
 				executionNode.addProperty("ExecutionStatus",execStatus.toString())
 				executionNode.add("DEVICES", jsonArray)
+		}else{
+			executionNode = new JsonObject()
+			executionNode.addProperty("status","FAILURE")
+			executionNode.addProperty("remarks","no valid execution found with this name "+execName)
 		}
 		return executionNode
 	}

@@ -504,7 +504,7 @@ class ExecutescriptService {
 						if(executionDeviceList.size() > 1){
 							deviceName = MULTIPLE
 						}
-						executionSaveStatus = executionService.saveExecutionDetails(newExecName, scriptName, deviceName, scriptGroupInstance,appUrl,"false","false","false")
+						executionSaveStatus = executionService.saveExecutionDetails(newExecName, scriptName, deviceName, scriptGroupInstance,appUrl,"false","false","false","false")
 						cnt++
 						Execution.withTransaction{
 							rerunExecutionInstance = Execution.findByName(newExecName)
@@ -535,9 +535,8 @@ class ExecutescriptService {
 						
 						
 						// adding log transfer to server for reruns 
-						
+						Properties props = new Properties()
 						try {
-							Properties props = new Properties()
 							props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
 							// initiating log transfer 
 							if(executionResultList.size() > 0){

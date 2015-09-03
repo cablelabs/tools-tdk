@@ -76,7 +76,14 @@ $('#scheduletable').dataTable({
 					}
                     }
                     else{
-                        def scptGrp = ScriptGroup.findById(jobDetailsInstance?.scriptGroup)
+						def scptGrp = ""
+						def data = jobDetailsInstance?.scriptGroup
+						if(data?.isNumber()) {
+							scptGrp = ScriptGroup.findById(jobDetailsInstance?.scriptGroup)
+						}else{
+							scptGrp = jobDetailsInstance?.scriptGroup
+						}
+						
                         scrLst = scptGrp
                     }                      	        
 				%>			
@@ -86,7 +93,10 @@ $('#scheduletable').dataTable({
 			
 				<td align="center" style ="width :40% ; word-wrap: break-word;">${scrLst }</td>
 			
-				<td align="center">${deviceInstance?.stbName} </td>
+				<td align="center" style="width: 40%; word-wrap: break-word;">
+                        ${deviceInstance?.stbName}
+   	  			</td>
+
 				
 				<td align="center">${fieldValue(bean: jobDetailsInstance, field: "queryString")}
 				<g:hiddenField id="id" name="id${count}" value="${jobDetailsInstance?.id}" /></td>	
