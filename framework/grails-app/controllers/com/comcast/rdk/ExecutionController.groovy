@@ -787,6 +787,12 @@ class ExecutionController {
 	}
 	
 	def thirdPartyJsonPerformanceResult(final String execName, final String appurl ){
+		Execution executionInstance = Execution.findByName(execName)
+		if(executionInstance?.script && executionInstance?.executionStatus?.equals(COMPLETED_STATUS)){
+			executionService.setPerformance(executionInstance,request.getRealPath('/'))
+		}else{
+			executionService.setPerformance(executionInstance,request.getRealPath('/'))
+		}
 		JsonObject executionNode = scriptexecutionService.thirdPartyJsonPerformanceResultFromController(execName, getApplicationUrl() ,getRealPath())
 		render executionNode
 	}
@@ -2242,22 +2248,14 @@ class ExecutionController {
 											String getRealPathString  = getRealPath()
 											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
 											if(repeat > 1){
-												String realPat = getRealPath()
-//												Thread.start{
-//													try {
-//														for(int i =0 ;i < repeat;i++){
-//															println "repeat "+i
-															htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
-																	filePath, realPat, SINGLE_SCRIPT, url, timeInfo, performance, reRunOnFailure,FALSE,repeat)
-//														}
-//													} catch (Exception e) {
-//													println" ERRRR "+e.getMessage()
-//														e.printStackTrace()
-//													}
-//												}
+												// NOTHING TO DO
 											}else{
+											def rerun = null
+											if(reRunOnFailure?.equals(TRUE)){
+												rerun = "on"
+											}
 											htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
-													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, reRunOnFailure,FALSE)
+													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,FALSE)
 											}
 											executed = true
 											url = url + "/execution/thirdPartyJsonResult?execName=${execName}"

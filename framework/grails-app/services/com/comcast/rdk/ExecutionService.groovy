@@ -1214,7 +1214,7 @@ class ExecutionService {
 	
 	def Groups getGroup(){
 		def user = User.findByUsername(SecurityUtils.subject.principal)
-		def group = Groups.findById(user.groupName?.id)
+		def group = Groups.findById(user?.groupName?.id)
 		return group
 	}
 	

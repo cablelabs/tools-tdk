@@ -1307,6 +1307,13 @@ class ScriptexecutionService {
 							url = appUrl + exResult?.id.toString()
 							scriptStatusNode.addProperty("LogUrl", url.toString())
 							
+							def benchmarkArray = getBenchMarkJsonArray(exResult)
+							scriptStatusNode.add("TimeInfo", benchmarkArray)
+							def cpuArray = getPerformanceJsonArray(exResult,Constants.SYSTEMDIAGNOSTICS_CPU)
+							scriptStatusNode.add("CPU", cpuArray)
+							def memArray = getPerformanceJsonArray(exResult,Constants.SYSTEMDIAGNOSTICS_MEMORY)
+							scriptStatusNode.add("Memory", memArray)
+							
 							scriptStatusArray.add(scriptStatusNode)
 							
 						}
