@@ -77,22 +77,19 @@ if "SUCCESS" in loadmodulestatus.upper():
                         actualresult = tdkTestObj.getResult();
                         details = tdkTestObj.getResultDetails();
                         print "[TEST EXECUTION RESULT] : %s" %actualresult;
-                        print "Details: [%s]"%details;
+                        print "VideoOutputPorts: [%s]"%details;
 			if "SUCCESS" in actualresult.upper():
 				tdkTestObj = obj.createTestStep('DS_HOST_getVideoOutputPortFromName');
-				portList1 = details.split(":")
-				portList2 = details.split(",")
-				for ele in portList2:
-					port = ele
+				portList = details.split(",")
+				for portName in portList:
 		                        #Primitive test case which associated to this Script
-					print "Getting the Video output Port from : ", port
-					tdkTestObj.addParameter("port_name", port);
+					tdkTestObj.addParameter("port_name", portName);
 			                expectedresult="SUCCESS"
 		                        tdkTestObj.executeTestCase(expectedresult);
 		                        actualresult = tdkTestObj.getResult();
 		                        details = tdkTestObj.getResultDetails();
 		                        print "[TEST EXECUTION RESULT] : %s" %actualresult;
-		                        print "Details: [%s]"%details;
+		                        print "PortName: [%s] Details: [%s]"%(portName,details);
 		                        #Set the result status of execution
 		                        if expectedresult in actualresult:
         		                        tdkTestObj.setResultStatus("SUCCESS");

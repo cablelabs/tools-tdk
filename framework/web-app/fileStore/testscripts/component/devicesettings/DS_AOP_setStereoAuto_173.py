@@ -101,26 +101,24 @@ if "SUCCESS" in loadmodulestatus.upper():
 			portNameLst = details.split(',')
 			print "portName: ",portNameLst
 
-			for ele in portNameLst:
-	                	autoMode = 0
-		                tdkTestObj.addParameter("autoMode",autoMode);
-				tdkTestObj.addParameter("port_name",ele);
-        		        expectedresult="SUCCESS"
-                		print " "
-		                tdkTestObj.executeTestCase(expectedresult);
-        		        actualresult = tdkTestObj.getResult();
-	        	        details = tdkTestObj.getResultDetails()
-        	        	print "[DS_AOP_setStereoAuto RESULT] : %s" %actualresult;
-		                print "[DS_AOP_setStereoAuto DETAILS] : %s" %details;
+			for portName in portNameLst:
+				for autoMode in range(0,2):
+		                	tdkTestObj.addParameter("autoMode",autoMode);
+					tdkTestObj.addParameter("port_name",portName);
+        		        	expectedresult="SUCCESS"
+                			print " "
+		                	tdkTestObj.executeTestCase(expectedresult);
+        		        	actualresult = tdkTestObj.getResult();
+	        	        	details = tdkTestObj.getResultDetails()
+        	        		print "[DS_AOP_setStereoAuto RESULT] : %s" %actualresult;
+		                	print "[PortName:%s setStereoAuto DETAILS: %s]" %(portName,details);
 
-        		        #Check for SUCCESS/FAILURE return value of DS_AOP_setStereoAuto
-                		if expectedresult in actualresult:
-                        		tdkTestObj.setResultStatus("SUCCESS");
-	                        	print "SUCCESS: Get DS_AOP_setStereoAuto";
-	                	else:
-        		                tdkTestObj.setResultStatus("FAILURE");
-                	        	print "FAILURE: Get DS_AOP_setStereoAuto"
-                		print " "
+        		        	#Check for SUCCESS/FAILURE return value of DS_AOP_setStereoAuto
+                			if expectedresult in actualresult:
+                        			tdkTestObj.setResultStatus("SUCCESS");
+	                		else:
+        		                	tdkTestObj.setResultStatus("FAILURE");
+                			print " "
 		else:
                 	tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE: Get DS_HOST_getAudioOutputPorts"

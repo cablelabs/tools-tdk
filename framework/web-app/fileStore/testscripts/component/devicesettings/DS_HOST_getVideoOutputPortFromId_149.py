@@ -83,10 +83,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 				#Primitive test case which associated to this Script
 				tdkTestObj = obj.createTestStep('DS_HOST_getVideoOutputPortFromId');
 				portList = details.split(",")
-				value = len(portList)
-				print "Number of Video ID's supported is ", value	
-				port_id = 0
-				while(port_id < value):
+				for port_id in range (0,len(portList)):
 					print "Getting the VideoOutput Port details from ID ", port_id
 					tdkTestObj.addParameter("port_id", port_id);
 		                        expectedresult="SUCCESS"
@@ -95,7 +92,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 		                        details = tdkTestObj.getResultDetails();
 		                        print "[TEST EXECUTION RESULT] : %s" %actualresult;
 		                        print "Details: [%s]"%details;
-					port_id += 1
 		                        #Set the result status of execution
 	        	                if expectedresult in actualresult:
 	                	                tdkTestObj.setResultStatus("SUCCESS");

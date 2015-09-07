@@ -52,22 +52,21 @@ Test Type: Positive</synopsis>
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
 
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
-
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'DS_AOPCONFIG_load_171');
 
+#Test component to be tested
+obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
+obj.configureTestCase(ip,port,'DS_AOPCONFIG_load_171');
 #Get the result of connection with test component and STB
 loadmodulestatus = obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus;
+#Set the module loading status
+obj.setLoadModuleStatus(loadmodulestatus)
 
 if "SUCCESS" in loadmodulestatus.upper():
-        #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
 
         #calling Device Settings - initialize API
         tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
@@ -80,24 +79,37 @@ if "SUCCESS" in loadmodulestatus.upper():
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
 
+                tdkTestObj = obj.createTestStep('DS_HOST_getAudioOutputPorts');
+                expectedresult="SUCCESS"
+                tdkTestObj.executeTestCase(expectedresult);
+                actualresult = tdkTestObj.getResult();
+		portDetails = tdkTestObj.getResultDetails();
+                print "[TEST EXECUTION RESULT] : %s" %actualresult;
+                print "Details: [%s]"%portDetails;
+		if expectedresult in actualresult:
+			tdkTestObj.setResultStatus("SUCCESS");
+		else:
+			tdkTestObj.setResultStatus("FAILURE");
+			
                 #calling Device Settings - Audio Load.
                 tdkTestObj = obj.createTestStep('DS_AOPCONFIG_load');
-
                 expectedresult="SUCCESS"
                 print " "
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
-                details = tdkTestObj.getResultDetails()
+                loadDetails = tdkTestObj.getResultDetails()
                 print "[DS_AOPCONFIG_load RESULT] : %s" %actualresult;
-                print "[DS_AOPCONFIG_load DETAILS] : %s" %details;
+                print "[DS_AOPCONFIG_load DETAILS] : %s" %loadDetails;
 
                 #Check for SUCCESS/FAILURE return value of DS_AOPCONFIG_load
                 if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        print "SUCCESS: Get DS_AOPCONFIG_load";
+			if portDetails == loadDetails:
+				tdkTestObj.setResultStatus("SUCCESS");
+			else:
+				tdkTestObj.setResultStatus("FAILURE");
+				print "Audio output ports not loaded correctly"
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "FAILURE: Get DS_AOPCONFIG_load"
 
                 print " "
                 #calling DS_ManagerDeInitialize to DeInitialize API
@@ -119,5 +131,3 @@ if "SUCCESS" in loadmodulestatus.upper():
         obj.unloadModule("devicesettings");
 else:
         print"Load module failed";
-        #Set the module loading status
-        obj.setLoadModuleStatus("FAILURE");

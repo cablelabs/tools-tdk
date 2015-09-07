@@ -75,19 +75,18 @@ if "SUCCESS" in loadmodulestatus.upper():
                 indicatordetails = tdkTestObj.getResultDetails();
                 if "SUCCESS" in actualresult:
                         print "SUCCESS :Application successfully gets the list of Indicators";
-                        print "Indicators:%s" %indicatordetails
+                        print "Indicators: %s" %indicatordetails
 			indicatorList = indicatordetails.split(",")
-			#Primitive test case which associated to this Script
-			tdkTestObj = obj.createTestStep('DS_FP_getColorMode');
                         for indicator_name in indicatorList:
-				print "Getting the Color Mode for : ", indicator_name
+				#Primitive test case which associated to this Script
+				tdkTestObj = obj.createTestStep('DS_FP_getColorMode');
 				tdkTestObj.addParameter("indicator_name", indicator_name);
 				expectedresult="SUCCESS"
 				tdkTestObj.executeTestCase(expectedresult);
 				actualresult = tdkTestObj.getResult();
 				details = tdkTestObj.getResultDetails();
 				print "[TEST EXECUTION RESULT] : %s" %actualresult;
-				print "Details: [%s]"%details;
+				print "IndicatorName: %s ColorMode: [%s]"%(indicator_name,details);
 				#Set the result status of execution
 				if expectedresult in actualresult:
 					tdkTestObj.setResultStatus("SUCCESS");

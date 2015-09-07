@@ -86,25 +86,21 @@ if "SUCCESS" in loadmodulestatus.upper():
 		
 		indicatorList = ["Message","Power", "Record", "Remote","RfByPass"]
 		print ""
-		for ele in indicatorList:
+		for indicator_name in indicatorList:
 	                #Set FP indicator name. 
-        	        indicator_name = ele
-	                print "Indicator name: %s" %indicator_name;
 	                tdkTestObj.addParameter("indicator_name",indicator_name);
 	                expectedresult="SUCCESS"
         	        tdkTestObj.executeTestCase(expectedresult);
 	                actualresult = tdkTestObj.getResult();
 			details = tdkTestObj.getResultDetails();
 	                print "[DS_FPCONFIG_getIndicatorFromName RESULT] : %s" %actualresult;
-			print "[DS_FPCONFIG_getIndicatorFromName DETAILS] : %s" %details;			
+			print "[IndicatorName: %s DETAILS: %s]" %(indicator_name,details);			
 
 			#Check for SUCCESS/FAILURE return value of DS_FPCONFIG_getIndicatorFromName
         	        if expectedresult in actualresult:
 				tdkTestObj.setResultStatus("SUCCESS");
-                        	print "SUCCESS: Get DS_FPCONFIG_getIndicatorFromName";
 	                else:
         	                tdkTestObj.setResultStatus("FAILURE");
-                	        print "FAILURE: Get DS_FPCONFIG_getIndicatorFromName";
 			print " "
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');

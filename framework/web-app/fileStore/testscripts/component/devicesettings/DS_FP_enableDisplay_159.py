@@ -70,8 +70,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         if "SUCCESS" in result.upper():
                 #Primitive test case which associated to this Script
 		tdkTestObj = obj.createTestStep('DS_FP_enableDisplay');
-		enable = 0
-		while(enable < 2):
+		for enable in range (0,2):
 			print "Value given to enable/disable display : ", enable
 			tdkTestObj.addParameter("enable", enable);
 	                expectedresult="SUCCESS"
@@ -80,7 +79,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 	                details = tdkTestObj.getResultDetails();
 	                print "[TEST EXECUTION RESULT] : %s" %actualresult;
 	                print "Details: [%s]"%details;
-			enable += 1
         	        #Set the result status of execution
 	                if expectedresult in actualresult:
         	                tdkTestObj.setResultStatus("SUCCESS");

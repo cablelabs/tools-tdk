@@ -155,27 +155,25 @@ if "SUCCESS" in loadmodulestatus.upper():
 			portNames = details.split(',')
 			print "Port Names: ",portNames
 
-			for ele in portNames:
+			for portName in portNames:
 				
 	        	        #calling Device Settings - Check Video Port Is Active.
         	        	tdkTestObj = obj.createTestStep('DS_VOP_isActive');
 
-                		tdkTestObj.addParameter("port_name",ele);
+                		tdkTestObj.addParameter("port_name",portName);
 		                expectedresult="SUCCESS"
                 		print " "
 		                tdkTestObj.executeTestCase(expectedresult);
                 		actualresult = tdkTestObj.getResult();
 		                details = tdkTestObj.getResultDetails()
                 		print "[DS_VOP_isActive RESULT] : %s" %actualresult;
-		                print "[DS_VOP_isActive DETAILS] : %s" %details;
+		                print "[PortName: %s isActive DETAILS: %s]" %(portName,details);
 
                 		#Check for SUCCESS/FAILURE return value of DS_VOP_isActive
 		                if expectedresult in actualresult:
                 		        tdkTestObj.setResultStatus("SUCCESS");
-		                        print "SUCCESS: Is DS_VOP_isActive";
                 		else:
 		                        tdkTestObj.setResultStatus("FAILURE");
-                		        print "FAILURE: Is DS_VOP_isActive";
 
 		                print " "
 		else:

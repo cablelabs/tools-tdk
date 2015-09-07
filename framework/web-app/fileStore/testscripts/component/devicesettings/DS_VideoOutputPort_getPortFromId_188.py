@@ -53,7 +53,7 @@ ip = <ipaddress>
 port = <port>
 
 #Load module to be tested
-dsObj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
+dsObj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
 dsObj.configureTestCase(ip,port,'DS_VideoOutputPort_getPortFromId_188');
 dsLoadStatus = dsObj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %dsLoadStatus ;
@@ -68,20 +68,35 @@ if "SUCCESS" in dsLoadStatus.upper():
                 #Check for display connection status
                 result = devicesettings.dsIsDisplayConnected(dsObj)
                 if "TRUE" in result:
-                        #Invoke primitive testcase
-                        tdkTestObj = dsObj.createTestStep('DS_VideoOutputPort_getPortFromId');
-                        tdkTestObj.addParameter("port_id",0);
+                        #Get the Video Ports supported
+                        tdkTestObj = dsObj.createTestStep('DS_HOST_getVideoOutputPorts');
                         expectedresult="SUCCESS"
                         tdkTestObj.executeTestCase(expectedresult);
                         actualresult = tdkTestObj.getResult();
                         details = tdkTestObj.getResultDetails();
-                        print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,actualresult)
-                        print "Details: %s"%details;
-                        #Check for SUCCESS/FAILURE return value
-                        if expectedresult in actualresult:
-                            tdkTestObj.setResultStatus("SUCCESS");
-                        else:
-                            tdkTestObj.setResultStatus("FAILURE");
+                        print "[TEST EXECUTION RESULT] : %s" %actualresult;
+                        print "Details: [%s]"%details;
+                        if "SUCCESS" in actualresult.upper():
+                                #Primitive test case which associated to this Script
+                                tdkTestObj = dsObj.createTestStep('DS_VideoOutputPort_getPortFromId');
+                                portList = details.split(",")
+                                for port_id in range (0,len(portList)):
+                        		#Invoke primitive testcase
+                        		tdkTestObj.addParameter("port_id",port_id);
+                        		expectedresult="SUCCESS"
+                        		tdkTestObj.executeTestCase(expectedresult);
+                        		actualresult = tdkTestObj.getResult();
+                        		details = tdkTestObj.getResultDetails();
+                        		print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,actualresult)
+                        		print "PortId: %d Details: %s"%(port_id,details);
+                        		#Check for SUCCESS/FAILURE return value
+                        		if expectedresult in actualresult:
+                            			tdkTestObj.setResultStatus("SUCCESS");
+                        		else:
+                            			tdkTestObj.setResultStatus("FAILURE");
+			else:
+				tdkTestObj.setResultStatus("FAILURE");
+				print "FAILED: Get DS_HOST_getVideoOutputPorts";
                 else:
                         print "Display device not connected. Skipping testcase"
                 #Calling DS_ManagerDeInitialize to DeInitialize API

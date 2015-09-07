@@ -54,77 +54,21 @@ import tdklib;
 import time;
 import devicesettings;
 
-#To Check whether HDMI device is connected or not.
-#Test component to be tested
-dsObj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
-
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
 
-dsObj.configureTestCase(ip,port,'DS_isDisplayConnected');
-
-isDisplayConnected = "false"
-
-#Get the result of connection with test component and STB
-result =dsObj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %result;
-
-if "SUCCESS" in result.upper():
-        #Calling Device Settings - initialize API
-        result = devicesettings.dsManagerInitialize(dsObj);
-        #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
-        if "SUCCESS" in result:
-                #Check for display connection status
-                result = devicesettings.dsIsDisplayConnected(dsObj)
-                if "TRUE" in result:
-                        #Get the result of execution
-                        print "HDMI display connected"
-                        isDisplayConnected = "true"
-                else:
-                        print "HDMI display not connected."
-                        isDisplayConnected = "false"
-                #Calling DS_ManagerDeInitialize to DeInitialize API
-                result = devicesettings.dsManagerDeInitialize(dsObj)
-        else:
-                print "Failed to initialize DSMgr"
-
-        #Unload the deviceSettings module
-        dsObj.unloadModule("devicesettings");
-else:
-        print "DS loading failed";
-
-
-if isDisplayConnected == "true":
-        print " "
-        print "[HDMI device is connected proceeding to execute the script....!!!]"
-        print " "
-else:
-        print " "
-        print "[HDMI device not connected.]"
-        print "[Please test connecting HDMI device. Exiting....!!!]"
-        print " "
-        exit()
-
-
-
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
-
-#IP and Port of box, No need to change,
-#This will be replaced with correspoing Box Ip and port while executing script
-ip = <ipaddress>
-port = <port>
+obj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
 obj.configureTestCase(ip,port,'DS_VOP_setDisplayConnected_178');
-
 #Get the result of connection with test component and STB
 loadmodulestatus = obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus;
+#Set the module loading status
+obj.setLoadModuleStatus(loadmodulestatus);
 
 if "SUCCESS" in loadmodulestatus.upper():
-        #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
 
         #calling Device Settings - initialize API
         tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
@@ -155,27 +99,34 @@ if "SUCCESS" in loadmodulestatus.upper():
                         portNames = details.split(',')
                         print "Port Names: ",portNames
 
-                        for ele in portNames:
-                                #calling Device Settings - set Display Connected.
-                                tdkTestObj = obj.createTestStep('DS_VOP_setDisplayConnected');
+                        for portName in portNames:
+				for connected in range (0,2):
+                                	#calling Device Settings - set Display Connected.
+                                	tdkTestObj = obj.createTestStep('DS_VOP_setDisplayConnected');
+                                	tdkTestObj.addParameter("port_name",portName);
+					tdkTestObj.addParameter("connected",connected);
+                                	expectedresult="SUCCESS"
+                                	print " "
+                                	tdkTestObj.executeTestCase(expectedresult);
+                                	actualresult = tdkTestObj.getResult();
+                                	details = tdkTestObj.getResultDetails()
+                                	print "[RESULT:%s PortName: %s DETAILS:%s]" %(actualresult,portName,details);
+					connResult = devicesettings.dsIsDisplayConnected(obj)
+					print "[PortName: %s IsDisplayConnected:%s]" %(portName,connResult);
 
-                                tdkTestObj.addParameter("port_name",ele);
-				tdkTestObj.addParameter("connected",0);
-                                expectedresult="SUCCESS"
-                                print " "
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                details = tdkTestObj.getResultDetails()
-                                print "[DS_VOP_setDisplayConnected RESULT] : %s" %actualresult;
-                                print "[DS_VOP_setDisplayConnected DETAILS] : %s" %details;
-
-                                #Check for SUCCESS/FAILURE return value of DS_VOP_setDisplayConnected
-                                if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        print "SUCCESS: Is DS_VOP_setDisplayConnected";
-				else:
-		                        tdkTestObj.setResultStatus("FAILURE");
-                		        print "FAILURE: Is DS_VOP_setDisplayConnected"
+                                	#Check for SUCCESS/FAILURE return value of DS_VOP_setDisplayConnected
+                                	if expectedresult in actualresult:
+						if connected == 0 and connResult == "TRUE":
+							tdkTestObj.setResultStatus("FAILURE");
+							print "setDisplayConnected to false but isDisplayConnected is true"
+						elif connected == 1 and connResult == "FALSE":
+							tdkTestObj.setResultStatus("FAILURE");
+							print "setDisplayConnected to true but isDisplayConnected is false"
+						else:
+							tdkTestObj.setResultStatus("SUCCESS");
+							print "setDisplayConnected value matches with isDisplayConnected result"
+					else:
+		                        	tdkTestObj.setResultStatus("FAILURE");
 
 		                print " "
 		else:
@@ -202,5 +153,3 @@ if "SUCCESS" in loadmodulestatus.upper():
         obj.unloadModule("devicesettings");
 else:
         print"Load module failed";
-        #Set the module loading status
-        obj.setLoadModuleStatus("FAILURE");

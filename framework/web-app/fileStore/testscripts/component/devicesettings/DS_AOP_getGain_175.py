@@ -100,23 +100,21 @@ if "SUCCESS" in loadmodulestatus.upper():
 	                #calling Device Settings - Get Audio Gain.
         	        tdkTestObj = obj.createTestStep('DS_AOP_getGain');
 			
-			for ele in portNameLst:
-		                tdkTestObj.addParameter("port_name",ele);
+			for portName in portNameLst:
+		                tdkTestObj.addParameter("port_name",portName);
         		        expectedresult="SUCCESS"
 	                	print " "
 	        	        tdkTestObj.executeTestCase(expectedresult);
 		                actualresult = tdkTestObj.getResult();
         		        details = tdkTestObj.getResultDetails()
 		                print "[DS_AOP_getGain RESULT] : %s" %actualresult;
-        		        print "[DS_AOP_getGain DETAILS] : %s" %details;
+        		        print "[portName:%s GetGain DETAILS: %s]" %(portName,details);
 
 	        	        #Check for SUCCESS/FAILURE return value of DS_AOP_getGain
         	        	if expectedresult in actualresult:
                 	        	tdkTestObj.setResultStatus("SUCCESS");
-	                        	print "SUCCESS: Get DS_AOP_getGain";
 		                else:
         		                tdkTestObj.setResultStatus("FAILURE");
-                		        print "FAILURE: Get DS_AOP_getGain"
 	
 		                print " "
 		else:

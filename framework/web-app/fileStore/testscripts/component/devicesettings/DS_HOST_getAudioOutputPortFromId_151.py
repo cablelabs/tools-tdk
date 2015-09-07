@@ -81,20 +81,15 @@ if "SUCCESS" in loadmodulestatus.upper():
 			if "SUCCESS" in actualresult.upper():
 			        #Primitive test case which associated to this Script
 				tdkTestObj = obj.createTestStep('DS_HOST_getAudioOutputPortFromId');
-                                portList1 = details.split(",")
-                                value = len(portList1)
-                                print "Number of Audio ID's supported is ", value
-                                port_id = 0
-				while(port_id < value):
-					print "Getting the audio output port from ID: ", port_id
+                                portList = details.split(",")
+				for port_id in range (0,len(portList)):
 					tdkTestObj.addParameter("port_id", port_id);
 					expectedresult="SUCCESS"
 		                        tdkTestObj.executeTestCase(expectedresult);
 		                        actualresult = tdkTestObj.getResult();
 		                        details = tdkTestObj.getResultDetails();
 		                        print "[TEST EXECUTION RESULT] : %s" %actualresult;
-		                        print "Details: [%s]"%details;
-					port_id += 1
+		                        print "PortId: %d Details: [%s]"%(port_id,details);
 		                        #Set the result status of execution
 		                        if expectedresult in actualresult:
 	        	                        tdkTestObj.setResultStatus("SUCCESS");

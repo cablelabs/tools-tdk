@@ -154,27 +154,24 @@ if "SUCCESS" in loadmodulestatus.upper():
                         portNames = details.split(',')
                         print "Port Names: ",portNames
 
-                        for ele in portNames:
+                        for portName in portNames:
                                 #calling Device Settings - Get Default Resolution for VideoPort.
                                 tdkTestObj = obj.createTestStep('DS_VOP_getDefaultResolution');
 				
                                 print " "
-				print "Port Name: ",ele
-                                tdkTestObj.addParameter("port_name",ele);
+                                tdkTestObj.addParameter("port_name",portName);
                                 expectedresult="SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
                                 details = tdkTestObj.getResultDetails()
                                 print "[DS_VOP_getDefaultResolution RESULT] : %s" %actualresult;
-                                print "[DS_VOP_getDefaultResolution DETAILS] : %s" %details;
+                                print "[portName: %s getDefaultResolution DETAILS: %s]" %(portName,details);
 
                                 #Check for SUCCESS/FAILURE return value of DS_VOP_getDefaultResolution.
                                 if expectedresult in actualresult:
                                         tdkTestObj.setResultStatus("SUCCESS");
-                                        print "SUCCESS: Get DS_VOP_getDefaultResolution";
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "FAILURE: Get DS_VOP_getDefaultResolution";
 
                                 print " "
                 else:

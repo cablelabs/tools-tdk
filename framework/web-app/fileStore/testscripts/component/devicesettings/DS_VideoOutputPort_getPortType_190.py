@@ -85,24 +85,19 @@ if "SUCCESS" in dsLoadStatus.upper():
 
                         #Invoke primitive testcase
                         tdkTestObj = dsObj.createTestStep('DS_VideoOutputPort_getPortType');
-			port_id = 0
-                        tdkTestObj.addParameter("port_id",port_id);
-                        expectedresult="SUCCESS"
-                        tdkTestObj.executeTestCase(expectedresult);
-                        actualresult = tdkTestObj.getResult();
-                        typeVal = tdkTestObj.getResultDetails();
-                        print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,actualresult)
-                        print "PortId: %d Type: %s"%(port_id,typeVal);
-                        #Check for SUCCESS/FAILURE return value
-                        if expectedresult in actualresult:
-                            #tdkTestObj.setResultStatus("SUCCESS");
-			    if typeVal in types:
-				tdkTestObj.setResultStatus("SUCCESS");
-			    else:
-                                tdkTestObj.setResultStatus("FAILURE");
-				print "Type %s not in %s"%(typeVal,types)
-                        else:
-                            tdkTestObj.setResultStatus("FAILURE");
+			portTypes = 9 
+			for port_id in range (0,portTypes):
+                        	tdkTestObj.addParameter("port_id",port_id);
+                        	expectedresult="SUCCESS"
+                        	tdkTestObj.executeTestCase(expectedresult);
+                        	actualresult = tdkTestObj.getResult();
+                        	typeVal = tdkTestObj.getResultDetails();
+                        	print "Result:%s PortIndex:%d PortType: %s"%(actualresult,port_id,typeVal);
+                        	#Check for SUCCESS/FAILURE return value
+                        	if expectedresult in actualresult:
+                            		tdkTestObj.setResultStatus("SUCCESS");
+                        	else:
+                            		tdkTestObj.setResultStatus("FAILURE");
                 else:
                         print "Display device not connected. Skipping testcase"
                 #Calling DS_ManagerDeInitialize to DeInitialize API

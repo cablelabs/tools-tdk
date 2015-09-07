@@ -49,8 +49,8 @@ Test Type: Positive.</synopsis>
   </rdk_versions>
 </xml>
 '''
-# use tdklib library,which provides a wrapper for tdk testcase script 
-import tdklib; 
+#use tdklib library,which provides a wrapper for tdk testcase script
+import tdklib;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
@@ -84,27 +84,20 @@ if "SUCCESS" in loadmodulestatus.upper():
                 #calling Device Settings - Get Audio output Get port type.
                 tdkTestObj = obj.createTestStep('DS_AOPCONFIG_getPortType');
 		
-		portIdLst = [0,1,2]
-		for ele in portIdLst:
-	                port_id = ele
+		portTypes = 3
+		for port_id in range(0,portTypes):
         	        tdkTestObj.addParameter("port_id",port_id);
                 	expectedresult="SUCCESS"
-	                print " "
         	        tdkTestObj.executeTestCase(expectedresult);
 	                actualresult = tdkTestObj.getResult();
         	        details = tdkTestObj.getResultDetails()
-	               	print "[DS_AOPCONFIG_getPortType RESULT] : %s" %actualresult;
-        	        print "[DS_AOPCONFIG_getPortType DETAILS] : %s" %details;
+        	        print "[RESULT: %s PortIndex: %d PortType: %s]" %(actualresult,port_id,details);
 
                 	#Check for SUCCESS/FAILURE return value of DS_AOPCONFIG_getPortType
 	                if expectedresult in actualresult:
         	                tdkTestObj.setResultStatus("SUCCESS");
-                	        print "SUCCESS: Get DS_AOPCONFIG_getPortType";
 	                else:
         	                tdkTestObj.setResultStatus("FAILURE");
-                	        print "FAILURE: Get DS_AOPCONFIG_getPortType"
-
-                print " "
 
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');

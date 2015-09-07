@@ -68,21 +68,37 @@ if "SUCCESS" in dsLoadStatus.upper():
                 #Check for display connection status
                 result = devicesettings.dsIsDisplayConnected(dsObj)
                 if "TRUE" in result:
-                        #Invoke primitive testcase
-                        tdkTestObj = dsObj.createTestStep('DS_VOPCONFIG_getFrameRate');
-			portName="HDMI0"
-                        tdkTestObj.addParameter("port_name",portName);
+                        #Get the Video Ports supported
+                        tdkTestObj = dsObj.createTestStep('DS_HOST_getVideoOutputPorts');
                         expectedresult="SUCCESS"
                         tdkTestObj.executeTestCase(expectedresult);
                         actualresult = tdkTestObj.getResult();
-                        details = tdkTestObj.getResultDetails();
-                        print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,actualresult)
-                        print "Port name: %s Framerate: %s"%(portName,details);
-                        #Check for SUCCESS/FAILURE return value
+                        details = tdkTestObj.getResultDetails()
+                        print "[getVideoOutputPorts RESULT] : %s" %actualresult;
+                        print "[getVideoOutputPorts DETAILS] : %s" %details;
+                        #Check for SUCCESS/FAILURE return value of DS_HOST_getVideoOutputPorts.
                         if expectedresult in actualresult:
-                            tdkTestObj.setResultStatus("SUCCESS");
-                        else:
-                            tdkTestObj.setResultStatus("FAILURE");
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                print "SUCCESS: Get DS_HOST_getVideoOutputPorts";
+                                portNames = details.split(',')
+                                for portName in portNames:
+                        		#Invoke primitive testcase
+                        		tdkTestObj = dsObj.createTestStep('DS_VOPCONFIG_getFrameRate');
+                        		tdkTestObj.addParameter("port_name",portName);
+                        		expectedresult="SUCCESS"
+                        		tdkTestObj.executeTestCase(expectedresult);
+                        		actualresult = tdkTestObj.getResult();
+                        		details = tdkTestObj.getResultDetails();
+                        		print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,actualresult)
+                        		print "Port name: %s Framerate: %s"%(portName,details);
+                        		#Check for SUCCESS/FAILURE return value
+                        		if expectedresult in actualresult:
+                            			tdkTestObj.setResultStatus("SUCCESS");
+                        		else:
+                            			tdkTestObj.setResultStatus("FAILURE");
+			else:
+				tdkTestObj.setResultStatus("FAILURE");
+				print "FAILED: Get DS_HOST_getVideoOutputPorts";
                 else:
                         print "Display device not connected. Skipping testcase"
                 #Calling DS_ManagerDeInitialize to DeInitialize API

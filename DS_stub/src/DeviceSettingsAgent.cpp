@@ -384,10 +384,11 @@ bool DeviceSettingsAgent::FPI_setColor(IN const Json::Value& req, OUT Json::Valu
 	char colorDetails[20];
 	int color=req["color"].asInt();
 	int colorid;
-	/*Creating object for Color*/
-	device::FrontPanelIndicator::Color c(color);
+
 	try
 	{
+		/*Creating object for Color*/
+		device::FrontPanelIndicator::Color c(color);
 		/*calling setcolor*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling setColor\n");
 		DEBUG_PRINT(DEBUG_LOG,"\ncolor to set:%d\n",color);
@@ -1569,7 +1570,6 @@ bool DeviceSettingsAgent::FPI_getSupportedColors(IN const Json::Value& req, OUT 
 		const device::List<device::FrontPanelIndicator::Color> colorList = device::FrontPanelIndicator::getInstance(indicator_name).getSupportedColors();
                 size_t listSize = colorList.size();
 		DEBUG_PRINT(DEBUG_LOG,"No. of supported colors for %s indicator: %d\n",indicator_name.c_str(), listSize);
-		//sprintf(colors,"%s indicator Colors: ",indicator_name.c_str());
                 for (size_t i = 0; i < listSize; i++)
                 {
 			strcat(colors,colorList.at(i).getName().c_str());
@@ -1796,7 +1796,7 @@ bool DeviceSettingsAgent::FPTEXT_setTimeFormat(IN const Json::Value& req, OUT Js
 	try
 	{
 		device::FrontPanelTextDisplay::getInstance("Text").setTimeFormat(timeFormat);
-		int timeFormatOut = device::FrontPanelTextDisplay::getInstance("Text").getCurrentTimeForamt();
+		int timeFormatOut = device::FrontPanelTextDisplay::getInstance("Text").getCurrentTimeFormat();
 		sprintf(timeFormatDetails,"TimeFormat:%d",timeFormatOut);
 		response["details"]= timeFormatDetails;
 		if (timeFormat == timeFormatOut)
@@ -2539,33 +2539,6 @@ bool DeviceSettingsAgent::VOPTYPE_getPorts(IN const Json::Value& req, OUT Json::
                         response["details"]="Failed to get list of supported video output ports";
                         response["result"]= "FAILURE";
                 }
-
-		//GetPorts for specified portId
-		int portId=req["port_id"].asInt();
-		device::List<device::VideoOutputPort> vPorts = device::VideoOutputPortType::getInstance(portId).getPorts();
-                size_t listSize = vPorts.size();
-                DEBUG_PRINT(DEBUG_LOG,"PortId: %d Supported Ports size: %d\n", portId, listSize);
-                for (size_t i = 0; i < listSize; i++)
-                {
-                        strcat(details, vPorts.at(i).getName().c_str());
-                        if( i < listSize-1 )
-                        {
-                                strcat(details,",");
-                        }
-                }
-
-		/*
-                if (listSize != 0)
-                {
-                        response["details"]=details;
-                        response["result"]= "SUCCESS";
-                }
-                else
-                {
-                        response["details"]="Failed to get list of supported video output ports";
-                        response["result"]= "FAILURE";
-                }
-		*/
         }
         catch(...)
         {
@@ -2586,15 +2559,15 @@ bool DeviceSettingsAgent::VOPTYPE_setRestrictedResolution(IN const Json::Value& 
         try
         {
                 char details[50] = {'\0'};
-		std::string portName=req["port_name"].asCString();
-		int resolution=req["resolution"].asInt();
+		std::string portType=req["port_name"].asCString();
+		int iResolution=req["resolution"].asInt();
 
-                device::VideoOutputPortType::getInstance(portName).setRestrictedResolution(resolution);
-		int outResolution = device::VideoOutputPortType::getInstance(portName).getRestrictedResolution();
-		sprintf(details,"SETVALUE:%d GETVALUE:%d",resolution,outResolution);
+                device::VideoOutputPortType::getInstance(portType).setRestrictedResolution(iResolution);
+		int oResolution = device::VideoOutputPortType::getInstance(portType).getRestrictedResolution();
+		sprintf(details,"SETVALUE:%d GETVALUE:%d",iResolution,oResolution);
                 DEBUG_PRINT(DEBUG_LOG,"RestrictedResolution %s\n", details);
 		response["details"]=details;
-                if (resolution == outResolution)
+                if (iResolution == oResolution)
                 {
                         response["result"]= "SUCCESS";
                 }
@@ -2621,19 +2594,13 @@ bool DeviceSettingsAgent::VOPTYPE_getRestrictedResolution(IN const Json::Value& 
         try
         {
                 char details[50] = {'\0'};
-                std::string portName=req["port_name"].asCString();
+                std::string portType=req["port_name"].asCString();
 
-                //int resolution = device::VideoOutputPortType::getInstance(portName).getRestrictedResolution();
-		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
-		int resolution = vPort.getType().getRestrictedResolution();
+                int resolution = device::VideoOutputPortType::getInstance(portType).getRestrictedResolution();
                 sprintf(details,"%d",resolution);
-                DEBUG_PRINT(DEBUG_LOG,"PortName: %s RestrictedResolution: %s\n", portName.c_str(), details);
-		DEBUG_PRINT(DEBUG_LOG,"Min Resolution: %d Max Resolution: %d\n", device::PixelResolution::k720x480, device::PixelResolution::kMax);
+                DEBUG_PRINT(DEBUG_LOG,"PortType: %s RestrictedResolution: %s\n", portType.c_str(), details);
                 response["details"]=details;
-		if ( (resolution < device::PixelResolution::k720x480) || (resolution >= device::PixelResolution::kMax) )
-			response["result"]= "FAILURE";
-		else
-			response["result"]= "SUCCESS";
+		response["result"]= "SUCCESS";
         }
         catch(...)
         {
@@ -2692,7 +2659,6 @@ bool DeviceSettingsAgent::VOPCONFIG_getSSMode(IN const Json::Value& req, OUT Jso
                 char details[20] = {'\0'};
                 int id = req["ss_id"].asInt();
                 device::StereoScopicMode mode = device::VideoOutputPortConfig::getInstance().getSSMode(id);
-                //sprintf(details,"%d",mode.getId());
 		sprintf(details,"%s",mode.getName().c_str());
                 DEBUG_PRINT(DEBUG_LOG,"ss_id: %d SSMode Id:%d\n", id, mode.getId());
 		response["details"]=details;
@@ -3382,7 +3348,7 @@ bool DeviceSettingsAgent::VOP_getDefaultResolution(IN const Json::Value& req, OU
         {
 		char details[50]={'\0'};
 		std::string portName=req["port_name"].asCString();
-		device::VideoResolution resolution = device::VideoOutputPort::getInstance(portName).getDfeaultResolution();
+		device::VideoResolution resolution = device::VideoOutputPort::getInstance(portName).getDefaultResolution();
                 sprintf(details,"%s",resolution.getName().c_str());
 		DEBUG_PRINT(DEBUG_LOG,"Display [%s] Default Resolution: %s\n", portName.c_str(), resolution.getName().c_str());
                 response["details"]= details;
@@ -3459,11 +3425,11 @@ bool DeviceSettingsAgent::HOST_setVersion(IN const Json::Value& req, OUT Json::V
 bool DeviceSettingsAgent::HOST_setPreferredSleepMode(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setPreferredSleepMode ---->Entry\n");
-	std::string sleepModeStr = req["sleepMode"].asCString();
-	const device::SleepMode &mode= device::SleepMode::getInstance(sleepModeStr);
 
         try
         {
+		std::string sleepModeStr = req["sleepMode"].asCString();
+		const device::SleepMode &mode= device::SleepMode::getInstance(sleepModeStr);
                 int ret = device::Host::getInstance().setPreferredSleepMode(mode);
 		DEBUG_PRINT(DEBUG_LOG,"Set PreferredSleepMode returned value: %d\n", ret);
 		const device::SleepMode &currMode = device::Host::getInstance().getPreferredSleepMode();

@@ -78,7 +78,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 
 		if "SUCCESS" in actualresult.upper():
 			tdkTestObj = obj.createTestStep('DS_HOST_setPreferredSleepMode');
-			mode = "TIGHT_SLEEP"
+			mode = "UNKNOWN"
 			print "Setting an Invalid Sleep mode : ", mode
 			tdkTestObj.addParameter("sleepMode", mode);
 			expectedresult="FAILURE"

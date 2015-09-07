@@ -68,21 +68,37 @@ if "SUCCESS" in dsLoadStatus.upper():
                 #Check for display connection status
                 result = devicesettings.dsIsDisplayConnected(dsObj)
                 if "TRUE" in result:
-                        #Invoke primitive testcase
-                        tdkTestObj = dsObj.createTestStep('DS_VOPTYPE_getRestrictedResolution');
-			portName="HDMI0"
-                        tdkTestObj.addParameter("port_name",portName);
+                        #Get the Video output Port types supported
+                        tdkTestObj = dsObj.createTestStep('DS_VideOutputPort_getSupportedTypes');
                         expectedresult="SUCCESS"
                         tdkTestObj.executeTestCase(expectedresult);
                         actualresult = tdkTestObj.getResult();
-                        details = tdkTestObj.getResultDetails();
-                        print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,actualresult)
-                        print "Port name: %s RestrictedResolution: %s"%(portName,details);
-                        #Check for SUCCESS/FAILURE return value
+                        details = tdkTestObj.getResultDetails()
+                        print "[VideOutputPort_getSupportedTypes RESULT] : %s" %actualresult;
+                        print "[VideOutputPort_getSupportedTypes DETAILS] : %s" %details;
+                        #Check for SUCCESS/FAILURE return value of DS_HOST_getVideoOutputPorts.
                         if expectedresult in actualresult:
-                            tdkTestObj.setResultStatus("SUCCESS");
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                portTypes = details.split(',')
+                                for portType in portTypes:
+                                        #calling Device Settings - Get RestrictedResolution of VideoOutputPort Type.
+                                        tdkTestObj = dsObj.createTestStep('DS_VOPTYPE_getRestrictedResolution');
+                                        tdkTestObj.addParameter("port_name",portType);
+                                        expectedresult="SUCCESS"
+                                        tdkTestObj.executeTestCase(expectedresult);
+                                        actualresult = tdkTestObj.getResult();
+                                        details = tdkTestObj.getResultDetails()
+                                        print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,actualresult)
+                                        print "PortType: %s RestrictedResolution: %s"%(portType,details)
+
+                                        #Check for SUCCESS/FAILURE return value
+                                        if expectedresult in actualresult:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
                         else:
-                            tdkTestObj.setResultStatus("FAILURE");
+                                tdkTestObj.setResultStatus("FAILURE");
+                                print "Failed to get VideoOutput Port Types";
                 else:
                         print "Display device not connected. Skipping testcase"
                 #Calling DS_ManagerDeInitialize to DeInitialize API

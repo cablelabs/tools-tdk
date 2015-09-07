@@ -78,53 +78,39 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
         if expectedresult in actualresult:
-                tdkTestObj.setResultStatus("SUCCESS");
-		
-                #calling Device Settings - Get Supported Types.
-                tdkTestObj = obj.createTestStep('DS_AOPCONFIG_getSupportedTypes');
-		
-		tdkTestObj.executeTestCase(expectedresult);
-		
-		actualresult = tdkTestObj.getResult();
-                details = tdkTestObj.getResultDetails()
-                print "[DS_AOPCONFIG_getSupportedTypes RESULT] : %s" %actualresult;
-                print "[DS_AOPCONFIG_getSupportedTypes DETAILS] : %s" %details;
+            tdkTestObj.setResultStatus("SUCCESS");
 
-		#Check for SUCCESS/FAILURE return value of DS_AOPCONFIG_getSupportedTypes
-                if expectedresult in actualresult:
-			tdkTestObj.setResultStatus("SUCCESS");	
-                	print "SUCCESS: Get DS_AOPCONFIG_getSupportedTypes";
-		
-	                #calling Device Settings - Get Front Panel Get Port From Name.
-        	        tdkTestObj = obj.createTestStep('DS_AOPCONFIG_getPortFromName');
-				
-                	portNameLst = details.split(',')
-			print "Supported Audio Types: ",portNameLst
-	                for ele in portNameLst:
-        	                port_name = ele + '0'			
-				print "Port Name Passed: ",port_name	
-                	        tdkTestObj.addParameter("port_name",port_name);
-                        	expectedresult="SUCCESS"
-	                        print " "
-        	                tdkTestObj.executeTestCase(expectedresult);
-                	        actualresult = tdkTestObj.getResult();
-	                        details = tdkTestObj.getResultDetails()
-        	                print "[DS_AOPCONFIG_getPortFromName RESULT] : %s" %actualresult;
-                	        print "[DS_AOPCONFIG_getPortFromName DETAILS] : %s" %details;
+            tdkTestObj = obj.createTestStep('DS_HOST_getAudioOutputPorts');
+            expectedresult="SUCCESS"
+            tdkTestObj.executeTestCase(expectedresult);
+            actualresult = tdkTestObj.getResult();
+            details = tdkTestObj.getResultDetails();
+            print "[TEST EXECUTION RESULT] : %s" %actualresult;
+            print "Supported AudioOutputPorts: [%s]"%details;
+            if "SUCCESS" in actualresult.upper():
 
-	                        #Check for SUCCESS/FAILURE return value of DS_AOPCONFIG_getPortFromName
-        	                if expectedresult in actualresult:
-                	                tdkTestObj.setResultStatus("SUCCESS");
-                        	        print "SUCCESS: Get DS_AOPCONFIG_getPortFromName";
-	                        else:
-        	                        tdkTestObj.setResultStatus("FAILURE");
-                	                print "FAILURE: Get DS_AOPCONFIG_getPortFromName";
-		else: 
-			tdkTestObj.setResultStatus("FAILURE");
-                	print "FAILURE: Get DS_AOPCONFIG_getSupportedTypes";
+		portList = details.split(",")
+
+		for portName in portList:
+			#calling Device Settings - Get Port From Name
+			tdkTestObj = obj.createTestStep('DS_AOPCONFIG_getPortFromName');
+	                tdkTestObj.addParameter("port_name",portName);
+        	        expectedresult="SUCCESS"
+
+	        	print " "
+        	        tdkTestObj.executeTestCase(expectedresult);
+                	actualresult = tdkTestObj.getResult();
+	                details = tdkTestObj.getResultDetails()
+                	print "[DS_AOPCONFIG_getPortFromName RESULT] : %s" %actualresult;
+        	        print "PortName: %s DETAILS : %s" %(portName,details);
+
+	                #Check for SUCCESS/FAILURE return value of DS_AOPCONFIG_getPortFromName
+        	        if expectedresult in actualresult:
+                	        tdkTestObj.setResultStatus("SUCCESS");
+	                else:
+        	                tdkTestObj.setResultStatus("FAILURE");
 
                 print " "
-
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
                 expectedresult="SUCCESS"
@@ -137,6 +123,9 @@ if "SUCCESS" in loadmodulestatus.upper():
                         tdkTestObj.setResultStatus("SUCCESS");
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
+	    else:
+		tdkTestObj.setResultStatus("FAILURE");
+		print "Failed to get number of AudioOutputPorts"
         else:
                 tdkTestObj.setResultStatus("FAILURE");
 

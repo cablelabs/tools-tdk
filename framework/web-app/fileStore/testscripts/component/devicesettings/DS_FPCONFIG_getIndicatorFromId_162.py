@@ -53,7 +53,7 @@ Test Type: Positive</synopsis>
 import tdklib; 
 
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
+obj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -80,31 +80,26 @@ if "SUCCESS" in loadmodulestatus.upper():
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
 
-                #calling Device Settings - Get Front Panel Indicator.
-                tdkTestObj = obj.createTestStep('DS_FPCONFIG_getIndicatorFromId');
-				
-		print "IDS: 0:Message, 1:Power, 2:Record, 3:Remote and 4:RfByPass "
+		print "IDs:: 0:Message 1:Power 2:Record 3:Remote 4:RfByPass"
                 indicatorList = [0,1,2,3,4]
                 print " "
-                for ele in indicatorList:
+                for indicator_id in indicatorList:
                         #Set FP indicator name.
-                        indicator_id = ele
-                        print "Indicator Id: %d" %indicator_id;
+			#calling Device Settings - Get Front Panel Indicator.
+			tdkTestObj = obj.createTestStep('DS_FPCONFIG_getIndicatorFromId');
                         tdkTestObj.addParameter("indicator_id",indicator_id);
                         expectedresult="SUCCESS"
                         tdkTestObj.executeTestCase(expectedresult);
                         actualresult = tdkTestObj.getResult();
 			details = tdkTestObj.getResultDetails()
                         print "[DS_FPCONFIG_getIndicatorFromId RESULT] : %s" %actualresult;
-                        print "[DS_FPCONFIG_getIndicatorFromId DETAILS] : %s" %details;
+                        print "[IndicatorId: %d DETAILS: %s]" %(indicator_id,details);
 
                        #Check for SUCCESS/FAILURE return value of DS_FPCONFIG_getIndicatorFromId
                         if expectedresult in actualresult:
                                 tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: Get DS_FPCONFIG_getIndicatorFromId";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: Get DS_FPCONFIG_getIndicatorFromId"
                         print " "
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');

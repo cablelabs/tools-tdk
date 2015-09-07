@@ -155,26 +155,24 @@ if "SUCCESS" in loadmodulestatus.upper():
                         portNames = details.split(',')
                         print "Port Names: ",portNames
 
-                        for ele in portNames:
+                        for portName in portNames:
                                 #calling Device Settings - Check Video port has Surround.
                                 tdkTestObj = obj.createTestStep('DS_VOP_hasSurround');
 
-                                tdkTestObj.addParameter("port_name",ele);
+                                tdkTestObj.addParameter("port_name",portName);
                                 expectedresult="SUCCESS"
                                 print " "
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
                                 details = tdkTestObj.getResultDetails()
                                 print "[DS_VOP_hasSurround RESULT] : %s" %actualresult;
-                                print "[DS_VOP_hasSurround DETAILS] : %s" %details;
+                                print "[Portname: %s hasSurround DETAILS: %s]" %(portName,details);
 
                                 #Check for SUCCESS/FAILURE return value of DS_VOP_hasSurround
                                 if expectedresult in actualresult:
                                         tdkTestObj.setResultStatus("SUCCESS");
-                                        print "SUCCESS: Has DS_VOP_hasSurround";
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "FAILURE: Has DS_VOP_hasSurround";
 
                                 print " "
                 else:
