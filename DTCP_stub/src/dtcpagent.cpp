@@ -124,6 +124,7 @@ bool dtcpProcessReleasePacket()
     {
         DEBUG_PRINT(DEBUG_TRACE,"Src DTCPMgrProcessPacket failed\n");
         status = false;
+	return status;
     }
 
     //Start processing sink packet
