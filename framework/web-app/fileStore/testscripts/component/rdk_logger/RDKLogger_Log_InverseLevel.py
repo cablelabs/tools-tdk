@@ -52,21 +52,18 @@ Test Type: Negative</synopsis>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
-import tdklib;
-
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("rdklogger","2.0");
+from tdklib import TDKScriptingLibrary;
 
 #IP and Port of box, No need to change,
-#This will be replaced with correspoing Box Ip and port while executing script
+#This will be replaced with corresponding Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'RDKLogger_Log_InverseLevel');
 
+#Test component to be tested
+obj = TDKScriptingLibrary("rdklogger","2.0");
+obj.configureTestCase(ip,port,'RDKLogger_Log_InverseLevel');
 #Get the result of connection with test component and STB
 result =obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %result;
-
 print "rdklogger module loading status :%s" %result;
 
 #Check for SUCCESS/FAILURE of rdklogger module
@@ -93,13 +90,13 @@ if "SUCCESS" in result.upper():
     result = tdkTestObj.getResult();
     print "[TEST EXECUTION RESULT] : %s" %result;
     details = tdkTestObj.getResultDetails();
+    #Set the result status of execution
     if "FAILURE" in result.upper():
-        #Set the result status of execution
         tdkTestObj.setResultStatus("SUCCESS");
         print "rdklogger logging Successful";
     else:
-         tdkTestObj.setResultStatus("FAILURE");
-         print "rdklogger logging Failed: [%s]"%details;
+        tdkTestObj.setResultStatus("FAILURE");
+        print "rdklogger logging Failed: [%s]"%details;
 
     #unloading rdklogger module
     obj.unloadModule("rdklogger");

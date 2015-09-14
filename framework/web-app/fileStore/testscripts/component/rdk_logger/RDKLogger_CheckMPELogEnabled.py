@@ -52,80 +52,46 @@ Test Type: Positive</synopsis>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
-import tdklib;
-
-def Create_ExecuteTestcase(obj,primitivetest,expectedresult,verifyList, **kwargs):
-    print kwargs
-    details = "NULL";
- 
-    #calling primitive test case    
-    tdkTestObj = obj.createTestStep(primitivetest);
-    for name, value in kwargs.iteritems():
-      
-        print "Name: %s"%str(name);
-        tdkTestObj.addParameter(str(name),value);                                   
-       
-    Expectedresult=expectedresult;
-    tdkTestObj.executeTestCase(Expectedresult); 
-    actualresult = tdkTestObj.getResult();
-    print "Actual Result: %s"%actualresult;
-    
-    try: 
-        details = tdkTestObj.getResultDetails();
-        print "Details:%s"%details;
-    except:                
-        pass;
-    
-    #Check for SUCCESS/FAILURE return value 
-    if Expectedresult in actualresult:
-        count = 0;
-        if verifyList:
-            print "Verify List not empty"
-            for name,value in verifyList.items():	
-                print "Name:%s,Value:%s to be verified in the details"%(name,value);
-                if value in details:
-            	    print details;	    
-                    print "SUCCESS : %s sucess"%primitivetest;
-                    count+=1;
-                    if count > 0:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        print "SUCCESS:%s"%(primitivetest);
-                else:                    
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "FAILURE:Value not in details %s" %details;
-        else:          
-            tdkTestObj.setResultStatus("SUCCESS");
-    else:
-        tdkTestObj.setResultStatus("FAILURE");            
-    
-    return (actualresult,tdkTestObj,details);
-
-
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("rdklogger","2.0");
+from tdklib import TDKScriptingLibrary;
 
 #IP and Port of box, No need to change,
-#This will be replaced with correspoing Box Ip and port while executing script
+#This will be replaced with corresponding Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'RDKLogger_CheckMPELogEnabled');
 
+#Test component to be tested
+obj = TDKScriptingLibrary("rdklogger","2.0");
+obj.configureTestCase(ip,port,'RDKLogger_CheckMPELogEnabled');
 #Get the result of connection with test component and STB
 result =obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %result;
-
 print "rdklogger module loading status :%s" %result;
 
 #Check for SUCCESS/FAILURE of rdklogger module
 if "SUCCESS" in result.upper():
     #Set the module loading status
     obj.setLoadModuleStatus("SUCCESS");
-        
-    actualresult,tdkTestObj_cc,details = Create_ExecuteTestcase(obj,'RDKLogger_CheckMPELogEnabled', 'SUCCESS',verifyList ={} );
+
+    #Primitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('RDKLogger_CheckMPELogEnabled');
+
+    expectedRes = "SUCCESS"
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedRes);
+
+    #Get the result of execution
+    result = tdkTestObj.getResult();
+    print "[TEST EXECUTION RESULT] : %s" %result;
+    details = tdkTestObj.getResultDetails();
+    if "SUCCESS" in result.upper():
+        #Set the result status of execution
+        tdkTestObj.setResultStatus("SUCCESS");
+        print "rdklogger logging Successful";
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+        print "rdklogger logging Failed: [%s]"%details;
 
     #unloading rdklogger module
     obj.unloadModule("rdklogger");
-    
 else:
     print "Failed to load rdklogger module";
     #Set the module loading status

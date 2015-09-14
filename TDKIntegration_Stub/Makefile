@@ -39,7 +39,7 @@ LDOPTS    +=  -L $(IMAGE_PATH)/usr/local/lib \
               -L $(IMAGE_PATH)/lib 
 
 ifneq ($(SINGLE_TUNER_IP_CLIENT),y)
-LDOPTS    += -lsdvsectionfilter -lrmfsdvconfiguration -lrmfsdvdiscovery -lcurl
+#LDOPTS    += -lsdvsectionfilter -lrmfsdvconfiguration -lrmfsdvdiscovery -lcurl
 endif
 
 INCLUDES  +=    -I./include \

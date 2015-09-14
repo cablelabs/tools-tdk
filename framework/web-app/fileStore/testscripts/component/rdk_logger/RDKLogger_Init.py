@@ -52,22 +52,18 @@ Test Type: Positive</synopsis>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
-import tdklib;
-import random;
-
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("rdklogger","2.0");
+from tdklib import TDKScriptingLibrary;
 
 #IP and Port of box, No need to change,
-#This will be replaced with correspoing Box Ip and port while executing script
+#This will be replaced with corresponding Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'RDKLogger_Init');
 
+#Test component to be tested
+obj = TDKScriptingLibrary("rdklogger","2.0");
+obj.configureTestCase(ip,port,'RDKLogger_Init');
 #Get the result of connection with test component and STB
 result =obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %result;
-
 print "rdklogger module loading status :%s" %result;
 
 #Check for SUCCESS/FAILURE of rdklogger module
@@ -75,7 +71,7 @@ if "SUCCESS" in result.upper():
     #Set the module loading status
     obj.setLoadModuleStatus("SUCCESS");
 
-    #Prmitive test case which associated to this Script
+    #Primitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('RDKLogger_Init');
 
     expectedRes = "SUCCESS"
@@ -92,9 +88,9 @@ if "SUCCESS" in result.upper():
         tdkTestObj.setResultStatus("SUCCESS");
         print "rdklogger init Successful";
     else:
-         tdkTestObj.setResultStatus("FAILURE");
-         details = tdkTestObj.getResultDetails();
-         print "rdklogger init Failed: [%s]"%details;
+        tdkTestObj.setResultStatus("FAILURE");
+        details = tdkTestObj.getResultDetails();
+        print "rdklogger init Failed: [%s]"%details;
 
     #unloading rdklogger module
     obj.unloadModule("rdklogger");

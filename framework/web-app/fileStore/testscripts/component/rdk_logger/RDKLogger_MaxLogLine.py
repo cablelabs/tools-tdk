@@ -52,23 +52,20 @@ Test Type: Positive</synopsis>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
-import tdklib;
-import string
-import random
-
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("rdklogger","2.0");
+from tdklib import TDKScriptingLibrary;
+from string import ascii_letters,digits
+from random import choice
 
 #IP and Port of box, No need to change,
-#This will be replaced with correspoing Box Ip and port while executing script
+#This will be replaced with corresponding Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'RDKLogger_MaxLogLine');
 
+#Test component to be tested
+obj = TDKScriptingLibrary("rdklogger","2.0");
+obj.configureTestCase(ip,port,'RDKLogger_MaxLogLine');
 #Get the result of connection with test component and STB
 result =obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %result;
-
 print "rdklogger module loading status :%s" %result;
 
 #Check for SUCCESS/FAILURE of rdklogger module
@@ -87,8 +84,8 @@ if "SUCCESS" in result.upper():
     level = "ERROR"
     print "Requested level: %s"%level
     tdkTestObj.addParameter("level",level);
-    #randMsg = [random.choice(string.ascii_letters + string.digits) for n in xrange(512)]
-    randMsg = [random.choice(string.ascii_letters + string.digits) for n in xrange(256)]
+    #randMsg = [choice(ascii_letters + digits) for n in xrange(512)]
+    randMsg = [choice(ascii_letters + digits) for n in xrange(256)]
     msg = "".join(randMsg)
     print "Requested message: %s"%msg
     tdkTestObj.addParameter("msg",msg);
@@ -105,8 +102,8 @@ if "SUCCESS" in result.upper():
         tdkTestObj.setResultStatus("SUCCESS");
         print "rdklogger logging Successful";
     else:
-         tdkTestObj.setResultStatus("FAILURE");
-         print "rdklogger logging Failed: [%s]"%details;
+        tdkTestObj.setResultStatus("FAILURE");
+        print "rdklogger logging Failed: [%s]"%details;
 
     #unloading rdklogger module
     obj.unloadModule("rdklogger");
