@@ -1,7 +1,7 @@
 [Unit]
 Description=TDK Test Agent Start
-After=irmgr.service
-Requires=irmgr.service
+After=swupdate.service
+Requires=swupdate.service
 
 [Service]
 ExecStartPre=/bin/sh -c 'cp -r /var/TDK /opt/'

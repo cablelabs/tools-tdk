@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARMBUS_Single_Sender_Multiple_Receiver_Test</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -23,9 +23,9 @@
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>RDKCMF-1518 : Cannot register multiple event handlers for same event</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
@@ -45,8 +45,6 @@
     <rdk_version>RDK1.2</rdk_version>
     <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
-    <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
 </xml>
