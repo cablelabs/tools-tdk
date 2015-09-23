@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LivePlayback_OFF_to_ONMode</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -30,15 +30,15 @@
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
     <!--  -->
-    <box_type>Terminal-RNG</box_type>
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -92,7 +92,8 @@ if "SUCCESS" in loadmodulestatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
                     result3 = change_powermode(iarm_obj,2);
                     if "SUCCESS" in result3.upper():
                         result4 = getURL_PlayURL(obj,'01');
-                    
+                else:
+                         change_powermode(iarm_obj,2);
             
                 # Calling IARM_Bus_DisConnect API
                 actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});                                 
@@ -104,6 +105,7 @@ if "SUCCESS" in loadmodulestatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
             
         else:
             print "FAILURE: IARM_Bus_Init failed. %s " %details;
+        
         print "Tdkintegration module loaded successfully";
         obj.unloadModule("tdkintegration");
         iarm_obj.unloadModule("iarmbus");

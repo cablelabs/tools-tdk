@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>6</version>
+  <version>9</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LivePlayback_TSB_Increase_StandbyMode</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -30,9 +30,9 @@
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -112,7 +112,8 @@ def Change_Power(iarm_obj, powermode):
             if expectedresult in actualresult:                    
                 print "SUCCESS: Querying STB power state -RPC method invoked successfully";
                                                     
-                change_powermode(iarm_obj,powermode);                    
+                change_powermode(iarm_obj,powermode); 
+                print "Power mode is ",powermode            
                     
             
                 # Calling IARM_Bus_DisConnect API
@@ -188,6 +189,18 @@ if "SUCCESS" in loadModuleStatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
                 time.sleep(40);
         else:
                 print "Status of RMF_Element_Create_Instance:  %s" %loadModuleStatus;
+	#calling IARMBUS API "IARM_Bus_Init"
+	actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Init', 'SUCCESS',verifyList ={});
+
+        #calling IARMBUS API "IARM_Bus_Connect"
+	actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Connect', 'SUCCESS',verifyList ={});				
+        print "Changing Power mode to ON state. " 
+   	#Setting Power mode to ON
+        change_powermode(iarm_obj,2);                    
+        #Calling IARM_Bus_DisConnect API
+	actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});                                 
+        #calling IARMBUS API "IARM_Bus_Term"
+        actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={}); 
         obj.unloadModule("mediaframework");
 else:
         print "Load Module Failed"

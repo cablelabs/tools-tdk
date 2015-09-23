@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>21</version>
+  <version>27</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVRPlayback_OFF_to_ONMode</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -32,11 +32,11 @@
     <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
     <!--  -->
     <box_type>IPClient-4</box_type>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
     <!--  -->
     <box_type>Emulator-Client</box_type>
     <!--  -->
@@ -142,7 +142,7 @@ if "SUCCESS" in loadmodulestatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
                             
                             #Calling DvrPlay_rec to play the recorded content
                             result4 = dvr_playback(tdkTestObj,recordID);
-                  else:
+                else:
 	          	print "No Matching recordings list found"
 
 	                iarm_obj.resetConnectionAfterReboot()
