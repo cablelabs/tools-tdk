@@ -57,108 +57,69 @@ print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
 recObj.setLoadModuleStatus(recLoadStatus);
 
-
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+	       print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+	       print "Waiting for the recoder to be up"
 	       sleep(300);
-
-        print "Waiting for the recoder to be up"
-
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
 
-	print "Sending noUpdate to get the recording list after full sync"
-	serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
-	sleep(10);
-	response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
-
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
-
-        genIdInput = "test6b";
 
         #Execute Inline noUpdate
+	genIdInput = "test6b";
         jsonMsgNoUpdate = "{\"noUpdate\":{\"generationId\":\""+genIdInput+"\"}}";
-        serverResponse =recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
-        print "Server response for Inline NoUpdate: %s"%serverResponse;
+        serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
 
         if 'noUpdate' in serverResponse:
                 print "Inline noUpdate message post success";
-		#No need to check for response from recorder for noupdate
+		# Verify that Recorder does not make any POST request to RWS
+		sleep(30)
+		recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+		print "Retrieve Status for inline noUpdate message: ",recResponse;
 
+		if 'generationId' in recResponse:
+			print "Recorder sent POST request to RWS for genId update through inline noUpdate"
+		else:
+			print "Recorder did not make any POST request to RWS as expected"
+
+		response = recorderlib.callServerHandler('clearStatus',ip);
                 #Execute Inline updateSchedule
                 requestID = str(randint(10, 500));
                 jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\"}}";
                 serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
-                print "Server response for Inline UpdateSchedule: %s"%serverResponse;
 
-                if "updateSchedule" in serverResponse:
+                if 'updateSchedule' in serverResponse:
                         print "Inline updateSchedule message post success";
-                        sleep(10);
+                        sleep(20)
                         retry = 0;
                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-			while (( ('[]' in recResponse) or ('ack' not in recResponse) ) and ('ERROR' not in recResponse) and (retry < 15)):
+			while ( ('generationId' not in recResponse) and (retry < 15)):
                                 sleep(10);
                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 retry += 1
                         print "Retrieve Status Details: %s"%recResponse;
 
-                        if ( ('[]' in recResponse) or ('ERROR' in recResponse)):
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "Received Empty/Error status";
-                        elif 'ack' in recResponse:
-                                print "Successfully retrieved acknowledgement from recorder for the inline message";
-
-                                response = recorderlib.callServerHandler('clearStatus',ip);
-                                print "Clear Status Details: %s"%response;
-
-                                print "Now again post same json msg as legacy updateSchedule";
-                                #Execute updateSchedule
-                                requestID = str(randint(10, 500));
-                                jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\"}}";
-                                serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-                                print "Server response for UpdateSchedule: %s"%serverResponse;
-
-                                if 'updateSchedule' in serverResponse:
-                                        print "updateSchedule message post success";
-                                        sleep(10)
-                                        retry = 0;
-                                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        while (('[]' in recResponse) and ('ERROR' not in recResponse) and (retry < 15)):
-                                                sleep(10);
-                                                recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                                retry += 1
-                                        print "Retrieve Status Details: %s"%recResponse;
-
-                                        if (('[]' in recResponse) or ('ERROR' in recResponse)):
-                                                print "Received Empty/Error status";
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                        else:
-                                                genOut = recorderlib.getGenerationId(recResponse)
-                                                if genOut == genIdInput:
-                                                        tdkTestObj.setResultStatus("SUCCESS");
-                                                        print "GenerationId retrieved (%s) matches with expected (%s)"%(genOut,genIdInput);
-                                                else:
-                                                        tdkTestObj.setResultStatus("FAILURE");
-                                                        print "GenerationId retrieved (%s) does not match with expected (%s)"%(genOut,genIdInput);
+                        if 'generationId' in recResponse:
+                        	genOut = recorderlib.getGenerationId(recResponse)
+                                if genOut == genIdInput:
+                                	tdkTestObj.setResultStatus("SUCCESS");
+                                        print "GenerationId retrieved matches with expected (%s)"%(genIdInput);
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "updateSchedule message post failed";
+                                        print "GenerationId retrieved does not match with expected (%s)"%(genIdInput);
                         else:
+				print "Failed to receive response from recorder for inline longpoll notification";
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "Failed to retrieve acknowledgement from recorder for the inline message";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Inline updateSchedule message post failed";

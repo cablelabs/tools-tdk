@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>10</execution_time>
+  <execution_time>8</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -59,57 +59,90 @@ port = <port>
 obj.configureTestCase(ip,port,'DS_getSPDIF_StereoMode_136');
 loadmodulestatus =obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
+#Set the module loading status
+obj.setLoadModuleStatus(loadmodulestatus);
+
 if "SUCCESS" in loadmodulestatus.upper():
-        #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
-        #Rebooting box 
-        obj.initiateReboot();
+
         #calling Device Settings - initialize API
         tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
         expectedresult="SUCCESS"
         tdkTestObj.executeTestCase(expectedresult);
         actualresult = tdkTestObj.getResult();
+	print "[TEST EXECUTION RESULT] : %s" %actualresult;
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize 
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
-                #calling DS_GetSupportedStereoModes get list of StereoModes.
-                tdkTestObj = obj.createTestStep('DS_GetSupportedStereoModes');
-                tdkTestObj.addParameter("port_name","SPDIF0");
-                expectedresult="SUCCESS"
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                stereomodedetails = tdkTestObj.getResultDetails();
-                #Check for SUCCESS/FAILURE return value of DS_GetSupportedStereoModes
-                if expectedresult in actualresult:
-                        print "SUCCESS :Application successfully gets the list of supported StereoModes for SPDIF0" ;
-                        print "%s" %stereomodedetails
-                        tdkTestObj.setResultStatus("SUCCESS");
-                else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                        print "FAILURE :Failed to get supported stereo modes";
-                #calling DS_SetStereoMode to get and set the stereo modes
+
+                #calling DS_SetStereoMode to get the current stereo mode
                 tdkTestObj = obj.createTestStep('DS_SetStereoMode');
                 tdkTestObj.addParameter("port_name","SPDIF0");
                 tdkTestObj.addParameter("get_only",1);
                 expectedresult="SUCCESS"
-                stereomode="SURROUND"
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
                 stereomodedetails = tdkTestObj.getResultDetails();
+                print "Port: SPDIF0 ",stereomodedetails;
+
                 #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
                 if expectedresult in actualresult:
-                        print "SUCCESS :Application successfully get the Stereomode for SPDIF";
-                        print "getstereomode: %s" %stereomodedetails;
-                        #comparing stereo modes before and after setting
-                        if stereomode in stereomodedetails:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: SURROUND Mode set for SPDIF after Reboot";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: SURROUND Mode not set for SPDIF after Reboot";
+                        print "Application successfully fetched Stereomode for SPDIF0";
+                        tdkTestObj.setResultStatus("SUCCESS");
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "FAILURE :Application failed to get the Stereomode for SPDIF";
+                        print "Application failed to get the Stereomode for SPDIF0";
+
+
+		if "SURROUND" in stereomodedetails:
+			print "Stereo Mode for port SPDIF0 already set to SURROUND";
+		else:
+
+                	#calling DS_GetSupportedStereoModes get list of StereoModes.
+                	tdkTestObj = obj.createTestStep('DS_GetSupportedStereoModes');
+                	tdkTestObj.addParameter("port_name","SPDIF0");
+                	expectedresult="SUCCESS"
+                	tdkTestObj.executeTestCase(expectedresult);
+                	actualresult = tdkTestObj.getResult();
+                	supportedModes = tdkTestObj.getResultDetails();
+                	print supportedModes
+                	#Check for SUCCESS/FAILURE return value of DS_GetSupportedStereoModes
+                	if expectedresult in actualresult:
+                        	print "Successfully fetched list of supported StereoModes for SPDIF0";
+                        	tdkTestObj.setResultStatus("SUCCESS");
+				if "SURROUND" in supportedModes:
+					print "SURROUND StereoMode is supported"
+				else:
+					print "SURROUND is not a supported StereoMode"
+                	else:
+                        	tdkTestObj.setResultStatus("FAILURE");
+                        	print "Failed to get supported stereo modes";
+
+			obj.initiateReboot();
+
+			print "Get Stereo Mode for port SPDIF0 after Reboot";
+                	#calling DS_SetStereoMode to get and set the stereo modes
+                	tdkTestObj = obj.createTestStep('DS_SetStereoMode');
+                	tdkTestObj.addParameter("port_name","SPDIF0");
+                	tdkTestObj.addParameter("get_only",1);
+                	expectedresult="SUCCESS"
+                	tdkTestObj.executeTestCase(expectedresult);
+                	actualresult = tdkTestObj.getResult();
+                	stereomodedetails = tdkTestObj.getResultDetails();
+			print "Port: SPDIF0 ",stereomodedetails;
+                	#Check for SUCCESS/FAILURE return value of DS_SetStereoMode
+                	if expectedresult in actualresult:
+                        	print "SUCCESS :Application successfully get the Stereomode for SPDIF";
+                        	#comparing stereo modes before and after setting
+                        	if "SURROUND" in stereomodedetails:
+                                	tdkTestObj.setResultStatus("SUCCESS");
+                                	print "SUCCESS: SURROUND Mode set for SPDIF after Reboot";
+                        	else:
+                                	tdkTestObj.setResultStatus("FAILURE");
+                                	print "FAILURE: SURROUND Mode not set for SPDIF after Reboot";
+                	else:
+                        	tdkTestObj.setResultStatus("FAILURE");
+                        	print "FAILURE :Application failed to get the Stereomode for SPDIF";
+
                 #calling DS_ManagerDeInitialize to DeInitialize API 
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
                 expectedresult="SUCCESS"
@@ -125,10 +158,8 @@ if "SUCCESS" in loadmodulestatus.upper():
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "FAILURE: Device Setting Initialize failed";
-        print "[TEST EXECUTION RESULT] : %s" %actualresult;
+
         #Unload the deviceSettings module
         obj.unloadModule("devicesettings");
 else:
         print"Load module failed";
-        #Set the module loading status
-        obj.setLoadModuleStatus("FAILURE");

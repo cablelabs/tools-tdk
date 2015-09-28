@@ -51,10 +51,10 @@ Test case Id - CT_IARMBUS_79</synopsis>
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
-import tdklib;
+from tdklib import TDKScriptingLibrary;
 import time;
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
+obj = TDKScriptingLibrary("iarmbus","1.3");
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
@@ -109,12 +109,9 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 tdkTestObj.addParameter("state",setstate);
                                 tdkTestObj.addParameter("error",seterror);
                                 tdkTestObj.addParameter("payload",setpayload);
-				print "setstate:%d\n"%setstate;
-                                print "seterror:%d\n"%seterror;
-                                print "setpayload:%s\n"%setpayload;
-								
                                 expectedresult="SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
+				print "set state:%d "%setstate, "error:%d "%seterror, "payload:%s "%setpayload;
                                 actualresult = tdkTestObj.getResult();
                                 #checking for Broadcast event invokation status
                                 if expectedresult in actualresult:
@@ -123,7 +120,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
                                         print "FAILURE:Broadcast event fails";
-                                time.sleep(10);
+
+				#Wait for SystemStates values to change
+                                time.sleep(2);
+
                                 #calling IARMBUS API "IARM_Bus_Call"
                                 tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
                                 tdkTestObj.addParameter("owner_name","SYSMgr");
@@ -132,17 +132,13 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
                                 details=tdkTestObj.getResultDetails();
+				print details;
                                 #checking for event received status
                                 if expectedresult in actualresult:
-                                        if str(setstate) in details and  str(seterror) in details:
+                                        if str(setstate) in details and str(seterror) in details:
                                                 tdkTestObj.setResultStatus("SUCCESS");
-                                                print details;
                                                 print "SUCCESS: RPC method invoked and CMAC value for state and error properly set";
                                         else :
-                                                print details;
-                                                print "setstate: %d"%setstate;
-                                                print "seterror: %d"%seterror;
-                                                print "setpayload: %s"%setpayload;
 						tdkTestObj.setResultStatus("FAILURE");						                           
                                                 print "FAILURE:RPC method invoked and CMAC value for state and error has not been set";
                                 else:

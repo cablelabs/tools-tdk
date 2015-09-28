@@ -37,18 +37,19 @@
   </rdk_versions>
 </xml>
 '''
-# use tdklib library,which provides a wrapper for tdk testcase script 
+#use tdklib library,which provides a wrapper for tdk test case script
 import tdklib;
 import recorderlib
 from random import randint
 from time import sleep
+
 #IP and Port of box, No need to change,
+#This will be replaced with corresponding Box IP and port while executing script
 ip = <ipaddress>
 port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-#This will be replaced with correspoing Box Ip and port while executing script
 recObj.configureTestCase(ip,port,'Recorder_RMF_GenerationId_noUpdate_RWS_16');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
@@ -74,9 +75,8 @@ if "SUCCESS" in recLoadStatus.upper():
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
 
-        genIdInput = "test2c";
-
         #Execute Legacy noUpdate
+	genIdInput = "test2c";
         jsonMsgNoUpdate = "{\"noUpdate\":{\"generationId\":\""+genIdInput+"\"}}";
         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
 

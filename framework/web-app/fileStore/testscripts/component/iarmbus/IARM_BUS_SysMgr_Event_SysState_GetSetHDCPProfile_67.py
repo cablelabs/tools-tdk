@@ -47,9 +47,9 @@ Test case Id - CT_IARMBUS_67</synopsis>
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
-import tdklib;
+from tdklib import TDKScriptingLibrary;
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
+obj = TDKScriptingLibrary("iarmbus","1.3");
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
@@ -80,44 +80,26 @@ if "SUCCESS" in loadmodulestatus.upper():
                 if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "Application is successfully connected with IARM-BUS Daemon";
-                        #calling IARMBUS API "IARM_Bus_Call"
-                        tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
-                        #passing parameter for querying STB HDCP profile state
-                        tdkTestObj.addParameter("method_name","GetHDCPProfile");
-                        tdkTestObj.addParameter("owner_name","SYSMgr");
-                        expectedresult="SUCCESS"
-                        tdkTestObj.executeTestCase(expectedresult);
-                        actualresult = tdkTestObj.getResult();
-                        details=tdkTestObj.getResultDetails();
-                        print "current HDCP state: %s" %details;
-                        curstate=details;
-                        #Check for SUCCESS/FAILURE return value of IARMBUS_BusCall
-                        if expectedresult in actualresult:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: Querying HDCP profile state -RPC method invoked successfully";
-                                #Setting the POWER state
-                                tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
-                                tdkTestObj.addParameter("method_name","SetHDCPProfile");
-                                tdkTestObj.addParameter("owner_name","SYSMgr");
-                                # setting state to 1
-                                if curstate == "0" :
-                                        #change to 1
-                                        tdkTestObj.addParameter("newState",1);
-                                        set_HDCPstate = "1";
-                                else :
-                                        #change to 0
-                                        tdkTestObj.addParameter("newState",0);
-                                        set_HDCPstate = "0";
-                                expectedresult="SUCCESS"
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                details=tdkTestObj.getResultDetails();
-                                print "set HDCP profile value: %s" %details;
-                                #Check for SUCCESS/FAILURE return value of IARMBUS_BusCall
-                                if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        print "SUCCESS: Setting STB HDCP profile state -RPC method invoked successfully";
-                                        #Querying the STB HDCP profile state
+			for hdcpProfile in range(0,2):
+					#Setting the HdcpProfile, RNG supports HDCPProfile = 0 and 1, others HDCPProfile = 1
+                                	tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
+                                	tdkTestObj.addParameter("method_name","SetHDCPProfile");
+                                	tdkTestObj.addParameter("owner_name","SYSMgr");
+					tdkTestObj.addParameter("newState",hdcpProfile);
+                                	expectedresult="SUCCESS"
+                                	tdkTestObj.executeTestCase(expectedresult);
+                                	actualresult = tdkTestObj.getResult();
+                                	details=tdkTestObj.getResultDetails();
+                                	print "Set HDCP profile: %d"%(hdcpProfile);
+                                	#Check for SUCCESS/FAILURE return value of IARMBUS_BusCall
+                                	if expectedresult in actualresult:
+                                        	tdkTestObj.setResultStatus("SUCCESS");
+                                        	print "SUCCESS: Setting STB HDCP profile is successful";
+					else:
+						tdkTestObj.setResultStatus("FAILURE");
+						print "FAILURE: Setting STB HDCP profile failed. ",details;
+
+                                        #Querying the STB HDCP profile
                                         tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
                                         tdkTestObj.addParameter("method_name","GetHDCPProfile");
                                         tdkTestObj.addParameter("owner_name","SYSMgr");
@@ -125,27 +107,20 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         tdkTestObj.executeTestCase(expectedresult);
                                         actualresult = tdkTestObj.getResult();
                                         details=tdkTestObj.getResultDetails();
-                                        print "current HDCP profile state: %s" %details;
+                                        print "Get HDCP profile: %s" %details;
                                         #Check for SUCCESS/FAILURE return value of IARMBUS_BusCall
-                                        after_set_HDCPstate=details;
                                         if expectedresult in actualresult:
-                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                print "SUCCESS: Querying STB HDCP profile state -RPC method invoked successfully";
-                                                if set_HDCPstate == after_set_HDCPstate :
+                                                if str(hdcpProfile) == details:
                                                         tdkTestObj.setResultStatus("SUCCESS");
-                                                        print "SUCCESS: Both the HDCP states are equal";
+                                                        print "SUCCESS: HDCPProfile fetched is same as HDCPProfile set";
                                                 else:
                                                         tdkTestObj.setResultStatus("FAILURE");
-                                                        print "FAILURE: Both HDCP states are different";
+                                                        print "FAILURE: HDCPProfile fetched is not same as HDCPProfile set";
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
-                                                print "FAILURE: Querying STB HDCP state - IARM_Bus_Call failed. %s " %details;
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "FAILURE: Set STB HDCP profile state - IARM_Bus_Call failed. %s " %details;
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: Querying STB HDCP profile state - IARM_Bus_Call failed. %s " %details;
+                                                print "FAILURE: Querying STB HDCP Profile. ",details;
+			#End for loop
+
                         # Calling IARM_Bus_DisConnect API
                         tdkTestObj = obj.createTestStep('IARMBUS_DisConnect');
                         expectedresult="SUCCESS"
@@ -162,6 +137,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE: IARM_Bus_Connect failed. %s" %details;
+
                 #calling IARMBUS API "IARM_Bus_Term"
                 tdkTestObj = obj.createTestStep('IARMBUS_Term');
                 expectedresult="SUCCESS";

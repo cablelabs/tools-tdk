@@ -69,23 +69,42 @@ if "SUCCESS" in loadmodulestatus.upper():
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "SUCCESS :Application successfully initialized with Device Settings library";
-                #calling DS_SetDFC to get and set the zoom settings 
-                tdkTestObj = obj.createTestStep('DS_SetDFC');
-                zoom="Platform";
-                print "Zoom value set to %s" %zoom;
-                tdkTestObj.addParameter("zoom_setting",zoom);
+
+                #Invoke primitive testcase
+                tdkTestObj = obj.createTestStep('DS_VD_getSupportedDFCs');
                 expectedresult="SUCCESS"
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
-                dfcdetails = tdkTestObj.getResultDetails();
-		print "Details: ",dfcdetails
+                supportedDFCs = tdkTestObj.getResultDetails();
+		print "Details: ",supportedDFCs
                 #Check for SUCCESS/FAILURE return value of DS_SetDFC
                 if expectedresult in actualresult:
-                        print "SUCCESS :Application successfully gets and sets the zoom settingts as PLATFORM for the video device";
-			tdkTestObj.setResultStatus("SUCCESS");
+			zoom="Platform";
+			if zoom.upper() in supportedDFCs.upper():
+                		#calling DS_SetDFC to get and set the zoom settings
+                		tdkTestObj = obj.createTestStep('DS_SetDFC');
+               	 		print "Zoom value set to %s" %zoom;
+                		tdkTestObj.addParameter("zoom_setting",zoom);
+                		expectedresult="SUCCESS"
+                		tdkTestObj.executeTestCase(expectedresult);
+                		actualresult = tdkTestObj.getResult();
+                		dfcdetails = tdkTestObj.getResultDetails();
+                		print "Details: ",dfcdetails
+                		#Check for SUCCESS/FAILURE return value of DS_SetDFC
+                		if expectedresult in actualresult:
+                        		tdkTestObj.setResultStatus("SUCCESS");
+					print "SUCCESS :Application successfully gets and sets the zoom settings as Platform for the video device";
+                		else:
+                        		tdkTestObj.setResultStatus("FAILURE");
+                        		print "FAILURE :Failed to get and set the Platform zoom";
+			else:
+				tdkTestObj.setResultStatus("FAILURE");
+				print "FAILURE : Platform is not a supported value"
+
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "FAILURE :Failed to get and set the PLATFORM zoom";
+			print "FAILURE :Failed to get SupportedDFCs";
+
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
                 expectedresult="SUCCESS"

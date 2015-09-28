@@ -25,9 +25,9 @@ Test Type: Negative</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
+  <remarks>Script Issue. Needs correction.</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
+  <skip>true</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -52,7 +52,7 @@ port = <port>
 obj = tdklib.TDKScriptingLibrary("trm","2.0");
 obj.configureTestCase(ip,port,'TRM_CT_43');
 #Get the result of connection with test component and STB
-result =obj.getLoadModuleResult();
+result = obj.getLoadModuleResult();
 print "[TRM LIB LOAD STATUS]  :  %s" %result;
 #Set the module loading status
 obj.setLoadModuleStatus(result);

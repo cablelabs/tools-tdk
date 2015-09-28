@@ -42,6 +42,7 @@ bool RecorderAgent::initialize(IN const char* szVersion, IN RDKTestAgent *ptrAge
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_SendRequestToDeleteFile,"TestMgr_Recorder_SendRequestToDeleteFile");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_DeleteRecordingMetaData,"TestMgr_Recorder_DeleteRecordingMetaData");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_SetValuesInRmfconfig,"TestMgr_Recorder_SetValuesInRmfconfig");
+        ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_PresenceOfRecordingMetaData,"TestMgr_Recorder_PresenceOfRecordingMetaData");
 	
 	return TEST_SUCCESS;
 }
@@ -417,6 +418,56 @@ bool RecorderAgent::Recorder_DeleteRecordingMetaData(IN const Json::Value& reque
 }
 
 /**************************************************************************
+ * Function name : RecorderAgent::Recorder_PresenceOfRecordingMetaData()
+ *
+ * Arguments     : Input argument is Recording ID
+ *
+ * Description   : Checking the presence of recording meta data files which contains its recording ID and priority
+ * ***************************************************************************/
+bool RecorderAgent::Recorder_PresenceOfRecordingMetaData(IN const Json::Value& request, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "Recorder_PresenceOfRecordingMetaData ---> Entry\n");
+        string recording_id = request["Recording_Id"].asString();
+        string search_recid_priority_cmd;
+        string str1 = "grep -rls";
+        string str2(recording_id);
+        string find = "find";
+        int count = 0;
+
+        search_recid_priority_cmd= find + " " + RECORDING_METADATA_PATH + " " + " -type f | xargs " + str1 + " " + str2 + " " + " | xargs " + str1 + " " + "P0";
+        DEBUG_PRINT(DEBUG_TRACE,"Command for searching metadata files contains rec-id: \"%s\" \n",search_recid_priority_cmd.c_str() );
+
+        /* check whether there are any metadata file contains the rec id*/
+
+        FILE *file = popen(search_recid_priority_cmd.c_str(), "r");
+        if ( file != NULL)
+        {
+                char line[128];
+                while (fgets(line, sizeof line, file) != NULL)
+                {
+                        ++count;
+                }
+                fclose (file);
+                DEBUG_PRINT(DEBUG_TRACE, "Number of lines: %d\n", count);
+        }
+        if (count == 0)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "No Files Found!";
+                DEBUG_PRINT(DEBUG_ERROR," There are no metadata files present with rec-id:%s \n",recording_id.c_str() );
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                return TEST_FAILURE;
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE, "Successfully found metadata files \n");
+        response["result"] = "SUCCESS";
+        response["details"] = "Files found successfully";
+
+        DEBUG_PRINT(DEBUG_TRACE,"Recorder_PresenceOfRecordingMetaData ---> Exit\n");
+        return TEST_SUCCESS;
+}
+
+/**************************************************************************
  * Function name : RecorderAgent::Recorder_SetValuesInRmfconfig()
  *
  * Arguments     : Input arguments are keyword, value, set or reset flag
@@ -518,6 +569,7 @@ bool RecorderAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentOb
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_SendRequestToDeleteFile");
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_DeleteRecordingMetaData");
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_SetValuesInRmfconfig");
+        ptrAgentObj->UnregisterMethod("TestMgr_Recorder_PresenceOfRecordingMetaData");
 	
 	/* All done, close things cleanly */
 	return TEST_SUCCESS;

@@ -66,10 +66,7 @@ ds_mgr_value=[""]
 ip = <ipaddress>
 port = <port>
 
-mediaframework_obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
 ds_obj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
-
-mediaframework_obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_TSB_ChangeResolution_Check_54');
 ds_obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_TSB_ChangeResolution_Check_54');
 
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
@@ -108,6 +105,18 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         print Mediaspeed[1];
 
     return result
+
+#Get the result of connection with test component and STB
+dsLoadModuleStatus = ds_obj.getLoadModuleResult();
+print "DeviceSetting Load Module Status :  %s" %dsLoadModuleStatus;
+
+if "FAILURE" in dsLoadModuleStatus.upper():
+        print "Load Module Failed"
+        ds_obj.setLoadModuleStatus("FAILURE");
+	exit()
+
+mediaframework_obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+mediaframework_obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_TSB_ChangeResolution_Check_54');
 
 def Create_ExecuteTestcase(obj,primitivetest,expectedresult,verifyList,**kwargs):
     print kwargs
@@ -156,14 +165,25 @@ def Create_ExecuteTestcase(obj,primitivetest,expectedresult,verifyList,**kwargs)
 
     return (actualresult,tdkTestObj,details);
 
-
-
 #Get the result of connection with test component and STB
 mfLoadModuleStatus = mediaframework_obj.getLoadModuleResult();
 print "Mediaframework Load Module Status :  %s" %mfLoadModuleStatus;
+loadmoduledetails = mediaframework_obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
 
-dsLoadModuleStatus = ds_obj.getLoadModuleResult();
-print "DeviceSetting Load Module Status :  %s" %dsLoadModuleStatus;
+if "FAILURE" in mfLoadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                mediaframework_obj.initiateReboot();
+                #Reload Test component to be tested
+                mediaframework_obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                mediaframework_obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_TSB_ChangeResolution_Check_54');
+                #Get the result of connection with test component and STB
+                mfLoadModuleStatus = mediaframework_obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %mfLoadModuleStatus;
+                loadmoduledetails = mediaframework_obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
 
 if Expected_Result in mfLoadModuleStatus.upper() and Expected_Result in dsLoadModuleStatus.upper():
 
@@ -314,8 +334,3 @@ else:
         print "Load Module Failed"
         mediaframework_obj.setLoadModuleStatus("FAILURE");
         ds_obj.setLoadModuleStatus("FAILURE");
-        loadmoduledetails = mediaframework_obj.getLoadModuleDetails();
-        print "loadmoduledetails %s" %loadmoduledetails;
-        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-                print "Rebooting the STB"
-                obj.initiateReboot();

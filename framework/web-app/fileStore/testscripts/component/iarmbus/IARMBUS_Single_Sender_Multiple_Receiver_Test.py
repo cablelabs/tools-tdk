@@ -52,7 +52,7 @@
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
 import time;
-from resetAgent import resetAgent;
+#from resetAgent import resetAgent;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
@@ -105,7 +105,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 tdkTestObj.setResultStatus("SUCCESS");
                                 print "SUCCESS: Event Handler registered for IR key events";
                                 #sleep for 3 sec to receive IR key event that is broadcasted from second app.
-                                time.sleep(3);
+                                #time.sleep(3);
 				#Prmitive test case which associated to this Script
 				tdkTestObj = obj.createTestStep('IARMBUS_InvokeEventTransmitterApp');
 				#registering event handler for IR Key events
@@ -118,7 +118,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
                                 #details=tdkTestObj.getResultDetails();
-                                #Check for SUCCESS/FAILURE return value of IARMBUS_InvokeSecondApplication
+                                #Check for SUCCESS/FAILURE return value
                                 if expectedresult in actualresult:
                                         tdkTestObj.setResultStatus("SUCCESS");
                                         print "SUCCESS: Second application Invoked successfully";

@@ -98,7 +98,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 		
 		#Calling DS_ManagerDeInitialize to DeInitialize 
 		result = devicesettings.dsManagerDeInitialize(obj)
+		obj.unloadModule("devicesettings");
 else :
 	print "Failed to Load Module"
-
-obj.unloadModule("devicesettings");

@@ -67,7 +67,7 @@ if "SUCCESS" in result.upper():
     if ( 0 == maxTuner ):
         print "Exiting without executing the script"
     else:
-        for deviceNo in range(0,maxTuner):
+        for deviceNo in range(0,maxTuner-1):
             # Frame different request URL for each client box
             streamId = '0'+str(deviceNo+1)
             reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':1000,'startTime':0})

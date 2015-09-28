@@ -85,7 +85,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 		print "Details: ",dfcdetails
                 #Check for SUCCESS/FAILURE return value of DS_SetDFC
                 if expectedresult in actualresult:
-                        print "SUCCESS : Failed to get and set the zoom settingts as INVALID for the video device";
+                        print "SUCCESS : Failed to get and set the zoom settings as INVALID for the video device";
                         tdkTestObj.setResultStatus("SUCCESS");
                 else:
                         tdkTestObj.setResultStatus("FAILURE");

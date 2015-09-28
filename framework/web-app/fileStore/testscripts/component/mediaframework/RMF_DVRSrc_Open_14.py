@@ -94,15 +94,28 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     print "[Execution Result]:  %s" %result;
     print "[Execution Details]:  %s" %details;
     
-	
-
-    
     return result
 
 
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
+
+if "FAILURE" in loadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                obj.configureTestCase(ip,port,'RMF_DVRSrc_Open_14');
+                #Get the result of connection with test component and STB
+                loadModuleStatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadModuleStatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
 
 if expected_Result in loadModuleStatus.upper():
 	tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
@@ -115,9 +128,6 @@ if expected_Result in loadModuleStatus.upper():
 	obj.resetConnectionAfterReboot()
 
 #---------End-------------------
-
-
-
 
 if expected_Result in loadModuleStatus.upper():
         #Prmitive test case which associated to this Script
@@ -145,8 +155,3 @@ if expected_Result in loadModuleStatus.upper():
 else:
         print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");
-        loadmoduledetails = obj.getLoadModuleDetails();
-        print "loadmoduledetails %s" %loadmoduledetails;
-        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-                print "Rebooting the STB"
-                obj.initiateReboot();

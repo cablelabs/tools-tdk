@@ -52,21 +52,39 @@ from random import randint
 ip = <ipaddress>
 port = <port>
 
+#Load tdk integration module
 tdkIntObj = tdklib.TDKScriptingLibrary('tdkintegration','2.0');
-mfObj = tdklib.TDKScriptingLibrary('mediaframework','2.0');
-
-#Load modules
 tdkIntObj.configureTestCase(ip,port,'RMF_DVRManager_DeleteInvalidRecordingId');
-mfObj.configureTestCase(ip,port,'RMF_DVRManager_DeleteInvalidRecordingId');
+tdkIntLoadStatus = tdkIntObj.getLoadModuleResult();
+print '[tdkintegration LIB LOAD STATUS] : %s'%tdkIntLoadStatus;
+tdkIntObj.setLoadModuleStatus(tdkIntLoadStatus);
 
+if "FAILURE" in tdkIntLoadStatus.upper():
+	print "Failed to load tdk integration module";
+	tdkIntObj.setLoadModuleStatus("FAILURE");
+	exit()
+
+#Load MediaFramework module
+mfObj = tdklib.TDKScriptingLibrary('mediaframework','2.0');
+mfObj.configureTestCase(ip,port,'RMF_DVRManager_DeleteInvalidRecordingId');
 # Record stream1 and tune to same channel at the same time
 mfLoadStatus = mfObj.getLoadModuleResult();
 print '[mediaframework LIB LOAD STATUS] : %s'%mfLoadStatus;
 mfObj.setLoadModuleStatus(mfLoadStatus);
 
-tdkIntLoadStatus = tdkIntObj.getLoadModuleResult();
-print '[tdkintegration LIB LOAD STATUS] : %s'%tdkIntLoadStatus;
-tdkIntObj.setLoadModuleStatus(tdkIntLoadStatus);
+if "FAILURE" in mfLoadStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                mfObj.initiateReboot();
+                #Reload Test component to be tested
+                mfObj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                mfObj.configureTestCase(ip,port,'RMF_DVRManager_DeleteInvalidRecordingId');
+                #Get the result of connection with test component and STB
+                mfLoadStatus = mfObj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %mfLoadStatus;
+                loadmoduledetails = mfObj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
 
 if ('SUCCESS' in mfLoadStatus.upper()) and ('SUCCESS' in tdkIntLoadStatus.upper()):
         Id = randint(1000,10000)
@@ -99,8 +117,3 @@ elif ('SUCCESS' in mfLoadStatus.upper()) and ('SUCCESS' not in tdkIntLoadStatus.
         mfObj.unloadModule('mediaframework');
 elif ('SUCCESS' not in mfLoadStatus.upper()) and ('SUCCESS' in tdkIntLoadStatus.upper()):
         tdkIntObj.unloadModule('tdkintegration');
-        loadmoduledetails = mfObj.getLoadModuleDetails();
-        print "loadmoduledetails %s" %loadmoduledetails;
-        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-                print "Rebooting the STB"
-                obj.initiateReboot();

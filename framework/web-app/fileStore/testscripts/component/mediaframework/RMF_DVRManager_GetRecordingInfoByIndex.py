@@ -58,6 +58,21 @@ obj.configureTestCase(ip,port,'RMF_DVRManager_GetRecordingInfoByIndex');
 #Get the result of connection with test component and STB
 result =obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %result;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
+
+if "FAILURE" in result.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                obj.configureTestCase(ip,port,'RMF_DVRManager_GetRecordingInfoByIndex');
+                #Get the result of connection with test component and STB
+                result = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %result;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
 
 print "Mediaframework Dvrsink module loading status :%s" %result;
 
@@ -99,8 +114,3 @@ if "SUCCESS" in result.upper():
 else:
     print "Failed to load mediaframework module";
     obj.setLoadModuleStatus("FAILURE");
-    loadmoduledetails = obj.getLoadModuleDetails();
-    print "loadmoduledetails %s" %loadmoduledetails;
-    if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-        print "Rebooting the STB"
-        obj.initiateReboot();

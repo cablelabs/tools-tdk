@@ -42,27 +42,22 @@ Test Case ID: CT_RMF_HNSource_11.</synopsis>
   </rdk_versions>
 </xml>
 '''
+#use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 import mediaframework;
-src_element=["HNSrc"]
-Expected_Result="SUCCESS"
-src_parameter=["rmfElement"]
-open_parameter_name=["rmfElement","url"]
-open_parameter_value=["HNSrc"]
-
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'RMF_HNSrc_Open_ValidUrl_11');
+
+open_parameter_name=["rmfElement","url"]
+open_parameter_value=["HNSrc"]
 
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
 
     #Primitive test case which associated to this Script
-    tdkTestObj =testobject.createTestStep(teststep);
+    tdkTestObj = testobject.createTestStep(teststep);
     if teststep == "RMF_Element_Open":
         streamDetails = tdkTestObj.getStreamDetails('01');
         url = mediaframework.getStreamingURL("Live" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
@@ -74,42 +69,61 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         open_parameter_value.append(url);
 
     for item in range(len(parametername)):
+        print "%s : %s" %(parametername[item],parametervalue[item]);
         tdkTestObj.addParameter(parametername[item],parametervalue[item]);
 
     #Execute the test case in STB
     tdkTestObj.executeTestCase(expectedresult);
+
     #Get the result of execution
     result = tdkTestObj.getResult();
-    print "RMF_Element Status:  %s" %result;
     tdkTestObj.setResultStatus(result);
+
+    print "Status of "+ teststep+":  %s" %result;
     return result
 
+#Load Test component to be tested
+obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+obj.configureTestCase(ip,port,'RMF_HNSrc_Open_ValidUrl_11');
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
 
-if Expected_Result in loadModuleStatus.upper():
+if "FAILURE" in loadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                obj.configureTestCase(ip,port,'RMF_HNSrc_Open_ValidUrl_11');
+                #Get the result of connection with test component and STB
+                loadModuleStatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadModuleStatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
+if "SUCCESS" in loadModuleStatus.upper():
+	#Set module load status
+	obj.setLoadModuleStatus("SUCCESS");
+
+	src_element=["HNSrc"]
+	src_parameter=["rmfElement"]
 
         #Prmitive test case which associated to this Script
-        result=Create_and_ExecuteTestStep('RMF_Element_Create_Instance',obj,Expected_Result,src_parameter,src_element);
-        if Expected_Result in result.upper():
-                result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,Expected_Result,src_parameter,src_element);
-                print "RMF_Element_Init status:  %s" %result;
-                if Expected_Result in result.upper():
-                        result=Create_and_ExecuteTestStep('RMF_Element_Open',obj,Expected_Result,open_parameter_name,open_parameter_value);
-                              
-                result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,Expected_Result,src_parameter,src_element);
-                print "RMF_Element_Term status:  %s" %result;
-                result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,Expected_Result,src_parameter,src_element);
-                print "RMF_Element_Term status:  %s" %result;
-        else:
-                print "Status of RMF_Element_Create_Instance:  %s" %loadModuleStatus;
+        result=Create_and_ExecuteTestStep('RMF_Element_Create_Instance',obj,"SUCCESS",src_parameter,src_element);
+        if "SUCCESS" in result.upper():
+                result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,"SUCCESS",src_parameter,src_element);
+                if "SUCCESS" in result.upper():
+                        result=Create_and_ExecuteTestStep('RMF_Element_Open',obj,"SUCCESS",open_parameter_name,open_parameter_value);
+			if "SUCCESS" in result.upper():
+				result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,"SUCCESS",src_parameter,src_element);
+                	result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,"SUCCESS",src_parameter,src_element);
+                result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,"SUCCESS",src_parameter,src_element);
+
+	#Unload Test component
         obj.unloadModule("mediaframework");
 else:
-        print "Load Module Failed"
+	#Set module load status
         obj.setLoadModuleStatus("FAILURE");
-        loadmoduledetails = obj.getLoadModuleDetails();
-        print "loadmoduledetails %s" %loadmoduledetails;
-        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-                print "Rebooting the STB"
-                obj.initiateReboot();

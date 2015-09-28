@@ -51,10 +51,10 @@ Test Case ID : CT_IARMBUS_17</synopsis>
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
-import tdklib;
-import time;
+from tdklib import TDKScriptingLibrary;
+from time import sleep;
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
+obj = TDKScriptingLibrary("iarmbus","1.3");
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
@@ -84,7 +84,6 @@ if "SUCCESS" in loadmodulestatus.upper():
                 if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "SUCCESS: Application successfully connected with IARM-Bus Daemon";
-                        #Run another application to receive broadcasted events
                         #calling IARMBUS API "IARM_Bus_RegisterEventHandler"
                         tdkTestObj = obj.createTestStep('IARMBUS_RegisterEventHandler');
                         #registering event handler for IR Key events
@@ -98,20 +97,23 @@ if "SUCCESS" in loadmodulestatus.upper():
                         if expectedresult in actualresult:
                                 tdkTestObj.setResultStatus("SUCCESS");
                                 print "SUCCESS: Event Handler registered for IR key events";
-                                #sleep for 10 sec to receive IR key event that is broadcasted from second app.
-                                time.sleep(10);
-                                tdkTestObj = obj.createTestStep('IARMBUS_InvokeSecondApplication');
+				#invoking application to broadcast event
+                                tdkTestObj = obj.createTestStep('IARMBUS_InvokeEventTransmitterApp');
                                 expectedresult="SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
-                                #details=tdkTestObj.getResultDetails();
-                                #Check for SUCCESS/FAILURE return value of IARMBUS_InvokeSecondApplication
+                                #Check for SUCCESS/FAILURE return value
                                 if expectedresult in actualresult:
                                         tdkTestObj.setResultStatus("SUCCESS");
                                         print "SUCCESS: Second application Invoked successfully";
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
                                         print "FAILURE: Second application failed to execute";
+
+				#sleep for 2 sec to receive IR key event that is broadcasted from second app
+				sleep(2);
+
+                                #Getting last received event details
                                 tdkTestObj = obj.createTestStep('IARMBUS_GetLastReceivedEventDetails');
                                 expectedresult="SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);

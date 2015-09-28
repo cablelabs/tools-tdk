@@ -51,9 +51,9 @@ Test case Id - CT_IARMBUS_72</synopsis>
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
-import tdklib;
+from tdklib import TDKScriptingLibrary;
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
+obj = TDKScriptingLibrary("iarmbus","1.3");
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
@@ -174,7 +174,8 @@ if "SUCCESS" in loadmodulestatus.upper():
                         print "FAILURE: IARM_Bus Term failed";                        
         else:
                 tdkTestObj.setResultStatus("FAILURE");
-                print "FAILURE: IARM_Bus_Init failed. %s " %details;        
+                print "FAILURE: IARM_Bus_Init failed. %s " %details;
+
         print "[TEST EXECUTION RESULT] : %s" %actualresult;
         #Unload the iarmbus module
         obj.unloadModule("iarmbus");

@@ -51,10 +51,10 @@ Test Case ID : CT_IARMBUS_30</synopsis>
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
-import tdklib;
-import time;
+from tdklib import TDKScriptingLibrary;
+from time import sleep;
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
+obj = TDKScriptingLibrary("iarmbus","1.3");
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
@@ -110,7 +110,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
                                         print "FAILURE:InvokeSecondApplication fails";
-                                time.sleep(10);
+
+                                #wait for 2 sec to receive event that is broadcasted from second app
+                                sleep(2);
+
                                 #Getting last received event details
                                 tdkTestObj = obj.createTestStep('IARMBUS_GetLastReceivedEventDetails');
                                 expectedresult="SUCCESS"

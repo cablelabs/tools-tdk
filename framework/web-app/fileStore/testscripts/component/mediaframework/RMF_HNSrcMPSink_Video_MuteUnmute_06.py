@@ -55,6 +55,22 @@ obj.configureTestCase(ip,port,'RMF_HNSrcMPSink_Video_MuteUnmute_06');
 #Get the result of connection with test component and STB
 loadmodulestatus =obj.getLoadModuleResult();
 print "Mediaframework module loading status :%s" %loadmodulestatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
+
+if "FAILURE" in loadmodulestatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                obj.configureTestCase(ip,port,'RMF_HNSrcMPSink_Video_MuteUnmute_06');
+                #Get the result of connection with test component and STB
+                loadmodulestatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadmodulestatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
 #Check for SUCCESS/FAILURE of Mediaframework module
 if "SUCCESS" in loadmodulestatus.upper():
         obj.setLoadModuleStatus("SUCCESS");
@@ -80,7 +96,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 		#Set the result status of execution
 		tdkTestObj.setResultStatus("SUCCESS");
 		print "Video Mute using HNSrc MPSink Pipeline is success";
-		time.sleep(40);
+		time.sleep(20);
 	else:
 		tdkTestObj.setResultStatus("FAILURE");
                 details = tdkTestObj.getResultDetails();
@@ -91,8 +107,3 @@ if "SUCCESS" in loadmodulestatus.upper():
 else:
 	print "Failed to load mediaframework module";
 	obj.setLoadModuleStatus("FAILURE");
-        loadmoduledetails = obj.getLoadModuleDetails();
-        print "loadmoduledetails %s" %loadmoduledetails;
-        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-                print "Rebooting the STB"
-                obj.initiateReboot();

@@ -91,7 +91,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         tdkTestObj.executeTestCase(expectedresult);
                         actualresult = tdkTestObj.getResult();
                         #details=tdkTestObj.getResultDetails();
-                        #Check for SUCCESS/FAILURE return value of IARMBUS_InvokeSecondApplication
+                        #Check for SUCCESS/FAILURE return value
                         if expectedresult in actualresult:
                                 tdkTestObj.setResultStatus("SUCCESS");
                                 print "SUCCESS: Second application Invoked successfully";

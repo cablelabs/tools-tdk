@@ -46,21 +46,38 @@ Test Case ID: CT_RMF_HNSrc_05.</synopsis>
 import tdklib;
 import mediaframework;
 import time
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
+
+#Load Test component to be tested
+obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
 obj.configureTestCase(ip,port,'RMF_HNSrc_GetBufferedRanges_04');
 #Get the result of connection with test component and STB
-loadmodulestatus =obj.getLoadModuleResult();
-print "Mediaframework module loading status :%s" %loadmodulestatus;
-#Check for SUCCESS/FAILURE of Mediaframework module
-if "SUCCESS" in loadmodulestatus.upper():
+loadModuleStatus = obj.getLoadModuleResult();
+print "Load Module Status :  %s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
+
+if "FAILURE" in loadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                obj.configureTestCase(ip,port,'RMF_HNSrc_GetBufferedRanges_04');
+                #Get the result of connection with test component and STB
+                loadModuleStatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadModuleStatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
+if "SUCCESS" in loadModuleStatus.upper():
         #Set the module loading status
         obj.setLoadModuleStatus("SUCCESS");
-        print "Mediaframework module loaded successfully";
+
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('RMF_HNSrc_GetBufferedRanges');
         streamDetails = tdkTestObj.getStreamDetails('01'); 
@@ -86,15 +103,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Failure secnario : %s" %details;
                 print "Failed to Get buffer range of HNSrc";
-                time.sleep(40);
-        #unloading mediastreamer module
+                time.sleep(20);
+
+	#Unload Test component
         obj.unloadModule("mediaframework");
 else:
-        print "Failed to load mediaframework module";
-        #Set the module loading status
+	#Set module load status
         obj.setLoadModuleStatus("FAILURE");
-        loadmoduledetails = obj.getLoadModuleDetails();
-        print "loadmoduledetails %s" %loadmoduledetails;
-        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-                print "Rebooting the STB"
-                obj.initiateReboot();

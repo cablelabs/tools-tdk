@@ -21,7 +21,7 @@ Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>20</execution_time>
+  <execution_time>15</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -120,7 +120,22 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
+print "[LIB LOAD STATUS]  :  %s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
 
+if "FAILURE" in loadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                obj.configureTestCase(ip,port,'RMF_DVRSrcMPSink_SkipToEnd_05');
+                #Get the result of connection with test component and STB
+                loadModuleStatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadModuleStatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
   
 if expected_Result in loadModuleStatus.upper():
 	tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
@@ -207,26 +222,27 @@ if expected_Result in loadModuleStatus.upper():
                                                                         else:
                                                                                 tdkTestObj.setResultStatus(expected_Failure);
                                                 src_parameter=["rmfElement"]
-                                                src_element=["MPSink"]
-                                                result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);
+                                		src_element=["DVRSrc"]
+                                                #src_element=["MPSink"]
+                                                #result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);
+                                		result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,expected_Result,src_parameter,src_element);
                                         src_parameter=["rmfElement"]
                                         src_element=["MPSink"]
-                                        result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,expected_Result,src_parameter,src_element);
+                                        result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);
+                                        #result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,expected_Result,src_parameter,src_element);
                                 src_parameter=["rmfElement"]
                                 src_element=["DVRSrc"]
-                                result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,expected_Result,src_parameter,src_element);
+                                #result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,expected_Result,src_parameter,src_element);
+                        	result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);
                         src_parameter=["rmfElement"]
                         src_element=["DVRSrc"]
-                        result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);
+                        #result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);
+                	result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,expected_Result,src_parameter,src_element);
                 src_parameter=["rmfElement"]
-                src_element=["DVRSrc"]
+                #src_element=["DVRSrc"]
+                src_element=["MPSink"]
                 result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,expected_Result,src_parameter,src_element);
         obj.unloadModule("mediaframework");
 else:
         print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");
-        loadmoduledetails = obj.getLoadModuleDetails();
-        print "loadmoduledetails %s" %loadmoduledetails;
-        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-                print "Rebooting the STB"
-                obj.initiateReboot();

@@ -71,7 +71,7 @@ if "SUCCESS" in result.upper():
     startTime = 0
 
     # Step1: Start live tuning on different channels on all tuners
-    for deviceNo in range(0,maxTuner):
+    for deviceNo in range(0,maxTuner-1):
         # Frame different request URL for each client box
         streamId = '0'+str(deviceNo+1)
         trm.reserveForLive(obj,"SUCCESS",kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':duration,'startTime':startTime})

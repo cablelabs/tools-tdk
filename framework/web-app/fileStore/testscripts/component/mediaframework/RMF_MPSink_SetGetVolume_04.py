@@ -53,10 +53,27 @@ ip = <ipaddress>
 port = <port>
 obj.configureTestCase(ip,port,'RMF_MPSink_SetGetVolume_04');
 #Get the result of connection with test component and STB
-loadmodulestatus =obj.getLoadModuleResult();
-print "Mediaframework module loading status :%s" %loadmodulestatus;
+loadModuleStatus =obj.getLoadModuleResult();
+print "Mediaframework module loading status :%s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
+
+if "FAILURE" in loadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                obj.configureTestCase(ip,port,'RMF_MPSink_SetGetVolume_04');
+                #Get the result of connection with test component and STB
+                loadModuleStatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadModuleStatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
+
 #Check for SUCCESS/FAILURE of Mediaframework module
-if "SUCCESS" in loadmodulestatus.upper():
+if "SUCCESS" in loadModuleStatus.upper():
         obj.setLoadModuleStatus("SUCCESS");
         print "Mediaframework module loaded successfully";
         #Prmitive test case which associated to this Script
@@ -83,8 +100,3 @@ else:
 
         print "Failed to load mediaframework module";
         obj.setLoadModuleStatus("FAILURE");
-        loadmoduledetails = obj.getLoadModuleDetails();
-        print "loadmoduledetails %s" %loadmoduledetails;
-        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-                print "Rebooting the STB"
-                obj.initiateReboot();

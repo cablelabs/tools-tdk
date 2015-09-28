@@ -20,7 +20,7 @@ TestcaseID: CT_DS116</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>10</execution_time>
+  <execution_time>8</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -119,7 +119,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
-                #calling Device Settings - Get Brightness
+                #calling Device Settings - Get Indicator Brightness
                 tdkTestObj = obj.createTestStep('DS_SetBrightness');
                 print "Brightness before reboot: %d" %brightness;
                 print "Indicator name: %s" %indicator_name;
@@ -140,8 +140,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "FAILURE: Brightness changed after reboot";
+
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
+
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
                 expectedresult="SUCCESS"

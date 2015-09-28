@@ -82,13 +82,14 @@ if "SUCCESS" in result.upper():
     result = tdkTestObj.getResult();
     print "[TEST EXECUTION RESULT] : %s" %result;
     details = tdkTestObj.getResultDetails();
+    print "[TEST EXECUTION DETAILS] : %s" %details;
+    #Set the result status of execution
     if "SUCCESS" in result.upper():
-        #Set the result status of execution
         tdkTestObj.setResultStatus("SUCCESS");
-        print "rdklogger logging Successful";
+        print "EnableMPELog set to TRUE";
     else:
         tdkTestObj.setResultStatus("FAILURE");
-        print "rdklogger logging Failed: [%s]"%details;
+        print "EnableMPELog set to FALSE";
 
     #unloading rdklogger module
     obj.unloadModule("rdklogger");

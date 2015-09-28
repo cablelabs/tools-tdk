@@ -82,7 +82,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 #Check for SUCCESS/FAILURE return value of DS_SetDFC
                 if expectedresult in actualresult:
 			tdkTestObj.setResultStatus("SUCCESS");
-                        print "SUCCESS :Application successfully gets and sets the zoom settingts as FULL for the video device";
+                        print "SUCCESS :Application successfully gets and sets the zoom settings as FULL for the video device";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE :Failed to get and set the FULL zoom";

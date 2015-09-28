@@ -15,7 +15,8 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis></synopsis>
+  <synopsis>Check if multiple IR event notification is received for repeated key press/release for setup key.
+Testcase ID: CT_IARMBUS_112</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -103,31 +104,39 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 print "SUCCESS :Event Handler registered successfully";
                                 #Broadcast IR Key event (SETUP) from IR Mgr
                                 keyCode=0x00000052
-                                # Repeat Key Press/Relaese for 5 times
-                                for x in range(0,5):
-                                        tdkTestObj = obj.createTestStep('IARMBUS_BroadcastEvent');
+				keyCodeStr="SETUP"
+                                # Repeat Key Press/Release for 6 times
+                                for x in range(0,6):
+					print '\n******** Iteration %d **********' % x ;
+					tdkTestObj = obj.createTestStep('IARMBUS_InvokeEventTransmitterApp',0);
                                         if (x % 2 == 0):
                                                 # Key Press
                                                 keyType=0x00008000
+						keyTypeStr="PRESS"
                                         else:
                                                 # Key Release
                                                 keyType=0x00008100
+						keyTypeStr="RELEASE"
 
                                         tdkTestObj.addParameter("owner_name",ownerName);
                                         tdkTestObj.addParameter("event_id",eventId);
+					tdkTestObj.addParameter("evttxappname","gen_single_event");
                                         tdkTestObj.addParameter("keyCode",keyCode);
                                         tdkTestObj.addParameter("keyType",keyType);
-                                        print "Broadcast IR Key (%x,%x)"%(keyCode,keyType)
+                                        print "Broadcasting IR Key Event (%s:%x,%s:%x)"%(keyCodeStr,keyCode,keyTypeStr,keyType)
                                         expectedresult="SUCCESS"
                                         tdkTestObj.executeTestCase(expectedresult);
                                         actualresult = tdkTestObj.getResult();
                                         #checking for Broadcast event invocation status
                                         if expectedresult in actualresult:
                                                 tdkTestObj.setResultStatus("SUCCESS");
-                                                print "SUCCESS: Broadcast Key %x success"%keyType;
+                                                print "SUCCESS: Broadcasting Key success";
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
-                                                print "FAILURE: Broadcast Key %x fails"%keyType;
+                                                print "FAILURE: Broadcasting Key failed";
+
+					#sleep for 1 sec to receive IR key event that is broadcasted from second app
+					time.sleep(1);
 
                                         #Getting last received event details
                                         tdkTestObj = obj.createTestStep('IARMBUS_GetLastReceivedEventDetails');
@@ -135,14 +144,15 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         tdkTestObj.executeTestCase(expectedresult);
                                         actualresult = tdkTestObj.getResult();
                                         details=tdkTestObj.getResultDetails();
-                                        print "LastReceivedEventDetails: %s"%(details)
+                                        print details
                                         #checking for event received status
                                         if expectedresult in actualresult:
                                                 tdkTestObj.setResultStatus("SUCCESS");
+						print "Successfully received broadcasted Event"
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
-
-                                        time.sleep(1);
+						print "Failed to receive broadcasted Event"
+				print '\n********************************\n';
                                 # End of for loop
 
                                 #calling IARM_Bus_UnRegisterEventHandler API
