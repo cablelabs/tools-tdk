@@ -1,22 +1,23 @@
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
-  <id>1312</id>
+  <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>IARMBUS_BusCall_MFR-Scruballbanks_62</name>
-  <!-- If you are adding a new script you can specify the script name. -->
-  <primitive_test_id>8</primitive_test_id>
+  <name>IARMBUSReleaseResourceNegativeTest</name>
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
+  <primitive_test_id>11</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
-  <primitive_test_name>IARMBUS_BusCall</primitive_test_name>
+  <primitive_test_name>IARMBUS_RequestResource</primitive_test_name>
   <!--  -->
-  <primitive_test_version>8</primitive_test_version>
+  <primitive_test_version>3</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>IARMBUS – Scrub all banks from box using IARM_BUS_MFRLIB_API_ScrubAllBanks RPC call
-Test case ID - CT_IARMBUS_62</synopsis>
+  <synopsis>This test script tests the release of an acquired resource after unregistering from iarmbus.
+Negative Test case
+Test Case ID : CT_IARMBUS_120</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -24,24 +25,28 @@ Test case ID - CT_IARMBUS_62</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>Rebooting of DUT after this script causing ABL Mode in Pace Xi3v2</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
+    <!--  -->
+    <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Terminal-RNG</box_type>
     <!--  -->
     <box_type>IPClient-4</box_type>
     <!--  -->
+    <box_type>Emulator-HYB</box_type>
+    <!--  -->
     <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
-    <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
+    <!--  -->
+    <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
 </xml>
@@ -53,7 +58,7 @@ obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'CT_IARMBUS_62');
+obj.configureTestCase(ip,port,'CT_IARMBUS_120')
 loadmodulestatus =obj.getLoadModuleResult();
 print "Iarmbus module loading status :  %s" %loadmodulestatus ;
 if "SUCCESS" in loadmodulestatus.upper():
@@ -69,7 +74,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Check for SUCCESS/FAILURE return value of IARMBUS_Init
         if ("SUCCESS" in actualresult):
                 tdkTestObj.setResultStatus("SUCCESS");
-                print "SUCCESS :Application successfully initialized with IARMBUS library";
+                print "SUCCESS: Application successfully initialized with IARMBUS library";
                 #calling IARMBUS API "IARM_Bus_Connect"
                 tdkTestObj = obj.createTestStep('IARMBUS_Connect');
                 expectedresult="SUCCESS"
@@ -79,27 +84,25 @@ if "SUCCESS" in loadmodulestatus.upper():
                 #Check for SUCCESS/FAILURE return value of IARMBUS_Connect
                 if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");
-                        print "SUCCESS :Application successfully connected with IARMBUS ";
-                        #calling IARMBUS API "IARM_Bus_Call"
-                        tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
-                        # parameter for Scrub all Banks
-                        tdkTestObj.addParameter("owner_name","MFRLib");
-                        tdkTestObj.addParameter("method_name","scrubAllBanks");
+                        print "SUCCESS: Application successfully connected with IARMBUS ";
+
+                        #calling IARMBUS API "IARM_BusDaemon_RequestOwnership"
+                        tdkTestObj = obj.createTestStep('IARMBUS_RequestResource');
+                        #Requesting "RESOURCE_FOCUS" resource
+                        tdkTestObj.addParameter("resource_type",0);
                         expectedresult="SUCCESS"
                         tdkTestObj.executeTestCase(expectedresult);
                         actualresult = tdkTestObj.getResult();
                         details=tdkTestObj.getResultDetails();
-                        #Check for SUCCESS/FAILURE return value of IARMBUS_BusCall
+                        #Check for SUCCESS/FAILURE return value of IARMBUS_RequestResource
                         if expectedresult in actualresult:
                                 tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: RPC method invoked successfully";
-                                print "DUT for Scrub all banks:" ;
-                                print details;
+                                print "SUCCESS: Requested resource is allocated successfully for the application";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: IARM_Bus_Call failed. %s " %details;
+                                print "FAILURE: IARM_BusDaemon_RequestOwnership failed. %s" %details;
 
-                         # Calling IARM_Bus_DisConnect API
+                        # Calling IARM_Bus_DisConnect API
                         tdkTestObj = obj.createTestStep('IARMBUS_DisConnect');
                         expectedresult="SUCCESS"
                         tdkTestObj.executeTestCase(expectedresult);
@@ -111,10 +114,11 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 print "SUCCESS :Application successfully disconnected from IARMBus";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: IARM_Bus_Disconnect failed. %s " %details;                                               
+                                print "FAILURE: IARM_Bus_Disconnect failed. Error: %s " %details;
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE: IARM_Bus_Connect failed. %s" %details;
+
                 #calling IARMBUS API "IARM_Bus_Term"
                 tdkTestObj = obj.createTestStep('IARMBUS_Term');
                 expectedresult="SUCCESS";
@@ -127,12 +131,26 @@ if "SUCCESS" in loadmodulestatus.upper():
                         print "SUCCESS: IARM_Bus term success";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "FAILURE: IARM_Bus Term failed";                        
+                        print "FAILURE: IARM_Bus Term failed";
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "FAILURE: IARM_Bus_Init failed. %s " %details;
-        
-        print "[TEST EXECUTION RESULT] : %s" %actualresult;
+
+        #calling IARMBUS API "IARM_BusDaemon_ReleaseOwnership"
+        tdkTestObj = obj.createTestStep('IARMBUS_ReleaseResource');
+        tdkTestObj.addParameter("resource_type",0);
+        expectedresult="FAILURE"
+        tdkTestObj.executeTestCase(expectedresult);
+        actualresult = tdkTestObj.getResult();
+        details=tdkTestObj.getResultDetails();
+        #Check for SUCCESS/FAILURE return value of IARMBUS_ReleaseResource
+        if expectedresult in actualresult:
+                tdkTestObj.setResultStatus("SUCCESS");
+                print "FAILURE: IARM_BusDaemon_ReleaseOwnership failed. %s" %details;
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+                print "SUCCESS: Allocated resource is successfully released";
+
         #Unload the iarmbus module
         obj.unloadModule("iarmbus");
 else:

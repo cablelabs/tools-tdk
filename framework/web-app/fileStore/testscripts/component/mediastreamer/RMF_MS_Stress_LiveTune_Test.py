@@ -3,7 +3,7 @@
 <xml>
   <id>930</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_MS_Stress_LiveTune_Test</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>3</execution_time>
+  <execution_time>5</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -30,9 +30,9 @@
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -88,7 +88,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Json response parameter is failed";
                         
-                time.sleep(100/1000);
+                time.sleep(2);
                 #Calling the RMFStreamer_LiveTune_Request function
                 tdkTestObj = obj.createTestStep('MS_RMFStreamer_InterfaceTesting');
                 streamDetails = tdkTestObj.getStreamDetails('01');

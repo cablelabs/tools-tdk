@@ -20,7 +20,7 @@ Testcase ID: CT_XUPNP_22</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>7</execution_time>
+  <execution_time>2</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -49,7 +49,7 @@ Testcase ID: CT_XUPNP_22</synopsis>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
-import tdklib;
+from tdklib import TDKScriptingLibrary;
 from iarmbus import IARMBUS_Init,IARMBUS_Connect,IARMBUS_DisConnect,IARMBUS_Term;
 
 #IP and Port of box, No need to change,
@@ -58,7 +58,7 @@ ip = <ipaddress>
 port = <port>
 
 #Test component to be tested
-iarmObj = tdklib.TDKScriptingLibrary("iarmbus","2.0");
+iarmObj = TDKScriptingLibrary("iarmbus","2.0");
 iarmObj.configureTestCase(ip,port,'XUPNP_GetDnsConfig');
 #Get the result of connection with test component and STB
 iarmLoadStatus = iarmObj.getLoadModuleResult();
@@ -75,7 +75,7 @@ if "SUCCESS" in iarmLoadStatus.upper():
                 result = IARMBUS_Connect(iarmObj,"SUCCESS")
                 #Check for SUCCESS/FAILURE return value of IARMBUS_Connect
                 if "SUCCESS" in result:
-                        xUpnpObj = tdklib.TDKScriptingLibrary("xupnp","2.0");
+                        xUpnpObj = TDKScriptingLibrary("xupnp","2.0");
                         xUpnpObj.configureTestCase(ip,port,'XUPNP_GetDnsConfig');
                         #Get the result of connection with test component and STB
                         xupnpLoadStatus = xUpnpObj.getLoadModuleResult();

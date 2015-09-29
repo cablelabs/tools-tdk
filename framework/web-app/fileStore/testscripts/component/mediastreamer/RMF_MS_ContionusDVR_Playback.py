@@ -3,7 +3,7 @@
 <xml>
   <id>913</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_MS_ContionusDVR_Playback</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -69,7 +69,7 @@ if "SUCCESS" in result.upper():
          tdkTestObj = obj.createTestStep('MS_RMFStreamer_Player');
          #set the dvr play url
          streamDetails = tdkTestObj.getStreamDetails("01");
-         time.sleep(50) 
+         time.sleep(2) 
          
          if matchList:
 		 
@@ -97,7 +97,7 @@ if "SUCCESS" in result.upper():
                         tdkTestObj.setResultStatus("SUCCESS");
                         details =  tdkTestObj.getResultDetails();
                         print "DVR Playback in normal speed:[%s]"%details;
-                        time.sleep(10);
+                        time.sleep(2);
                         #Prmitive test case which associated to this Script
                         tdkTestObj = obj.createTestStep('MS_RMFStreamer_Player');
                         if matchList:

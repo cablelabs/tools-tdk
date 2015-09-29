@@ -20,7 +20,7 @@ Testcase ID: CT_XUPNP_07</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>7</execution_time>
+  <execution_time>2</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -49,7 +49,7 @@ Testcase ID: CT_XUPNP_07</synopsis>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
-import tdklib;
+from tdklib import TDKScriptingLibrary;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -57,7 +57,7 @@ ip = <ipaddress>
 port = <port>
 
 #Test component to be tested
-xUpnpObj = tdklib.TDKScriptingLibrary("xupnp","2.0");
+xUpnpObj = TDKScriptingLibrary("xupnp","2.0");
 xUpnpObj.configureTestCase(ip,port,'XUPNP_GetDnsConfigFromOutFile');
 #Get the result of connection with test component and STB
 xupnpLoadStatus = xUpnpObj.getLoadModuleResult();
