@@ -17,6 +17,7 @@ char *tdkP = getenv("TDK_PATH");
 
 string rdkLogPath;
 string tdkPath;
+string cecP = "cec_log.txt";
 
 /***************************************************************************
  *Function name	: ServiceManagerAgent 
@@ -1329,10 +1330,6 @@ bool ServiceManagerAgent::SM_WebSocket_GetProtocol(IN const Json::Value& req, OU
 	return TEST_SUCCESS;
 }
 
-#ifdef HAS_API_HDMI_CEC
-/*static HdmiCecService *ptr_service=NULL;*/
-#endif
-
 /***************************************************************************
  *Function name : SM_HdmiCec_ClearCecLog
  *Descrption    : This will ClearCecLog and new log entry be done.
@@ -1341,8 +1338,9 @@ bool ServiceManagerAgent::SM_WebSocket_GetProtocol(IN const Json::Value& req, OU
 bool ServiceManagerAgent::SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "SM_HdmiCec_ClearCecLog ---> Entry\n");
+
 #ifdef HAS_API_HDMI_CEC
-	string cecLogPath = rdkLogPath + "/" + "cec.txt";
+	string cecLogPath = rdkLogPath + "/" + cecP;
 	string clearLogCmd = "cat /dev/null > " + cecLogPath;
 
 	DEBUG_PRINT(DEBUG_TRACE, "clearLogCmd: %s\n",clearLogCmd.c_str());
@@ -1352,10 +1350,10 @@ bool ServiceManagerAgent::SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT 
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"Exception occured not able to Clear Cec Log\n");
+		DEBUG_PRINT(DEBUG_ERROR,"Exception occured not able to clear Cec Log\n");
                 DEBUG_PRINT(DEBUG_TRACE, "SM_HdmiCec_ClearCecLog ---> Exit\n");
 	        response["result"]="FAILURE";
-	        response["details"]="Exception occured not able to Clear Cec Log";
+	        response["details"]="Exception occured not able to clear Cec Log";
 		
 		return TEST_FAILURE;
 	}
@@ -1382,7 +1380,7 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT 
 
 #ifdef HAS_API_HDMI_CEC 
 	string pattern = req["pattern"].asCString();
-	string cecLogPath = rdkLogPath + "/" + "cec.txt";
+	string cecLogPath = rdkLogPath + "/" + cecP;
 	string cecTdkLog = "cecTdkLog.txt";
 	string tdkLogPath = tdkPath + "logs/" + cecTdkLog;
 	string cecTdkLogCpCmd = "cp -r " + cecLogPath + " " + tdkLogPath;
@@ -1399,15 +1397,15 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT 
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"Exception occured, Failed to copy Cec.log to TDK folder\n");
+		DEBUG_PRINT(DEBUG_ERROR,"Exception occured, Failed to copy Cec log to TDK folder\n");
 		response["result"]="FAILURE";
-	        response["details"]="Exception occured, Failed to copy Cec.log to TDK folder";
+	        response["details"]="Exception occured, Failed to copy Cec log to TDK folder";
                 return TEST_FAILURE;
 	}
 
-	DEBUG_PRINT(DEBUG_TRACE,"Successfully copied Cec.txt to TDK folder\n");
+	DEBUG_PRINT(DEBUG_TRACE,"Successfully copied cec log to TDK folder\n");
 	
-	/* Checking for the pattern from Cec.txt*/
+	/* Checking for the pattern from cec_log.txt*/
 	ifstream cecLogFile;
 	string lineMatching;
 	DEBUG_PRINT(DEBUG_TRACE,"File Open for searching the pattern: %s\n",tdkLogPath.c_str());
@@ -1434,7 +1432,6 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT 
                                 response["log-path"]= tdkLogPath.c_str();
 				return TEST_FAILURE;
 			}
-			
 		}
 		cecLogFile.close();
 		response["result"] = "SUCCESS";
@@ -1465,14 +1462,14 @@ bool ServiceManagerAgent::SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT J
 	DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetEnabled ---->Entry\n");
 
 	bool valueToSetEnabled = req["valueToSetEnabled"].asInt();
-	bool getEnabledResult = false;
 
 	DEBUG_PRINT(DEBUG_TRACE,"Value passed to setEnabled: %d (true - 1, false - 0)\n",valueToSetEnabled);
 
 #ifdef HAS_API_HDMI_CEC
+	bool getEnabledResult = false;
 	QString serviceName = HdmiCecService::SERVICE_NAME;
 	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
 
 	if(ptr_service != NULL)
         {
@@ -1521,14 +1518,12 @@ bool ServiceManagerAgent::SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT J
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetEnabled ---->Entry\n");
 	std::stringstream details;	
-	/*Default value - false*/
-        bool getEnabledResult = false;
 
 #ifdef HAS_API_HDMI_CEC
-
+	bool getEnabledResult = false;
 	QString serviceName = HdmiCecService::SERVICE_NAME;
 	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
 
         if(ptr_service != NULL)
         {
@@ -1574,7 +1569,7 @@ bool ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json
 #ifdef HAS_API_HDMI_CEC
 	QString serviceName = HdmiCecService::SERVICE_NAME;
 	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
         
 	if(ptr_service != NULL)
         {
@@ -1631,7 +1626,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json
 #ifdef HAS_API_HDMI_CEC
 	QString serviceName = HdmiCecService::SERVICE_NAME;
 	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
 
         if(ptr_service != NULL)
         {
@@ -1672,10 +1667,10 @@ bool ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices(IN const Json::Value& r
 	QVariantList listOfDevicesConnected;
 
 #ifdef HAS_API_HDMI_CEC
-
 	QString serviceName = HdmiCecService::SERVICE_NAME;
 	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+
         if(ptr_service != NULL)
         {
                 listOfDevicesConnected = ptr_service->getConnectedDevices();
@@ -1719,7 +1714,8 @@ bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT 
 #ifdef HAS_API_HDMI_CEC
 	QString serviceName = HdmiCecService::SERVICE_NAME;
 	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+
         if(ptr_service != NULL)
         {
                 ptr_service->sendMessage(messageToSend);
@@ -1734,7 +1730,6 @@ bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT 
                 DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
                 response["result"]="FAILURE";
                 response["details"]="Failed to create HdmiCec Service handler.";
-
                 return TEST_FAILURE;
         }
 #else
@@ -1762,7 +1757,8 @@ bool ServiceManagerAgent::SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Js
 #ifdef HAS_API_HDMI_CEC
 	QString serviceName = HdmiCecService::SERVICE_NAME;
 	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
+
         if(ptr_service != NULL)
         {
                 ptr_service->onMessage(onMessage);
