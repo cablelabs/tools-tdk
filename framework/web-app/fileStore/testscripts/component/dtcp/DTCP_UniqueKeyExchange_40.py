@@ -70,24 +70,26 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-Cond: Init,StartSource,CreateSrcSession,CreateSinkSession
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5003})
-  #Enable uniqueKey flag to request unique exchange key
-  #dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':1,'maxPacketSize':4096})
-  #Session exchange key unique to box
-  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
-  #Provide session exchange key sink generates
-  #dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':87,'pcpPacketSize':0,'maxPacketSize':4096})
-  dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
+  result = dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5022})
+  if expectedresult in result:
+        #Enable uniqueKey flag to request unique exchange key
+        #dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':1,'maxPacketSize':4096})
+        #Session exchange key unique to box
+        dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5022,'uniqueKey':0,'maxPacketSize':4096})
+        #Provide session exchange key sink generates
+        #dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':87,'pcpPacketSize':0,'maxPacketSize':4096})
+        dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
 
-  #Get key info from sessions created
-  dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
-  dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        #Get key info from sessions created
+        dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
+        dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
 
-  #Post-Cond: Delete all sessions,stopsrc
-  dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
-  dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
-  dtcp.stopSource(tdkTestObj,expectedresult)
-
+        #Post-Cond: Delete all sessions,stopsrc
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        dtcp.stopSource(tdkTestObj,expectedresult)
+  else:
+        print "DTCP StartSource failed"
   #Unload the dtcp module
   obj.unloadModule("dtcp");
 else:

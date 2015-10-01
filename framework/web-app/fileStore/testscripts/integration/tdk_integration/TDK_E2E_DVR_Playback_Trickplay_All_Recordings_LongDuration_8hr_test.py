@@ -138,7 +138,7 @@ if "SUCCESS" in result.upper():
                             tdkTestObj.setResultStatus("FAILURE");
                             print "E2E DVR Playback Failed: [%s]"%details;
 
-                         time.sleep(40);
+                         
 
                  stopTime = timeit.default_timer()
                  timer = timer + (stopTime - startTime)

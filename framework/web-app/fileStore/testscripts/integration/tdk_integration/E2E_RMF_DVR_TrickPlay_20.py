@@ -139,7 +139,7 @@ if "SUCCESS" in result.upper():
          else:
                  tdkTestObj.setResultStatus("FAILURE");
                  print "E2E DVR Rewind From end point Failed: [%s]"%details;
-         time.sleep(40);
+         
          obj.unloadModule("tdkintegration");
     else:
         print "No Matching recordings list found"

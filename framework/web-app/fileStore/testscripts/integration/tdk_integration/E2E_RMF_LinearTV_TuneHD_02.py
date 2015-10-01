@@ -121,7 +121,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                       print "E2E LinearTv Playback Failed: [%s]"%details;
         else:
                 tdkTestObj.setResultStatus("FAILURE");
-        time.sleep(40);
+        
         obj.unloadModule("tdkintegration");
 else:
          print "Failed to load TDKIntegration module";

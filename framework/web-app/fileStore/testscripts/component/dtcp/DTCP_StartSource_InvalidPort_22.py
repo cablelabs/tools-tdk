@@ -69,7 +69,7 @@ if "SUCCESS" in loadmodulestatus.upper():
   expectedresult="SUCCESS";
   #Pre-cond: DTCPMgrInit
   init(tdkTestObj,expectedresult);
-  setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
+  setLogLevel(tdkTestObj,expectedresult,kwargs={"level":5})
   #Calling DTCPMgrStartSource
   result = startSource(tdkTestObj,'FAILURE',kwargs={'ifName':'lo','port':23})
   #Post-cond: StopSource

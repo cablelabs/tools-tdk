@@ -180,17 +180,17 @@ if expected_Result in loadModuleStatus.upper():
 					
 					if expectedresult in actualresult:
 						#Value must be greater than 0.
-        	                                deviceCount = 0
-                	                        deviceCountReturned = int(getConnDevDetails[5:])
-                        	                print "GetConnectedDevices returned count: ",deviceCountReturned
+        	                                defCount = 1
+                	                        deviceCount = int(getConnDevDetails[5:])
+                        	                print "GetConnectedDevices returned count: ",deviceCount
 
-                                	        #Compare the deviceCount with current Count returned.
-	                                        if deviceCountReturned > deviceCount:
+                                	        #Compare the deviceCount with default Count
+	                                        if deviceCount >= defCount:
         	                                        tdkTestObj.setResultStatus("SUCCESS");
-                	                                print "[COMPARING DEFAULT COUNT WITH RETURNED COUNT] : The getConnectedDevices() API SUCCESS"
+                	                                print "GetConnectedDevices() API SUCCESS"
                         	                else:
                                 	                tdkTestObj.setResultStatus("FAILURE");
-                                        	        print "[COMPARING DEFAULT COUNT WITH RETURNED COUNT] : The getConnectedDevices() API FAILURE"
+                                        	        print "GetConnectedDevices() API FAILURE"
 	                                else:
         	                                tdkTestObj.setResultStatus("FAILURE");
                 	                        print "getConnectedDevices FAILURE"

@@ -118,7 +118,7 @@ def TDKE2E_Linear_Simultaneous_ChannelChange(IP,portnumber,args=(),kwargs={}):
                print "Channel Tuning Time:  0 in ms (milli seconds)."
                print "Box with IP: %s"%ip
                print "Simultaneous tuning: " + actualresult + " [" + details + "]"
-       time.sleep(40);
+       
        obj.unloadModule("tdkintegration");
    else:
        print "Failed to load e2e_rmf module";

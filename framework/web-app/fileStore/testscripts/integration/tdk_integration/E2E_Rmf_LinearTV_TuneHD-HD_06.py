@@ -155,7 +155,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         else:
                 print "Json Response Parameter is Failed";
                 tdkTestObj.setResultStatus("FAILURE");
-        time.sleep(40);
+        
         obj.unloadModule("tdkintegration");
 else:
         print "Failed to load TDKIntegration module";

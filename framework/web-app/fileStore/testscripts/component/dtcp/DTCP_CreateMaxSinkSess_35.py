@@ -72,15 +72,18 @@ if "SUCCESS" in loadmodulestatus.upper():
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
   #Creating 10 instances of StartSource,CreateSinkSession
-  for port in range (5003,5013):
+  for port in range (9003,9013):
       dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
-      dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':port,'uniqueKey':0,'maxPacketSize':4096})
-  #Post-Cond: Stop all source after deleting all sink sessions
-  sinkNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1}))
-  for index in range (0,sinkNum):
-      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":index,"deviceType":1})
-  dtcp.stopSource(tdkTestObj,expectedresult)
-
+      result = tdkTestObj.getResult();
+      if "SUCCESS" in result:
+                dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':port,'uniqueKey':0,'maxPacketSize':4096})
+                #Post-Cond: Stop all source after deleting all sink sessions
+                sinkNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1}))
+                for index in range (0,sinkNum):
+                        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":index,"deviceType":1})
+                dtcp.stopSource(tdkTestObj,expectedresult)
+      else:
+        print "DTCP StartSource failed"
   #Unload the dtcp module
   obj.unloadModule("dtcp");
 else:

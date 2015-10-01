@@ -138,7 +138,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         print "E2E RMF TSB Playback Failed: [%s]"%details;
                         break;
 
-                    time.sleep(40);						
+                    						
                     stopTime = timeit.default_timer()
                     timer = timer + (stopTime - startTime)
 					

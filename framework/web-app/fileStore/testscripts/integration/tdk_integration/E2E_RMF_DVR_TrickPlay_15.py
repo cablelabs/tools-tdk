@@ -140,7 +140,7 @@ if "SUCCESS" in result.upper():
          else:
                  tdkTestObj.setResultStatus("FAILURE");
                  print "E2E DVR Playback -16x speed Failed: [%s]"%details;
-         time.sleep(40);
+         
         
     else:
         print "No Matching recordings list found"

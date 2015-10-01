@@ -73,10 +73,13 @@ if "SUCCESS" in loadmodulestatus.upper():
   init(tdkTestObj,expectedresult);
   setLogLevel(tdkTestObj,expectedresult,kwargs={"level":5});
   #Calling DTCPMgrStartSource
-  startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5010})
-  #Post-cond: DTCPMgrStopSource
-  stopSource(tdkTestObj,expectedresult)
-
+  startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5018})
+  result = tdkTestObj.getResult();
+  if "SUCCESS" in result:
+        #Post-cond: DTCPMgrStopSource
+        stopSource(tdkTestObj,expectedresult)
+  else:
+        print "DTCP StartSource failed"
   #Unload the dtcp module
   obj.unloadModule("dtcp");
 else:

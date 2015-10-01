@@ -70,37 +70,40 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: Init,SetLoglevel,StartSource,CreateSinkSession
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5003})
-  prevNum = dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
-  print "num of sink sessions before creating new session: [%s]"%prevNum
-  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
-  #Calling DeleteSinkSession
-  dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
-  #Check if session is deleted successfully
-  fnName="DTCPMgrGetNumSessions";
-  #Add parameters to test object
-  deviceType=1
-  tdkTestObj.addParameter("funcName", fnName);
-  tdkTestObj.addParameter("intParam2", deviceType);
-  #Execute the test case in STB
-  tdkTestObj.executeTestCase(expectedresult);
-  #Get the result of execution
+  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5010})
   result = tdkTestObj.getResult();
-  currNum = tdkTestObj.getResultDetails();
-  print "Input: [funcName:%s deviceType:%d]"%(fnName,deviceType);
-  print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
-  print "num of sink sessions after deleting session: [%s]"%currNum
+  if "SUCCESS" in result:
+        prevNum = dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
+        print "num of sink sessions before creating new session: [%s]"%prevNum
+        dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5010,'uniqueKey':0,'maxPacketSize':4096})
+        #Calling DeleteSinkSession
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        #Check if session is deleted successfully
+        fnName="DTCPMgrGetNumSessions";
+        #Add parameters to test object
+        deviceType=1
+        tdkTestObj.addParameter("funcName", fnName);
+        tdkTestObj.addParameter("intParam2", deviceType);
+        #Execute the test case in STB
+        tdkTestObj.executeTestCase(expectedresult);
+        #Get the result of execution
+        result = tdkTestObj.getResult();
+        currNum = tdkTestObj.getResultDetails();
+        print "Input: [funcName:%s deviceType:%d]"%(fnName,deviceType);
+        print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
+        print "num of sink sessions after deleting session: [%s]"%currNum
 
-  #As per RDKTT-242,DTCP sink session is persistent and on every channel change, dtcp uses the same session
-  #Set the result status of execution
-  if ((expectedresult in result) and (1 == int(currNum))):
-       tdkTestObj.setResultStatus("SUCCESS");
+        #As per RDKTT-242,DTCP sink session is persistent and on every channel change, dtcp uses the same session
+        #Set the result status of execution
+        if ((expectedresult in result) and (1 == int(currNum))):
+             tdkTestObj.setResultStatus("SUCCESS");
+        else:
+             tdkTestObj.setResultStatus("FAILURE");
+
+        #Post-Cond: StopSrc
+        dtcp.stopSource(tdkTestObj,expectedresult)
   else:
-       tdkTestObj.setResultStatus("FAILURE");
-
-  #Post-Cond: StopSrc
-  dtcp.stopSource(tdkTestObj,expectedresult)
-
+        print "DTCP StartSource failed"
   #Unload the dtcp module
   obj.unloadModule("dtcp");
 else:

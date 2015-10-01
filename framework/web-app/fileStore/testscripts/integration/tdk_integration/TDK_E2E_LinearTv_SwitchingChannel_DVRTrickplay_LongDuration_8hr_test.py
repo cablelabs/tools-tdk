@@ -185,7 +185,7 @@ def DVR_PlayURL(obj):
                      retValue = "FAILURE"
                      break;
 
-                 time.sleep(40);
+                 
 
          return retValue
 

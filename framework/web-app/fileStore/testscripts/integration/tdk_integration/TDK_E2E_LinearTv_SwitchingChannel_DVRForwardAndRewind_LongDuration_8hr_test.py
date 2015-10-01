@@ -181,7 +181,7 @@ def DVR_PlayURL(obj):
                      retValue = "FAILURE"
                      break;
 
-                 time.sleep(40);
+                 
 
          return retValue
 		 
@@ -243,7 +243,7 @@ def DVR_Rewind(obj):
                  print "E2E DVR Playback at",trickPlayRateList[i],"x speed Failed: [%s]" %details;
                  retValue = "FAILURE"
 
-             time.sleep(40);
+             
 
          return retValue
 

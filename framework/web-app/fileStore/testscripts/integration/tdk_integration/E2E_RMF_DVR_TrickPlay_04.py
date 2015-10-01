@@ -3,7 +3,7 @@
 <xml>
   <id>999</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>21</version>
+  <version>23</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_TrickPlay_04</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -32,11 +32,11 @@
     <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
     <!--  -->
     <box_type>IPClient-4</box_type>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
     <!--  -->
     <box_type>Emulator-Client</box_type>
     <!--  -->
@@ -137,13 +137,14 @@ if "SUCCESS" in result.upper():
                else:
                        tdkTestObj.setResultStatus("FAILURE");
                        print "E2E DVR Playback Failed: [%s]"%details;
-               time.sleep(40);
+               
                obj.unloadModule("tdkintegration");
          else:
                print "No Matching recordings list found"
 					 
                time.sleep(10);
                obj.unloadModule("tdkintegration");
+
 else:
          print "Failed to load tdkintegration module";
          obj.setLoadModuleStatus("FAILURE");

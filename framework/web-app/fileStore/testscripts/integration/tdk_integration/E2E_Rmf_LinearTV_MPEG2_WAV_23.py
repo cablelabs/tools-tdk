@@ -119,7 +119,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 
-        time.sleep(40);
+        
         obj.unloadModule("tdkintegration");
 else:
          print "Failed to load TDKIntegration module";

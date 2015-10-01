@@ -74,12 +74,13 @@ if "SUCCESS" in loadmodulestatus.upper():
   setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
   #ifNames = ["lan0","wan","lo"]
   ifNames = ["lo"]
-  ports = [5003,8003]
+  ports = [7003,8003]
   for ifName in ifNames:
       for port in ports:
         #Calling DTCPMgrStartSource/DTCPMgrStopSource
-        startSource(tdkTestObj,expectedresult,kwargs={'ifName':ifName,'port':port})
-        stopSource(tdkTestObj,expectedresult)
+        result = startSource(tdkTestObj,expectedresult,kwargs={'ifName':ifName,'port':port})
+        if expectedresult in result:
+                stopSource(tdkTestObj,expectedresult)
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");

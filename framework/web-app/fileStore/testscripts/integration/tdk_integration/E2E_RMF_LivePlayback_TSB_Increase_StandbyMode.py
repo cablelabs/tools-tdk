@@ -186,7 +186,7 @@ if "SUCCESS" in loadModuleStatus.upper() and ("SUCCESS" in loadmodulestatus1.upp
                         result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,Expected_Result,sink_parameter,sink_element);
                 #Removing the HNSrc Element Instances
                 result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,Expected_Result,src_parameter,src_element);
-                time.sleep(40);
+                
         else:
                 print "Status of RMF_Element_Create_Instance:  %s" %loadModuleStatus;
 	#calling IARMBUS API "IARM_Bus_Init"

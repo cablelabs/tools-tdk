@@ -69,14 +69,16 @@ if "SUCCESS" in loadmodulestatus.upper():
   expectedresult="SUCCESS";
   #Pre-cond: Init
   dtcp.init(tdkTestObj,expectedresult);
-  dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
+  dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":5})
   #Executing 10 instances of StartSource
   for port in range (6000,6010):
       dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
+      result1 = tdkTestObj.getResult();
   #Add new listener with StartSource (11th instance)
   dtcp.startSource(tdkTestObj,'FAILURE',kwargs={'ifName':'lo','port':6010})
   #Post-Cond: Stop all sources
-  dtcp.stopSource(tdkTestObj,expectedresult)
+  if "SUCCESS" in result1:
+        dtcp.stopSource(tdkTestObj,expectedresult)
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");

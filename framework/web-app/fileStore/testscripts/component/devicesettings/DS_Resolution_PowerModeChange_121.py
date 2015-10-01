@@ -78,13 +78,35 @@ if 'SUCCESS' in dsLoadStatus.upper():
                 if "TRUE" in result:
                     #Save a copy of current resolution
                     copyResolution = devicesettings.dsGetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0"});
-                    # Set resolution value to 1080i
-                    resolution="1080i";
-                    # Check if current value is already 1080i
-                    if resolution not in copyResolution:
-                        devicesettings.dsSetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':resolution});
+
+                    #Get the resolution list supported by TV.
+                    print "Get list of resolutions supported on HDMI0"
+
+                    tdkTestObj = dsObj.createTestStep('DS_Resolution');
+                    tdkTestObj.addParameter("port_name","HDMI0");
+                    expectedresult = "SUCCESS"
+                    #Execute the test case in STB
+                    tdkTestObj.executeTestCase(expectedresult);
+                    #Get the result of execution
+                    result = tdkTestObj.getResult();
+                    supportedResolutions = tdkTestObj.getResultDetails();
+                    print "Result: [%s] Details: [%s]"%(result,supportedResolutions)
+                    #Set the result status of execution
+                    if expectedresult in result:
+                        tdkTestObj.setResultStatus("SUCCESS");
                     else:
-                        print "Resolution value already at %s"%resolution;
+                        tdkTestObj.setResultStatus("FAILURE");
+
+		    list = supportedResolutions.split(":");
+		    resolutionList = list[1].split(",");
+
+		    for resolution in resolutionList:
+			if resolution != copyResolution:
+				print "Setting resolution to ",resolution
+                        	devicesettings.dsSetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':resolution});
+				break;
+                    	else:
+                        	print "Resolution value already at ",resolution;
 
                     #Load IARMBUS module
                     iarmObj = tdklib.TDKScriptingLibrary("iarmbus","1.3");

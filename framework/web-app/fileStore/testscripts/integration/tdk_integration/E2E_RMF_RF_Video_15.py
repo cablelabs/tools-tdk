@@ -111,7 +111,7 @@ def TDKE2E_Linear_Simultaneous_ChannelChange(IP,portnumber,args=(),kwargs={}):
            tdkTestObj.setResultStatus(actualresult);
            print "Simultaneous tuning: " + actualresult + " [%s]"%details;
            print " "
-       time.sleep(40);
+       
        obj.unloadModule("tdkintegration");
    else:
        print "Failed to load e2e_rmf module";

@@ -71,7 +71,7 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
     
     #calling TSB_play to play the given program with TSB
     result1 = TSB_play(tdk_obj,'01');
-    time.sleep(40);
+    
     #Calling sched_rec to schedule the  record with TSB
     result2,recording_id = sched_rec(rec_obj,'01','0','120000');
     tdk_obj.initiateReboot();

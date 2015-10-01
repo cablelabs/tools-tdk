@@ -73,8 +73,9 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Creating/removing multiple listeners using startsource/stopsource
   for x in range (0,2):
       for port in range (8000,8005):
-          dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
-      dtcp.stopSource(tdkTestObj,expectedresult)
+          result = dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
+          if expectedresult in result:
+                dtcp.stopSource(tdkTestObj,expectedresult)
   #If stopSource is successful, DTCPMgrCreateSinkSession should fail with socket connection error
   dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'127.0.0.1','srcPort':8000,'uniqueKey':0,'maxPacketSize':4096})
   #Unload the dtcp module

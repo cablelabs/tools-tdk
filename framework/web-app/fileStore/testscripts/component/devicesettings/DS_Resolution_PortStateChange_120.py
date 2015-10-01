@@ -50,62 +50,61 @@ TestcaseID: CT_DS120</synopsis>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+import devicesettings;
+
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
+dsObj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'DS_Resolution_PortStateChange_120');
-loadmodulestatus =obj.getLoadModuleResult();
+dsObj.configureTestCase(ip,port,'DS_Resolution_PortStateChange_120');
+loadmodulestatus =dsObj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
 if "SUCCESS" in loadmodulestatus.upper():
         #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
-        #calling Device Settings - initialize API
-        tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
-        expectedresult="SUCCESS"
-        tdkTestObj.executeTestCase(expectedresult);
-        actualresult = tdkTestObj.getResult();
-        print "[DS Initialize RESULT] : %s" %actualresult;
+        dsObj.setLoadModuleStatus("SUCCESS");
+
+        #Calling Device Settings - initialize API
+        result = devicesettings.dsManagerInitialize(dsObj)
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
-        if expectedresult in actualresult:
-                tdkTestObj.setResultStatus("SUCCESS");
-                #calling DS_IsDisplayConnectedStatus function to check for display connection status
-                tdkTestObj = obj.createTestStep('DS_IsDisplayConnectedStatus');
-                expectedresult="SUCCESS"
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                displaydetails = tdkTestObj.getResultDetails();
-                #Check for SUCCESS/FAILURE return value of DS_IsDisplayConnectedStatus
-                if (expectedresult in actualresult) and ("TRUE" in displaydetails):
-                    tdkTestObj.setResultStatus("SUCCESS");
-                    #calling Device Settings - Set Resolution
-                    tdkTestObj = obj.createTestStep('DS_SetResolution');
-                    resolution="1080i";
-                    print "Setting resolution to %s" %resolution;
-                    tdkTestObj.addParameter("resolution",resolution);
+        if "SUCCESS" in result:
+                #Calling DS_IsDisplayConnectedStatus function to check for display connection status
+                result = devicesettings.dsIsDisplayConnected(dsObj)
+                if "TRUE" in result:
+                    #Save a copy of current resolution
+                    copyResolution = devicesettings.dsGetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0"});
+
+                    #Get the resolution list supported by TV.
+                    print "Get list of resolutions supported on HDMI0"
+
+                    tdkTestObj = dsObj.createTestStep('DS_Resolution');
                     tdkTestObj.addParameter("port_name","HDMI0");
-                    tdkTestObj.addParameter("get_only",0);
-                    expectedresult="SUCCESS"
+                    expectedresult = "SUCCESS"
+                    #Execute the test case in STB
                     tdkTestObj.executeTestCase(expectedresult);
-                    actualresult = tdkTestObj.getResult();
-                    print "[DS SetResolution RESULT] : %s" %actualresult;
-                    getResolution = tdkTestObj.getResultDetails();
-                    print "getResolution:%s" %getResolution;
-                    #Check for SUCCESS/FAILURE return value of DS_SetResolution
-                    if expectedresult in actualresult:
-                        #comparing the resolution before and after setting
-                        if resolution in getResolution :
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: Get resolution same as Set resolution value";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: Get resolution not same as Set resolution value";
+                    #Get the result of execution
+                    result = tdkTestObj.getResult();
+                    supportedResolutions = tdkTestObj.getResultDetails();
+                    print "Result: [%s] Details: [%s]"%(result,supportedResolutions)
+                    #Set the result status of execution
+                    if expectedresult in result:
+                        tdkTestObj.setResultStatus("SUCCESS");
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
 
+                    list = supportedResolutions.split(":");
+                    resolutionList = list[1].split(",");
+
+                    for resolution in resolutionList:
+                        if resolution != copyResolution:
+                                print "Setting resolution to ",resolution
+                                devicesettings.dsSetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':resolution});
+                                break;
+                        else:
+                                print "Resolution value already at ",resolution;
+
                     #calling Device Settings - Set Port to disable
-                    tdkTestObj = obj.createTestStep('DS_SetEnable');
+                    tdkTestObj = dsObj.createTestStep('DS_SetEnable');
                     enable=0;
                     print "Setting Port enable to %d" %enable;
                     tdkTestObj.addParameter("enable",enable);
@@ -123,7 +122,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         tdkTestObj.setResultStatus("FAILURE");
 
                     #calling Device Settings - Set Port to enable
-                    tdkTestObj = obj.createTestStep('DS_SetEnable');
+                    tdkTestObj = dsObj.createTestStep('DS_SetEnable');
                     enable=1
                     print "Setting Port enable to %d" %enable;
                     tdkTestObj.addParameter("enable",enable);
@@ -141,7 +140,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         tdkTestObj.setResultStatus("FAILURE");
 
                     #calling Device Setting -Get Resolution
-                    tdkTestObj = obj.createTestStep('DS_SetResolution');
+                    tdkTestObj = dsObj.createTestStep('DS_SetResolution');
                     print "Resolution before enable:%s" %resolution;
                     tdkTestObj.addParameter("port_name","HDMI0");
                     tdkTestObj.addParameter("get_only",1);
@@ -154,7 +153,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                     #Check for SUCCESS/FAILURE return value of DS_SetResolution
                     if expectedresult in actualresult:
                         #comparing the resolution before and after port enabling
-                        if resolution in getResolution :
+                        if resolution == getResolution :
                                 tdkTestObj.setResultStatus("SUCCESS");
                                 print "SUCCESS: Resolution same after port disable/enable";
                         else:
@@ -163,27 +162,18 @@ if "SUCCESS" in loadmodulestatus.upper():
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
 
-
-                    #calling DS_ManagerDeInitialize to DeInitialize API
-                    tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
-                    expectedresult="SUCCESS"
-                    tdkTestObj.executeTestCase(expectedresult);
-                    actualresult = tdkTestObj.getResult();
-                    print "[DS Deinitalize RESULT] : %s" %actualresult;
-                    #Check for SUCCESS/FAILURE return value of DS_ManagerDeInitialize
-                    if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                    else:
-                        tdkTestObj.setResultStatus("FAILURE");
+                    #Revert to original value of resolution unless original value was already 1080i
+                    if resolution not in copyResolution:
+                        devicesettings.dsSetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':copyResolution});
                 else:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "FAILURE:Connection Failed";                         
-        else:
-                tdkTestObj.setResultStatus("FAILURE");
+                    print "Display Device NOT Connected to execute test";
+
+                #Calling DS_ManagerDeInitialize to DeInitialize API
+                result = devicesettings.dsManagerDeInitialize(dsObj)
 
         #Unload the deviceSettings module
-        obj.unloadModule("devicesettings");
+        dsObj.unloadModule("devicesettings");
 else:
         print"Load module failed";
         #Set the module loading status
-        obj.setLoadModuleStatus("FAILURE");
+        dsObj.setLoadModuleStatus("FAILURE");

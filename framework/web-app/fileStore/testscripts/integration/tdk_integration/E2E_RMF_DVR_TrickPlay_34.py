@@ -129,7 +129,7 @@ if "SUCCESS" in result.upper():
          else:
                  tdkTestObj.setResultStatus("FAILURE");
                  print "E2E DVR Skip number of seconds from end of video Failed: [%s]"%details;
-         time.sleep(40);
+         
          obj.unloadModule("tdkintegration");
     else:
         print "No Matching recordings list found"

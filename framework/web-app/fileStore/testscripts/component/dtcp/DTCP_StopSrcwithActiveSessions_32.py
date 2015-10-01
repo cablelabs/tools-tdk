@@ -70,13 +70,16 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: Init,StartSource,CreateSrcSession,CreateSinkSession
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5003})
-  dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
-  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
-  dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
-  dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
-  #Stopsource without deleting active sessions
-  dtcp.stopSource(tdkTestObj,expectedresult)
+  result = dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5021})
+  if expectedresult in result:
+        dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
+        dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5021,'uniqueKey':0,'maxPacketSize':4096})
+        dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
+        dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
+        #Stopsource without deleting active sessions
+        dtcp.stopSource(tdkTestObj,expectedresult)
+  else:
+        print "DTCP StartSource failed"
 
   #Post-Cond: Delete all sessions
   #Delete all source sessions

@@ -93,6 +93,10 @@ export OPENSOURCE_PATH=$RDK_PROJECT_ROOT_PATH/opensource
 #export RDK_PLATFORM_SOC=${RDK_PLATFORM_SOC-broadcom}
 #export PLATFORM_SOC=$RDK_PLATFORM_SOC
 
+if [ "x${BUILD_CONFIG^^}" == "xGST1X" ]; then
+    export BUILD_CONFIG="hybrid"
+fi
+
 if [ "x"$RDK_PLATFORM_SOC == "xintel" ]; then
 	export TOOLCHAIN_DIR=$RDK_BUILD_DIR/sdk/toolchain/staging_dir/bin
         export CROSS_COMPILE=i686-cm-linux-

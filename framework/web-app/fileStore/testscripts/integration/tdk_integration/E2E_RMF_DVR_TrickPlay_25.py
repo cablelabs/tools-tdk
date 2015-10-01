@@ -134,7 +134,7 @@ if "SUCCESS" in result.upper():
          else:
                  tdkTestObj.setResultStatus("FAILURE");
                  print "E2E DVR Pause on the video playing Failed: [%s]"%details;
-         time.sleep(40);
+         
          obj.unloadModule("tdkintegration");
     else:
         print "No Matching recordings list found"

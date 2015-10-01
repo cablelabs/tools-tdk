@@ -86,7 +86,7 @@ else:
 
 if isDisplayConnected == "true":
 	print " "
-	print "[This Script as to be tested with no HDMI device connected!!!]"
+	print "[This Script has to be tested with no HDMI device connected!!!]"
 	print "[Please test removing HDMI device. Exiting....!!!]"
 	print " "
 	exit()

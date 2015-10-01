@@ -124,7 +124,7 @@ def playDVR (recordingId):
         obj1.setLoadModuleStatus("FAILURE");
         retValue = "FAILURE"
 
-    time.sleep(40);
+    
 
     return retValue
 

@@ -70,38 +70,41 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: Init,SetLoglevel,StartSource,CreateSrcSession
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5003})
-  prevNum = dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
-  print "num of src sessions before creating new session: [%s]"%prevNum
-  dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
-  dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
-  #Calling DeleteSrcSession
-  dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
-  dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
-  #Check if session is deleted successfully
-  fnName="DTCPMgrGetNumSessions";
-  #Add parameters to test object
-  deviceType=0
-  tdkTestObj.addParameter("funcName", fnName);
-  tdkTestObj.addParameter("intParam2", deviceType);
-  #Execute the test case in STB
-  tdkTestObj.executeTestCase(expectedresult);
-  #Get the result of execution
+  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5011})
   result = tdkTestObj.getResult();
-  currNum = tdkTestObj.getResultDetails();
-  print "Input: [funcName:%s deviceType:%d]"%(fnName,deviceType);
-  print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
-  print "num of src sessions after deleting session: [%s]"%currNum
+  if "SUCCESS" in result:
+        prevNum = dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
+        print "num of src sessions before creating new session: [%s]"%prevNum
+        dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5011,'uniqueKey':0,'maxPacketSize':4096})
+        dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
+        #Calling DeleteSrcSession
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        #Check if session is deleted successfully
+        fnName="DTCPMgrGetNumSessions";
+        #Add parameters to test object
+        deviceType=0
+        tdkTestObj.addParameter("funcName", fnName);
+        tdkTestObj.addParameter("intParam2", deviceType);
+        #Execute the test case in STB
+        tdkTestObj.executeTestCase(expectedresult);
+        #Get the result of execution
+        result = tdkTestObj.getResult();
+        currNum = tdkTestObj.getResultDetails();
+        print "Input: [funcName:%s deviceType:%d]"%(fnName,deviceType);
+        print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
+        print "num of src sessions after deleting session: [%s]"%currNum
 
-  #Set the result status of execution
-  if ((expectedresult in result) and (prevNum == currNum)):
-       tdkTestObj.setResultStatus("SUCCESS");
+        #Set the result status of execution
+        if ((expectedresult in result) and (prevNum == currNum)):
+             tdkTestObj.setResultStatus("SUCCESS");
+        else:
+             tdkTestObj.setResultStatus("FAILURE");
+
+        #Post-Cond: StopSrc
+        dtcp.stopSource(tdkTestObj,expectedresult)
   else:
-       tdkTestObj.setResultStatus("FAILURE");
-
-  #Post-Cond: StopSrc
-  dtcp.stopSource(tdkTestObj,expectedresult)
-
+        print "DTCP StartSource failed"
   #Unload the dtcp module
   obj.unloadModule("dtcp");
 else:

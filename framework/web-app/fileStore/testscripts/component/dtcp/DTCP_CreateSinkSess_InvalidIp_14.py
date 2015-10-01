@@ -70,14 +70,16 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-cond: DTCPMgrInit,setLoglevel,DTCPMgrStartSource
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5003})
-  #Calling CreateSinkSession
-  result=dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'0.42.42.42','srcPort':5003,'uniqueKey':0,'maxPacketSize':4096})
-  #Post-Cond: DeleteSinkSession,StopSrc
-  if expectedresult not in result:
-      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
-  dtcp.stopSource(tdkTestObj,expectedresult)
-
+  result = dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5006})
+  if expectedresult in result:
+        #Calling CreateSinkSession
+        result=dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'0.42.42.42','srcPort':5006,'uniqueKey':0,'maxPacketSize':4096})
+        #Post-Cond: DeleteSinkSession,StopSrc
+        if expectedresult not in result:
+            dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        dtcp.stopSource(tdkTestObj,expectedresult)
+  else:
+        print "DTCP StartSource failed"
   #Unload the dtcp module
   obj.unloadModule("dtcp");
 else:
