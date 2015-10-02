@@ -1777,5 +1777,105 @@ class ScriptGroupController {
 		}
 		render scriptGrp
 	}
+	/**
+	 * REST API :- create a new suite
+	 * params : file uploaded through the Curl command
+	 * Eg : curl http://localhost:8080/rdk-test-tool/scriptGroup/
+	 */
 
+	def createNewScriptGroup(){
+		JsonObject scriptGroup = new JsonObject()
+		ScriptGroup scriptGroupInstance = new ScriptGroup()
+		def fileName
+		String xml
+		def node
+		String  idList
+		boolean valid = false
+		if(params?.scriptGroupXml){
+			def uploadedFile = request.getFile('scriptGroupXml')
+			if(uploadedFile?.originalFilename?.endsWith(".xml")){
+				fileName = uploadedFile?.originalFilename?.replace(".xml","")
+				InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
+				def fileContent = reader?.readLines()
+				if(ScriptGroup.findByName(fileName.trim())){
+					scriptGroup?.addProperty("STATUS","FAILURE")
+					scriptGroup.addProperty("Remarks","The test suite name already exists")
+				}else{
+					if(fileContent){
+						try{
+							String s = ""
+							int indx = 0
+							String scriptContent = ""
+							if(fileContent.get(indx))	{
+								while(indx < fileContent.size()){
+									s = s + fileContent.get(indx)+"\n"
+									indx++
+								}
+							}
+							xml = s
+							XmlParser parser = new XmlParser();
+							node = parser.parseText(xml)
+							List<String> names = new ArrayList<String>()
+							node?.script_group?.scripts?.script_name?.each{
+								names.add(it.text())
+							}
+
+							idList =  names
+							idList = idList?.replace(SQUARE_BRACKET_OPEN,"")
+							idList = idList?.replace(SQUARE_BRACKET_CLOSE,"")
+						}catch(Exception e){
+							scriptGroup?.addProperty("STATUS","FAILURE")
+							scriptGroup.addProperty("Remarks","Invalid xml tags  ")
+						}
+						if(idList.equals("")){
+							scriptGroup?.addProperty("STATUS","FAILURE")
+							scriptGroup.addProperty("Remarks"," scripts  name list is empty  ")
+						}else{
+							try{
+								StringTokenizer st = new StringTokenizer(idList,",")
+								while(st.hasMoreTokens()){
+									String token = st.nextToken()
+									if(token && token.size()>0){
+										ScriptFile sctFile = ScriptFile.findByScriptName(token?.trim())
+										if( sctFile != null  && !scriptGroupInstance?.scriptList?.contains(sctFile)){
+											scriptGroupInstance.addToScriptList(sctFile)
+											valid = true
+										}
+									}
+								}
+								if(valid){
+									scriptGroupInstance.name = fileName
+									if(scriptGroupInstance.save(flush:true)){
+										scriptGroup?.addProperty("STATUS","SUCCESS")
+										scriptGroup.addProperty("Remarks","Script group created success fully ")
+									}else{
+										scriptGroup?.addProperty("STATUS","FAILURE")
+										scriptGroup.addProperty("Remarks","Script Group not created  ")
+									}
+								}else {
+									scriptGroup?.addProperty("STATUS","FAILURE")
+									scriptGroup.addProperty("Remarks","Script name is not valid   ")
+								}
+							}catch(Exception e){
+								println "ERRORS"+e.getMessage()
+								scriptGroup?.addProperty("STATUS","FAILURE")
+								scriptGroup.addProperty("Remarks","Invalid xml tags   ")
+							}
+						}
+					}else{
+						scriptGroup?.addProperty("STATUS","FAILURE")
+						scriptGroup.addProperty("Remarks","File not Exists")
+					}
+				}
+			}else{
+				scriptGroup?.addProperty("STATUS","FAILURE")
+				scriptGroup.addProperty("Remarks","file not in xml format ")
+			}
+		}else{
+			scriptGroup?.addProperty("STATUS","FAILURE")
+			scriptGroup.addProperty("Remarks","No file specified ")
+		}
+		render scriptGroup
+	}
+	
 }

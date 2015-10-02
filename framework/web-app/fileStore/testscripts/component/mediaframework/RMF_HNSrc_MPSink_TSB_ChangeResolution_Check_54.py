@@ -95,8 +95,9 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     print "Status of "+ teststep+":  %s" %result;
     print "Details of "+ teststep+":  %s" %details;
     if teststep == "RMF_Element_Getmediatime":
-        Mediatime=details.split(":");
-
+	if "SUCCESS" in result.upper():
+	        Mediatime=details.split(":");
+		print Mediatime[1];
     return result
 
 ds_obj = tdklib.TDKScriptingLibrary("devicesettings","2.0");

@@ -397,7 +397,7 @@ function hideParameters(k){
 			
 			<g:if test="${executionResultInstance.performance}">
 			<table>
-						<tr class="scripthead">
+						<tr class="scripthead" style=" background:#DFDFDF;">
 							<td colspan="4" class="tdhead">Performance</td>					
 							<td>
 							<a href="#" id="expanderperf${k}_${i}" onclick="this.innerHTML='Hide';viewOnClickperf(this,${k},${i}); return false;">Show</a>
@@ -451,7 +451,11 @@ function hideParameters(k){
 						</tbody>
 						</g:if>
 						</table>
+						<%
+							def performance2 = Performance.findAllByExecutionResultAndPerformanceType(executionResultInstance,"SYSTEMDIAGNOSTICS_MEMORY")													
+						%>
 						<table>	
+						<g:if test="${performance2}">
 						<tbody>							
 							<tr class="fnhead">
 								<td class="tdhead" colspan="4">Memory Utilization</td>														
@@ -516,7 +520,7 @@ function hideParameters(k){
 									<td>${usedPeak?.processValue}</td>	
 									<td>${memPeak?.processValue}</td>						
 								</tr>							</tbody>
-						
+						</g:if>
 						</table>
 				</section>		
 				</span>		

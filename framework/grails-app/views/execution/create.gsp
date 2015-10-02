@@ -246,6 +246,9 @@ $(document).ready(function() {
 	</div>
 	<div id="executionLogPopup" style="display: none; overflow: auto; width : 98%; height : 98%;">			
 	</div>
+	
+	<div id="executionStatusPopup" style="display: none; overflow: auto; width : 98%; height : 98%;">			
+	</div>
 
 	<div id="cleanupPopup" style="display: none; overflow: auto;">			
 		<g:form controller="execution" ><br>

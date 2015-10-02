@@ -25,7 +25,7 @@
   <!-- execution_time is the time out time for test execution -->
   <remarks>Causing ABL mode In Pace Xi3 box</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>

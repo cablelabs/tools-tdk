@@ -66,6 +66,8 @@ class Execution {
      * time taken for execution
      */
     String executionTime
+	
+	String realExecutionTime
 
     /**
      * Set of ExecutionResults to the execution
@@ -146,6 +148,7 @@ class Execution {
 		isStbLogRequired(nullable:true, blank:true)
 		applicationUrl(nullable:true, blank:true)
 		scriptCount(nullable:true, blank:true)
+		realExecutionTime(nullable:true, blank:true)
     }
     
     static mapping = {

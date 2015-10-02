@@ -1272,8 +1272,8 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
     /* Sending the device status */
 
 /* To check if tdk is enabled.In gateway boxes only  */
-#ifdef PORT_FORWARD
-
+/*#ifdef PORT_FORWARD Disable the TDK file checkin since this is causing file deletion*/ 
+#if 0
     strFilePath = TDK_ENABLE_FILE;
 
     /* check if tdk enable file is there, if not send TDK Disabled */

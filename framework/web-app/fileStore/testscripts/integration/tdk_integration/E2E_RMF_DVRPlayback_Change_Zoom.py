@@ -100,7 +100,7 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
                     #calling DS_SetDFC to get and set the zoom settings 
                     tdkTestObj = obj.createTestStep('DS_SetDFC');
                     #zoom="Full";
-                    zoom="Platform";
+                    zoom="Full";
                     print "Zoom value set to :%s" %zoom;
                     tdkTestObj.addParameter("zoom_setting",zoom);
                     expectedresult="SUCCESS"

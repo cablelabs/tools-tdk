@@ -93,11 +93,13 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     print "Status of "+ teststep+":  %s" %result;
     print "Details of "+ teststep+":  %s" %details;
     if teststep == "RMF_Element_Getmediatime":
-        Mediatime=details.split(":");
-        print Mediatime[1];
+	if "SUCCESS" in result.upper():
+	        Mediatime=details.split(":");
+        	print Mediatime[1];
     if teststep == "RMF_Element_Getspeed":
-        Mediaspeed=details.split(":");
-        print Mediaspeed[1];
+	if "SUCCESS" in result.upper():
+	        Mediaspeed=details.split(":");
+        	print Mediaspeed[1];
 
     return result
 
@@ -190,15 +192,16 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                                         print "Video check Done. Status: ",result;
 
                                                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
-                                                                                                        Mediaspeed[1]=float(Mediaspeed[1]);
-                                                                                                        Mediatime[1]=float(Mediatime[1]);
-                                                                                                        initialmediatime=float(initialmediatime);
-                                                                                                        if (Mediatime[1] > initialmediatime) and (Mediaspeed[1] == speed_parameter_value[0]):
-                                                                                                                print "success"
-                                                                                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                                                                        else:
-                                                                                                                print "failed"
-                                                                                                                tdkTestObj.setResultStatus("FAILURE");
+													if "SUCCESS" in result.upper():
+	                                                                                                        Mediaspeed[1]=float(Mediaspeed[1]);
+        	                                                                                                Mediatime[1]=float(Mediatime[1]);
+                	                                                                                        initialmediatime=float(initialmediatime);
+                        	                                                                                if (Mediatime[1] > initialmediatime) and (Mediaspeed[1] == speed_parameter_value[0]):
+                                	                                                                                print "success"
+                                        	                                                                        tdkTestObj.setResultStatus("SUCCESS");
+                                                	                                                        else:
+                                                        	                                                        print "failed"
+                                                                	                                                tdkTestObj.setResultStatus("FAILURE");
 
                                                 #Close the Hnsrc Element
                                                 result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,Expected_Result,src_parameter,src_element);

@@ -1157,6 +1157,16 @@ class ExecutionService {
 		}
 	}
 	
+	public void updateExecutionTime(final String totalTime, final long executionResultId){
+		ExecutionResult.executeUpdate("update ExecutionResult c set c.totalExecutionTime = :time where c.id = :execId",
+				[time: totalTime, execId: executionResultId])
+	}
+	
+	public void updateTotalExecutionTime(final String totalTime, final long executionId){
+		Execution.executeUpdate("update Execution c set c.realExecutionTime = :time where c.id = :execId",
+				[time: totalTime, execId: executionId])
+	}
+	
 	
 	public void updateExecutionStatusData(final String status, final long executionId){
 		Execution.withTransaction {
@@ -1219,6 +1229,59 @@ class ExecutionService {
 	}
 	
 	/**
+	 * Method saving the multiple scripts execution details
+	 *
+	 * @param realPath
+	 * @param execName
+	 * @param scriptName
+	 * @param deviceName
+	 * @param scriptGroupInstance
+	 * @param appUrl
+	 * @param isBenchMark
+	 * @param isSystemDiagnostics
+	 * @param rerun
+	 * @param isLogReqd
+	 * @param scriptCount
+	 * @return
+	 */
+	public boolean saveExecutionDetailsOnMultipleScripts(final String execName, String scriptName, String deviceName,
+		String scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,String isLogReqd, final int scriptCount){
+		   def executionSaveStatus = true
+		   try {
+			   Execution execution = new Execution()
+			   execution.name = execName
+			   execution.script = scriptName
+			   execution.device = deviceName
+			   execution.scriptGroup = scriptGroupInstance
+			   execution.result = UNDEFINED_STATUS
+			   execution.executionStatus = INPROGRESS_STATUS
+			   execution.dateOfExecution = new Date()
+			   execution.groups = getGroup()
+			   execution.applicationUrl = appUrl
+			   execution.isRerunRequired = rerun?.equals("true")
+			   execution.isBenchMarkEnabled = isBenchMark?.equals("true")
+			   execution.isStbLogRequired = isLogReqd?.equals("true")
+			   execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
+			   execution.scriptCount = scriptCount
+			   if(! execution.save(flush:true)) {
+				   log.error "Error saving Execution instance : ${execution.errors}"
+				   executionSaveStatus = false
+			   }
+		   }
+		   catch(Exception th) {
+			   th.printStackTrace()
+			   executionSaveStatus = false
+		   }
+		   return executionSaveStatus
+	   }
+	
+	
+	
+	
+	
+	
+	
+	/**
 	 * Method to save details of execution in Execution Domain
 	 * @param execName
 	 * @param scriptName
@@ -1230,11 +1293,15 @@ class ExecutionService {
 	 ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,String isLogReqd){
 		def executionSaveStatus = true
 		int scriptCnt = 0
-		if(scriptGroupInstance?.scriptList?.size() > 0){
-			scriptCnt = scriptGroupInstance?.scriptList?.size()
-		}
-		
 		try {
+			ScriptGroup.withTransaction {
+				def scriptGroupInstance1 = ScriptGroup.get(scriptGroupInstance?.id)
+				if(scriptGroupInstance1?.scriptList?.size() > 0){
+					scriptCnt = scriptGroupInstance1?.scriptList?.size()
+				}
+			}
+		
+		
 			Execution execution = new Execution()
 			execution.name = execName
 			execution.script = scriptName

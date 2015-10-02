@@ -180,14 +180,15 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                         time.sleep(10);
                                                                                         initialmediatime=Mediatime[1]
                                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
-                                                                                        Mediatime[1]=float(Mediatime[1]);
-                                                                                        initialmediatime=float(initialmediatime);
-                                                                                        if (Mediatime[1] < initialmediatime) and (Mediatime[1] > 0.0):
-                                                                                                print "success"
-                                                                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                                                        else:
-                                                                                                print "failed"
-                                                                                                tdkTestObj.setResultStatus("FAILURE");
+											if "SUCCESS" in result.upper():
+	                                                                                        Mediatime[1]=float(Mediatime[1]);
+        	                                                                                initialmediatime=float(initialmediatime);
+                	                                                                        if (Mediatime[1] < initialmediatime) and (Mediatime[1] > 0.0):
+                        	                                                                        print "success"
+                                	                                                                tdkTestObj.setResultStatus("SUCCESS");
+                                        	                                                else:
+                                                	                                                print "failed"
+                                                        	                                        tdkTestObj.setResultStatus("FAILURE");
 
                                                 #Close the Hnsrc Element
                                                 result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,Expected_Result,src_parameter,src_element);

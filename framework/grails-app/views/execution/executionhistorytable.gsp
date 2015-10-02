@@ -113,8 +113,9 @@
 									</g:if>
 						          </g:elseif>
 							</g:if>
+							<g:link onclick="executionStatus(${executionInstance.id}); return false;" id="${executionInstance.id}" > <img src="../images/execution_status.png" style="padding-left: 3px" /></g:link>
 							</g:if>
-							<g:link action="exportConsolidatedToExcel" id="${executionInstance.id}" ><img src="../images/excel.png" /></g:link>
+							<g:link action="exportConsolidatedToExcel" id="${executionInstance.id}" ><img src="../images/excel.png" style="padding-left: 3px"/></g:link>
 						</td>						
 					</tr>
 				</g:each>

@@ -105,17 +105,20 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 	tdkTestObj = obj.createTestStep('DS_VOP_setDisplayConnected');
                                 	tdkTestObj.addParameter("port_name",portName);
 					tdkTestObj.addParameter("connected",connected);
-                                	expectedresult="SUCCESS"
+                                	expectedresult="FAILURE"
                                 	print " "
                                 	tdkTestObj.executeTestCase(expectedresult);
                                 	actualresult = tdkTestObj.getResult();
                                 	details = tdkTestObj.getResultDetails()
                                 	print "[RESULT:%s PortName: %s DETAILS:%s]" %(actualresult,portName,details);
-					connResult = devicesettings.dsIsDisplayConnected(obj)
-					print "[PortName: %s IsDisplayConnected:%s]" %(portName,connResult);
 
                                 	#Check for SUCCESS/FAILURE return value of DS_VOP_setDisplayConnected
-                                	if expectedresult in actualresult:
+                                        if expectedresult in actualresult:
+						tdkTestObj.setResultStatus("SUCCESS");
+						print "Error occured while executing unsupported API setDisplayConnected"
+                                	else:
+						connResult = devicesettings.dsIsDisplayConnected(obj)
+						print "[PortName: %s IsDisplayConnected:%s]" %(portName,connResult);
 						if connected == 0 and connResult == "TRUE":
 							tdkTestObj.setResultStatus("FAILURE");
 							print "setDisplayConnected to false but isDisplayConnected is true"
@@ -125,8 +128,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 						else:
 							tdkTestObj.setResultStatus("SUCCESS");
 							print "setDisplayConnected value matches with isDisplayConnected result"
-					else:
-		                        	tdkTestObj.setResultStatus("FAILURE");
 
 		                print " "
 		else:

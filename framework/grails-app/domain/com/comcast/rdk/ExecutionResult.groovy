@@ -61,6 +61,10 @@ class ExecutionResult {
 	
 	String executionTime
 	
+	String moduleName
+	
+	String totalExecutionTime 
+	
     /**
      * Execution can have many execution results.
      */
@@ -76,6 +80,8 @@ class ExecutionResult {
 		deviceIdString(nullable:true, blank:true)
 		dateOfExecution(nullable:true, blank:true)
 		executionTime(nullable:true, blank:true)
+		moduleName(nullable:true, blank:true)
+		totalExecutionTime(nullable:true, blank:true)
     }
     
     static mapping = {

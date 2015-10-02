@@ -21,8 +21,8 @@ class SecurityFilters {
 		user: ['changePassword','registerUser','saveUser'],
 		primitiveTest : ['getJson','getStreamDetails'],
 		execution : ['saveLoadModuleStatus','saveResultDetails','getDeviceStatusList','getDeviceStatus','thirdPartyJsonResult','thirdPartyTest','showResult','getDetailedTestResult','getClientPort','stopThirdPartyTestExecution','getAgentConsoleLog','getRealtimeDeviceStatus','getExecutionOutput','thirdPartySingleTestExecution','thirdPartyJsonPerformanceResult'],
-		deviceGroup : ['uploadAgentBinaries','getDeviceList','deleteDeviceMethod'],
-		scriptGroup : ['getScriptsByScriptGroup','getScriptsByModule','getAllScriptGroups','deleteScriptGroup'],
+		deviceGroup : ['uploadAgentBinaries','getDeviceList','deleteDeviceMethod','createNewDevice'],
+		scriptGroup : ['getScriptsByScriptGroup','getScriptsByModule','getAllScriptGroups','deleteScriptGroup','createNewScriptGroup'],
 		module : ['getModuleScriptTimeOut']
     ];
 

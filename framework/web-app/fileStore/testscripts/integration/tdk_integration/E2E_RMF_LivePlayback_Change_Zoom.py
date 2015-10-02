@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>This test tries ti change the Zoom settings during Live Playback</synopsis>
+  <synopsis>This test tries to change the Zoom settings during Live Playback</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -46,27 +46,34 @@
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 from tdkintegration import getURL_PlayURL
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
-tdk_obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+
 #Ip address of the selected STB for testing
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'E2E_RMF_LivePlayback_Change_Zoom');
-tdk_obj.configureTestCase(ip,port,'E2E_RMF_LivePlayback_Change_Zoom');
-loadmodulestatus =obj.getLoadModuleResult();
-loadmodulestatus1 = tdk_obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
-if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.upper()):
-        #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
-        tdk_obj.setLoadModuleStatus("SUCCESS");
 
-        result = getURL_PlayURL(tdk_obj,'02');
+#Test component to be tested
+dsObj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
+tdkObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+dsObj.configureTestCase(ip,port,'E2E_RMF_LivePlayback_Change_Zoom');
+tdkObj.configureTestCase(ip,port,'E2E_RMF_LivePlayback_Change_Zoom');
+dsLoadStatus = dsObj.getLoadModuleResult();
+tdkIntLoadStatus = tdkObj.getLoadModuleResult();
+print "[devicesettings LIB LOAD STATUS]  :  %s" %dsLoadStatus ;
+print "[tdkintegration LIB LOAD STATUS]  :  %s" %tdkIntLoadStatus
+
+if ("SUCCESS" in dsLoadStatus.upper()) and ("SUCCESS" in tdkIntLoadStatus.upper()):
+
+        #Set the module loading status
+        dsObj.setLoadModuleStatus("SUCCESS");
+        tdkObj.setLoadModuleStatus("SUCCESS");
+
+        result = getURL_PlayURL(tdkObj,'01');
         if ("SUCCESS" in result.upper()):
-        
+
+       	    print "Live Playback execution successful"
+ 
             #calling Device Settings - initialize API
-            tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
+            tdkTestObj = dsObj.createTestStep('DS_ManagerInitialize');
             expectedresult="SUCCESS"
             tdkTestObj.executeTestCase(expectedresult);
             actualresult = tdkTestObj.getResult();
@@ -74,33 +81,65 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
             if expectedresult in actualresult:
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "SUCCESS :Application successfully initialized with Device Settings library";
-                    #calling DS_SetDFC to get and set the zoom settings 
-                    tdkTestObj = obj.createTestStep('DS_SetDFC');
-                    #zoom="Full";
-                    zoom="Platform";
-                    print "Zoom value set to :%s" %zoom;
-                    tdkTestObj.addParameter("zoom_setting",zoom);
+
+                    #Invoke primitive testcase
+                    tdkTestObj = dsObj.createTestStep('DS_VD_getSupportedDFCs');
                     expectedresult="SUCCESS"
                     tdkTestObj.executeTestCase(expectedresult);
                     actualresult = tdkTestObj.getResult();
-                    dfcdetails = tdkTestObj.getResultDetails();
-                    setdfc="%s" %zoom;
+                    supportedDFCs = tdkTestObj.getResultDetails();
+                    print "Details: ",supportedDFCs
                     #Check for SUCCESS/FAILURE return value of DS_SetDFC
                     if expectedresult in actualresult:
-                            print "SUCCESS :Application successfully gets and sets the zoom settings for the video device";
-                            print "getdfc %s" %dfcdetails;
-                            #comparing the DFC (zoomSettings) before and after setting
-                            if setdfc in dfcdetails:
-                                    tdkTestObj.setResultStatus("SUCCESS");
-                                    print "SUCCESS: Both the zoomsettings values are equal";
-                            else:
-                                    tdkTestObj.setResultStatus("FAILURE");
-                                    print "FAILURE: Get and Set APi's are Success But the zoomsettings values are not equal";
+                        zoom="Full";
+                        if zoom.upper() in supportedDFCs.upper():
+                                #calling DS_SetDFC to get and set the zoom settings
+                                tdkTestObj = dsObj.createTestStep('DS_SetDFC');
+                                print "Zoom value set to %s" %zoom;
+                                tdkTestObj.addParameter("zoom_setting",zoom);
+                                expectedresult="SUCCESS"
+                                tdkTestObj.executeTestCase(expectedresult);
+                                actualresult = tdkTestObj.getResult();
+                                dfcdetails = tdkTestObj.getResultDetails();
+                                print "Details: ",dfcdetails
+                                #Check for SUCCESS/FAILURE return value of DS_SetDFC
+                                if expectedresult in actualresult:
+                                        tdkTestObj.setResultStatus("SUCCESS");
+                                        print "SUCCESS :Application successfully gets and sets the zoom settings to Full for the video device";
+	        			result = getURL_PlayURL(tdkObj,'01');
+        				if ("SUCCESS" in result.upper()):
+            					print "Live Playback execution successful after changing zoom settings"
+        				else:
+            					print "Live Playback execution failed after changing zoom settings"
+                                else:
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        print "FAILURE :Failed to get and set the Full zoom";
+
+				print "Revert zoom to None"
+				zoom="None";
+                                #calling DS_SetDFC to get and set the zoom settings
+                                tdkTestObj = dsObj.createTestStep('DS_SetDFC');
+                                print "Zoom value set to %s" %zoom;
+                                tdkTestObj.addParameter("zoom_setting",zoom);
+                                expectedresult="SUCCESS"
+                                tdkTestObj.executeTestCase(expectedresult);
+                                actualresult = tdkTestObj.getResult();
+                                dfcdetails = tdkTestObj.getResultDetails();
+                                print "Details: ",dfcdetails
+                                #Check for SUCCESS/FAILURE return value of DS_SetDFC
+                                if expectedresult in actualresult:
+                                        tdkTestObj.setResultStatus("SUCCESS");
+                                else:
+                                        tdkTestObj.setResultStatus("FAILURE");
+                        else:
+                                tdkTestObj.setResultStatus("FAILURE");
+                                print "FAILURE : Full is not a supported value"
                     else:
-                            tdkTestObj.setResultStatus("FAILURE");
-                            print "FAILURE :Failed to get and set the zoom settings";
+                        tdkTestObj.setResultStatus("FAILURE");
+                        print "FAILURE :Failed to get SupportedDFCs";
+
                     #calling DS_ManagerDeInitialize to DeInitialize API
-                    tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
+                    tdkTestObj = dsObj.createTestStep('DS_ManagerDeInitialize');
                     expectedresult="SUCCESS"
                     tdkTestObj.executeTestCase(expectedresult);
                     actualresult = tdkTestObj.getResult();
@@ -114,14 +153,14 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
             else:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "FAILURE: Device Setting Initialize failed";
-            print "[TEST EXECUTION RESULT] : %s" %actualresult;
         else:
-            print "Execution  failure"
+            print "Live Playback execution failed"
+
         #Unload the deviceSettings module
-        obj.unloadModule("devicesettings");
-        tdk_obj.unloadModule("tdkintegration");
+        dsObj.unloadModule("devicesettings");
+        tdkObj.unloadModule("tdkintegration");
 else:
         print"Load module failed";
         #Set the module loading status
-        obj.setLoadModuleStatus("FAILURE");
-        tdk_obj.setLoadModuleStatus("FAILURE");
+        dsObj.setLoadModuleStatus("FAILURE");
+        tdkObj.setLoadModuleStatus("FAILURE");

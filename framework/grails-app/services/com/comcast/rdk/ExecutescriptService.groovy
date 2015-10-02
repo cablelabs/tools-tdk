@@ -14,6 +14,7 @@ package com.comcast.rdk
 import static com.comcast.rdk.Constants.*
 import groovy.sql.Sql
 
+import java.text.DecimalFormat
 import java.util.List
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
@@ -78,6 +79,7 @@ class ExecutescriptService {
 	
 	def String executeScript(final String executionName, final ExecutionDevice executionDevice, final def scriptInstance,
 			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String uniqueExecutionName,final String isMultiple, def executionResult,def isLogReqd) {
+				Date startTime = new Date()
 		String htmlData = ""
 		String scriptData = executionService.convertScriptFromHTMLToPython(scriptInstance.scriptContent)
 		String stbIp = STRING_QUOTES + deviceInstance.stbIp + STRING_QUOTES
@@ -85,12 +87,12 @@ class ExecutescriptService {
 		def executionId = executionInstance?.id
 		Date executionDate = executionInstance?.dateOfExecution
 		def resultArray = Execution.executeQuery("select a.executionTime from Execution a where a.name = :exName",[exName: executionName])
-				
+		def totalTimeArray = Execution.executeQuery("select a.realExecutionTime from Execution a where a.name = :exName",[exName: executionName])
 		def executionResultId
 		if(executionResult == null){			
 		    try {
 			   def sql = new Sql(dataSource)
-			   sql.execute("insert into execution_result(version,execution_id,execution_device_id,script,device,date_of_execution,status) values(?,?,?,?,?,?,?)", [1,executionInstance?.id, executionDevice?.id, scriptInstance.name, deviceInstance.stbName, new Date(), UNDEFINED_STATUS])
+			   sql.execute("insert into execution_result(version,execution_id,execution_device_id,script,device,date_of_execution,status) values(?,?,?,?,?,?,?)", [1,executionInstance?.id, executionDevice?.id, scriptInstance.name, deviceInstance.stbName, startTime, UNDEFINED_STATUS])
 			} catch (Exception e) {
 				e.printStackTrace()
 			}
@@ -171,7 +173,7 @@ class ExecutescriptService {
 		Date execEndDate = new Date()
 		def execEndTime =  execEndDate.getTime()
 		def timeDifference = ( execEndTime - executionStartTime  ) / 60000;
-
+		
 		String timeDiff =  String.valueOf(timeDifference)
 		String singleScriptExecTime = String.valueOf(timeDifference)
 		
@@ -197,7 +199,7 @@ class ExecutescriptService {
 			def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 			new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
 			logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
-			if(isLogReqd){
+			if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
 				transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
 			}
 			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
@@ -302,15 +304,33 @@ class ExecutescriptService {
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 			htmlData += scriptExecutor.executeScript(cmd,10)
 		}
-		
 		def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 
 		new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
 		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
-		if(isLogReqd){
+		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
 			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
 		}
+		}
+		Date endTime = new Date()
+		try {
+		def totalTimeTaken = (endTime?.getTime() - startTime?.getTime()) / 60000
+//		totalTimeTaken = totalTimeTaken?.round(2)
+		
+			executionService.updateExecutionTime(totalTimeTaken?.toString(), executionResultId)
+			BigDecimal totalVal
+			if(totalTimeArray[0]){
+				totalVal= new BigDecimal (totalTimeArray[0]) + new BigDecimal (totalTimeTaken)
+			}
+			else{
+				totalVal =  new BigDecimal (totalTimeTaken)
+			}
+			
+			timeDiff =  String.valueOf(totalVal)
+			executionService.updateTotalExecutionTime(timeDiff?.toString(), executionId)
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
 		return htmlData
 	}
@@ -488,6 +508,7 @@ class ExecutescriptService {
 		def executionSaveStatus = true
 		if(result != SUCCESS_STATUS){
 			def scriptName
+			
 			def scriptGroupInstance = ScriptGroup.findByName(executionInstance?.scriptGroup)
 			/**
 			 * Get all devices for execution
@@ -558,7 +579,6 @@ class ExecutescriptService {
 						} catch (Exception e) {
 							e.printStackTrace()
 						}
-						
 						executionResultList.each{ executionResult ->
 							if(!executionResult.status.equals(SKIPPED)){
 //								scriptInstance = Script.findByName(executionResult?.script)
@@ -579,7 +599,6 @@ class ExecutescriptService {
 								}
 							}
 						}
-						
 						try {
 							// stopping log transfer
 								if(executionResultList.size() > 0){
@@ -616,6 +635,7 @@ class ExecutescriptService {
 			}
 		}
 		} catch (Exception e) {
+		println " ERROR "+e.getMessage()
 			e.printStackTrace()
 		}
 	}
@@ -1673,8 +1693,8 @@ class ExecutescriptService {
 			boolean executionStarted = false
 			List pendingScripts = []
 			// rest call for log transfer starts
+			Properties props = new Properties()
 			try {
-				Properties props = new Properties()
 				props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
 				println props
 				if(validScriptList.size() > 0){
@@ -1845,8 +1865,12 @@ class ExecutescriptService {
 	def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId){
 		try {
 			def module
+			def stbLogFiles
 			Module.withTransaction {
 				module = Module.findByName(moduleName)
+				if(module?.stbLogFiles?.size() > 0){
+					stbLogFiles = module?.stbLogFiles
+				}
 			}
 
 			def destFolder = grailsApplication.parentContext.getResource("//logs//stblogs//execId_logdata.txt").file
@@ -1856,9 +1880,8 @@ class ExecutescriptService {
 			def filePath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
 			def directoryPath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
 			new File(directoryPath).mkdirs()
-		
 			
-			module?.stbLogFiles?.each{ name -> 
+			stbLogFiles?.each{ name -> 
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
 
 			File fileStore = grailsApplication.parentContext.getResource("//fileStore//").file

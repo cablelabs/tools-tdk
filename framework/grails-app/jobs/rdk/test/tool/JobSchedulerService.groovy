@@ -209,10 +209,12 @@ class JobSchedulerService implements Job{
 							else{
 								execName = executionName
 							}
-
 							int scriptCnt = 0
 							if(scriptGroupInstance?.scriptList?.size() > 0){
 								scriptCnt = scriptGroupInstance?.scriptList?.size()
+							}// Test case  count includes execution result page while executing multiple scripts. 	
+							else if(scriptName.equals("Multiple Scripts")){
+								scriptCnt  = scripts?.size()
 							}
 							
 							Execution.withTransaction { status ->

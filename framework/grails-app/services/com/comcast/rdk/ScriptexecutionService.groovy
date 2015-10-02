@@ -94,9 +94,10 @@ class ScriptexecutionService {
 	
 
 	def executeScriptGroup(ScriptGroup scriptGroup, final String boxType,  final String execName, final String execDeviceId,
-		Device deviceInstance, final String url, final String filePath, final String realPath, final String callbackUrl, final String imageName ){
+		Device deviceInstance, final String url, final String filePath, final String realPath, final String callbackUrl, final String imageName
+		,final String isBenchMark, final String isSystemDiagnostics, final String rerun, final String isLogReqd  ){
 		Future<String> future =  executorService.submit( { executeScriptGrp(scriptGroup, boxType, execName, execDeviceId, deviceInstance,
-			url, filePath, realPath, callbackUrl, imageName)} as Callable< String > )
+			url, filePath, realPath, callbackUrl, imageName,isBenchMark,isSystemDiagnostics,rerun,isLogReqd)} as Callable< String > )
   
 	}
 		
@@ -165,7 +166,8 @@ class ScriptexecutionService {
 	}
 		
 	def executeScriptGrp(ScriptGroup scriptGroup, final String boxType, final String execName, final String execDeviceId,
-		Device deviceInstance, final String url, final String filePath, final String realPath, final String callbackUrl, final String imageName){
+		Device deviceInstance, final String url, final String filePath, final String realPath, final String callbackUrl, final String imageName,
+		final String isBenchMark, final String isSystemDiagnostics, final String rerun, final String isLogReqd){
 		boolean aborted = false
 		boolean pause = false
 		try{
@@ -270,7 +272,8 @@ class ScriptexecutionService {
 				if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()) || devStatus.equals(Status.TDK_DISABLED.toString())) && !pause){
 					try {
 						executionStarted = true
-								def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple)
+								//def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple)
+						def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple, isBenchMark,isSystemDiagnostics,rerun,isLogReqd)
 								if(isMultiple.equals("false")){
 									Execution.withTransaction {
 										Execution executionInstance = Execution.findByName(execName)
@@ -355,6 +358,12 @@ class ScriptexecutionService {
 					saveThirdPartyExecutionDetails(Execution.findByName(execName),execName,url,callbackUrl,filePath,executionStartTime,imageName,boxType)
 				}else{
 					executeCallBackUrl(execName,url,callbackUrl,filePath,executionStartTime,imageName,boxType,realPath)
+				}
+			}
+			
+			if(!aborted && !pause){
+				if((executionInstance1) && (rerun)){
+					executescriptService.reRunOnFailure(realPath,filePath,execName,execName,url)
 				}
 			}
 					
@@ -669,7 +678,7 @@ class ScriptexecutionService {
 	 * @return
 	 */
 	def String executeScripts(String executionName, String execDeviceId, def scriptInstance,
-			Device deviceInstance, final String url, final String filePath, final String realPath, final String isMultiple ) {
+			Device deviceInstance, final String url, final String filePath, final String realPath, final String isMultiple , final String isBenchMark,final String  isSystemDiagnostics, final String isLogReqd, final String rerun) {
 	
 		String htmlData = ""
 
@@ -743,7 +752,7 @@ class ScriptexecutionService {
 
 		scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
 			executionId  + COMMA_SEPERATOR + execDeviceId + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance?.statusPort + COMMA_SEPERATOR +
-			sFile?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR+ SINGLE_QUOTES + "false" + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + "false" + SINGLE_QUOTES + COMMA_SEPERATOR +
+			sFile?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR+ SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +
 			SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR )//+ gatewayIp + COMMA_SEPERATOR)
 		
 		scriptData	 = scriptData + "\nprint \"SCRIPTEND#!@~\";"
@@ -776,7 +785,50 @@ class ScriptexecutionService {
 		
 		String outData = executeScript( file.getPath(), execTime , executionName )
 		
-		def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDeviceInstance?.id.toString()}"		
+		def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDeviceInstance?.id.toString()}"
+		String performanceFilePath
+		if(isBenchMark.equals(TRUE) || isSystemDiagnostics.equals(TRUE)){
+			new File("${realPath}//logs//performance//${executionId}//${executionDeviceInstance?.id}//${executionResultId}").mkdirs()
+			performanceFilePath = "${realPath}//logs//performance//${executionId}//${executionDeviceInstance?.id}//${executionResultId}//"
+		}
+	
+		if(isBenchMark.equals(TRUE)){
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
+			def absolutePath = layoutFolder.absolutePath
+
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.stbPort,
+				deviceInstance?.logTransferPort,
+				KEY_PERFORMANCE_BM,
+				performanceFilePath
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor(executionName)
+			outData += scriptExecutor.executeScript(cmd,1)
+		}
+		if(isSystemDiagnostics.equals(TRUE)){
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.stbPort,
+				deviceInstance?.logTransferPort,
+				KEY_PERFORMANCE_SD,
+				performanceFilePath
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor(executionName)
+			outData += scriptExecutor.executeScript(cmd,10)
+		}
+	
+		if(isLogReqd){
+			executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId)
+		}
+		
+			
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}//"
 		new File("${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}").mkdirs()
 		executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
@@ -823,6 +875,12 @@ class ScriptexecutionService {
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 			}
+			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
+			if(isLogReqd){
+				executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId)
+			}	
+			
+			
 			executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
 			Thread.sleep(5000)
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file

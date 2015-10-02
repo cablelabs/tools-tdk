@@ -748,9 +748,9 @@ class ExecutedbService {
 		def listStatusCount = [:]
 		int scriptCount = 0
 
-		if(executionInstance?.scriptGroup){
+		if(executionInstance?.scriptGroup || executionInstance?.script.toString().equals("Multiple Scripts")){
 			ScriptGroup scriptGrp = ScriptGroup.findByName(executionInstance?.scriptGroup)
-			if(scriptGrp){
+			if(scriptGrp || executionInstance?.script.toString().equals("Multiple Scripts")){
 
 				def successCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"SUCCESS")
 
@@ -790,5 +790,270 @@ class ExecutedbService {
 		return listStatusCount
 	}
 
+	def Map getDetailedStatusList(final Execution executionInstance, final ExecutionDevice executionDevice, final String scriptCnt,String realPath){
+		def dataMap = prepareDetailMap(executionInstance, KEY_GATEWAYIP)
+				def listStatusCount = [:]
+				int scriptCount = 0
+		
+				if(executionInstance?.scriptGroup){
+					ScriptGroup scriptGrp = ScriptGroup.findByName(executionInstance?.scriptGroup)
+					if(scriptGrp){
+		
+						def successCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"SUCCESS")
+		
+						def failureCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"FAILURE")
+		
+						def skippedCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"SKIPPED")
+		
+						def naCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"N/A")
+		
+						def pendingCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"PENDING")
+		
+						def unknownCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"UNDEFINED")
+		
+						def timeoutCount = ExecutionResult.countByExecutionDeviceAndStatus(executionDevice,"SCRIPT TIME OUT")
+		
+						if((executionInstance?.scriptCount != 0 ) && (executionInstance?.scriptCount != null)){
+							scriptCount = executionInstance?.scriptCount
+						}
+						else{
+							scriptCount = Integer.parseInt(scriptCnt)
+						}
+		
+						def executedCount = ExecutionResult.countByExecutionDevice(executionDevice)
+						executedCount = executedCount - pendingCount
+						
+						listStatusCount.put("Total Scripts",scriptCount?.toString())
+						listStatusCount.put("Executed",""+executedCount?.toString())
+						listStatusCount.put("SUCCESS",successCount?.toString())
+						listStatusCount.put("FAILURE",failureCount?.toString())
+						listStatusCount.put("N/A",naCount?.toString())
+						listStatusCount.put("SKIPPED",skippedCount?.toString())
+						listStatusCount.put("PENDING",pendingCount?.toString())
+						listStatusCount.put("TIMED OUT",timeoutCount?.toString())
+						listStatusCount.put("UNDEFINED",unknownCount?.toString())
+					}
+				}
+				return listStatusCount
+			}
+	
+	def prepareDetailMap(def executionInstance,def realPath){
+		def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
+		def detailDataMap = [:]
+		def sMap = scriptService.getScriptNameModuleNameMapping(realPath)
+		executionDeviceList.each{ executionDeviceInstance ->
+			def executionResultInstanceList =  ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance,executionDeviceInstance)
+			executionResultInstanceList.each{ executionResultInstance ->
+				String scriptName = executionResultInstance?.script
+				String status = executionResultInstance?.status
+				def moduleName = sMap.get(scriptName)
+				
+				if(moduleName && !moduleName.equals("null") && !moduleName.equals("")){
+					
+					def moduleMap = detailDataMap.get(moduleName)
+					if(!moduleMap){
+						moduleMap = [:]
+						detailDataMap.put(moduleName,moduleMap)
+					}
+					def statusCounter = moduleMap.get(status)
+					if(!statusCounter){
+						statusCounter = 0
+					}
+					statusCounter ++
+					moduleMap.put(status, statusCounter)
+				}
+			}
+		}
+		
+		
+		TreeMap<String, Map> tMap = new TreeMap<String, Map>(detailDataMap)
+		return tMap
+	}
 
+	/**
+	 * Method to get the data for creating the consolidated report in excel format.
+	 */
+	def getDataForConsolidatedListPerformanceExcelExport(Execution executionInstance, String realPath,String appUrl) {
+
+		List executionDeviceList = []
+		List executionResultInstanceList = []
+		List columnWidthList = []
+		columnWidthList = [0.1, 0.3, 0.1, 0.4]
+		
+		String deviceDetails
+
+		String fileContents = ""
+		def deviceName = ""
+		def deviceIp = ""
+		def executionTime = ""
+		int totalCount = 0
+		int testCount =0
+
+		String filePath = ""
+		def executionDeviceId
+
+		Map summaryHead = [:]
+		Map statusValue = [:]
+		List fieldList = ["C1", "C2", "C3", "C4", "C5","C6","C7","C8","C9","C10","C11"]
+
+
+		executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
+		def detailDataMap = [:]
+		executionDeviceList.each{ executionDeviceInstance ->
+
+			deviceName = executionDeviceInstance?.device
+			deviceIp = executionDeviceInstance?.deviceIp
+			executionTime = executionDeviceInstance?.executionTime
+
+			executionDeviceId = executionDeviceInstance?.id
+			filePath = "${realPath}//logs//version//${executionInstance?.id}//${executionDeviceId?.toString()}//${executionDeviceId?.toString()}_version.txt"
+			if(filePath){
+				File file = new File(filePath)
+				if(file.exists()){
+					file.eachLine { line ->
+						if(!(line.isEmpty())){
+							if(!(line.startsWith( LINE_STRING ))){
+								fileContents = fileContents + line + HTML_BR
+							}
+						}
+					}
+					deviceDetails = fileContents.replace(HTML_BR, NEW_LINE)
+				}
+				else{
+					//println "No version file found"
+				}
+			}
+			else{
+				//println "Invalid file path"
+			}
+
+			Map coverPageMap = [:]
+			detailDataMap.put("CoverPage", coverPageMap)
+			Map detailsMap = [:]
+			coverPageMap.put("Details",detailsMap)
+			detailsMap.put("Device", deviceName)
+			detailsMap.put("DeviceIP", deviceIp)
+			detailsMap.put("Execution Time (min)", executionTime)
+			try {
+				String image = "Not Available"
+				if(deviceDetails != null && deviceDetails.contains("imagename:")){
+					String imagename = "imagename:"
+					int indx = deviceDetails.indexOf(imagename)
+					int endIndx = deviceDetails.indexOf("\n",indx)
+					if(indx >=0 && endIndx > 0){
+						indx = indx + imagename.length()
+						image = deviceDetails.substring(indx, endIndx)
+					}
+				}
+				detailsMap.put("Image", image)
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+			
+		
+
+			executionResultInstanceList =  ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance,executionDeviceInstance)//,[sort: "script",order: "asc"])
+			def summaryMap = getStatusList(executionInstance,executionDeviceInstance,executionResultInstanceList?.size()?.toString())
+			
+			int counter = 1
+			int counter1=1
+			Date date = new Date()
+			executionResultInstanceList.each{ executionResultInstance ->
+				counter1= counter1+1
+			
+				String scriptName = executionResultInstance?.script
+				String status = executionResultInstance?.status
+				String output = executionResultInstance?.executionOutput
+				String executionOutput
+				String moduleName = ""
+//				int  execution = executionResultInstance?.script?.count
+//				Script.withTransaction {
+//					Script scrpt = Script.findByName(scriptName)
+//					moduleName = scrpt?.primitiveTest?.module?.name
+				
+//				}
+				
+				
+				def sMap = scriptService.getScriptNameModuleNameMapping(realPath)
+				moduleName = sMap.get(scriptName)
+				
+				int i = 0
+				
+				if(!moduleName.equals("")){
+		//			def scriptObj1 = ScriptFile.findByModuleName(moduleName)
+		
+	
+					def scriptObj = ScriptFile.findByScriptNameAndModuleName(scriptName,moduleName)
+					if(scriptObj){
+						def dataList
+						Map dataMapList = detailDataMap.get(moduleName)
+							if(dataMapList == null){
+								dataMapList = [:]
+								detailDataMap.put(moduleName,dataMapList)
+								//detailDataMap.put("total", summaryMap.get("Total Scripts"))
+							}
+						
+						if(dataMapList != null){
+							dataList = dataMapList.get("dataList")
+							if(dataList == null){
+								dataList = []
+								dataMapList.put("dataList",dataList)
+								dataMapList.put("fieldsList",fieldList)
+								counter = 1
+						}else{
+							counter =  dataMapList.get("counter")
+						}
+						if(dataList != null){
+							
+							if(output){
+								executionOutput = output.replace(HTML_BR, NEW_LINE)
+								if(executionOutput && executionOutput.length() > 10000){
+									executionOutput = executionOutput.substring(0, 10000)
+								}
+							}
+								
+							String executed
+							if( "PENDING".equals(status)){
+								executed = "NO"
+							}
+							else{
+								executed = "YES"
+							}
+							/*Map dataMap = ["C1":counter,"C2":scriptName,"C3":status,"C4":executionOutput,"C5":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id,,"C6":parseTime(executionInstance?.dateOfExecution)]
+							Map dataMap =["C1":counter,"C2":scriptName,"C3":executed,"C4":status,"C5":parseTime(executionInstance?.dateOfExecution),"C6":appUrl+"/execution/getExecutionOutput?execResId="+executionResultInstance?.id,"C7":"","C8":"","C9":"","C10":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id]*/
+							Map dataMap
+							def countOfExecutionOutput = executionOutput?.size()
+							//For CGRTS-521
+							String executionLogData = executionOutput
+							if(countOfExecutionOutput >= 1000 ){
+								executionLogData = executionOutput+"\n To view full log use this link ....... \r\n  " +appUrl+"/execution/getExecutionOutput?execResId="+executionResultInstance?.id
+							}
+							
+							String exeTime = executionResultInstance?.executionTime
+							String realExeTime = executionResultInstance?.totalExecutionTime
+							float time1 = 0.0
+							float time2 = 0.0
+							 try {
+								 time1 = Float.parseFloat(exeTime)
+								 time1 = time1?.round(2)
+								 time2 = Float.parseFloat(realExeTime)
+								 time2 = time2?.round(2)
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+							
+							dataMap =["C1":counter,"C2":scriptName,"C3":executed,"C4":status,"C5":time1,"C6":parseTime(executionInstance?.dateOfExecution),"C7":executionLogData,"C8":"","C9":"","C10":"","C11":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id]
+							
+							dataList.add(dataMap)
+							counter ++
+							dataMapList.put("counter",counter)
+						}
+					}
+				}
+			}
+		}
+	}
+		prepareStatusList(detailDataMap)
+		return detailDataMap
+	}
 }

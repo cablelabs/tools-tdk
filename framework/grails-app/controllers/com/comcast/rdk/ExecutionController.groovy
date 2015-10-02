@@ -525,7 +525,7 @@ class ExecutionController {
 	 * @param suiteName
 	 * @return
 	 */
-	def thirdPartyTest(final String stbName, final String boxType, final String imageName, final String suiteName, final String test_request, final String callbackUrl ){
+	def thirdPartyTest(final String stbName, final String boxType, final String imageName, final String suiteName, final String test_request, final String callbackUrl, final String timeInfo,final String  performance, final String isLogReqd, final String reRunOnFailure ){
 		JsonObject jsonOutData = new JsonObject()
 		
 		try {
@@ -533,6 +533,25 @@ class ExecutionController {
 			String outData = ""
 			String  url = getApplicationUrl()
 			def execName = ""
+			def isBenchMark1 = FALSE
+			def isSystemDiagnostics1 = FALSE
+			def isLogReqd1 = FALSE
+			def rerun1 = FALSE
+			
+			if(timeInfo != null ){
+				isBenchMark1 = timeInfo
+			}
+			if(performance != null  ){
+				isSystemDiagnostics1 = performance
+			}
+			if(isLogReqd != null ){
+				isLogReqd1  = isLogReqd
+				
+			}
+			if(reRunOnFailure != null ){
+				rerun1 = reRunOnFailure
+			}
+			
 			String filePath = "${request.getRealPath('/')}//fileStore"
 
 			if(test_request){
@@ -634,7 +653,9 @@ class ExecutionController {
 											}
 
 											try {
-												executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptname, deviceName, scriptGroup,url)
+												// for saving the execution details includes the performance information 
+												executionSaveStatus = executionService.saveExecutionDetails(execName, scriptname, deviceName, scriptGroup,url,isBenchMark1,isSystemDiagnostics1,rerun1,isLogReqd1)
+												//executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptname, deviceName, scriptGroup,url)
 											} catch (Exception e) {
 												executionSaveStatus = false
 											}
@@ -652,7 +673,12 @@ class ExecutionController {
 												if(executionDevice.save(flush:true)){
 													String getRealPathString  = getRealPath()
 													executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
-													scriptexecutionService.executeScriptGroup(scriptGroup, boxType, execName, executionDevice?.id.toString(), deviceInstance, url, filePath, getRealPathString, callbackUrl, imageName )
+													//scriptexecutionService.executeScriptGroup(scriptGroup, boxType, execName, executionDevice?.id.toString(), deviceInstance, url, filePath, getRealPathString, callbackUrl, imageName )
+													def rerun = null
+													if(rerun1?.equals(TRUE)){
+														rerun = "on"
+													}
+													scriptexecutionService.executeScriptGroup(scriptGroup, boxType, execName, executionDevice?.id.toString(), deviceInstance, url, filePath, getRealPathString, callbackUrl, imageName, isBenchMark1,isSystemDiagnostics1,rerun,isLogReqd1)
 												}
 											}
 											catch(Exception e){
@@ -1061,8 +1087,13 @@ class ExecutionController {
 							else{
 								execName = exName
 							}
-							
-							executionSaveStatus = executionService.saveExecutionDetails(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,isLogReqd)
+							// Test case count include in the multiple scripts executions
+							if(scriptName.equals(MULTIPLESCRIPT)){
+								def  scriptCount = params?.scripts?.size()
+								executionSaveStatus = executionService.saveExecutionDetailsOnMultipleScripts(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,isLogReqd,scriptCount)
+							}else{							
+								executionSaveStatus = executionService.saveExecutionDetails(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,isLogReqd)
+							}
 			
 							if(deviceList.size() > 0 ){
 								executionNameForCheck = execName
@@ -1699,7 +1730,50 @@ class ExecutionController {
 				}
 		
 			}
+//	
 	
+	/**
+	 * Method to export the consolidated report in excel format.
+	 */
+	def exportConsolidatedPerfToExcel = {
+				if(!params.max) params.max = 100000
+				Map dataMap = [:]
+				List fieldLabels = []
+				Map fieldMap = [:]
+				Map parameters = [:]
+				List columnWidthList = [0.08,0.4,0.15,0.2,0.2,0.2,0.8,0.15,0.2,0.2,0.8]
+		
+				Execution executionInstance = Execution.findById(params.id)
+				String executionInstanceStatus ;
+				executionInstanceStatus =executedbService?.isValidExecutionAvailable(executionInstance)
+				if(executionInstanceStatus?.equals(Constants.SUCCESS_STATUS)){
+				
+				if(executionInstance){
+					dataMap = executedbService.getDataForConsolidatedListPerformanceExcelExport(executionInstance, getRealPath(),getApplicationUrl())
+					fieldMap = ["C1":" Sl.No ", "C2":" Script Name ","C3":"Executed","C4":" Status ","C5":"Script Execution Time","C6":"Executed On ","C7":"Log Data","C8":"Jira #","C9":"Issue Type","C10":"Remarks","C11":" Agent Console Log"]
+					
+					parameters = [ title: EXPORT_SHEET_NAME, "column.widths": columnWidthList]
+				}
+				else{
+					log.error "Invalid excution instance......"
+				}
+		
+				params.format = EXPORT_EXCEL_FORMAT
+				params.extension = EXPORT_EXCEL_EXTENSION
+				response.contentType = grailsApplication.config.grails.mime.types[params.format]
+				def fileName = executionInstance.name
+				fileName = fileName?.replaceAll(" ","_")
+				response.setHeader("Content-disposition", "attachment; filename="+EXPORT_FILENAME+ fileName +".${params.extension}")
+				excelExportService.export(params.format, response.outputStream,dataMap, null,fieldMap,[:], parameters)
+				log.info "Completed excel export............. "
+				}
+				else{
+					redirect(action: "create");
+					flash.message= "No valid execution reports are available."
+					return
+				}
+		
+			}
 	
 	/**
 	 * Method to perform delete operation for marked results.
@@ -1928,6 +2002,7 @@ class ExecutionController {
 		render listdate as JSON
 	}
 	
+	
 	/**
 	 * REST API to request for stopping the test execution 
 	 * @param executionName
@@ -2137,7 +2212,15 @@ class ExecutionController {
 	 * @return - Return JSON with status of REST call
 	 */
 	
-	def thirdPartySingleTestExecution(final String stbName, final String boxType, final String scriptName , final String executionCount, final String reRunOnFailure, final String timeInfo,final String performance){
+		/**
+	 * REST API for single test execution .
+	 * @param stbName - name of the STB configured in Test Manager
+	 * @param boxType - boxType of the STB like Hybrid-1, IPClient-3
+	 * @param scriptName - Name if the script to be executed
+	 * @return - Return JSON with status of REST call
+	 */
+	
+	def thirdPartySingleTestExecution(final String stbName, final String boxType, final String scriptName , final String executionCount, final String reRunOnFailure, final String timeInfo,final String performance,final String isLogRequired){
 		int exeCount = 1
 		if(executionCount ){
 			try {
@@ -2161,14 +2244,20 @@ class ExecutionController {
 		if(performance && performance?.equals("true")){
 			perfo = TRUE
 		}
-		singleTestRestExecution(stbName,boxType,scriptName,exeCount,rerun,time,perfo)
+		
+		String isLog = FALSE
+		if(isLogRequired && isLogRequired?.equals("true")){
+			isLog = TRUE
+		}
+		
+		singleTestRestExecution(stbName,boxType,scriptName,exeCount,rerun,time,perfo,isLog)
 	}
 	
 //	def thirdPartySingleTestExecution(final String stbName, final String boxType, final String scriptName ){
 //		singleTestRestExecution(stbName,boxType,scriptName,1,FALSE,FALSE,FALSE)
 //	}
 	
-	def singleTestRestExecution(final String stbName, final String boxType, final String scriptName , final int repeat, final String reRunOnFailure, final String timeInfo,final String performance){
+	def singleTestRestExecution(final String stbName, final String boxType, final String scriptName , final int repeat, final String reRunOnFailure, final String timeInfo,final String performance,final String isLog){
 		def moduleName= scriptService.scriptMapping.get(scriptName)
 		def deviceInstance = Device.findByStbName(stbName)
 		String  url = getApplicationUrl()
@@ -2178,10 +2267,13 @@ class ExecutionController {
 		String filePath = "${request.getRealPath('/')}//fileStore"
 		boolean executed = false
 		JsonObject jsonOutData = new JsonObject()
+		int i =0;
 		
-		if(deviceInstance){
-			
+		
+		// Loop  For checking the repeat count 
+		if(deviceInstance){			
 			if(moduleName){
+				
 				def scriptInstance1 = scriptService.getScript(getRealPath(),moduleName, scriptName)
 				if(scriptInstance1){
 					
@@ -2200,7 +2292,6 @@ class ExecutionController {
 										if((status.equals( Status.FREE.toString() ))){
 											if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 												executionService.deviceAllocatedList.add(deviceInstance?.id)
-
 												Thread.start{
 													deviceStatusService.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
 												}
@@ -2213,7 +2304,9 @@ class ExecutionController {
 							}
 							status = status.trim()
 							//execute script only if the device is free
+				
 							if((status.equals( Status.FREE.toString() ))){
+								
 								if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 									executionService.deviceAllocatedList.add(deviceInstance?.id)
 								}
@@ -2225,10 +2318,13 @@ class ExecutionController {
 									DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT1)
 									Calendar cal = Calendar.getInstance()
 									deviceName = deviceInstance?.stbName
-									execName = CI_EXECUTION+deviceName+dateFormat.format(cal.getTime()).toString()
-									newExecName = execName
+									
+									
+										execName = CI_EXECUTION+deviceName+dateFormat.format(cal.getTime()).toString()
+										newExecName = execName
+									//execName = CI_EXECUTION+deviceName+dateFormat.format(cal.getTime()).toString()
 
-								try {
+								try {					
 //									executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptName, deviceName, null,url)
 									executionSaveStatus =  executionService.saveExecutionDetails(execName, scriptName, deviceName, null,url,timeInfo,performance,reRunOnFailure,FALSE)
 								} catch (Exception e) {
@@ -2247,20 +2343,31 @@ class ExecutionController {
 										if(executionDevice.save(flush:true)){
 											String getRealPathString  = getRealPath()
 											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
-											if(repeat > 1){
-												// NOTHING TO DO
-											}else{
 											def rerun = null
 											if(reRunOnFailure?.equals(TRUE)){
 												rerun = "on"
 											}
+												
+											if(repeat > 1){
+												
+											}else{										
 											htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
-													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,FALSE)
+													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,isLog)
+											
+											// The Execution is done through only one device 
+//											htmlData = executescriptService.executescriptsOnDevice(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
+//													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,FALSE)
+											
+												executed = true
+												url = url + "/execution/thirdPartyJsonResult?execName=${execName}"
+												jsonOutData.addProperty("status", "RUNNING")
+												jsonOutData.addProperty("result", url)
+												
 											}
-											executed = true
-											url = url + "/execution/thirdPartyJsonResult?execName=${execName}"
-											jsonOutData.addProperty("status", "RUNNING")
-											jsonOutData.addProperty("result", url)
+											
+												
+								
+				
 										}
 									}
 									catch(Exception e){
@@ -2306,6 +2413,8 @@ class ExecutionController {
 			htmlData = "No device found with this name "+stbName
 		}
 		
+		
+		
 		if(!executed){
 			jsonOutData.addProperty("status", "FAILURE")
 			jsonOutData.addProperty("result", htmlData)
@@ -2320,6 +2429,64 @@ class ExecutionController {
 			render "Done"
 		}
 		render "Nothing to clear"
+	}
+	
+	def executionStatus(){
+		
+        Execution executionInstance = Execution.findById(params?.id) 
+		
+		def detailDataMap = executedbService.prepareDetailMap(executionInstance,request.getRealPath('/'))
+		
+		def tDataMap = [:]
+		int total = 0
+		detailDataMap?.keySet()?.each { k ->
+			Map mapp = detailDataMap?.get(k)
+			int tCount = 0
+			mapp?.keySet()?.each { status ->
+				
+				def tStatusCounter = tDataMap.get(status)
+				def statusCounter = mapp.get(status)
+				if(!tStatusCounter){
+					tStatusCounter = 0
+				}
+				if(!status.equals("PENDING")){
+					tCount = tCount + statusCounter
+				tStatusCounter = tStatusCounter + statusCounter
+				tDataMap.put(status, tStatusCounter)
+				}
+			}
+			mapp.put("Executed", tCount)
+			def success = mapp?.get("SUCCESS")
+			if(success){
+				int rate = 0
+				if(tCount > 0){				
+						rate = ((success * 100)/tCount)
+				}
+				mapp.put("passrate",rate)
+
+			}
+			total = total + tCount
+		}
+		tDataMap.put("Executed", total)
+		int rate
+		if(tDataMap?.get("SUCCESS")){
+			int success = tDataMap?.get("SUCCESS")
+			rate = ((success * 100)/total)
+		}
+		
+		tDataMap.put("passrate",rate)
+		
+		def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
+        def device = Device.findByStbName(executionInstance?.device)
+        def testGroup
+		
+        if(executionInstance?.script){
+            def script = Script.findByName(executionInstance?.script)
+            testGroup = script?.primitiveTest?.module?.testGroup
+        }	
+
+		[statusResults : [:], executionInstance : executionInstance, executionDeviceInstanceList : executionDeviceList, testGroup : testGroup,executionresults:[:],detailDataMap:detailDataMap,tDataMap:tDataMap]
+
 	}
 	
 }

@@ -168,7 +168,18 @@ function showExecutionLog(id){
 	            
 	        } }, { onClose : function(dialog) {
 		  $.modal.close(); } });
-}	
+}
+
+function executionStatus(id){	
+	$.get('executionStatus', {id: id}, function(data) { $("#executionStatusPopup").html(data); });		
+	$("#executionStatusPopup").modal({ opacity : 40, overlayCss : {
+		  backgroundColor : "#c4c4c4" }, containerCss: {
+	            width: 800,
+	            height: 570
+	            
+	        } }, { onClose : function(dialog) {
+		  $.modal.close(); } });
+}
 
 function showScheduler(id){	
 	

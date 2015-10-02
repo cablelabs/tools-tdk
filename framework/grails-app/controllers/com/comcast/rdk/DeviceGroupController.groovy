@@ -538,6 +538,25 @@ class DeviceGroupController {
 		}
 		return isDuplicate
 	}
+	
+	def boolean validateOcapIds(def streams, def ocapIdList){
+		boolean valid = true
+		int streamSize = StreamingDetails?.list().size()
+		streamSize += RadioStreamingDetails?.list().size()
+		if(streams?.size() == streamSize){
+			int ocapIdSize = streams.size()
+			Set setOcapId =  streams
+			int setSize = setOcapId.size()
+			if(setSize < ocapIdSize){
+				valid = false
+			}else{
+				valid =  true
+			}
+		}else{
+			valid = false
+		}
+		return valid
+	}
 
     /**
      * Save device specific stream details
@@ -1144,6 +1163,188 @@ class DeviceGroupController {
 			return false
 		}
 		return true
+	}
+	
+	/**
+	 * REST API for add new device
+	 */
+	def createNewDevice(){
+		JsonObject deviceObj = new JsonObject()
+		try {
+			String deviceStreams , deviceOcapId
+			def node
+			if(params?.deviceXml){
+				def uploadedFile = request.getFile('deviceXml')
+				if(uploadedFile){
+				if( uploadedFile?.originalFilename?.endsWith(".xml")) {
+
+					InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
+					def fileContent = reader?.readLines()
+					int indx = 0
+					String s = ""
+					String xml
+					if(fileContent && fileContent.size() > 0){
+						try{
+							if(fileContent.get(indx))	{
+								while(indx < fileContent.size()){
+									s = s + fileContent.get(indx)+"\n"
+									indx++
+								}
+							}
+							xml = s
+							XmlParser parser = new XmlParser();
+							node = parser.parseText(xml)
+							List<String> streams= new ArrayList<String>()
+							List<String> ocapId= new ArrayList<String>()
+							def deviceName =  node?.device?.stb_name?.text()?.trim()
+							def  deviceIp =node?.device?.stb_ip?.text()?.trim()
+							String boxType = node?.device?.box_type?.text()?.trim()
+							def recorderId = node?.device?.recorder_id?.text()?.trim()
+							def socVendor = node?.device?.soc_vendour?.text()?.trim()
+							def boxManufacture = node?.device.box_manufacture?.text()?.trim()
+							def gateway = node?.device?.gateway_name?.text()?.trim()
+							
+							node?.device?.streams?.stream?.each{
+								streams.add(it?.@id)
+								ocapId.add(it?.text()?.trim())
+							}
+							
+							def boxTypeObj = BoxType.findByName(boxType)
+							def boxManufactureObj = BoxManufacturer.findByName(boxManufacture)
+							def socVendorObj = SoCVendor.findByName(socVendor)
+							if(!boxType){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","Boxtype shouldnot be empty ")
+							}else if(!boxTypeObj){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","No valid boxtype available with name "+boxType)
+							}else if(Device.findByStbName(deviceName)){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","Device name is already exists " +deviceName)
+							}else if(!deviceName){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","Device name shouldnot be empty")
+							}else if(!deviceIp){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","Device IP name shouldnot be empty")
+							}else if(deviceIp && Device.findByStbIp(deviceIp)){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","Device IP is already exists"+deviceIp)
+							}else if(!socVendor){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","SOC Vendor  shouldnot be empty")
+							}else if(socVendor && !SoCVendor.findByName(socVendor)){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","No valid soc vendor available with name "+socVendor)
+							}else if(!boxManufacture){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","Box Manufacture shouldnot be empty")
+							}else if(boxManufacture && !BoxManufacturer.findByName(boxManufacture)){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","No valid box manufacture available with name "+boxManufacture)
+							}else{
+								BoxType boxTypeInastnce = BoxType.findByName(boxType)
+								boolean valid = true
+								if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
+								|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+
+									if(recorderId?.trim()?.length() ==  0){
+										valid = false
+										deviceObj.addProperty("STATUS","FAILURE")
+										deviceObj.addProperty("Remarks","Recorder  id should not blank ")
+									}else if(streams){
+											if(validateOcapIds(streams,ocapId)){
+												if(checkDuplicateOcapId(ocapId)){
+													valid = false
+													deviceObj.addProperty("STATUS","FAILURE")
+													deviceObj.addProperty("Remarks","Duplicate Ocap id ")
+												}
+											}else{
+												valid = false
+												deviceObj.addProperty("STATUS","FAILURE")
+												deviceObj.addProperty("Remarks","Stream information is not correct")
+											}
+										}
+								}else{
+									if(gateway){
+										if(!Device.findByStbName(gateway)){
+											valid = false
+											deviceObj.addProperty("STATUS","FAILURE")
+											deviceObj.addProperty("Remarks","No valid gateway device available with name" +gateway)
+										}
+									}
+								}
+								if(valid){
+								try{
+
+									int status = 0
+
+									Device deviceInstance = new Device()
+									deviceInstance.stbName = deviceName
+									deviceInstance.stbIp = deviceIp
+									deviceInstance.soCVendor = socVendorObj
+									deviceInstance.boxType=boxTypeObj
+									deviceInstance.boxManufacturer =boxManufactureObj
+
+									if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_CLIENT)){
+										status = 1
+										deviceInstance.gatewayIp =gateway
+
+									}else if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
+									|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+									
+										status = 2
+										deviceInstance.recorderId = recorderId
+										deviceInstance.macId =""
+									}
+
+									if(status > 0 && deviceInstance.save(flush:true)){
+										if(status == 2){
+											devicegroupService.saveToDeviceGroup(deviceInstance)
+											saveDeviceStream(streams, ocapId, deviceInstance)
+										}
+										deviceObj.addProperty("STATUS","Success")
+										deviceObj.addProperty("Remarks","Device saved successfully ")
+									}else{
+										deviceObj.addProperty("STATUS","FAILURE")
+										deviceObj.addProperty("Remarks","Device not saved ")
+									}
+
+								}catch (Exception e){
+									println "ERROR"+e.getMessage()
+									deviceObj.addProperty("STATUS","FAILURE")
+									deviceObj.addProperty("Remarks","Device not saved ")
+								}
+								}
+							}
+						}catch(Exception e){
+							println "ERROR "+e.getMessage()
+							deviceObj.addProperty("STATUS","FAILURE")
+							deviceObj.addProperty("Remarks","Device not saved "+e.getMessage())
+						}
+					}else{
+						deviceObj.addProperty("STATUS","FAILURE")
+						deviceObj.addProperty("Remarks","XML file is not proper")
+					}
+				}else {
+					deviceObj.addProperty("STATUS","FAILURE")
+					deviceObj.addProperty("Remarks","please check the file name ")
+				}
+				}else{
+				deviceObj.addProperty("STATUS","FAILURE")
+				deviceObj.addProperty("Remarks","File does not exists  ")
+			}
+			}else{
+				deviceObj.addProperty("STATUS","FAILURE")
+				deviceObj.addProperty("Remarks","File does not exists  ")
+			}
+		} catch (Exception e) {
+		println " EE "+e.getMessage()
+			deviceObj.addProperty("STATUS","FAILURE")
+			deviceObj.addProperty("Remarks","Device not saved "+e.getMessage())
+		}
+		println " device obj "+deviceObj
+		render deviceObj
 	}
 }
 

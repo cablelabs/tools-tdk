@@ -93,11 +93,13 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     print "Status of "+ teststep+":  %s" %result;
     print "Details of "+ teststep+":  %s" %details;
     if teststep == "RMF_Element_Getmediatime":
-        Mediatime=details.split(":");
-        print Mediatime[1];
+	if "SUCCESS" in result.upper():
+	        Mediatime=details.split(":");
+	        print Mediatime[1];
     if teststep == "RMF_Element_Getspeed":
-        Mediaspeed=details.split(":");
-        print Mediaspeed[1];
+	if "SUCCESS" in result.upper():
+	        Mediaspeed=details.split(":");
+	        print Mediaspeed[1];
 
 
     return result
@@ -149,34 +151,33 @@ if Expected_Result in loadModuleStatus.upper():
                                                                 #Play the HNSRC-->MPSINK pipeline
                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
                                                                 if Expected_Result in result.upper():
-																		#Pause the HNSRC-->MPSINK pipeline
-																		result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
-																		if Expected_Result in result.upper():
-																			#Get the Mediatime value
-																			time.sleep(120);
-																			result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
-																			result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
-																			if Expected_Result in result.upper():
-																					initialmediatime=Mediatime[1]
-																					#FF with 4x
-																					result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
-																					if Expected_Result in result.upper():
-																							result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
-																							if Expected_Result in result.upper():
-																									time.sleep(5);
-																									result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
-																									Mediaspeed[1]=float(Mediaspeed[1]);
-																									Mediatime[1]=float(Mediatime[1]);
-																									initialmediatime=float(initialmediatime);
-																									if (Mediatime[1] > initialmediatime) and (Mediaspeed[1] == speed_parameter_value[0]):
-																											print "success"
-																											tdkTestObj.setResultStatus("SUCCESS");
-																									else:
-																											print "failed"
-																											tdkTestObj.setResultStatus("FAILURE");
-
-
-                                                #Close the Hnsrc Element
+										#Pause the HNSRC-->MPSINK pipeline
+										result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
+										if Expected_Result in result.upper():
+											#Get the Mediatime value
+											time.sleep(120);
+											result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+											result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
+											if Expected_Result in result.upper():
+												initialmediatime=Mediatime[1]
+												#FF with 4x
+												result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
+												if Expected_Result in result.upper():
+														result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
+														if Expected_Result in result.upper():
+															time.sleep(5);
+															result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
+															if "SUCCESS" in result.upper():
+																Mediaspeed[1]=float(Mediaspeed[1]);
+																Mediatime[1]=float(Mediatime[1]);
+																initialmediatime=float(initialmediatime);
+																if (Mediatime[1] > initialmediatime) and (Mediaspeed[1] == speed_parameter_value[0]):
+																	print "success"
+																	tdkTestObj.setResultStatus("SUCCESS");
+																else:
+																	print "failed"
+																	tdkTestObj.setResultStatus("FAILURE");
+						#Close the Hnsrc Element
                                                 result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,Expected_Result,src_parameter,src_element);
                                         #Terminating the MPSink Element
                                         result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,Expected_Result,sink_parameter,sink_element);

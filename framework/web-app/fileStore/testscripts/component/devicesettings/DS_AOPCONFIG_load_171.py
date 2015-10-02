@@ -64,7 +64,7 @@ obj.configureTestCase(ip,port,'DS_AOPCONFIG_load_171');
 loadmodulestatus = obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus;
 #Set the module loading status
-obj.setLoadModuleStatus(loadmodulestatus)
+obj.setLoadModuleStatus(loadmodulestatus.upper())
 
 if "SUCCESS" in loadmodulestatus.upper():
 
