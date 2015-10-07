@@ -3,7 +3,7 @@
 <xml>
   <id>1133</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>15</version>
+  <version>16</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSource_Init_Uninit_Platform_07</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -20,7 +20,7 @@ Test Case ID: CT_RMF_QAMSrc_MPSink_07.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>12</execution_time>
+  <execution_time>10</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -32,8 +32,6 @@ Test Case ID: CT_RMF_QAMSrc_MPSink_07.</synopsis>
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
-    <box_type>Terminal-RNG</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -85,21 +83,6 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
-loadmoduledetails = obj.getLoadModuleDetails();
-print "Load Module Details : %s" %loadmoduledetails;
-
-if "FAILURE" in loadModuleStatus.upper():
-        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-                print "rmfStreamer is not running. Rebooting STB"
-                obj.initiateReboot();
-                #Reload Test component to be tested
-                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
-                obj.configureTestCase(ip,port,'RMF_QAMSource_Init_Uninit_Platform_07');
-                #Get the result of connection with test component and STB
-                loadModuleStatus = obj.getLoadModuleResult();
-                print "Re-Load Module Status :  %s" %loadModuleStatus;
-                loadmoduledetails = obj.getLoadModuleDetails();
-                print "Re-Load Module Details : %s" %loadmoduledetails;
 
 if expected_Result in loadModuleStatus.upper():
 
@@ -124,8 +107,13 @@ if expected_Result in loadModuleStatus.upper():
                 result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_RmfPlatform_Uninit',obj,expected_Result,src_parameter,src_element);
         else:
                 print "Status of RmfElement_QAMSrc_RmfPlatform_Init:  %s" %loadModuleStatus;
-        #obj.initiateReboot();
+        obj.initiateReboot();
         obj.unloadModule("mediaframework");
 else:
         print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();

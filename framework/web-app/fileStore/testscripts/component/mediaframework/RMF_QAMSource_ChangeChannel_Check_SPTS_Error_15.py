@@ -3,7 +3,7 @@
 <xml>
   <id>1565</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>24</version>
+  <version>25</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSource_ChangeChannel_Check_SPTS_Error_15</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -21,7 +21,7 @@ Test Case Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>10</execution_time>
+  <execution_time>13</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -64,7 +64,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     global tdkTestObj
     global createCount
     #Primitive test case which associated to this Script
-    tdkTestObj = testobject.createTestStep(teststep);
+    tdkTestObj =testobject.createTestStep(teststep);
 
     if teststep == 'RMF_Element_Create_Instance':
         #Stream details for tuning
@@ -72,7 +72,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
                 createCount = createCount + 1
                 #temproary need to be removed
                 if createCount == 3:
-                        createCount = 1
+                        createCount = 1     
                 print "QAMSrc ceateCount increament"
 
         print "createCount=",createCount
@@ -98,7 +98,6 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         print "ChangeUri:",changeUri
 
     for item in range(len(parametername)):
-	print "%s : %s"%(parametername[item],parametervalue[item]);
         tdkTestObj.addParameter(parametername[item],parametervalue[item]);
 
     #Execute the test case in STB
@@ -110,7 +109,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     if teststep != 'RMF_Element_GetState' and teststep != 'RmfElement_CheckFor_SPTSReadError':
        tdkTestObj.setResultStatus(result);
 
-    print "[%s Execution Result]:  %s" %(teststep,result);
+    print "[Execution Result]:  %s" %result;
     print "[Execution Details]:  %s" %details;
 
     return result
@@ -118,25 +117,11 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
-loadmoduledetails = obj.getLoadModuleDetails();
-print "Load Module Details : %s" %loadmoduledetails;
-
-if "FAILURE" in loadModuleStatus.upper():
- 	if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-		print "rmfStreamer is not running. Rebooting STB"
-		obj.initiateReboot();
-                #Reload Test component to be tested
-                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
-                obj.configureTestCase(ip,port,'RMF_QAMSource_ChangeChannel_Check_SPTS_Error_15');
-        	#Get the result of connection with test component and STB
-        	loadModuleStatus = obj.getLoadModuleResult();
-        	print "Re-Load Module Status :  %s" %loadModuleStatus;
-        	loadmoduledetails = obj.getLoadModuleDetails();
-        	print "Re-Load Module Details : %s" %loadmoduledetails;
 
 if expected_Result in loadModuleStatus.upper():
-	#Set module load status
-	obj.setLoadModuleStatus("SUCCESS");
+
+        #Pre-requsite to kill the rmfStreamer Gthread instance and to start new gthread instance.
+        obj.initiateReboot();
 
         #Prmitive test case which associated to this Script
         #Change the List according to Prmitive test case
@@ -254,9 +239,15 @@ if expected_Result in loadModuleStatus.upper():
                         tdkTestObj.setResultStatus(failure);
                 else:
                         tdkTestObj.setResultStatus(expected_Result);
-
-	#Unload Test component
+        else:
+                print "Status of RmfElement_QAMSrc_RmfPlatform_Init:  %s" %loadModuleStatus;
+        obj.initiateReboot();
         obj.unloadModule("mediaframework");
 else:
-	#Set module load status
+        print "Load Module Failed"
         obj.setLoadModuleStatus("FAILURE");
+        loadmoduledetails = obj.getLoadModuleDetails();
+        print "loadmoduledetails %s" %loadmoduledetails;
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "Rebooting the STB"
+                obj.initiateReboot();
