@@ -396,18 +396,17 @@ class ScriptgroupService {
 //		Script.withTransaction {
 //			script = Script.findById(scriptOrig?.id)
 //		}
-        
 		if(script == null || scriptFile == null){
 			return false
 		}
-		
         boolean scriptInUse = false
         boolean isAllocatedScriptGrp = false
         try {
 			 if(script?.status.equals( Status.ALLOCATED.toString() )){
             scriptInUse = true
         }
-        else{           
+			 
+        else{         
             /**
              * Selecting scriptGroups based on whether selected script exists 
              * in the script group's and status of the ScriptGroup is Allocated. 
@@ -433,19 +432,20 @@ class ScriptgroupService {
                 def scriptInstance
 					scriptGroups?.each{ scriptGrp ->
 						ScriptGroup.withTransaction {
-							scriptInstance = scriptGrp?.scriptList?.find { it.id == scriptFile.id }
+							scriptInstance = scriptGrp?.scriptList?.find { it?.id == scriptFile?.id }
 							if(scriptInstance){
 								scriptGrp.removeFromScriptList(scriptInstance)
 							}
-							def scriptInstanceList = scriptGrp?.scriptList?.findAll { it.id == scriptFile.id }
-							if(scriptInstanceList?.size() > 0){
-								if(scriptInstance){
-									scriptGrp?.scriptList?.removeAll(scriptInstance);
+								
+								def scriptInstanceList = scriptGrp?.scriptList?.findAll { it?.id == scriptFile?.id }
+								if(scriptInstanceList?.size() > 0){
+									if(scriptInstance){
+										scriptGrp?.scriptList?.removeAll(scriptInstance);
+									}
 								}
-							}
 						}
 					}
-            }                       
+            }          
         }
 		} catch (Exception e) {
 		}

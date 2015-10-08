@@ -635,7 +635,6 @@ class ExecutescriptService {
 			}
 		}
 		} catch (Exception e) {
-		println " ERROR "+e.getMessage()
 			e.printStackTrace()
 		}
 	}

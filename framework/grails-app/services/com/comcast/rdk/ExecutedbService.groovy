@@ -1039,7 +1039,6 @@ class ExecutedbService {
 								 time2 = Float.parseFloat(realExeTime)
 								 time2 = time2?.round(2)
 							} catch (Exception e) {
-								e.printStackTrace()
 							}
 							
 							dataMap =["C1":counter,"C2":scriptName,"C3":executed,"C4":status,"C5":time1,"C6":parseTime(executionInstance?.dateOfExecution),"C7":executionLogData,"C8":"","C9":"","C10":"","C11":appUrl+"/execution/getAgentConsoleLog?execResId="+executionResultInstance?.id]

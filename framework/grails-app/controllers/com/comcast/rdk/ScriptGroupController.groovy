@@ -632,7 +632,13 @@ class ScriptGroupController {
 					render("Exception")
 				}
 				else{
-					scriptObj.delete(flush: true)
+					try{
+						if(!scriptObj.delete(flush: true)){
+							println "not deleted"+scriptObj?.errors
+						}
+					}catch(Exception e){
+						println  e.getMessage()
+					}
 				}
 			}
 			
@@ -1878,4 +1884,5 @@ class ScriptGroupController {
 		render scriptGroup
 	}
 	
+
 }

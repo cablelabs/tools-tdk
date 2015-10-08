@@ -1787,10 +1787,10 @@ class ExecutionService {
 			def scriptGrp
 			def execInstance
 			def deviceInstanceObj
-			List validScriptsList = new ArrayList()
 			def executionStatus = Execution.findAllByExecutionStatus(INPROGRESS_STATUS)
 			Date now = new Date()
 			executionStatus.each { execution ->
+				List validScriptsList = new ArrayList()
 				if (isOlderExecutionValid(now, execution?.dateOfExecution)){
 					exName = execution?.name
 					device =execution?.device?.toString()

@@ -273,7 +273,7 @@ class ScriptexecutionService {
 					try {
 						executionStarted = true
 								//def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple)
-						def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple, isBenchMark,isSystemDiagnostics,rerun,isLogReqd)
+						def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple, isBenchMark,isSystemDiagnostics,isLogReqd,rerun)
 								if(isMultiple.equals("false")){
 									Execution.withTransaction {
 										Execution executionInstance = Execution.findByName(execName)
@@ -679,7 +679,6 @@ class ScriptexecutionService {
 	 */
 	def String executeScripts(String executionName, String execDeviceId, def scriptInstance,
 			Device deviceInstance, final String url, final String filePath, final String realPath, final String isMultiple , final String isBenchMark,final String  isSystemDiagnostics, final String isLogReqd, final String rerun) {
-	
 		String htmlData = ""
 
 		String scriptData = convertScriptFromHTMLToPython(scriptInstance.scriptContent)
@@ -823,8 +822,7 @@ class ScriptexecutionService {
 			ScriptExecutor scriptExecutor = new ScriptExecutor(executionName)
 			outData += scriptExecutor.executeScript(cmd,10)
 		}
-	
-		if(isLogReqd){
+		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
 			executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId)
 		}
 		

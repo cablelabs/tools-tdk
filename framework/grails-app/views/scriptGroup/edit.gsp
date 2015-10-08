@@ -208,12 +208,14 @@
 					<label>All Scripts</label> <br>
 					<ul class= "selectable" id="selectable" name ="selectable"  title="selectable" style="max-height : 454px; max-width : 380px; overflow: auto; ">
 						<g:each in='${scripts}' var="script">
+						<g:if test="${script}">
 						<% 
 							String idScript = script?.id;
  					     %>
-							<li id = "script-${idScript}" title="${script.scriptName}" class="ui-state-default">
-								${script.scriptName}
+							<li id = "script-${idScript}" title="${script?.scriptName}" class="ui-state-default">
+								${script?.scriptName}
 							</li>
+							</g:if>
 						</g:each>
 					</ul>
 					</div>
@@ -229,12 +231,14 @@
 					<ul id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 380px; overflow: auto;">
 						<g:if test="${scriptGroupInstance}">
 						<g:each in='${scriptGroupInstance.scriptList}' var="script">
+						<g:if test="${script}">
 						<% 
 							String idSgScript = script?.id;
  					     %>
-							<li id = "sgscript-${idSgScript}end"  title="${script.scriptName}" class="ui-state-default">
-								${script.scriptName}
+							<li id = "sgscript-${idSgScript}end"  title="${script?.scriptName}" class="ui-state-default">
+								${script?.scriptName}
 							</li>
+							</g:if>
 						</g:each>
 						</g:if>
 						<g:else> <li class="ui-state-default">

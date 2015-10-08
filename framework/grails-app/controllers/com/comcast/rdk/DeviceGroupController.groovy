@@ -994,7 +994,7 @@ class DeviceGroupController {
 			if(boxType){
 				bb = BoxType.findByName(boxType)
 				if(bb){
-					devList = Device.findByBoxType(bb)
+					devList = Device.findAllByBoxType(bb)
 				}
 			}else{
 				devList = Device.list()
@@ -1013,11 +1013,19 @@ class DeviceGroupController {
 							if(dev?.isChild == 1){
 								device.addProperty("macid", dev?.macId)
 								device.addProperty("mocachild", "true")
+								if(dev?.gatewayIp){
+									def devv = Device?.findByStbIpAndIsChild(dev?.gatewayIp,0)
+									device.addProperty("gateway", devv?.stbName)
+								}
 							}else{
 								device.addProperty("ip", dev?.stbIp)
 								device.addProperty("mocachild", "false")
+								device.addProperty("ip", dev?.stbIp)
+								if(dev?.gatewayIp){
+									device.addProperty("gateway", dev?.gatewayIp)
+								}
 							}
-							device.addProperty("gateway", dev?.gatewayIp)
+							
 						}else{
 							device.addProperty("ip", dev?.stbIp)
 						}
