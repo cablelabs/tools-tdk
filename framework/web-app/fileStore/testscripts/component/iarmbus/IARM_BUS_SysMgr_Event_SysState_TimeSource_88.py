@@ -117,7 +117,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         print "FAILURE:Broadcast event fails";
 
 				#Wait for SystemStates values to change
-                                time.sleep(2);
+                                time.sleep(10);
 
                                 #calling IARMBUS API "IARM_Bus_Call"
                                 tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
