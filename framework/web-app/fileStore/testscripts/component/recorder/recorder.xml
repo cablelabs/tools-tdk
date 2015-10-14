@@ -41,6 +41,12 @@
           <parameter name="Value" value=""/>
         </parameters>
       </primitiveTest>
+      <primitiveTest name="Recorder_PresenceOfRecordingMetaData" id=" " version="1">
+        <function>TestMgr_Recorder_PresenceOfRecordingMetaData</function>
+        <parameters>
+          <parameter name="Recording_Id" value=""/>
+        </parameters>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>

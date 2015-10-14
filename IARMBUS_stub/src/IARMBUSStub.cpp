@@ -319,30 +319,27 @@ bool IARMBUSAgent::IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value&
 {
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_Term --->Entry\n");
-#if 0
-	//Commented for RDKTT-152
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
 	memset(resultDetails , '\0', (sizeof(char)*16));
 	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_Term()\n");
+
 	/*Calling IARMBUS API IARM_Bus_Term  */
 	retval=IARM_Bus_Term();
+
 	/*Checking the return value of API*/
 	/*Filling json response with SUCCESS status*/	
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
 	free(resultDetails);
-#endif
-        response["result"]="SUCCESS";
-        response["details"]="NULL";
 	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_Term --->Exit\n");
 	return TEST_SUCCESS;
 
 }
 
 /**************************************************************************
- * Functio Name	: IARMBUSAgent_BusConnect
+ * Function Name	: IARMBUSAgent_BusConnect
  * Descrption	: IARMBUSAgent_BusConnect wrapper function will be used to call IARMBUS API "IARM_Bus_Connect".
  * 
  * @param [in] req- None 
