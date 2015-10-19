@@ -26,7 +26,8 @@ static char cancelRecReqId[GUID_LEN];
 static const unsigned int kRecorderClientId = 0xFFFFFF00;
 static const unsigned int kTestAppClientId = 0x00000001;
 static bool bSelectOnConflict = false;
-#define TRM_RESPONSE_TIMEOUT (30*1000*1000)
+#define TRM_RESPONSE_TIMEOUT (10*1000*1000)
+#define MAX_RETRY 5
 
 // Helper function to connect to TRM server
 static int connect_to_trm()
@@ -306,20 +307,21 @@ static void get_response (void* arg)
 
 bool waitForTRMResponse()
 {
-    int retry_count = 30;
-    while ((false == responseReceived) && (retry_count >0))
+    int retry_count = 0;
+    while ((false == responseReceived) && (retry_count < MAX_RETRY))
     {
 	sleep(1);
-	retry_count --;
+	retry_count++;
     }
 
-    rmf_osal_mutexAcquire( g_mutex);
-    if((retry_count == 0) && (false == responseReceived))
+    if( false == responseReceived )
     {
-	RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Timeout. Failed to get response msg\n", __FUNCTION__);
-	responseSuccess = false;
+        RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Timeout. Failed to get response msg within %d sec(s)\n", __FUNCTION__, retry_count);
     }
-    rmf_osal_mutexRelease( g_mutex);
+    else
+    {
+        RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Received response in %d sec(s)\n", __FUNCTION__, retry_count);
+    }
 
     return responseSuccess;
 }
@@ -895,6 +897,7 @@ void CTRMMonitor::operator() (const TRM::ReserveTunerResponse &msg)
     {
         bool success = false;
         TRM::ResponseStatus status = msg.getStatus();
+        TRM::TunerReservation resv = msg.getTunerReservation();
         if ( status == TRM::ResponseStatus::kOk )
         {
             RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Status OK\n", __FUNCTION__);
@@ -902,11 +905,24 @@ void CTRMMonitor::operator() (const TRM::ReserveTunerResponse &msg)
             const TRM::ReserveTunerResponse::ConflictCT &conflicts =  msg.getConflicts();
             if (conflicts.size() != 0)
             {
-                RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Found %d Conflict(s)\n", __FUNCTION__,conflicts.size());
+                RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Activity:[%s] Locator:[%s] Token:[%s]\n",
+                                                 (const char *)resv.getActivity().getActivity(),
+                                                 resv.getServiceLocator().c_str(),
+                                                 resv.getReservationToken().c_str());
+
+                RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Found %d Conflict(s) with: \n", __FUNCTION__,conflicts.size());
+
+                TRM::ReserveTunerResponse::ConflictCT::const_iterator it = conflicts.begin();
+                for (it = conflicts.begin(); it != conflicts.end(); it++)
+                {
+                        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Activity:[%s] Locator:[%s] Token:[%s]\n",
+                                                 (const char *)(*it).getActivity().getActivity(),
+                                                 (*it).getServiceLocator().c_str(),
+                                                 (*it).getReservationToken().c_str());
+                }
             }
             else
             {
-                TRM::TunerReservation resv = msg.getTunerReservation();
                 if (resv.getReservationToken().empty())
                 {
                     RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s() - No tuner reservation\n",__FUNCTION__);
@@ -1090,22 +1106,21 @@ void CTRMMonitor::operator() (const TRM::NotifyTunerReservationConflicts &msg)
     const TRM::ReserveTunerResponse::ConflictCT &conflicts =  msg.getConflicts();
     if (conflicts.size() != 0)
     {
-        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Found %d conflict(s)\n", __FUNCTION__,conflicts.size());
-
-        TRM::ReserveTunerResponse::ConflictCT::const_iterator it = conflicts.begin();
-        for (it = conflicts.begin(); it != conflicts.end(); it++)
-        {
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Activity:[%s] Locator:[%s] Token:[%s] is in conflict with:\n",
-                                                 (const char *)(*it).getActivity().getActivity(),
-                                                 (*it).getServiceLocator().c_str(),
-                                                 (*it).getReservationToken().c_str());
-
-            TRM::TunerReservation resv = msg.getTunerReservation();
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Activity:[%s] Locator:[%s] Token:[%s]\n",
+        TRM::TunerReservation resv = msg.getTunerReservation();
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Activity:[%s] Locator:[%s] Token:[%s]\n",
                                                  (const char *)resv.getActivity().getActivity(),
                                                  resv.getServiceLocator().c_str(),
                                                  resv.getReservationToken().c_str());
 
+        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Found %d conflict(s) with:\n", __FUNCTION__,conflicts.size());
+
+        TRM::ReserveTunerResponse::ConflictCT::const_iterator it = conflicts.begin();
+        for (it = conflicts.begin(); it != conflicts.end(); it++)
+        {
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Activity:[%s] Locator:[%s] Token:[%s]\n",
+                                                 (const char *)(*it).getActivity().getActivity(),
+                                                 (*it).getServiceLocator().c_str(),
+                                                 (*it).getReservationToken().c_str());
             if ( NULL == trmClient )
             {
                 RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "NotifyTunerReservationConflicts - Matching TRM client not found\n");
