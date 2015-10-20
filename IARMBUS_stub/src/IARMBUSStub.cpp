@@ -293,16 +293,11 @@ bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value&
 	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_Init directly from IARMBUSAgent_Init\n");
 	/*Calling IARMBUS API IARM_Bus_Init with json req as parameter*/
 	retval=IARM_Bus_Init((char *)req["Process_name"].asCString());
-	if(retval ==1)
-	{
-	response["result"]="SUCCESS";
-	response["details"]="NULL";
-	}
-	else
-	{
+
+	/* Constructing json reponse message */
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
-	}
+
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_Init --->Exit\n");
 	return TEST_SUCCESS;

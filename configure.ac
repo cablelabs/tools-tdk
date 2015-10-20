@@ -136,11 +136,31 @@ AC_ARG_ENABLE([errorlog],
                   ],
                   )
 
+dnl GStreamer version. Use 0.10 by default
+AC_ARG_ENABLE(gstreamer1,
+    AS_HELP_STRING([--enable-gstreamer1],
+                    [Use GStreamer 1.x]), ,
+        [enable_gstreamer1=auto])
 
+AS_IF([test "x$enable_gstreamer1" = "xyes"], [
+    GST_MAJORMINOR=1.0
+    PKG_CHECK_MODULES([GST], [gstreamer-1.0 >= 1.4], have_gst1="yes", have_gst1="no")
+    PKG_CHECK_MODULES([GST_CHECK], [gstreamer-check-1.0 >= 1.4], have_gst1="yes", have_gst1="no")
+    PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.38.2])
+    AC_DEFINE(USE_GST1, 1, [Build with GStreamer 1.x])
+], []) 
 
-PKG_CHECK_MODULES([GST], [gstreamer-0.10 >= 0.10.28])
-PKG_CHECK_MODULES([GST_CHECK], [gstreamer-check-0.10 >= 0.10.28])
-PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 0.10.28])
+AS_IF([test "x$enable_gstreamer1" = "xyes" -a "x$have_gst1" != "xyes"], [
+    AC_MSG_ERROR([Could not find GStreamer 1.x dependencies:
+$GST_PKG_ERRORS])], []) 
+
+AS_IF([test "x$have_gst1" != "xyes"], [
+    GST_MAJORMINOR=0.10
+    PKG_CHECK_MODULES([GST], [gstreamer-0.10 >= 0.10.28])
+    PKG_CHECK_MODULES([GST_CHECK], [gstreamer-check-0.10 >= 0.10.28])
+    PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.22.5])
+], []) 
+
 PKG_CHECK_MODULES([XML2], [libxml-2.0 >= 2.7.8])
 PKG_CHECK_MODULES([JANSON],[jansson >= 2.4])
 

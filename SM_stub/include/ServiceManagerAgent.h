@@ -80,6 +80,7 @@ using namespace std;
 #endif
 #ifdef HAS_API_HDMI_CEC
 #include "hdmicecservice.h"
+#define ENABLE_CECLOG   "scripts/servicemanager_hdmicec_enable_debuglog.sh"
 #endif
 
 #define IN

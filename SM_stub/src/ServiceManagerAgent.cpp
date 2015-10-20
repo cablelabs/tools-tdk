@@ -12,12 +12,36 @@
 
 #include "ServiceManagerAgent.h"
 
-char *rdkLogP = getenv("RDK_LOG_PATH");
-char *tdkP = getenv("TDK_PATH");
-
-string rdkLogPath;
-string tdkPath;
-string cecP = "cec_log.txt";
+#ifdef HAS_API_HDMI_CEC
+std::string rdkLogPath = getenv("RDK_LOG_PATH");
+std::string tdkPath = getenv("TDK_PATH");
+std::string cecRdkLogFile = "cec_log.txt";
+std::string cecTdkLogFile = "cec_tdk.log";
+static bool gDebugLogEnabled = false;
+static void checkDebugLogEnabled(void)
+{
+        if(false == gDebugLogEnabled)
+        {
+                // Enable debug log in platform before invoking sendMessage
+                string enableCecLogCmd = "source " + tdkPath + "/" + ENABLE_CECLOG;
+                try
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Command to enable debug log: %s\n", enableCecLogCmd.c_str());
+                        system((char *)enableCecLogCmd.c_str());
+                        gDebugLogEnabled = true;
+                        DEBUG_PRINT(DEBUG_TRACE, "CEC Debug Log enabled\n");
+                }
+                catch(...)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Failed to enable cec debug log\n");
+                }
+        }
+        else
+        {
+            DEBUG_PRINT(DEBUG_TRACE, "CEC Debug Log already enabled\n");
+        }
+}
+#endif
 
 /***************************************************************************
  *Function name	: ServiceManagerAgent 
@@ -92,28 +116,28 @@ std::string ServiceManagerAgent::testmodulepre_requisites()
 {
         DEBUG_PRINT(DEBUG_TRACE,"testmodulepre_requisites() ---> Entry\n");
 
-	/*Check for the environment variable set or not */
-        if(rdkLogP == NULL)
+#ifdef HAS_API_HDMI_CEC
+	/*Check if the environment variables are set or not */
+        if( rdkLogPath.empty() )
         {
-                DEBUG_PRINT(DEBUG_ERROR,"\nEnvironment variable not set for RDK_LOG_PATH\n");
+                DEBUG_PRINT(DEBUG_ERROR,"Environment variable not set for RDK_LOG_PATH\n");
                 return "FAILURE<DETAILS>Environment variable not set for \"RDK_LOG_PATH\"";
         }
         else
         {
-                rdkLogPath.assign(rdkLogP);
-                DEBUG_PRINT(DEBUG_TRACE,"\n RDK_LOG_PATH=%s\n",rdkLogPath.c_str());
+                DEBUG_PRINT(DEBUG_TRACE,"RDK_LOG_PATH=%s\n",rdkLogPath.c_str());
         }
 
-        if(tdkP == NULL)
+        if( tdkPath.empty() )
         {
-                DEBUG_PRINT(DEBUG_ERROR,"\nEnvironment variable not set for TDK_PATH\n");
+                DEBUG_PRINT(DEBUG_ERROR,"Environment variable not set for TDK_PATH\n");
                 return "FAILURE<DETAILS>Environment variable not set for \"TDK_PATH\"";
         }
         else
         {
-                tdkPath.assign(tdkP);
-                DEBUG_PRINT(DEBUG_TRACE,"\n TDK_PATH=%s\n",tdkPath.c_str());
+                DEBUG_PRINT(DEBUG_TRACE,"TDK_PATH=%s\n",tdkPath.c_str());
         }
+#endif
 
         DEBUG_PRINT(DEBUG_TRACE,"testmodulepre_requisites() ---> Exit\n");
 
@@ -1340,28 +1364,25 @@ bool ServiceManagerAgent::SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT 
         DEBUG_PRINT(DEBUG_TRACE, "SM_HdmiCec_ClearCecLog ---> Entry\n");
 
 #ifdef HAS_API_HDMI_CEC
-	string cecLogPath = rdkLogPath + "/" + cecP;
-	string clearLogCmd = "cat /dev/null > " + cecLogPath;
+	string cecRdkLog = rdkLogPath + "/" + cecRdkLogFile;
+	string clearLogCmd = "cat /dev/null > " + cecRdkLog;
 
 	DEBUG_PRINT(DEBUG_TRACE, "clearLogCmd: %s\n",clearLogCmd.c_str());
 	try
 	{
 		system((char *)clearLogCmd.c_str());
+        	DEBUG_PRINT(DEBUG_TRACE,"Clear Cec Log Success\n");
+        	response["result"]="SUCCESS";
+        	response["details"]="Cleared Cec Log";
 	}
 	catch(...)
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"Exception occured not able to clear Cec Log\n");
-                DEBUG_PRINT(DEBUG_TRACE, "SM_HdmiCec_ClearCecLog ---> Exit\n");
+		DEBUG_PRINT(DEBUG_ERROR,"Exception occured while clearing Cec Log\n");
 	        response["result"]="FAILURE";
-	        response["details"]="Exception occured not able to clear Cec Log";
-		
-		return TEST_FAILURE;
+	        response["details"]="Failed to clear Cec Log";
 	}
-	
-	DEBUG_PRINT(DEBUG_TRACE,"Clear Cec Log Success\n");
-	response["result"]="SUCCESS";
-        response["details"]="Clear Cec Log Success";
 #else
+	DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
         response["result"]="FAILURE";
         response["details"]="HdmiCec Service not supported";
 #endif
@@ -1378,73 +1399,68 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT 
 {
 	DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckStatus ---> Entry\n");
 
-#ifdef HAS_API_HDMI_CEC 
+#ifdef HAS_API_HDMI_CEC
 	string pattern = req["pattern"].asCString();
-	string cecLogPath = rdkLogPath + "/" + cecP;
-	string cecTdkLog = "cecTdkLog.txt";
-	string tdkLogPath = tdkPath + "logs/" + cecTdkLog;
-	string cecTdkLogCpCmd = "cp -r " + cecLogPath + " " + tdkLogPath;
-	string setPermission = "chmod -R 777 " + tdkLogPath;	
+	string cecRdkLog = rdkLogPath + "/" + cecRdkLogFile;
+	string cecTdkLog = tdkPath + "/" + cecTdkLogFile;
+	string cecTdkLogCpCmd = "cp -r " + cecRdkLog + " " + cecTdkLog;
+	string setPermissionCmd = "chmod -R 777 " + cecTdkLog;
 	
-	DEBUG_PRINT(DEBUG_TRACE,"Cec Tdk Log Path: %s\n",cecTdkLogCpCmd.c_str());
-	DEBUG_PRINT(DEBUG_TRACE,"SetPermissionPath: %s\n",setPermission.c_str());
+	DEBUG_PRINT(DEBUG_TRACE,"Cec Tdk Log copy command: %s\n",cecTdkLogCpCmd.c_str());
+	DEBUG_PRINT(DEBUG_TRACE,"Cec Tdk Log set permission command: %s\n",setPermissionCmd.c_str());
 	
 	/*Copy Cec.log to TDK folder and handling exception for system call*/
 	try
-	{	
+	{
 		system((char *)cecTdkLogCpCmd.c_str());
-                system((char*)setPermission.c_str());
+                system((char*)setPermissionCmd.c_str());
 	}
 	catch(...)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"Exception occured, Failed to copy Cec log to TDK folder\n");
+		DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckStatus ---> Exit\n");
 		response["result"]="FAILURE";
-	        response["details"]="Exception occured, Failed to copy Cec log to TDK folder";
+	        response["details"]="Exception occured. Failed to copy Cec log to TDK folder";
                 return TEST_FAILURE;
 	}
 
 	DEBUG_PRINT(DEBUG_TRACE,"Successfully copied cec log to TDK folder\n");
 	
 	/* Checking for the pattern from cec_log.txt*/
-	ifstream cecLogFile;
 	string lineMatching;
-	DEBUG_PRINT(DEBUG_TRACE,"File Open for searching the pattern: %s\n",tdkLogPath.c_str());
-	DEBUG_PRINT(DEBUG_TRACE,"Pattern to be searched: %s\n",pattern.c_str());
-	cecLogFile.open(tdkLogPath.c_str());
-	if (cecLogFile.is_open())
+	ifstream cecTDKLogIn;
+	cecTDKLogIn.open(cecTdkLog.c_str());
+	if (cecTDKLogIn.is_open())
 	{
-		while (!cecLogFile.eof())
+		DEBUG_PRINT(DEBUG_TRACE,"Successfully opened file: %s for searching pattern: %s\n", cecTdkLog.c_str(), pattern.c_str());
+
+		// Assign default value to response
+                response["result"] = "FAILURE";
+                response["details"] = "No Pattern found in Log file";
+                response["log-path"] = cecTdkLog.c_str();
+		while ( cecTDKLogIn.good() )
                 {
-			if(getline(cecLogFile,lineMatching)>0)
+			if( getline(cecTDKLogIn,lineMatching) > 0 )
 			{
-				if (lineMatching.find(pattern) != string::npos)
+				if ( lineMatching.find(pattern) != string::npos )
 				{
 					response["result"] = "SUCCESS";
 					response["details"] = lineMatching.c_str();
-					response["log-path"]= tdkLogPath.c_str();
+					DEBUG_PRINT(DEBUG_TRACE,"Matching pattern found in log file\n");
 					break;
 				}
 			}
-			else
-			{
-                                response["result"] = "FAILURE";
-                                response["details"] = "No Pattern found in Log file";
-                                response["log-path"]= tdkLogPath.c_str();
-				return TEST_FAILURE;
-			}
 		}
-		cecLogFile.close();
-		response["result"] = "SUCCESS";
+		cecTDKLogIn.close();
 	}
 	else
 	{
-		DEBUG_PRINT(DEBUG_TRACE,"Unable to open %s\n", tdkLogPath.c_str());
-                DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckStatus ---> Exit\n");
+		DEBUG_PRINT(DEBUG_TRACE,"Failed to open file: %s for searching pattern: %s\n", cecTdkLog.c_str(), pattern.c_str());
                 response["result"] = "FAILURE";
-                response["details"] = "Unable to open the log file";
-		return TEST_FAILURE;
+                response["details"] = "Unable to open the tdk cec log file for searching message";
 	}
 #else
+	DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
         response["result"]="FAILURE";
         response["details"]="HdmiCec Service not supported";
 #endif		
@@ -1461,46 +1477,36 @@ bool ServiceManagerAgent::SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT J
 {
 	DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetEnabled ---->Entry\n");
 
-	bool valueToSetEnabled = req["valueToSetEnabled"].asInt();
-
-	DEBUG_PRINT(DEBUG_TRACE,"Value passed to setEnabled: %d (true - 1, false - 0)\n",valueToSetEnabled);
-
 #ifdef HAS_API_HDMI_CEC
-	bool getEnabledResult = false;
-	QString serviceName = HdmiCecService::SERVICE_NAME;
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
-
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
 	if(ptr_service != NULL)
         {
+		bool valueToSetEnabled = req["valueToSetEnabled"].asInt();
+		DEBUG_PRINT(DEBUG_TRACE,"Calling HdmiCec Service setEnabled with value %d\n",valueToSetEnabled);
 		ptr_service->setEnabled(valueToSetEnabled);
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setEnabled called.\n");
-		
-		getEnabledResult = ptr_service->getEnabled();
+		bool getEnabledResult = ptr_service->getEnabled();
+		DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getEnabled returned value: %d\n",getEnabledResult);
 		if (valueToSetEnabled == getEnabledResult)
 		{
 			DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setEnabled() call Success.\n");
                 	response["result"]="SUCCESS";
-	                response["details"]="HdmiCec Service setEnabled() call Success.";
+	                response["details"]="HdmiCec Service setEnabled value call success";
 		}
 		else
 		{
 			DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setEnabled() call Failure.\n");
 	                response["result"]="FAILURE";
-        	        response["details"]="HdmiCec Service setEnabled() call Failure.";
-			
-			return TEST_FAILURE;
+        	        response["details"]="HdmiCec Service setEnabled call failed";
 		}
         }
         else
         {
                 DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
                 response["result"]="FAILURE";
-                response["details"]="Failed to create HdmiCec Service handler.";
-	
-		return TEST_FAILURE;
+                response["details"]="Failed to create HdmiCec Service handler";
         }
 #else
+	DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
         response["result"]="FAILURE";
         response["details"]="HdmiCec Service not supported";
 #endif
@@ -1517,33 +1523,26 @@ bool ServiceManagerAgent::SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT J
 bool ServiceManagerAgent::SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetEnabled ---->Entry\n");
-	std::stringstream details;	
 
 #ifdef HAS_API_HDMI_CEC
-	bool getEnabledResult = false;
-	QString serviceName = HdmiCecService::SERVICE_NAME;
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
-
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
         if(ptr_service != NULL)
         {
-                getEnabledResult = ptr_service->getEnabled();
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getEnabled called.\n");
-
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getEnabled() call Success.\n");
-		details << "Cec: "<<getEnabledResult;
+		char stringDetails[STR_DETAILS_20] = {'\0'};
+                bool getEnabledResult = ptr_service->getEnabled();
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getEnabled() returned value: %d\n", getEnabledResult);
+		sprintf(stringDetails,"%d",getEnabledResult);
                 response["result"]="SUCCESS";
-                response["details"]=details.str();
+                response["details"]=stringDetails;
         }
         else
         {
                 DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
                 response["result"]="FAILURE";
                 response["details"]="Failed to create HdmiCec Service handler.";
-
-                return TEST_FAILURE;
         }
 #else
+	DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
         response["result"]="FAILURE";
         response["details"]="HdmiCec Service not supported";
 #endif
@@ -1560,39 +1559,27 @@ bool ServiceManagerAgent::SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT J
 bool ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetName ---->Entry\n");
-        std::stringstream details;
-	QString nameToSet = QString::fromStdString(req["nameToSet"].asCString());
-	QString getNameResult;
-
-	DEBUG_PRINT(DEBUG_TRACE,"Value passed to setName: %s \n",nameToSet.toUtf8().constData());
 
 #ifdef HAS_API_HDMI_CEC
-	QString serviceName = HdmiCecService::SERVICE_NAME;
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
-        
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
 	if(ptr_service != NULL)
         {
+        	QString nameToSet = QString::fromStdString(req["nameToSet"].asCString());
+        	DEBUG_PRINT(DEBUG_TRACE,"Calling setName with value : %s\n",nameToSet.toUtf8().constData());
                 ptr_service->setName(nameToSet);
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setName called.\n");		
-
-                getNameResult = ptr_service->getName();
-
-		DEBUG_PRINT(DEBUG_TRACE,"Name Passed to setName(): %s \n",nameToSet.toUtf8().constData());
-                DEBUG_PRINT(DEBUG_TRACE,"Name returned from getName(): %s \n",getNameResult.toUtf8().constData());
+                QString getNameResult = ptr_service->getName();
+                DEBUG_PRINT(DEBUG_TRACE,"getName returned value: %s\n",getNameResult.toUtf8().constData());
                 if (nameToSet == getNameResult)
                 {
                         DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setName() call Success.\n");
                         response["result"]="SUCCESS";
-                        response["details"]="HdmiCec Service setName() call Success.";
+                        response["details"]="HdmiCec Service setName call success";
                 }
                 else
                 {
                         DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service setName() call Failure.\n");
                         response["result"]="FAILURE";
-                        response["details"]="HdmiCec Service setName() call Failure.";
-
-                        return TEST_FAILURE;
+                        response["details"]="HdmiCec Service setName call failed";
                 }
         }
         else
@@ -1600,10 +1587,9 @@ bool ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json
                 DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
                 response["result"]="FAILURE";
                 response["details"]="Failed to create HdmiCec Service handler.";
-
-                return TEST_FAILURE;
         }
 #else
+	DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
         response["result"]="FAILURE";
         response["details"]="HdmiCec Service not supported";
 #endif
@@ -1620,33 +1606,26 @@ bool ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json
 bool ServiceManagerAgent::SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetName ---->Entry\n");
-        std::stringstream details;
-	QString getNameResult;
 
 #ifdef HAS_API_HDMI_CEC
-	QString serviceName = HdmiCecService::SERVICE_NAME;
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
-
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
         if(ptr_service != NULL)
         {
-                getNameResult = ptr_service->getName();
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getName called.\n");
-
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getName() call Success.\n");
-                details << "Cec: "<<getNameResult.toUtf8().constData();
+		char stringDetails[STR_DETAILS_100] = {'\0'};
+                QString getNameResult = ptr_service->getName();
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCecService Device getName = %s\n", getNameResult.toUtf8().constData());
+		sprintf(stringDetails,"%s", getNameResult.toUtf8().constData());
                 response["result"]="SUCCESS";
-                response["details"]=details.str();
+                response["details"]=stringDetails;
         }
         else
         {
                 DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
                 response["result"]="FAILURE";
                 response["details"]="Failed to create HdmiCec Service handler.";
-
-                return TEST_FAILURE;
         }
 #else
+	DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
         response["result"]="FAILURE";
         response["details"]="HdmiCec Service not supported";
 #endif
@@ -1663,33 +1642,31 @@ bool ServiceManagerAgent::SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json
 bool ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetConnectedDevices ---->Entry\n");
-        std::stringstream details;
-	QVariantList listOfDevicesConnected;
 
 #ifdef HAS_API_HDMI_CEC
-	QString serviceName = HdmiCecService::SERVICE_NAME;
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
-
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
         if(ptr_service != NULL)
         {
-                listOfDevicesConnected = ptr_service->getConnectedDevices();
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getConnectedDevices called.\n");
+		char stringDetails[STR_DETAILS_20] = {'\0'};
+                QVariantList listOfDevicesConnected = ptr_service->getConnectedDevices();
+		DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getConnectedDevices count = %d size = %d\n", listOfDevicesConnected.count(), listOfDevicesConnected.size());
+                for(int j = 0; j < listOfDevicesConnected.size(); j++)
+		{
+			DEBUG_PRINT(DEBUG_TRACE,"ConnectedDevice:%d Address: %d\n", j+1, listOfDevicesConnected.value(j).toInt());
+		}
 
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getConnectedDevices() call Success.\n");
-                details << "Cec: "<<listOfDevicesConnected.count();
+		sprintf(stringDetails,"%d",listOfDevicesConnected.size());
                 response["result"]="SUCCESS";
-                response["details"]=details.str();
+                response["details"]=stringDetails;
         }
         else
         {
                 DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
                 response["result"]="FAILURE";
                 response["details"]="Failed to create HdmiCec Service handler.";
-
-                return TEST_FAILURE;
         }
 #else
+	DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
         response["result"]="FAILURE";
         response["details"]="HdmiCec Service not supported";
 #endif
@@ -1706,33 +1683,35 @@ bool ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices(IN const Json::Value& r
 bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SendMessage ---->Entry\n");
-        std::stringstream details;
-	QString messageToSend = QString::fromStdString(req["messageToSend"].asCString());
-	
-	DEBUG_PRINT(DEBUG_TRACE,"Value passed to sendMessage: %s \n",messageToSend.toUtf8().constData());
 
 #ifdef HAS_API_HDMI_CEC
-	QString serviceName = HdmiCecService::SERVICE_NAME;
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
-
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
         if(ptr_service != NULL)
         {
-                ptr_service->sendMessage(messageToSend);
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service sendMessage() called.\n");
-
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service sendMessage() call Success.\n");
-                response["result"]="SUCCESS";
-                response["details"]="HdmiCec Service sendMessage() call Success.";
+                checkDebugLogEnabled();
+        	if(false == gDebugLogEnabled)
+        	{
+                        response["result"]="FAILURE";
+                	response["details"]="Failed to enable debug cec log";
+		}
+		else
+		{
+			// Send Message to HDMI device
+			QString qstrMessage = QString::fromStdString(req["messageToSend"].asCString());
+			DEBUG_PRINT(DEBUG_TRACE,"sendMessage to HDMI device with value: %s \n", qstrMessage.toUtf8().constData());
+                	ptr_service->sendMessage(qstrMessage);
+                	response["result"]="SUCCESS";
+                	response["details"]="HdmiCec Service sendMessage call success";
+		}
         }
         else
         {
-                DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler\n");
                 response["result"]="FAILURE";
-                response["details"]="Failed to create HdmiCec Service handler.";
-                return TEST_FAILURE;
+                response["details"]="Failed to create HdmiCec Service handler";
         }
 #else
+	DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
         response["result"]="FAILURE";
         response["details"]="HdmiCec Service not supported";
 #endif
@@ -1749,34 +1728,26 @@ bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT 
 bool ServiceManagerAgent::SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_OnMessage ---->Entry\n");
-        std::stringstream details;
-        QString onMessage = QString::fromStdString(req["onMessage"].asCString());
-
-        DEBUG_PRINT(DEBUG_TRACE,"Value passed to onMessage: %s \n",onMessage.toUtf8().constData());
 
 #ifdef HAS_API_HDMI_CEC
-	QString serviceName = HdmiCecService::SERVICE_NAME;
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(serviceName));
-	//DEBUG_PRINT(DEBUG_TRACE,"After: HdmiCecService new created with dynamic cast\n");
-
+	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
         if(ptr_service != NULL)
         {
+        	QString onMessage = QString::fromStdString(req["onMessage"].asCString());
+        	DEBUG_PRINT(DEBUG_TRACE,"Value passed to onMessage: %s \n",onMessage.toUtf8().constData());
                 ptr_service->onMessage(onMessage);
-                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service onMessage() called.\n");
-
                 DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service onMessage() call Success.\n");
                 response["result"]="SUCCESS";
-                response["details"]="HdmiCec Service onMessage() call Success.";
+                response["details"]="HdmiCec Service onMessage call success.";
         }
         else
         {
                 DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
                 response["result"]="FAILURE";
                 response["details"]="Failed to create HdmiCec Service handler.";
-
-                return TEST_FAILURE;
         }
 #else
+	DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
         response["result"]="FAILURE";
         response["details"]="HdmiCec Service not supported";
 #endif
