@@ -52,10 +52,38 @@ TDKINTEGRATION_FLAGS=" "
 TDKINTEGRATION_HYBRID_LIBS=" "
 QAM_LIBS=" "
 SF_LIBS=" "
+TDK_GST_LIBS=" "
 HEADLESS=" "
 SUBDIR_HYBRID=" "
 SUBDIR_CLIENT=" "
 SM_STUB_CFLAG_HYBRID=" "
+
+dnl GStreamer version. Use 0.10 by default
+AC_ARG_ENABLE(gstreamer1,
+    AS_HELP_STRING([--enable-gstreamer1],
+                    [Use GStreamer 1.x]), ,
+        [enable_gstreamer1=auto])
+
+AS_IF([test "x$enable_gstreamer1" = "xyes"], [
+    GST_MAJORMINOR=1.0
+    PKG_CHECK_MODULES([GST], [gstreamer-1.0 >= 1.4], have_gst1="yes", have_gst1="no")
+    PKG_CHECK_MODULES([GST_CHECK], [gstreamer-check-1.0 >= 1.4], have_gst1="yes", have_gst1="no")
+    PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.38.2])
+    AC_DEFINE(USE_GST1, 1, [Build with GStreamer 1.x])
+], [])
+
+AS_IF([test "x$enable_gstreamer1" = "xyes" -a "x$have_gst1" != "xyes"], [
+    AC_MSG_ERROR([Could not find GStreamer 1.x dependencies:
+$GST_PKG_ERRORS])], [])
+
+AS_IF([test "x$have_gst1" != "xyes"], [
+    GST_MAJORMINOR=0.10
+    PKG_CHECK_MODULES([GST], [gstreamer-0.10 >= 0.10.28])
+    PKG_CHECK_MODULES([GST_CHECK], [gstreamer-check-0.10 >= 0.10.28])
+    PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.22.5])
+], [])
+
+
 AC_ARG_ENABLE([hybrid],
         AS_HELP_STRING([--enable-hybrid],[enable hybrid build]),
         [
@@ -63,6 +91,7 @@ AC_ARG_ENABLE([hybrid],
              yes) HYBRID=true
                   SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub"
                   AGENT_FLAGS=" -DPORT_FORWARD"
+                  TDK_GST_LIBS=" -lgstreamer-$GST_MAJORMINOR -lgstbase-$GST_MAJORMINOR"
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc"
                   TDKINTEGRATION_FLAGS="-DENABLE_HYBRID_CODECOMPILE -DHYBRID" ;;
            no) HYBRID=false ;;
@@ -136,31 +165,6 @@ AC_ARG_ENABLE([errorlog],
                   ],
                   )
 
-dnl GStreamer version. Use 0.10 by default
-AC_ARG_ENABLE(gstreamer1,
-    AS_HELP_STRING([--enable-gstreamer1],
-                    [Use GStreamer 1.x]), ,
-        [enable_gstreamer1=auto])
-
-AS_IF([test "x$enable_gstreamer1" = "xyes"], [
-    GST_MAJORMINOR=1.0
-    PKG_CHECK_MODULES([GST], [gstreamer-1.0 >= 1.4], have_gst1="yes", have_gst1="no")
-    PKG_CHECK_MODULES([GST_CHECK], [gstreamer-check-1.0 >= 1.4], have_gst1="yes", have_gst1="no")
-    PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.38.2])
-    AC_DEFINE(USE_GST1, 1, [Build with GStreamer 1.x])
-], []) 
-
-AS_IF([test "x$enable_gstreamer1" = "xyes" -a "x$have_gst1" != "xyes"], [
-    AC_MSG_ERROR([Could not find GStreamer 1.x dependencies:
-$GST_PKG_ERRORS])], []) 
-
-AS_IF([test "x$have_gst1" != "xyes"], [
-    GST_MAJORMINOR=0.10
-    PKG_CHECK_MODULES([GST], [gstreamer-0.10 >= 0.10.28])
-    PKG_CHECK_MODULES([GST_CHECK], [gstreamer-check-0.10 >= 0.10.28])
-    PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.22.5])
-], []) 
-
 PKG_CHECK_MODULES([XML2], [libxml-2.0 >= 2.7.8])
 PKG_CHECK_MODULES([JANSON],[jansson >= 2.4])
 
@@ -173,6 +177,7 @@ AC_SUBST(TDKINTEGRATION_FLAGS)
 AC_SUBST(TDKINTEGRATION_HYBRID_LIBS)
 AC_SUBST(QAM_LIBS)
 AC_SUBST(SF_LIBS)
+AC_SUBST(TDK_GST_LIBS)
 AC_SUBST(SUBDIR_HYBRID)
 AC_SUBST(SUBDIR_CLIENT)
 AC_SUBST(SM_STUB_CFLAG_HYBRID)

@@ -25,8 +25,16 @@ cross_compile:DEFINES+=CROSS_COMPILED_FOR_DEVICE
 TEMPLATE = lib
 TARGET = servicemanagerstub
 
+use-gstreamer-1.0{
+LIBS += -lgstpbutils-1.0 -lgstvideo-1.0 -lgstbase-1.0
+}
+
+!use-gstreamer-1.0{
+LIBS += -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10
+}
+
 LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
-LIBS += -lservicemanager -lRCEC -lRCECOSHal -lRCECIARMBusHal -ludev -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10 -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata
+LIBS += -lservicemanager -lRCEC -lRCECOSHal -lRCECIARMBusHal -ludev -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata
 
 HEADERS += $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/hdmicecservice.h \
 

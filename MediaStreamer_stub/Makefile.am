@@ -38,7 +38,7 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/mediaframework/core/ \
 
 lib_LTLIBRARIES = libmediastreamerstub.la
 libmediastreamerstub_la_SOURCES = src/MediaStreamerStub.cpp
-libmediastreamerstub_la_LIBADD = -ldvrmgr -ltinyxml -luuid -lcrypto -lTasseograph -lssl -lreadline -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lsectionfilter -linbsimanager -linbsectionfilter -lqamsrc -lhistory -lgstreamer-0.10 -lgio-2.0 -lglib-2.0 -llog4c -lgobject-2.0 -lrmfinit  -lncurses -lhnsource -lrdkloggers -ltrm -lcurl -lmediaplayersink
+libmediastreamerstub_la_LIBADD = -ldvrmgr -ltinyxml -luuid -lcrypto -lTasseograph -lssl -lreadline -lnetsnmp -lnetsnmpagent -lnetsnmphelpers -lsectionfilter -linbsimanager -linbsectionfilter -lqamsrc -lhistory -lgio-2.0 -lglib-2.0 -llog4c -lgobject-2.0 -lrmfinit -lncurses -lhnsource -lrdkloggers -ltrm -lcurl -lmediaplayersink $(TDK_GST_LIBS)
 
 libmediastreamerstub_la_includedir = ${includedir}
 libmediastreamerstub_la_include_HEADERS = ${top_srcdir}/MediaStreamer_stub/include/MediaStreamerStub.h
