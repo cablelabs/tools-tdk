@@ -21,7 +21,7 @@ Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>9</execution_time>
+  <execution_time>14</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -34,8 +34,6 @@ Test Type: Positive</synopsis>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
     <!--  -->
-    <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
@@ -43,28 +41,22 @@ Test Type: Positive</synopsis>
   </rdk_versions>
 </xml>
 '''
-# use tdklib library,which provides a wrapper for tdk testcase script 
-import tdklib; 
+# use tdklib library,which provides a wrapper for tdk testcase script
+import tdklib;
 import mediaframework;
 import time;
-
-expected_Result="SUCCESS"
-failure = "FAILURE"
-
-#Test component to be tested
-obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'RMF_QAMSrc_HNSink_04');
 
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
     global details
     global tdkTestObj
+
     #Primitive test case which associated to this Script
-    tdkTestObj =testobject.createTestStep(teststep);
+    tdkTestObj = testobject.createTestStep(teststep);
 
     if teststep == 'RMF_Element_Open':
         #Stream details for tuning
@@ -83,6 +75,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         print "hnsink url:",url
 
     for item in range(len(parametername)):
+	print "%s : %s"%(parametername[item],parametervalue[item]);
         tdkTestObj.addParameter(parametername[item],parametervalue[item]);
 
     #Execute the test case in STB
@@ -99,102 +92,118 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
 
     return result
 
+#Load Test component to be tested
+obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+obj.configureTestCase(ip,port,'RMF_QAMSrc_HNSink_04');
 #Get the result of connection with test component and STB
 loadModuleStatus = obj.getLoadModuleResult();
 print "Load Module Status :  %s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
 
+if "FAILURE" in loadModuleStatus.upper():
+ 	if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+		print "rmfStreamer is not running. Rebooting STB"
+		obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                obj.configureTestCase(ip,port,'RMF_QAMSrc_HNSink_04');
+        	#Get the result of connection with test component and STB
+        	loadModuleStatus = obj.getLoadModuleResult();
+        	print "Re-Load Module Status :  %s" %loadModuleStatus;
+        	loadmoduledetails = obj.getLoadModuleDetails();
+        	print "Re-Load Module Details : %s" %loadmoduledetails;
 
-if expected_Result in loadModuleStatus.upper():
+if "SUCCESS" in loadModuleStatus.upper():
+	#Set module load status
+	obj.setLoadModuleStatus("SUCCESS");
+
         #Prmitive test case which associated to this Script
         #Change the List according to Prmitive test case
         src_parameter=[];
         src_element=[];
-        result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_RmfPlatform_Init',obj,expected_Result,src_parameter,src_element);
-        if expected_Result in result.upper():
+        result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_RmfPlatform_Init',obj,"SUCCESS",src_parameter,src_element);
+        if "SUCCESS" in result.upper():
                 src_parameter=[];
                 src_element=[];
-                result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_InitPlatform',obj,expected_Result,src_parameter,src_element);
-                if expected_Result in result.upper():
+                result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_InitPlatform',obj,"SUCCESS",src_parameter,src_element);
+                if "SUCCESS" in result.upper():
                         src_parameter=["rmfElement","factoryEnable"]
                         src_element=["QAMSrc","false"]
-                        result=Create_and_ExecuteTestStep('RMF_Element_Create_Instance',obj,expected_Result,src_parameter,src_element);
-                        if expected_Result in result.upper():
+                        result=Create_and_ExecuteTestStep('RMF_Element_Create_Instance',obj,"SUCCESS",src_parameter,src_element);
+                        if "SUCCESS" in result.upper():
                                 src_parameter=["rmfElement"]
                                 src_element=["QAMSrc"]
-                                result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,expected_Result,src_parameter,src_element);
-                                if expected_Result in result.upper():
+                                result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,"SUCCESS",src_parameter,src_element);
+                                if "SUCCESS" in result.upper():
                                         src_parameter=["rmfElement"]
                                         src_element=["QAMSrc"]
-                                        result=Create_and_ExecuteTestStep('RMF_Element_Open',obj,expected_Result,src_parameter,src_element);
-                                        if expected_Result in result.upper():
+                                        result=Create_and_ExecuteTestStep('RMF_Element_Open',obj,"SUCCESS",src_parameter,src_element);
+                                        if "SUCCESS" in result.upper():
                                                 src_parameter=["rmfElement"]
                                                 src_element=["HNSink"]
-                                                result=Create_and_ExecuteTestStep('RMF_Element_Create_Instance',obj,expected_Result,src_parameter,src_element);
-                                                if expected_Result in result.upper():
+                                                result=Create_and_ExecuteTestStep('RMF_Element_Create_Instance',obj,"SUCCESS",src_parameter,src_element);
+                                                if "SUCCESS" in result.upper():
                                                         src_parameter=[]
                                                         src_element=[]
-                                                        result=Create_and_ExecuteTestStep('RmfElement_HNSink_InitPlatform',obj,expected_Result,src_parameter,src_element);
+                                                        result=Create_and_ExecuteTestStep('RmfElement_HNSink_InitPlatform',obj,"SUCCESS",src_parameter,src_element);
 
-                                                        if expected_Result in result.upper():
+                                                        if "SUCCESS" in result.upper():
                                                                 src_parameter=["rmfElement"]
                                                                 src_element=["HNSink"]
-                                                                result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,expected_Result,src_parameter,src_element);
-                                                                if expected_Result in result.upper():
+                                                                result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,"SUCCESS",src_parameter,src_element);
+                                                                if "SUCCESS" in result.upper():
                                                                         src_parameter=["dctpEnable","typeFlag"]
                                                                         src_element=["true",0]
-                                                                        result=Create_and_ExecuteTestStep('RmfElement_HNSink_SetProperties',obj,expected_Result,src_parameter,src_element);
-                                                                        if expected_Result in result.upper():
+                                                                        result=Create_and_ExecuteTestStep('RmfElement_HNSink_SetProperties',obj,"SUCCESS",src_parameter,src_element);
+                                                                        if "SUCCESS" in result.upper():
                                                                                 src_parameter=["rmfElement"]
                                                                                 src_element=["QAM_SRC"]
-                                                                                result=Create_and_ExecuteTestStep('RmfElement_HNSink_SetSourceType',obj,expected_Result,src_parameter,src_element);
-                                                                                if expected_Result in result.upper():
+                                                                                result=Create_and_ExecuteTestStep('RmfElement_HNSink_SetSourceType',obj,"SUCCESS",src_parameter,src_element);
+                                                                                if "SUCCESS" in result.upper():
                                                                                         src_parameter=["rmfSourceElement","rmfSinkElement"]
                                                                                         src_element=["QAMSrc","HNSink"]
-                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Sink_SetSource',obj,expected_Result,src_parameter,src_element);
-                                                                                        if expected_Result in result.upper():
+                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Sink_SetSource',obj,"SUCCESS",src_parameter,src_element);
+                                                                                        if "SUCCESS" in result.upper():
                                                                                                 src_parameter=["rmfElement","defaultPlay","playSpeed","playTime"]
                                                                                                 src_element=["QAMSrc",1,1.0,0.0]
-                                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,expected_Result,src_parameter,src_element);
-                                                                                                if expected_Result in result.upper():
+                                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,"SUCCESS",src_parameter,src_element);
+                                                                                                if "SUCCESS" in result.upper():
                                                                                                         time.sleep(30);
                                                                                                         src_parameter=["rmfElement"]
                                                                                                         src_element=["QAMSrc"]
-                                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_GetState',obj,expected_Result,src_parameter,src_element);
-                                                                                                        if expected_Result in result.upper() and "PLAYING" in details.upper():
+                                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_GetState',obj,"SUCCESS",src_parameter,src_element);
+                                                                                                        if "SUCCESS" in result.upper() and "PLAYING" in details.upper():
                                                                                                                 print "QAMSource play successful"
                                                                                                                 tdkTestObj.setResultStatus(result);
                                                                                                         else:
                                                                                                                 print "QAMSource play failed"
-                                                                                                                tdkTestObj.setResultStatus(failure);
+                                                                                                                tdkTestObj.setResultStatus("FAILURE");
                                                                         src_parameter=["rmfElement"]
                                                                         src_element=["HNSink"]
-                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);
+                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,"SUCCESS",src_parameter,src_element);
                                                                 src_parameter=[]
                                                                 src_element=[]
-                                                                result=Create_and_ExecuteTestStep('RmfElement_HNSink_UninitPlatform',obj,expected_Result,src_parameter,src_element);
+                                                                result=Create_and_ExecuteTestStep('RmfElement_HNSink_UninitPlatform',obj,"SUCCESS",src_parameter,src_element);
                                                 src_parameter=["rmfElement"]
                                                 src_element=["QAMSrc"]
-                                                result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,expected_Result,src_parameter,src_element);
+                                                result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,"SUCCESS",src_parameter,src_element);
                                         src_parameter=["rmfElement"]
                                         src_element=["QAMSrc"]
-                                        result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);
+                                        result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,"SUCCESS",src_parameter,src_element);
                                 src_parameter=["rmfElement","factoryEnable"]
                                 src_element=["QAMSrc","false"]
-                                result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,expected_Result,src_parameter,src_element);
+                                result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,"SUCCESS",src_parameter,src_element);
                         src_parameter=[];
                         src_element=[];
-                        result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_UninitPlatform',obj,expected_Result,src_parameter,src_element);
+                        result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_UninitPlatform',obj,"SUCCESS",src_parameter,src_element);
                 src_parameter=[];
                 src_element=[];
-                result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_RmfPlatform_Uninit',obj,expected_Result,src_parameter,src_element);
-        else:
-                print "Status of RmfElement_QAMSrc_RmfPlatform_Init:  %s" %loadModuleStatus;
+                result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_RmfPlatform_Uninit',obj,"SUCCESS",src_parameter,src_element);
+
+	obj.initiateReboot();
+	#Unload Test component
         obj.unloadModule("mediaframework");
 else:
-        print "Load Module Failed"
+	#Set module load status
         obj.setLoadModuleStatus("FAILURE");
-        loadmoduledetails = obj.getLoadModuleDetails();
-        print "loadmoduledetails %s" %loadmoduledetails;
-        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
-                print "Rebooting the STB"
-                obj.initiateReboot();

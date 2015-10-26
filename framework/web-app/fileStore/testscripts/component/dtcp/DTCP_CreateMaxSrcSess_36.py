@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>5</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_CreateMaxSrcSess_36</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -25,9 +25,9 @@ TestcaseID: CT_DTCP_36</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
+  <remarks>test case is  DTCP library vendor specific</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
+  <skip>true</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
@@ -77,12 +77,12 @@ if "SUCCESS" in loadmodulestatus.upper():
         sinkNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1}))
         print "Total sessions present: %d"%(srcNum+sinkNum)
         #Creating max of 8 source sessions are allowed if no sink sessions are there
-        maxNum = 6003+(8-srcNum-sinkNum)
-        for port in range (6003,maxNum):
-              dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':6003,'uniqueKey':0,'maxPacketSize':4096})
+        maxNum = 5003+(8-srcNum-sinkNum)
+        for port in range (5003,maxNum):
+              dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':port,'uniqueKey':0,'maxPacketSize':4096})
               dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
         #Creating 8th source session should be denied
-        dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':6030,'uniqueKey':0,'maxPacketSize':4096})
+        dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5020,'uniqueKey':0,'maxPacketSize':4096})
         dtcp.createSourceSession(tdkTestObj,'FAILURE',kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
         #Post-Cond: Deleting all source sessions,stopSource
         srcNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0}))

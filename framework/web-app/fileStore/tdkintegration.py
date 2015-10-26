@@ -479,7 +479,7 @@ def skip_forward(obj):
        recordID = matchList[1]
        recordID = recordID.strip()
        #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
-       url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID[:-1]);
+       url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID);
 
        print "The Play DVR Url Requested: %s"%url
        tdkTestObj.addParameter("playUrl",url);
@@ -543,7 +543,7 @@ def skip_backward(obj):
        recordID = recordID.strip()
 
        #url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
-       url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID[-1]);
+       url = E2E_getStreamingURL(obj , "DVR", streamDetails.getGatewayIp() , recordID);
 
        print "The Play DVR Url Requested: %s"%url
        tdkTestObj.addParameter("playUrl",url);
