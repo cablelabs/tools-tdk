@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>6</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARMBUS_Two_Evt_Sender_Two_Evt_Receiver</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -15,7 +15,8 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis></synopsis>
+  <synopsis>Contributed by TWC
+Test Case ID : IARMBUS_PERF_4</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -32,11 +33,11 @@
     <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Emulator-HYB</box_type>
+    <!--  -->
     <box_type>Terminal-RNG</box_type>
     <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-HYB</box_type>
     <!--  -->
     <box_type>Emulator-Client</box_type>
     <!--  -->
@@ -63,7 +64,7 @@ obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'IR_event_performance');
+obj.configureTestCase(ip,port,'IARMBUS_Two_Evt_Sender_Two_Evt_Receiver');
 
 loadmodulestatus =obj.getLoadModuleResult();
 print "Iarmbus module loading status :  %s" %loadmodulestatus ;
@@ -78,7 +79,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         actualresult = tdkTestObj.getResult();
         details=tdkTestObj.getResultDetails();
         #Check for SUCCESS/FAILURE return value of IARMBUS_Init
-        if ("SUCCESS" in actualresult or ("FAILURE" in actualresult and "INVALID_PARAM" in details)):
+        if ("SUCCESS" in actualresult):
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "SUCCESS: Application successfully initialized with IARMBUS library";
                 #calling IARMBUS API "IARM_Bus_Connect"
@@ -91,7 +92,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "SUCCESS: Application successfully connected with IARM-Bus Daemon";
-	
+
 			#Prmitive test case which associated to this Script
 			tdkTestObj = obj.createTestStep('IARMBUS_RegisterEventHandler');
 			#registering event handler for IR Key events
@@ -191,7 +192,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 	                                else:
         	                                tdkTestObj.setResultStatus("FAILURE");
                 	                        print "FAILURE: GetLastReceivedEventDetails failed";
-	
+
 					tdkTestObj = obj.createTestStep('IARMBUS_UnRegisterEventHandler');
 					#Transmit IR Key events
 					tdkTestObj.addParameter("owner_name","Daemon");
@@ -231,31 +232,46 @@ if "SUCCESS" in loadmodulestatus.upper():
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "FAILURE : IARM_Bus_RegisterEventHandler IR Events failed. %s " %details;
+
+                        #calling IARMBUS API "IARM_Bus_DisConnect"
+                        tdkTestObj = obj.createTestStep('IARMBUS_DisConnect');
+                        expectedresult="SUCCESS"
+                        tdkTestObj.executeTestCase(expectedresult);
+                        actualresult = tdkTestObj.getResult();
+                        details=tdkTestObj.getResultDetails();
+                        #Check for SUCCESS/FAILURE return value of IARMBUS_DisConnect
+                        if expectedresult in actualresult:
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                print "SUCCESS: Application successfully disconnected from IARMBus";
+                        else:
+                                tdkTestObj.setResultStatus("FAILURE");
+                                print "FAILURE: IARM_Bus_Disconnect failed. %s " %details
+
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE: IARM_Bus_Connect failed. %s" %details;
+
+                #calling IARMBUS API "IARM_Bus_Term"
+                tdkTestObj = obj.createTestStep('IARMBUS_Term');
+                expectedresult="SUCCESS";
+                tdkTestObj.executeTestCase(expectedresult);
+                actualresult = tdkTestObj.getResult();
+                details=tdkTestObj.getResultDetails();
+                #Check for SUCCESS/FAILURE return value of IARMBUS_Term
+                if expectedresult in actualresult:
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        print "SUCCESS: IARM_Bus term success";
+                else:
+                        tdkTestObj.setResultStatus("FAILURE");
+                        print "FAILURE: IARM_Bus Term failed";
+
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "FAILURE: IARM_Bus_Init failed. %s " %details;
-
-	#calling IARMBUS API "IARM_Bus_DisConnect"
-        tdkTestObj = obj.createTestStep('IARMBUS_DisConnect');
-        expectedresult="SUCCESS"
-        tdkTestObj.executeTestCase(expectedresult);
-        actualresult = tdkTestObj.getResult();
-        details=tdkTestObj.getResultDetails();
-        #Check for SUCCESS/FAILURE return value of IARMBUS_DisConnect
-        if expectedresult in actualresult:
-                tdkTestObj.setResultStatus("SUCCESS");
-                print "SUCCESS: Application successfully disconnected from IARMBus";
-        else:
-                tdkTestObj.setResultStatus("FAILURE");
-                print "FAILURE: IARM_Bus_Disconnect failed. %s " %details;
-        print "[TEST EXECUTION RESULT] : %s" %actualresult;
         
 	obj.unloadModule("iarmbus");
-	#resetAgent(ip,8090,"true");
+
 else:
-        print"Load module failed";
+        print "Load module failed";
         #Set the module loading status
         obj.setLoadModuleStatus("FAILURE");

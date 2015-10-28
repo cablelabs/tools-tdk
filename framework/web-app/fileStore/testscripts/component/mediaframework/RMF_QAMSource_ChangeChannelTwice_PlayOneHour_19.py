@@ -262,7 +262,7 @@ if expected_Result in loadModuleStatus.upper():
                 src_element=[];
                 result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_RmfPlatform_Uninit',obj,expected_Result,src_parameter,src_element);
 
-	obj.initiateReboot();
+	#obj.initiateReboot();
 	#Unload Test component
         obj.unloadModule("mediaframework");
 else:

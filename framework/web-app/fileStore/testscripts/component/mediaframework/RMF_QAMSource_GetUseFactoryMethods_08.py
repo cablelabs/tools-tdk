@@ -124,7 +124,7 @@ if expected_Result in loadModuleStatus.upper():
                 result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_RmfPlatform_Uninit',obj,expected_Result,src_parameter,src_element);
         else:
                 print "Status of RmfElement_QAMSrc_RmfPlatform_Init:  %s" %loadModuleStatus;
-        obj.initiateReboot();
+        #obj.initiateReboot();
         obj.unloadModule("mediaframework");
 else:
         print "Load Module Failed"

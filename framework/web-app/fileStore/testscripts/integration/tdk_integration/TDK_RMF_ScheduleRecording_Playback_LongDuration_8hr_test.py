@@ -136,6 +136,21 @@ obj.configureTestCase(ip,port,'RMF_ScheduleRecording_Playback_LongDuration_8hr_t
 result =obj.getLoadModuleResult();
 print "Mediaframework Dvr Mgr module loading status :%s" %result;
 
+loadmoduledetails1 = obj.getLoadModuleDetails();
+if "FAILURE" in result.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails1:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                obj.configureTestCase(ip,port,'RMF_ScheduleRecording_Playback_LongDuration_8hr_test');
+                #Get the result of connection with test component and STB
+                result = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %result;
+                loadmoduledetails1 = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails1;
+
+
 #Check for SUCCESS/FAILURE of Mediaframework module
 if "SUCCESS" in result.upper():
     obj.setLoadModuleStatus("SUCCESS");

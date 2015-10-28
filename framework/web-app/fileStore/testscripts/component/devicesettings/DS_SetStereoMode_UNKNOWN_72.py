@@ -83,29 +83,25 @@ if "SUCCESS" in loadmodulestatus.upper():
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE :Failed to get supported streoe modes";
+
                 #calling DS_SetStereoMode to get and set the stereo modes
                 tdkTestObj = obj.createTestStep('DS_SetStereoMode');
                 stereomode="UNKNOWN";
                 print "Stereo mode value set to:%s" %stereomode;
                 tdkTestObj.addParameter("stereo_mode",stereomode);
-                expectedresult="SUCCESS"
+                expectedresult="FAILURE"
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
                 stereomodedetails = tdkTestObj.getResultDetails();
+                print stereomodedetails;
                 #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
                 if expectedresult in actualresult:
-                        print "SUCCESS :Application successfully get and set the NONE stereo mode";
-                        print "getstereomode: %s" %stereomodedetails;
-                        #comparing stereo modes before and after setting
-                        if stereomode in stereomodedetails:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: Both the stereo modes are same";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: Both the stereo modes are not same";
+                        print "SUCCESS :Application failed to set and get the UNKNOWN stereo mode";
+                        tdkTestObj.setResultStatus("SUCCESS");
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "FAILURE :Application failed to set and get the NONE stereo mode";
+                        print "FAILURE :Application successfully get and set the UNKNOWN stereo mode";
+
                 #calling DS_ManagerDeInitialize to DeInitialize API 
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
                 expectedresult="SUCCESS"

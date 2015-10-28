@@ -102,6 +102,22 @@ result1 = media_obj.getLoadModuleResult();
 
 print "Load Module Status of tdkintegration:  %s\n Load Module Status of mediaframework:  %s" %(result,result1);
 
+details1 = media_obj.getLoadModuleDetails();
+
+if "FAILURE" in result1.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in details1:
+                print "rmfStreamer is not running. Rebooting STB"
+                media_obj.initiateReboot();
+                #Reload Test component to be tested
+                media_obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                media_obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_Stress_LivePlayback_Longduration');
+                #Get the result of connection with test component and STB
+                result1 = media_obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %result1;
+                details1 = media_obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %details1;
+
+
 if ("SUCCESS" in result.upper()) and ("SUCCESS" in result1.upper()):
      
     tdk_obj.setLoadModuleStatus("SUCCESS");
@@ -113,7 +129,7 @@ if ("SUCCESS" in result.upper()) and ("SUCCESS" in result1.upper()):
     #set the dvr play url
     streamDetails = tdkTestObj.getStreamDetails("01");
  
-        url = tdkintegration.E2E_getStreamingURL(obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
+        url = tdkintegration.E2E_getStreamingURL(media_obj, "LIVE" , streamDetails.getGatewayIp() , streamDetails.getOCAPID());
         if url == "NULL":
             print "Failed to generate the Streaming URL";
             tdkTestObj.setResultStatus("FAILURE");

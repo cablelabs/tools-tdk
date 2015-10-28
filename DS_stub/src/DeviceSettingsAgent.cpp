@@ -4264,7 +4264,7 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 		DEBUG_PRINT(DEBUG_ERROR,"\n Application failed to Disconnect from IARMBUS \n");
 		return TEST_FAILURE;
 	}
-	//IARM_Bus_Term(); //Commented for RDKTT-152
+	IARM_Bus_Term();
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_managerInitialize");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_managerDeinitialize");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_setBrightness");

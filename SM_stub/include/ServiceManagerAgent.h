@@ -81,6 +81,8 @@ using namespace std;
 #ifdef HAS_API_HDMI_CEC
 #include "hdmicecservice.h"
 #define ENABLE_CECLOG   "scripts/servicemanager_hdmicec_enable_debuglog.sh"
+#define FLUSH_CECDATA   "scripts/servicemanager_hdmicec_flush_cecdata.sh"
+#define CHECK_CECDATA   "scripts/servicemanager_hdmicec_check_cecdata.sh"
 #endif
 
 #define IN
@@ -120,6 +122,7 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		bool SM_Services_GetName(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_Services_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_Services_RegisterForEvents(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_Services_UnRegisterForEvents(IN const Json::Value& req, OUT Json::Value& response);
 		// HomeNetworking Service callMethod APIs
 		bool SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::Value& response);
@@ -146,6 +149,8 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		bool SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_HdmiCec_FlushCecData(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT Json::Value& response);
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
 		

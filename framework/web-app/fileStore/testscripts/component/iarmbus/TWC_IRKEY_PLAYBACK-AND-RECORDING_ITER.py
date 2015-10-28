@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>6</version>
+  <version>7</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TWC_IRKEY_PLAYBACK-AND-RECORDING_ITER</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -53,11 +53,11 @@ IRKEY_PLAYBACK-AND-RECORDING_ITER_TC_21</synopsis>
     <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Emulator-HYB</box_type>
+    <!--  -->
     <box_type>Terminal-RNG</box_type>
     <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-HYB</box_type>
     <!--  -->
     <box_type>Emulator-Client</box_type>
     <!--  -->
@@ -214,26 +214,41 @@ if "SUCCESS" in loadmodulestatus.upper():
 						else:
 							tdkTestObj.setResultStatus("FAILURE");
 							print ("FAILURE : IARMBUS_RegisterEventHandler failed with %s " %details);
+
+				                #calling IARMBUS API "IARM_Bus_DisConnect"
+                                                tdkTestObj = obj.createTestStep('IARMBUS_DisConnect',0);
+                                                expectedresult="SUCCESS"
+                                                tdkTestObj.executeTestCase(expectedresult);
+                                                actualresult = tdkTestObj.getResult();
+                                                details=tdkTestObj.getResultDetails();
+                                                #Check for SUCCESS/FAILURE return value of IARMBUSPERF_DisConnect
+                                                if expectedresult in actualresult:
+                                                        tdkTestObj.setResultStatus("SUCCESS");
+                                                        print ("SUCCESS: Application successfully disconnected from IARMBus");
+                                                else:
+                                                        tdkTestObj.setResultStatus("FAILURE");
+                                                        print ("FAILURE: IARMBUS_Disconnect failed with %s " %details);
 					else:
 						tdkTestObj.setResultStatus("FAILURE");
 						print ("FAILURE: IARMBUS_Connect failed with %s" %details);
+
+                                        #calling IARMBUS API "IARM_Bus_Term"
+                                        tdkTestObj = obj.createTestStep('IARMBUS_Term');
+                                        expectedresult="SUCCESS";
+                                        tdkTestObj.executeTestCase(expectedresult);
+                                        actualresult = tdkTestObj.getResult();
+                                        details=tdkTestObj.getResultDetails();
+                                        #Check for SUCCESS/FAILURE return value of IARMBUS_Term
+                                        if expectedresult in actualresult:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                print "SUCCESS: IARM_Bus term success";
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "FAILURE: IARM_Bus Term failed";
 				else:
 					tdkTestObj.setResultStatus("FAILURE");
 					print ("FAILURE: IARMBUS_Init failed with %s " %details);
-        
-				#calling IARMBUS API "IARM_Bus_DisConnect"
-				tdkTestObj = obj.createTestStep('IARMBUS_DisConnect',0);
-				expectedresult="SUCCESS"
-				tdkTestObj.executeTestCase(expectedresult);
-				actualresult = tdkTestObj.getResult();
-				details=tdkTestObj.getResultDetails();
-				#Check for SUCCESS/FAILURE return value of IARMBUSPERF_DisConnect
-				if expectedresult in actualresult:
-					tdkTestObj.setResultStatus("SUCCESS");
-					print ("SUCCESS: Application successfully disconnected from IARMBus");
-				else:
-					tdkTestObj.setResultStatus("FAILURE");
-					print ("FAILURE: IARMBUS_Disconnect failed with %s " %details);
+
 			#pause between each iteration
 			#time.sleep(5);
 			sizeOfData = itercount; 

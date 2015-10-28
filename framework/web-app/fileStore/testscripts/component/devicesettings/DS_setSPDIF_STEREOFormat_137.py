@@ -77,29 +77,31 @@ if "SUCCESS" in loadmodulestatus.upper():
                         tdkTestObj.setResultStatus("SUCCESS");
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "FAILURE :Failed to get supported streoe modes";
+                        print "FAILURE :Failed to get supported stereo modes";
+
                 #calling DS_SetStereoMode to get and set the stereo modes
                 tdkTestObj = obj.createTestStep('DS_SetStereoMode');
                 tdkTestObj.addParameter("port_name","SPDIF0");
                 tdkTestObj.addParameter("get_only",0);
                 stereomode="STEREO";
                 tdkTestObj.addParameter("stereo_mode",stereomode);
-                expectedresult="FAILURE"
+                expectedresult="SUCCESS"
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
                 stereomodedetails = tdkTestObj.getResultDetails();
+                print stereomodedetails
                 #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
-                if expectedresult in actualresult:
-                        print "SUCCESS :Application Failed to set and get the STEREO  mode to SPDIF";
-                        tdkTestObj.setResultStatus("SUCCESS");
+                if expectedresult not in actualresult:
+                        print "FAILURE: Application Failed to set and get the STEREO mode to SPDIF";
+                        tdkTestObj.setResultStatus("FAILURE");
                 else:
                         if stereomode in stereomodedetails:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: STEREO Mode set to SPDIF";
-                        else:
                                 tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: Stereo Mode not able to set for SPDIF";
-                        print "FAILURE :Application Successfully set and get the STEREO  mode to SPDIF";
+                                print "SUCCESS: STEREO Mode set for SPDIF";
+                        else:
+                                tdkTestObj.setResultStatus("FAILURE");
+                                print "FAILURE: STEREO Mode not set for SPDIF";
+
                 #calling DS_ManagerDeInitialize to DeInitialize API 
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
                 expectedresult="SUCCESS"

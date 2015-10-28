@@ -3,7 +3,7 @@
 <xml>
   <id>1154</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSrc_HNSink_01</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -194,7 +194,7 @@ if "SUCCESS" in loadModuleStatus.upper():
                 src_element=[];
                 result=Create_and_ExecuteTestStep('RmfElement_QAMSrc_RmfPlatform_Uninit',obj,"SUCCESS",src_parameter,src_element);
 
-	obj.initiateReboot();
+	#obj.initiateReboot();
 	#Unload Test component
         obj.unloadModule("mediaframework");
 else:

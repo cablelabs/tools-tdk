@@ -255,7 +255,7 @@ if expected_Result in loadModuleStatus.upper():
                 else:
                         tdkTestObj.setResultStatus(expected_Result);
 
-	obj.initiateReboot();
+	#obj.initiateReboot();
 	#Unload Test component
         obj.unloadModule("mediaframework");
 else:

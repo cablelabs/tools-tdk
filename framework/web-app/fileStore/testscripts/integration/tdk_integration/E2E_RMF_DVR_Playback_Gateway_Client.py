@@ -20,7 +20,7 @@ Testcase ID:</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>10</execution_time>
+  <execution_time>20</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -146,6 +146,20 @@ else:
         mfX1LoadStatus = mfX1Obj.getLoadModuleResult();
         print "[mediaframework LIB LOAD STATUS in X1] : %s"%mfX1LoadStatus;
         mfX1Obj.setLoadModuleStatus(mfX1LoadStatus);
+
+	mfX1LoadDetails = mfX1Obj.getLoadModuleDetails();
+	if "FAILURE" in mfX1LoadStatus.upper():
+        	if "RMF_STREAMER_NOT_RUNNING" in mfX1LoadDetails:
+                	print "rmfStreamer is not running. Rebooting STB"
+                	mfX1Obj.initiateReboot();
+	                #Reload Test component to be tested
+        	        mfX1Obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                	mfX1Obj.configureTestCase(ip,port,'E2E_RMF_DVR_Playback_Gateway_Client');
+	                #Get the result of connection with test component and STB
+			mfX1LoadStatus = mfX1Obj.getLoadModuleResult();
+	                print "Re-Load Module Status :  %s" %mfX1LoadStatus;
+			mfX1LoadDetails = mfX1Obj.getLoadModuleDetails();
+        	        print "Re-Load Module Details : %s" %mfX1LoadDetails;
 
         # tdkintegration lib is loaded in XG1 only to get the result of DVR play on XI3
         tdkIntX1LoadStatus = tdkIntX1Obj.getLoadModuleResult();

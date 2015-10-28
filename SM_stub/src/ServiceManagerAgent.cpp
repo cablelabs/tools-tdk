@@ -75,6 +75,7 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_Services_GetName,"TestMgr_Services_GetName");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_Services_SetAPIVersion,"TestMgr_SM_SetAPIVersion");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_Services_RegisterForEvents,"TestMgr_SM_RegisterForEvents");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_Services_UnRegisterForEvents,"TestMgr_SM_UnRegisterForEvents");
 	// HomeNetworking Service callMethod APIs
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_EnableMDVR,"TestMgr_SM_HN_EnableMDVR");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_EnableVPOP,"TestMgr_SM_HN_EnableVPOP");
@@ -101,6 +102,8 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_OnMessage,"TestMgr_SM_HdmiCec_OnMessage");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_ClearCecLog,"TestMgr_SM_HdmiCec_ClearCecLog");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_CheckStatus,"TestMgr_SM_HdmiCec_CheckStatus");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_FlushCecData,"TestMgr_SM_HdmiCec_FlushCecData");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_CheckCecData,"TestMgr_SM_HdmiCec_CheckCecData");
 
 	return TEST_SUCCESS;
 }
@@ -1013,7 +1016,7 @@ bool ServiceManagerAgent::SM_Services_RegisterForEvents(IN const Json::Value& re
 	event_list.append(QString::fromStdString(eventName));
 	//ServiceParams params;
 	ServiceListener *listener=NULL;
-	bool register_flag=false,unregister_flag=false;
+	bool register_flag=false;
 	Service* ptr_service=NULL;
 	/*Calling getGlobalService API to get the service instance*/
 	ptr_service = ServiceManager::getInstance()->getGlobalService(QString::fromStdString(serviceName));
@@ -1022,18 +1025,18 @@ bool ServiceManagerAgent::SM_Services_RegisterForEvents(IN const Json::Value& re
 		/*registering events for a given service*/
 		register_flag =ptr_service->registerForEvents(event_list,listener);
 		/*deregistering events for a given service*/
-		unregister_flag =ptr_service->unregisterEvents(listener);	
-		if(register_flag == 1 && unregister_flag==1)
+		//unregister_flag =ptr_service->unregisterEvents(listener);	
+		if(register_flag == 1 )
 		{
-			DEBUG_PRINT(DEBUG_LOG,"\nEvent are registered and unregistered successfully\n");
+			DEBUG_PRINT(DEBUG_LOG,"\nEvent are registered successfully\n");
 			response["result"]="SUCCESS";
-			response["details"]="Events Registered and unRegistered";
+			response["details"]="Events Registered ";
 		}
 		else
 		{
-			DEBUG_PRINT(DEBUG_LOG,"\nFailed to register and unregister events\n");
+			DEBUG_PRINT(DEBUG_LOG,"\nFailed to register events\n");
 			response["result"]="FAILURE";
-			response["details"]="Failed to register and unregister events";
+			response["details"]="Failed to register events";
 		}
 	}
 	else
@@ -1045,6 +1048,63 @@ bool ServiceManagerAgent::SM_Services_RegisterForEvents(IN const Json::Value& re
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_RegisterForEvents ---->Exit\n");
 	return TEST_SUCCESS;	
 }
+
+
+
+/***************************************************************************
+ *Function name : SM_Services_UnRegisterForEvents
+ *Descrption    : This function will check the functionality of unregisterEvents APIs.
+ *parameter [in]: service_name - Name of the service.
+                  event_name - event to be registered.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_Services_UnRegisterForEvents(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_UnRegisterForEvents ---->Entry\n");
+        if(&req["service_name"]==NULL || &req["event_name"]==NULL)
+        {
+                response["result"]="FAILURE";
+                response["details"]="service_name or event_name is NULL";
+                return TEST_FAILURE;
+        }
+        std::string serviceName=req["service_name"].asCString();
+        std::string eventName=req["event_name"].asCString();
+        QList<QString> event_list;
+        event_list.append(QString::fromStdString(eventName));
+        //ServiceParams params;
+        ServiceListener *listener=NULL;
+        bool unregister_flag=false;
+        Service* ptr_service=NULL;
+        /*Calling getGlobalService API to get the service instance*/
+        ptr_service = ServiceManager::getInstance()->getGlobalService(QString::fromStdString(serviceName));
+        if(ptr_service != NULL)
+        {
+                /*registering events for a given service*/
+                //#register_flag =ptr_service->registerForEvents(event_list,listener);
+                /*deregistering events for a given service*/
+                unregister_flag =ptr_service->unregisterEvents(listener);
+                if(unregister_flag==1)
+                {
+                        DEBUG_PRINT(DEBUG_LOG,"\nEvent are unregistered successfully\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="Events unRegistered";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_LOG,"\nFailed to unregister events\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Failed to unregister events";
+                }
+        }
+        else
+        {
+                response["result"]="FAILURE";
+                response["details"]="SM getGlobalService failed";
+                DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_UnRegisterForEvents ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
 
 /***************************************************************************
  *Function name : SM_DeviceSetting_GetDeviceInfo
@@ -1402,42 +1462,18 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT 
 #ifdef HAS_API_HDMI_CEC
 	string pattern = req["pattern"].asCString();
 	string cecRdkLog = rdkLogPath + "/" + cecRdkLogFile;
-	string cecTdkLog = tdkPath + "/" + cecTdkLogFile;
-	string cecTdkLogCpCmd = "cp -r " + cecRdkLog + " " + cecTdkLog;
-	string setPermissionCmd = "chmod -R 777 " + cecTdkLog;
-	
-	DEBUG_PRINT(DEBUG_TRACE,"Cec Tdk Log copy command: %s\n",cecTdkLogCpCmd.c_str());
-	DEBUG_PRINT(DEBUG_TRACE,"Cec Tdk Log set permission command: %s\n",setPermissionCmd.c_str());
-	
-	/*Copy Cec.log to TDK folder and handling exception for system call*/
-	try
-	{
-		system((char *)cecTdkLogCpCmd.c_str());
-                system((char*)setPermissionCmd.c_str());
-	}
-	catch(...)
-	{
-		DEBUG_PRINT(DEBUG_ERROR,"Exception occured, Failed to copy Cec log to TDK folder\n");
-		DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckStatus ---> Exit\n");
-		response["result"]="FAILURE";
-	        response["details"]="Exception occured. Failed to copy Cec log to TDK folder";
-                return TEST_FAILURE;
-	}
-
-	DEBUG_PRINT(DEBUG_TRACE,"Successfully copied cec log to TDK folder\n");
-	
 	/* Checking for the pattern from cec_log.txt*/
 	string lineMatching;
 	ifstream cecTDKLogIn;
-	cecTDKLogIn.open(cecTdkLog.c_str());
+	cecTDKLogIn.open(cecRdkLog.c_str());
 	if (cecTDKLogIn.is_open())
 	{
-		DEBUG_PRINT(DEBUG_TRACE,"Successfully opened file: %s for searching pattern: %s\n", cecTdkLog.c_str(), pattern.c_str());
+		DEBUG_PRINT(DEBUG_TRACE,"Successfully opened file: %s for searching pattern: %s\n", cecRdkLog.c_str(), pattern.c_str());
 
 		// Assign default value to response
                 response["result"] = "FAILURE";
                 response["details"] = "No Pattern found in Log file";
-                response["log-path"] = cecTdkLog.c_str();
+                response["log-path"] = cecRdkLog.c_str();
 		while ( cecTDKLogIn.good() )
                 {
 			if( getline(cecTDKLogIn,lineMatching) > 0 )
@@ -1455,7 +1491,7 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT 
 	}
 	else
 	{
-		DEBUG_PRINT(DEBUG_TRACE,"Failed to open file: %s for searching pattern: %s\n", cecTdkLog.c_str(), pattern.c_str());
+		DEBUG_PRINT(DEBUG_TRACE,"Failed to open file: %s for searching pattern: %s\n", cecRdkLog.c_str(), pattern.c_str());
                 response["result"] = "FAILURE";
                 response["details"] = "Unable to open the tdk cec log file for searching message";
 	}
@@ -1696,11 +1732,35 @@ bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT 
 		}
 		else
 		{
-			// Send Message to HDMI device
-			QString qstrMessage = QString::fromStdString(req["messageToSend"].asCString());
-			DEBUG_PRINT(DEBUG_TRACE,"sendMessage to HDMI device with value: %s \n", qstrMessage.toUtf8().constData());
-                	ptr_service->sendMessage(qstrMessage);
-                	response["result"]="SUCCESS";
+			std::string messageToSend = req["messageToSend"].asCString();
+			DEBUG_PRINT(DEBUG_TRACE,"Command to enable debug log: %s\n", messageToSend.c_str());
+
+                        const int msgLength = 11;
+                        uint8_t *buf = new uint8_t [msgLength+1];
+                        istringstream bufferStr(messageToSend);
+                        unsigned int i = 0;
+                        do
+                        {
+                            unsigned int value;
+                            bufferStr >> std::hex >> value;
+                            buf[i] = value & 0xff;
+                            i++;
+                        } while (bufferStr);
+
+                        DEBUG_PRINT(DEBUG_TRACE,"Hex stream input: %s\n", buf);
+                        for (unsigned int i = 0; i < msgLength; i++) {
+                            printf("%x ", buf[i]);
+                        }
+                        printf("\n\n");
+                        // Convert hex stream to Base64 Qbyte array for sendMessage
+                        QByteArray byte_array = QByteArray((const char*)buf,msgLength);
+                        ptr_service->sendMessage(byte_array.toBase64());
+
+                        if (buf) {
+                            delete [] buf;
+                            buf = NULL;
+                        }
+	              	response["result"]="SUCCESS";
                 	response["details"]="HdmiCec Service sendMessage call success";
 		}
         }
@@ -1756,6 +1816,80 @@ bool ServiceManagerAgent::SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Js
         return TEST_SUCCESS;
 }
 
+bool ServiceManagerAgent::SM_HdmiCec_FlushCecData(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_FlushCecData ---->Entry\n");
+
+#ifdef HAS_API_HDMI_CEC
+        // Flush CEC Persistant data in platform
+        string flushCecDataCmd = "source " + tdkPath + "/" + FLUSH_CECDATA;
+        try
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Command to flush CEC Persistant data: %s\n", flushCecDataCmd.c_str());
+                system((char *)flushCecDataCmd.c_str());
+                response["result"]="SUCCESS";
+                response["details"]="Successfully flushed CEC Persistant Data";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Exception caught while flushing CEC Persistant data\n");
+                response["result"]="FAILURE";
+                response["details"]="Exception caught while flushing CEC Persistant data";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_FlushCecData ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+bool ServiceManagerAgent::SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckCecData ---->Entry\n");
+
+#ifdef HAS_API_HDMI_CEC
+        // Check if CEC Persistant data is present in platform
+        string checkCecDataCmd = "source " + tdkPath + "/" + CHECK_CECDATA;
+        DEBUG_PRINT(DEBUG_TRACE,"Command to check if CEC Persistant data is present: %s\n", checkCecDataCmd.c_str());
+        FILE *pipe = popen(checkCecDataCmd.c_str(), "r");
+        if (!pipe)
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Error occured in creating pipe to check CEC persistant data\n");
+                response["result"]="FAILURE";
+                response["details"]="Error occured in creating pipe to check CEC persistant data";
+        }
+        else
+        {
+                char output[1024] = {'\0'};
+                /* Read the output */
+                while (fgets(output, sizeof(output)-1, pipe) != NULL) {
+                        DEBUG_PRINT(DEBUG_TRACE, "command output %s\n",output);
+                }
+                pclose(pipe);
+                if(strstr(output, "FOUND") != NULL)
+                {
+                        response["result"]="SUCCESS";
+                        response["details"]="CEC Persistent Data Found";
+                }
+                else
+                {
+                        response["result"]="FAILURE";
+                        response["details"]="CEC Persistent Data Not Found";
+                }
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckCecData ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
 
 /**************************************************************************
  * Function Name: CreateObject
@@ -1798,6 +1932,7 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_Services_GetName");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_SetAPIVersion");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_RegisterForEvents");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_UnRegisterForEvents");
 	// HomeNetworking Service callMethod APIs
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_EnableMDVR");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_EnableVPOP");
@@ -1824,6 +1959,8 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_OnMessage");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_ClearCecLog");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_CheckStatus");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_FlushCecData");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_CheckCecData");
 
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;

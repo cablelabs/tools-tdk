@@ -631,7 +631,12 @@ bool TRMClient::reserveTunerForRecord( const string device, const string recordi
     out.push_back(0);
     int len = strlen((const char*)&out[0]);
     int retry_count = 10;
+
+    g_mutex_lock ( tunerStopMutex );
     resrvResponseReceived = false;
+    reservationSuccess = false;
+    g_cond_signal(tunerStopCond);
+    g_mutex_unlock ( tunerStopMutex );
 
     do
     {
@@ -669,7 +674,12 @@ bool TRMClient::reserveTunerForLive( const string device, const string locator,
     out.push_back(0);
     int len = strlen((const char*)&out[0]);
     int retry_count = 10;
+
+    g_mutex_lock ( tunerStopMutex );
     resrvResponseReceived = false;
+    reservationSuccess = false;
+    g_cond_signal(tunerStopCond);
+    g_mutex_unlock ( tunerStopMutex );
 
     do
     {

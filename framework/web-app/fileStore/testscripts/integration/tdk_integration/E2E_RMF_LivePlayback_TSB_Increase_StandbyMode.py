@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>3</execution_time>
+  <execution_time>10</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -131,6 +131,22 @@ print "Mediaframework Load Module Status :  %s" %mfLoadModuleStatus;
 print "IARMBus Load Module Status :  %s" %iarmModuleStatus
 mfObj.setLoadModuleStatus(mfLoadModuleStatus.upper());
 iarmObj.setLoadModuleStatus(iarmModuleStatus.upper());
+
+mfLoadModuleDetails = mfObj.getLoadModuleDetails();
+
+if "FAILURE" in mfLoadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in mfLoadModuleDetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                mfObj.initiateReboot();
+                #Reload Test component to be tested
+                mfObj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                mfObj.configureTestCase(ip,port,'E2E_RMF_LivePlayback_TSB_Increase_StandbyMode');
+                #Get the result of connection with test component and STB
+                mfLoadModuleStatus = mfObj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %mfLoadModuleStatus;
+		mfLoadModuleDetails = mfObj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %mfLoadModuleDetails;
+
 
 if "SUCCESS" in mfLoadModuleStatus.upper() and "SUCCESS" in iarmModuleStatus.upper():
 

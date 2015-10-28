@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>14</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_ShortDuration_DurationCheck</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>8</execution_time>
+  <execution_time>14</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -64,18 +64,32 @@ loadmodulestatus1 = media_obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus;
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus1;
 
+loadmoduledetails1 = media_obj.getLoadModuleDetails();
+
+if "FAILURE" in loadmodulestatus1.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails1:
+                print "rmfStreamer is not running. Rebooting STB"
+                media_obj.initiateReboot();
+                #Reload Test component to be tested
+                media_obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+                media_obj.configureTestCase(ip,port,'E2E_RMF_DVR_ShortDuration_DurationCheck');
+                #Get the result of connection with test component and STB
+                loadmodulestatus1 = media_obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadmodulestatus1;
+                loadmoduledetails1 = media_obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails1;
+
 if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.upper()):
     #Set the module loading status
     media_obj.setLoadModuleStatus("SUCCESS");
     rec_obj.setLoadModuleStatus("SUCCESS");
-    rec_duration = "60000"
+    rec_duration = '60000';
     start_time = '0';
-    result1,recording_id = sched_rec(rec_obj,'01',start_time,duration = rec_duration);
-    media_obj.initiateReboot();
-    rec_obj.resetConnectionAfterReboot();
+    result1,recording_id = sched_rec(rec_obj,'01',start_time,rec_duration);
         
     if ("SUCCESS" in result1.upper()):
-        
+	media_obj.initiateReboot();
+	rec_obj.resetConnectionAfterReboot();
         print "Execution  Success"
         #Prmitive test case which associated to this Script
         tdkTestObj = media_obj.createTestStep('RMF_DVRManager_GetRecordingDuration');
@@ -105,7 +119,7 @@ if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.u
             #Set the result status of execution
             mylist = details.split(" ");
             print mylist[1];
-            if (int(mylist[1]) <= ((int(rec_duration)/1000) + 3) and int(mylist[1]) >= ((int(rec_duration)/1000) - 3)):
+            if( (int(mylist[1]) <= ((int(rec_duration)/1000) + 3)) and (int(mylist[1]) >= ((int(rec_duration)/1000) - 3))):
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "DVRManager GetRecordingDuration Successful: %s" %details;
             else:
