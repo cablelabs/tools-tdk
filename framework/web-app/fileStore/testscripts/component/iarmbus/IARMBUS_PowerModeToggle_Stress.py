@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>7</version>
+  <version>11</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARMBUS_PowerModeToggle_Stress</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -25,22 +25,22 @@ Testcase ID: CT_IARMBUS_113</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>This is skipped till RDKTT-152 is fixed.</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
     <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
     <!--  -->
     <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
+    <!--  -->
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -97,7 +97,29 @@ if expectedresult in iarmLoadStatus.upper():
                 #calling IARMBUS API "IARM_Bus_Term"
                 actualresult,iarmTestObj,details = tdklib.Create_ExecuteTestcase(iarmObj,'IARMBUS_Term', 'SUCCESS',verifyList ={});
                 print "IARMBUS_Term result: [%s]"%actualresult;
-        #End of loop for power mode toggle
+    #End of loop for power mode toggle
     #End of loop for 50 times
+    #Make sure the DUT must in Power ON state after the loop
+    actualresult,iarmTestObj,details = tdklib.Create_ExecuteTestcase(iarmObj,'IARMBUS_Init', 'SUCCESS',verifyList ={});
+    print "IARMBUS_Init result: [%s]"%actualresult;
+    #Check for return value of IARMBUS_Init
+    if expectedresult in actualresult:
+                #Calling "IARM_Bus_Connect"
+                actualresult,iarmTestObj,details = tdklib.Create_ExecuteTestcase(iarmObj,'IARMBUS_Connect', 'SUCCESS',verifyList ={});
+                print "IARMBUS_Connect result: [%s]"%actualresult;
+
+                #Check for return value of IARMBUS_Connect
+                if expectedresult in actualresult:
+                    #Calling change_powermode
+                    change_powermode(iarmObj,2);
+                    print "Set PowerMode to %d: %s"%(powermode,result);
+
+                    #Calling IARMBus_DisConnect API
+                    actualresult,iarmTestObj,details = tdklib.Create_ExecuteTestcase(iarmObj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});
+                    print "IARMBUS_DisConnect result: [%s]"%actualresult;
+
+                #calling IARMBUS API "IARM_Bus_Term"
+                actualresult,iarmTestObj,details = tdklib.Create_ExecuteTestcase(iarmObj,'IARMBUS_Term', 'SUCCESS',verifyList ={});
+                print "IARMBUS_Term result: [%s]"%actualresult
     #Unload the iarmbus module
     iarmObj.unloadModule("iarmbus");

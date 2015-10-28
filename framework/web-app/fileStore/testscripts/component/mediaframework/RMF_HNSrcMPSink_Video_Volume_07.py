@@ -85,7 +85,7 @@ if "SUCCESS" in loadModuleStatus.upper():
         print "PLAY URL : %s" %url;
         tdkTestObj.addParameter("playuri",url);
 
-	volume = 1.0
+	volume = 0.9
 	tdkTestObj.addParameter("Volume",volume);
 
 	#Execute the test case in STB

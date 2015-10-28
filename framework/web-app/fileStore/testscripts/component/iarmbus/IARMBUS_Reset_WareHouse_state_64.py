@@ -24,7 +24,7 @@ Test case Id - CT_IARMBUS_64</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>Causes the XI3 device to reboot continuously</remarks>
+  <remarks>Causes warehouse reset of the box</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
   <skip>true</skip>
   <!--  -->

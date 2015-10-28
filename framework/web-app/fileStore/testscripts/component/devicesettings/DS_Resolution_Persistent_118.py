@@ -3,7 +3,7 @@
 <xml>
   <id>1594</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>6</version>
+  <version>9</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_Resolution_Persistent_118</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -24,22 +24,22 @@ TestcaseID: CT_DS118</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>This script is causing IPClient box to go to ABL mode.</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
     <!--  -->
-    <box_type>Terminal-RNG</box_type>
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -58,39 +58,54 @@ import devicesettings;
 ip = <ipaddress>
 port = <port>
 
-#Load module to be tested
-obj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
-obj.configureTestCase(ip,port,'DS_Resolution_Persistent_118');
-loadmodulestatus =obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
-obj.setLoadModuleStatus("SUCCESS");
+#Load module D.S module
+dsObj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
+dsObj.configureTestCase(ip,port,'DS_Resolution_Persistent_118');
+dsLoadStatus =dsObj.getLoadModuleResult();
+print "[LIB LOAD STATUS]  :  %s" %dsLoadStatus ;
+dsObj.setLoadModuleStatus("dsLoadStatus");
 
-if "SUCCESS" in loadmodulestatus.upper():
+if "SUCCESS" in dsLoadStatus.upper():
         #Calling Device Settings - initialize API
-        result = devicesettings.dsManagerInitialize(obj)
+        result = devicesettings.dsManagerInitialize(dsObj)
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
         if "SUCCESS" in result:
                 #Calling DS_IsDisplayConnectedStatus function to check for display connection status
-                isDisplay = devicesettings.dsIsDisplayConnected(obj)
-                if "TRUE" in isDisplay:
+                result = devicesettings.dsIsDisplayConnected(dsObj)
+                if "TRUE" in result:
                     #Save a copy of current resolution
-                    copyResolution = devicesettings.dsGetResolution(obj,"SUCCESS",kwargs={'portName':"HDMI0"});
-                    #Setting Resolution value to 1080i
-                    resolution="1080i";
-                    # Check if current value is already 1080i
-                    if resolution in copyResolution:
-                        print "Resolution value already at %s"%resolution;
+                    copyResolution = devicesettings.dsGetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0"});
+                    #Get the resolution list supported by TV.
+                    print "Get list of resolutions supported on HDMI0"
+
+                    tdkTestObj = dsObj.createTestStep('DS_Resolution');
+                    tdkTestObj.addParameter("port_name","HDMI0");
+                    expectedresult = "SUCCESS"
+                    #Execute the test case in STB
+                    tdkTestObj.executeTestCase(expectedresult);
+                    #Get the result of execution
+                    result = tdkTestObj.getResult();
+                    supportedResolutions = tdkTestObj.getResultDetails();
+                    print "Result: [%s] Details: [%s]"%(result,supportedResolutions)
+                    #Set the result status of execution
+                    if expectedresult in result:
+                        tdkTestObj.setResultStatus("SUCCESS");
                     else:
-                        devicesettings.dsSetResolution(obj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':resolution});
-                else:
-                    print "Display Device NOT Connected"
+                        tdkTestObj.setResultStatus("FAILURE");
 
-                #Calling DS_ManagerDeInitialize to DeInitialize API
-                result = devicesettings.dsManagerDeInitialize(obj)
+		    list = supportedResolutions.split(":");
+		    resolutionList = list[1].split(",");
 
-                if "TRUE" in isDisplay:
+		    for resolution in resolutionList:
+			if resolution != copyResolution:
+				print "Setting resolution to ",resolution
+                        	devicesettings.dsSetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':resolution});
+				break;
+                    	else:
+                        	print "Resolution value already at ",resolution;
+                if "TRUE" in result:
                     #Reboot the box
-                    obj.initiateReboot();
+                    dsObj.initiateReboot();
 
                     #Check the value of resolution after reboot
                     #Calling Device Settings - initialize API
@@ -109,6 +124,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         getResolution = tdkTestObj.getResultDetails();
                         print "getResolution:%s" %getResolution;
                         #comparing the resolution before and after reboot
+                        dsObj.initiateReboot();
                         if (expectedresult in actualresult) and (resolution in getResolution):
                                 tdkTestObj.setResultStatus("SUCCESS");
                                 print "SUCCESS: Resolution persisted after reboot";
@@ -125,8 +141,8 @@ if "SUCCESS" in loadmodulestatus.upper():
                         result = devicesettings.dsManagerDeInitialize(obj)
 
         #Unload the deviceSettings module
-        obj.unloadModule("devicesettings");
+        dsObj.unloadModule("devicesettings");
 else:
         print"Load module failed";
         #Set the module loading status
-        obj.setLoadModuleStatus("FAILURE");
+        dsObj.setLoadModuleStatus("FAILURE");

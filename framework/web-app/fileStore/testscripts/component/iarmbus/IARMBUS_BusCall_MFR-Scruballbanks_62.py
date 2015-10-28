@@ -24,7 +24,7 @@ Test case ID - CT_IARMBUS_62</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>Rebooting of DUT after this script causing ABL Mode in Pace Xi3v2</remarks>
+  <remarks>WARNING: Running this script will cause all memory banks on the STB to be wiped out</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
   <skip>true</skip>
   <!--  -->

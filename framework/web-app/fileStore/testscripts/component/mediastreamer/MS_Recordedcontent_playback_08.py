@@ -24,9 +24,9 @@ Test Case ID:CT_Mediastreamer_08.</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>This test will get fail because of bug in Mediastreamer.As per RDKTT-10 this test skipped</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>

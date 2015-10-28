@@ -25,9 +25,9 @@ Test Type: Positive</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>HNSink Api setHNSinkProperties() failing with segmentation fault. Need to raise the RDKTT ticket.</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -142,7 +142,7 @@ if "SUCCESS" in loadModuleStatus.upper():
                                         if "SUCCESS" in result.upper():
                                                 src_parameter=["rmfElement"]
                                                 src_element=["HNSink"]
-                                                #result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,"SUCCESS",src_parameter,src_element);
+                                                result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,"SUCCESS",src_parameter,src_element);
                                                 if "SUCCESS" in result.upper():
                                                         src_parameter=["dctpEnable","typeFlag","socketId"]
                                                         src_element=["false",0,8080]

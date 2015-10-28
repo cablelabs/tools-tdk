@@ -100,8 +100,19 @@ if "SUCCESS" in loadmodulestatus.upper():
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE: IARM_Bus_Connect failed. %s" %details;
-
-
+		#calling IARMBUS API "IARM_Bus_Term"
+                tdkTestObj = obj.createTestStep('IARMBUS_Term');
+                expectedresult="SUCCESS";
+                tdkTestObj.executeTestCase(expectedresult);
+                actualresult = tdkTestObj.getResult();
+                details=tdkTestObj.getResultDetails();
+                #Check for SUCCESS/FAILURE return value of IARMBUS_Term
+                if expectedresult in actualresult:
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        print "SUCCESS: IARM_Bus term success";
+                else:
+                        tdkTestObj.setResultStatus("FAILURE");
+                        print "FAILURE: IARM_Bus Term failed";
 
         else:
                 tdkTestObj.setResultStatus("FAILURE");
