@@ -40,124 +40,78 @@ Test Type: Positive</synopsis>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
-import tdklib; 
+import tdklib;
 import devicesettings;
-
-#To Check whether HDMI device is connected or not.
-#Test component to be tested
-dsObj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
+import iarmbus;
+import servicemanager;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
 
+#To Check whether HDMI device is connected or not.
+#Test component to be tested
+dsObj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
 dsObj.configureTestCase(ip,port,'DS_isDisplayConnected');
-
-isDisplayConnected = "false"
-
 #Get the result of connection with test component and STB
-result =dsObj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %result;
+result = dsObj.getLoadModuleResult();
+print "[devicesettings LIB LOAD STATUS]  :  %s" %result;
+dsObj.setLoadModuleStatus(result.upper());
 
 if "SUCCESS" in result.upper():
+	isDisplayConnected = "FALSE"
 	#Calling Device Settings - initialize API
         result = devicesettings.dsManagerInitialize(dsObj);
 	#Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
         if "SUCCESS" in result:
                 #Check for display connection status
-                result = devicesettings.dsIsDisplayConnected(dsObj)
-                if "TRUE" in result:
-			#Get the result of execution
-			print "HDMI display connected"
-			isDisplayConnected = "true"
-		else:
-                        print "HDMI display not connected."
-			isDisplayConnected = "false"
-	        #Calling DS_ManagerDeInitialize to DeInitialize API
+                isDisplayConnected = devicesettings.dsIsDisplayConnected(dsObj)
+                #Calling DS_ManagerDeInitialize to DeInitialize API
                 result = devicesettings.dsManagerDeInitialize(dsObj)
-	else:
-		print "Failed to initialize DSMgr"
-	
         #Unload the deviceSettings module
         dsObj.unloadModule("devicesettings");
+
+        if "FALSE" == isDisplayConnected:
+		print "\nPlease test with HDMI device connected. Exiting....!!!"
+		exit()
 else:
-	print "DS loading failed";
-
-
-if isDisplayConnected == "true":
-	print " "
-	print "[This Script has to be tested with no HDMI device connected!!!]"
-	print "[Please test removing HDMI device. Exiting....!!!]"
-	print " "
 	exit()
-else:
-	print " "
-	print "[HDMI device not connected proceeding to execute the script.]"
-	print " "
+
 
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
-iarm_obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
+smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
+iarmObj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 
-#IP and Port of box, No need to change,
-#This will be replaced with correspoing Box Ip and port while executing script
-ip = <ipaddress>
-port = <port>
-obj.configureTestCase(ip,port,'SM_HdmiCec_GetNumOfDevicesConnected_CecEnabled');
-iarm_obj.configureTestCase(ip,port,'SM_HdmiCec_GetNumOfDevicesConnected_CecEnabled');
+smObj.configureTestCase(ip,port,'SM_HdmiCec_GetNumOfDevicesConnected_CecEnabled');
+iarmObj.configureTestCase(ip,port,'SM_HdmiCec_GetNumOfDevicesConnected_CecEnabled');
 
 #Get the result of connection with test component and STB
-loadModuleStatus =obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %loadModuleStatus;
+smLoadStatus = smObj.getLoadModuleResult();
+print "[servicemanager LIB LOAD STATUS]  :  %s" %smLoadStatus;
+iarmLoadStatus = iarmObj.getLoadModuleResult();
+print "[iarmbus LIB LOAD STATUS]  :  %s" %iarmLoadStatus;
+#Set the module loading status
+smObj.setLoadModuleStatus(smLoadStatus.upper());
+iarmObj.setLoadModuleStatus(iarmLoadStatus.upper());
 
-loadModuleStatus_iarm = iarm_obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %loadModuleStatus_iarm;
+if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
-expected_Result = "SUCCESS"
+	service_name = "com.comcast.hdmiCec_1"
 
-if expected_Result in loadModuleStatus.upper():
-        #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
+	register = servicemanager.registerService(smObj,service_name)
+        if "SUCCESS" in register:
 
-        expectedresult="SUCCESS"
-        #Register the service hdmicecservice.
-        service_name_hdmicec = "com.comcast.hdmiCec_1"
-        tdkTestObj = obj.createTestStep('SM_RegisterService');
-        tdkTestObj.addParameter("service_name",service_name_hdmicec);
-
-        tdkTestObj.executeTestCase(expectedresult);
-        actualresult = tdkTestObj.getResult();
-        serviceRegDetails = tdkTestObj.getResultDetails();
-        print "[REGISTRATION DETAILS] : ",serviceRegDetails
-        if expectedresult in actualresult:
-                tdkTestObj.setResultStatus("SUCCESS");
-
-                #Check whether the service exists.
-                tdkTestObj = obj.createTestStep('SM_DoesServiceExist');
-                expectedresult="SUCCESS"
-                tdkTestObj.addParameter("service_name",service_name_hdmicec);
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                existdetails = tdkTestObj.getResultDetails();
-                print "[TEST EXECUTION DETAILS] : ",existdetails;
-
-                if expectedresult in actualresult:
-                        if "PRESENT" in existdetails:
-                                tdkTestObj.setResultStatus("SUCCESS");
-
-                                #Call IARM Bus API's
-                                #Calling IARM Bus Init
-                                iarm_obj.setLoadModuleStatus("SUCCESS");
-                                actualresult,Obj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Init', 'SUCCESS',verifyList ={});
-                                print "Status of IARM Init: ",actualresult
-
-                                #calling IARMBUS API IARM_Bus_Connect
-                                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Connect', 'SUCCESS',verifyList ={});
-                                print "Status of IARM Connect: ",actualresult
+                #Calling IARM Bus Init
+		term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
+		init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')
+		if "SUCCESS" in init:
+			connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
+			if "SUCCESS" in connect:
 
                                 #Enable the cec support setting it true.
-                                tdkTestObj = obj.createTestStep('SM_HdmiCec_SetEnabled');
+				print "Set CEC Enabled"
+                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetEnabled');
                                 expectedresult = "SUCCESS"
 				valueToSetEnabled = 1
 				tdkTestObj.addParameter("valueToSetEnabled",valueToSetEnabled);
@@ -165,78 +119,41 @@ if expected_Result in loadModuleStatus.upper():
                                 actualresult = tdkTestObj.getResult();
                                 setEnabledDetails = tdkTestObj.getResultDetails();
                                 print "[TEST EXECUTION DETAILS] : ",setEnabledDetails;
-
                                 if expectedresult in actualresult:
 					tdkTestObj.setResultStatus("SUCCESS");
 					
 					#Get the default number of devices connected after enabling the CEC support.
-					tdkTestObj = obj.createTestStep('SM_HdmiCec_GetConnectedDevices');
+					tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetConnectedDevices');
 	                                expectedresult = "SUCCESS"
         	                        tdkTestObj.executeTestCase(expectedresult);
                 	                actualresult = tdkTestObj.getResult();
                         	        getConnDevDetails = tdkTestObj.getResultDetails();
 	                                print "[TEST EXECUTION DETAILS] : ",getConnDevDetails;
-					
 					if expectedresult in actualresult:
-						#Default value must be 0.
-        	                                deviceCount = 0
-                	                        deviceCountReturned = int(getConnDevDetails[5:])
-                        	                print "GetConnectedDevices returned count: ",deviceCountReturned
+						#Default value must be 2.
+        	                                defaultCount = 2
+                	                        deviceCount = int(getConnDevDetails)
+                        	                print "ConnectedDevices Count: %d Default Count: %d"%(deviceCount,defaultCount)
 
                                 	        #Compare the deviceCount with current Count returned.
-	                                        if deviceCountReturned == deviceCount:
+	                                        if deviceCount == defaultCount:
         	                                        tdkTestObj.setResultStatus("SUCCESS");
-                	                                print "[COMPARING DEFAULT COUNT WITH RETURNED COUNT] : The getConnectedDevices() API SUCCESS"
+                	                                print "deviceCount matches default count"
                         	                else:
                                 	                tdkTestObj.setResultStatus("FAILURE");
-                                        	        print "[COMPARING DEFAULT COUNT WITH RETURNED COUNT] : The getConnectedDevices() API FAILURE"
+                                        	        print "deviceCount does not match default count"
 	                                else:
         	                                tdkTestObj.setResultStatus("FAILURE");
-                	                        print "getConnectedDevices FAILURE"
 				else:
 					tdkTestObj.setResultStatus("FAILURE");
-					print "setEnabled FAILURE";	
 
                                 #Calling IARM_Bus_DisConnect API
-                                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_DisConnect', 'SUCCESS',verifyList ={});
-                                print "Status of IARM DisConnect: ",actualresult
-
-                                #calling IARMBUS API "IARM_Bus_Term"
-                                actualresult,tdkTestObj_iarm,details = tdklib.Create_ExecuteTestcase(iarm_obj,'IARMBUS_Term', 'SUCCESS',verifyList ={});
-                                print "Status of IARM Term: ",actualresult
-
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "HDMICEC service is not supported: FAILURE"
-                else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                        print "doesServiceExist FAILURE"
+                                disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
+                        term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
 
                 #Unregister hdmicec service
-                tdkTestObj = obj.createTestStep('SM_UnRegisterService');
-                expectedresult="SUCCESS"
-                tdkTestObj.addParameter("service_name",service_name_hdmicec);
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                serviceUnRegDetails = tdkTestObj.getResultDetails();
-                print "[UNREGISTRATION DETAILS] : %s"%serviceUnRegDetails;
+		unregister = servicemanager.unRegisterService(smObj,service_name)
 
-                if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        print "Unregistration of HDMICEC service is SUCCESS"
-                        print " "
-                else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                        print "Unregistration of HDMICEC service is FAILURE"
-                        print " "
-	else:
-		tdkTestObj.setResultStatus("FAILURE");
-                print "Registration of HDMICEC service is FAILURE"
-                print " "
-
-        #Unload the servicemanager module
-        obj.unloadModule("servicemanager");
-        iarm_obj.unloadModule("iarmbus");
-else:
-        print "Load Module Failed"
-        obj.setLoadModuleStatus("FAILURE");			
+        #Unload the modules
+        smObj.unloadModule("servicemanager");
+        iarmObj.unloadModule("iarmbus");

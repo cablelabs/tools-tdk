@@ -3,9 +3,9 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>SM_HdmiCec_GetNumOfDevicesConnected_CecDisabled</name>
+  <name>SM_HdmiCec_Stress_SetName_CecDisabled</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>106</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -15,9 +15,9 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Objective: Service Manager – Checking the number of cec devices connected after disabling CEC. Default value: 0 (If no devices connected)
-Test Case Id: CT_Service Manager_35
-Test Type: Negative</synopsis>
+  <synopsis>Objective: Service Manager – Setting the STB device name and fetch the name multiple times (5 times) after disabling CEC.
+Test Case Id: CT_Service Manager_45
+Test Type: Negative.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -83,8 +83,8 @@ else:
 smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
 iarmObj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 
-smObj.configureTestCase(ip,port,'SM_HdmiCec_GetNumOfDevicesConnected_CecDisabled');
-iarmObj.configureTestCase(ip,port,'SM_HdmiCec_GetNumOfDevicesConnected_CecDisabled');
+smObj.configureTestCase(ip,port,'SM_HdmiCec_Stress_SetName_CecDisabled');
+iarmObj.configureTestCase(ip,port,'SM_HdmiCec_Stress_SetName_CecDisabled');
 
 #Get the result of connection with test component and STB
 smLoadStatus = smObj.getLoadModuleResult();
@@ -121,28 +121,34 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 if expectedresult in actualresult:
 					tdkTestObj.setResultStatus("SUCCESS");
 					
-					#Get the default number of devices connected after enabling the CEC support.
-					tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetConnectedDevices');
-	                                expectedresult = "SUCCESS"
-        	                        tdkTestObj.executeTestCase(expectedresult);
-                	                actualresult = tdkTestObj.getResult();
-                        	        getConnDevDetails = tdkTestObj.getResultDetails();
-	                                print "[TEST EXECUTION DETAILS] : ",getConnDevDetails;
-					if expectedresult in actualresult:
-						#Default value must be 2.
-        	                                defaultCount = 2
-                	                        deviceCount = int(getConnDevDetails)
-                        	                print "ConnectedDevices Count: %d Default Count: %d"%(deviceCount,defaultCount)
+					nameList = ["tdk_hdmicec_01","tdk_hdmicec_02","tdk_hdmicec_03","tdk_hdmicec_04","tdk_hdmicec_05"]
+					for nameToSet in nameList:
+						#Set the device Name.
+						print "Set device name to ",nameToSet
+		                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetName');
+	        	                        expectedresult = "SUCCESS"
+	                        	        tdkTestObj.addParameter("nameToSet",nameToSet);
+		                                tdkTestObj.executeTestCase(expectedresult);
+		                                actualresult = tdkTestObj.getResult();
+	        	                        setNameDetails = tdkTestObj.getResultDetails();
+        	        	                print "[TEST EXECUTION DETAILS] : ",setNameDetails;
+						if expectedresult in actualresult:
+							tdkTestObj.setResultStatus("SUCCESS");
+						else:
+							tdkTestObj.setResultStatus("FAILURE");
 
-                                	        #Compare the deviceCount with current Count returned.
-	                                        if deviceCount == defaultCount:
-        	                                        tdkTestObj.setResultStatus("SUCCESS");
-                	                                print "deviceCount matches default count"
-                        	                else:
-                                	                tdkTestObj.setResultStatus("FAILURE");
-                                        	        print "deviceCount does not match default count"
-	                                else:
-        	                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "Get device name"
+                                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetName');
+                                                expectedresult = "SUCCESS"
+                                                tdkTestObj.executeTestCase(expectedresult);
+                                                actualresult = tdkTestObj.getResult();
+                                                setNameDetails = tdkTestObj.getResultDetails();
+                                                print "[TEST EXECUTION DETAILS] : ",setNameDetails;
+                                                if expectedresult in actualresult:
+                                                        tdkTestObj.setResultStatus("SUCCESS");
+                                                else:
+                                                        tdkTestObj.setResultStatus("FAILURE");
+
 				else:
 					tdkTestObj.setResultStatus("FAILURE");
 

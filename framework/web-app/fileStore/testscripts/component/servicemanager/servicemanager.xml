@@ -163,10 +163,25 @@
         <function>TestMgr_SM_HdmiCec_ClearCecLog</function>
         <parameters/>
       </primitiveTest>
-      <primitiveTest name="SM_HdmiCec_CheckStatus" id=" " version="2">
+      <primitiveTest id=" " name="SM_HdmiCec_CheckStatus" version="2">
         <function>TestMgr_SM_HdmiCec_CheckStatus</function>
         <parameters>
-          <parameter name="pattern" value="308F"/>
+          <parameter name="pattern" value="30 8F"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HdmiCec_FlushCecData" version="1">
+        <function>TestMgr_SM_HdmiCec_FlushCecData</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HdmiCec_CheckCecData" version="1">
+        <function>TestMgr_SM_HdmiCec_CheckCecData</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest name="SM_UnRegisterForEvents" id=" " version="1">
+        <function>TestMgr_SM_UnRegisterForEvents</function>
+        <parameters>
+          <parameter name="event_name" value=""/>
+          <parameter name="service_name" value=""/>
         </parameters>
       </primitiveTest>
     </primitiveTests>

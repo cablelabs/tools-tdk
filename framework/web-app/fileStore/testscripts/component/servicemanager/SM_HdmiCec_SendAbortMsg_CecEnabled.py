@@ -3,9 +3,9 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>SM_HdmiCec_DisableCec_SendReceivePowerState</name>
+  <name>SM_HdmiCec_SendAbortMsg_CecEnabled</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>106</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -15,8 +15,8 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Objective: Service Manager – Send a message HEX command (30 8F) to check the device power status and receive message from the cec device ( 03 90 00(off) or 03 90 01(on)) after disabling the cec.
-Test Case Id: CT_Service Manager_49.
+  <synopsis>Objective: Service Manager – Send a message and receive message to and from the cec device after enabling the cec.
+Test Case Id: CT_Service Manager_46.
 Test Type: Negative.</synopsis>
   <!--  -->
   <groups_id />
@@ -41,250 +41,183 @@ Test Type: Negative.</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib;
-import time; 
 import devicesettings;
-
-#To Check whether HDMI device is connected or not.
-#Test component to be tested
-dsObj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
+import iarmbus;
+import servicemanager;
+from time import sleep;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
 
+#To Check whether HDMI device is connected or not.
+#Test component to be tested
+dsObj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
 dsObj.configureTestCase(ip,port,'DS_isDisplayConnected');
-
-isDisplayConnected = "false"
-
 #Get the result of connection with test component and STB
-result =dsObj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %result;
+result = dsObj.getLoadModuleResult();
+print "[devicesettings LIB LOAD STATUS]  :  %s" %result;
+dsObj.setLoadModuleStatus(result.upper());
 
 if "SUCCESS" in result.upper():
+	isDisplayConnected = "FALSE"
 	#Calling Device Settings - initialize API
         result = devicesettings.dsManagerInitialize(dsObj);
 	#Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
         if "SUCCESS" in result:
                 #Check for display connection status
-                result = devicesettings.dsIsDisplayConnected(dsObj)
-                if "TRUE" in result:
-			#Get the result of execution
-			print "HDMI display connected"
-			isDisplayConnected = "true"
-		else:
-                        print "HDMI display not connected."
-			isDisplayConnected = "false"
-	        #Calling DS_ManagerDeInitialize to DeInitialize API
+                isDisplayConnected = devicesettings.dsIsDisplayConnected(dsObj)
+                #Calling DS_ManagerDeInitialize to DeInitialize API
                 result = devicesettings.dsManagerDeInitialize(dsObj)
-	else:
-		print "Failed to initialize DSMgr"
-	
         #Unload the deviceSettings module
         dsObj.unloadModule("devicesettings");
-else:
-	print "DS loading failed";
 
-
-if isDisplayConnected == "true":
-	print " "
-	print "[HDMI device is connected proceeding to execute the script....!!!]"
-	print " "
+        if "FALSE" == isDisplayConnected:
+		print "\nPlease test with HDMI device connected. Exiting....!!!"
+		exit()
 else:
-	print " "
-	print "[HDMI device not connected.]"
-	print "[Please test connecting HDMI device. Exiting....!!!]"
-	print " "
 	exit()
 
 
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
+smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
+iarmObj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 
-#IP and Port of box, No need to change,
-#This will be replaced with correspoing Box Ip and port while executing script
-ip = <ipaddress>
-port = <port>
-obj.configureTestCase(ip,port,'SM_HdmiCec_DisableCec_SendReceivePowerState');
+smObj.configureTestCase(ip,port,'SM_HdmiCec_SendAbortMsg_CecEnabled');
+iarmObj.configureTestCase(ip,port,'SM_HdmiCec_SendAbortMsg_CecEnabled');
 
 #Get the result of connection with test component and STB
-loadModuleStatus =obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %loadModuleStatus;
+smLoadStatus = smObj.getLoadModuleResult();
+print "[servicemanager LIB LOAD STATUS]  :  %s" %smLoadStatus;
+iarmLoadStatus = iarmObj.getLoadModuleResult();
+print "[iarmbus LIB LOAD STATUS]  :  %s" %iarmLoadStatus;
+#Set the module loading status
+smObj.setLoadModuleStatus(smLoadStatus.upper());
+iarmObj.setLoadModuleStatus(iarmLoadStatus.upper());
 
-expected_Result = "SUCCESS"
+if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
-if expected_Result in loadModuleStatus.upper():
-        #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
+	service_name = "com.comcast.hdmiCec_1"
 
-        expectedresult="SUCCESS"
-        #Register the service hdmicecservice.
-        service_name_hdmicec = "com.comcast.hdmiCec_1"
-        tdkTestObj = obj.createTestStep('SM_RegisterService');
-        tdkTestObj.addParameter("service_name",service_name_hdmicec);
+	register = servicemanager.registerService(smObj,service_name)
+        if "SUCCESS" in register:
 
-        tdkTestObj.executeTestCase(expectedresult);
-        actualresult = tdkTestObj.getResult();
-        serviceRegDetails = tdkTestObj.getResultDetails();
-        print "[REGISTRATION DETAILS] : ",serviceRegDetails
-        if expectedresult in actualresult:
-                tdkTestObj.setResultStatus("SUCCESS");
+                #Calling IARM Bus Init
+		init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')
+		if "SUCCESS" in init:
+			connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
+			if "SUCCESS" in connect:
 
-                #Check whether the service exists.
-                tdkTestObj = obj.createTestStep('SM_DoesServiceExist');
-                expectedresult="SUCCESS"
-                tdkTestObj.addParameter("service_name",service_name_hdmicec);
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                existdetails = tdkTestObj.getResultDetails();
-                print "[TEST EXECUTION DETAILS] : ",existdetails;
-
-                if expectedresult in actualresult:
-                        if "PRESENT" in existdetails:
-                                tdkTestObj.setResultStatus("SUCCESS");
-
-                                #Disable the cec support setting it false.
-                                tdkTestObj = obj.createTestStep('SM_HdmiCec_SetEnabled');
+                                #Enable the cec support setting it true.
+				print "Set CEC Enabled"
+                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetEnabled');
                                 expectedresult = "SUCCESS"
-				valueToSetEnabled = 0
-				print "hdmicec disable:",valueToSetEnabled
+				valueToSetEnabled = 1
 				tdkTestObj.addParameter("valueToSetEnabled",valueToSetEnabled);
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
                                 setEnabledDetails = tdkTestObj.getResultDetails();
                                 print "[TEST EXECUTION DETAILS] : ",setEnabledDetails;
-
                                 if expectedresult in actualresult:
 					tdkTestObj.setResultStatus("SUCCESS");
 					
 					#Clear the cec.txt
-					tdkTestObj = obj.createTestStep('SM_HdmiCec_ClearCecLog');						
+					tdkTestObj = smObj.createTestStep('SM_HdmiCec_ClearCecLog');						
 					expectedresult = "SUCCESS"
 					tdkTestObj.executeTestCase(expectedresult);
 					actualresult = tdkTestObj.getResult();
 					clearLogDetails = tdkTestObj.getResultDetails();
 					print "[TEST EXECUTION DETAILS] : ",clearLogDetails;
-					
 					if expectedresult in actualresult:
 						tdkTestObj.setResultStatus("SUCCESS");
 						print "Clearing the Cec log success"
 					else:
 						tdkTestObj.setResultStatus("FAILURE");
 						print "Clearing the Cec log failure"
-					
-					#Clear cec.txt and send the message.
-					time.sleep(15)
+
+					#Clear cec.txt and send the msg.
+					sleep(5)
 
 					#Set the device Name.
-	                                tdkTestObj = obj.createTestStep('SM_HdmiCec_SendMessage');
+	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
 					#Send the random message.
-	                                messageToSend = "308F"
+	                                messageToSend = "30 FF FF FF"
 	                                tdkTestObj.addParameter("messageToSend",messageToSend);
 	                                tdkTestObj.executeTestCase(expectedresult);
 	                                actualresult = tdkTestObj.getResult();
 	                                sendMsgDetails = tdkTestObj.getResultDetails();
         	                        print "[TEST EXECUTION DETAILS] : ",sendMsgDetails;
-					
 					if expectedresult in actualresult:
 						tdkTestObj.setResultStatus("SUCCESS");
 	
 						#Check for the message sent for confirmation.
-						tdkTestObj = obj.createTestStep('SM_HdmiCec_CheckStatus');
+						tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
 						expectedresult = "SUCCESS"
-						pattern = "308F"
+						pattern = "30 FF FF FF"
 						tdkTestObj.addParameter("pattern",pattern);
 						tdkTestObj.executeTestCase(expectedresult);
 	                                        actualresult = tdkTestObj.getResult();
         	                                patternDetails= tdkTestObj.getResultDetails();
                 	                        print "[TEST EXECUTION DETAILS] : ",patternDetails;
-						
 						if expectedresult in actualresult:
 							tdkTestObj.setResultStatus("SUCCESS");
 							logpath=tdkTestObj.getLogPath();
 							print "Log path : %s" %logpath;
-							tdkTestObj.transferLogs(logpath,"false");
+							#tdkTestObj.transferLogs(logpath,"false");
 							
 							#Check for the replay from the Cec device.
 							tdkTestObj = obj.createTestStep('SM_HdmiCec_OnMessage');	
 		                                        expectedresult = "SUCCESS"
-		                                        #Assuming TV is on and should receive power state 039001.
-                		                        onMessage = "039001"
+		                                        #TODO: Need confirmation from Devlopement team.  Assuming to receive INVALID.
+                		                        onMessage = "INVALID"
 	                                	        tdkTestObj.addParameter("onMessage",onMessage);
         	                                	tdkTestObj.executeTestCase(expectedresult);
 	                	                        actualresult = tdkTestObj.getResult();
         	                	                onMsgDetails = tdkTestObj.getResultDetails();
                 	                	        print "[TEST EXECUTION DETAILS] : ",onMsgDetails;
-
 							if expectedresult in actualresult:
-								time.sleep(5)
+								sleep(5)
 								
 								#Check for the message sent for confirmation.
 		                                                tdkTestObj = obj.createTestStep('SM_HdmiCec_CheckStatus');
                 		                                expectedresult = "SUCCESS"
-                                		                pattern = "039001"
+                                		                pattern = "INVALID"
 		                                                tdkTestObj.addParameter("pattern",pattern);
 		                                                tdkTestObj.executeTestCase(expectedresult);
                 		                                actualresult = tdkTestObj.getResult();
 		                                                patternDetails= tdkTestObj.getResultDetails();
 		                                                print "[TEST EXECUTION DETAILS] : ",patternDetails;
-								
 								if expectedresult in actualresult:
 	                        	                                tdkTestObj.setResultStatus("SUCCESS");
         	                        	                        logpath=tdkTestObj.getLogPath();
                 	                        	                print "Log path : %s" %logpath;
-                        	                        	        tdkTestObj.transferLogs(logpath,"false");
+                        	                        	        #tdkTestObj.transferLogs(logpath,"false");
 								else:
 									tdkTestObj.setResultStatus("FAILURE");
 									logpath=tdkTestObj.getLogPath();
 									print "Log path : %s" %logpath;
-									tdkTestObj.transferLogs(logpath,"false");
+									#tdkTestObj.transferLogs(logpath,"false");
 							else:
 								tdkTestObj.setResultStatus("FAILURE");
-								print "onMessage FAILURE";	
 						else:
 							tdkTestObj.setResultStatus("FAILURE");
 							logpath=tdkTestObj.getLogPath();
 							print "Log path : %s" %logpath;
-							tdkTestObj.transferLogs(logpath,"false");	
-	
+							#tdkTestObj.transferLogs(logpath,"false");	
 					else:
 						tdkTestObj.setResultStatus("FAILURE");
-						print "sendMessage FAILURE";	
 				else:
 					tdkTestObj.setResultStatus("FAILURE");
-					print "setEnabled FAILURE";	
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "HDMICEC service is not supported: FAILURE"
-                else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                        print "doesServiceExist FAILURE"
+
+                                #Calling IARM_Bus_DisConnect API
+                                disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
+                        term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
 
                 #Unregister hdmicec service
-                tdkTestObj = obj.createTestStep('SM_UnRegisterService');
-                expectedresult="SUCCESS"
-                tdkTestObj.addParameter("service_name",service_name_hdmicec);
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                serviceUnRegDetails = tdkTestObj.getResultDetails();
-                print "[UNREGISTRATION DETAILS] : %s"%serviceUnRegDetails;
+		unregister = servicemanager.unRegisterService(smObj,service_name)
 
-                if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        print "Unregistration of HDMICEC service is SUCCESS"
-                        print " "
-                else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                        print "Unregistration of HDMICEC service is FAILURE"
-                        print " "
-	else:
-		tdkTestObj.setResultStatus("FAILURE");
-                print "Registration of HDMICEC service is FAILURE"
-                print " "
-
-        #Unload the servicemanager module
-        obj.unloadModule("servicemanager");
-else:
-        print "Load Module Failed"
-        obj.setLoadModuleStatus("FAILURE");			
+        #Unload the modules
+        smObj.unloadModule("servicemanager");
+        iarmObj.unloadModule("iarmbus");

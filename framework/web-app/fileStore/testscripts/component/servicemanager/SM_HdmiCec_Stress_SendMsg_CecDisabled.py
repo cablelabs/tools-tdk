@@ -3,9 +3,9 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>SM_HdmiCec_GetNumOfDevicesConnected_CecDisabled</name>
+  <name>SM_HdmiCec_Stress_SendMsg_CecDisabled</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>106</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -15,9 +15,9 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Objective: Service Manager – Checking the number of cec devices connected after disabling CEC. Default value: 0 (If no devices connected)
-Test Case Id: CT_Service Manager_35
-Test Type: Negative</synopsis>
+  <synopsis>Objective: Service Manager – Send message to the STB device multiple times (5 times) with disabling CEC.
+Test Case Id: CT_Service Manager_43.
+Test Type: Negative.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -40,10 +40,11 @@ Test Type: Negative</synopsis>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
-import tdklib; 
+import tdklib;
 import devicesettings;
 import iarmbus;
 import servicemanager;
+from time import sleep;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -83,8 +84,8 @@ else:
 smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
 iarmObj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 
-smObj.configureTestCase(ip,port,'SM_HdmiCec_GetNumOfDevicesConnected_CecDisabled');
-iarmObj.configureTestCase(ip,port,'SM_HdmiCec_GetNumOfDevicesConnected_CecDisabled');
+smObj.configureTestCase(ip,port,'SM_HdmiCec_Stress_SendMsg_CecDisabled');
+iarmObj.configureTestCase(ip,port,'SM_HdmiCec_Stress_SendMsg_CecDisabled');
 
 #Get the result of connection with test component and STB
 smLoadStatus = smObj.getLoadModuleResult();
@@ -120,29 +121,47 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 print "[TEST EXECUTION DETAILS] : ",setEnabledDetails;
                                 if expectedresult in actualresult:
 					tdkTestObj.setResultStatus("SUCCESS");
-					
-					#Get the default number of devices connected after enabling the CEC support.
-					tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetConnectedDevices');
-	                                expectedresult = "SUCCESS"
-        	                        tdkTestObj.executeTestCase(expectedresult);
-                	                actualresult = tdkTestObj.getResult();
-                        	        getConnDevDetails = tdkTestObj.getResultDetails();
-	                                print "[TEST EXECUTION DETAILS] : ",getConnDevDetails;
-					if expectedresult in actualresult:
-						#Default value must be 2.
-        	                                defaultCount = 2
-                	                        deviceCount = int(getConnDevDetails)
-                        	                print "ConnectedDevices Count: %d Default Count: %d"%(deviceCount,defaultCount)
 
-                                	        #Compare the deviceCount with current Count returned.
-	                                        if deviceCount == defaultCount:
-        	                                        tdkTestObj.setResultStatus("SUCCESS");
-                	                                print "deviceCount matches default count"
-                        	                else:
-                                	                tdkTestObj.setResultStatus("FAILURE");
-                                        	        print "deviceCount does not match default count"
-	                                else:
-        	                                tdkTestObj.setResultStatus("FAILURE");
+					for i in range(0,5):
+        					print "\n-------- Iteration %d ---------\n"%(i+1)
+
+        					#Set the device Name
+       	 					tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
+        					expectedresult = "SUCCESS"
+        					messageToSend = "30 8F 53 69 74 76 5F 65 44 72 81"
+						print "Message to be sent to HDMI device: ",messageToSend
+        					tdkTestObj.addParameter("messageToSend",messageToSend);
+        					tdkTestObj.executeTestCase(expectedresult);
+        					actualresult = tdkTestObj.getResult();
+        					sendMsgDetails = tdkTestObj.getResultDetails();
+        					print "[TEST EXECUTION DETAILS] : ",sendMsgDetails;
+
+        					if expectedresult in actualresult:
+                					tdkTestObj.setResultStatus("SUCCESS");
+
+                					#Check for the message sent for confirmation.
+                					tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
+                					expectedresult = "SUCCESS"
+                					pattern = "30 8F 53 69 74 76 5F 65 44 72 81"
+                					tdkTestObj.addParameter("pattern",pattern);
+                					tdkTestObj.executeTestCase(expectedresult);
+                					actualresult = tdkTestObj.getResult();
+                					patternDetails= tdkTestObj.getResultDetails();
+                					print "[TEST EXECUTION DETAILS] : ",patternDetails;
+                					if expectedresult in actualresult:
+                        					tdkTestObj.setResultStatus("SUCCESS");
+                        					logpath=tdkTestObj.getLogPath();
+                        					print "Log path : %s" %logpath;
+                        					#tdkTestObj.transferLogs(logpath,"false");
+                					else:
+                        					tdkTestObj.setResultStatus("FAILURE");
+                        					logpath=tdkTestObj.getLogPath();
+                        					print "Log path : %s" %logpath;
+                        					#tdkTestObj.transferLogs(logpath,"false");
+        					else:
+                					tdkTestObj.setResultStatus("FAILURE");
+					#end of for loop
+					print "\n"
 				else:
 					tdkTestObj.setResultStatus("FAILURE");
 

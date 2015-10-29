@@ -5,19 +5,17 @@
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>SM_HdmiCec_EnableAndDisable_CecSupport</name>
+  <name>SM_HdmiCec_Persist_CecEnabled</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id>106</primitive_test_id>
+  <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
-  <primitive_test_name>SM_RegisterService</primitive_test_name>
+  <primitive_test_name>SM_HdmiCec_FlushCecData</primitive_test_name>
   <!--  -->
   <primitive_test_version>1</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Objective: Service Manager - Enabling and disabling the CEC support (Enabled / Disabled).
-Test Case Id: CT_Service Manager_36.
-Test Type: Positive.</synopsis>
+  <synopsis>To test whether getEnabled() returns true without enabling CEC but obtained from persisted status.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -40,7 +38,7 @@ Test Type: Positive.</synopsis>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
-import tdklib; 
+import tdklib;
 import devicesettings;
 import iarmbus;
 import servicemanager;
@@ -83,8 +81,8 @@ else:
 smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
 iarmObj = tdklib.TDKScriptingLibrary("iarmbus","2.0");
 
-smObj.configureTestCase(ip,port,'SM_HdmiCec_GetDefault_CecSupport');
-iarmObj.configureTestCase(ip,port,'SM_HdmiCec_GetDefault_CecSupport');
+smObj.configureTestCase(ip,port,'SM_HdmiCec_Persist_CecEnabled');
+iarmObj.configureTestCase(ip,port,'SM_HdmiCec_Persist_CecEnabled');
 
 #Get the result of connection with test component and STB
 smLoadStatus = smObj.getLoadModuleResult();
@@ -104,7 +102,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 		connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
 		if "SUCCESS" in connect:
 			#TODO: Remove cecData file
-			#Create HdmiCecService
+			#Create HdmiCecService instance 1 
 			service_name = "com.comcast.hdmiCec_1"
 			register = servicemanager.registerService(smObj,service_name)
 			if "SUCCESS" in register:	
@@ -144,42 +142,32 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
 				#TODO: Verify the presence of the cecData file
 
-                                #Disable the cec support setting it false.
-                                print "Set CEC Disabled"
-                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetEnabled');
-                                expectedresult = "SUCCESS"
-                                valueToSetEnabled = 0
-                                print "setEnabled to ",valueToSetEnabled
-                                tdkTestObj.addParameter("valueToSetEnabled",valueToSetEnabled);
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                setEnabledDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",setEnabledDetails;
-                                if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-
-                                #Get the cec enabled value
-                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetEnabled');
-                                expectedresult = "SUCCESS"
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                getEnabledDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",getEnabledDetails;
-                                if expectedresult in actualresult:
-                                        #Compare the set value with get value
-                                        if valueToSetEnabled == int(getEnabledDetails):
-                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                print "Get CecSupport matches with CecSupport value set"
-                                        else:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "Get CecSupport does not match with CecSupport value set"
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-
-                                #Delete HdmiCecService
+                                #Delete HdmiCecService instance 1
                                 unregister = servicemanager.unRegisterService(smObj,service_name)
+
+				#Create HdmiCecService instance 2
+                        	register = servicemanager.registerService(smObj,service_name)
+                        	if "SUCCESS" in register:
+                                	#Get the cec enabled value
+                                	tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetEnabled');
+                                	expectedresult = "SUCCESS"
+                                	tdkTestObj.executeTestCase(expectedresult);
+                                	actualresult = tdkTestObj.getResult();
+                                	getEnabledDetails = tdkTestObj.getResultDetails();
+                                	print "[TEST EXECUTION DETAILS] : ",getEnabledDetails;
+                                	if expectedresult in actualresult:
+                                        	#Compare the set value with get value
+                                        	if valueToSetEnabled == int(getEnabledDetails):
+                                                	tdkTestObj.setResultStatus("SUCCESS");
+                                                	print "CecSupport value persisted"
+                                        	else:
+                                                	tdkTestObj.setResultStatus("FAILURE");
+                                                	print "CecSupport value not persisted"
+                                	else:
+                                        	tdkTestObj.setResultStatus("FAILURE");
+
+					#Delete HdmiCecService instance 2
+					unregister = servicemanager.unRegisterService(smObj,service_name)
 
                         #Calling IARM_Bus_DisConnect API
                         disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
