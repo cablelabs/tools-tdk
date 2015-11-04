@@ -10,34 +10,42 @@
   ============================================================================
 -->
 <%--<!DOCTYPE html>--%>
-<%@ page import="com.comcast.rdk.Device" %>
-<%@ page import="com.comcast.rdk.ScriptGroup" %> 
-<%@ page import="com.comcast.rdk.Execution" %> 
+<%@ page import="com.comcast.rdk.Device"%>
+<%@ page import="com.comcast.rdk.ScriptGroup"%>
+<%@ page import="com.comcast.rdk.Execution"%>
 
 <html>
 <head>
 <meta name="layout" content="main">
 <g:set var="entityName"
 	value="${message(code: 'ScriptExecution.label', default: 'ScriptExecution')}" />
-<link rel="stylesheet" href="${resource(dir:'css',file:'jquery.jqplot.min.css')}" />	
-<link rel="stylesheet" href="${resource(dir:'css',file:'shCoreDefault.min.css')}" />	
-<link rel="stylesheet" href="${resource(dir:'css',file:'shThemejqPlot.min.css')}" />
+<link rel="stylesheet"
+	href="${resource(dir:'css',file:'jquery.jqplot.min.css')}" />
+<link rel="stylesheet"
+	href="${resource(dir:'css',file:'shCoreDefault.min.css')}" />
+<link rel="stylesheet"
+	href="${resource(dir:'css',file:'shThemejqPlot.min.css')}" />
 <title>Trends</title>
-<g:javascript library="chart/jquery.jqplot.min"/>
-<g:javascript library="chart/shCore.min"/>
-<g:javascript library="chart/shBrushJScript.min"/>
-<g:javascript library="chart/shBrushXml.min"/>
-<g:javascript library="chart/jqplot.barRenderer.min"/>
-<g:javascript library="chart/jqplot.categoryAxisRenderer.min"/>
-<g:javascript library="chart/jqplot.pointLabels.min"/>
-<g:javascript library="chart/jqplot.canvasTextRenderer.min"/>
+<g:javascript library="chart/jquery.jqplot.min" />
+<g:javascript library="chart/shCore.min" />
+<g:javascript library="chart/shBrushJScript.min" />
+<g:javascript library="chart/shBrushXml.min" />
+<g:javascript library="chart/jqplot.barRenderer.min" />
+<g:javascript library="chart/jqplot.categoryAxisRenderer.min" />
+<g:javascript library="chart/jqplot.pointLabels.min" />
+<g:javascript library="chart/jqplot.canvasTextRenderer.min" />
 <g:javascript library="chart/jqplot.canvasAxisLabelRenderer.min" />
 <g:javascript library="chart/jqplot.canvasAxisTickRenderer.min" />
-<g:javascript library="jquery.more"/>
-<g:javascript library="select2"/>
-<g:javascript library="chartview"/>
-<link rel="stylesheet" href="${resource(dir:'css',file:'jquery-ui.css')}" type="text/css" />
-<link rel="stylesheet" href="${resource(dir:'css',file:'select2.css')}" type="text/css" />
+<g:javascript library="chart/jqplot.cursor.min.js" />
+<g:javascript library="chart/jqplot.highlighter.min.js" />
+<g:javascript library="jquery.more" />
+<g:javascript library="select2" />
+<g:javascript library="chartview" />
+<g:javascript library="chart/jqplot.draggable.js" />
+<link rel="stylesheet"
+	href="${resource(dir:'css',file:'jquery-ui.css')}" type="text/css" />
+<link rel="stylesheet" href="${resource(dir:'css',file:'select2.css')}"
+	type="text/css" />
 
 <script type="text/javascript">
 
@@ -45,73 +53,126 @@
 		$("#trendid").addClass("changecolor");	
 		$("#executionId").select2();	
 		var defaultValue = "ExecutionBased";
-		$('input[name=chartOption][value=ExecutionBased]').prop('checked', true);	
+		$('input[name=chartOption][value=ExecutionBased]').prop('checked', true);		
+		$("#previous").hide();
+		$("#next").hide();
 	});
 	
 </script>
 </head>
-<body>	
-<div  id="chart1"></div>
+<body>
+	<div id="chart1"></div>
 	<div>
 		<h1>Result Analysis</h1>
 		<g:if test="${flash.message}">
-			<div class="message" role="status">${flash.message}</div>
+			<div class="message" role="status">
+				${flash.message}
+			</div>
 		</g:if>
 		<g:if test="${error}">
 			<ul class="errors" role="alert">
-				<li>${error}</li>
+				<li>
+					${error}
+				</li>
 			</ul>
 		</g:if>
 		<br>
 		<div>
-			<input onclick="showExecutionBased();" type="radio" name="chartOption" value="ExecutionBased" checked="checked"/>Compare Results by Execution Name
-			&emsp;<input onclick="showDeviceBased();" type="radio" name="chartOption" value="DeviceBased" />Compare Results by Device Details    	
+			<g:hiddenField name="startIndex" value="${startIndex}" />
+			<g:hiddenField name="endIndex" value="${endIndex}" />
+			<input onclick="showExecutionBased();" type="radio"
+				name="chartOption" value="ExecutionBased" checked="checked" />Compare
+			Results by Execution Name &emsp;<input onclick="showDeviceBased();"
+				type="radio" name="chartOption" value="DeviceBased" />Compare
+			Results by Device Details
+
 		</div>
-		<br/>
-		
+		<br />
 		<div id="executionbased">
 			<table class="noClass" style="border: 1; border-color: black;">
 				<tr>
 					<td style="vertical-align: top;">Select Execution Names</td>
-					<td>					
-						<g:select id="executionId" multiple="true" style="height:200px;width:400px" name="execution"  from="${executionList}" optionKey="id" value="" class="many-to-one selectCombo"/>								
-					</td>
-			
+					<td><g:select id="executionId" multiple="true"
+							style="height:200px;width:400px" name="execution"
+							from="${executionList}" optionKey="id" value=""
+							class="many-to-one selectCombo" /></td>
+
 					<td style="vertical-align: top;">Select Field To Compare</td>
-					<td>				
-						<g:select id="chartType1" name="chartType" from="${['ExecutionStatus', 'TimingInfo', 'CPU_Utilization','Memory_Utilization','Memory_Used_Percentage']}" value="${count}" required="" />
-					</td>				
-										
+					<td><g:select id="chartType1" name="chartType"
+							from="${['ExecutionStatus', 'TimingInfo', 'CPU_Utilization','Memory_Utilization','Memory_Used_Percentage']}"
+							value="${count}" required="" /></td>
+					<td style="vertical-align: top;">Select chart Type</td>
 					<td>
-	          			<input type="button" value="Compare" onclick="showChart();" /><br>           			
-	          		</td>           		    		
+						<form>
+							<input onclick="showBarChartBased()" type="radio"
+								name="ChartType" id="bar" value="BarChart" checked="checked" />Script
+							Group Wise <br> <input onclick="showLineChartBased()"
+								type="radio" name="ChartType" id="line " value="LineChart" />Script
+							Wise
+						</form>
+					</td>
+					<td><input type="button" value="Compare"
+						onclick="showChart();" /><br></td>
 				</tr>
-			</table>		
+
+			</table>
+			<table>
+				<tr>
+					<td align="left"><input id="previous" type="button"
+						value="Previous " onclick="previousPlot()" class="buttons"
+						style="width: 15%" /></td>
+					<td align="center"><input id="next" type="button" value="Next"
+						onclick="nextPlot()" class="buttons" style="width: 15%" /></td>
+				</tr>
+			</table>
 		</div>
-		
-		<div id="devicebased" style="display:none;" >
+		<div id="devicebased" style="display: none;">
 			<table class="noClass" style="border: 1; border-color: black;">
 				<tr>
 					<td style="vertical-align: middle;">Device</td>
-					<td>
-						<g:select id="devices" name="devices" noSelection="['' : 'Please Select']" from="${Device?.list()}" required="" value="" optionKey="id" class="many-to-one selectCombo" />								
-					</td>
+					<td><g:select id="devices" name="devices"
+							noSelection="['' : 'Please Select']" from="${Device?.list()}"
+							required="" value="" optionKey="id"
+							class="many-to-one selectCombo" /></td>
 					<td style="vertical-align: middle;">ScriptGroup</td>
-					<td>
-						<g:select id="scriptGrp" name="scriptGrp" noSelection="['' : 'Please Select']" from="${ScriptGroup?.list()}" required=""  optionKey="id"  class="many-to-one selectCombo"/>
-					</td>
+					<td><g:select id="scriptGrp" name="scriptGrp"
+							noSelection="['' : 'Please Select']"
+							from="${ScriptGroup?.list()}" required="" optionKey="id"
+							class="many-to-one selectCombo" /></td>
 					<td style="vertical-align: middle;">Select Field To Compare</td>
-					<td>				
-					<g:select id="chartType" name="chartType" from="${['ExecutionStatus', 'TimingInfo', 'CPU_Utilization','Memory_Utilization','Memory_Used_Percentage']}" value="${count}" required="" /></td>									
+					<td><g:select id="chartType" name="chartType"
+							from="${['ExecutionStatus', 'TimingInfo', 'CPU_Utilization','Memory_Utilization','Memory_Used_Percentage']}"
+							value="${count}" required="" /></td>
 					<td style="vertical-align: middle;">Result No's</td>
-					<td><g:select id="resultCount" name="result.count" from="${2..10}" value="${count}" style="width:45px;" required="" /></td>          		
-	          		<td>
-	          			<input type="button" value="Compare" onclick="showChart();" /><br>           			
-	          		</td>           		    		
-				</tr>				
+					<td><g:select id="resultCount" name="result.count"
+							from="${2..10}" value="${count}" style="width:45px;" required="" />
+					</td>
+					<td style="vertical-align: top;">Select chart</td>
+					<td>
+						<form>
+							<input type="radio" name="ChartType1" id="bar" value="BarChart"
+								checked="checked" />Script Group Wise <br> <input
+								type="radio" name="ChartType1" id="line" value="LineChart" />Script
+							Wise
+						</form>
+					</td>
+					<td><input type="button" value="Compare"
+						onclick="showChart1();" /><br></td>
+				</tr>
+			</table>
+			<table>
+				<tr>
+					<td align="left"><input id="previous1" type="button"
+						value="Previous " onclick="previousPlot()" class="buttons"
+						style="width: 15%;display:none" /></td>
+					<td align="center"><input id="next1" type="button"
+						value="Next" onclick="nextPlot()" class="buttons"
+						style="width: 15%;display:none" /></td>
+				</tr>
 			</table>
 		</div>
-		<div class="chartdivclass" id="chartdiv" style="width:100%;height:600px;"></div>				
-	</div>	
+		<div class="chartdivclass" id="chartdiv"
+			style="width: 100%; height: 600px;"></div>
+	</div>
 </body>
-</html> 
+</html>

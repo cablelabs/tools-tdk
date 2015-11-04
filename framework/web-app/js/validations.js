@@ -74,6 +74,15 @@ function populateSoCVendorField(that){
 	});
 }
 
+function populateScriptTagField(that){
+	$.get('getScriptTag', {id:that.id}, function(data) {		
+		document.getElementById("scriptTagId").value = that.id;
+		document.getElementById("name").value = data[0];
+		$("#updateBtn").show(); 
+		$("#resetBtn").show(); 
+		$("#createBtn").hide(); 
+	});
+}
 function populateGroupField(that){
 
 	$.get('getGroup', {id:that.id}, function(data) {			

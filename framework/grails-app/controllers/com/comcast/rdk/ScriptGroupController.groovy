@@ -922,7 +922,8 @@ class ScriptGroupController {
 		def ptest = primitiveService.getPrimitiveTest(getRealPath()+"/fileStore/testscripts/"+scriptsDirName+"/"+moduleName+"/"+moduleName+".xml", params?.ptest)
 //		def module = Module.findByName(moduleName)
 		def scrpt = scriptService.getScript(getRealPath(),moduleName, params?.prevScriptName)
-		
+		def oldBoxTypes = scrpt?.boxTypes
+		def oldRDKVersions = scrpt?.rdkVersions
 		boolean isLongDuration = scrpt?.longDuration
 		
 		if (params.scriptVersion != null) {
@@ -1155,7 +1156,8 @@ class ScriptGroupController {
 		
 		if(boxTypes){
 //			boxTypesList = scriptgroupService.createBoxTypeList(boxTypes)
-			scriptgroupService.removeScriptsFromBoxSuites1(script)
+			scriptgroupService.removeScriptsFromBoxScriptGroup(script,boxTypes,oldBoxTypes)
+//			scriptgroupService.removeScriptsFromBoxSuites1(script)
 			if(isLongDuration != longDuration){
 				scriptgroupService.updateScriptGroup(script,sObject)
 			}
@@ -1165,10 +1167,9 @@ class ScriptGroupController {
 		scriptgroupService.saveToScriptGroups(script,sObject)
 		scriptgroupService.saveToDefaultGroups(script,sObject, bTypes)
 		
+//		scriptgroupService.updateScriptsFromRDKVersionBoxTypeTestSuites1(script,sObject)
 		
-		
-				
-		scriptgroupService.updateScriptsFromRDKVersionBoxTypeTestSuites1(script,sObject)
+		scriptgroupService.updateScriptsFromRDKVersionBoxTypeTestGroup(script,sObject,oldRDKVersions,oldBoxTypes)
 		
 		flash.message = message(code: 'default.updated.message', args: [
 			message(code: 'script.label', default: 'Script'),
@@ -1341,18 +1342,49 @@ class ScriptGroupController {
 	
 	
 	/**
-	 * Method to download the script content as python script file.
+	 * Method to trigger downloading the script content as python script file in script page.
 	 * @return
 	 */
 	def exportScriptContent(){
 		if(params?.id){
-//			Script script = Script.findById(params?.id)
+			if(!exportScript(params)){
+				flash.message = "Download failed. No valid script is available for download."
+				redirect(action: "list")
+			}
+		}else{
+			flash.message = "Download failed. No valid script is available for download."
+			redirect(action: "list")
+		}
+	}
+	
+	/**
+	 * Method to trigger downloading the script content as python script file from the execution result page.
+	 * @return
+	 */
+	def exportScriptData(){
+		if(params?.id){
+			if(!exportScript(params)){
+				flash.message = "Download failed. No valid script is available for download."
+				render "Failed to download Script."
+			}
+		}else{
+			flash.message = "Download failed. No valid script is available for download."
+			render "Failed to download Script."
+		}
+	}
+	
+	
+	/**
+	 * Method to download the script content as pythoin file.
+	 * @param params
+	 * @return
+	 */
+	def exportScript(def params){
 			def sMap = scriptService.getScriptNameModuleNameMapping(getRealPath())
 			def moduleName = sMap.get(params?.id)
 			def scriptDir = primitiveService.getScriptDirName(moduleName)
 			File sFile = new File(getRealPath()+"/fileStore/testscripts/"+scriptDir+"/"+moduleName+"/"+params?.id+".py")
 			if(sFile.exists()){
-//			def script = scriptService.getScript(getRealPath(), moduleName, params?.id)
 			params.format = "text"
 			params.extension = "py"
 			String data = new String(sFile.getBytes())
@@ -1360,14 +1392,9 @@ class ScriptGroupController {
 			response.setHeader("Content-Disposition", "attachment; filename=\""+ params?.id+".py\"")
 			response.setHeader("Content-Length", ""+data.length())
 			response.outputStream << data.getBytes()
-			}else{
-			flash.message = "Download failed. No valid script is available for download."
-			redirect(action: "list")
+			return true
 		}
-		}else{
-			flash.message = "Download failed. No valid script is available for download."
-			redirect(action: "list")
-		}
+		return false
 	}
 	
 	def exportScriptAsXML(){
@@ -1884,5 +1911,58 @@ class ScriptGroupController {
 		render scriptGroup
 	}
 	
+	def verifyScriptFile(String scriptName){
+		ScriptFile scriptFile
+		scriptFile = ScriptFile?.findByScriptName(scriptName)
+		try {
+			if(scriptFile && getScriptFileObj(getRealPath(), scriptFile?.scriptName, scriptFile?.moduleName) == null){
+				def sgList = []
+						def scriptGroups = ScriptGroup.where {
+					scriptList { id == scriptFile?.id }
+				}
+				scriptGroups?.each{ scriptGrp ->
+				sgList.add(scriptGrp?.id)
+				}
+				
+				sgList?.each{ sId ->
+				def sGroup = ScriptGroup.findById(sId)
+				sGroup?.scriptList?.removeAll(scriptFile)
+						sGroup?.save()
+				}
+				scriptFile?.delete()
+				render "Success fully updated"
+			}else{
+				render "Error"
+			}
+		} catch (Exception e) {
+			render "Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+	
+	
+	def getScriptFileObj(realPath,dirName,fileName){
+		dirName = dirName?.trim()
+		fileName = fileName?.trim()
+		Map script = [:]
+		try {
 
+			def moduleObj = Module.findByName(dirName)
+			def scriptDirName = Constants.COMPONENT
+			if(moduleObj){
+				if(moduleObj?.testGroup?.groupValue.equals(TestGroup.E2E.groupValue)){
+					scriptDirName = Constants.INTEGRATION
+				}
+			}
+			File file = new File( "${realPath}//fileStore//testscripts//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
+
+			if(file.exists()){
+				return file;
+			}
+		} catch (Exception e) {
+			script = null
+			e.printStackTrace()
+		}
+		return null;
+	}
 }

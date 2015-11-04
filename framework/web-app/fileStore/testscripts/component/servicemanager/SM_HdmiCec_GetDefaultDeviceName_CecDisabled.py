@@ -97,6 +97,19 @@ iarmObj.setLoadModuleStatus(iarmLoadStatus.upper());
 
 if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
+        #Remove cecData file
+        print "Flush CEC persistent data"
+        tdkTestObj = smObj.createTestStep('SM_HdmiCec_FlushCecData');
+        expectedresult = "SUCCESS"
+        tdkTestObj.executeTestCase(expectedresult);
+        actualresult = tdkTestObj.getResult();
+        details = tdkTestObj.getResultDetails();
+        print "[TEST EXECUTION DETAILS] : ",details;
+        if expectedresult in actualresult:
+                tdkTestObj.setResultStatus("SUCCESS");
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+
 	service_name = "com.comcast.hdmiCec_1"
 
 	register = servicemanager.registerService(smObj,service_name)
@@ -120,7 +133,20 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 print "[TEST EXECUTION DETAILS] : ",setEnabledDetails;
                                 if expectedresult in actualresult:
                                         tdkTestObj.setResultStatus("SUCCESS");
-				
+		
+					#Verify the presence of the cecData file
+					print "Verify the presence of CEC data"
+                                        tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckCecData');
+                                        expectedresult = "SUCCESS"
+                                        tdkTestObj.executeTestCase(expectedresult);
+                                        actualresult = tdkTestObj.getResult();
+                                        details = tdkTestObj.getResultDetails();
+                                        print "[TEST EXECUTION DETAILS] : ",details;
+                                        if expectedresult in actualresult:
+						tdkTestObj.setResultStatus("SUCCESS");
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+
 					print "Get cec enabled default device name"
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetName');
         	                        expectedresult = "SUCCESS"

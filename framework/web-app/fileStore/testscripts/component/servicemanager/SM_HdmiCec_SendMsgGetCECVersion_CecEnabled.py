@@ -99,7 +99,6 @@ iarmObj.setLoadModuleStatus(iarmLoadStatus.upper());
 if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
 	#Calling IARM Bus Init
-	term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
 	init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')	
         if "SUCCESS" in init:
 		connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
@@ -125,7 +124,6 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 					#Set the device Name.
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
-	                                #messageToSend = "30 9F"
 					messageToSend = "30 9F 53 65 74 74 6F 70 42 6F 78"
 					print "Message to be sent to HDMI device: ",messageToSend
 	                                tdkTestObj.addParameter("messageToSend",messageToSend);
@@ -142,7 +140,6 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 						#Check for the message sent for confirmation.
 						tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
 						expectedresult = "SUCCESS"
-						#pattern = "30 9F"
 						pattern = "30 9F 53 65 74 74 6F 70 42 6F 78"
 						tdkTestObj.addParameter("pattern",pattern);
 						tdkTestObj.executeTestCase(expectedresult);

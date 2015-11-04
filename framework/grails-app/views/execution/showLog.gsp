@@ -298,7 +298,7 @@ function hideParameters(k){
 				</tr> --%>
 				<tr class="scripthead">
 					<td style="width:10%;font-weight: bold;">Test Script </td>
-					<td style="width:50%">${executionResultInstance?.script}</td>					
+					<td style="width:50%"><g:link controller="scriptGroup" action="exportScriptData" id="${executionResultInstance?.script}" target="_blank" >${executionResultInstance?.script} </g:link> </td>					
 					<td style="width:10%;font-weight: bold;">Status</td>
 					<td style="width:10%;">${executionResultInstance?.status}</td>					
 					<td style="width:10%;"><a href="#" id="expander${k}_${i}" onclick="this.innerHTML='Hide';viewOnClick(this,${k},${i}); return false;">Details</a></td>

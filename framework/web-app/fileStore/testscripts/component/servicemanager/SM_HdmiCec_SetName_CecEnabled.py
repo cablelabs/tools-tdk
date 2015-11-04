@@ -103,7 +103,6 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
         if "SUCCESS" in register:
 
                 #Calling IARM Bus Init
-                term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
 		init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')
 		if "SUCCESS" in init:
 			connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')

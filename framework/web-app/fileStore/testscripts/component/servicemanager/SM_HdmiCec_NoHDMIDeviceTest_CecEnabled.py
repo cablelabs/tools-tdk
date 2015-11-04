@@ -112,6 +112,19 @@ iarmObj.setLoadModuleStatus(iarmLoadStatus.upper());
 
 if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
+	#Remove cecData file
+        print "Flush CEC persistent data"
+        tdkTestObj = smObj.createTestStep('SM_HdmiCec_FlushCecData');
+        expectedresult = "SUCCESS"
+        tdkTestObj.executeTestCase(expectedresult);
+        actualresult = tdkTestObj.getResult();
+        details = tdkTestObj.getResultDetails();
+        print "[TEST EXECUTION DETAILS] : ",details;
+        if expectedresult in actualresult:
+                tdkTestObj.setResultStatus("SUCCESS");
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+
 	service_name = "com.comcast.hdmiCec_1"
 
 	register = servicemanager.registerService(smObj,service_name)
@@ -150,8 +163,8 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 expectedresult = "SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
-                                setNameDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",setNameDetails;
+                                getNameDetails = tdkTestObj.getResultDetails();
+                                print "[TEST EXECUTION DETAILS] : ",getNameDetails;
                                 if expectedresult in actualresult:
                                         print "DefaultName: %s GetName return value: %s"%(defaultName,getNameDetails)
                                         #Compare the default name with current name.
@@ -191,6 +204,19 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
 
+				#Verify the presence of the cecData file
+        			print "Verify the presence of CEC data"
+        			tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckCecData');
+        			expectedresult = "SUCCESS"
+        			tdkTestObj.executeTestCase(expectedresult);
+        			actualresult = tdkTestObj.getResult();
+        			details = tdkTestObj.getResultDetails();
+        			print "[TEST EXECUTION DETAILS] : ",details;
+        			if expectedresult in actualresult:
+                			tdkTestObj.setResultStatus("SUCCESS");
+        			else:
+                			tdkTestObj.setResultStatus("FAILURE");
+
                                 #Set the device Name
 				nameToSet = "tdktestname"
 				print "Set device name to ", nameToSet
@@ -212,8 +238,8 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 expectedresult = "SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
-                                setNameDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",setNameDetails;
+                                getNameDetails = tdkTestObj.getResultDetails();
+                                print "[TEST EXECUTION DETAILS] : ",getNameDetails;
                                 if expectedresult in actualresult:
                                         tdkTestObj.setResultStatus("SUCCESS");
                                 else:

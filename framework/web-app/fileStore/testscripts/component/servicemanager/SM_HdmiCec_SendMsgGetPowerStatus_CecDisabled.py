@@ -121,8 +121,8 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 print "[TEST EXECUTION DETAILS] : ",setEnabledDetails;
                                 if expectedresult in actualresult:
 					tdkTestObj.setResultStatus("SUCCESS");
-					
-					#Set the device Name.
+                                        #Sending the message to the connected device
+
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
 	                                messageToSend = "30 8F 33 95 74 54 5F 30 42 7F 55"
@@ -134,7 +134,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
         	                        print "[TEST EXECUTION DETAILS] : ",sendMsgDetails;
 					if expectedresult in actualresult:
 						tdkTestObj.setResultStatus("SUCCESS");
-	
+                                                sleep(5); 	
 						#Check for the message sent for confirmation.
 						tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
 						expectedresult = "SUCCESS"
@@ -150,7 +150,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 							print "Log path : %s" %logpath;
 							#tdkTestObj.transferLogs(logpath,"false");
 							
-							#Check for the replay from the Cec device.
+							#Check for the reply from the Cec device.
                                                         tdkTestObj = smObj.createTestStep('SM_RegisterForEvents');	
 		                                        expectedresult = "SUCCESS"
                                                         expectedresult="SUCCESS"
@@ -164,6 +164,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                                                 eventregisterdetail =tdkTestObj.getResultDetails(); 
                                                                 print eventregisterdetail;
                                                                 print "SUCCESS: Application succesfully executes SM_RegisterForEvents API";
+                                                                sleep(5);
                                                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
                 		                                expectedresult = "SUCCESS"
                                                                 #Assuming TV is on and should receive power state 039000
@@ -221,4 +222,4 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
         #Unload the modules
         smObj.unloadModule("servicemanager");
-        iarmObj.unloadModule("iarmbus"); 
+        iarmObj.unloadModule("iarmbus");

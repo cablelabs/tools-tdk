@@ -44,7 +44,6 @@ import tdklib;
 import devicesettings;
 import iarmbus;
 import servicemanager;
-from time import sleep;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script

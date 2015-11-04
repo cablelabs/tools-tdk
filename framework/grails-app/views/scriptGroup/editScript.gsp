@@ -92,7 +92,7 @@ function clearLocks(scriptName){
 		<tr>
 			<td>RDK Version</td>
 			<td>
-				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.list()}" optionKey="id" required="" value="${script.rdkVersions}" class="many-to-one selectCombo" multiple="true"/>
+				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.list()}" optionKey="id" required="" value="${script?.rdkVersions}" class="many-to-one selectCombo" multiple="true"/>
 			</td>
 		</tr>
 

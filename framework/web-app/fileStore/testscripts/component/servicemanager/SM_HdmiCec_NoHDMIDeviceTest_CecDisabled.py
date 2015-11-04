@@ -112,6 +112,19 @@ iarmObj.setLoadModuleStatus(iarmLoadStatus.upper());
 
 if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
+	#Remove cecData file
+        print "Flush CEC persistent data"
+        tdkTestObj = smObj.createTestStep('SM_HdmiCec_FlushCecData');
+        expectedresult = "SUCCESS"
+        tdkTestObj.executeTestCase(expectedresult);
+        actualresult = tdkTestObj.getResult();
+        details = tdkTestObj.getResultDetails();
+        print "[TEST EXECUTION DETAILS] : ",details;
+        if expectedresult in actualresult:
+                tdkTestObj.setResultStatus("SUCCESS");
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+
 	service_name = "com.comcast.hdmiCec_1"
 
 	register = servicemanager.registerService(smObj,service_name)
@@ -125,27 +138,42 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
                                 #Get CEC enabled value
                                 print "Get default CEC Enable value"
+                                defaultCec = 0
                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetEnabled');
                                 expectedresult = "SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
-                                setEnabledDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",setEnabledDetails;
+                                getEnabledDetails = tdkTestObj.getResultDetails();
+                                print "[TEST EXECUTION DETAILS] : ",getEnabledDetails;
                                 if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
+                                        #Compare the default value with get value
+                                        if defaultCec == int(getEnabledDetails):
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                print "Get Default CecSupport returned false as expected"
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "Get Default CecSupport did not return false as expected"
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
 
                                 #Get the device Name
                                 print "Get default device name"
+				defaultName = "STB"
                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetName');
                                 expectedresult = "SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
-                                setNameDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",setNameDetails;
+                                getNameDetails = tdkTestObj.getResultDetails();
+                                print "[TEST EXECUTION DETAILS] : ",getNameDetails;
                                 if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
+                                        print "DefaultName: %s GetName return value: %s"%(defaultName,getNameDetails)
+                                        #Compare the default name with current name.
+                                        if defaultName == getNameDetails:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                print "getName return value matches with default name"
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "getName return value does not match with default name"
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
 
@@ -176,6 +204,19 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
 
+				#Verify the presence of the cecData file
+        			print "Verify the presence of CEC data"
+        			tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckCecData');
+        			expectedresult = "SUCCESS"
+        			tdkTestObj.executeTestCase(expectedresult);
+        			actualresult = tdkTestObj.getResult();
+        			details = tdkTestObj.getResultDetails();
+        			print "[TEST EXECUTION DETAILS] : ",details;
+        			if expectedresult in actualresult:
+                			tdkTestObj.setResultStatus("SUCCESS");
+        			else:
+                			tdkTestObj.setResultStatus("FAILURE");
+
                                 #Set the device Name
 				nameToSet = "tdktestname"
 				print "Set device name to ", nameToSet
@@ -197,8 +238,8 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 expectedresult = "SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
-                                setNameDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",setNameDetails;
+                                getNameDetails = tdkTestObj.getResultDetails();
+                                print "[TEST EXECUTION DETAILS] : ",getNameDetails;
                                 if expectedresult in actualresult:
                                         tdkTestObj.setResultStatus("SUCCESS");
                                 else:

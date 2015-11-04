@@ -122,24 +122,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 if expectedresult in actualresult:
 					tdkTestObj.setResultStatus("SUCCESS");
 					
-					#Clear the cec.txt
-					tdkTestObj = smObj.createTestStep('SM_HdmiCec_ClearCecLog');						
-					expectedresult = "SUCCESS"
-					tdkTestObj.executeTestCase(expectedresult);
-					actualresult = tdkTestObj.getResult();
-					clearLogDetails = tdkTestObj.getResultDetails();
-					print "[TEST EXECUTION DETAILS] : ",clearLogDetails;
-					if expectedresult in actualresult:
-						tdkTestObj.setResultStatus("SUCCESS");
-						print "Clearing the Cec log success"
-					else:
-						tdkTestObj.setResultStatus("FAILURE");
-						print "Clearing the Cec log failure"
-
-					#Clear cec.txt and send the msg.
-					sleep(5)
-
-					#Set the device Name.
+					#Set the abort opcode
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
 					#Send the random message.
@@ -167,7 +150,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 							print "Log path : %s" %logpath;
 							#tdkTestObj.transferLogs(logpath,"false");
 							
-							#Check for the replay from the Cec device.
+							#Check for the reply from the Cec device.
 							tdkTestObj = obj.createTestStep('SM_HdmiCec_OnMessage');	
 		                                        expectedresult = "SUCCESS"
 		                                        #TODO: Need confirmation from Devlopement team.  Assuming to receive INVALID.

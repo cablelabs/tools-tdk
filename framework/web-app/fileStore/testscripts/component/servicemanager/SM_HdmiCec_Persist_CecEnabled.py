@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_HdmiCec_Persist_CecEnabled</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -96,12 +96,24 @@ iarmObj.setLoadModuleStatus(iarmLoadStatus.upper());
 if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
 	#Calling IARM Bus Init
-	term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
 	init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')	
         if "SUCCESS" in init:
 		connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
 		if "SUCCESS" in connect:
-			#TODO: Remove cecData file
+
+        		#Remove cecData file
+        		print "Flush CEC persistent data"
+        		tdkTestObj = smObj.createTestStep('SM_HdmiCec_FlushCecData');
+        		expectedresult = "SUCCESS"
+        		tdkTestObj.executeTestCase(expectedresult);
+        		actualresult = tdkTestObj.getResult();
+        		details = tdkTestObj.getResultDetails();
+        		print "[TEST EXECUTION DETAILS] : ",details;
+        		if expectedresult in actualresult:
+                		tdkTestObj.setResultStatus("SUCCESS");
+        		else:
+                		tdkTestObj.setResultStatus("FAILURE");
+
 			#Create HdmiCecService instance 1 
 			service_name = "com.comcast.hdmiCec_1"
 			register = servicemanager.registerService(smObj,service_name)
@@ -140,7 +152,18 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
 
-				#TODO: Verify the presence of the cecData file
+                                #Verify the presence of the cecData file
+                                print "Verify the presence of CEC data"
+                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckCecData');
+                                expectedresult = "SUCCESS"
+                                tdkTestObj.executeTestCase(expectedresult);
+                                actualresult = tdkTestObj.getResult();
+                                details = tdkTestObj.getResultDetails();
+                                print "[TEST EXECUTION DETAILS] : ",details;
+                                if expectedresult in actualresult:
+                                        tdkTestObj.setResultStatus("SUCCESS");
+                                else:
+                                        tdkTestObj.setResultStatus("FAILURE");
 
                                 #Delete HdmiCecService instance 1
                                 unregister = servicemanager.unRegisterService(smObj,service_name)

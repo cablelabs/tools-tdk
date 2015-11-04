@@ -104,7 +104,6 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
         if "SUCCESS" in register:
 
                 #Calling IARM Bus Init
-                term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
 		init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')
 		if "SUCCESS" in init:
 			connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
@@ -151,7 +150,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 							print "Log path : %s" %logpath;
 							#tdkTestObj.transferLogs(logpath,"false");
 							
-							#Check for the replay from the Cec device.
+							#Check for the reply from the Cec device.
 							tdkTestObj = smObj.createTestStep('SM_RegisterForEvents');	
 		                                        expectedresult = "SUCCESS"
                                                         expectedresult="SUCCESS"
@@ -224,4 +223,3 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
         #Unload the modules
         smObj.unloadModule("servicemanager");
         iarmObj.unloadModule("iarmbus");
-

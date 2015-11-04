@@ -73,12 +73,12 @@ class ScriptgroupService {
 						if(module?.testGroup != TestGroup.OpenSource){
 							names.add(vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE)
 						}
-						removeScriptsFromSuites(scriptInstance, vers?.toString()+"_"+bType?.name+"_LD")
+						removeScriptFromScriptGroup(scriptInstance, vers?.toString()+"_"+bType?.name+"_LD")
 				   }else{
 				   
 				   		try {
-							removeScriptsFromSuites(scriptInstance, vers?.toString()+"_"+bType?.name)
-							removeScriptsFromSuites(scriptInstance, vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE)
+							removeScriptFromScriptGroup(scriptInstance, vers?.toString()+"_"+bType?.name)
+							removeScriptFromScriptGroup(scriptInstance, vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE)
 						} catch (Exception e) {
 							e.printStackTrace()
 						}
@@ -110,10 +110,10 @@ class ScriptgroupService {
 		try {
 			String moduleName = scriptObj.getModule()
 			if(scriptObj.getLongDuration()){
-				removeScriptsFromSuites(scriptInstance, moduleName)
+				removeScriptFromScriptGroup(scriptInstance, moduleName)
 				moduleName = moduleName + "_LD"
 			}else{
-				removeScriptsFromSuites(scriptInstance, moduleName+"_LD")
+				removeScriptFromScriptGroup(scriptInstance, moduleName+"_LD")
 			}
 			
 			def scriptGrpInstance = ScriptGroup.findByName(moduleName)
@@ -161,9 +161,9 @@ class ScriptgroupService {
 		 
 		 if(scriptObject.getLongDuration()){
 			 groupName = groupName + "_LD"
-			 removeScriptsFromSuites(scriptInstance, module?.testGroup?.toString() + KEY_GROUP)
-		 }else{
-			 removeScriptsFromSuites(scriptInstance, module?.testGroup?.toString() + KEY_GROUP+"_LD")
+			removeScriptFromScriptGroup(scriptInstance, module?.testGroup?.toString() + KEY_GROUP)
+		}else{
+			removeScriptFromScriptGroup(scriptInstance, module?.testGroup?.toString() + KEY_GROUP+"_LD")
 		 }
 		 
 		 
@@ -177,9 +177,9 @@ class ScriptgroupService {
  
 			 if(scriptObject.getLongDuration()){
 				 groupName = groupName + "_LD"
-				 removeScriptsFromSuites(scriptInstance, box?.name + KEY_GROUP)
+				 removeScriptFromScriptGroup(scriptInstance, box?.name + KEY_GROUP)
 			 }else{
-				 removeScriptsFromSuites(scriptInstance, box?.name + KEY_GROUP+"_LD")
+				 removeScriptFromScriptGroup(scriptInstance, box?.name + KEY_GROUP+"_LD")
 			 }
  
 			 createOrUpdateScriptGroups(scriptInstance, groupName)
@@ -187,6 +187,11 @@ class ScriptgroupService {
 		 }
 		 
 	 }
+	
+	private boolean checkIsPresent(ScriptFile sFile , String scriptGroupName){
+		ScriptGroup sg = ScriptGroup.findByName(scriptGroupName)
+		return sg?.scriptList?.contains(sFile)
+	}
 	
 	
 	/**
@@ -268,6 +273,32 @@ class ScriptgroupService {
 			}
 	}
 	
+	def removeScriptsFromBoxScriptGroup(final def scriptInstance,List boxTypes,List oldBoxTypes){
+		String groupName
+		try {
+			oldBoxTypes?.each {boxType ->
+				groupName = boxType.name + KEY_GROUP
+				if(!boxTypes?.contains(boxType)){
+				ScriptGroup.withTransaction {
+					def scriptGrpInstance = ScriptGroup?.findByName(groupName)
+					if(scriptGrpInstance){
+						if(scriptInstance){
+							if(scriptGrpInstance?.scriptList?.contains(scriptInstance)){
+								scriptGrpInstance?.removeFromScriptList(scriptInstance)
+								if(!scriptGrpInstance?.save(flush:true)){
+									println " EEE "+scriptGrpInstance?.errors
+								}
+							}
+						}
+					}
+				}
+				}
+			}
+		} catch (Exception e) {
+			println " Error "+e.getMessage()+" Script "+scriptInstance?.scriptName + " group "+groupName
+			e.printStackTrace()
+		}
+	}
 	/**
 	 * Method to save the script to relevant script groups and remove from others.
 	 * @param scriptInstance
@@ -578,5 +609,84 @@ class ScriptgroupService {
 			}
 		}
 
+	}
+	def removeScriptFromScriptGroup(final ScriptFile scriptInstance, final String sgName){
+
+		def scriptGrpInstance = ScriptGroup.findByName(sgName)
+		if(scriptGrpInstance){
+			if(scriptInstance){
+				if(scriptGrpInstance.scriptList.contains(scriptInstance)){
+					scriptGrpInstance.removeFromScriptList(scriptInstance)
+				}
+			}
+		}
+
+	}
+	
+	def removeFromScriptList(def final vers , def final bType , def final scriptInstance){
+		def groupNames  = [
+			vers?.toString()+"_"+bType?.name,
+			vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE,
+			vers?.toString()+"_"+bType?.name+"_LD"
+		]
+		groupNames.each {  groupName ->
+			def scriptGrpInstance = ScriptGroup.findByName(groupName)
+			if(scriptGrpInstance && scriptGrpInstance?.scriptList?.contains(scriptInstance)){
+				scriptGrpInstance.removeFromScriptList(scriptInstance)
+			}
+		}
+	}
+	
+	def updateScriptsFromRDKVersionBoxTypeTestGroup(final def scriptInstance,final ScriptObject sObject , final def oldRDKVersions, final def oldBoxTypes){
+		def time1 = System.currentTimeMillis()
+		try {
+			def bTypeList = BoxType.findAll()
+			def rdkVersionList = RDKVersions?.findAll()
+			
+			def bTypes = sObject?.getBoxTypes()
+			def versions = sObject?.getRdkVersions()
+			oldBoxTypes?.each { bt ->
+				oldRDKVersions?.each { ver ->
+					if(!bTypes?.contains(bt) || !versions?.contains(ver)){
+						removeFromScriptList(ver, bt, scriptInstance)
+					}
+				}
+			}
+			
+			sObject?.getBoxTypes()?.each{ bType ->
+
+				sObject?.getRdkVersions()?.each{ vers ->
+					
+					Module module
+					Module.withTransaction{
+						module = Module.findByName(sObject?.module)
+					}
+					
+			def names = []
+			if(!sObject?.getLongDuration()){
+				names.add(vers?.toString()+"_"+bType?.name)
+				if(module?.testGroup != TestGroup.OpenSource){
+					names.add(vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE)
+				}
+		   }else{
+				names.add(vers?.toString()+"_"+bType?.name+"_LD")
+		   }
+		   
+			names.each {  name ->
+				def scriptGrpInstance = ScriptGroup.findByName(name)
+				if(!scriptGrpInstance){
+					scriptGrpInstance = new ScriptGroup()
+					scriptGrpInstance.name = name
+					scriptGrpInstance.save()
+				}
+				if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptInstance)){
+					scriptGrpInstance.addToScriptList(scriptInstance)
+				}
+			}
+		}
+	}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 	}
 }
