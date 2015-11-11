@@ -3,7 +3,7 @@
 <xml>
   <id>1168</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVR_Get_Recording_List</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Get the List and deatils of the DVR recordings.</synopsis>
+  <synopsis>Get the List and details of the DVR recordings.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -55,7 +55,7 @@ def rmfAppMod():
     #This will be replaced with corresponding Box Ip and port while executing script
     ip = <ipaddress>
     port = <port>
-    obj.configureTestCase(ip,port,'E2E_rmfapp_record_and_quit');
+    obj.configureTestCase(ip,port,'TdkRmfApp_CreateRecording');
 
     #Get the result of connection with test component and STB
     result =obj.getLoadModuleResult();
@@ -71,21 +71,26 @@ def rmfAppMod():
     obj.setLoadModuleStatus(result);
 
     #Prmitive test case which initiates recording if no recordings found
-    tdkTestObj = obj.createTestStep('E2E_rmfapp_record_url');
+    tdkTestObj = obj.createTestStep('TdkRmfApp_CreateRecording');
 
     streamDetails = tdkTestObj.getStreamDetails('01');
 
     recordtitle = "test_dvr"
-    recordid = "11111"
+    recordid = "11111114"
     recordduration = "1"
+    ocapid = streamDetails.getOCAPID();
 
-    cmd = 'record -id ' + recordid + ' -duration ' + recordduration + ' -title ' + recordtitle + ' http://' + streamDetails.getGatewayIp() + ':8080/hnStreamStart?live=ocap://' + streamDetails.getOCAPID();
+    print "Record ID : ", recordid
+    print "Duration : ", recordduration
+    print "Title : ", recordtitle
+    print "Ocap ID : ", ocapid
 
-    print "Request record URL : %s" %cmd;
-    tdkTestObj.addParameter("rmfapp_command",cmd);
+    tdkTestObj.addParameter("recordId",recordid);
+    tdkTestObj.addParameter("recordDuration",recordduration);
+    tdkTestObj.addParameter("recordTitle",recordtitle);
+    tdkTestObj.addParameter("ocapId",ocapid);
 
-    expectedresult="Test Suite Executed"
-    print "Sending command to CLI interface of application..."
+    expectedresult="SUCCESS"
 
     #Execute the test case in STB
     tdkTestObj.executeTestCase(expectedresult);
@@ -95,19 +100,18 @@ def rmfAppMod():
     print "[TEST EXECUTION RESULT] : %s" %result;
 
     if expectedresult in result:
-         tdkTestObj.setResultStatus("SUCCESS");
-         print "SUCCESS: command was processed by rmfApp application."
-    else:
-         tdkTestObj.setResultStatus("FAILURE");
-         details=tdkTestObj.getResultDetails();
-         print "FAILURE: rmfApp failed. Details: %s" %details;
-         obj.unloadModule("rmfapp");
-         return 0;
+        tdkTestObj.setResultStatus("SUCCESS");
+	print "SUCCESS: command was processed by rmfApp application."
+        duration = int(recordduration)
+        time.sleep(duration * 60) #delay so that recording will happen.
+	time.sleep(10)
+        obj.initiateReboot()
 
-    duration = int(recordduration)
-    print duration
-    time.sleep(duration * 60) #delay so that recording will happen.
-    print "Sleep successful"
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+        details=tdkTestObj.getResultDetails();
+        print "FAILURE: rmfApp failed. Details: %s" %details;
+
     obj.unloadModule("rmfapp");
 
     return 0;
@@ -195,6 +199,5 @@ if "NULL" not in logpath.upper():
      #check if numOfRecordings is 0, then initiate the recording.
      if 0 == numOfRecordings:
           rmfAppMod();
-          os.system('python resetAgent.py');
           getRecordList();
           print "Finished call to rmfAppMod"
