@@ -81,12 +81,12 @@ if "SUCCESS" in loadmodulestatus.upper():
         dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
 
         #Get key info from sessions created
-        dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
-        dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"deviceType":0})
+        dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"deviceType":1})
 
         #Post-Cond: Delete all sessions,stopsrc
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":0})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
         dtcp.stopSource(tdkTestObj,expectedresult)
   else:
         print "DTCP StartSource failed"

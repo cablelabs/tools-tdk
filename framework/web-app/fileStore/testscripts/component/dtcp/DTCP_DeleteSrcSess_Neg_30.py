@@ -75,7 +75,7 @@ if "SUCCESS" in loadmodulestatus.upper():
   srcNum = dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
   print "num of src sessions before creating new session: [%s]"%srcNum
   #Calling DeleteSrcSession
-  dtcp.deleteSession(tdkTestObj,'FAILURE',kwargs={"index":0,"deviceType":0})
+  dtcp.deleteSession(tdkTestObj,'FAILURE',kwargs={"deviceType":0})
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");

@@ -25,7 +25,7 @@ TestcaseID: CT_DTCP_36</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>test case is  DTCP library vendor specific</remarks>
+  <remarks>As per PACXG1V3-5022 test case is  DTCP library vendor specific</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
   <skip>true</skip>
   <!--  -->
@@ -87,8 +87,8 @@ if "SUCCESS" in loadmodulestatus.upper():
         #Post-Cond: Deleting all source sessions,stopSource
         srcNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0}))
         for index in range (0,srcNum):
-              dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":index,"deviceType":0})
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+              dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":0})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
         dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
         dtcp.stopSource(tdkTestObj,expectedresult)
 

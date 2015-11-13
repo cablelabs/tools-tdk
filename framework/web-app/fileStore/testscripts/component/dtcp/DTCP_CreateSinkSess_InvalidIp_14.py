@@ -76,7 +76,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         result=dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'0.42.42.42','srcPort':5006,'uniqueKey':0,'maxPacketSize':4096})
         #Post-Cond: DeleteSinkSession,StopSrc
         if expectedresult not in result:
-            dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+            dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
         dtcp.stopSource(tdkTestObj,expectedresult)
   else:
         print "DTCP StartSource failed"

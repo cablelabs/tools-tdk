@@ -78,8 +78,8 @@ if "SUCCESS" in loadmodulestatus.upper():
         result=dtcp.createSourceSession(tdkTestObj,'FAILURE',kwargs={"sinkIp":'0.42.42.42',"keyLabel":0,"pcpPacketSize":0,"maxPacketSize":4096})
         #If sink session creation is allowed in failure case call DeleteDTCPSession
         if "FAILURE" in result:
-                dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+                dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":0})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
         #Post-Cond: DTCPMgrStopSource
         dtcp.stopSource(tdkTestObj,expectedresult)
   else:

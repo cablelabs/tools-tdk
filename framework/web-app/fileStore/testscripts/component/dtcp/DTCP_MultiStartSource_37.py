@@ -25,7 +25,7 @@ TestcaseID: CT_DTCP_37</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>test case is DTCP library vendor specific</remarks>
+  <remarks>As per PACXG1V3-5022 test case is  DTCP library vendor specific</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
   <skip>true</skip>
   <!--  -->
@@ -73,11 +73,11 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Executing 10 instances of StartSource
   for port in range (6000,6010):
       dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
-      result1 = tdkTestObj.getResult();
+      result = tdkTestObj.getResult();
   #Add new listener with StartSource (11th instance)
   dtcp.startSource(tdkTestObj,'FAILURE',kwargs={'ifName':'lo','port':6010})
   #Post-Cond: Stop all sources
-  if "SUCCESS" in result1:
+  if "SUCCESS" in result:
         dtcp.stopSource(tdkTestObj,expectedresult)
 
   #Unload the dtcp module

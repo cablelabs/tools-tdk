@@ -78,7 +78,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5005,'uniqueKey':0,'maxPacketSize':4096})
         dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
         #Post-Cond: DeleteSinkSession,StopSrc
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
         dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
         dtcp.stopSource(tdkTestObj,expectedresult)
 

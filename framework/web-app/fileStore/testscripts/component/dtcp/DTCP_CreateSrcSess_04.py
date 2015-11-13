@@ -71,14 +71,14 @@ if "SUCCESS" in loadmodulestatus.upper():
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":5})
   dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5008})
-  result1 = tdkTestObj.getResult();
-  if "SUCCESS" in result1:
+  result = tdkTestObj.getResult();
+  if "SUCCESS" in result:
         dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5008,'uniqueKey':0,'maxPacketSize':4096})
         #Calling CreateSourceSession
         dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={"sinkIp":'127.0.0.1',"keyLabel":0,"pcpPacketSize":0,"maxPacketSize":4096})
         #Post-Cond: DeleteDTCPSession,DTCPMgrStopSource
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":0})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
         dtcp.stopSource(tdkTestObj,expectedresult)
   else:
         print "DTCP Start Source failed"

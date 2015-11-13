@@ -71,10 +71,15 @@ if "SUCCESS" in loadmodulestatus.upper():
   expectedresult="SUCCESS";
   #Pre-cond: DTCPMgrInit
   dtcp.init(tdkTestObj,expectedresult);
-  dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
+  dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":5})
+  num = dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
+  if int(num) != 0:
+      print "Sink or Source sessions are present to process packets. Pre-req not met"
+  else:
+      print "No Sink or Source sessions found to process packets"
+
   #Calling ProcessPacket
-  dtcp.processPacket(tdkTestObj,'FAILURE',kwargs={"index":0})
+  dtcp.processPacket(tdkTestObj,'FAILURE',kwargs={})
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");

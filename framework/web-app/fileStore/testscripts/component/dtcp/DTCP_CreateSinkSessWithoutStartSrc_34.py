@@ -76,7 +76,7 @@ if "SUCCESS" in loadmodulestatus.upper():
   result = dtcp.createSinkSession(tdkTestObj,'FAILURE',kwargs={'srcIp':'127.0.0.1','srcPort':5004,'uniqueKey':0,'maxPacketSize':4096})
   #If sink session creation is allowed in failure case call DeleteDTCPSession
   if expectedresult not in result:
-      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");

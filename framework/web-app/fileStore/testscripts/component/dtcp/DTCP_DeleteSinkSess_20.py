@@ -77,7 +77,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         print "num of sink sessions before creating new session: [%s]"%prevNum
         dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5010,'uniqueKey':0,'maxPacketSize':4096})
         #Calling DeleteSinkSession
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
         #Check if session is deleted successfully
         fnName="DTCPMgrGetNumSessions";
         #Add parameters to test object

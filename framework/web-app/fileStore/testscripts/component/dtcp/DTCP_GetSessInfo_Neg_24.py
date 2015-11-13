@@ -74,7 +74,7 @@ if "SUCCESS" in loadmodulestatus.upper():
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
   #Calling GetSessionInfo
-  dtcp.getSessionInfo(tdkTestObj,'FAILURE',kwargs={"index":0,"deviceType":0})
+  dtcp.getSessionInfo(tdkTestObj,'FAILURE',kwargs={"deviceType":0})
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");

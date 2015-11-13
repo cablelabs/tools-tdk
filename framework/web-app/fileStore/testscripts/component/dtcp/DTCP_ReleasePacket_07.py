@@ -3,9 +3,9 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>9</version>
+  <version>10</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>DTCP_ProcessSrcPacket_06</name>
+  <name>DTCP_ReleasePacket_07</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id> </primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -15,9 +15,9 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>To process(encrypt) the provided buffers and create a DTCP-IP packet.
+  <synopsis>To release DTCP-IP packet. The processed packet may contain DTCP Manager allocated/owned buffers/memory - this call frees up these resources. 
 TestType: Positive
-TestcaseID: CT_DTCP_06</synopsis>
+TestCaseID: CT_DTCP_07</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -54,7 +54,7 @@ obj = tdklib.TDKScriptingLibrary("dtcp","2.0");
 #This will be replaced with corresponding Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'DTCP_ProcessSrcPacket_06');
+obj.configureTestCase(ip,port,'DTCP_ReleasePacket_07');
 
 #Get the result of connection with test component and STB
 loadmodulestatus = obj.getLoadModuleResult();
@@ -70,18 +70,18 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Pre-Cond: Init,StartSource,CreateSrcSession,CreateSinkSession
   dtcp.init(tdkTestObj,expectedresult);
   dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5015})
+  dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5017})
   result = tdkTestObj.getResult();
   if "SUCCESS" in result:
         #Disable unique key exchange
-        dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5015,'uniqueKey':0,'maxPacketSize':4096})
+        dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5017,'uniqueKey':0,'maxPacketSize':4096})
         #No session exchange key
         dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
-        #Calling Process Packet
-        dtcp.processPacket(tdkTestObj,expectedresult,kwargs={"index":0})
+        #Calling Release Packet
+        dtcp.releasePacket(tdkTestObj,expectedresult,kwargs={})
         #Post-Cond: DeleteSinkSession,DeleteSrcSession,StopSource
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":0})
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":0})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
         dtcp.stopSource(tdkTestObj,expectedresult)
   else:
         print "DTCP StartSource failed"

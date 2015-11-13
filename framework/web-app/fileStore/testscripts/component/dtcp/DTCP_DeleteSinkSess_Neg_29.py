@@ -75,7 +75,7 @@ if "SUCCESS" in loadmodulestatus.upper():
   sinkNum = dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
   print "num of sink sessions before creating new session: [%s]"%sinkNum
   #Calling DeleteSinkSession
-  dtcp.deleteSession(tdkTestObj,'FAILURE',kwargs={"index":0,"deviceType":1})
+  dtcp.deleteSession(tdkTestObj,'FAILURE',kwargs={"deviceType":1})
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");

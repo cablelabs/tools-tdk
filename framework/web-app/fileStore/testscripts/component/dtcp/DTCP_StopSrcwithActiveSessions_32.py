@@ -85,14 +85,14 @@ if "SUCCESS" in loadmodulestatus.upper():
   #Delete all source sessions
   srcNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0}))
   for index in range (0,srcNum):
-      dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"index":index,"deviceType":0})
-      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":index,"deviceType":0})
+      dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"deviceType":0})
+      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":0})
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
   #Delete all sink sessions
   sinkNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1}))
   for index in range (0,sinkNum):
-      dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"index":index,"deviceType":1})
-      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":index,"deviceType":1})
+      dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"deviceType":1})
+      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
 
   #Unload the dtcp module

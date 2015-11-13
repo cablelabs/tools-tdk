@@ -75,9 +75,9 @@ if "SUCCESS" in loadmodulestatus.upper():
   if "SUCCESS" in result:
         dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5012,'uniqueKey':0,'maxPacketSize':4096})
         #Calling Get Sink SessionInfo
-        dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"deviceType":1})
         #Post-Cond: DeleteSinkSession,StopSource
-        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"index":0,"deviceType":1})
+        dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
         dtcp.stopSource(tdkTestObj,expectedresult)
   else:
         print "DTCP StartSource Failed"
