@@ -188,8 +188,8 @@
 				</td>
 				<td style="width: 5%">
 				<br><br><br><br>
-				<input type="image" src= "../images/arrow_right.png" onclick="addScripts();return false;"  ><br><br>
-				<input type="image" src= "../images/arrow_left.png" onclick="removeScripts();return false;">
+				<input type="image" src= "../images/arrow_right.png" onclick="addScripts();return false;"  title = " Add Scripts" ><br><br>
+				<input type="image" src= "../images/arrow_left.png" onclick="removeScripts();return false;"  title = "Remove Scripts">
 				</td>
 				<td name="sortabletd"style="width: 45%">
 				<br>
@@ -209,8 +209,8 @@
 				</td>
 				<td style="width: 5%">
 					<br><br>
-					<input type="image" src= "../images/reorder_up.png" onclick="moveUp();return false;" > <br><br>
-					<input type="image" src="../images/reorder_down.png" onclick="moveDown();return false;">
+					<input type="image" src= "../images/reorder_up.png" onclick="moveUp();return false;"  title  = " Move Up"> <br><br>
+					<input type="image" src="../images/reorder_down.png" onclick="moveDown();return false;"  title  = "Move Down">
 				</td>
 			</tr>
 		</table>

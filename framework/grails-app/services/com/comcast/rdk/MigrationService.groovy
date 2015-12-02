@@ -95,6 +95,7 @@ class MigrationService {
 		migrateBoxModel()
 		migrateBoxType()
 		migrateRDKVersion()
+		migrateScriptTag()
 	}
 
 	/**
@@ -382,6 +383,49 @@ class MigrationService {
 						rdkVersion.groups = groups
 					}
 					if(!rdkVersion.save(flush:true)){
+					//	println "Error saving rdkVersion instance : ${rdkVersion.errors}"
+					}
+				}catch(Exception e ){
+				}
+			}
+		}
+
+	}
+	
+	
+	/**
+	 * Migrate data from Script Tag
+	 * @return
+	 */
+	def migrateScriptTag(){
+		def scriptTagTempList = []
+		ScriptTag.temp.withSession {
+			scriptTagTempList = ScriptTag.temp.findAll();
+		}
+
+		List migrationList = []
+		scriptTagTempList.each {tempEntry ->
+			RDKVersions.withSession {
+				def scriptTag = ScriptTag.findByName(tempEntry?.name)
+				if(!scriptTag){
+					migrationList.add(tempEntry)
+				}
+			}
+		}
+		migrationList.each{ mObject ->
+			def groups
+			Groups.withSession {
+				groups = Groups.findByName(mObject?.groups?.name)
+			}
+			ScriptTag.withSession {
+				try{
+					ScriptTag scriptTag  = new ScriptTag()
+					scriptTag.properties = mObject.getProperties()
+
+					if(groups){
+						scriptTag.groups = groups
+					}
+					if(!scriptTag.save(flush:true)){
 					//	println "Error saving rdkVersion instance : ${rdkVersion.errors}"
 					}
 				}catch(Exception e ){

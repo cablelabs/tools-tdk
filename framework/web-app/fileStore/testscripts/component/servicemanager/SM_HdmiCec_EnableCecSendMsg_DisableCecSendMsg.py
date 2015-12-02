@@ -44,6 +44,9 @@ import tdklib;
 import devicesettings;
 import iarmbus;
 import servicemanager;
+from time import sleep
+from os import urandom
+from binascii import b2a_hex
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -124,21 +127,22 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 					#Send message
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
-	                                messageToSend = "30 8F 53 65 22 74 4F 90 22 7E 58"
-					print "Message to be sent to HDMI device: ",messageToSend
-	                                tdkTestObj.addParameter("messageToSend",messageToSend);
+	                                message = "30 8F 53 65 22 74 " + str(b2a_hex(urandom(1))).upper()
+					print "Message to be sent to HDMI device: ",message
+	                                tdkTestObj.addParameter("messageToSend",message)
 	                                tdkTestObj.executeTestCase(expectedresult);
 	                                actualresult = tdkTestObj.getResult();
 	                                sendMsgDetails = tdkTestObj.getResultDetails();
         	                        print "[TEST EXECUTION DETAILS] : ",sendMsgDetails;
 					if expectedresult in actualresult:
 						tdkTestObj.setResultStatus("SUCCESS");
+
+						sleep(70)
 	
 						#Check for the message sent for confirmation.
 						tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
 						expectedresult = "SUCCESS"
-						pattern = "30 8F 53 65 22 74 4F 90 22 7E 58"
-						tdkTestObj.addParameter("pattern",pattern);
+						tdkTestObj.addParameter("pattern",message);
 						tdkTestObj.executeTestCase(expectedresult);
 	                                        actualresult = tdkTestObj.getResult();
         	                                patternDetails= tdkTestObj.getResultDetails();
@@ -167,8 +171,9 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 								#Set the device Name.
 				                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                			                expectedresult = "SUCCESS"
-				                                messageToSend = "30 8F 35 65 74 94 5F 60 41 7D 39"
-	                			                tdkTestObj.addParameter("messageToSend",messageToSend);
+                                                                message = "30 8F 35 65 74 94 " + str(b2a_hex(urandom(1))).upper()
+                                                                print "Message to be sent to HDMI device: ",message
+	                			                tdkTestObj.addParameter("messageToSend",message);
 				                                tdkTestObj.executeTestCase(expectedresult);
 	                			                actualresult = tdkTestObj.getResult();
 				                                sendMsgDetails = tdkTestObj.getResultDetails();
@@ -177,11 +182,12 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 								if expectedresult in actualresult:
 									tdkTestObj.setResultStatus("SUCCESS");
 	
+									sleep(70)
+
 									#Check for the message sent for confirmation.
 									tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
-									expectedresult = "SUCCESS"
-									pattern = "30 8F 35 65 74 94 5F 60 41 7D 39"
-									tdkTestObj.addParameter("pattern",pattern);
+									expectedresult = "FAILURE"
+									tdkTestObj.addParameter("pattern",message);
 									tdkTestObj.executeTestCase(expectedresult);
 	                                			        actualresult = tdkTestObj.getResult();
         	        			                        patternDetails= tdkTestObj.getResultDetails();

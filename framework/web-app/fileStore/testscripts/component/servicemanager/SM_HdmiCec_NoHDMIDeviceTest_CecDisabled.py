@@ -218,7 +218,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                 			tdkTestObj.setResultStatus("FAILURE");
 
                                 #Set the device Name
-				nameToSet = "tdktestname"
+				nameToSet = "testNameDis"
 				print "Set device name to ", nameToSet
                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetName');
                                 expectedresult = "SUCCESS"

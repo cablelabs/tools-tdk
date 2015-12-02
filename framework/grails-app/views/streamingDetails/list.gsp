@@ -25,6 +25,11 @@
 	  	<g:javascript library="stream_resolver" />
 	</head>
 	<body>		
+	<div class="nav" role="navigation">
+			<ul>
+				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
+			</ul>
+	</div>		
 		<div id="list-streamingDetails" class="content scaffold-list" role="main">
 			<h1><g:message code="default.list.label" args="[entityName]" /></h1>
 			<g:if test="${flash.message}">

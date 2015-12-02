@@ -82,9 +82,9 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
+        #print "Clear Status Details: %s"%response;
+        #response = recorderlib.callServerHandler('retrieveStatus',ip);
+        #print "Retrieve Status Details: %s"%response;
 
         #Execute updateSchedule
         requestID = str(randint(10, 500));
@@ -114,7 +114,9 @@ if "SUCCESS" in loadmodulestatus.upper():
                 if "acknowledgement" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
                         print "Wait till recording end";
+                        sleep(120);
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                        print "Recording List: %s" %actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                         print recordingData;
                         if ('NOTFOUND' not in recordingData):

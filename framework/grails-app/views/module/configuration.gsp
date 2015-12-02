@@ -54,6 +54,10 @@
 					<td><g:link controller="soCVendor" action="index"><span>SoC Vendors</span></g:link></td>
 					<td>Option to add SoC Vendors</td>
 				</tr>	
+				<tr>					
+					<td><g:link controller="scriptTag" action="index"><span>Script Tags</span></g:link></td>
+					<td>Option to add Script Tags</td>
+				</tr>	
 				<g:if test="${SecurityUtils.subject.principal.equals("admin")}">	
 				<tr>					
 					<td><g:link controller="groups" action="index"><span>Groups</span></g:link></td>

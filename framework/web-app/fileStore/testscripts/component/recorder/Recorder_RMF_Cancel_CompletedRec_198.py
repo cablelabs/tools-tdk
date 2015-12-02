@@ -147,26 +147,17 @@ if "SUCCESS" in recLoadStatus.upper():
                             print "Received Empty/Error status";
                         elif 'acknowledgement' in actResponse:
                             print "Successfully retrieved acknowledgement from recorder";
-                            # Reboot the STB
-                            print "Rebooting the STB to get the recording list from full sync"
-                            recObj.initiateReboot();
-                            print "Sleeping to wait for the recoder to be up"
-                            sleep(300);
-                            response = recorderlib.callServerHandler('clearStatus',ip);
-                            print "Clear Status Details: %s"%response;
-                            #Frame json message
-                            jsonMsgNoUpdate = "{\"noUpdate\":{}}";
-                            expResponse = "noUpdate";
                             tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
-                            actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-                            print "No Update Schedule Details: %s"%actResponse;
-                            sleep(120);
-	                    #Check for acknowledgement from recorder
                             tdkTestObj.executeTestCase(expectedResult);
-                            actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-			    print "Retrieve Status Details: %s"%actResponse;
-			    recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-	                    print recordingData
+                            print "Sending getRecordings to get the recording list"
+                            recorderlib.callServerHandler('clearStatus',ip)
+                            recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                            print "Wait for 3 min to get response from recorder"
+                            sleep(180)
+                            actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                            print "Recording List: %s" %actResponse;
+                            recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                            print recordingData
                             if 'NOTFOUND' not in recordingData:
 				statusKey = 'status'
 				statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)

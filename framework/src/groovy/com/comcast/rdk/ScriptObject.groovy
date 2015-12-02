@@ -27,6 +27,7 @@ class ScriptObject {
 	
 	Set rdkVersions
 	
+	Set scriptTags
 	ScriptFile scriptFile
 	
 	boolean longDuration

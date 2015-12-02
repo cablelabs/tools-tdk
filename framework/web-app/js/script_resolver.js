@@ -60,7 +60,10 @@ $(document).ready(function() {
 			'add_scriptgrp' : function(node) {
 				hideAllSearchoptions();
 				createScriptGrpForm();
-			}
+			},	
+			'upload_scriptGroup' : function(node) {	
+				showUploadOption();
+				}
 		}
 	});
 		
@@ -81,6 +84,16 @@ $(document).ready(function() {
 	$("#scriptid").addClass("changecolor");
 	
 });
+
+function showUploadOption(){
+	$("#responseDiv123").hide();
+	$("#up_load").show();		
+}
+
+function hideUploadOption(){
+	$("#responseDiv123").show();
+	$("#up_load").hide();		
+}
 
 var displayedGroups = [];
 
@@ -308,6 +321,7 @@ function createScriptForm() {
 }
 
 function editScript(id , flag ) {
+	hideUploadOption();	
 	hideSearchoptions();
 	checkAnyEditingScript();
 	$.get('editScript', {id: id , flag : flag}, function(data) { $("#responseDiv").html(data); });
@@ -339,6 +353,7 @@ function createScriptGrpForm() {
 }
 
 function editScriptGroup(id) {
+	hideUploadOption();
 	hideAllSearchoptions();
 	checkAnyEditingScript();
 	$.get('edit', {name: id}, function(data) { $("#responseDiv").html(data); });
@@ -510,3 +525,17 @@ function sleepIt(milliseconds) {
 	    }
 	  }
 	}
+
+
+function refreshListStart(){
+	alert(" Please wait, script list refresh will take some time.");
+} 
+function scriptRefreshSuccess(){
+	alert("The script list refreshed sucessfully.");
+	window.location.reload(); 
+}
+function scriptRefreshFailure(){
+	alert(" Error while refreshig the script list.");
+	window.location.reload(); 
+	
+}

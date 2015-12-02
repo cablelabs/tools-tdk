@@ -143,7 +143,7 @@ if "SUCCESS" in recLoadStatus.upper():
 			sleep(10);
 			retry=0
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                        while (( ('[]' in actResponse) or ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
+                        while (( ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
 				sleep(10);
 				actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 				retry += 1

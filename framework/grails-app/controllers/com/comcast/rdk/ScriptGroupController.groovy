@@ -768,6 +768,7 @@ class ScriptGroupController {
 
 				Set boxTypes = []
 				Set rdkVersions = []
+				Set scrptTags = []
 			try {
 
 				
@@ -843,6 +844,26 @@ class ScriptGroupController {
 							mkp.comment ""
 						}
 					}
+					def scriptTagList = params?.scriptTags
+					if(scriptTagList && scriptTagList instanceof List){
+						scriptTagList = scriptTagList?.sort()
+					}
+					try {
+						if(scriptTagList?.size() > 0){
+						xml.script_tags(){
+							scriptTagList?.each { tag ->
+							def sTag = ScriptTag.findById(tag)
+							scrptTags.add(sTag)
+							xml.script_tag(sTag?.name)
+							mkp.yield "\r\n    "
+							mkp.comment ""
+							}
+						}
+						}
+					} catch (Exception e) {
+					println " error "+e.getMessage()
+						e.printStackTrace()
+					}
 
 				}
 
@@ -883,6 +904,7 @@ class ScriptGroupController {
 			def sObject = new ScriptObject()
 			sObject.setBoxTypes(boxTypes)
 			sObject.setRdkVersions(rdkVersions)
+			sObject.setScriptTags(scrptTags)
 			sObject.setName(params?.name?.trim())
 			sObject.setModule(ptest?.module?.name)
 			sObject.setScriptFile(script)
@@ -891,6 +913,7 @@ class ScriptGroupController {
 			scriptService.updateScript(script)
 			scriptgroupService.saveToScriptGroups(script,sObject)
             scriptgroupService.saveToDefaultGroups(script,sObject, boxTypes)
+			scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[])
 			def sName = params?.name
 				render(message(code: 'default.created.message', args: [
                     message(code: 'script.label', default: 'Script'),
@@ -924,6 +947,7 @@ class ScriptGroupController {
 		def scrpt = scriptService.getScript(getRealPath(),moduleName, params?.prevScriptName)
 		def oldBoxTypes = scrpt?.boxTypes
 		def oldRDKVersions = scrpt?.rdkVersions
+		def oldTags = scrpt?.scriptTags
 		boolean isLongDuration = scrpt?.longDuration
 		
 		if (params.scriptVersion != null) {
@@ -952,6 +976,7 @@ class ScriptGroupController {
 		boolean longDuration = false
 				Set bTypes = []
 				Set rdkVers = []
+				Set scrptTags = []
 		try {
 			
 			
@@ -1062,6 +1087,24 @@ class ScriptGroupController {
 					}
 				}
 				
+				def scriptTagList = params?.scriptTags
+				if(scriptTagList instanceof List){
+					scriptTagList = scriptTagList?.sort()
+				}
+				try {
+					xml.script_tags(){
+						scriptTagList?.each { tag ->
+						def sTag = ScriptTag.findById(tag)
+						scrptTags.add(sTag)
+						xml.script_tag(sTag?.name)
+						mkp.yield "\r\n    "
+						mkp.comment ""
+						}
+					}
+				} catch (Exception e) {
+					println " error "+e.getMessage()
+					e.printStackTrace()
+				}
 				
 				
 			}
@@ -1152,6 +1195,7 @@ class ScriptGroupController {
 		sObject.setName(params?.name?.trim())
 		sObject.setModule(ptest?.module?.name)
 		sObject.setScriptFile(script)
+		sObject.setScriptTags(scrptTags)
 		sObject.setLongDuration(longDuration)
 		
 		if(boxTypes){
@@ -1170,6 +1214,7 @@ class ScriptGroupController {
 //		scriptgroupService.updateScriptsFromRDKVersionBoxTypeTestSuites1(script,sObject)
 		
 		scriptgroupService.updateScriptsFromRDKVersionBoxTypeTestGroup(script,sObject,oldRDKVersions,oldBoxTypes)
+		scriptgroupService.updateScriptsFromScriptTag(script,sObject,oldTags,oldBoxTypes)
 		
 		flash.message = message(code: 'default.updated.message', args: [
 			message(code: 'script.label', default: 'Script'),
@@ -1915,7 +1960,7 @@ class ScriptGroupController {
 		ScriptFile scriptFile
 		scriptFile = ScriptFile?.findByScriptName(scriptName)
 		try {
-			if(scriptFile && getScriptFileObj(getRealPath(), scriptFile?.scriptName, scriptFile?.moduleName) == null){
+			if(scriptFile && getScriptFileObj(getRealPath(), scriptFile?.moduleName,scriptFile?.scriptName) == null){
 				def sgList = []
 						def scriptGroups = ScriptGroup.where {
 					scriptList { id == scriptFile?.id }
@@ -1965,4 +2010,148 @@ class ScriptGroupController {
 		}
 		return null;
 	}
+/**
+	 * Function used to the newly added script automatically add the script list without stop and start the "apache-tomcat" server.
+	 * The refresh the script list, while calling the  initializeScriptsData() same as boot process.
+	 */
+	/**
+	 * Function used to the newly added script automatically add the script list without stop and start the "apache-tomcat" server.
+	 * The refresh the script list, while calling the  initializeScriptsData() same as boot process.  
+	 */
+	def scriptListRefresh(){
+		def requestGetRealPath = request.getRealPath("/")
+		def scriptGroupMap = scriptService.getScriptsMap(requestGetRealPath)
+		def refreshStatus = scriptService.scriptListRefresh(realPath ,scriptGroupMap )
+		if(refreshStatus){
+			flash.message =  "Script lists are same not modified "
+		} else {
+			flash.message = " Script list refreshment completed successfully "
+		}
+		redirect( action :"list")
+		
+	}
+	/**
+	 * Function used to implement download script group in .xml file format
+	 * @return
+	 */	
+	def downloadXml(){	 	
+		def scriptGrpName  = ScriptGroup.findByName(params.name)
+		String scriptGroupData = ""
+		 def writer = new StringWriter()
+		 def xml = new MarkupBuilder(writer)
+		 try{
+			 xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
+			 xml.xml(){
+				 xml.script_group(){
+					 xml.scripts(){
+						scriptGrpName?.scriptList.each{ scriptName ->
+							 xml.script_name(scriptName)
+						 }
+						 
+					 }
+				 }				 
+			 }
+			 scriptGroupData = writer.toString()
+		 }catch (Exception e){
+		 	log.error "ERROR "+e.getMessage()
+			 e.printStackTrace()
+		 }
+		 if(scriptGroupData){
+			params.format = "text"
+			params.extension = "xml"
+			response.setHeader("Content-Type", "application/octet-stream;")
+			response.setHeader("Content-Disposition", "attachment; filename=\""+ params?.name+".xml\"")
+			response.setHeader("Content-Length", ""+scriptGroupData.length())
+			response.outputStream << scriptGroupData.getBytes()
+		}else{
+			flash.message = "Download failed. Script Group data is not available."
+			redirect(action: "list")
+		}
+	}
+	
+	/** This function used to uploading the new .xml fill in the test manager
+	 * check the  .xml file or not
+	 * check same script group is exists or not
+	 * content of the file is same as the script group xml or not
+	 * script list is empty or not
+	 * return
+	 */
+			
+	def upload() {
+		def uploadedFile = request.getFile('file')
+		String xmlContent = ""
+		def node
+		String s = ""
+		String  idList
+		int indx = 0
+		if(uploadedFile){
+			if( uploadedFile?.originalFilename?.endsWith(".xml")) {
+
+				String fileName = uploadedFile?.originalFilename?.replace(".xml","")
+
+				if(ScriptGroup.findByName(fileName?.trim())){
+					flash.message= "Test Suite with same name already exists ..... "
+				}else{
+					InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
+					def fileContent = reader?.readLines()
+					if(fileContent){
+						
+						fileContent?.each{ xmlData->
+							xmlContent += xmlData +"\n"
+
+						}
+						List<String> names = new ArrayList<String>()
+						try{
+
+							XmlParser parser = new XmlParser();
+							node = parser.parseText(xmlContent)
+
+							node.script_group.scripts.script_name.each{
+								names.add(it.text())
+							}
+						}
+						catch(Exception e){
+							log.error "ERROR"+e.getMessage()
+							e.printStackTrace()
+						}
+						try{
+
+
+							if(names?.size() == 0){
+								flash.message ="  Test suite xml doesnot contain valid script  list... "
+							}else{
+								ScriptGroup scriptGroupInstance = new ScriptGroup()
+								names?.each{ token ->
+									if(token && token.size()>0){
+										ScriptFile sctFile = ScriptFile.findByScriptName(token?.trim())
+										if( sctFile != null  && !scriptGroupInstance?.scriptList?.contains(sctFile)){
+											scriptGroupInstance.addToScriptList(sctFile)
+										}
+									}
+								}
+								scriptGroupInstance.name = fileName.trim()
+								if (!scriptGroupInstance.save(flush: true)) {
+									flash.message = "File not uploaded"
+								}else{
+									flash.message = "File uploaded  successfully "
+								}
+							}
+						}catch(Exception e ){
+							log.error "ERROR "+ e.getMessage()
+							flash.message = "XML data is not in correct format"
+						}
+					}
+				}
+			} else{
+				flash.message="Error, The file extension is not in .xml format"
+			}
+		}else{
+			flash.message="Not a valid file"
+		}
+		redirect(action:"list")
+		return
+	}
+	
+	
+	
 }

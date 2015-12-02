@@ -21,7 +21,7 @@ Test Type: Positive.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>4</execution_time>
+  <execution_time>5</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -45,6 +45,8 @@ import devicesettings;
 import iarmbus;
 import servicemanager;
 from time import sleep;
+from os import urandom
+from binascii import b2a_hex
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -125,21 +127,20 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
-	                                messageToSend = "30 8F 53 65 74 74 5F 60 42 7F 88"
-					print "Message to be sent to HDMI device: ",messageToSend
-	                                tdkTestObj.addParameter("messageToSend",messageToSend);
+                                        message = "30 8F 53 65 74 74 " + str(b2a_hex(urandom(1))).upper()
+					print "Message to be sent to HDMI device: ",message
+	                                tdkTestObj.addParameter("messageToSend",message);
 	                                tdkTestObj.executeTestCase(expectedresult);
 	                                actualresult = tdkTestObj.getResult();
 	                                sendMsgDetails = tdkTestObj.getResultDetails();
         	                        print "[TEST EXECUTION DETAILS] : ",sendMsgDetails;
 					if expectedresult in actualresult:
 						tdkTestObj.setResultStatus("SUCCESS");
-                                                sleep(5); 	
+                                                sleep(70);
 						#Check for the message sent for confirmation.
 						tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
 						expectedresult = "SUCCESS"
-						pattern = "30 8F 53 65 74 74 5F 60 42 7F 88"
-						tdkTestObj.addParameter("pattern",pattern);
+						tdkTestObj.addParameter("pattern",message);
 						tdkTestObj.executeTestCase(expectedresult);
 	                                        actualresult = tdkTestObj.getResult();
         	                                patternDetails= tdkTestObj.getResultDetails();
@@ -164,7 +165,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                                                 eventregisterdetail =tdkTestObj.getResultDetails(); 
                                                                 print eventregisterdetail;
                                                                 print "SUCCESS: Application succesfully executes SM_RegisterForEvents API";
-                                                                sleep(5);
+                                                                sleep(70);
                                                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
                 		                                expectedresult = "SUCCESS"
                                                                 #Assuming TV is on and should receive power state 039000

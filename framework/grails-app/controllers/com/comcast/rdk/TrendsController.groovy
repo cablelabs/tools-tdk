@@ -33,6 +33,12 @@ class TrendsController {
 	def chart() {		
 		def c = Execution.createCriteria()
 		def executionName =  Execution?.findAllByIsBenchMarkEnabledAndIsSystemDiagnosticsEnabled('1','1')
+		def execName = []
+		executionName?.each { name->
+			if(name.scriptGroup != null ){
+				execName.add(name)
+			}
+		}
 		/*List executionName = [] 			
 		List<Execution> executionList = c.list {
 			isNotNull("scriptGroup")
@@ -40,7 +46,7 @@ class TrendsController {
 			order("id", "desc")			
 		}	
 		[executionList : executionList]*/	
-		[executionList : executionName,startIndex:0,endIndex:8]
+		[executionList : execName,startIndex:0,endIndex:8]
 	}
 
 	/**
@@ -844,9 +850,20 @@ class TrendsController {
 		
 		ScriptGroup scriptGroupInstance = ScriptGroup.findById(scriptGroup)
 		Device deviceInstance = Device.findById(deviceId)
-
 		int countRes = Integer.parseInt(maxRes)
-		def c = Execution.createCriteria()
+		//performance data enabled execution names
+		def executionNameList = Execution.findAllByIsBenchMarkEnabledAndIsSystemDiagnosticsEnabled('1','1')
+		def executionNames=[]
+		int executionNameCount = 0
+		executionNameList.each { execName ->
+			if(executionNameCount <= countRes){
+				if(execName.scriptGroup.toString().equals(scriptGroupInstance?.toString()) && execName.device.toString().equals(deviceInstance?.toString())){
+					executionNames.add(execName)
+					executionNameCount++
+				}
+			}
+		}
+		/*def c = Execution.createCriteria()
 		List<Execution> executionList = c.list {
 			and {
 				eq("scriptGroup", scriptGroupInstance?.name)
@@ -854,7 +871,8 @@ class TrendsController {
 			}
 			order("id", "desc")
 			maxResults(countRes)			
-		}
+		}*/
+		return executionNames
 	}
 	
 	/**

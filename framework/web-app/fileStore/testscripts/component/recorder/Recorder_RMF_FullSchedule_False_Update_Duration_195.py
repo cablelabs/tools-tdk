@@ -152,48 +152,36 @@ if "SUCCESS" in recLoadStatus.upper():
                             response = recorderlib.callServerHandler('clearStatus',ip);
                             print "Clear Status Details: %s"%response;
 			    sleep(480);
-                            recObj.initiateReboot();
-                            sleep(300);
-                            #Frame json message
-                            jsonMsgGetRec = "{\"noUpdate\":{}}";
-                            expResponse = "noUpdate";
                             tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
                             tdkTestObj.executeTestCase(expectedResult);
-                            actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgGetRec,ip);
-                            print "GetRecordings Details: %s"%actResponse;
-                            if expResponse in actResponse:
-                                print "GetRecordings message post success";
-                                print "Wait for 60s to get the recording list"
-                                sleep(120);
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                #Check for acknowledgement from recorder
-                                tdkTestObj.executeTestCase(expectedResult);
-                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                print actResponse;
-                                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-                                print recordingData
-                                if 'NOTFOUND' not in recordingData:
-                                    key = 'expectedDuration'
-                                    statusKey = 'status'
-                                    value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                    statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
-                                    print "key: ",key," value: ",value
-                                    print "Successfully retrieved the recording list from recorder";
-                                    if newDuration == value and "COMPLETE" in statusValue.upper():
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        print "Duration updated successfully";
-                                    elif "BADVALUE" in statusValue.upper():
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "Error/status field is missing in recording status";
-                                    else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "Duration updation not completed successfully";
+                            print "Sending getRecordings to get the recording list"
+                            recorderlib.callServerHandler('clearStatus',ip)
+                            recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                            print "Wait for 3 min to get response from recorder"
+                            sleep(180)
+                            actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                            print "Recording List: %s" %actResponse;
+                            recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                            print recordingData
+                            if 'NOTFOUND' not in recordingData:
+                                key = 'expectedDuration'
+                                statusKey = 'status'
+                                value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                                statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
+                                print "key: ",key," value: ",value
+                                print "Successfully retrieved the recording list from recorder";
+                                if (((int)(newDuration) - 5000) <= int(value) <= (int(newDuration) + 5000)) and "COMPLETE" in statusValue.upper():
+                                    tdkTestObj.setResultStatus("SUCCESS");
+                                    print "Duration updated successfully";
+                                elif "BADVALUE" in statusValue.upper():
+                                    tdkTestObj.setResultStatus("FAILURE");
+                                    print "Error/status field is missing in recording status";
                                 else:
                                     tdkTestObj.setResultStatus("FAILURE");
-                                    print "Failed to retrieve the recording list from recorder";
+                                    print "Duration updation not completed successfully";
                             else:
-                                    print "GetRecordings message post failed";
-                                    tdkTestObj.setResultStatus("FAILURE");
+                                tdkTestObj.setResultStatus("FAILURE");
+                                print "Failed to retrieve the recording list from recorder";
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve acknowledgement from recorder";

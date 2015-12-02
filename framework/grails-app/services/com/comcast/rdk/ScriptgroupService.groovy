@@ -637,6 +637,18 @@ class ScriptgroupService {
 		}
 	}
 	
+	def removeFromScriptTagList(def final scriptTag , def final bType , def final scriptInstance){
+		def groupNames  = [
+			scriptTag?.toString()+"SUITE_"+bType?.name,
+		]
+		groupNames.each {  groupName ->
+			def scriptGrpInstance = ScriptGroup.findByName(groupName)
+			if(scriptGrpInstance && scriptGrpInstance?.scriptList?.contains(scriptInstance)){
+				scriptGrpInstance.removeFromScriptList(scriptInstance)
+			}
+		}
+	}
+	
 	def updateScriptsFromRDKVersionBoxTypeTestGroup(final def scriptInstance,final ScriptObject sObject , final def oldRDKVersions, final def oldBoxTypes){
 		def time1 = System.currentTimeMillis()
 		try {
@@ -685,6 +697,54 @@ class ScriptgroupService {
 			}
 		}
 	}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+	
+	
+	def updateScriptsFromScriptTag(final def scriptInstance,final ScriptObject sObject , final def oldTags ,final def oldBoxTypes){
+		def time1 = System.currentTimeMillis()
+		try {
+			def bTypeList = BoxType.findAll()
+			def rdkVersionList = RDKVersions?.findAll()
+
+			def bTypes = sObject?.getBoxTypes()
+			def tags = sObject?.getScriptTags()
+			oldBoxTypes?.each { bt ->
+				oldTags?.each { tag ->
+					if(!bTypes?.contains(bt) || !tags?.contains(tag)){
+						removeFromScriptTagList(tag, bt, scriptInstance)
+					}
+				}
+			}
+			
+
+			sObject?.getBoxTypes()?.each{ bType ->
+
+				sObject?.getScriptTags()?.each{ tag ->
+
+					Module module
+					Module.withTransaction{
+						module = Module.findByName(sObject?.module)
+					}
+
+					def names = []
+					names.add(tag?.toString()+"SUITE_"+bType?.name)
+
+					names.each {  name ->
+						def scriptGrpInstance = ScriptGroup.findByName(name)
+						if(!scriptGrpInstance){
+							scriptGrpInstance = new ScriptGroup()
+							scriptGrpInstance.name = name
+							scriptGrpInstance.save()
+						}
+						if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptInstance)){
+							scriptGrpInstance.addToScriptList(scriptInstance)
+						}
+					}
+				}
+			}
 		} catch (Exception e) {
 			e.printStackTrace()
 		}

@@ -123,37 +123,27 @@ if "SUCCESS" in recLoadStatus.upper():
                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 print "Retrieve Status Details: ",recResponse;
                                 response = recorderlib.callServerHandler('clearStatus',ip);
-                                print "Rebooting the box to get full sync..."
-                                recObj.initiateReboot();
-                                print "Waiting for the recoder to be up"
-                                sleep(300);
-                                print "Sending noUpdate to get the recording list"
-                                jsonMsg = "{\"noUpdate\":{}}";
-                                serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-                                if "noUpdate" in serverResponse:
-                                        print "NoUpdate message post success";
-                                        print "Wait for 180sec to get the recording list"
-                                        sleep(180);
-                                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        print "Recording List: %s" %actResponse;
-                                        recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
-                                        print recordingData;
-                                        if 'NOTFOUND' == recordingData:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "Recording not found in list";
-                                        else:
-                                                key = 'status'
-                                                value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                                print "key: ",key," value: ",value
-                                                if "COMPLETE" in value.upper():
-                                                        tdkTestObj.setResultStatus("SUCCESS");
-                                                        print "Scheduled recording completed successfully";
-                                                else:
-                                                        tdkTestObj.setResultStatus("FAILURE");
-                                                        print "Scheduled recording did not complete successfully";
+                                print "Sending getRecordings to get the recording list"
+                                recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                                print "Wait for 3 min to get response from recorder"
+                                sleep(180)
+                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                                print "Recording List: %s" %actResponse;
+                                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                                print recordingData
+                                if 'NOTFOUND' == recordingData:
+                                    tdkTestObj.setResultStatus("FAILURE");
+                                    print "Recording not found in list";
                                 else:
+                                    key = 'status'
+                                    value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                                    print "key: ",key," value: ",value
+                                    if "COMPLETE" in value.upper():
+                                        tdkTestObj.setResultStatus("SUCCESS");
+                                        print "Scheduled recording completed successfully";
+                                    else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "NoUpdate message post failed";
+                                        print "Scheduled recording did not complete successfully";
                 else:
                         print "updateSchedule message post failure";
                         tdkTestObj.setResultStatus("FAILURE");

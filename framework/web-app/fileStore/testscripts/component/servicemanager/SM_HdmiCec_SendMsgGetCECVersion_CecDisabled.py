@@ -45,6 +45,8 @@ import devicesettings;
 import iarmbus;
 import servicemanager;
 from time import sleep;
+from os import urandom
+from binascii import b2a_hex
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -124,9 +126,9 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 					#Set the device Name.
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
-	                                messageToSend = "30 9F 54 66 79 74 7F 60 42 7F 98"
-					print "Message to be sent to HDMI device: ",messageToSend
-	                                tdkTestObj.addParameter("messageToSend",messageToSend);
+                                        message = "30 9F 54 66 79 74 " + str(b2a_hex(urandom(1))).upper()
+					print "Message to be sent to HDMI device: ",message
+	                                tdkTestObj.addParameter("messageToSend",message);
 	                                tdkTestObj.executeTestCase(expectedresult);
 	                                actualresult = tdkTestObj.getResult();
 	                                sendMsgDetails = tdkTestObj.getResultDetails();
@@ -135,13 +137,12 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 						tdkTestObj.setResultStatus("SUCCESS");
 
 						#Wait for data to be printed to cec log
-						sleep(10)
+						sleep(70)
 	
 						#Check for the message sent for confirmation.
 						tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
-						expectedresult = "SUCCESS"
-						pattern = "30 9F 54 66 79 74 7F 60 42 7F 98"
-						tdkTestObj.addParameter("pattern",pattern);
+						expectedresult = "FAILURE"
+						tdkTestObj.addParameter("pattern",message);
 						tdkTestObj.executeTestCase(expectedresult);
 	                                        actualresult = tdkTestObj.getResult();
         	                                patternDetails= tdkTestObj.getResultDetails();

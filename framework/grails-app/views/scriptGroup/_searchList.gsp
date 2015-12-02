@@ -55,7 +55,7 @@
 									${scriptListInstance?.boxTypes}
 								</td>
 								<td>
-									<g:link action="exportScriptContent" id="${scriptListInstance?.name}" ><img src="../images/script-py.png" /></g:link>
+									<g:link action="exportScriptContent" id="${scriptListInstance?.name}" ><img src="../images/script-py.png"  title=" Download Script" /></g:link>
 								</td>
 							</tr>
 						</g:each>

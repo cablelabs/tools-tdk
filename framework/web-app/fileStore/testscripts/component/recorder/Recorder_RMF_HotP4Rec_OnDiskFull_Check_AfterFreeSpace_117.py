@@ -63,14 +63,12 @@ recObj.setLoadModuleStatus(recLoadStatus);
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+	       print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+               print "Waiting for the recoder to be up"
 	       sleep(300);
-
-        print "Waiting for the recoder to be up"
-
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -83,13 +81,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #jsonMsg = "{\"dvrProtocolVersion\":\"7\",\"getRecordings\":{}}";
 	jsonMsg = "{\"getRecordings\":{}}";
         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-        print "Server response for getRecordings: ",serverResponse;
         if 'getRecordings' in serverResponse:
                 print "getRecordings message post success"
 		print "Waiting to get recording list"
-		sleep(120)
+		sleep(60)
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                print "Retrieve Status Details: %s"%recResponse;
+                print "Retrieve Status Details: ",recResponse;
 		status = recorderlib.getStatusMessage(recResponse)
 		print "get reclist status: ",status
              	if ("NOSTATUS" != status):

@@ -149,53 +149,39 @@ if "SUCCESS" in recLoadStatus.upper():
                         elif 'acknowledgement' in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully retrieved acknowledgement from recorder";
-                            response = recorderlib.callServerHandler('clearStatus',ip);
-                            print "Clear Status Details: %s"%response;
 			    sleep(660);
-                            recObj.initiateReboot();
-                            sleep(300);
-                            #Frame json message
-                            jsonMsgGetRec = "{\"noUpdate\":{}}";
-                            expResponse = "noUpdate";
                             tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
                             tdkTestObj.executeTestCase(expectedResult);
-                            actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgGetRec,ip);
-                            print "GetRecordings Details: %s"%actResponse;
-                            if expResponse in actResponse:
-                                print "GetRecordings message post success";
-                                print "Wait for 60s to get the recording list"
-                                sleep(120);
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                #Check for acknowledgement from recorder
-                                tdkTestObj.executeTestCase(expectedResult);
-                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                print actResponse;
-                                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-                                print recordingData
-                                if 'NOTFOUND' not in recordingData:
-                                    key = 'expectedStart'
-                                    startKey = 'start'
-                                    statusKey = 'status'
-                                    value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                    startValue = recorderlib.getValueFromKeyInRecording(recordingData,startKey)
-                                    statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
-                                    print "key: ",key," value: ",value," startValue: ",startValue
-                                    print "Successfully retrieved the recording list from recorder";
-                                    if "COMPLETE" in statusValue.upper() and (int(startValue)-30000) <= int(value) <= (int(startValue)+30000):
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        print "Start Time updated correctly";
-                                    elif "BADVALUE" in statusValue.upper():
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "Error/status field is missing in recording status";
-                                    else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "Start Time not updated";
+                            recorderlib.callServerHandler('clearStatus',ip)
+                            print "Sending getRecordings to get the recording list"
+                            recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+                            print "Wait for 3 min to get response from recorder"
+                            sleep(180)
+                            actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                            print "Recording List: %s" %actResponse;
+                            recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                            print recordingData
+                            if 'NOTFOUND' not in recordingData:
+                                key = 'expectedStart'
+                                startKey = 'start'
+                                statusKey = 'status'
+                                value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                                startValue = recorderlib.getValueFromKeyInRecording(recordingData,startKey)
+                                statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
+                                print "key: ",key," value: ",value," startValue: ",startValue
+                                print "Successfully retrieved the recording list from recorder";
+                                if "COMPLETE" in statusValue.upper() and (int(startValue)-30000) <= int(value) <= (int(startValue)+30000):
+                                    tdkTestObj.setResultStatus("SUCCESS");
+                                    print "Start Time updated correctly";
+                                elif "BADVALUE" in statusValue.upper():
+                                    tdkTestObj.setResultStatus("FAILURE");
+                                    print "Error/status field is missing in recording status";
                                 else:
                                     tdkTestObj.setResultStatus("FAILURE");
-                                    print "Failed to retrieve the recording list from recorder";
+                                    print "Start Time not updated";
                             else:
-                                    print "GetRecordings message post failed";
-                                    tdkTestObj.setResultStatus("FAILURE");
+                                tdkTestObj.setResultStatus("FAILURE");
+                                print "Failed to retrieve the recording list from recorder";
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve acknowledgement from recorder";

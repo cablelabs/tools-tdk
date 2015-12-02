@@ -128,11 +128,11 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 		                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetName');
 	        	                        expectedresult = "SUCCESS"
 	                        	        tdkTestObj.addParameter("nameToSet",nameToSet);
-		                                tdkTestObj.executeTestCase(expectedresult);
+		                                tdkTestObj.executeTestCase("FAILURE");
 		                                actualresult = tdkTestObj.getResult();
 	        	                        setNameDetails = tdkTestObj.getResultDetails();
         	        	                print "[TEST EXECUTION DETAILS] : ",setNameDetails;
-						if expectedresult in actualresult:
+						if "FAILURE" in actualresult:
 							tdkTestObj.setResultStatus("SUCCESS");
 						else:
 							tdkTestObj.setResultStatus("FAILURE");

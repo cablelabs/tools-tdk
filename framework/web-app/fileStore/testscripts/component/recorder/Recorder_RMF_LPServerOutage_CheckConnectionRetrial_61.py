@@ -87,23 +87,28 @@ if "SUCCESS" in recLoadStatus.upper():
         print "Longpoll server status: ",status
         if "FALSE" in status.upper():
 		print "Waiting to get connection retrial attempts from recorder"
-		sleep(550)
-
+		#sleep(550)
+		sleep(300)
 		#Checkpoint-1: Get the time between each re-trials
 		print "Checking status of disabled servers"
                 lpstatus = recorderlib.callServerHandlerWithType('retrieveDisabledStatus','LPServer',ip)
 		print "LPServer Status: ",lpstatus
         	#Check if status is not empty
-        	if ( [] == lpstatus ):
+        	if ( '[]' in lpstatus ):
                 	print "ERROR: No status available for LPServer"
 			tdkTestObj.setResultStatus("FAILURE")
 		else:
+			MINDELAY = 40
+			RETRYCOUNT = 3
 			intervalPrev = 0
 			ret = recorderlib.getTimeListFromStatus(lpstatus)
 			print "LP server timelist = ",ret
-			for x in range(len(ret)-1):
+			for x in range(RETRYCOUNT):
 				intervalCurr = int( (ret[x+1] - ret[x])/1000 )
 				print "Retry interval for LPServer: ",intervalCurr,"sec"
+				if intervalCurr < MINDELAY:
+					print "Retry interval for LPServer less than ",intervalCurr,"secs"
+					tdkTestObj.setResultStatus("FAILURE")
 				if intervalCurr <= intervalPrev:
 					print "Retry interval for LPServer not incrementing from ",intervalPrev,"sec to ",intervalCurr,"sec"
 					tdkTestObj.setResultStatus("FAILURE")

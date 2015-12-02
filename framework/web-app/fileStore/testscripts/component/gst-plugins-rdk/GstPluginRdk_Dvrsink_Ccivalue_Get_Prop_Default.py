@@ -38,6 +38,10 @@ Test CaseID:CT_GST_PLUGINS_RDK_23</synopsis>
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags>
+    <script_tag>BASIC</script_tag>
+    <!--  -->
+  </script_tags>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 

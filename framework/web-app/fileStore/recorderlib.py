@@ -304,8 +304,13 @@ def getStatusMessage(jsonData):
                 return ret
 
         #Get dictionary content inside list status
+        #for my_item in jsonList:
+        #        return my_item['statusMessage']
+
+        #Get statusMessage from status list
         for my_item in jsonList:
-                return my_item['statusMessage']
+                if 'recordingStatus' in my_item['statusMessage']:
+                        return my_item['statusMessage']
 
         print "ERROR: StatusMessage not found!"
         return ret

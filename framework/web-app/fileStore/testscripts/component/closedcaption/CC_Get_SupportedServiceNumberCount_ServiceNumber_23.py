@@ -48,6 +48,10 @@ Test Case ID : CT_ClosedCaption_23</synopsis>
     <rdk_version>RDK1.3</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags>
+    <script_tag>BASIC</script_tag>
+    <!--  -->
+  </script_tags>
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script

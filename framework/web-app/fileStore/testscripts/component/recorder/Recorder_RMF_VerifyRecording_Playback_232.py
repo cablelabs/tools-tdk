@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_VerifyRecording_Playback_232</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -35,6 +35,10 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags>
+    <script_tag>BASIC</script_tag>
+    <!--  -->
+  </script_tags>
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
@@ -89,7 +93,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #Frame json message
         RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
-        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
+        serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL,ip);
 
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
@@ -108,7 +112,7 @@ if "SUCCESS" in recLoadStatus.upper():
                         sleep(120)
                         print "Sending getRecordings to get the recording list"
                         recorderlib.callServerHandler('clearStatus',ip)
-                        recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
                         print "Wait for 3 min to get response from recorder"
                         sleep(180)
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)

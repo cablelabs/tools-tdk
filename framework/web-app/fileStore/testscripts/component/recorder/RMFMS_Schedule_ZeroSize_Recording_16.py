@@ -129,42 +129,31 @@ if "SUCCESS" in loadmodulestatus.upper():
                 if "ack" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
                         sleep(150);
-                        print "Rebooting the box to get full sync..."
-                        obj.initiateReboot();
-                        print "Sleeping to wait for the recoder to be up"
-                        sleep(300);
-                        response = recorderlib.callServerHandler('clearStatus',ip);
-                        print "Sending noUpdate to get the recording list"
-                        RequestURL = "{\"noUpdate\":{}}";
-                        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
-                        if "noUpdate" in serverResponse:
-                                print "NoUpdate message post success";
-                                print "Wait for 180sec to get the recording list"
-                                sleep(180);
-                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                print "Recording List: %s" %actResponse;
-
-                                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
-                                print recordingData;
-                                if ('NOTFOUND' not in recordingData):
-                                        key = 'status'
-                                        value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                        print "key: ",key," value: ",value
-                                        if "FAILED" in value.upper():
-                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                print "Recording status=failed since the duration=0";
-                                        elif "BADVALUE" == value.upper():
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "Recording did not have status field";
-                                        else:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "Recording not have failed status for the recording duration=0";
+			print "Sending getRecordings to get the recording list"
+			recorderlib.callServerHandler('clearStatus',ip)
+			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+			print "Wait for 3 min to get response from recorder"
+			sleep(180)
+			actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+			print "Recording List: %s" %actResponse;
+                        recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                        print recordingData;
+                        if ('NOTFOUND' not in recordingData):
+                                key = 'status'
+                                value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                                print "key: ",key," value: ",value
+                                if "FAILED" in value.upper():
+                                       tdkTestObj.setResultStatus("SUCCESS");
+                                       print "Recording status=failed since the duration=0";
+                                elif "BADVALUE" == value.upper():
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        print "Recording did not have status field";
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "Recording not found";
+                                        print "Recording not have failed status for the recording duration=0";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "NoUpdate message post failed";
+                                print "Recording not found";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Simulator Server failed to receive acknowledgement from recorder";

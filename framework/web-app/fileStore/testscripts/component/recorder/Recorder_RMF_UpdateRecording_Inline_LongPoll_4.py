@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_UpdateRecording_Inline_LongPoll_4</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -35,6 +35,10 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags>
+    <script_tag>BASIC</script_tag>
+    <!--  -->
+  </script_tags>
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk test case script
@@ -151,48 +155,36 @@ if "SUCCESS" in recLoadStatus.upper():
                         elif 'acknowledgement' in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully retrieved acknowledgement from recorder";
-                            # Reboot the STB
-                            print "Rebooting the STB to get the recording list from full sync"
-                            recObj.initiateReboot();
-                            print "Sleeping to wait for the recoder to be up"
-                            sleep(300);
-                            response = recorderlib.callServerHandler('clearStatus',ip);
-                            print "Clear Status Details: %s"%response;
-                            #Frame json message
-                            jsonMsgNoUpdate = "{\"noUpdate\":{}}";
-                            expResponse = "noUpdate";
+			    print "Sending getRecordings to get the recording list"
+                            recorderlib.callServerHandler('clearStatus',ip);
+   			    recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
                             tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
                             tdkTestObj1.executeTestCase(expectedResult);
-                            actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-                            print "No Update Schedule Details: %s"%actResponse;
-                            if expResponse in actResponse:
-                                print "No Update Schedule message post success";
-                                print "Wait for 60s to get the recording list"
-                                sleep(120);
-                                tdkTestObj1.setResultStatus("SUCCESS");
-                                #Check for acknowledgement from recorder
-                                tdkTestObj1.executeTestCase(expectedResult);
-                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                print actResponse;
-                                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-                                print recordingData
-                                if 'NOTFOUND' not in recordingData:
-                                    key = 'deletePriority'
-                                    value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                    print "key: ",key," value: ",value
-                                    print "Successfully retrieved the recording list from recorder";
-                                    if "P2" in value.upper():
-                                        tdkTestObj1.setResultStatus("SUCCESS");
-                                        print "update recording completed successfully";
-                                    else:
-                                        tdkTestObj1.setResultStatus("FAILURE");
-                                        print "update recording not completed successfully";
-                                else:
-                                    tdkTestObj1.setResultStatus("FAILURE");
-                                    print "Failed to retrieve the recording list from recorder";
+			    tdkTestObj1.setResultStatus("SUCCESS");
+			    print "Wait for 3 min to get response from recorder"
+			    sleep(180)
+			    actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+			    print "Recording List: %s" %actResponse;
+                            #Check for acknowledgement from recorder
+                            tdkTestObj1.executeTestCase(expectedResult);
+                            actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                            print actResponse;
+                            recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
+                            print recordingData
+                            if 'NOTFOUND' not in recordingData:
+                                 key = 'deletePriority'
+                                 value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                                 print "key: ",key," value: ",value
+                                 print "Successfully retrieved the recording list from recorder";
+                                 if "P2" in value.upper():
+                                     tdkTestObj1.setResultStatus("SUCCESS");
+                                     print "update recording completed successfully";
+                                 else:
+                                     tdkTestObj1.setResultStatus("FAILURE");
+                                     print "update recording not completed successfully";
                             else:
-                                    print "No Update Schedule message post failed";
-                                    tdkTestObj1.setResultStatus("FAILURE");
+                                 tdkTestObj1.setResultStatus("FAILURE");
+                                 print "Failed to retrieve the recording list from recorder";
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve acknowledgement from recorder";

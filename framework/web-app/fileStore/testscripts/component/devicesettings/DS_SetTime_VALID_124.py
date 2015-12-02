@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>5</version>
+  <version>7</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_SetTime_VALID_124</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -31,15 +31,15 @@ Test Case ID : CT_DS124</synopsis>
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
     <!--  -->
     <box_type>Terminal-RNG</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
+    <!--  -->
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
@@ -48,6 +48,10 @@ Test Case ID : CT_DS124</synopsis>
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags>
+    <script_tag>BASIC</script_tag>
+    <!--  -->
+  </script_tags>
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script

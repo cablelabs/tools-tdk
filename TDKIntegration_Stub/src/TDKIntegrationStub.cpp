@@ -205,8 +205,8 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
 		soc_init(1, "tdk_agent", 1);
         #endif
 */
-// Need to fix the hang happening while stoping the xre service
-#if 0
+
+#if 1
         string TDK_testmodule_PR_cmd;
         TDK_testmodule_PR_cmd= g_tdkPath + "/" + PRE_REQUISITE_FILE;
         string pre_req_chk= "source "+TDK_testmodule_PR_cmd;

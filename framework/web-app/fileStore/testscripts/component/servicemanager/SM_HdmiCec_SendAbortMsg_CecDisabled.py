@@ -45,6 +45,8 @@ import devicesettings;
 import iarmbus;
 import servicemanager;
 from time import sleep;
+from os import urandom
+from binascii import b2a_hex
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -126,8 +128,9 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
 					#Send the random message.
-	                                messageToSend = "30 FF FF FF"
-	                                tdkTestObj.addParameter("messageToSend",messageToSend);
+                                        message = "30 FF 00 FF FF FF " + str(b2a_hex(urandom(1))).upper()
+                                        print "Message to be sent to HDMI device: ",message
+	                                tdkTestObj.addParameter("messageToSend",message);
 	                                tdkTestObj.executeTestCase(expectedresult);
 	                                actualresult = tdkTestObj.getResult();
 	                                sendMsgDetails = tdkTestObj.getResultDetails();
@@ -135,11 +138,12 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 					if expectedresult in actualresult:
 						tdkTestObj.setResultStatus("SUCCESS");
 	
+						sleep(70)
+
 						#Check for the message sent for confirmation.
 						tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
-						expectedresult = "SUCCESS"
-						pattern = "30 FF FF FF"
-						tdkTestObj.addParameter("pattern",pattern);
+						expectedresult = "FAILURE"
+						tdkTestObj.addParameter("pattern",message);
 						tdkTestObj.executeTestCase(expectedresult);
 	                                        actualresult = tdkTestObj.getResult();
         	                                patternDetails= tdkTestObj.getResultDetails();
@@ -151,39 +155,40 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 							#tdkTestObj.transferLogs(logpath,"false");
 							
 							#Check for the reply from the Cec device.
-							tdkTestObj = obj.createTestStep('SM_HdmiCec_OnMessage');	
-		                                        expectedresult = "SUCCESS"
+							#tdkTestObj = smObj.createTestStep('SM_HdmiCec_OnMessage');	
+		                                        #expectedresult = "SUCCESS"
 		                                        #TODO: Need confirmation from Devlopement team.  Assuming to receive INVALID.
-                		                        onMessage = "INVALID"
-	                                	        tdkTestObj.addParameter("onMessage",onMessage);
-        	                                	tdkTestObj.executeTestCase(expectedresult);
-	                	                        actualresult = tdkTestObj.getResult();
-        	                	                onMsgDetails = tdkTestObj.getResultDetails();
-                	                	        print "[TEST EXECUTION DETAILS] : ",onMsgDetails;
-							if expectedresult in actualresult:
-								sleep(5)
-								
-								#Check for the message sent for confirmation.
-		                                                tdkTestObj = obj.createTestStep('SM_HdmiCec_CheckStatus');
-                		                                expectedresult = "SUCCESS"
-                                		                pattern = "INVALID"
-		                                                tdkTestObj.addParameter("pattern",pattern);
-		                                                tdkTestObj.executeTestCase(expectedresult);
-                		                                actualresult = tdkTestObj.getResult();
-		                                                patternDetails= tdkTestObj.getResultDetails();
-		                                                print "[TEST EXECUTION DETAILS] : ",patternDetails;
-								if expectedresult in actualresult:
-	                        	                                tdkTestObj.setResultStatus("SUCCESS");
-        	                        	                        logpath=tdkTestObj.getLogPath();
-                	                        	                print "Log path : %s" %logpath;
-                        	                        	        #tdkTestObj.transferLogs(logpath,"false");
-								else:
-									tdkTestObj.setResultStatus("FAILURE");
-									logpath=tdkTestObj.getLogPath();
-									print "Log path : %s" %logpath;
-									#tdkTestObj.transferLogs(logpath,"false");
-							else:
-								tdkTestObj.setResultStatus("FAILURE");
+                		                        #onMessage = "INVALID"
+	                                	        #tdkTestObj.addParameter("onMessage",onMessage);
+        	                                	#tdkTestObj.executeTestCase(expectedresult);
+	                	                        #actualresult = tdkTestObj.getResult();
+        	                	                #onMsgDetails = tdkTestObj.getResultDetails();
+                	                	        #print "[TEST EXECUTION DETAILS] : ",onMsgDetails;
+							#if expectedresult in actualresult:
+							#	tdkTestObj.setResultStatus("SUCCESS");
+							#	sleep(5)
+							#
+							#	#Check for the message sent for confirmation.
+		                                        #        tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
+                		                        #        expectedresult = "FAILURE"
+                                		        #        pattern = "INVALID"
+		                                        #        tdkTestObj.addParameter("pattern",pattern);
+		                                        #        tdkTestObj.executeTestCase(expectedresult);
+                		                        #        actualresult = tdkTestObj.getResult();
+		                                        #        patternDetails= tdkTestObj.getResultDetails();
+		                                        #        print "[TEST EXECUTION DETAILS] : ",patternDetails;
+							#	if expectedresult in actualresult:
+	                        	                #                tdkTestObj.setResultStatus("SUCCESS");
+        	                        	        #                logpath=tdkTestObj.getLogPath();
+                	                        	#                print "Log path : %s" %logpath;
+                        	                        #	        #tdkTestObj.transferLogs(logpath,"false");
+							#	else:
+							#		tdkTestObj.setResultStatus("FAILURE");
+							#		logpath=tdkTestObj.getLogPath();
+							#		print "Log path : %s" %logpath;
+							#		#tdkTestObj.transferLogs(logpath,"false");
+							#else:
+							#	tdkTestObj.setResultStatus("FAILURE");
 						else:
 							tdkTestObj.setResultStatus("FAILURE");
 							logpath=tdkTestObj.getLogPath();

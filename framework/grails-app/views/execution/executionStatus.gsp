@@ -128,7 +128,7 @@ function hideParameters(k){
 		<g:link action="exportConsolidatedPerfToExcel" params="[id:"${executionInstance?.id}"]" >Download Consolidated Performance Report(Excel)</g:link>
 		</td>		
 	</tr>		
-	<tr class="trborder even">
+	<tr class="odd">
 		<td class="tdhead">Device Name (IP)</td>
 		<td >${executionDeviceInstance?.device}(${executionDeviceInstance?.deviceIp})</td>				
 	</tr>
@@ -150,7 +150,7 @@ function hideParameters(k){
 		 %>
 		<td>${time}</td>				
 	</tr>
-	<tr class="odd">
+	<tr class="trborder even">
 		<td class="tdhead">Time taken for Complete execution(min)</td>
 		<%
 			String time1 = executionInstance?.realExecutionTime
@@ -165,7 +165,7 @@ function hideParameters(k){
 		<td>${time1}</td>				
 	</tr>
 	
-	<tr class="trborder even">
+	<tr class="odd">
 		<td class="tdhead">Image Name </td>		
 		<td>
 		<%

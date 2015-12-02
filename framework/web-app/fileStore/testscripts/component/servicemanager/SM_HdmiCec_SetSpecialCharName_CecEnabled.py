@@ -121,18 +121,45 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 if expectedresult in actualresult:
 					tdkTestObj.setResultStatus("SUCCESS");
 
-					#Set the device Name.
-					#Name length has to be 14 Characters
-					nameToSet = "tdk_$#%&&_1234"
-					print "Set device name with special characters: ",nameToSet
+					#Set the device Name containing special characters.
+                                        nameToSet = "tdk_$#%&&_1234"
+                                        print "Set device name with special characters: ",nameToSet
+                                        tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetName');
+                                        expectedresult = "SUCCESS"
+                                        tdkTestObj.addParameter("nameToSet",nameToSet);
+                                        tdkTestObj.executeTestCase(expectedresult);
+                                        actualresult = tdkTestObj.getResult();
+                                        setNameDetails = tdkTestObj.getResultDetails();
+                                        print "[TEST EXECUTION DETAILS] : ",setNameDetails;
+                                        if expectedresult in actualresult:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+
+                                        #Get the device Name.
+                                        print "Get device name"
+                                        tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetName');
+                                        expectedresult = "SUCCESS"
+                                        tdkTestObj.executeTestCase(expectedresult);
+                                        actualresult = tdkTestObj.getResult();
+                                        setNameDetails = tdkTestObj.getResultDetails();
+                                        print "[TEST EXECUTION DETAILS] : ",setNameDetails;
+                                        if expectedresult in actualresult:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+
+					#Name length cannot exceed 14 Characters
+					nameToSet = "tdk_$#%&&_54321"
+					print "Set device name exceeding 14 characters: ",nameToSet
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetName');
 	                                expectedresult = "SUCCESS"
 	                                tdkTestObj.addParameter("nameToSet",nameToSet);
-	                                tdkTestObj.executeTestCase(expectedresult);
+	                                tdkTestObj.executeTestCase("FAILURE");
 	                                actualresult = tdkTestObj.getResult();
 	                                setNameDetails = tdkTestObj.getResultDetails();
         	                        print "[TEST EXECUTION DETAILS] : ",setNameDetails;
-					if expectedresult in actualresult:
+					if "FAILURE" in actualresult:
 						tdkTestObj.setResultStatus("SUCCESS");
 					else:
 						tdkTestObj.setResultStatus("FAILURE");

@@ -156,7 +156,7 @@ if "SUCCESS" in recLoadStatus.upper():
         sleep(30)
 	#Get recordings list and check for error code of scheduled recording
 	recorderlib.callServerHandler('clearStatus',ip)
-	recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+	recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
 	#Wait to get response from recorder
 	sleep(120)
         recResponse = recorderlib.callServerHandler('retrieveStatus',ip)

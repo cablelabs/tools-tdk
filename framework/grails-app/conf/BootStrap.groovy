@@ -45,7 +45,7 @@ class BootStrap {
 		def absolutePath1 = layoutFolder.absolutePath
 		User.withTransaction {
 		def user = new User(username: "admin", passwordHash: new Sha256Hash("password").toHex(),
-			name : "ADMINISTRATOR", email : "sreejasuma@tataelxsi.co.in")
+			name : "ADMINISTRATOR", email : "sreelal@tataelxsi.co.in")
         user.addToPermissions("*:*")
         user.save(flush:true)
 		}

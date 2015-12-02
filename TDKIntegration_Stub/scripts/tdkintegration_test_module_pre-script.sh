@@ -37,12 +37,25 @@ mkdir -p $LOG_PATH
 #	fi
 #done
 
+jsonlocationvalue=`cat /$XDISCOVERY_PATH/xdiscovery.conf |grep outputJsonFile|awk -F '=' '{print $2};'`
+echo $jsonlocationvalue
+echo "Waiting for output.json "
+while [ ! -f $jsonlocationvalue ];
+do
+        sleep 1
+	count=$((count+1))
+        if [ $count -eq "60" ]; then
+                exit 1
+        fi
+done
+echo "Found : $jsonlocationvalue"
+
 #Kill the Guide Application
-/etc/init.d/xre-service stop
-if [ $? -eq 0 ]
-then
-	echo  "xre stopped"
-else
-	echo "xre not stopped"
-fi
+#/etc/init.d/xre-service stop
+#if [ $? -eq 0 ]
+#then
+#	echo  "xre stopped"
+#else
+#	echo "xre not stopped"
+#fi
                                                                                                                                 

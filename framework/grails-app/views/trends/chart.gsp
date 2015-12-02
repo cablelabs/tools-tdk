@@ -36,12 +36,9 @@
 <g:javascript library="chart/jqplot.canvasTextRenderer.min" />
 <g:javascript library="chart/jqplot.canvasAxisLabelRenderer.min" />
 <g:javascript library="chart/jqplot.canvasAxisTickRenderer.min" />
-<g:javascript library="chart/jqplot.cursor.min.js" />
-<g:javascript library="chart/jqplot.highlighter.min.js" />
 <g:javascript library="jquery.more" />
 <g:javascript library="select2" />
 <g:javascript library="chartview" />
-<g:javascript library="chart/jqplot.draggable.js" />
 <link rel="stylesheet"
 	href="${resource(dir:'css',file:'jquery-ui.css')}" type="text/css" />
 <link rel="stylesheet" href="${resource(dir:'css',file:'select2.css')}"
@@ -56,6 +53,7 @@
 		$('input[name=chartOption][value=ExecutionBased]').prop('checked', true);		
 		$("#previous").hide();
 		$("#next").hide();
+		$("#home").hide();
 	});
 	
 </script>
@@ -92,7 +90,7 @@
 			<table class="noClass" style="border: 1; border-color: black;">
 				<tr>
 					<td style="vertical-align: top;">Select Execution Names</td>
-					<td><g:select id="executionId" multiple="true"
+					<td  id="executionNameList"><g:select id="executionId" multiple="true"
 							style="height:200px;width:400px" name="execution"
 							from="${executionList}" optionKey="id" value=""
 							class="many-to-one selectCombo" /></td>
@@ -111,18 +109,24 @@
 							Wise
 						</form>
 					</td>
-					<td><input type="button" value="Compare"
-						onclick="showChart();" /><br></td>
+					<td>						
+						<g:submitToRemote  class =" buttons"   value="Compare" before ="homePage();"
+						onclick="showChart();"  />														
+						<br></td>
 				</tr>
 
 			</table>
 			<table>
 				<tr>
-					<td align="left"><input id="previous" type="button"
+					<td align="left"  width ="60%">
+					<input id="previous" type="button"
 						value="Previous " onclick="previousPlot()" class="buttons"
-						style="width: 15%" /></td>
-					<td align="center"><input id="next" type="button" value="Next"
+						style="width:9%" /></td>
+					<td align="center" width ="40%">					
+						<input id="next" type="button" value="Next"
 						onclick="nextPlot()" class="buttons" style="width: 15%" /></td>
+						<!-- my new add  -->
+					<td align="right" width="99%" id="home" ><img src="../images/skin/house.png"  onclick="homePage()"  height="28" width="28"  title="First Page "/></td>
 				</tr>
 			</table>
 		</div>
@@ -156,18 +160,27 @@
 							Wise
 						</form>
 					</td>
-					<td><input type="button" value="Compare"
-						onclick="showChart1();" /><br></td>
+					<td>
+						<g:submitToRemote  class =" buttons"   value="Compare"
+						onclick="showChart1();"  before ="homePage()"/>							
+						<br></td>
 				</tr>
 			</table>
 			<table>
 				<tr>
-					<td align="left"><input id="previous1" type="button"
+					<td align="left" width ="60%">
+					<input id="previous1" type="button"
 						value="Previous " onclick="previousPlot()" class="buttons"
-						style="width: 15%;display:none" /></td>
-					<td align="center"><input id="next1" type="button"
+						style="width: 9%;display:none" /></td>
+					<td align="center" width= "50%">
+					<input id="next1" type="button"
 						value="Next" onclick="nextPlot()" class="buttons"
 						style="width: 15%;display:none" /></td>
+					<td align="right" width= "99%" id= "home1" ><img src="../images/skin/house.png"  onclick="homePage()" height="28" width="28"  title="First Page"/></td>
+						<script type="text/javascript">
+						var elem = document.getElementById("home1");
+						elem.style.display = "none";
+					</script>
 				</tr>
 			</table>
 		</div>

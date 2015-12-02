@@ -78,7 +78,7 @@ if "SUCCESS" in recLoadStatus.upper():
         response = recorderlib.callServerHandler('clearStatus',ip);
         #Get the list of recordings
         jsonMsg = "{\"getRecordings\":{}}";
-        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
+        serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
         print "Server response for getRecordings: ",serverResponse;
         if 'getRecordings' in serverResponse:
                 print "getRecordings message post success"
@@ -128,7 +128,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                                         print "Space Full!! Check if old P3 recording is purged by recorder"
                                                         response = recorderlib.callServerHandler('clearStatus',ip);
                                                         jsonMsg = "{\"getRecordings\":{}}";
-                                                        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
+                                                        serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
                                                         print "Server response for getRecordings: ",serverResponse;
 
 							#Wait for recording to be complete

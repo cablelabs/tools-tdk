@@ -150,7 +150,7 @@
       <primitiveTest id=" " name="SM_HdmiCec_SendMessage" version="2">
         <function>TestMgr_SM_HdmiCec_SendMessage</function>
         <parameters>
-          <parameter name="messageToSend" value="308F"/>
+          <parameter name="messageToSend" value="30 8F"/>
         </parameters>
       </primitiveTest>
       <primitiveTest id=" " name="SM_HdmiCec_OnMessage" version="1">

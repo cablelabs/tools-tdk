@@ -87,6 +87,7 @@ class ScriptService {
 	def initializeScriptsData(def realPath){
 		try {
 			def list1 = scriptsList.collect()
+			def scriptFileList = ScriptFile?.findAll()
 			scriptsList.clear()
 			List scriptList = []
 			
@@ -150,12 +151,96 @@ class ScriptService {
 					}
 				}
 			}
+//			removeOrphanScriptFile(realPath,scriptFileList, scriptsList)
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
 		return scriptsList
 	}
+	def removeOrphanScriptFile(String realPath,List oldList , List newList){
+		oldList.removeAll(newList)
+		int indx = 0;
+		List deleteFiles = []
+		Map sgMap = [:]
+		oldList?.each { scriptFile ->
+
+			if(getScriptFileObj(realPath, scriptFile?.moduleName,scriptFile?.scriptName) == null){
+				indx ++
+				def scriptGroups = ScriptGroup.where {
+					scriptList { id == scriptFile.id }
+				}
+
+				def scriptInstance
+				def sgId = []
+				boolean flag = false
+				scriptGroups?.each{ scriptGrp ->
+					flag = true
+					def sList = sgMap.get(scriptGrp?.name)
+					if(sList == null){
+						sList = []
+						sgMap.put(scriptGrp?.name,sList)
+					}
+					sList.add(scriptFile)
+				}
+				if(!flag){
+					deleteFiles.add(scriptFile?.id)
+				}
+			}
+		}
+		
+		
+		sgMap?.keySet().each { sname ->
+			try {
+				ScriptGroup.withTransaction {
+					ScriptGroup sGroup = ScriptGroup.findByName(sname)
+					if(sGroup){
+						List sList = sgMap.get(sname)
+//						if(sList?.size() <= 7){
+//							println " SG<<>><<> "+sname
+//						sList?.each{ scriptInstance ->
+//							sGroup.removeFromScriptList(scriptInstance)
+//							sGroup?.scriptList?.removeAll(sList);
+//							sGroup?.save(flush:true)
+//						}
+//						}
+					}
+				}
+			} catch (Exception e) {
+				println " ERROR "+sname+" ee "+e.getMessage()
+				e.printStackTrace()
+			}
+		}
+		
+		
+		deleteFiles?.each { sFileId ->
+			ScriptFile.withTransaction {
+				def sFile = ScriptFile.get(sFileId)
+				if(sFile){
+					sFile.delete()
+				}
+			}
+		}
+	}
   
+	
+	def removeFromSG(def sid , def scriptFile){
+		def  scriptInstance
+		ScriptGroup.withTransaction {
+			ScriptGroup sGroup = ScriptGroup.get(sid)
+			scriptInstance = sGroup?.scriptList?.find { it?.id == scriptFile?.id }
+			if(scriptInstance){
+				sGroup.removeFromScriptList(scriptInstance)
+				sGroup.save(flush:true)
+			}
+
+			def scriptInstanceList = sGroup?.scriptList?.findAll { it?.id == scriptFile?.id }
+			if(scriptInstanceList?.size() > 0){
+				if(scriptInstance){
+					sGroup?.scriptList?.removeAll(scriptInstance);
+				}
+			}
+		}
+	}
 	def updateDefaultScriptGroups(def realPath, def name , def moduleName){
 		try {
 			def sFile
@@ -171,6 +256,7 @@ class ScriptService {
 					sObject.setName(name)
 					sObject.setModule(moduleName)
 					sObject.setScriptFile(sFile)
+					sObject.setScriptTags(script?.scriptTags?.toSet())
 					sObject.setLongDuration(script?.longDuration)
 
 					ScriptGroup.withTransaction{
@@ -178,6 +264,7 @@ class ScriptService {
 						scriptgroupService.saveToDefaultGroups(sFile,sObject, script?.boxTypes)
 					}
 					createDefaultGroupWithoutOS(sObject,sFile)
+					createDefaultScriptTagGroup(sObject,sFile)
 				}
 			}
 		} catch (Exception e) {
@@ -218,6 +305,27 @@ class ScriptService {
 			}
 		}
 	}
+	
+	
+	def createDefaultScriptTagGroup(def scriptObject , def scriptFile){
+			scriptObject?.boxTypes?.each{ bType ->
+
+				scriptObject?.scriptTags?.each{ tag ->
+					String name = tag?.toString()+"_"+bType?.name
+					ScriptGroup.withTransaction {
+						def scriptGrpInstance = ScriptGroup.findByName(name)
+							if(!scriptGrpInstance){
+								scriptGrpInstance = new ScriptGroup()
+								scriptGrpInstance.name = name
+							}
+							if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
+								scriptGrpInstance.addToScriptList(scriptFile)
+								scriptGrpInstance.save(flush:true)
+							}
+					}
+				}
+			}
+	}
 			
   
   def getScriptNameFileList(def realPath){
@@ -247,6 +355,34 @@ class ScriptService {
 	  }
 	  return scriptNameList
   }
+  
+	def getScriptFileObj(realPath,dirName,fileName){
+		dirName = dirName?.trim()
+		fileName = fileName?.trim()
+		Map script = [:]
+		try {
+
+			def moduleObj = Module.findByName(dirName)
+			def scriptDirName = Constants.COMPONENT
+			if(moduleObj){
+				if(moduleObj?.testGroup?.groupValue.equals(TestGroup.E2E.groupValue)){
+					scriptDirName = Constants.INTEGRATION
+				}
+			}
+			File file = new File( "${realPath}//fileStore//testscripts//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
+
+			if(file.exists()){
+				return file;
+			}else{
+				println " File Not present "+file?.getName()
+			}
+		} catch (Exception e) {
+			println " file name "+fileName
+			script = null
+			e.printStackTrace()
+		}
+		return null;
+	}
 	
 	def getScript(realPath,dirName,fileName){
 		dirName = dirName?.trim()
@@ -317,16 +453,23 @@ class ScriptService {
 				def primitiveTest = primitiveService.getPrimitiveTest(realPath+"/fileStore/testscripts/"+primitiveDirName+"//"+moduleName1+"/"+moduleName1+".xml",nodePrimitiveTestName)
 				script.put("primitiveTest",primitiveTest)
 				def versList = []
+				def sTagList = []
 				def btList = []
 				Set btSet = node?.box_types?.box_type?.collect{ it.text() }
 				Set versionSet = node?.rdk_versions?.rdk_version?.collect{ it.text() }
+				Set scriptTagSet = node?.script_tags?.script_tag?.collect{ it.text() }
 				btSet.each { bt ->
 					btList.add(BoxType.findByName(bt))
 				}
 				versionSet.each { ver ->
 					versList.add(RDKVersions.findByBuildVersion(ver))
 				}
+				scriptTagSet?.each { tag ->
+					sTagList.add(ScriptTag.findByName(tag))
+				}
+				
 				script.put("rdkVersions", versList)
+				script.put("scriptTags", sTagList)
 				script.put("boxTypes", btList)
 				def statusText = node?.status?.text()
 				script.put("status",getStatus(statusText) )
@@ -467,5 +610,87 @@ class ScriptService {
 			e.printStackTrace()
 		}
 		return false
+	}
+	
+	
+	
+	def scriptListRefresh(def realPath , def totalScriptList){
+		
+		boolean  value1 =false
+		try {
+			def list1 = scriptsList.collect()
+			scriptsList.clear()
+			List scriptList = []
+			boolean updateReqd = isDefaultSGUpdateRequired(realPath)
+			List dirList = [
+				Constants.COMPONENT,
+				Constants.INTEGRATION
+			]
+			def start = System.currentTimeMillis()
+			dirList.each{ directory ->
+				File scriptsDir = new File( "${realPath}//fileStore//testscripts//"+directory+"//")
+				if(scriptsDir.exists()){
+					def modules = scriptsDir.listFiles()
+					Arrays.sort(modules);
+					modules.each { module ->
+						def start1 =System.currentTimeMillis()
+						try {
+							File [] files = module.listFiles(new FilenameFilter() {
+										@Override
+										public boolean accept(File dir, String name) {
+											return name.endsWith(".py");
+										}
+									});
+							def start2 = System.currentTimeMillis()
+							def sLst = []
+							files.each { file ->
+								String name = ""+file?.name?.trim()?.replace(".py", "")
+								
+								def sFile
+								ScriptFile.withTransaction {
+									sFile = ScriptFile.findByScriptNameAndModuleName(name,module.getName())
+									if(sFile == null){
+										sFile = new ScriptFile()
+										sFile.setModuleName(module?.getName())
+										sFile.setScriptName(name)
+										sFile.save(flush:true)
+									}
+								}
+								if(!scriptsList.contains(sFile)){
+									scriptsList.add(sFile)
+									sLst.add(name)
+									scriptMapping.put(name, module?.getName())
+								}
+
+								if(!scriptNameList.contains(name)){
+									scriptNameList.add(name)
+								}
+								if(updateReqd == true){
+									updateDefaultScriptGroups(realPath,name,module?.getName())
+								}
+							}
+							sLst.sort()
+							totalScriptList?.each{ key, value ->
+							if( key.toString()  ==  module.getName()?.toString()){
+									if(!(value?.equals(sLst))){
+										scriptGroupMap.put(module?.getName(), sLst)										
+										value1 = false
+									}else {
+										value1 = true
+									}
+								}
+							}
+						} catch (Exception e) {
+							println "ERROR"+e.getMessage()
+							e.printStackTrace()
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error  "Error"+e.getMessage()
+			e.printStackTrace()
+		}
+		return value1
 	}
 }

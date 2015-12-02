@@ -233,6 +233,10 @@ img {
 	background-image: url(../images/skin/database_add.png);
 }
 
+
+
+
+
 /* CREATE/EDIT FORMS AND SHOW PAGES */
 fieldset,.property-list {
 	margin: 0.6em 1.25em 0 1.25em;
@@ -667,8 +671,60 @@ th:hover,tr:hover {
 	color: #444444;
 	text-decoration: underline;
 }
+.editscriptbutton {
+	background-color: #efefef;
+	overflow: hidden;
+	padding: 0.3em;
+	-moz-box-shadow: 0 0 3px 1px #aaaaaa;
+	-webkit-box-shadow: 0 0 3px 1px #aaaaaa;
+	box-shadow: 0 0 3px 1px #aaaaaa;
+	margin: 0.1em 0 0 0;
+	border: none;
+	background-position: 0.7em center;
+	background-repeat: no-repeat;
+	text-indent: 25px;
+	background-image: url(../images/skin/database_edit.png);	
+}
 
-.buttons .delete,.buttons .edit,.buttons .save, .buttons .find{
+
+
+.updatebutton {
+	background-color: #efefef;
+	overflow: hidden;
+	padding: 0.3em;
+	-moz-box-shadow: 0 0 3px 1px #aaaaaa;
+	-webkit-box-shadow: 0 0 3px 1px #aaaaaa;
+	box-shadow: 0 0 3px 1px #aaaaaa;
+	margin: 0.1em 0 0 0;
+	border: none;
+	background-position: 0.7em center;
+	background-repeat: no-repeat;
+	text-indent: 25px;
+	background-image: url(../images/skin/database_edit.png);	 
+}
+.deletebutton {
+	background-color: #efefef;
+	overflow: hidden;
+	padding: 0.3em;
+	-moz-box-shadow: 0 0 3px 1px #aaaaaa;
+	-webkit-box-shadow: 0 0 3px 1px #aaaaaa;
+	box-shadow: 0 0 3px 1px #aaaaaa;
+	margin: 0.1em 0 0 0;
+	border: none;
+	background-position: 0.7em center;
+	background-repeat: no-repeat;
+	text-indent: 25px;
+	background-image: url(../images/skin/database_delete.png);	 
+}
+
+ 
+.test {
+	background-color  : transparent;
+	margin: 0 0 0 0 ;
+	border: none;
+	
+}
+.buttons .delete,.buttons .edit,.buttons .save, .buttons .find ,.buttons .download , .buttons .refresh{
 	background-position: 0.7em center;
 	background-repeat: no-repeat;
 	text-indent: 25px;
@@ -693,6 +749,13 @@ th:hover,tr:hover {
 
 .buttons .find {
 	background-image: url(../images/skin/database_search.png);
+}
+
+.buttons .download {
+	background-image: url(../images/script-py.png);
+}
+.buttons .refresh  {
+	background-image: url(../images/refresh.gif);
 }
 
 a.skip {

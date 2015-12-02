@@ -121,32 +121,16 @@ if "SUCCESS" in recLoadStatus.upper():
         # Reboot the STB
 	print "Wait for the recording to complete "
 	sleep(180);
-	print "Rebooting the STB"
-	recObj.initiateReboot();
-	print "STB is up after reboot"
-	print "Sleeping to wait for the recoder to be up"
-	sleep(300);
-	response = recorderlib.callServerHandler('clearStatus',ip);
-	#Frame json message
-	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
-        expResponse = "noUpdate";
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
-        actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-        print "No Update Schedule Details: %s"%actResponse;
-        if expResponse not in actResponse:
-        	print "No Update Schedule message post failed";
-	        tdkTestObj.setResultStatus("FAILURE");
-        	recObj.unloadModule("Recorder");
-		exit();
-       	print "No Update Schedule message post success";
-        print "Wait to get the recording list"
-	sleep(300);
-        #check for acknowledgement from recorder
-        tdkTestObj.executeTestCase(expectedResult);
-        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	print actResponse;
+        print "Sending getRecordings to get the recording list"
+        recorderlib.callServerHandler('clearStatus',ip)
+        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+        print "Wait for 3 min to get response from recorder"
+        sleep(180)
+        actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+        print "Recording List: %s" %actResponse;
 	msg = recorderlib.getStatusMessage(actResponse);
 	print "Get Status Message Details: %s"%msg;
         if "" == msg:
@@ -233,12 +217,12 @@ if "SUCCESS" in recLoadStatus.upper():
 	sleep(5);
 	retry=0
 	actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-        while (( ('[]' in actResponse) or ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
+        while (( ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
 		sleep(5);
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 		retry += 1
 	print "Retrieve Status Details: %s"%actResponse;
-        if (('[]' in actResponse) or ('ERROR' in actResponse)):
+        if (('ERROR' in actResponse)):
 		tdkTestObj.setResultStatus("FAILURE");
         	print "Received Empty/Error status";
         	recObj.unloadModule("Recorder");
@@ -253,35 +237,16 @@ if "SUCCESS" in recLoadStatus.upper():
 	print "Wait for the recording to complete "
 	sleep(180);
 	# end of Perform 2nd  recording
-	# do full sync for recording list 
-        # Reboot the STB
-	print "Rebooting the STB"
-	recObj.initiateReboot();
-	print "STB is up after reboot"
-	print "Sleeping to wait for the recoder to be up"
-	sleep(300);
-	response = recorderlib.callServerHandler('clearStatus',ip);
-	print "Clear Status Details: %s"%response;
-   	#Frame json message
-	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
-        expResponse = "noUpdate";
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
-        actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-        print "No Update Schedule Details: %s"%actResponse;
-        if expResponse not in actResponse:
-        	print "No Update Schedule message post failed";
-	        tdkTestObj.setResultStatus("FAILURE");
-        	recObj.unloadModule("Recorder");
-		exit();
-       	print "No Update Schedule message post success";
-        print "Wait to get the recording list"
-	sleep(300);
-        #check for acknowledgement from recorder
-        tdkTestObj.executeTestCase(expectedResult);
-        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	print actResponse;
+        print "Sending getRecordings to get the recording list"
+        recorderlib.callServerHandler('clearStatus',ip)
+        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+        print "Wait for 3 min to get response from recorder"
+        sleep(180)
+        actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+        print "Recording List: %s" %actResponse;
 	msg = recorderlib.getStatusMessage(actResponse);
 	print "Get Status Message Details: %s"%msg;
         if "" == msg:

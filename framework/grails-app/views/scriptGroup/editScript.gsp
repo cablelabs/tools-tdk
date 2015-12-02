@@ -93,6 +93,9 @@ function clearLocks(scriptName){
 			<td>RDK Version</td>
 			<td>
 				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.list()}" optionKey="id" required="" value="${script?.rdkVersions}" class="many-to-one selectCombo" multiple="true"/>
+				 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Tags&emsp;&emsp; 
+				<g:select id="scriptTags" name="scriptTags"  from="${com.comcast.rdk.ScriptTag.list()}" optionKey="id" value="${script?.scriptTags}" class="many-to-one selectCombo" multiple="true"/>
+			
 			</td>
 		</tr>
 
@@ -160,11 +163,11 @@ function clearLocks(scriptName){
 				<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 				<g:if test="${flag != 'STATIC'}" >	
 					<div id = "editDiv">
-						<input id ="editButton" type="button" onclick="needToConfirm= true;enableEdit(this,'${script.name}','${SecurityUtils.getSubject().getSession(false)}')" value="Edit Script">
+						<input id ="editButton" class= "editscriptbutton" type="button" onclick="needToConfirm= true;enableEdit(this,'${script.name}','${SecurityUtils.getSubject().getSession(false)}')" value="Edit Script">
 					</div>
-					<div id ="updateDiv">			
-						<input type="submit"  style="display: none"  onclick="needToConfirm= false;" value="Update" id="save">&emsp;
-						<input type="reset" style="display: none" value="Cancel" id="cancel" onclick="makeScriptEditable('${script.name}')">		
+					<div id ="updateDiv">						
+						<input type="submit" class= "updatebutton"   style="display: none"  onclick="needToConfirm= false;" value="Update" id="save"> 
+						 <input type="reset"  class="deletebutton" style="display: none" value="Cancel" id="cancel" onclick="makeScriptEditable('${script.name}')">		
 					</div>		
 				</g:if>
 				</g:if>
@@ -179,8 +182,9 @@ function clearLocks(scriptName){
 		<tr></tr>
 			<tr>
 				<td style="width: 15%;"></td>
-				<td style="width: 80%;"><input type="submit"
-					value="Download Script" id="download"></td>
+				<td style="width: 80%;">
+				<span class="buttons"> <input class= "download" type="submit"
+					value="Download Script" id="download"> </span></td>
 			</tr>
 		</table>
 	</g:form>

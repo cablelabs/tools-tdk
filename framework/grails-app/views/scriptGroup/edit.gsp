@@ -222,12 +222,12 @@
 					</td>
 				<td style="width: 8%">
 				<br><br><br><br>
-				<input type="image" src= "../images/arrow_right.png" onclick="addScripts();return false;"  ><br><br>
-				<input type="image" src= "../images/arrow_left.png" onclick="removeScripts();return false;">
+				<input type="image" src= "../images/arrow_right.png" onclick="addScripts();return false;"  title  = "Add Scripts"><br><br>
+				<input type="image" src= "../images/arrow_left.png" onclick="removeScripts();return false;"  title = "Remove Scripts">
 				</td>
 				<td  style="width: 45%">
 				 <br>
-				 ${scriptGroupInstance}
+				 ${scriptGroupInstance} &emsp;&emsp;&emsp; &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;  Scripts Count : ${scriptGroupInstance.scriptList.size()} 
 					<ul id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 380px; overflow: auto;">
 						<g:if test="${scriptGroupInstance}">
 						<g:each in='${scriptGroupInstance.scriptList}' var="script">
@@ -248,8 +248,8 @@
 				</td>
 				<td style="width: 8%">
 					<br>
-					<input type="image" src= "../images/reorder_up.png" value="Move Up" onclick="moveUp();return false;" > <br><br>
-					<input type="image" src="../images/reorder_down.png" value="Move Down" onclick="moveDown();return false;">
+					<input type="image" src= "../images/reorder_up.png" value="Move Up" onclick="moveUp();return false;"  title  = " Move Up "> <br><br>
+					<input type="image" src="../images/reorder_down.png" value="Move Down" onclick="moveDown();return false;"  title  = " Move Down ">
 				</td>
 			</tr>
 		</table>
@@ -258,6 +258,7 @@
 	<div style="width : 90%; text-align: center;">
 	<span class="buttons"><input type="button" class="save" value="${message(code: 'default.button.update.label', default: 'Update')}" onclick="updateSG()"></span>
 		<span class="buttons"><g:actionSubmit class="delete" action="deleteScriptGrp" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
+		<span class="buttons" ><g:actionSubmit class="save" action ="downloadXml" value="Download XML"  /></span>
 	</div>
 	<%--</fieldset>--%>
 	</g:form>

@@ -80,7 +80,6 @@ if "SUCCESS" in recLoadStatus.upper():
         print "Clear Status Details: %s"%response;
         response = recorderlib.callServerHandler('retrieveStatus',ip);
         print "Retrieve Status Details: %s"%response;
-
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";

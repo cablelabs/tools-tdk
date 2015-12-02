@@ -90,6 +90,9 @@
 			<td>RDK Version</td>
 			<td>
 				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.list()}" optionKey="id" required="" value="" class="many-to-one selectCombo" multiple="true"/>
+			 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Tags&emsp;&emsp; 
+				<g:select id="scriptTags" name="scriptTags"  from="${com.comcast.rdk.ScriptTag.list()}" optionKey="id" value="" class="many-to-one selectCombo" multiple="true"/>
+			
 			</td>
 		</tr>
 		<tr>

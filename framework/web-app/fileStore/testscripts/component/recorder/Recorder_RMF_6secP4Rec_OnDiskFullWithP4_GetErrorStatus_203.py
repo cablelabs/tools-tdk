@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_6secP4Rec_OnDiskFullWithP4_GetErrorStatus_203</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -35,6 +35,7 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
@@ -156,7 +157,7 @@ if "SUCCESS" in recLoadStatus.upper():
         sleep(30)
 	#Get recordings list and check for error code of scheduled recording
 	recorderlib.callServerHandler('clearStatus',ip)
-	recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+	recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
 	#Wait to get response from recorder
 	sleep(120)
         recResponse = recorderlib.callServerHandler('retrieveStatus',ip)

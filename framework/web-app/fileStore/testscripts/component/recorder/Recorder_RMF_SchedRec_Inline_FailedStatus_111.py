@@ -82,9 +82,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
 
         #Execute updateSchedule
         requestID = str(randint(10, 500));

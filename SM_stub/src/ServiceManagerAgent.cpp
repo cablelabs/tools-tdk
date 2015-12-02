@@ -1685,7 +1685,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices(IN const Json::Value& r
         {
 		char stringDetails[STR_DETAILS_20] = {'\0'};
                 QVariantList listOfDevicesConnected = ptr_service->getConnectedDevices();
-		DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getConnectedDevices count = %d size = %d\n", listOfDevicesConnected.count(), listOfDevicesConnected.size());
+		DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getConnectedDevices size = %d\n", listOfDevicesConnected.size());
                 for(int j = 0; j < listOfDevicesConnected.size(); j++)
 		{
 			DEBUG_PRINT(DEBUG_TRACE,"ConnectedDevice:%d Address: %d\n", j+1, listOfDevicesConnected.value(j).toInt());
@@ -1733,35 +1733,39 @@ bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT 
 		else
 		{
 			std::string messageToSend = req["messageToSend"].asCString();
-			DEBUG_PRINT(DEBUG_TRACE,"Command to enable debug log: %s\n", messageToSend.c_str());
-
-                        const int msgLength = 11;
-                        uint8_t *buf = new uint8_t [msgLength+1];
-                        istringstream bufferStr(messageToSend);
-                        unsigned int i = 0;
-                        do
+			DEBUG_PRINT(DEBUG_TRACE,"Message to Send: %s\n", messageToSend.c_str());
+			DEBUG_PRINT(DEBUG_TRACE,"Length of message received: %d\n", messageToSend.length());
+                        if (messageToSend.length() == 20)
                         {
-                            unsigned int value;
-                            bufferStr >> std::hex >> value;
-                            buf[i] = value & 0xff;
-                            i++;
-                        } while (bufferStr);
+                            const int msgLength = 7;
+                            uint8_t *buf = new uint8_t [msgLength];
+                            istringstream bufferStr(messageToSend);
+                            DEBUG_PRINT(DEBUG_TRACE,"Hex stream input: ");
+                            for (unsigned int i = 0; i < msgLength; i++)
+                            {
+                                unsigned int value;
+                                bufferStr >> std::hex >> value;
+                                buf[i] = value & 0xff;
+                                printf("%x ", buf[i]);
+                            }
+                            printf("\n");
 
-                        DEBUG_PRINT(DEBUG_TRACE,"Hex stream input: %s\n", buf);
-                        for (unsigned int i = 0; i < msgLength; i++) {
-                            printf("%x ", buf[i]);
-                        }
-                        printf("\n\n");
-                        // Convert hex stream to Base64 Qbyte array for sendMessage
-                        QByteArray byte_array = QByteArray((const char*)buf,msgLength);
-                        ptr_service->sendMessage(byte_array.toBase64());
+                            // Convert hex stream to Base64 Qbyte array for sendMessage
+                            QByteArray byte_array = QByteArray((const char*)buf,msgLength);
+                            ptr_service->sendMessage(byte_array.toBase64());
 
-                        if (buf) {
-                            delete [] buf;
-                            buf = NULL;
+                            if (buf) {
+                                delete [] buf;
+                                buf = NULL;
+                            }
+	              	    response["result"]="SUCCESS";
+                	    response["details"]="HdmiCec Service sendMessage call success";
                         }
-	              	response["result"]="SUCCESS";
-                	response["details"]="HdmiCec Service sendMessage call success";
+                        else
+                        {
+                            response["result"]="FAILURE";
+                            response["details"]="Message length not equal to 7 bytes";
+                        }
 		}
         }
         else

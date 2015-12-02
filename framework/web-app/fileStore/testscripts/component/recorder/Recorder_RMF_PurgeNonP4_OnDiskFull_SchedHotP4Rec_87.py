@@ -60,14 +60,12 @@ recObj.setLoadModuleStatus(recLoadStatus);
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+               print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+               print "Waiting for the recoder to be up"
 	       sleep(300);
-
-        print "Waiting for the recoder to be up"
-
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -83,7 +81,7 @@ if "SUCCESS" in recLoadStatus.upper():
         if 'getRecordings' in serverResponse:
                 print "getRecordings message post success"
         	print "Waiting to get recording list"
-        	sleep(120)
+        	sleep(60)
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
         	status = recorderlib.getStatusMessage(recResponse)
         	print "status message containing recording list: ",status
@@ -134,7 +132,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                                         if 'getRecordings' in serverResponse:
                                                         	print "getRecordings message post success";
                                                                 #wait to get list
-                                                                sleep(100)
+                                                                sleep(60)
                                                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                                                	print "Retrieve Status Details: ",recResponse
                                                                	status = recorderlib.getStatusMessage(recResponse)

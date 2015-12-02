@@ -59,6 +59,16 @@
 <body>
 	<a href="#list-scriptGroup" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		
+		<%--<div class="nav" role = "navigation" style ="background: #f7f7f7">
+		<table  height = "5">
+			<tr>
+				<td>
+				 		<span class=" buttons"> <g:submitToRemote class="refresh"   before="refreshListStart()"  action="scriptListRefresh;"  value="Script List Refresh"  onFailure="scriptRefreshFailure()" onSuccess="scriptRefreshSuccess()" /></span> 
+				</td>
+			</tr>
+		<tr></tr>
+		</table>
+		</div>--%>
 		<div id="" class="">
 			<g:if test="${flash.message}">
 				<div class="message" role="status">${flash.message}</div>
@@ -133,7 +143,7 @@
 						</div>
 					</td>
 										
-					<td rowspan="2" style="width: 80%;">																	
+					<td rowspan="2" style="width: 80%;">	
 						<div id="responseDiv123" style="width: 100%; height: 610px; overflow: auto;">						    
 						    <div id="minSearch" style="width: 100%;overflow: auto;text-align: right;vertical-align: top;">
 						    	<g:form controller="scriptGroup" >
@@ -187,14 +197,37 @@
 							<div id="responseDiv" style="width: 100%;overflow: auto;" class="responseclass">							    
 							</div>
 						</div>
+					<div class="contextMenu" id="up_load" align="center"
+						style="width: 950px; height: 900px;">
+						<br> <br> <br> <br>
+						<g:form method="POST" controller="scriptGroup" action="upload"
+							enctype="multipart/form-data">
+							<label> <b><g:message code="scriptGroup.name.label"
+										default="Select the testSuite XML file" /></b>
+							</label>
+							&emsp;
+							<input class="uploadFile" type="file" name="file" />
+							&emsp;&emsp;
+							<g:actionSubmit class="buttons" style="width : 100px; "
+								action="upload" value="Upload" />
+
+						</g:form>
+					</div>
 					</td>					
 				</tr>
 			</table>
-			<div class="contextMenu" id="script_root_menu">
-				<ul>
-	          		<li id="add_script"><img src="../images/add_new.png" height="15px" width="15px"/>Add New Script</li>
-	        	</ul>
-	      	</div>
+		<div class="contextMenu" id="script_root_menu">
+			<ul>
+				<li id="add_script"><img src="../images/add_new.png"
+					height="15px" width="15px" />Add New Script</li>
+
+				<li id="refresh"><img src="../images/refresh.gif" height="15px"
+					width="15px" /> <g:submitToRemote class="test"
+						before="refreshListStart()" action="scriptListRefresh;"
+						value="ScriptList Refresh" onFailure="scriptRefreshFailure()"
+						onSuccess="scriptRefreshSuccess()" /></li>
+			</ul>
+		</div>
 	      	
 			<div class="contextMenu" id="script_childs_menu">
 				<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
@@ -208,6 +241,8 @@
 	       <div class="contextMenu" id="scriptgrp_root_menu">
 				<ul>
 	          		<li id="add_scriptgrp"><img src="../images/add_new.png" height="15px" width="15px"/>Add New Test Suite</li>
+	          		<li id="upload_scriptGroup"><img src="../images/reorder_up.png"
+					height="15px" width="15px" /> Upload script group XML</li>
 	        	</ul>
 	        </div>
 			<div class="contextMenu" id="scriptgrp_childs_menu">

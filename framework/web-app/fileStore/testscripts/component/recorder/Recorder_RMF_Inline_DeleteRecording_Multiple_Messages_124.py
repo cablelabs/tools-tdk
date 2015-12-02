@@ -154,52 +154,35 @@ if "SUCCESS" in recLoadStatus.upper():
                         elif 'acknowledgement' in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully retrieved acknowledgement from recorder";
-                            # Reboot the STB
-                            print "Rebooting the STB to get the recording list from full sync"
-                            recObj.initiateReboot();
-                            print "Sleeping to wait for the recoder to be up"
-                            sleep(300);
-                            response = recorderlib.callServerHandler('clearStatus',ip);
-                            print "Clear Status Details: %s"%response;
-                            #Frame json message
-                            jsonMsgNoUpdate = "{\"noUpdate\":{\"generationId\":\"0\"}}";
-                            expResponse = "noUpdate";
                             tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
                             tdkTestObj1.executeTestCase(expectedResult);
-                            actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-                            print "No Update Schedule Details: %s"%actResponse;
-                            if expResponse in actResponse:
-                                print "No Update Schedule message post success";
-                                print "Wait for 60s to get the recording list"
-                                sleep(120);
-                                tdkTestObj1.setResultStatus("SUCCESS");
-                                #Check for acknowledgement from recorder
-                                tdkTestObj1.executeTestCase(expectedResult);
-                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                print actResponse;
-                                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-                                secondRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1))
-                                thirdRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+2))
-                                print recordingData,secondRecordingData,thirdRecordingData
-                                if 'NOTFOUND' not in recordingData or 'NOTFOUND' not in secondRecordingData or 'NOTFOUND' not in thirdRecordingData:
-                                        key = 'status'
-                                        value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                        secondRecValue = recorderlib.getValueFromKeyInRecording(secondRecordingData,key)
-                                        thirdRecValue = recorderlib.getValueFromKeyInRecording(thirdRecordingData,key)
-                                        print "key: ",key," value: ",value," secondRecValue: ",secondRecValue," thirdRecValue: ",thirdRecValue
-                                        print "Successfully retrieved the recording list from recorder";
-                                        if "ERASED" in value.upper() and "ERASED" in secondRecValue.upper() and "ERASED" in thirdRecValue.upper():
-                                                tdkTestObj1.setResultStatus("SUCCESS");
-                                                print "Delete recording happened properly";
-                                        else:
-                                                tdkTestObj1.setResultStatus("FAILURE");
-                                                print "Delete recording not happened properly";
+                            print "Sending getRecordings to get the recording list"
+                            recorderlib.callServerHandler('clearStatus',ip)
+                            recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                            print "Wait for 3 min to get response from recorder"
+                            sleep(180)
+                            actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                            print "Recording List: %s" %actResponse;
+                            recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
+                            secondRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1))
+                            thirdRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+2))
+                            print recordingData,secondRecordingData,thirdRecordingData
+                            if 'NOTFOUND' not in recordingData or 'NOTFOUND' not in secondRecordingData or 'NOTFOUND' not in thirdRecordingData:
+                                key = 'status'
+                                value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                                secondRecValue = recorderlib.getValueFromKeyInRecording(secondRecordingData,key)
+                                thirdRecValue = recorderlib.getValueFromKeyInRecording(thirdRecordingData,key)
+                                print "key: ",key," value: ",value," secondRecValue: ",secondRecValue," thirdRecValue: ",thirdRecValue
+                                print "Successfully retrieved the recording list from recorder";
+                                if "ERASED" in value.upper() and "ERASED" in secondRecValue.upper() and "ERASED" in thirdRecValue.upper():
+                                    tdkTestObj1.setResultStatus("SUCCESS");
+                                    print "Delete recording happened properly";
                                 else:
-                                        tdkTestObj1.setResultStatus("FAILURE");
-                                        print "Failed to retrieve the recording list from recorder";
-                            else:
-                                    print "No Update Schedule message post failed";
                                     tdkTestObj1.setResultStatus("FAILURE");
+                                    print "Delete recording not happened properly";
+                            else:
+                                tdkTestObj1.setResultStatus("FAILURE");
+                                print "Failed to retrieve the recording list from recorder";
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve acknowledgement from recorder";

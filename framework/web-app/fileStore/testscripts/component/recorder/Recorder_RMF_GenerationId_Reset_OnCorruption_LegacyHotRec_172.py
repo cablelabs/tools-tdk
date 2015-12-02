@@ -133,41 +133,32 @@ if "SUCCESS" in recLoadStatus.upper():
                                 sleep(5)
 
                         response = recorderlib.callServerHandler('clearStatus',ip);
-                        print "Rebooting box for properties file restoration"
-                        recObj.initiateReboot();
-                        print "Waiting for the recoder to be up"
-                        sleep(300);
 
-                        #Execute noUpdate
-                        jsonMsgNoUpdate = "{\"noUpdate\":{}}";
-                        serverResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-                        print "Server response for NoUpdate: %s"%serverResponse;
-
-                        if 'noUpdate' in serverResponse:
-                                print "noUpdate message post success";
-                                print "Waiting to get response from RWS"
-                                sleep(30)
-                                retry = 0
-                                recResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                                while ( ('[]' == recResponse) and (retry < 15) ):
-                                        sleep(10);
-                                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        retry += 1
-                                print "Retrieve Status Details: ",recResponse;
-				if 'generationId' in recResponse:
-	                                genIdOut = recorderlib.getGenerationId(recResponse)
-        	                        if "0" == genIdOut:
-                	                        tdkTestObj.setResultStatus("SUCCESS");
-                        	                print "GenerationId is successfully reset to 0"
-                                	else:
-                                       	        tdkTestObj.setResultStatus("FAILURE");
-	                                        print "GenerationId failed to reset to 0"
-				else:
-				        print "No GenerationId in status"
+			print "Sending getRecordings to get the recording list"
+			recorderlib.callServerHandler('clearStatus',ip)
+			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+			print "Wait for 3 min to get response from recorder"
+			sleep(180)
+			actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+			print "Recording List: %s" %actResponse;
+                        retry = 0
+                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                        while ( ('[]' == recResponse) and (retry < 15) ):
+                                 sleep(10);
+                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                                 retry += 1
+                        print "Retrieve Status Details: ",recResponse;
+			if 'generationId' in recResponse:
+	                        genIdOut = recorderlib.getGenerationId(recResponse)
+        	                if "0" == genIdOut:
+                 	                tdkTestObj.setResultStatus("SUCCESS");
+                                        print "GenerationId is successfully reset to 0"
+                               	else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                        else:
+	                                print "GenerationId failed to reset to 0"
+			else:
+			        print "No GenerationId in status"
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "noUpdate message post failed";
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Legacy updateSchedule message post failed";

@@ -56,25 +56,23 @@ obj.configureTestCase(ip,port,'Recorder_RMF_HotRec_Legacy_FailedStatus_110');
 loadmodulestatus =obj.getLoadModuleResult();
 print "Recorder module loading status :%s" %loadmodulestatus ;
 #Set the module loading status
-obj.setLoadModuleStatus(loadmodulestatus);
+obj.setLoadModuleStatus(loadmodulestatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in loadmodulestatus.upper():
 
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = obj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+               print "Rebooting box for setting configuration"
                obj.initiateReboot();
+               print "Waiting for the recoder to be up"
 	       sleep(300);
-        print "Waiting for the recoder to be up"
-
 
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
 
-        print "Sending noUpdate to get the recording list after full sync"
         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
         sleep(10);
         response = recorderlib.callServerHandler('retrieveStatus',ip);
@@ -82,9 +80,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
 
         #Execute updateSchedule
         requestID = str(randint(10, 500));

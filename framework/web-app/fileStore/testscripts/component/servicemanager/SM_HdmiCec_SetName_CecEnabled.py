@@ -122,7 +122,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 					tdkTestObj.setResultStatus("SUCCESS");
 
 					#Set the device Name.
-					nameToSet = "tdk_hdmicec"
+					nameToSet = "nameEnabled"
 					print "Set device name to ",nameToSet
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetName');
 	                                expectedresult = "SUCCESS"

@@ -126,7 +126,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
 		#Save the list of completed recodings before starting test
         	recorderlib.callServerHandler('clearStatus',ip)
-        	recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+        	recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
         	#Wait to get response from recorder
         	sleep(120)
         	recResponse = recorderlib.callServerHandler('retrieveStatus',ip)
@@ -180,7 +180,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	#STEP3: Check that an existing P3 recording of duration not more than 10 min duration is deleted
         #Get recordings list and check for error code of recordings
         recorderlib.callServerHandler('clearStatus',ip)
-        recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
         #Wait to get response from recorder
         sleep(120)
         recResponse = recorderlib.callServerHandler('retrieveStatus',ip)

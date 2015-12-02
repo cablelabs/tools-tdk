@@ -120,31 +120,21 @@ if "SUCCESS" in recLoadStatus.upper():
                                 print "Enabled LP Server"
                                 print "Wait for recorder to connect to longpoll server"
                                 sleep (220)
-                                print "Rebooting the box to get full sync..."
-                                recObj.initiateReboot();
-                                print "Sleeping to wait for the recoder to be up"
-                                sleep(300);
-				response = recorderlib.callServerHandler('clearStatus',ip);
-                                print "Sending noUpdate to get the recording list"
-                                jsonMsg = "{\"noUpdate\":{}}";
-                                serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-                                if "noUpdate" in serverResponse:
-                                	print "NoUpdate message post success";
-                                        print "Wait for 180sec to get the recording list"
-                                        sleep(180);
-                                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        print "Recording List: %s" %actResponse;
-                                        recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
-                                        print recordingData;
-                                        if 'NOTFOUND' == recordingData:
-                                        	tdkTestObj.setResultStatus("SUCCESS");
-                                                print "Recording not found in list";
-                                        else:
-						tdkTestObj.setResultStatus("FAILURE");
-						print "Inline recording started while LPServer was down";
-                              	else:
-                                	tdkTestObj.setResultStatus("FAILURE");
-                                        print "NoUpdate message post failed";
+                                print "Sending getRecordings to get the recording list"
+                                recorderlib.callServerHandler('clearStatus',ip)
+                                recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+                                print "Wait for 3 min to get response from recorder"
+                                sleep(180)
+                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                                print "Recording List: %s" %actResponse;
+                                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                                print recordingData
+                                if 'NOTFOUND' == recordingData:
+                                    tdkTestObj.setResultStatus("SUCCESS");
+                                    print "Recording not found in list";
+                                else:
+				    tdkTestObj.setResultStatus("FAILURE");
+				    print "Inline recording started while LPServer was down";
         	else:
                 	print "updateSchedule message post failure";
                	 	tdkTestObj.setResultStatus("FAILURE");

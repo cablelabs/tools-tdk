@@ -113,9 +113,9 @@
 									</g:if>
 						          </g:elseif>
 							</g:if>
-							<g:link onclick="executionStatus(${executionInstance.id}); return false;" id="${executionInstance.id}" > <img src="../images/execution_status.png" style="padding-left: 3px" /></g:link>
+							<g:link onclick="executionStatus(${executionInstance.id}); return false;" id="${executionInstance.id}" > <img src="../images/execution_status.png" title="Execution Status Viewer"  style="padding-left: 3px" /></g:link>
 							</g:if>
-							<g:link action="exportConsolidatedToExcel" id="${executionInstance.id}" ><img src="../images/excel.png" style="padding-left: 3px"/></g:link>
+							<g:link action="exportConsolidatedToExcel" id="${executionInstance.id}" ><img src="../images/excel.png"  title = " Download Consolidated Report(Excel)" style="padding-left: 3px"/></g:link>
 						</td>						
 					</tr>
 				</g:each>
@@ -127,7 +127,7 @@
 					<a href="#" onclick="showCleanUpPopUp();"><label> <b>Date based CleanUp </b></label></a>
 					<input type="checkbox" name="markAll" id="markAll2" class="markAll" onclick="clickCheckbox(this)">
 					<label> <b>Mark All </b></label>	
-					<img src="../images/trash.png" onclick="deleteResults();return false;" style="cursor: pointer;" alt="Delete" />
+					<img src="../images/trash.png" onclick="deleteResults();return false;" style="cursor: pointer;" alt="Delete" title ="Delete Executions" />
 					<g:paginate total="${executorInstanceTotal}" />
 			</div>			
 			<g:hiddenField name="pageOffset" id="pageOffset" value="${params.offset}"/>

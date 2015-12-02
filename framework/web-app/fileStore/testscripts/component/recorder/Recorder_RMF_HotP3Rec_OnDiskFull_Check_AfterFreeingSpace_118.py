@@ -150,7 +150,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                                                         print "Get recording list to check deleted recording status"
                                                                         response = recorderlib.callServerHandler('clearStatus',ip);
                                                                         jsonMsg = "{\"getRecordings\":{}}";
-                                                                        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
+                                                                        serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
                                                                         print "Server response for getRecordings: ",serverResponse;
 
                                                                         if 'getRecordings' in serverResponse:

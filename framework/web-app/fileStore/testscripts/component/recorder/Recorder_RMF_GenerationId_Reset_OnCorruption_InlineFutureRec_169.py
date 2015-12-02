@@ -55,19 +55,16 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_GenerationId_Reset_OnCorruption_I
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
-recObj.setLoadModuleStatus(recLoadStatus);
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
                recObj.initiateReboot();
+	       print "Waiting for the recoder to be up"
 	       sleep(300);
-
-        print "Waiting for the recoder to be up"
-
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -91,8 +88,6 @@ if "SUCCESS" in recLoadStatus.upper():
         jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdIn+"\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
-        print "Server response for inline updateSchedule: ",serverResponse;
-
         if 'updateSchedule' in serverResponse:
                 print "Inline updateSchedule message post success";
                 sleep(20)
@@ -128,7 +123,7 @@ if "SUCCESS" in recLoadStatus.upper():
 				print "Failed to corrupt recording properties"
 				testObj.setResultStatus("FAILURE");
 			else:
-				print "recorder properties corrupted"
+				print "Recorder properties corrupted"
 				testObj.setResultStatus("SUCCESS")
 				sleep(5)
 
@@ -141,12 +136,10 @@ if "SUCCESS" in recLoadStatus.upper():
         		#Execute noUpdate
         		jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         		serverResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-        		print "Server response for NoUpdate: %s"%serverResponse;
-
         		if 'noUpdate' in serverResponse:
                        		print "noUpdate message post success";
 				print "Waiting to get response from RWS"
-               			sleep(30)
+               			sleep(10)
                			retry = 0
                			recResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                			while ( ('[]' == recResponse) and (retry < 15) ):

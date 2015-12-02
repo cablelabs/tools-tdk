@@ -1825,11 +1825,13 @@ class ExecutionController {
 		int markStatus
 		markStatus = Integer.parseInt(params?.markStatus)
 		try {
+			Execution.withTransaction {
 			Execution executionInstance = Execution.findById(params?.id)
 					if(executionInstance){
 						executionInstance.isMarked = markStatus
 								executionInstance.save(flush:true)
 					}
+			}
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
@@ -2099,7 +2101,6 @@ class ExecutionController {
 	 */
 	
 	def deleteExecutions(){
-	
 		def deleteCount = 0
 		try {
 			
@@ -2108,76 +2109,74 @@ class ExecutionController {
 			List executionMethodResultInstanceList = []
 			List performanceList = []
 			executionList?.each{ executionInstance ->
-			
 				if(!executionInstance?.executionStatus?.equals(INPROGRESS_STATUS) ){
 					if( !executionInstance?.executionStatus?.equals(PAUSED)){
 				if(executionInstance){
-					executionResultList  = ExecutionResult.findAllByExecution(executionInstance)
-					
-					executionResultList.each { executionResultInstance ->
-						
-						if(executionResultInstance){
-							executionMethodResultInstanceList = ExecuteMethodResult.findAllByExecutionResult(executionResultInstance)
-							if(executionMethodResultInstanceList){
-								executionMethodResultInstanceList.each { executionMethodResultInstance ->
-									executionMethodResultInstance.delete(flush:true)
+						executionResultList  = ExecutionResult.findAllByExecution(executionInstance)
+								
+								executionResultList.each { executionResultInstance ->
+								
+								if(executionResultInstance){
+									executionMethodResultInstanceList = ExecuteMethodResult.findAllByExecutionResult(executionResultInstance)
+											if(executionMethodResultInstanceList){
+												executionMethodResultInstanceList.each { executionMethodResultInstance ->
+												executionMethodResultInstance.delete()
+												}
+											}
+									performanceList = Performance.findAllByExecutionResult(executionResultInstance)
+											performanceList.each{ performance ->
+											performance.delete()
+									}
+									executionResultInstance.delete(flush:true)
 								}
-							}
-							performanceList = Performance.findAllByExecutionResult(executionResultInstance)
-							performanceList.each{ performance ->
-								performance.delete(flush:true)
-							}
-							executionResultInstance.delete(flush:true)
 						}
-					}
-				
-
-					if(executionInstance?.thirdPartyExecutionDetails){
-						executionInstance?.thirdPartyExecutionDetails = null;
-						executionInstance?.save();
-					}
-					
-					def thirdPartyExecutionDetailsList = ThirdPartyExecutionDetails.findAllByExecution(executionInstance)
-					thirdPartyExecutionDetailsList.each{ thirdPartyExecution ->
-						thirdPartyExecution.delete(flush:true)
-					}
-					
-					def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
-					executionDeviceList.each{ executionDeviceInstance ->
-						executionDeviceInstance.delete(flush:true)
-					}
-					
-					def execId = executionInstance?.id.toString()
-					executionInstance.delete(flush:true)
-					deleteCount ++
-					log.info "Deleted "+executionInstance
-					/**
-					 * Deletes the log files, crash files
-					 */
-					String logFilePath = "${getRealPath()}//logs//"+execId
-					def logFiles = new File(logFilePath)
-					if(logFiles.exists()){
-						logFiles?.deleteDir()
-					}
-					String crashFilePath = "${getRealPath()}//logs//crashlogs//"
-					
-					new File(crashFilePath).eachFileRecurse { file->
-						if((file?.name).startsWith(execId)){
-							file?.delete()
-						}		
-					}
-					String versionFilePath = "${getRealPath()}//logs//version//"+execId
-					def versionFiles = new File(versionFilePath)
-					if(versionFiles.exists()){
-						versionFiles?.deleteDir()
-					}
-					
-					String agentLogFilePath = "${realPath}//logs//consolelog//"+execId
-					def agentLogFiles = new File(agentLogFilePath)
-					if(agentLogFiles.exists()){
-						agentLogFiles?.deleteDir()
-					}
-					
+						
+						if(executionInstance?.thirdPartyExecutionDetails){
+							executionInstance?.thirdPartyExecutionDetails = null;
+							executionInstance?.save();
+						}
+						
+						def thirdPartyExecutionDetailsList = ThirdPartyExecutionDetails.findAllByExecution(executionInstance)
+								thirdPartyExecutionDetailsList.each{ thirdPartyExecution ->
+								thirdPartyExecution.delete(flush:true)
+						}
+								
+						def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
+								executionDeviceList.each{ executionDeviceInstance ->
+								executionDeviceInstance.delete(flush:true)
+						}
+						
+						def execId = executionInstance?.id.toString()
+								executionInstance.delete(flush:true)
+								deleteCount ++
+								log.info "Deleted "+executionInstance
+								/**
+								 * Deletes the log files, crash files
+								 */
+								String logFilePath = "${getRealPath()}//logs//"+execId
+								def logFiles = new File(logFilePath)
+						if(logFiles.exists()){
+							logFiles?.deleteDir()
+						}
+						String crashFilePath = "${getRealPath()}//logs//crashlogs//"
+								
+								new File(crashFilePath).eachFileRecurse { file->
+								if((file?.name).startsWith(execId)){
+									file?.delete()
+								}		
+						}
+						String versionFilePath = "${getRealPath()}//logs//version//"+execId
+								def versionFiles = new File(versionFilePath)
+						if(versionFiles.exists()){
+							versionFiles?.deleteDir()
+						}
+						
+						String agentLogFilePath = "${realPath}//logs//consolelog//"+execId
+								def agentLogFiles = new File(agentLogFilePath)
+						if(agentLogFiles.exists()){
+							agentLogFiles?.deleteDir()
+						}
+						def time4 = System.currentTimeMillis()
 				}
 				else{
 					log.info "Invalid executionInstance"
@@ -2188,9 +2187,9 @@ class ExecutionController {
 			
 							
 		} catch (Exception e) {
+		println " Error "+e.getMessage()
 			e.printStackTrace()
 		}				
-	
 		render deleteCount.toString()+" execution entries deleted"
 	}
 	
@@ -2431,6 +2430,9 @@ class ExecutionController {
 		render "Nothing to clear"
 	}
 	
+	/**
+	 * Method to get the module wise execution status
+	 */
 	def executionStatus(){
 		
         Execution executionInstance = Execution.findById(params?.id) 
@@ -2454,13 +2456,19 @@ class ExecutionController {
 				tStatusCounter = tStatusCounter + statusCounter
 				tDataMap.put(status, tStatusCounter)
 				}
+				
+				
 			}
 			mapp.put("Executed", tCount)
 			def success = mapp?.get("SUCCESS")
 			if(success){
 				int rate = 0
-				if(tCount > 0){				
-						rate = ((success * 100)/tCount)
+				if(tCount > 0){
+					int na = 0
+					if(mapp?.keySet().contains("N/A")){
+						na = mapp?.get("N/A")
+					}
+					rate = ((success * 100)/(tCount - na))
 				}
 				mapp.put("passrate",rate)
 
@@ -2471,7 +2479,11 @@ class ExecutionController {
 		int rate
 		if(tDataMap?.get("SUCCESS")){
 			int success = tDataMap?.get("SUCCESS")
-			rate = ((success * 100)/total)
+			int na = 0
+			if(tDataMap?.keySet().contains("N/A")){
+				na = tDataMap?.get("N/A")
+			}
+			rate = ((success * 100)/(total - na))
 		}
 		
 		tDataMap.put("passrate",rate)
@@ -2489,4 +2501,62 @@ class ExecutionController {
 
 	}
 	
+	def File [] getFilesArray(def moduleObj ){
+		List fileList = []
+		File [] files = moduleObj?.listFiles();
+		files?.each { ff ->
+			 if(ff?.name?.endsWith(".py")){
+				 fileList.add(ff)
+			 }
+		}
+		return files
+	}
+	
+	/**
+	 * Utility method to fetch the module wise script count details 
+	 */
+	def getScriptsDetails(){
+
+		JsonObject scripts = new JsonObject()
+		
+		JsonArray jsonArray = new JsonArray()
+		List scriptList = []
+
+		List dirList = [
+			Constants.COMPONENT,
+			Constants.INTEGRATION
+		]
+		def start = System.currentTimeMillis()
+		int moduleCount = 0;
+		int total = 0
+		dirList.each{ directory ->
+			File scriptsDir = new File( "${realPath}//fileStore//testscripts//"+directory+"//")
+			if(scriptsDir.exists()){
+				File [] moduleArray = scriptsDir.listFiles()
+
+				Arrays.sort(moduleArray);
+
+				moduleArray.each { moduleObj ->
+					moduleCount ++
+					JsonObject jsonObj = new JsonObject()
+					def start1 =System.currentTimeMillis()
+					try {
+						List files = getFilesArray(moduleObj)
+						total = total + files?.size()
+						jsonObj.addProperty(moduleObj?.name, ""+files?.size())
+						jsonArray.add(jsonObj)
+					}catch (Exception e) {
+						println " Error  "+e.getMessage()
+						e.printStackTrace()
+					}
+				}
+			}
+		}
+		scripts.addProperty("modules", moduleCount)
+		scripts.addProperty("total", total)
+		scripts.add("details", jsonArray)
+		String data = ""+scripts?.toString()
+		render data
+	}
+
 }
