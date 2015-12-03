@@ -93,7 +93,7 @@ export OPENSOURCE_PATH=$RDK_PROJECT_ROOT_PATH/opensource
 #export RDK_PLATFORM_SOC=${RDK_PLATFORM_SOC-broadcom}
 #export PLATFORM_SOC=$RDK_PLATFORM_SOC
 
-if [ "x${BUILD_CONFIG^^}" == "xGST1X" ]; then
+if [ "x$BUILD_CONFIG" = "xhybrid-legacy" ];then
     export BUILD_CONFIG="hybrid"
 fi
 
