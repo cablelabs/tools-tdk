@@ -83,6 +83,15 @@ using namespace std;
 #define ENABLE_CECLOG   "scripts/servicemanager_hdmicec_enable_debuglog.sh"
 #define FLUSH_CECDATA   "scripts/servicemanager_hdmicec_flush_cecdata.sh"
 #define CHECK_CECDATA   "scripts/servicemanager_hdmicec_check_cecdata.sh"
+
+#if defined(HAS_HDD_ENABLED_DEVICE)
+#define CEC_SETTING_ENABLED_FILE "/tmp/mnt/diska3/persistent/ds/cecData"
+#elif defined(HAS_FLASH_ENABLED_DEVICE)
+#define CEC_SETTING_ENABLED_FILE "/opt/persistent/ds/cecData"
+#else
+#define CEC_SETTING_ENABLED_FILE "/opt/ds/cecData"
+#endif
+
 #endif
 
 #define IN

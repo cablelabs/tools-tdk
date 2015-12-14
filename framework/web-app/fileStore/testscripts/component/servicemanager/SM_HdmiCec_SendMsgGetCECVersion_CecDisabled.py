@@ -25,9 +25,9 @@ Test Type: Negative.</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
+  <remarks>This testcase will fail because of RDKTT-618</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
+  <skip>true</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -164,6 +164,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
                                 #Delete HdmiCecService instance 1
                                 unregister = servicemanager.unRegisterService(smObj,service_name)
+
                         #Calling IARM_Bus_DisConnect API
                         disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
                 term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')

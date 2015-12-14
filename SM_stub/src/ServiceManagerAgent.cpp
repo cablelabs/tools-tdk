@@ -18,6 +18,8 @@ std::string tdkPath = getenv("TDK_PATH");
 std::string cecRdkLogFile = "cec_log.txt";
 std::string cecTdkLogFile = "cec_tdk.log";
 static bool gDebugLogEnabled = false;
+static HdmiCecService *pHdmiService = NULL;
+
 static void checkDebugLogEnabled(void)
 {
         if(false == gDebugLogEnabled)
@@ -39,6 +41,49 @@ static void checkDebugLogEnabled(void)
         else
         {
             DEBUG_PRINT(DEBUG_TRACE, "CEC Debug Log already enabled\n");
+        }
+}
+
+bool startHdmiCecService(void)
+{
+        bool bReturn = false;
+        DEBUG_PRINT(DEBUG_TRACE,"Create new instance of HdmiCec Service\n");
+        if (ServiceManager::getInstance()->doesServiceExist(HdmiCecService::SERVICE_NAME))
+        {
+                pHdmiService = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->createService(HdmiCecService::SERVICE_NAME));
+                if (pHdmiService != NULL)
+                {
+                        DEBUG_PRINT(DEBUG_LOG,"pHdmiService = %p\n", pHdmiService);
+                        bReturn = true;
+                        bool getEnabledResult = pHdmiService->getEnabled();
+                        DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service getEnabled value: %d\n",getEnabledResult);
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Failed to create instance of HdmiCecService\n");
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service does not exist");
+        }
+
+        return bReturn;
+}
+
+void stopHdmiCecService(void)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"Delete instance of HdmiCec Service\n");
+        if (pHdmiService != NULL)
+        {
+                DEBUG_PRINT(DEBUG_LOG,"Delete %p\n", pHdmiService);
+                delete pHdmiService;
+                pHdmiService = NULL;
+                DEBUG_PRINT(DEBUG_LOG,"\nDeleted service successfully\n");
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service does not exist");
         }
 }
 #endif
@@ -291,6 +336,10 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
         registerStatus = ServiceManager::getInstance()->registerService(serviceName, serviceStruct);
         DEBUG_PRINT(DEBUG_LOG,"\n%s registration status = %d\n", serviceName.toUtf8().constData(), registerStatus);
 
+#ifdef HAS_API_HDMI_CEC
+	registerStatus = startHdmiCecService();
+#endif
+
         return registerStatus;
 }
 
@@ -339,6 +388,7 @@ bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json
 bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_UnRegisterService ---->Entry\n");
+
 	char stringDetails[STR_DETAILS_50] = {'\0'};
 	bool unregister_service=false;
         if(&req["service_name"]==NULL)
@@ -355,6 +405,10 @@ bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Js
 		DEBUG_PRINT(DEBUG_LOG,"\n%s UnRegistration Success\n", serviceName.c_str());
 		response["result"]="SUCCESS";
 		sprintf(stringDetails,"%s unregistration success", serviceName.c_str());
+#ifdef HAS_API_HDMI_CEC
+		//TODO: Uncomment once PACXG1V3-5284 is fixed
+		//stopHdmiCecService();
+#endif
 	}
 	else
 	{
@@ -1514,7 +1568,8 @@ bool ServiceManagerAgent::SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT J
 	DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetEnabled ---->Entry\n");
 
 #ifdef HAS_API_HDMI_CEC
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+	//HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+	HdmiCecService *ptr_service = pHdmiService;
 	if(ptr_service != NULL)
         {
 		bool valueToSetEnabled = req["valueToSetEnabled"].asInt();
@@ -1561,7 +1616,8 @@ bool ServiceManagerAgent::SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT J
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetEnabled ---->Entry\n");
 
 #ifdef HAS_API_HDMI_CEC
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+//	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+	HdmiCecService *ptr_service = pHdmiService;
         if(ptr_service != NULL)
         {
 		char stringDetails[STR_DETAILS_20] = {'\0'};
@@ -1597,7 +1653,8 @@ bool ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetName ---->Entry\n");
 
 #ifdef HAS_API_HDMI_CEC
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+//	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+	HdmiCecService *ptr_service = pHdmiService;
 	if(ptr_service != NULL)
         {
         	QString nameToSet = QString::fromStdString(req["nameToSet"].asCString());
@@ -1644,7 +1701,8 @@ bool ServiceManagerAgent::SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetName ---->Entry\n");
 
 #ifdef HAS_API_HDMI_CEC
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+//	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+	HdmiCecService *ptr_service = pHdmiService;
         if(ptr_service != NULL)
         {
 		char stringDetails[STR_DETAILS_100] = {'\0'};
@@ -1680,7 +1738,8 @@ bool ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices(IN const Json::Value& r
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetConnectedDevices ---->Entry\n");
 
 #ifdef HAS_API_HDMI_CEC
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+//	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+	HdmiCecService *ptr_service = pHdmiService;
         if(ptr_service != NULL)
         {
 		char stringDetails[STR_DETAILS_20] = {'\0'};
@@ -1721,7 +1780,8 @@ bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SendMessage ---->Entry\n");
 
 #ifdef HAS_API_HDMI_CEC
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+//	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+	HdmiCecService *ptr_service = pHdmiService;
         if(ptr_service != NULL)
         {
                 checkDebugLogEnabled();
@@ -1794,7 +1854,8 @@ bool ServiceManagerAgent::SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Js
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_OnMessage ---->Entry\n");
 
 #ifdef HAS_API_HDMI_CEC
-	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+//	HdmiCecService *ptr_service = dynamic_cast<HdmiCecService*>(ServiceManager::getInstance()->getGlobalService(HdmiCecService::SERVICE_NAME));
+	HdmiCecService *ptr_service = pHdmiService;
         if(ptr_service != NULL)
         {
         	QString onMessage = QString::fromStdString(req["onMessage"].asCString());
@@ -1826,7 +1887,7 @@ bool ServiceManagerAgent::SM_HdmiCec_FlushCecData(IN const Json::Value& req, OUT
 
 #ifdef HAS_API_HDMI_CEC
         // Flush CEC Persistant data in platform
-        string flushCecDataCmd = "source " + tdkPath + "/" + FLUSH_CECDATA;
+        string flushCecDataCmd = "source " + tdkPath + "/" + FLUSH_CECDATA + " " + CEC_SETTING_ENABLED_FILE;
         try
         {
                 DEBUG_PRINT(DEBUG_TRACE,"Command to flush CEC Persistant data: %s\n", flushCecDataCmd.c_str());
@@ -1856,7 +1917,7 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT
 
 #ifdef HAS_API_HDMI_CEC
         // Check if CEC Persistant data is present in platform
-        string checkCecDataCmd = "source " + tdkPath + "/" + CHECK_CECDATA;
+        string checkCecDataCmd = "source " + tdkPath + "/" + CHECK_CECDATA + " " + CEC_SETTING_ENABLED_FILE;
         DEBUG_PRINT(DEBUG_TRACE,"Command to check if CEC Persistant data is present: %s\n", checkCecDataCmd.c_str());
         FILE *pipe = popen(checkCecDataCmd.c_str(), "r");
         if (!pipe)
@@ -1870,9 +1931,11 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT
                 char output[1024] = {'\0'};
                 /* Read the output */
                 while (fgets(output, sizeof(output)-1, pipe) != NULL) {
-                        DEBUG_PRINT(DEBUG_TRACE, "command output %s\n",output);
+                        DEBUG_PRINT(DEBUG_TRACE, "line output: %s\n",output);
                 }
                 pclose(pipe);
+
+                DEBUG_PRINT(DEBUG_TRACE, "CheckCecData output: %s\n",output);
                 if(strstr(output, "FOUND") != NULL)
                 {
                         response["result"]="SUCCESS";

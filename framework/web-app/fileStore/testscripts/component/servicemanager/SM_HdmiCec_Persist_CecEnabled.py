@@ -23,9 +23,9 @@
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
+  <remarks>This testcase will fail because of RDKTT-618</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
+  <skip>true</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -42,6 +42,7 @@ import tdklib;
 import devicesettings;
 import iarmbus;
 import servicemanager;
+from time import sleep;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -151,6 +152,9 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                                 print "Get CecSupport does not match with CecSupport value set"
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
+
+				print "Wait 20s for CEC persistent file to be created"
+				sleep(20)
 
                                 #Verify the presence of the cecData file
                                 print "Verify the presence of CEC data"
