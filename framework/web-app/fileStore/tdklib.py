@@ -1109,11 +1109,48 @@ class TDKScriptingLibrary:
     	#------------------------------------------------------------------------------
     	# Public methods
     	#------------------------------------------------------------------------------
+
 	def enableLogging(self,scriptName,logpath,infoDict=None):
 		self.scriptName=scriptName				
 		self.enabledXmlLogging=True
 		self.logpath=logpath
 		self.infoDict=infoDict
+
+	########## End of Function ##########
+
+	def isValidIpv6Address(self):
+
+	# To check if ip address is in valid ipv6 format 
+
+	# Syntax       : OBJ.isValidIpv6Address()
+	# Description  : To check if ip address is in valid ipv6 format
+	# Parameters   : None
+	# Return Value : Returns true or false
+
+		try:
+			socket.inet_pton(socket.AF_INET6, self.IP)
+		except socket.error:  # not a valid address
+			return False
+		return True
+
+	########## End of Function ##########
+
+	def getSocketInstance(self):
+
+	# Creates a socket instance depending on ip version
+
+	# Syntax       : OBJ.getSocketInstance()
+	# Description  : Creates a socket instance depending on ip version
+	# Parameters   : None
+	# Return Value : Returns socket descriptor
+
+		if self.isValidIpv6Address():
+			tcpClient = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+		else:
+			tcpClient = socket.socket()
+		return tcpClient
+
+	########## End of Function ##########
 
 	def configureTestCase(self, url, path, execId, execDeviceId, execResId, deviceIp, devicePort, logTransferPort,\
 				statusPort, testcaseID, deviceId, performanceBenchMarkingEnabled, performanceSystemDiagnosisEnabled, \
@@ -1156,9 +1193,9 @@ class TDKScriptingLibrary:
 			self.execDevId = execDeviceId
 			self.testcaseId = testcaseID
 			self.deviceId = deviceId
-			self.tcpClient = socket.socket()
 			self.IP = deviceIp
 			self.portValue = devicePort
+			self.tcpClient = self.getSocketInstance()
 			self.realpath = path
 			self.performanceBenchMarkingEnabled = performanceBenchMarkingEnabled  
 			self.performanceSystemDiagnosisEnabled = performanceSystemDiagnosisEnabled 
@@ -1560,7 +1597,7 @@ class TDKScriptingLibrary:
 				   'execDevID':str(self.execDevId),'resultID':str(self.resultId)}
 			query = json.dumps(message)
 
-			self.tcpClient = socket.socket()
+			self.tcpClient = self.getSocketInstance()
 			self.tcpClient.connect((self.IP, self.portValue))
 			self.tcpClient.send(query)
 
@@ -1608,7 +1645,7 @@ class TDKScriptingLibrary:
 		if(self.portValue == AGENTPORT):
                     self.tcpClient.close()
                     time.sleep(5)
-                    self.tcpClient = socket.socket()
+                    self.tcpClient = self.getSocketInstance()
                     self.tcpClient.connect((self.IP, self.portValue))
                 return
 

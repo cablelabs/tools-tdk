@@ -29,7 +29,7 @@
 #define NULL_LOG "/dev/null"
 #define CONFIGURATION_FILE "tdkconfig.ini"
 #define PORT_FORWARD_RULE_FILE "forwardRule.ini"
-#define START_TFTP_SERVER "udpsvd -vE 0.0.0.0 69 tftpd"
+#define START_TFTP_SERVER "udpsvd -vE :: 69 tftpd"
 
 #define STR(x)   #x
 #define SHOW_DEFINE(x) STR(x)

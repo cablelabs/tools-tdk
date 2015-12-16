@@ -15,6 +15,22 @@ import sys
 import socket
 import json
 
+# Methods
+
+def isValidIpv6Address(ip):
+                try:
+                        socket.inet_pton(socket.AF_INET6, ip)
+                except socket.error:  # not a valid address
+                        return False
+                return True
+
+def getSocketInstance(ip):
+                if isValidIpv6Address(ip):
+                        tcpClient = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+                else:
+                        tcpClient = socket.socket()
+                return tcpClient
+
 # Check the number of arguments and print the syntax if args not equal to 4
 if ( (len(sys.argv)) != 4):
         print "Usage : python " + sys.argv[0] + " Device_IP_Address Port_Number LogFile(Name of log file to be removed)"
@@ -28,7 +44,7 @@ filename = sys.argv[3]
 
 # Sending json request and receiving response
 try:
-	tcpClient = socket.socket()
+	tcpClient = getSocketInstance(ipaddrs)
 	tcpClient.connect((ipaddrs, deviceport))
 
 	jsonMsg = {'jsonrpc':'2.0','id':'2','method':'executeRemoveLogsScript','argument':filename}

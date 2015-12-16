@@ -23,6 +23,20 @@ import sys
 # Methods
 #------------------------------------------------------------------------------
 
+def isValidIpv6Address(ip):
+                try:
+                        socket.inet_pton(socket.AF_INET6, ip)
+                except socket.error:  # not a valid address
+                        return False
+                return True
+
+def getSocketInstance(ip):
+                if isValidIpv6Address(ip):
+                        tcpClient = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+                else:
+                        tcpClient = socket.socket()
+                return tcpClient
+
 def getRDKVersion(deviceIP,devicePort):
 
         # Syntax       : getRDKVersion.getRDKVersion( deviceIP,devicePort )
@@ -33,7 +47,7 @@ def getRDKVersion(deviceIP,devicePort):
 
 	try:
         	port = devicePort
-        	tcpClient = socket.socket()
+		tcpClient = getSocketInstance(deviceIP)
         	tcpClient.connect((deviceIP, port))
 
        		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'GetRDKVersion'}

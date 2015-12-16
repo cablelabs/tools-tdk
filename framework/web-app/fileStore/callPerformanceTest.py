@@ -16,6 +16,22 @@ import sys
 import socket
 import json
 
+# Methods
+
+def isValidIpv6Address(ip):
+                try:
+                        socket.inet_pton(socket.AF_INET6, ip)
+                except socket.error:  # not a valid address
+                        return False
+                return True
+
+def getSocketInstance(ip):
+                if isValidIpv6Address(ip):
+                        tcpClient = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+                else:
+                        tcpClient = socket.socket()
+                return tcpClient
+
 def tftpDownload(ipaddrs, logtransferport, remotefile, localfile):
 
 	# Connect to TFTP server and download the file
@@ -47,7 +63,7 @@ localfilepath = sys.argv[5]
 
 # Sending json request and receiving response
 try:
-	tcpClient = socket.socket()
+	tcpClient = getSocketInstance(ipaddrs)
 	tcpClient.connect((ipaddrs, deviceport))
 
 	jsonMsg = {'jsonrpc':'2.0','id':'2','method':rpcmethod}

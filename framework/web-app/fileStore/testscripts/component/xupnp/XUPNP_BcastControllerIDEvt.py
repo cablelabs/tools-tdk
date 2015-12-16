@@ -85,13 +85,25 @@ if "SUCCESS" in iarmLoadStatus.upper():
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
                                 details = tdkTestObj.getResultDetails();
-                                print "Broadcasting ControllerID Event Result : %s"%actualresult;
-                                print "Details : %s"%details;
                                 #Check for SUCCESS return value of Testcase
                                 if "SUCCESS" in actualresult.upper():
                                         tdkTestObj.setResultStatus("SUCCESS");
+                                	print "Broadcasting ControllerID Event Result : %s"%actualresult;
+	                                print "Details : %s"%details;
                                 else:
-                                        tdkTestObj.setResultStatus("FAILURE");
+                                	tdkTestObj.addParameter("stateId",31);
+	                                tdkTestObj.addParameter("eventLog","dac id available");
+	                                tdkTestObj.addParameter("payload","4321");
+	                                tdkTestObj.executeTestCase(expectedresult);
+	                                actualresult = tdkTestObj.getResult();
+	                                details = tdkTestObj.getResultDetails();
+	                                print "Broadcasting ControllerID Event Result : %s"%actualresult;
+	                                print "Details : %s"%details;
+	                                if "SUCCESS" in actualresult.upper():
+        	                                tdkTestObj.setResultStatus("SUCCESS");
+	                                else:
+        	                                tdkTestObj.setResultStatus("FAILURE");
+
                                 #Unload xupnp module
                                 xUpnpObj.unloadModule("xupnp");
 

@@ -42,7 +42,7 @@ bool   	     bBenchmarkEnabled;
 #define LIB_NAME_SIZE 50       // Maximum size of component interface library name
 #define COMMAND_SIZE  100      // Maximum size of command
 #define ERROR_SIZE    50       // Maximum size of error string
-#define BUFFER_SIZE   32       // Maximum size of buffer
+#define BUFFER_SIZE   64       // Maximum size of buffer
 
 #define TDK_ENABLE_FILE "/opt/.tdkenable"                            // File to check if TDK is enabled
 #define DEVICE_LIST_FILE     "devicesFile.ini"                 	// File to populate connected devices
@@ -146,28 +146,57 @@ char* RpcMethods::GetHostIPInterface (const char* pszIPaddr)
     int iFlag = FLAG_NOT_SET;
     char szBuffer [BUFFER_SIZE];
     struct sockaddr_in *pSocketAddr;
+    struct sockaddr_in6 *pSocketAddr6;
     std::string strInValid = "NOT VALID";
 
     getifaddrs(&pAddrs);
-	
-    /* Going through the linked list to get network interface of correspondin IP address */
+
+    /* Going through the linked list to get network interface of corresponding IPV4 address */
     for (pAddrIterator = pAddrs; pAddrIterator != NULL; pAddrIterator = pAddrIterator->ifa_next)
     {
-        if ((pAddrIterator->ifa_addr) && 
-             (pAddrIterator->ifa_flags & IFF_UP) && 
+        if ((pAddrIterator->ifa_addr) &&
+             (pAddrIterator->ifa_flags & IFF_UP) &&
              (pAddrIterator->ifa_addr->sa_family == AF_INET))
         {
             pSocketAddr = (struct sockaddr_in *) (pAddrIterator->ifa_addr);
             inet_ntop (pAddrIterator->ifa_addr->sa_family, (void *)&(pSocketAddr->sin_addr), szBuffer, sizeof (szBuffer));
-            if (!strcmp (pszIPaddr, szBuffer))
+            std::string strBuffer(szBuffer);
+            std::string strIPaddr(pszIPaddr);
+
+            if (strIPaddr.find(strBuffer) != std::string::npos)
             {
                 iFlag = FLAG_SET;
                 break;
             }
         }
     }
-	
+
+    if(iFlag == FLAG_NOT_SET)
+    {
+
+        /* Going through the linked list to get network interface of corresponding IPV6 address */
+        for (pAddrIterator = pAddrs; pAddrIterator != NULL; pAddrIterator = pAddrIterator->ifa_next)
+        {
+            if ((pAddrIterator->ifa_addr) &&
+                 (pAddrIterator->ifa_flags & IFF_UP) &&
+                 (pAddrIterator->ifa_addr->sa_family == AF_INET6))
+            {
+                pSocketAddr6 = (struct sockaddr_in6 *) (pAddrIterator->ifa_addr);
+                inet_ntop (pAddrIterator->ifa_addr->sa_family, (void *)&(pSocketAddr6->sin6_addr.s6_addr), szBuffer, sizeof (szBuffer));
+                std::string strBuffer(szBuffer);
+                std::string strIPaddr(pszIPaddr);
+
+                if (strIPaddr.find(strBuffer) != std::string::npos)
+                {
+                    iFlag = FLAG_SET;
+                    break;
+                }
+            }
+        }
+    }
+
     freeifaddrs (pAddrs);
+
     if (iFlag == FLAG_SET)
     {
         return pAddrIterator->ifa_name;  // Returns the name of interface
@@ -176,7 +205,7 @@ char* RpcMethods::GetHostIPInterface (const char* pszIPaddr)
     {
         return (char*)strInValid.c_str();   // Returns the string "NOT VALID"
     }
-	
+
 } /* End of GetHostIPInterface */
 
 
@@ -1240,7 +1269,7 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
     {	
         /* Fetching the connected box IP address */
         RpcMethods::sm_strBoxIP = go_Server.getIP();
-		
+
         /* Getting corresponding network interface */
         pszInterface = GetHostIPInterface (RpcMethods::sm_strBoxIP.c_str());
         if (strcmp (pszInterface, "NOT VALID"))
