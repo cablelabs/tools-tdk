@@ -82,7 +82,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         tdkTestObj.addParameter("hdcpKey",key);
                         tdkTestObj.addParameter("keySize",keySize);
                         tdkTestObj.addParameter("protectContent",protectContent);
-                        expectedresult="SUCCESS"
+                        expectedresult="FAILURE"
                         tdkTestObj.executeTestCase(expectedresult);
                         actualresult = tdkTestObj.getResult();
                         details = tdkTestObj.getResultDetails();
@@ -92,26 +92,6 @@ if "SUCCESS" in loadmodulestatus.upper():
                         #Check for SUCCESS/FAILURE return value of DS_GetHDCPStatus
                         if expectedresult in actualresult:
                             tdkTestObj.setResultStatus("SUCCESS");
-                        else:
-                            tdkTestObj.setResultStatus("FAILURE");
-
-                        #Get the status of HDCP authentication
-                        tdkTestObj = obj.createTestStep('DS_GetHDCPStatus');
-                        tdkTestObj.addParameter("port_name","HDMI0");
-                        expectedresult="SUCCESS"
-                        tdkTestObj.executeTestCase(expectedresult);
-                        actualresult = tdkTestObj.getResult();
-                        details = tdkTestObj.getResultDetails();
-                        print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,actualresult)
-                        print "Details: [%s]"%details;
-                        #Check for SUCCESS/FAILURE return value of DS_GetHDCPStatus
-                        if expectedresult in actualresult:
-                            #Check if status = "Authenticated(2)"
-                            if (("Authenticated" in details) or ('2' in details)):
-                                print "HDCP authentication success with invalid key size"
-                                tdkTestObj.setResultStatus("FAILURE");
-                            else:
-                                tdkTestObj.setResultStatus("SUCCESS");
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                 else:

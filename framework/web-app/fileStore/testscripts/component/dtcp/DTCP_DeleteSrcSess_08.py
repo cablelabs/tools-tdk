@@ -100,7 +100,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         print "num of src sessions after deleting session: [%s]"%currNum
 
         #Set the result status of execution
-        if ((expectedresult in result) and (prevNum == currNum)):
+        if (expectedresult in result):
              tdkTestObj.setResultStatus("SUCCESS");
         else:
              tdkTestObj.setResultStatus("FAILURE");

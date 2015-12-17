@@ -99,7 +99,8 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #As per RDKTT-242,DTCP sink session is persistent and on every channel change, dtcp uses the same session
         #Set the result status of execution
-        if ((expectedresult in result) and (1 == int(currNum))):
+        #if ((expectedresult in result) and (1 == int(currNum))): - There's no DTCP specification for RDKTT-242.
+        if (expectedresult in result):
              tdkTestObj.setResultStatus("SUCCESS");
         else:
              tdkTestObj.setResultStatus("FAILURE");
