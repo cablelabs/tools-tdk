@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>These Script tests the RDK Mediaframework to clearing the lib buffer by watching it for 75 mins . Test Case ID: CT_RMF_HNSrc_MPSink_19.</synopsis>
+  <synopsis>These Script tests the RDK Mediaframework to should not clear the lib buffer by watching it for 75 mins . Test Case ID: CT_RMF_HNSrc_MPSink_19.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -151,7 +151,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                                                                                 if Expected_Result in result.upper():
                                                                                         Mediatime[1]=float(Mediatime[1]);
-                                                                                        if Mediatime[1] < initialmediatime:
+                                                                                        if Mediatime[1] > initialmediatime:
                                                                                                 print "success"
                                                                                                 tdkTestObj.setResultStatus("SUCCESS");
                                                                                         else:

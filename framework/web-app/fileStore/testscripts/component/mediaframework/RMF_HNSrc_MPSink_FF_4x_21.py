@@ -154,18 +154,22 @@ if Expected_Result in loadModuleStatus.upper():
                                                         if Expected_Result in result.upper():
                                                                 #Play the HNSRC-->MPSINK pipeline
                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+								time.sleep(30)
                                                                 if Expected_Result in result.upper():
 										#Pause the HNSRC-->MPSINK pipeline
 										result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
 										if Expected_Result in result.upper():
 											#Get the Mediatime value
-											time.sleep(120);
+											time.sleep(30);
 											result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+											time.sleep(15)
 											result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
 											if Expected_Result in result.upper():
 												initialmediatime=Mediatime[1]
+												initialmediatime=float(initialmediatime)
 												#FF with 4x
-												result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
+												play_parameter_value=["HNSrc",1,initialmediatime,4.0] 
+												result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
 												if Expected_Result in result.upper():
 														result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
 														if Expected_Result in result.upper():

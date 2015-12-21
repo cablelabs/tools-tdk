@@ -93,7 +93,7 @@ if "SUCCESS" in result.upper():
     #since it is negative test case.
     expectedRes = "FAILURE"
 
-    recordingId = "0"
+    recordingId = "1111111"
     print "Requested record ID: %s"%recordingId
     tdkTestObj.addParameter("recordingId",recordingId);
 

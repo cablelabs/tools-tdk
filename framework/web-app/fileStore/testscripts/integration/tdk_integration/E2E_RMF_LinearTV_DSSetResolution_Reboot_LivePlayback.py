@@ -51,6 +51,7 @@
 import tdklib;
 import tdkintegration;
 from tdkintegration import getURL_PlayURL;
+import devicesettings;
 
 #Test component to be tested
 tdk_obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
@@ -66,71 +67,74 @@ dev_obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_DSSetResolution_Reboot_LiveP
 loadmodulestatus = tdk_obj.getLoadModuleResult();
 loadmodulestatus1 = dev_obj.getLoadModuleResult();
 
-print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
-print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus1 ;
+print "[tdkintegration LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
+print "[devicesettings LIB LOAD STATUS]  :  %s" %loadmodulestatus1 ;
 
 if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.upper()):
     #Set the module loading status
     dev_obj.setLoadModuleStatus("SUCCESS");
     tdk_obj.setLoadModuleStatus("SUCCESS");    
 
+    displayStatus = "FALSE"
     #calling DS_ManagerInitialize to check Intialize API.
-    actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_ManagerInitialize', 'SUCCESS',verifyList ={});      
-    
+    actualresult = devicesettings.dsManagerInitialize(dev_obj)
+
     #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
     if "SUCCESS" in actualresult:
-        
-        actualresult,tdkTestObj_dev,resolutiondetails = tdklib.Create_ExecuteTestcase(dev_obj,'DS_Resolution', 'SUCCESS',verifyList ={}, port_name = "HDMI0");    
-        setresolution="720p";
-        print "Resolution value set to:%s" %setresolution;
-        if setresolution in resolutiondetails:
+        #Calling DS_IsDisplayConnectedStatus function to check for display connection status
+        displayStatus = devicesettings.dsIsDisplayConnected(dev_obj)
+        if "TRUE" in displayStatus:
 
-            actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_SetResolution', 'SUCCESS', verifyList = {'resolution':setresolution},resolution = setresolution, port_name = "HDMI0");              
-            if "SUCCESS" in actualresult:
-                
-                #Calling the getURL_PlayURL to get the URL and playback
-                result = getURL_PlayURL(tdk_obj,'01');
-                if "SUCCESS" in result:
-                    print "Sucessfully executed the getURL_PlayURL function"
-                else:
-                    print "Failure: getURL_PlayURL function"
-                                
-            else:               
-                print "FAILURE: Both the resolutions are not same";                                             
-        
-        actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_SetResolution', 'SUCCESS', verifyList = {'resolution':setresolution},resolution = setresolution, port_name = "HDMI0",get_only = 1);
+		actualresult,dsTdkObj,supportedResolutions = tdklib.Create_ExecuteTestcase(dev_obj,'DS_Resolution', 'SUCCESS',verifyList ={}, port_name = "HDMI0");
 
+		print "Get current resolution"
+		copyResolution = devicesettings.dsGetResolution(dev_obj,"SUCCESS",kwargs={'portName':"HDMI0"});
+        	#Set resolution value to 720p
+        	setresolution="720p";
+        	#Check if current value is already 720p
+		if setresolution not in supportedResolutions:
+			print setresolution, " Resolution not supported"
+		elif setresolution in copyResolution:
+			print "Resolution value already at ",copyResolution
+			#Calling the getURL_PlayURL to get the URL and playback
+                	result = getURL_PlayURL(tdk_obj,'01');
+                	if "SUCCESS" in result:
+                    		print "Sucessfully executed the getURL_PlayURL function"
+                	else:
+                    		print "Failure: getURL_PlayURL function"
+        	else:
+			devicesettings.dsSetResolution(dev_obj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':setresolution});
+                        #Calling the getURL_PlayURL to get the URL and playback
+                        result = getURL_PlayURL(tdk_obj,'01');
+                        if "SUCCESS" in result:
+                                print "Sucessfully executed the getURL_PlayURL function"
+                        else:
+                                print "Failure: getURL_PlayURL function"
         #calling DS_ManagerDeInitialize to DeInitialize API
-        actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_ManagerDeInitialize', 'SUCCESS',verifyList ={});
-       
-    else:
-        print "FAILURE :DS Manager Intialize";
+	result = devicesettings.dsManagerDeInitialize(dev_obj)
 
-    print "#----------------------------------------------After Reboot--------------------------------------#";
- 
-     
-    dev_obj.initiateReboot();
-    tdk_obj.resetConnectionAfterReboot();
-    #calling DS_ManagerInitialize to check Intialize API.
-    actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_ManagerInitialize', 'SUCCESS',verifyList ={});
+    #unloading the module
+    tdk_obj.unloadModule("tdkintegration");
 
-    if "SUCCESS" in actualresult:       
-        actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_SetResolution', 'SUCCESS', verifyList = {'resolution':setresolution},resolution = setresolution, port_name = "HDMI0",get_only = 1);         
+    if "TRUE" in displayStatus:
+    	dev_obj.initiateReboot();
+    	dev_obj.resetConnectionAfterReboot();
 
-        #calling DS_ManagerDeInitialize to DeInitialize API
-        actualresult,tdkTestObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_ManagerDeInitialize', 'SUCCESS',verifyList ={});
-        
-    else:       
-        print "FAILURE :DS Manager Intialize";    
-    
-       
+    	print "#--------------------------------------After Reboot--------------------------------------#";
+
+	setresolution="720p";	
+
+    	#calling DS_ManagerInitialize to check Intialize API.
+    	actualresult = devicesettings.dsManagerInitialize(dev_obj)
+    	if "SUCCESS" in actualresult:
+		actualresult,tdkObj_dev,details = tdklib.Create_ExecuteTestcase(dev_obj,'DS_SetResolution', 'SUCCESS', verifyList = {'resolution':setresolution},resolution = setresolution, port_name = "HDMI0",get_only = 1);
+        	#calling DS_ManagerDeInitialize to DeInitialize API
+		result = devicesettings.dsManagerDeInitialize(dev_obj)
+
     #Unload the modules
     dev_obj.unloadModule("devicesettings");
-    tdk_obj.unloadModule("tdkintegration");
 else:
     print"Load module failed";
     #Set the module loading status
     dev_obj.setLoadModuleStatus("FAILURE");
     tdk_obj.setLoadModuleStatus("FAILURE");
-
-

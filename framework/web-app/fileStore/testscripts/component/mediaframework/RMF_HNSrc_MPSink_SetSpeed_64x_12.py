@@ -60,6 +60,7 @@ videorec_parameter_value=[0,0,1280,0,720]
 setsource_parameter_name=["rmfSourceElement","rmfSinkElement"]
 setsource_parameter_value=["HNSrc","MPSink"]
 speed_parameter_name=["playSpeed","rmfElement"]
+
 speed_parameter_value=[-64.0,"HNSrc"]
 
 ip = <ipaddress>
@@ -89,6 +90,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     #Get the result of execution
     result = tdkTestObj.getResult();
     tdkTestObj.setResultStatus(result);
+    print result;
     details = tdkTestObj.getResultDetails();
     print "Status of "+ teststep+":  %s" %result;
     print "Details of "+ teststep+":  %s" %details;
@@ -126,7 +128,6 @@ if "FAILURE" in loadModuleStatus.upper():
 if Expected_Result in loadModuleStatus.upper():
 
         #Prmitive test case which associated to this Script
-        obj.setLoadModuleStatus("FAILURE");
         #Creating the Hnsrc instance
         result=Create_and_ExecuteTestStep('RMF_Element_Create_Instance',obj,Expected_Result,src_parameter,src_element);
         if Expected_Result in result.upper():
@@ -152,7 +153,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
                                                                 if Expected_Result in result.upper():
                                                                         #Get the Mediatime value
-                                                                        time.sleep(120);
+                                                                        time.sleep(30);
                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                                                                         if Expected_Result in result.upper():
                                                                                 initialmediatime=Mediatime[1]
@@ -169,7 +170,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                                 	initialmediatime=float(initialmediatime);
                                                                                                 	if (Mediatime[1]< initialmediatime) and (Mediaspeed[1] == speed_parameter_value[0]):
                                                                                                         	print "success"
-                                                                                                        	tdkTestObj.setResultStatus("SUCCESS");
+                                                                                                        	#tdkTestObj.setResultStatus("SUCCESS");
                                                                                                 	else:
                                                                                                         	print "failed"
                                                                                                         	tdkTestObj.setResultStatus("FAILURE");

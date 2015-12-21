@@ -3,7 +3,7 @@
 <xml>
   <id>850</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>13</version>
+  <version>14</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrc_GetSpeed_05</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -39,6 +39,7 @@ Test Type: Positive.</synopsis>
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
@@ -122,11 +123,7 @@ if "FAILURE" in loadModuleStatus.upper():
                 print "Re-Load Module Status :  %s" %loadModuleStatus;
                 loadmoduledetails = obj.getLoadModuleDetails();
                 print "Re-Load Module Details : %s" %loadmoduledetails;
-
-
-if expected_Result in loadModuleStatus.upper():
-
-	tdkTestObj =obj.createTestStep('RMF_Element_Create_Instance');
+	
 #Pre-requisite to Check and verify required recording is present or not.
 #---------Start-----------------
 	duration = 6

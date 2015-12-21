@@ -3,7 +3,7 @@
 <xml>
   <id>1649</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>10</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_TSB_FF_RW_CheckMacroblocking_51</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -157,39 +157,31 @@ if Expected_Result in loadModuleStatus.upper():
                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
                                                                 if Expected_Result in result.upper():
                                                                         time.sleep(15)
-                                                                        #Commenting Audio Check as audio will not be available during the trickplay.
-                                                                        #checkStatusParameter=["audioVideoStatus"]
-                                                                        #checkStatusFor=["CheckAudioStatus.sh"]
-                                                                        #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
-                                                                        #print "Audio check Done. Status: ",result;
 
                                                                         checkStatusParameter=["audioVideoStatus"]
                                                                         checkStatusFor=["CheckVideoStatus.sh"]
                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
 
                                                                         print "Video check Done. Status: ",result;
-
+									
+                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
+									
                                                                         #Pause the HNSRC-->MPSINK pipeline
                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
                                                                         if Expected_Result in result.upper():
                                                                                 #Get the Mediatime value
-                                                                                time.sleep(300);
-                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
-                                                                                time.sleep(10);
-                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
+                                                                                time.sleep(30);
                                                                                 if Expected_Result in result.upper():
-                                                                                        initialmediatime=Mediatime[1]
+                                                                                        #initialmediatime=Mediatime[1]
                                                                                         #FF with 4x
-                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
+                                                                                        play_parameter_value=["HNSrc",1,0.0,4.0]
+                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+											
                                                                                         if Expected_Result in result.upper():
                                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
                                                                                                 if Expected_Result in result.upper():
                                                                                                         time.sleep(15);
 
-                                                                                                        #checkStatusParameter=["audioVideoStatus"]
-                                                                                                        #checkStatusFor=["CheckAudioStatus.sh"]
-                                                                                                        #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
-                                                                                                        #print "Audio check Done. Status: ",result;
 
                                                                                                         checkStatusParameter=["audioVideoStatus"]
                                                                                                         checkStatusFor=["CheckVideoStatus.sh"]
@@ -197,22 +189,28 @@ if Expected_Result in loadModuleStatus.upper():
 
                                                                                                         print "Video check Done. Status: ",result;
 
-                                                                                                        #Rewind in -4x
-                                                                                                        speed_parameter_name=["playSpeed","rmfElement"]
-                                                                                                        speed_parameter_value=[-4.0,"HNSrc"]
-                                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value)
-                                                                                                        if Expected_Result in result.upper():
-                                                                                                                time.sleep(15)
-                                                                                                                #checkStatusParameter=["audioVideoStatus"]
-                                                                                                                #checkStatusFor=["CheckAudioStatus.sh"]
-                                                                                                                #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
-                                                                                                                #print "Audio check Done. Status: ",result;
+                                                                                                   
+													if Expected_Result in result.upper():
+														time.sleep(15)
+														
+														result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
+														result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
+														if Expected_Result in result.upper():
 
-                                                                                                                checkStatusParameter=["audioVideoStatus"]
-                                                                                                                checkStatusFor=["CheckVideoStatus.sh"]
-                                                                                                                result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
+															time.sleep(20)
+															
+															Curr_mediatime=Mediatime[1]
+															Curr_mediatime=float(Curr_mediatime)
+		                                                                                                        speed_parameter_name=["playSpeed","rmfElement"]
+															play_parameter_value=["HNSrc",1,Curr_mediatime,-4.0] 
+                                		                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+                                                		                                                        if Expected_Result in result.upper():
 
-                                                                                                                print "Video check Done. Status: ",result;
+                		                                                                                                checkStatusParameter=["audioVideoStatus"]
+                                		                                                                                checkStatusFor=["CheckVideoStatus.sh"]
+                                                		                                                                result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
+
+                                                                		                                                print "Video check Done. Status: ",result;
 
                                                 #Close the Hnsrc Element
                                                 result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,Expected_Result,src_parameter,src_element);

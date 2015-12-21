@@ -228,14 +228,10 @@ if expected_Result in loadModuleStatus.upper():
                                                                                                                 else:
                                                                                                                         print "DVRSource Play trickplay Failed"
                                                                                                                         tdkTestObj.setResultStatus(expected_Failure);
-                                                                                                        checkStatusParameter=["audioVideoStatus"]
-                                                                                                        checkStatusFor=["CheckAudioStatus.sh"]
-                                                                                                        result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,expected_Result,checkStatusParameter,checkStatusFor);
-                                                                                                        print "Audio check Done. Status: ",result;
-                                                                                                        checkStatusParameter=["audioVideoStatus"]
-                                                                                                        checkStatusFor=["CheckVideoStatus.sh"]
-                                                                                                        result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,expected_Result,checkStatusParameter,checkStatusFor);
-                                                                                                        print "Video check Done. Status: ",result;
+                                                                                                        #checkStatusParameter=["audioVideoStatus"]
+                                                                                                        #checkStatusFor=["CheckVideoStatus.sh"]
+                                                                                                        #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,expected_Result,checkStatusParameter,checkStatusFor);
+                                                                                                        #print "Video check Done. Status: ",result;
                                                                                         else:
                                                                                                 tdkTestObj.setResultStatus(expected_Failure);
                                                                         else:

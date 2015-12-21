@@ -74,6 +74,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     global details
     global tdkTestObj
     global matchList
+    global Mediatime
     #Primitive test case which associated to this Script
     tdkTestObj =testobject.createTestStep(teststep);
     if teststep == "RMF_Element_Open":
@@ -99,6 +100,10 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     print "Status of "+ teststep+":  %s" %result;
     details = tdkTestObj.getResultDetails();
     print "[TEST EXCEUTION DETAILS] : %s"%details;
+    if teststep == "RMF_Element_Getmediatime":
+        if "SUCCESS" in result.upper():
+                Mediatime=details.split(":");
+                print Mediatime[1];
   
     return result
 
@@ -177,10 +182,9 @@ if expected_Result in loadModuleStatus.upper():
                                                                         print "Video check Done. Status: ",result;
 
                                                                         result=Create_and_ExecuteTestStep('RMF_Element_GetState',obj,Expected_Result,src_parameter,src_element);
-                                                                        src_play_parameter=["rmfElement","playSpeed"];
-                                                                        src_play_element=["HNSrc",4.0];
                                                                         #Forward in 4.0x speed
-                                                                        result=Create_and_ExecuteTestStep('RMF_Element_SetSpeed',obj,Expected_Result,src_play_parameter,src_play_element);
+									play_parameter_value=["HNSrc",1,0.0,4.0]
+                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
 
                                                                         if Expected_Result in result.upper():
                                                                                 time.sleep(5)
@@ -194,10 +198,15 @@ if expected_Result in loadModuleStatus.upper():
                                                                                 result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                 print "Video check Done. Status: ",result;
 
-                                                                                src_play_parameter=["rmfElement","playSpeed"];
-                                                                                src_play_element=["HNSrc",-4.0];
                                                                                 #Rewind in -4.0x speed
-                                                                                result=Create_and_ExecuteTestStep('RMF_Element_SetSpeed',obj,Expected_Result,src_play_parameter,src_play_element);
+    										result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
+                                                                                Curr_Time=Mediatime[1]
+                                                                                Curr_Time=float(Curr_Time);
+
+                                                                                #Rewind in -4.0x speed
+                                                                                play_parameter_value=["HNSrc",1,Curr_Time,-4.0]
+                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+
                                                                                 if Expected_Result in result.upper():
                                                                                         time.sleep(5)
                                                                                         #checkStatusParameter=["audioVideoStatus"]
