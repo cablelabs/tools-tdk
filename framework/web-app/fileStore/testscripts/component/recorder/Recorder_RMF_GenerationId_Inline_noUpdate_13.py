@@ -54,7 +54,7 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_GenerationId_Inline_noUpdate_13')
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
-recObj.setLoadModuleStatus(recLoadStatus);
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
@@ -79,7 +79,6 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute Inline noUpdate
         jsonMsgNoUpdate = "{\"noUpdate\":{\"generationId\":\""+genIdInput+"\"}}";
         serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
-
         if 'noUpdate' in serverResponse:
              	print "Inline noUpdate message post success";
 		# Verify that Recorder does not make any POST request to RWS
@@ -87,39 +86,20 @@ if "SUCCESS" in recLoadStatus.upper():
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 print "Retrieve Status for inline noUpdate message: ",recResponse;
 
-		if 'generationId' in recResponse:
-			print "Recorder sent POST request to RWS for genId update through inline noUpdate"
-		else:
-			print "Recorder did not make any POST request to RWS with noUpdate as expected"
-
                 response = recorderlib.callServerHandler('clearStatus',ip);
             	#Execute updateSchedule
                 requestID = str(randint(10, 500));
                 jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\"}}";
                 serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-
                 if 'updateSchedule' in serverResponse:
                         	print "Legacy updateSchedule message post success";
-                                sleep(20)
-                                retry = 0;
-                                recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-				while ( ('generationId' not in recResponse) and (retry < 15)):
-                                	sleep(10);
-                                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        retry += 1
-                                print "Retrieve Status Details: %s"%recResponse;
-
-                                if 'generationId' in recResponse:
-                                        genOut = recorderlib.getGenerationId(recResponse)
-                                        if genOut == genIdInput:
+				genOut = recorderlib.readGenerationId(ip)
+                                if genOut == genIdInput:
                                                 tdkTestObj.setResultStatus("SUCCESS");
                                         	print "GenerationId retrieved matches the expected value ",genIdInput;
-                                        else:
+                                else:
                                                 tdkTestObj.setResultStatus("FAILURE");
                                                 print "GenerationId retrieved does not match the expected value ",genIdInput;
-				else:
-					print "Failed to receive response from recorder for legacy longpoll notification";
-					tdkTestObj.setResultStatus("FAILURE");
                 else:
                         	tdkTestObj.setResultStatus("FAILURE");
                                 print "Legacy updateSchedule message post failed";

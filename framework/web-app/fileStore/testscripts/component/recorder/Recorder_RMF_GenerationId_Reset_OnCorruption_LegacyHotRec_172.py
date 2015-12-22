@@ -134,31 +134,31 @@ if "SUCCESS" in recLoadStatus.upper():
 
                         response = recorderlib.callServerHandler('clearStatus',ip);
 
-			print "Sending getRecordings to get the recording list"
-			recorderlib.callServerHandler('clearStatus',ip)
-			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-			print "Wait for 3 min to get response from recorder"
-			sleep(180)
-			actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-			print "Recording List: %s" %actResponse;
-                        retry = 0
-                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                        while ( ('[]' == recResponse) and (retry < 15) ):
-                                 sleep(10);
-                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                 retry += 1
-                        print "Retrieve Status Details: ",recResponse;
-			if 'generationId' in recResponse:
-	                        genIdOut = recorderlib.getGenerationId(recResponse)
-        	                if "0" == genIdOut:
-                 	                tdkTestObj.setResultStatus("SUCCESS");
-                                        print "GenerationId is successfully reset to 0"
-                               	else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-	                                print "GenerationId failed to reset to 0"
-			else:
-			        print "No GenerationId in status"
-                                tdkTestObj.setResultStatus("FAILURE");
+			#print "Sending getRecordings to get the recording list"
+			#recorderlib.callServerHandler('clearStatus',ip)
+			#recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+			#print "Wait for 60 seconds to get response from recorder"
+			#sleep(60);
+			#actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+			#print "Recording List: %s" %actResponse;
+                        #retry = 0
+                        #recResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                        #while ( ('[]' == recResponse) and (retry < 15) ):
+                                 #sleep(10);
+                                 #recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                                 #retry += 1
+                        #print "Retrieve Status Details: ",recResponse;
+			#if 'generationId' in recResponse:
+                        recObj.initiateReboot();
+                        print "Waiting for the recoder to be up"
+                        sleep(300);
+	                genIdOut = recorderlib.readGenerationId(ip)
+        	        if "0" == genIdOut:
+                            tdkTestObj.setResultStatus("SUCCESS");
+                            print "GenerationId is successfully reset to 0"
+                        else:
+                            tdkTestObj.setResultStatus("FAILURE");
+	                    print "GenerationId failed to reset to 0"
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Legacy updateSchedule message post failed";

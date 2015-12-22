@@ -17,7 +17,7 @@
   <!--  -->
   <synopsis>This tests hot record channel 1 with start time 2s from now for 10s and again request hot record channel1 with start time 4s from now for 5s. 
 Test Case ID: CT_TRM_38
-Test Type: Negative</synopsis>
+Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -43,6 +43,7 @@ Test Type: Negative</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+from trm import reserveForRecord, getAllTunerStates;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("trm","2.0");
@@ -62,8 +63,10 @@ if "SUCCESS" in result.upper():
     #Set the module loading status
     obj.setLoadModuleStatus("SUCCESS");
 
+    # Schedule future recordings on same channel
+
     # Hot recording channel 1 with start time 2s from now for 10s
-    print "Hot recording channel 1 with start time 2s from now for 10s"
+    print "Schedule recording on channel 1 with start time 2s from now for 10s"
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
 
     deviceNo = 0
@@ -100,7 +103,7 @@ if "SUCCESS" in result.upper():
     # End Hot recording channel 1 with start time 2s from now for 10s
 
     # Hot recording channel 1 with start time 4s from now for 5s
-    print "Hot recording channel 1 with start time 4s from now for 5s"
+    print "Schedule recording on channel 1 with start time 4s from now for 5s"
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
 
     deviceNo = 1
@@ -118,7 +121,7 @@ if "SUCCESS" in result.upper():
     tdkTestObj.addParameter("hot",hot);
     tdkTestObj.addParameter("recordingId",recordingId);
 
-    expectedRes = "FAILURE"
+    expectedRes = "SUCCESS"
 
     #Execute the test case in STB
     tdkTestObj.executeTestCase(expectedRes);
@@ -157,6 +160,17 @@ if "SUCCESS" in result.upper():
     else:
         tdkTestObj.setResultStatus("FAILURE");
     # Get all Tuner states End
+
+    # Schedule hot recordings on same channel
+    # Send first recording request from device 3 starting now for 10s
+    streamId = '01'
+    print "Schedule hot recordings on channel 1 starting now for 10s"
+    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':2,'streamId':streamId,'duration':10000,'startTime':0,'recordingId':'RecordId03','hot':1})
+    # Send second recording request from device 4 starting 5s from now for 10s
+    print "Schedule recording on channel 1 starting 5s from now for 10s"
+    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':3,'streamId':streamId,'duration':10000,'startTime':5,'recordingId':'RecordId04','hot':0})
+
+    getAllTunerStates(obj,'SUCCESS')
 
     #unloading trm module
     obj.unloadModule("trm");

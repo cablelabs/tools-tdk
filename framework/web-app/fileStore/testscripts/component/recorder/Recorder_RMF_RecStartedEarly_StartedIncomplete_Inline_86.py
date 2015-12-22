@@ -140,16 +140,15 @@ def ScheduleRec():
         	        elif 'acknowledgement' in actResponse:
                 		tdkTestObj.setResultStatus("SUCCESS");
 	                	print "Successfully retrieved acknowledgement from recorder";
-	                    	# Reboot the STB
 			    	print "Wait for the recording to complete"
-				sleep(300);
+				sleep(330);
 			    	tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
                 	    	tdkTestObj1.executeTestCase(expectedResult);
                                 print "Sending getRecordings to get the recording list"
                                 recorderlib.callServerHandler('clearStatus',ip)
                                 recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-                                print "Wait for 3 min to get response from recorder"
-                                sleep(180)
+                                print "Wait for 60 seconds to get response from recorder"
+                                sleep(60)
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                                 print "Recording List: %s" %actResponse;
 				msg = recorderlib.getStatusMessage(actResponse);

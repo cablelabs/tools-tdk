@@ -110,7 +110,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
 		loop = 0;
-		while loop < 5:
+	        while (('acknow' not in actResponse) and (loop < 5)):	
 	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
@@ -138,7 +138,7 @@ if "SUCCESS" in recLoadStatus.upper():
                         tdkTestObj.executeTestCase(expectedResult);
                         print "Looping till acknowledgement is received"
                         loop = 0;
-                        while loop < 5:
+                        while (('acknow' not in actResponse) and (loop < 5)): 
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 #print "Retrieve Status Details: %s"%actResponse;
                                 sleep(10);
@@ -149,11 +149,13 @@ if "SUCCESS" in recLoadStatus.upper():
                         elif 'acknowledgement' in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully retrieved acknowledgement from recorder";
+                            print "Wait for 10 min for recording to complete"
+                            sleep(600);
 			    print "Sending getRecordings to get the recording list"
 			    recorderlib.callServerHandler('clearStatus',ip)
 			    recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-			    print "Wait for 3 min to get response from recorder"
-			    sleep(180)
+			    print "Wait for 60 seconds to get response from recorder"
+			    sleep(60)
 			    actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 			    print "Recording List: %s" %actResponse;
                             tdkTestObj = recObj.createTestStep('Recorder_SendRequest');

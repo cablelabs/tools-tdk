@@ -87,39 +87,19 @@ if "SUCCESS" in recLoadStatus.upper():
 		recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 		print "Retrieve Status for legacy noUpdate message: ",recResponse;
 
-		if 'generationId' in recResponse:
-			print "Recorder sent POST request to RWS for genId update through legacy noUpdate"
-		else:
-			print "Recorder did not make any POST request to RWS as expected"
-
-		response = recorderlib.callServerHandler('clearStatus',ip);
-                #Execute updateSchedule
                 requestID = str(randint(10, 500));
                 jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\"}}";
                 serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
 
                 if 'updateSchedule' in serverResponse:
                         print "Legacy updateSchedule message post success";
-                        sleep(20)
-                        retry = 0;
-                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-			while ( ('generationId' not in recResponse) and (retry < 15)):
-                                sleep(10);
-                                recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                retry += 1
-                        print "Retrieve Status Details: %s"%recResponse;
-
-                        if 'generationId' in recResponse:
-                                genOut = recorderlib.getGenerationId(recResponse)
-                                if genOut == genIdInput:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        print "GenerationId retrieved matches with expected (%s)"%(genIdInput);
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "GenerationId retrieved does not match with expected (%s)"%(genIdInput);
-			else:
-				print "Failed to receive response from recorder for legacy longpoll notification";
-				tdkTestObj.setResultStatus("FAILURE");
+                        genOut = recorderlib.readGenerationId(ip)
+                        if genOut == genIdInput:
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                print "GenerationId retrieved matches with expected (%s)"%(genIdInput);
+                        else:
+                                tdkTestObj.setResultStatus("FAILURE");
+                                print "GenerationId retrieved does not match with expected (%s)"%(genIdInput);
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Legacy updateSchedule message post failed";

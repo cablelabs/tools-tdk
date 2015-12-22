@@ -64,13 +64,12 @@ obj.setLoadModuleStatus(loadmodulestatus);
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in loadmodulestatus.upper():
 
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = obj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+	       print "Rebooting box for setting configuration"
                obj.initiateReboot();
+               print "Waiting for the recoder to be up"
 	       sleep(300);
-        print "Waiting for the recoder to be up"
-
 
         #Primitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
@@ -79,14 +78,11 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
 
         #Complete a recording to change check sum
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        #3mins duration
+        #30 secs duration
         duration = "30000";
         startTime = "0";
         genIdInput = "TDK456";
@@ -95,45 +91,26 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #Frame json message
         RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-        serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL,ip);
-        print "serverResponse : %s" %serverResponse;
-        sleep(60);
-
-
-        #Execute updateSchedule
-        requestID = str(randint(10, 500));
-        recordingID = str(randint(10000, 500000));
-        #5mins duration
-        duration = "1000";
-        startTime = "60000";
-        genIdInput = "TDK456";
-        ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
-        now = "curTime";
-
-        #Frame json message
-        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-
         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
-        print "serverResponse : %s" %serverResponse;
-
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(60);
+                sleep(10);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
-                while (( ([] == recResponse) or ('ack' not in recResponse) ) and (retry < 10 )):
+                while (( ('ack' not in recResponse) ) and (retry < 10 )):
                         sleep(10);
                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                         retry += 1
                 print "Retrieve Status Details: ",recResponse;
                 if "ack" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
-                        sleep(150);
+			print "Wait for recording to complete"
+                        sleep(30);
 			print "Sending getRecordings to get the recording list"
 			recorderlib.callServerHandler('clearStatus',ip)
 			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-			print "Wait for 3 min to get response from recorder"
-			sleep(180)
+			print "Wait for 1 min to get response from recorder"
+			sleep(60)
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 			print "Recording List: %s" %actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);

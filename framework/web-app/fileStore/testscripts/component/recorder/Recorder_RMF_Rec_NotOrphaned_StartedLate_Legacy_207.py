@@ -155,21 +155,16 @@ if "SUCCESS" in recLoadStatus.upper():
 	print "Sleeping to wait for the recoder to be up"
 	sleep(300);
 	print "Wait for the recording to complete"
-	sleep(720);
+	sleep(1200);
 	print "Sending getRecordings to get the recording list"
 	recorderlib.callServerHandler('clearStatus',ip);
 	recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
-	print "Wait for 3 min to get response from recorder"
-	sleep(180)
+	print "Wait for 60 seconds to get response from recorder"
+	sleep(60)
 	actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-	print "Recording List: %s" %actResponse;
-        #check for acknowledgement from recorder
-        tdkTestObj.executeTestCase(expectedResult);
-        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	print actResponse;
 	msg = recorderlib.getStatusMessage(actResponse);
 	print "Get Status Message Details: %s"%msg;
         if "" == msg:

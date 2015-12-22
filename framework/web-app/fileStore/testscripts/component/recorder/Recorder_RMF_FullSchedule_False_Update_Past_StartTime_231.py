@@ -110,7 +110,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
 		loop = 0;
-		while loop < 5:
+		while (('acknow' not in actResponse) and (loop < 5)):
 	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
@@ -123,22 +123,22 @@ if "SUCCESS" in recLoadStatus.upper():
                     print "Successfully retrieved acknowledgement from recorder";
 
                     #Frame json message for update recording
-                    jsonMsgUpdateSchedule = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+newStartTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+                    jsonMsgUpdateSchedule = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+newStartTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
-                    expResponse = "updateSchedule";
+                    expResponse = "updateRecordings";
                     tdkTestObj.executeTestCase(expectedResult);
                     actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgUpdateSchedule,ip);
-                    print "updateSchedule Details: %s"%actResponse;
+                    print "updateRecordings Details: %s"%actResponse;
                     if expResponse in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
-                        print "updateSchedule message post success";
+                        print "updateRecordings message post success";
                         print "Wait for 60s to get acknowledgement"
                         sleep(60);
                         #Check for acknowledgement from recorder
                         tdkTestObj.executeTestCase(expectedResult);
                         print "Looping till acknowledgement is received"
                         loop = 0;
-                        while loop < 5:
+                        while (('acknow' not in actResponse) and (loop < 5)):
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 #print "Retrieve Status Details: %s"%actResponse;
                                 sleep(10);
@@ -149,13 +149,15 @@ if "SUCCESS" in recLoadStatus.upper():
                         elif 'acknowledgement' in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully retrieved acknowledgement from recorder";
+                            print "Wait for 180s for the recording to be completed"
+                            sleep(240);
                             recorderlib.callServerHandler('clearStatus',ip);
                             recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
                             tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
                             tdkTestObj.executeTestCase(expectedResult);
                             print "Recording List: %s"%actResponse;
-                            print "Wait for 3 mins to get response from the recorder"
-                            sleep(180);
+                            print "Wait for 60 seconds to get response from the recorder"
+                            sleep(60);
                             tdkTestObj.setResultStatus("SUCCESS");
                             #Check for acknowledgement from recorder
                             tdkTestObj.executeTestCase(expectedResult);

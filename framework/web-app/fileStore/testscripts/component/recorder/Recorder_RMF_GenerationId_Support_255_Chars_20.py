@@ -99,26 +99,12 @@ if "SUCCESS" in recLoadStatus.upper():
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule Inline message post success";
-                #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
-                print "Looping till acknowledgement is received"
-
-                retry = 0;
-                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                while (('ERROR' not in actResponse) and (retry < 15)):
-                        sleep(10);
-                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                        retry += 1
-                print "Retrieve Status Details: %s"%actResponse;
-		if 'acknowledgement' not in actResponse:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "Failed to retrieve acknowledgement from recorder";
-                else:
-                    genOut = recorderlib.getGenerationId(actResponse)
-                    if genOut == genIdInput:
+                genOut = recorderlib.readGenerationId(ip)
+                if genOut == genIdInput:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "GenerationId matches with the expected one";
-                    else:
+                else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "GenerationId retrieved (%s) does not match with the expected (%s)"%(genOut,genIdInput);
 

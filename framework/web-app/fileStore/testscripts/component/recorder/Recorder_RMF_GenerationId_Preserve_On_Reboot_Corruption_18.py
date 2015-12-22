@@ -110,18 +110,18 @@ if "SUCCESS" in recLoadStatus.upper():
 		sleep(10);
 		retry=0
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                while (( ('[]' in actResponse) or ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
+                while (( ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
 			sleep(10);
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 			retry += 1
 		print "Retrieve Status Details: %s"%actResponse;
-                if (('[]' in actResponse) or ('ERROR' in actResponse)):
+                if (('ERROR' in actResponse)):
 	                tdkTestObj.setResultStatus("FAILURE");
         	        print "Received Empty/Error status";
                 elif 'acknowledgement' in actResponse:
                 	tdkTestObj.setResultStatus("SUCCESS");
                     	print "Successfully retrieved acknowledgement from recorder";
-			genOut = recorderlib.getGenerationId(actResponse)
+			genOut = recorderlib.readGenerationId(ip)
 			print "genOut = ",genOut
 		    	if genOut == genIdInput:
                     		tdkTestObj.setResultStatus("SUCCESS");
@@ -137,29 +137,14 @@ if "SUCCESS" in recLoadStatus.upper():
 		        	if expResponse in actResponse:
                 			tdkTestObj.setResultStatus("SUCCESS");
 			               	print "updateSchedule message post success";
-			      	        print "Wait for 60s to get acknowledgement";
-		                	tdkTestObj.executeTestCase(expectedResult);
-					print "Waiting to get acknowledgment status"
-					sleep(10);
-					retry=0
-					actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-		                	while (( ('[]' in actResponse) or ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
-						sleep(10);
-						actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-						retry += 1
-					print "Retrieve Status Details: %s"%actResponse;
-				        if ( ('[]' in actResponse) or ('ERROR' in actResponse)):
-			        		tdkTestObj.setResultStatus("FAILURE");
-				              	print "Received Empty/Error status";
+					genOut = recorderlib.readGenerationId(ip)
+					print "genOut = ",genOut
+					if genOut == genIdInput:
+			                        tdkTestObj.setResultStatus("SUCCESS");
+				                print "GenerationId matches with the expected one";
 					else:
-						genOut = recorderlib.getGenerationId(actResponse)
-						print "genOut = ",genOut
-					    	if genOut == genIdInput:
-			                    		tdkTestObj.setResultStatus("SUCCESS");
-				                  	print "GenerationId matches with the expected one";
-					 	else:
-			        	        	tdkTestObj.setResultStatus("FAILURE");
-                				   	print "GenerationId does not match with the expected one";
+			        	        tdkTestObj.setResultStatus("FAILURE");
+                				print "GenerationId does not match with the expected one";
 				else:
                 			tdkTestObj.setResultStatus("FAILURE");
 			               	print "updateSchedule message post failure";

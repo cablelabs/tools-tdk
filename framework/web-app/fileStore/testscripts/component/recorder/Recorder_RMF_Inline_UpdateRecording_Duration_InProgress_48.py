@@ -121,7 +121,8 @@ if "SUCCESS" in recLoadStatus.upper():
                 elif 'acknowledgement' in actResponse:
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
-                    print "Wait for 60s for the recording to be completed"
+                    print "Wait for 180s for the recording to be completed"
+		    sleep(180);
 		    jsonMsgNoUpdate = "{\"updateSchedule\":{\"generationId\":\"0\"}}";
 		    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
 
@@ -157,8 +158,8 @@ if "SUCCESS" in recLoadStatus.upper():
                             print "Sending getRecordings to get the recording list"
                             recorderlib.callServerHandler('clearStatus',ip)
                             recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
-                            print "Wait for 3 min to get response from recorder"
-                            sleep(180)
+                            print "Wait for 60 seconds to get response from recorder"
+                            sleep(60);
                             actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                             print "Recording List: %s" %actResponse;
                             recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);

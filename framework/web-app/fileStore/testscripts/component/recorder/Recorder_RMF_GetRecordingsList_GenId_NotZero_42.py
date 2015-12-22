@@ -55,30 +55,24 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_GetRecordingsList_GenId_NotZero_4
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
+#Set the module loading status
+recObj.setLoadModuleStatus(recLoadStatus.upper())
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        #Set the module loading status
-        recObj.setLoadModuleStatus(recLoadStatus);
-
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
                recObj.initiateReboot();
+	       print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-	print "Sleeping to wait for the recoder to be up"
-
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
- 	print "No Update Schedule Details: %s"%actResponse;
-	sleep(60);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -98,63 +92,59 @@ if "SUCCESS" in recLoadStatus.upper():
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-        print "Update Schedule Details: %s"%actResponse;
-
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
-                print "Wait for 60s to get acknowledgement"
-                sleep(60);
+                sleep(10);
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
+		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 		loop = 0;
-		while loop < 5:
+		while ( ('acknowledgement' not in actResponse) and (loop < 5)):
 	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
 			loop = loop+1;
+		print "Retrieve Status Details: %s"%actResponse;
+
 		if 'acknowledgement' not in actResponse:
                     tdkTestObj.setResultStatus("FAILURE");
-                    print "Received Empty/Error status";
+                    print "Failed to retrieve acknowledgement from recorder";
                 elif 'acknowledgement' in actResponse:
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
+	            response = recorderlib.callServerHandler('clearStatus',ip);
                     print "Wait for 60s for the recording to be completed"
                     sleep(60);
-		    tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
-                    tdkTestObj1.executeTestCase(expectedResult);
-                    print "Sending getRecordings to get the recording list"
-                    recorderlib.callServerHandler('clearStatus',ip)
-                    recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
-                    print "Wait for 3 min to get response from recorder"
-                    sleep(180)
+                    print "Rebooting the STB with generation Id not equal to 0"
+                    recObj.initiateReboot();
+                    print "Sleeping to wait for the recoder to be up"
+                    sleep(300);
+
+		    actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
+                    print "Wait for 60 seconds to get response from recorder"
+                    sleep(60);
                     actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                     print "Recording List: %s" %actResponse;
+
 		    msg = recorderlib.getStatusMessage(actResponse);
-		    print "Get Status Message Details: %s"%msg;
-                    if "" == msg or "recordingStatus" not in msg:
+                    if "NOSTATUS" == msg or "recordingStatus" not in msg:
                         value = "FALSE";
+			tdkTestObj.setResultStatus("FAILURE");
                         print "No status message retrieved"
                     else:
 			value = msg['recordingStatus']["initializing"];
 			print "Initializing value: %s"%value;
-		    if "TRUE" in value.upper():
-                        tdkTestObj1.setResultStatus("FAILURE");
-                        print "Retrieved the recording list from recorder for Generation Id other than zero";
-                    else:
-                        tdkTestObj1.setResultStatus("SUCCESS");
-                        print "Not Retrieved the recording list from recorder for Generation Id other than zero";
-                else:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "Failed to retrieve acknowledgement from recorder";
+
+		    	if "TRUE" in value.upper():
+                        	tdkTestObj.setResultStatus("FAILURE");
+                        	print "Retrieved initializing=true when box rebooted with generation id not equal to zero";
+                    	else:
+                        	tdkTestObj.setResultStatus("SUCCESS");
+                        	print "Did not Retrieve initializing=true when box rebooted with generation id not equal to zero";
         else:
             tdkTestObj.setResultStatus("FAILURE");
             print "updateSchedule message post failed";
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
-else:
-    print "Failed to load Recorder module";
-    #Set the module loading status
-    recObj.setLoadModuleStatus("FAILURE");

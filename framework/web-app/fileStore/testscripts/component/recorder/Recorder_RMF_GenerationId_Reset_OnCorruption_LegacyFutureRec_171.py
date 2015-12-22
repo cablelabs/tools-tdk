@@ -60,13 +60,13 @@ recObj.setLoadModuleStatus(recLoadStatus);
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+               print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+               print "Waiting for the recoder to be up"
 	       sleep(300);
 
-        print "Waiting for the recoder to be up"
 
 
         #Primitive test case which associated to this script
@@ -131,21 +131,10 @@ if "SUCCESS" in recLoadStatus.upper():
                                 print "recorder properties corrupted"
                                 testObj.setResultStatus("SUCCESS")
                                 sleep(5)
-			print "Sending getRecordings to get the recording list"
-			recorderlib.callServerHandler('clearStatus',ip)
-			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-			print "Wait for 3 min to get response from recorder"
-			sleep(180)
-			actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-			print"Recording List: %s" %actResponse;
-                        retry = 0
-                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                        while ( ('[]' == recResponse) and (retry < 15) ):
-                                 sleep(10);
-                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                 retry += 1
-                        print "Retrieve Status Details: ",recResponse;
-                        genIdOut = recorderlib.getGenerationId(recResponse)
+                        recObj.initiateReboot();
+                        print "Waiting for the recoder to be up"
+                        sleep(300);
+                        genIdOut = recorderlib.readGenerationId(ip)
                         print "GenerationId retrieved after reboot: ",genIdOut
                         if "0" == genIdOut:
                                 tdkTestObj.setResultStatus("SUCCESS");

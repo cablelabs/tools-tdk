@@ -163,8 +163,8 @@ def ScheduleRec():
                 print "Sending getRecordings to get the recording list"
                 recorderlib.callServerHandler('clearStatus',ip)
                 recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-                print "Wait for 3 min to get response from recorder"
-                sleep(180)
+                print "Wait for 1 min to get response from recorder"
+                sleep(60)
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                 print "Recording List: %s" %actResponse;
 		msg = recorderlib.getStatusMessage(actResponse);

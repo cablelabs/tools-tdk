@@ -17,7 +17,7 @@
   <!--  -->
   <synopsis>This tests multiple terminals recording same station at the same time.
 Test Case ID: CT_TRM_17
-Test Type: Negative</synopsis>
+Test Type: Positive</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -69,7 +69,7 @@ if "SUCCESS" in result.upper():
     # Send first recording request from device 1
     reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':streamId,'duration':1000,'startTime':startTime,'recordingId':'RecordIdCh01','hot':0})
     # Send second recording request from device 2
-    reserveForRecord(obj,'FAILURE',kwargs={'deviceNo':1,'streamId':streamId,'duration':1000,'startTime':startTime,'recordingId':'RecordIdCh02','hot':0})
+    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':1,'streamId':streamId,'duration':1000,'startTime':startTime,'recordingId':'RecordIdCh02','hot':0})
 
     #unloading trm module
     obj.unloadModule("trm");

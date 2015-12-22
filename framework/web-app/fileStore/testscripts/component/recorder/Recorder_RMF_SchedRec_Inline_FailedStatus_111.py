@@ -111,8 +111,13 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "Retrieve Status Details: ",recResponse;
                 if "acknowledgement" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
-                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                        print "Retrieve Status Details2: ",actResponse;
+                        print "Sending getRecordings to get the recording list"
+                        recorderlib.callServerHandler('clearStatus',ip)
+                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                        print "Wait for 60 seconds to get response from recorder"
+                        sleep(60)
+                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                        print "Retrieve Status Details: ",actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                         print recordingData;
                         if ('NOTFOUND' not in recordingData):

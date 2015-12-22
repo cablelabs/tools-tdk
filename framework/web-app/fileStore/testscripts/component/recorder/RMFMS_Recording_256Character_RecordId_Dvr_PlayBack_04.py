@@ -67,21 +67,19 @@ videorec_parameter_name=["X","Y","width","apply","height"]
 videorec_parameter_value=[0,0,1280,0,720]
 setsource_parameter_name=["rmfSourceElement","rmfSinkElement"]
 setsource_parameter_value=["HNSrc","MPSink"]
-recording_id_256 = " "
+recording_id_256 = str(random.randrange(10**9, 10**256));
 details = " "
 
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
     #Primitive test case which associated to this Script
     global mf_tdkTestObj
-    global recording_id_256
     global details
     mf_tdkTestObj =testobject.createTestStep(teststep);
     if teststep == 'RMF_Element_Open':
         streamDetails = mf_tdkTestObj.getStreamDetails('01');
 
         #fetch recording id from list matchList.
-        recordID = recording_id_256
-        url = mediaframework.getStreamingURL("DVR" , streamDetails.getGatewayIp() , recordID );
+        url = mediaframework.getStreamingURL("DVR" , streamDetails.getGatewayIp() , recording_id_256 );
         print url
         if url == "NULL":
             print "Failed to generate the Streaming URL";
@@ -113,10 +111,10 @@ def dvr_playBack():
 
         mf_loadmodulestatus = mf_obj.getLoadModuleResult();
         print "Mediaframework module loading status :%s" %mf_loadmodulestatus ;
+	#Set the module loading status
+	mf_obj.setLoadModuleStatus(mf_loadmodulestatus.upper())
 
         if "SUCCESS" in mf_loadmodulestatus.upper():
-                #Set the module loading status
-                mf_obj.setLoadModuleStatus("SUCCESS");
 
                 #--------------------PlayBack the Recording----------------
 
@@ -171,10 +169,6 @@ def dvr_playBack():
                 #Delete the Recording after testing to not mesh up with storage space.
                 mf_obj.unloadModule("mediaframework")
                 #--------------------Done--------------------------------
-        else:
-                print "Failed to load mediaframework  module";
-                #Set the module loading status
-                mf_obj.setLoadModuleStatus("FAILURE");
 
         return 0
 
@@ -184,12 +178,11 @@ obj.configureTestCase(ip,port,'RMFMS_Recording_256Character_RecordId_Dvr_PlayBac
 #Get the result of connection with test component and STB
 loadmodulestatus =obj.getLoadModuleResult();
 print "Recorder module loading status :%s" %loadmodulestatus ;
+#Set the module loading status
+obj.setLoadModuleStatus(loadmodulestatus.upper())
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in loadmodulestatus.upper():
-        global recording_id_256
-        #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
 
         loadmoduledetails = obj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
@@ -198,42 +191,31 @@ if "SUCCESS" in loadmodulestatus.upper():
                sleep(300);
 
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
 
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
-        rec_id = random.randrange(10**9, 10**256);
-	requestID = str(rec_id);
-        recording_id_256 = str(rec_id);
 	genIdInput = "TDK12345";
-        print "Record_256---->:",recording_id_256 
-        duration = "180000";
+        duration = "30000";
         start_time = "0";
         streamDetails = tdkTestObj.getStreamDetails('01');
         #Adding ocapid parameter
         validid = streamDetails.getOCAPID();
         Id = re.search(r"\w\w\w\w",validid);
         if Id:
-                print "ocapid : %s" %validid;
                 #Execute the test case in STB
                 expectedresult="SUCCESS";
                 tdkTestObj.executeTestCase(expectedresult);
                 #Get the Actual result of streaming Interface
                 actualresult = tdkTestObj.getResult();
      	        RequestURL = "{\"updateSchedule\":{\"requestId\":\"789"+"\",\"generationId\":\""+genIdInput+"\",\"schedule\":[{\"recordingId\":\""+recording_id_256+"\",\"locator\":[\"ocap://0x125d\"],\"epoch\":curTime,\"start\":0,\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_256_Dvr_PlayBack_04"+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
-                print "RequestURL  is : %s" %RequestURL ;
                 #compare the actual result with expected result
                 if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");
-                        print "Requested recording url is formed";
                         status_expected = "updateSchedule";
         		expectedResult="SUCCESS";
 			tdkTestObj.executeTestCase(expectedResult);
 			sleep(5);
 			status_actual = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
-                        print "Status string is: %s"%status_actual;
                         if status_expected in status_actual:
                                 tdkTestObj.setResultStatus("SUCCESS");
                 		print "updateSchedule message post success";
@@ -242,69 +224,45 @@ if "SUCCESS" in loadmodulestatus.upper():
 				sleep(10);
 				retry=0
 				actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-		                while ((('[]' in actResponse) or ('ack' not in actResponse)) and ('ERROR' not in actResponse) and (retry < 15)):
+		                while (('ack' not in actResponse) and (retry < 5)):
 					sleep(10);
 					actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 					retry += 1
 				print "Retrieve Status Details: %s"%actResponse;
-		                if (('[]' in actResponse) or ('ERROR' in actResponse)):
+		                if ('acknowledgement' not in actResponse):
 	        		        tdkTestObj.setResultStatus("FAILURE");
-		        	        print "Received Empty/Error status";
-		                elif 'acknowledgement' in actResponse:
+		        	        print "Failed to receive acknowledgement from recorder";
+		                else:
                 			tdkTestObj.setResultStatus("SUCCESS");
 		                    	print "Successfully retrieved acknowledgement from recorder";
-                                #Prmitive test case which associated to this Script
-                                tdkTestObj = obj.createTestStep('Recorder_checkRecording_status');
-                                print "Record_256---->:",recording_id_256
-                                PATTERN = recording_id_256;
-                                print "PATTERN--->:",PATTERN
-                                tdkTestObj.addParameter("Recording_Id",recording_id_256);
-                                #Execute the test case in STB
-                                expectedresult="SUCCESS";
-                                tdkTestObj.executeTestCase(expectedresult);
-                                #Get the Actual result of streaming Interface
-                                actualresult = tdkTestObj.getResult();
-                                print "In script **********************"
-                                patterndetails = tdkTestObj.getResultDetails();
-                                print "Pattern details is : %s" %patterndetails;
-                                duration_int = int(duration);
-                                duration_sec = duration_int/1000;
-                                duration_string = str(duration_sec);
-                                print duration_string;
-                                #compare the actual result with expected result
-                                if expectedresult in actualresult:
-                                        if (PATTERN in patterndetails):
-                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                #Getting the mplayer log file from DUT
-                                                logpath=tdkTestObj.getLogPath();
-                                                print "Log path : %s" %logpath;
-                                                tdkTestObj.transferLogs(logpath,"false");
-                                                print "Successfully scheduled a Recording";
 
-                                                #DVR Playback.
-                                                dvr_playBack()
-                                        else:
+                                        print "Wait for recording to complete"
+                                        sleep(30);
+
+                                        print "Sending getRecordings to get the recording list"
+                                        recorderlib.callServerHandler('clearStatus',ip)
+                                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                                        print "Wait for 1 min to get response from recorder"
+                                        sleep(60)
+                                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                                        print "Recording List: %s" %actResponse;
+                                        recordingData = recorderlib.getRecordingFromRecId(actResponse,recording_id_256);
+                                        print recordingData;
+                                        if ('NOTFOUND' in recordingData):
                                                 tdkTestObj.setResultStatus("FAILURE");
-                                                #Getting the mplayer log file from DUT
-                                                logpath=tdkTestObj.getLogPath();
-                                                print "Log path : %s" %logpath;
-                                                tdkTestObj.transferLogs(logpath,"false");
-                                                print "Recording is not completed with requested duration";
-                                else:
-                                        print "Failed to schedule a Recording";
-                                        tdkTestObj.setResultStatus("FAILURE");
+                                        else:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+						#DVR Playback
+						dvr_playBack()
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                 		print "updateSchedule message post failure";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Requested recording url not formed";
-                #unloading Recorder module
-                obj.unloadModule("Recorder");
         else:
                 print "getSourceId is failed";
                 tdkTestObj.setResultStatus("FAILURE");
-else:
-        print "Failed to load Recorder module";
-        #Set the module loading status
-        obj.setLoadModuleStatus("FAILURE");
+
+	#unloading Recorder module
+	obj.unloadModule("Recorder");

@@ -25,7 +25,7 @@
   <!-- execution_time is the time out time for test execution -->
   <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
+  <skip>true</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -52,30 +52,24 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_WITH_REQUESTED_START_Inline_176')
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
+#Set the module loading status
+recObj.setLoadModuleStatus(recLoadStatus.upper())
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        #Set the module loading status
-        recObj.setLoadModuleStatus(recLoadStatus);
-
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
                recObj.initiateReboot();
+	       print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-	print "Sleeping to wait for the recoder to be up"
-
 
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         actResponse =recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
- 	print "No Update Schedule Details: %s"%actResponse;
-	sleep(30);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -96,8 +90,6 @@ if "SUCCESS" in recLoadStatus.upper():
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
         actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
-        print "Update Schedule Details: %s"%actResponse;
-
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
@@ -110,25 +102,22 @@ if "SUCCESS" in recLoadStatus.upper():
 			sleep(5);
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 			retry += 1
-		print "Retrieve Status Details: %s"%actResponse;
-                if (('ERROR' in actResponse)):
-	                tdkTestObj.setResultStatus("FAILURE");
-        	        print "Received Empty/Error status";
-                elif 'acknowledgement' in actResponse:
+		#print "Retrieve Status Details: %s"%actResponse;
+                if 'acknowledgement' in actResponse:
                 	tdkTestObj.setResultStatus("SUCCESS");
 	                print "Successfully retrieved acknowledgement from recorder";
-		    	tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
-                    	tdkTestObj1.executeTestCase(expectedResult);
+			print "Wait for recording to complete"
+			sleep(180);
                         print "Sending getRecordings to get the recording list"
                         recorderlib.callServerHandler('clearStatus',ip)
                         recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-                        print "Wait for 3 min to get response from recorder"
-                        sleep(180)
+                        print "Wait for 60 seconds to get response from recorder"
+			sleep(60);
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                         print "Recording List: %s" %actResponse;
 			msg = recorderlib.getStatusMessage(actResponse);
 		        print "Get Status Message Details: %s"%msg;
-                        if "" == msg:
+                        if "NOSTATUS" == msg:
                             value = "FALSE";
 	                    print "No status message retrieved"
 	        	    tdkTestObj.setResultStatus("FAILURE");
@@ -145,21 +134,21 @@ if "SUCCESS" in recLoadStatus.upper():
         	                    print "Successfully retrieved the recording list from recorder";
                 	            if "" != value.upper():
 	                	        print "Recording status set";
-                        	        tdkTestObj1.setResultStatus("SUCCESS");
+                        	        tdkTestObj.setResultStatus("SUCCESS");
                 	            	if "COMPLETE" == value.upper():
-                        	            tdkTestObj1.setResultStatus("SUCCESS");
+                        	            tdkTestObj.setResultStatus("SUCCESS");
 	                		    print "Recording marked as COMPLETE";
         		                else:
-                		            tdkTestObj1.setResultStatus("FAILURE");
+                		            tdkTestObj.setResultStatus("FAILURE");
 		                	    print "Recording not marked as COMPLETE";
         		            else:
 	                		print "Recording status not set";
-                		        tdkTestObj1.setResultStatus("FAILURE");
+                		        tdkTestObj.setResultStatus("FAILURE");
 			        else:
-                	            tdkTestObj1.setResultStatus("FAILURE");
+                	            tdkTestObj.setResultStatus("FAILURE");
                         	    print "Failed to get the recording data";
 		            else:
-        		        tdkTestObj1.setResultStatus("FAILURE");
+        		        tdkTestObj.setResultStatus("FAILURE");
                 	        print "Failed to retrieve the recording list from recorder";
 		else:
                 	tdkTestObj.setResultStatus("FAILURE");
@@ -167,8 +156,5 @@ if "SUCCESS" in recLoadStatus.upper():
         else:
 	        tdkTestObj.setResultStatus("FAILURE");
                 print "updateSchedule message post failure";
+
         recObj.unloadModule("Recorder");
-else:
-	print "Failed to load Recorder module";
-    	#Set the module loading status
-    	recObj.setLoadModuleStatus("FAILURE");

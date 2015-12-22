@@ -95,12 +95,8 @@ if "SUCCESS" in recLoadStatus.upper():
                 print "Inline updateSchedule message post success";
                 print "Waiting to get status"
                 sleep(120);
-                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                print "Step1: Retrieve Status Details: %s"%actResponse;
-                if 'generationId' in actResponse:
-                        print "Successfully retrieved generationId from recorder";
-                        genOut = recorderlib.getGenerationId(actResponse)
-                        if genOut == genIdInput:
+                genOut = recorderlib.readGenerationId(ip)
+                if genOut == genIdInput:
                                 print "GenerationId (%s) matches with expected value(%s)"%(genIdInput,genOut);
 				#STEP2: WAIT FOR RECORDING TO COMPLETE AND GET THE RECORDING STATUS
 				response = recorderlib.callServerHandler('clearStatus',ip);
@@ -112,10 +108,9 @@ if "SUCCESS" in recLoadStatus.upper():
                                 print "Sending getRecordings to get the recording list"
                                 recorderlib.callServerHandler('clearStatus',ip);
 				recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-                                print "Wait for 3 mins to get response from the recorder"
-                                sleep(180);
+                                print "Wait for 60 seconds to get response from the recorder"
+                                sleep(60);
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                print actResponse;
                                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
                                 print recordingData
                                 if 'NOTFOUND' not in recordingData:
@@ -127,7 +122,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                                 print "Scheduled recording completed successfully";
 				                #STEP3: SEND inline "updateRecordings" payload containing "generationId": "test1bb AND EXPECT "generationId": "test1b"
                                                 genIdInput = "test1b";
-                                                jsonMsg = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"requestId\":\""+requestID+"\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P2\",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},}]}}";
+                                                jsonMsg = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"requestId\":\""+requestID+"\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P2\",\"properties\":{\"title\":\"Recording_"+recordingID+"\"}}]}}";
                                                 expResponse = "updateRecordings";
                                                 actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
                                                 print "Update Recordings Details: %s"%actResponse;
@@ -136,40 +131,31 @@ if "SUCCESS" in recLoadStatus.upper():
                                                         print "update recordings message post success";
                                                         print "Waiting to get status"
                                                         sleep(120);
-                                                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-						        print "Step3: Retrieve Status Details: %s"%actResponse
-							if 'generationId' in actResponse:
-									print "Successfully retrieved generationId from recorder";
-                                                                        genOut = recorderlib.getGenerationId(actResponse)
-                                                                        if genOut == genIdInput:
-										print "GenerationId (%s) matches with expected value(%s)"%(genIdInput,genOut);
-										#STEP4: RWS "updateSchedule" without generationId and expect genId="test1b"
-                                                                                jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\"}}";
-                                                                                expResponse = "updateSchedule";
-                                                                                actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-                                                                                print "Update Schedule Details: %s"%actResponse;
-
-                                                                                if expResponse in actResponse:
-                                                                                        print "updateSchedule message post success";
-                                                                                        sleep(120);
-                                                                                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-										        print "Step4: Retrieve Status Details: %s"%actResponse;
-											genOut = recorderlib.getGenerationId(actResponse)
-											if genOut == genIdInput:
-                                                                                                tdkTestObj.setResultStatus("SUCCESS");
-											        print "GenerationId (%s) matches with expected value(%s)"%(genIdInput,genOut);
-                                                                                        else:
-                                                                                                tdkTestObj.setResultStatus("FAILURE");
-												print "GenerationId does not match with expected value";
-                                                                                else:
-                                                                                        tdkTestObj.setResultStatus("FAILURE");
-                                                                                        print "updateSchedule message post failure";
-									else:
-									        tdkTestObj.setResultStatus("FAILURE");
-										print "GenerationId does not match with expected value";
-							else:
-								print "Failed to retrieve generationId from recorder";
-								tdkTestObj.setResultStatus("FAILURE");	
+                                                        genOut = recorderlib.readGenerationId(ip)
+                                                        if genOut == genIdInput:
+							        print "GenerationId (%s) matches with expected value(%s)"%(genIdInput,genOut);
+								#STEP4: RWS "updateSchedule" without generationId and expect genId="test1b"
+                                                                jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\"}}";
+                                                                expResponse = "updateSchedule";
+                                                                actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
+                                                                print "Update Schedule Details: %s"%actResponse;
+                                                                if expResponse in actResponse:
+                                                                    print "updateSchedule message post success";
+                                                                    actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+				                                    print "Step4: Retrieve Status Details: %s"%actResponse;
+                                                                    genOut = recorderlib.readGenerationId(ip)
+								    if genOut == genIdInput:
+                                                                        tdkTestObj.setResultStatus("SUCCESS");
+									print "GenerationId (%s) matches with expected value(%s)"%(genIdInput,genOut);
+                                                                    else:
+                                                                        tdkTestObj.setResultStatus("FAILURE");
+									print "GenerationId does not match with expected value";
+                                                                else:
+                                                                    tdkTestObj.setResultStatus("FAILURE");
+                                                                    print "updateSchedule message post failure";
+				                        else:
+							    tdkTestObj.setResultStatus("FAILURE");
+							    print "GenerationId does not match with expected value";
                                                 else:
                                                         tdkTestObj.setResultStatus("FAILURE");
                                                         print "update recordings message post failure";
@@ -179,12 +165,9 @@ if "SUCCESS" in recLoadStatus.upper():
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
                                         print "Failed to retrieve the recording list from recorder";
-			else:
-				tdkTestObj.setResultStatus("FAILURE");
-				print "GenerationId does not match with expected value";
 		else:
-                	tdkTestObj.setResultStatus("FAILURE");
-                        print "Failed to retrieve generationId from recorder";
+		        tdkTestObj.setResultStatus("FAILURE");
+			print "GenerationId does not match with expected value";
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Inline updateSchedule message post failed";

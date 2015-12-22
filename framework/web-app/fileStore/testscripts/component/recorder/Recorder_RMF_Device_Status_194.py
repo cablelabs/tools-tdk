@@ -59,37 +59,31 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_Device_Status_194');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
-
+#Set the module loading status
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
-
-        #Set the module loading status
-        recObj.setLoadModuleStatus(recLoadStatus);
-
+	
         #Pre-requisite
         response = recorderlib.callServerHandler('clearDeviceStatus',ip);
-        print "Clear Device Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveDeviceStatus',ip);
-        print "Retrieve Device Status Details: %s"%response;
 
-	loadmoduledetails = recObj.getLoadModuleDetails();
-        if "REBOOT_REQUESTED" in loadmoduledetails:
-               recObj.initiateReboot();
-	       sleep(300);
+	recObj.initiateReboot();
 	print "Sleeping to wait for the recoder to be up"
+	sleep(300);
 
-      
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
 
         tdkTestObj.executeTestCase(expectedResult);
+	actResponse = recorderlib.callServerHandler('retrieveDeviceStatus',ip);
+
         loop = 0;
-        while loop < 5:
+        while (('deviceStatus' not in actResponse) and (loop < 5)):
                 actResponse = recorderlib.callServerHandler('retrieveDeviceStatus',ip);
-                print "Retrieve Device Status Details: %s"%actResponse;
                 sleep(10);
                 loop = loop + 1;
+	print "Retrieve Device Status Details: %s"%actResponse;
         if 'deviceStatus' in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
 		print "Device status retrieved after reboot";
@@ -99,7 +93,3 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
-else:
-    print "Failed to load Recorder module";
-    #Set the module loading status
-    recObj.setLoadModuleStatus("FAILURE");

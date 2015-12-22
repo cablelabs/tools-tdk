@@ -108,7 +108,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
                 print "Wait for 60s to get acknowledgement"
-                sleep(20);
+                sleep(60);
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
@@ -125,6 +125,7 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
+		    sleep(60);
 		    jsonMsgGenIdUpdate = "{\"updateSchedule\" : {\"generationId\":\"0\"} }";
 		    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgGenIdUpdate,ip);
                     sleep(10);

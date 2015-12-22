@@ -56,23 +56,20 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_GenerationId_UpdateRecording_RWS_
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
-recObj.setLoadModuleStatus(recLoadStatus);
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-	print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+               print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+ 	       print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-
-        print "Sleeping to wait for the recoder to be up"
-
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: ",response;
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -93,18 +90,11 @@ if "SUCCESS" in recLoadStatus.upper():
 
         expResponse = "updateSchedule";
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-        print "Update Schedule Details: %s"%actResponse;
-
         if expResponse in actResponse:
                 print "updateSchedule message post success";
-                print "Waiting to get status"
-                sleep(120);
-                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                print "Step1: Retrieve Status Details: %s"%actResponse;
-                if 'generationId' in actResponse:
-                        print "Successfully retrieved generationId from recorder";
-                        genOut = recorderlib.getGenerationId(actResponse)
-                        if genOut == genIdInput:
+                sleep(10)
+                genOut = recorderlib.readGenerationId(ip)
+                if genOut == genIdInput:
                                 print "GenerationId (%s) matches with expected value(%s)"%(genIdInput,genOut);
 				#STEP2: WAIT FOR RECORDING TO COMPLETE AND GET THE RECORDING STATUS
 				response = recorderlib.callServerHandler('clearStatus',ip);
@@ -114,65 +104,51 @@ if "SUCCESS" in recLoadStatus.upper():
                                 actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
                                 sleep(60);
                                 print "Sending getRecordings to get the recording list"
-				recorderlib.callServerHandler('clearStatus',ip)
 				recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-				print "Wait for 3 min to get response from recorder"
-				sleep(180)
+                                print "Wait for 60sec to get the recording list"
+                                sleep(60)
 				actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-				print "Recording List: %s" %actResponse;
+				#print "Recording List: %s" %actResponse;
                                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
                                 print recordingData
                                 if 'NOTFOUND' not in recordingData:
                                         key = 'status'
                                         value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                                         print "key: ",key," value: ",value
-                                        print "Successfully retrieved the recording list from recorder"
                                         if "COMPLETE" in value.upper():
                                                 print "Scheduled recording completed successfully";
 						#STEP3: SEND legacy "updateRecordings" payload containing "generationId": "test2b"
                                                 genIdInput = "test2b";
-                                                jsonMsg = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"requestId\":\""+requestID+"\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P2\",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},}]}}";
+                                                jsonMsg = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"requestId\":\""+requestID+"\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P2\",\"properties\":{\"title\":\"Recording_"+recordingID+"\"}}]}}";
                                                 expResponse = "updateRecordings";
                                                 actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-                                                print "Update Recordings Details: %s"%actResponse;
-
                                                 if expResponse in actResponse:
                                                         print "update recordings message post success";
-                                                        print "Waiting to get status"
-                                                        sleep(120);
-                                                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                                        print "Step3: Retrieve Status Details: %s"%actResponse
-                                                        if 'generationId' in actResponse:
-                                                                        print "Successfully retrieved generationId from recorder";
-                                                                        genOut = recorderlib.getGenerationId(actResponse)
-                                                                        if genOut == genIdInput:
-										print "GenerationId (%s) matches with expected value(%s)"%(genIdInput,genOut);
-										#STEP4: RWS "updateSchedule" without generationId and expect genId="test2b"
-                                                                                jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\"}}";
-                                                                                expResponse = "updateSchedule";
-                                                                                actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-                                                                                print "Update Schedule Details: %s"%actResponse;
-                                                                                if expResponse in actResponse:
-                                                                                        print "updateSchedule message post success";
-                                                                                        sleep(120);
-                                                                                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                                                                        print "Step4: Retrieve Status Details: %s"%actResponse;
-                                                                                        genOut = recorderlib.getGenerationId(actResponse)
-                                                                                        if genOut == genIdInput:
-                                                                                              tdkTestObj.setResultStatus("SUCCESS");
-											      print "GenerationId (%s) matches with expected value(%s)"%(genIdInput,genOut);
-                                                                                        else:
-                                                                                              tdkTestObj.setResultStatus("FAILURE");
-											      print "GenerationId does not match with expected value";
-                                                                                else:
-                                                                                        tdkTestObj.setResultStatus("FAILURE");
-                                                                                        print "updateSchedule message post failure";
-									else:
-										tdkTestObj.setResultStatus("FAILURE");
-										print "GenerationId does not match with expected value";
+                                                        sleep(10);
+                                                        genOut = recorderlib.readGenerationId(ip)
+                                                        if genOut == genIdInput:
+					                        print "GenerationId (%s) matches with expected value(%s)"%(genIdInput,genOut);
+								#STEP4: RWS "updateSchedule" without generationId and expect genId="test2b"
+                                                                jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\"}}";
+                                                                expResponse = "updateSchedule";
+                                                                actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
+                                                                if expResponse in actResponse:
+                                                                    print "updateSchedule message post success";
+                                                                    actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                                                                    print "Step4: Retrieve Status Details: %s"%actResponse;
+                                                                    genOut = recorderlib.readGenerationId(ip)
+                                                                    if genOut == genIdInput:
+                                                                        tdkTestObj.setResultStatus("SUCCESS");
+									print "GenerationId (%s) matches with expected value(%s)"%(genIdInput,genOut);
+                                                                    else:
+                                                                        tdkTestObj.setResultStatus("FAILURE");
+								        print "GenerationId does not match with expected value";
+                                                                else:
+                                                                     tdkTestObj.setResultStatus("FAILURE");
+                                                                     print "updateSchedule message post failure";
 							else:
-								print "Failed to retrieve generationId from recorder";
-								tdkTestObj.setResultStatus("FAILURE");	
+							    tdkTestObj.setResultStatus("FAILURE");
+							    print "GenerationId does not match with expected value";
                                                 else:
                                                         tdkTestObj.setResultStatus("FAILURE");
                                                         print "update recordings message post failure";
@@ -182,12 +158,9 @@ if "SUCCESS" in recLoadStatus.upper():
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
                                         print "Failed to retrieve the recording list from recorder";
-			else:
-				tdkTestObj.setResultStatus("FAILURE");
-				print "GenerationId does not match with expected value";
 		else:
-                	tdkTestObj.setResultStatus("FAILURE");
-                        print "Failed to retrieve generationId from recorder";
+			tdkTestObj.setResultStatus("FAILURE");
+			print "GenerationId does not match with expected value";
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "updateSchedule message post failed";

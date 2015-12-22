@@ -61,7 +61,7 @@ obj.configureTestCase(ip,port,'RMFMS_Recording_256Character_RecordId_Neg_02');
 loadmodulestatus =obj.getLoadModuleResult();
 print "Recorder module loading status :%s" %loadmodulestatus ;
 #Set the module loading status
-obj.setLoadModuleStatus(loadmodulestatus);
+obj.setLoadModuleStatus(loadmodulestatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in loadmodulestatus.upper():
@@ -73,16 +73,13 @@ if "SUCCESS" in loadmodulestatus.upper():
                sleep(300);
 
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
 
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
         negate = "-"
         rec_id = random.randrange(10**9, 10**255)
         recording_id = negate + str(rec_id);
-        duration = "180000";
+        duration = "60000";
         start_time = "0";
         requestID = str(randint(10,500));
 	genIdInput = requestID;
@@ -91,26 +88,18 @@ if "SUCCESS" in loadmodulestatus.upper():
         validid = streamDetails.getOCAPID();
         Id = re.search(r"\w\w\w\w",validid);
         if Id:
-                print "ocapid : %s" %validid;
                 #Execute the test case in STB
                 expectedresult="SUCCESS";
                 tdkTestObj.executeTestCase(expectedresult);
                 #Get the Actual result of streaming Interface
                 actualresult = tdkTestObj.getResult();
-########################## SINCE THERE WAS SOME ISSUE IN USING THE STUBS URL, USING THE HARD CODED VALUE #################################
      	        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"schedule\":[{\"recordingId\":\""+recording_id+"\",\"locator\":[\"ocap://0x125d\"],\"epoch\":curTime,\"start\":0,\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recording_id+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
-                print "RequestURL  is : %s" %RequestURL;
                 #compare the actual result with expected result
                 if expectedresult in actualresult:
-                        print "Requested recording url is formed";
-                        #status_expected = "acknowledgement";
                         status_expected = "updateSchedule";
-                        #status_actual =tdkTestObj.initiateRecorderApp(RequestURL);
         		expectedResult="SUCCESS";
 			tdkTestObj.executeTestCase(expectedResult);
-			sleep(5);
 			status_actual = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
-                        print "Status string is: %s"%status_actual;
                         if status_expected in status_actual:
                                 tdkTestObj.setResultStatus("SUCCESS");
                 		print "updateSchedule message post success";
@@ -119,50 +108,41 @@ if "SUCCESS" in loadmodulestatus.upper():
 				sleep(10);
 				retry=0
 				actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-		                while ((('[]' in actResponse and len(actResponse) < 3) or ('ack' not in actResponse)) and ('ERROR' not in actResponse) and (retry < 15)):
+		                while (('ack' not in actResponse) and (retry < 5)):
 					sleep(10);
 					actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 					retry += 1
-					print "Retrieve Status Details:\n %s \n"%actResponse;
-		                if (('[]' in actResponse and len(actResponse) < 3) or ('ERROR' in actResponse)):
-	        		        tdkTestObj.setResultStatus("FAILURE");
-		        	        print "Received Empty/Error status";
-		                elif 'acknowledgement' in actResponse:
+				print "Retrieve Status Details:\n %s \n"%actResponse;
+		                if 'acknowledgement' in actResponse:
                 			tdkTestObj.setResultStatus("SUCCESS");
 		                    	print "Successfully retrieved acknowledgement from recorder";
-	                      	tdkTestObj = obj.createTestStep('Recorder_checkRecording_status');
-        	                PATTERN = recording_id;
-                	        tdkTestObj.addParameter("Recording_Id",recording_id);
-	                        #Execute the test case in STB
-        	                expectedresult="SUCCESS";
-                	        tdkTestObj.executeTestCase(expectedresult);
-	                        #Get the Actual result of streaming Interface
-        	                actualresult = tdkTestObj.getResult();
-                	        print "In script **********************"
-                        	patterndetails = tdkTestObj.getResultDetails();
-	                        print "Pattern details is : %s" %patterndetails;
-        	                duration_int = int(duration);
-                	        duration_sec = duration_int/1000;
-                        	duration_string = str(duration_sec);
-	                        print duration_string;
-        	                #compare the actual result with expected result
-                	        if expectedresult in actualresult:
-	                        	if (PATTERN in patterndetails):
-        	                        	tdkTestObj.setResultStatus("SUCCESS");
-                	                        #Getting the mplayer log file from DUT
-                        	                logpath=tdkTestObj.getLogPath();
-                                	        print "Log path : %s" %logpath;
-	                                        tdkTestObj.transferLogs(logpath,"false");
-        	                                print "As expected failed to schedule a Recording with negative recordID";
-                	            	else:
-                        	        	tdkTestObj.setResultStatus("FAILURE");
-                                	        #Getting the mplayer log file from DUT
-	                                        logpath=tdkTestObj.getLogPath();
-        	                                print "Log path : %s" %logpath;
-                	                        tdkTestObj.transferLogs(logpath,"false");
-                        	                print "Failed to search the pattern in the logfile";
+
+					print "Wait for recording to complete"
+					sleep(60)
+
+                                        print "Sending getRecordings to get the recording list"
+                                        recorderlib.callServerHandler('clearStatus',ip)
+                                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                                        print "Wait for 1 min to get response from recorder"
+                                        sleep(60)
+                                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                                        print "Recording List: %s" %actResponse;
+                                        recordingData = recorderlib.getRecordingFromRecId(actResponse,recording_id);
+                                        print recordingData;
+                                        if 'NOTFOUND' in recordingData:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                print "As expected failed to schedule a Recording with negative recordID";
+                                        else:
+                                                print "Recorder scheduled a Recording with negative recordID";
+                                                value = recorderlib.getValueFromKeyInRecording(recordingData,'status')
+                                                if "COMPLETE" in value.upper():
+                                                        tdkTestObj.setResultStatus("FAILURE");
+                                                        print "Created recording with negative recordID";
+                                                else:
+                                                        tdkTestObj.setResultStatus("SUCCESS");
+							print "Failed to create recording with negative recordID";
 	                    	else:
-        	                	print "Failed to schedule a Recording";
+        	                	print "Failed to retrieve acknowledgement from recorder";
                 	                tdkTestObj.setResultStatus("FAILURE");
 	        	else:
         	           tdkTestObj.setResultStatus("FAILURE");
@@ -170,12 +150,9 @@ if "SUCCESS" in loadmodulestatus.upper():
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Requested url not formed, Please check precondition";
-                #unloading Recorder module
-                obj.unloadModule("Recorder");
         else:
                 print "getSourceId is failed";
                 tdkTestObj.setResultStatus("FAILURE");
-else:
-        print "Failed to load Recorder module";
-        #Set the module loading status
-        obj.setLoadModuleStatus("FAILURE");
+
+	#unloading Recorder module
+	obj.unloadModule("Recorder");

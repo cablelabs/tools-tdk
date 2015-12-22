@@ -109,7 +109,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
 		loop = 0;
-		while loop < 5:
+                while ( ('acknow' not in actResponse) and (loop < 5 ) ):
 	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
@@ -137,7 +137,7 @@ if "SUCCESS" in recLoadStatus.upper():
                         tdkTestObj.executeTestCase(expectedResult);
                         print "Looping till acknowledgement is received"
                         loop = 0;
-                        while loop < 5:
+                        while ( ('acknow' not in actResponse) and (loop < 5 ) ):
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 #print "Retrieve Status Details: %s"%actResponse;
                                 sleep(10);
@@ -149,8 +149,13 @@ if "SUCCESS" in recLoadStatus.upper():
                         	print "Successfully retrieved acknowledgement from recorder";
 			   	tdkTestObj.setResultStatus("SUCCESS");
                            	tdkTestObj.executeTestCase(expectedResult);
-                           	actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                            	print actResponse;
+                                print "Sending getRecordings to get the recording list"
+                                recorderlib.callServerHandler('clearStatus',ip)
+                                recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                                print "Wait for 60 seconds to get response from recorder"
+                                sleep(60)
+                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                                print "Recording List: %s" %actResponse;
                             	recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
                             	print recordingData
                             	if 'NOTFOUND' not in recordingData:

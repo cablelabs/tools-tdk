@@ -169,15 +169,15 @@ if "SUCCESS" in recLoadStatus.upper():
                 recObj.unloadModule("Recorder");
                 exit();
         print "Successfully retrieved acknowledgement from recorder";
-	sleep(5);
+	sleep(20);
         print "Sending getRecordings to get the recordings list"
 	tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
         tdkTestObj1.executeTestCase(expectedResult);
         recorderlib.callServerHandler('clearStatus',ip);
         recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
         tdkTestObj1.setResultStatus("FAILURE");
-	print "Wait for 3 min to get response from recorder"
-	sleep(180)
+	print "Wait for 60 seconds to get response from recorder"
+	sleep(60)
 	actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 	print "Recording List: %s" %actResponse;
         #check for acknowledgement from recorder
@@ -191,14 +191,6 @@ if "SUCCESS" in recLoadStatus.upper():
                 recObj.unloadModule("Recorder");
                 exit();
         print "Retrieved status message";
-        value = msg['recordingStatus']["initializing"];
-        print "Initializing value: %s"%value;
-        if "TRUE" not in value.upper():
-                print "Failed to retrieve the recording list from recorder";
-                tdkTestObj1.setResultStatus("FAILURE");
-                recObj.unloadModule("Recorder");
-                exit();
-        print "Retrieved the recording list from recorder";
         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
         print recordingData
         if 'NOTFOUND' in recordingData:

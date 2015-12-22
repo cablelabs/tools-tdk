@@ -30,7 +30,7 @@ from sys import exit
 from resetAgent import resetAgent
 from time import gmtime, strftime
 from devicestatus import getStatus
-from recorderlib import startRecorderApp
+#from recorderlib import startRecorderApp
 from getRDKVersion import getRDKVersion
 import MySQLdb
 import shutil
@@ -763,7 +763,7 @@ class PrimitiveTestCase:
                 return result
 
 	########## End of Function ##########
-  
+	''' 
 	def initiateRecorderApp(self, arg):
 
 	# To start recorder application
@@ -778,7 +778,7 @@ class PrimitiveTestCase:
 		return outdata
 	
 	########## End of Function ##########
- 
+	''' 
 	def downloadFile(self, IP, PORT, RemoteFile, LocalFile):
 	
 	# Download a file
@@ -883,7 +883,7 @@ class PrimitiveTestCase:
 			localFileName = sourceLogPath.split("/")[-1]
 			localFileName = destinationLogPath + str(self.execID) + "_" + localFileName + "_" + timeStamp
 			self.downloadFile(ipAddress, port, sourceLogPath, localFileName)
-		return
+		return localFileName
 
 	########## End of Function ##########
 

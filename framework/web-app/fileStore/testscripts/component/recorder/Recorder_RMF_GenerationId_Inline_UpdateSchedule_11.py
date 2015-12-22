@@ -102,7 +102,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in actResponse:
                 	tdkTestObj.setResultStatus("SUCCESS");
                     	print "Successfully retrieved acknowledgement from recorder";
-			genOut = recorderlib.getGenerationId(actResponse)
+			genOut = recorderlib.readGenerationId(ip)
 		    	if genOut == genIdInput:
                     		tdkTestObj.setResultStatus("SUCCESS");
                     		print "GenerationId matches with the expected value ",genIdInput
@@ -116,26 +116,13 @@ if "SUCCESS" in recLoadStatus.upper():
 		        	if expResponse in actResponse:
                 			tdkTestObj.setResultStatus("SUCCESS");
 			               	print "Legacy updateSchedule message post success";
-					print "Waiting to get recorder request"
-					sleep(10);
-					retry=0
-					actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        while ( ('generationId' not in actResponse) and (retry < 15)):
-						sleep(10);
-						actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-						retry += 1
-					print "Retrieve Status Details: %s"%actResponse;
-				        if 'generationId' in actResponse:
-						genOut = recorderlib.getGenerationId(actResponse)
-					    	if genOut == genIdInput:
-			                    		tdkTestObj.setResultStatus("SUCCESS");
-				                  	print "GenerationId matches with the expected value ",genIdInput;
-					 	else:
-			        	        	tdkTestObj.setResultStatus("FAILURE");
-                				   	print "GenerationId does not match with the expected value ",genIdInput;
-                                        else:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "No generationId in status" 
+					genOut = recorderlib.readGenerationId(ip)
+					if genOut == genIdInput:
+			                        tdkTestObj.setResultStatus("SUCCESS");
+				                print "GenerationId matches with the expected value ",genIdInput;
+					else:
+			        	       	tdkTestObj.setResultStatus("FAILURE");
+                			   	print "GenerationId does not match with the expected value ",genIdInput;
 				else:
                 			tdkTestObj.setResultStatus("FAILURE");
 			               	print "Legacy updateSchedule message post failure";

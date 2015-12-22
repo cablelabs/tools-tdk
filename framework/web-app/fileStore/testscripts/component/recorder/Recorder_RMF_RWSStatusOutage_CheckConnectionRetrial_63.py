@@ -63,14 +63,12 @@ if "SUCCESS" in recLoadStatus.upper():
         #Set the module loading status
         recObj.setLoadModuleStatus(recLoadStatus);
 
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+               print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+	       print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-
-        print "Sleeping to wait for the recoder to be up"
-
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -87,15 +85,16 @@ if "SUCCESS" in recLoadStatus.upper():
         print "RWSStatus server status: ",status
         if "FALSE" in status.upper():
                 print "Waiting to get connection retrial attempts from recorder"
-                sleep(550)
+                #sleep(550)
+		sleep(240)
 
                 #Checkpoint-1: Get the time between each re-trials
                 print "Checking status of disabled servers"
                 rwsstatus = recorderlib.callServerHandlerWithType('retrieveDisabledStatus','RWSStatus',ip)
                 print "RWSStatus Status: ",rwsstatus
                 #Check if status is not empty
-                if ( [] == rwsstatus ):
-                        print "ERROR: No status available for RWSStatus"
+                if ( "[]" == rwsstatus ):
+                        print "ERROR: No connection retry from recorder"
                         tdkTestObj.setResultStatus("FAILURE")
                 else:
                         intervalPrev = 0

@@ -56,7 +56,7 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_HotP4Rec_OnDiskFull_Check_AfterFr
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
-recObj.setLoadModuleStatus(recLoadStatus);
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 
 #Pre-req: hdd should be full with P4 recodings. There should be at least one P4 recording of 1 min duration
 
@@ -88,7 +88,6 @@ if "SUCCESS" in recLoadStatus.upper():
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 print "Retrieve Status Details: ",recResponse;
 		status = recorderlib.getStatusMessage(recResponse)
-		print "get reclist status: ",status
              	if ("NOSTATUS" != status):
                         #Find one recording of duration 1 min (max 2 min)
                         recordings = recorderlib.getRecordings(recResponse)

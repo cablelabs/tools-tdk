@@ -132,8 +132,8 @@ if "SUCCESS" in recLoadStatus.upper():
                     print "Sending getRecordings to get the recording list"
                     recorderlib.callServerHandler('clearStatus',ip)
                     recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-                    print "Wait for 3 min to get response from recorder"
-                    sleep(180)
+                    print "Wait for 60 seconds to get response from recorder"
+                    sleep(60)
                     actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                     print "Recording List: %s" %actResponse;
                     msg = recorderlib.getStatusMessage(actResponse);
@@ -151,7 +151,6 @@ if "SUCCESS" in recLoadStatus.upper():
                             key = 'error'
                             value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                             print "key: ",key," value: ",value
-                            print "Successfully retrieved the recording list from recorder";
                             if "MULTIPLE_SEGMENTS" not in value.upper():
                                 tdkTestObj1.setResultStatus("SUCCESS");
                                 print "Multiple segments error not in recording status";
@@ -162,8 +161,8 @@ if "SUCCESS" in recLoadStatus.upper():
                                 tdkTestObj1.setResultStatus("FAILURE");
                                 print "Received multiple segments error";
 	                else:
-                            tdkTestObj1.setResultStatus("FAILURE");
-                            print "Failed to get the recording data";
+                            tdkTestObj1.setResultStatus("SUCCESS");
+                            print "No recordings found with error MULTIPLE_SEGMENTS";
                     else:
                         tdkTestObj1.setResultStatus("FAILURE");
                         print "Failed to retrieve the recording list from recorder";

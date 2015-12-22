@@ -163,8 +163,8 @@ if "SUCCESS" in recLoadStatus.upper():
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
-        print "Wait 3 mins to get resonse from the recorder"
-	sleep(300);
+        print "Wait 60 seconds to get resonse from the recorder"
+	sleep(60);
         #check for acknowledgement from recorder
         tdkTestObj.executeTestCase(expectedResult);
         actResponse = recorderlib.callServerHandler('retrieveStatus',ip);

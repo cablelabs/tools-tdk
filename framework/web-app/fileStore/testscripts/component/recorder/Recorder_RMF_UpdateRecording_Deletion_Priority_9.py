@@ -158,9 +158,9 @@ if "SUCCESS" in recLoadStatus.upper():
                             print "Sending getRecordings to get the recording list"
                             recorderlib.callServerHandler('clearStatus',ip)
                             recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
-                            print "Wait for 3 min to get response from recorder"
-                            sleep(180)
                             actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                            print "Wait for 1 min to get response from the recorder";
+                            sleep(60);
                             print "Recording List: %s" %actResponse;
                             recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                             print recordingData

@@ -23,9 +23,9 @@
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
+  <remarks>Recorder does not send acknowledgement back to RWS now as per BEI-106</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>false</skip>
+  <skip>true</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -129,8 +129,8 @@ if "SUCCESS" in recLoadStatus.upper():
                     print "Clear Status Details: %s"%response;
 
                     #Frame json message for update recording
-                    jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P2\"}]}}";
-
+                    jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",generationId\":\"0\",dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P2\"}]}}";
+                    #jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P2\"}]}}";
                     expResponse = "updateRecordings";
                     tdkTestObj.executeTestCase(expectedResult);
                     actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgUpdateRecording,ip);
@@ -161,8 +161,8 @@ if "SUCCESS" in recLoadStatus.upper():
                             tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
                             tdkTestObj1.executeTestCase(expectedResult);
 			    tdkTestObj1.setResultStatus("SUCCESS");
-                            print "Wait for 3mins to get response from the recorder"
-                            sleep(180);
+                            print "Wait for 60 seconds to get response from the recorder"
+                            sleep(60);
                             #Check for acknowledgement from recorder
                             tdkTestObj1.executeTestCase(expectedResult);
                             actResponse = recorderlib.callServerHandler('retrieveStatus',ip);

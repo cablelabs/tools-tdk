@@ -85,7 +85,7 @@ if "SUCCESS" in recLoadStatus.upper():
         requestID = str(randint(10,500));
         recordingID = str(randint(10000, 500000));
 	genIdInput = "FSL60";
-	duration = "30000";
+	duration = "60000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
         startTime = "0";
@@ -106,7 +106,7 @@ if "SUCCESS" in recLoadStatus.upper():
 		sleep(10);
 		retry=0
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                while (( ('[]' in actResponse) or ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
+                while (( ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
 			sleep(10);
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 			retry += 1
@@ -115,7 +115,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 	tdkTestObj.setResultStatus("SUCCESS");
 	                print "Successfully retrieved acknowledgement from recorder";
 	                print "Wait for the recording to be completed"
-		   	sleep(40);
+		   	sleep(60);
                     	# Reboot the STB
 		    	print "Rebooting the STB to get the recording list from full sync"
 		    	recObj.initiateReboot();
@@ -138,7 +138,7 @@ if "SUCCESS" in recLoadStatus.upper():
         	                #Check for acknowledgement from recorder
                 	        tdkTestObj1.executeTestCase(expectedResult);
                         	actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-				print actResponse;
+				print "Recording list" , actResponse;
 				msg = recorderlib.getStatusMessage(actResponse);
 				print "Get Status Message Details: %s"%msg;
                         	if "" == msg:

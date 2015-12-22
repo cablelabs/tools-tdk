@@ -91,6 +91,24 @@ if "SUCCESS" in loadmodulestatus.upper():
 		else:
 			tdkTestObj.setResultStatus("FAILURE");
 			
+                #calling Device Settings - Audio Release.
+                tdkTestObj = obj.createTestStep('DS_AOPCONFIG_release');
+                expectedresult="SUCCESS"
+                print " "
+                tdkTestObj.executeTestCase(expectedresult);
+                actualresult = tdkTestObj.getResult();
+                details = tdkTestObj.getResultDetails()
+                print "[DS_AOPCONFIG_release RESULT] : %s" %actualresult;
+                print "[DS_AOPCONFIG_release DETAILS] : %s" %details;
+
+                #Check for SUCCESS/FAILURE return value of DS_AOPCONFIG_release
+                if expectedresult in actualresult:
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        print "SUCCESS: Get DS_AOPCONFIG_release";
+                else:
+                        tdkTestObj.setResultStatus("FAILURE");
+                        print "FAILURE: Get DS_AOPCONFIG_release"
+
                 #calling Device Settings - Audio Load.
                 tdkTestObj = obj.createTestStep('DS_AOPCONFIG_load');
                 expectedresult="SUCCESS"

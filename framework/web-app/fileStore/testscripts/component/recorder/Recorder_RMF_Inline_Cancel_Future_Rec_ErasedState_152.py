@@ -149,7 +149,12 @@ if "SUCCESS" in recLoadStatus.upper():
                             print "Successfully retrieved acknowledgement from recorder";
 	                    #Check for acknowledgement from recorder
                             tdkTestObj.executeTestCase(expectedResult);
-                            actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                            print "Sending getRecordings to get the recording list"
+                            recorderlib.callServerHandler('clearStatus',ip)
+                            recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                            print "Wait for 60 seconds to get response from recorder"
+                            sleep(60)
+                            actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 			    recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
 	                    print recordingData
                             if 'NOTFOUND' not in recordingData:

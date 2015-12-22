@@ -107,7 +107,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
 		loop = 0;
-		while loop < 5:
+                while ( ('acknow' not in actResponse) and (loop < 5 ) ):
 	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);

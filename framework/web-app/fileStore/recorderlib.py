@@ -280,12 +280,50 @@ def getGenerationId(jsonData):
 
         #Get dictionary content inside list status
         for my_item in jsonList:
-                return my_item['generationId']
+		if 'generationId' in my_item:
+                	return my_item['generationId']
 
-        print "ERROR: StatusMessage not found!"
+        print "ERROR: generationId not found!"
         return ret
 
 ########## End of Function getGenerationId ##########
+
+def readGenerationId(gwIp):
+
+        ret = "NOID"
+
+        #Get recordings list
+        callServerHandler('clearStatus',gwIp)
+        callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',gwIp)
+        print "Wait for 60sec to get the recording list"
+        sleep(60)
+        recResponse = callServerHandler('retrieveStatus',gwIp)
+	print "Rec List: ",recResponse
+
+        try:
+                jsonList = json.loads(recResponse, strict=False)
+        except ValueError, e:
+                print e
+                return ret
+        except:
+                print "Unexpected error:", sys.exc_info()[0]
+                return ret
+
+        #Check if response is not empty
+        if jsonList == []:
+                print "ERROR: No response available"
+                return ret
+
+        #Get dictionary content inside list status
+        for my_item in jsonList:
+                if 'generationId' in my_item:
+			print "generationId = ",my_item['generationId']
+                        return my_item['generationId']
+
+        print "ERROR: generationId not found in response!"
+        return ret
+
+########## End of Function readGenerationId ##########
 
 def getStatusMessage(jsonData):
         ret = "NOSTATUS"
@@ -302,10 +340,6 @@ def getStatusMessage(jsonData):
         if jsonList == []:
                 print "ERROR: No status available"
                 return ret
-
-        #Get dictionary content inside list status
-        #for my_item in jsonList:
-        #        return my_item['statusMessage']
 
         #Get statusMessage from status list
         for my_item in jsonList:
@@ -464,14 +498,19 @@ def getRecordingFromRecId(jsonData,recordingId):
                                         #print "Found Recording with recordingId ",recordingId
                                         return (recordings['recordingStatus']['recordings'][i])
 
-        print "RecordingID not found in status message!"
+        print "RecordingID ", recordingId, " not found in status message!"
         return ret
 
 ########## End of Function getRecordingFromRecId ##########
 
 def getValueFromKeyInRecording(recording,key):
         value = "BADVALUE"
+
         try:
+                if "NOTFOUND" == recording:
+                        print "No recording data found"
+                        return value
+
                 if key in ['volume','start','duration','playbackLocator']:
 			#Extract dictionary from content list value
 			content = {}

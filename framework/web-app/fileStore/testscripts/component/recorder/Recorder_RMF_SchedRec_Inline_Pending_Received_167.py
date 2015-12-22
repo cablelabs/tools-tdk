@@ -78,7 +78,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
         sleep(10);
         response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
+        #print "Retrieve Status Details: %s"%response;
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -137,12 +137,19 @@ if "SUCCESS" in loadmodulestatus.upper():
 
                                 while (endtime > 0):
                                         sleep(10);
-                                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                                        print "Sending getRecordings to get the recording list"
+                                        recorderlib.callServerHandler('clearStatus',ip)
+                                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                                        print "Wait for 60 seconds to get response from recorder"
+                                        sleep(60)
+                                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                                        print recResponse
 
                                         if ('acknowledgement' in recResponse):
                                                 ackflag = 1;
 
                                         recordingData = recorderlib.getRecordingFromRecId(recResponse,recordingID2);
+                                        print recordingData
                                         if ('NOTFOUND' not in recordingData):
                                                 key = 'status'
                                                 value = recorderlib.getValueFromKeyInRecording(recordingData,key)

@@ -128,11 +128,13 @@ if "SUCCESS" in recLoadStatus.upper():
         	recObj.unloadModule("Recorder");
 		exit();
         print "Successfully retrieved acknowledgement from recorder";
+	print "Wait for 120 seconds for the recording to be completed"
+        sleep(120)
 	print "Sending getRecordings to get the recording list"
 	recorderlib.callServerHandler('clearStatus',ip)
 	recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-	print "Wait for 3 min to get response from recorder"
-	sleep(180)
+	print "Wait for 60 seconds to get response from recorder"
+	sleep(60)
 	actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 	print "Recording List: %s" %actResponse;
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -247,11 +249,12 @@ if "SUCCESS" in recLoadStatus.upper():
         	recObj.unloadModule("Recorder");
 		exit();
         print "Successfully retrieved acknowledgement from recorder";
+        print "Wait for 120 seconds for the recording to be completed"
 	print "Sending getRecordings to get the recording list"
 	recorderlib.callServerHandler('clearStatus',ip)
 	recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-	print "Wait for 3 min to get response from recorder"
-	sleep(180)
+	print "Wait for 60 seconds to get response from recorder"
+	sleep(60)
 	actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 	print "Recording List: %s" %actResponse;
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');

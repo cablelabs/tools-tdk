@@ -43,6 +43,7 @@ Test Type: Positive</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+from trm import getMaxTuner;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("trm","2.0");
@@ -62,23 +63,32 @@ if "SUCCESS" in result.upper():
     #Set the module loading status
     obj.setLoadModuleStatus("SUCCESS");
 
+    # Fetch max tuners supported
+    maxTuner = getMaxTuner(obj,'SUCCESS')
+    if ( 0 == maxTuner ):
+        print "Exiting without executing the script"
+        obj.unloadModule("trm");
+        exit()
+
     #Primitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
 
     duration = 10000
     startTime = 0
     hot = 0
+    deviceNo1 = 0
 
+    print "Start " , maxTuner-1, " recordings from device 1 on different channels"
     # Start recording channel 1-4 from device 1
-    for deviceNo in range(0,4):
+    for channelNo in range(0,maxTuner-1):
         # Frame different request URL for each client box
-        streamId = '0'+str(deviceNo+1)
+        streamId = '0'+str(channelNo+1)
         locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
         recordingId = 'RecordIdCh'+streamId
 
-        print "DeviceNo:%d Locator:%s hot:%d recordingId:%s duration:%d startTime:%d"%(0,locator,hot,recordingId,duration,startTime)
+        print "DeviceNo:%d Locator:%s hot:%d recordingId:%s duration:%d startTime:%d"%(deviceNo1,locator,hot,recordingId,duration,startTime)
 
-        tdkTestObj.addParameter("deviceNo",0);
+        tdkTestObj.addParameter("deviceNo",deviceNo1);
         tdkTestObj.addParameter("duration",duration);
         tdkTestObj.addParameter("locator",locator);
         tdkTestObj.addParameter("startTime", startTime);
@@ -105,14 +115,14 @@ if "SUCCESS" in result.upper():
     # Start recording channel 1-4 from device 1 end
 
     # Start live tuning channel5 from device 1
-    print "Start device 1 tuning to channel 5"
+    print "Start live tuning from device 1 on another new channel"
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
 
-    deviceNo = 0
-    locator = tdkTestObj.getStreamDetails('05').getOCAPID()
-    print "DeviceNo:%d Locator:%s duration:%d startTime:%d"%(deviceNo,locator,duration,startTime)
+    streamId = '0'+str(channelNo+2)
+    locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+    print "DeviceNo:%d Locator:%s duration:%d startTime:%d"%(deviceNo1,locator,duration,startTime)
 
-    tdkTestObj.addParameter("deviceNo",deviceNo);
+    tdkTestObj.addParameter("deviceNo",deviceNo1);
     tdkTestObj.addParameter("duration",duration);
     tdkTestObj.addParameter("locator",locator);
     tdkTestObj.addParameter("startTime", startTime);
@@ -133,15 +143,18 @@ if "SUCCESS" in result.upper():
         tdkTestObj.setResultStatus("FAILURE");
     # Start device 1 live tuning channel5 End
 
+    # All tuners are busy now
+
     # Start live tuning channel 6 from device 2
-    print "Start device 2 tuning to channel 6"
+    print "Start live tuning from device 2 on another new channel"
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
 
-    deviceNo = 1
-    locator = tdkTestObj.getStreamDetails('06').getOCAPID()
-    print "DeviceNo:%d Locator:%s duration:%d startTime:%d"%(deviceNo,locator,duration,startTime)
+    deviceNo2 = 1
+    streamId = '0'+str(channelNo+3)
+    locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+    print "DeviceNo:%d Locator:%s duration:%d startTime:%d"%(deviceNo2,locator,duration,startTime)
 
-    tdkTestObj.addParameter("deviceNo",deviceNo);
+    tdkTestObj.addParameter("deviceNo",deviceNo2);
     tdkTestObj.addParameter("duration",duration);
     tdkTestObj.addParameter("locator",locator);
     tdkTestObj.addParameter("startTime", startTime);

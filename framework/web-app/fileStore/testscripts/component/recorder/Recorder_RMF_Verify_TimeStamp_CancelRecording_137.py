@@ -122,6 +122,7 @@ if "SUCCESS" in recLoadStatus.upper():
                     #Frame json message for update recording
                     jsonMsgCancelRecording = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"cancelRecordings\":[\""+recordingID+"\"]}}";
 
+
                     expResponse = "updateSchedule";
                     tdkTestObj.executeTestCase(expectedResult);
                     actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgCancelRecording,ip);

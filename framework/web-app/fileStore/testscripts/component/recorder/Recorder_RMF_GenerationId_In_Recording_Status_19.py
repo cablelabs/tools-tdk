@@ -124,20 +124,27 @@ if "SUCCESS" in recLoadStatus.upper():
 
                 retry = 0;
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                while (('[]' == actResponse) and ('ERROR' not in actResponse) and (retry < 15)):
+                while ( ('ERROR' not in actResponse) and (retry < 15)):
                         sleep(10);
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                         retry += 1
                 print "Retrieve Status Details: %s"%actResponse;
 
-		if ( ('[]' == actResponse) or ('ERROR' in actResponse)):
+		if ( ('ERROR' in actResponse)):
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Received Empty/Error status";
                 else:
-                    genOut = recorderlib.getGenerationId(actResponse)
+                    genOut = recorderlib.readGenerationId(ip)
 		    if genOut == genIdInput2:
                         tdkTestObj.setResultStatus("SUCCESS");
 			print "GenerationId retrieved (%s) match with the expected (%s)"%(genOut,genIdInput2);
+                        print "Sending getRecordings to get the recording list"
+                        recorderlib.callServerHandler('clearStatus',ip)
+                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                        print "Wait for 3 min to get response from recorder"
+                        sleep(60)
+                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                        print "Recording List: %s" %actResponse;
 			recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
 			print "Recording data details: %s"%recordingData;
 			if 'NOTFOUND' not in recordingData:
