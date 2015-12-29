@@ -158,6 +158,15 @@ export TDK_BIN_PATH=$TDK_PATH/build/bin
 
 export LIBDIR=$TDK_LIB_PATH
 export TARGETDIR=$TDK_BIN_PATH
+
+ls ${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh
+if (($? == 0)); then
+    echo "Mediaplayer_stub present"
+    source ${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh
+else
+    echo "pri file not present"
+fi
+
 TDK_PATH=$TDK_PATH/platform/
 # functional modules
 
@@ -184,6 +193,12 @@ function build()
        exit $retCode
     fi
     touch $RDK_PROJECT_ROOT_PATH/tdk_image
+
+    ls ${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh
+    if (($? == 0)); then
+        rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/cpc/Mediaplayer_stub/libmediaplayerstub.so* ${TDK_LIB_PATH}
+    fi
+
 }
 
 function rebuild()
