@@ -39,12 +39,16 @@ class ScriptGroupController {
 	
 	def primitiveService
 	
+	def excelExportService
+	
     /**
      * Injecting scriptgroupService
      */
 	def scriptgroupService
+	public static final String EXPORT_EXCEL_FORMAT 			= "excel"
+	public static final String EXPORT_EXCEL_EXTENSION 		= "xls"
+
 	
-    
 	def index() {
 		redirect(action: "list", params: params)
 	}
@@ -325,8 +329,7 @@ class ScriptGroupController {
 		}
 			
 
-		if (!scriptGroupInstance.save(flush: true)) {
-			
+		if (!scriptGroupInstance.save(flush: true)) {			
 			flash.message = "TestSuite name is already in use. Please use a different name."
 			errorList.add("TestSuite name is already in use. Please use a different name.");
 			render errorList as JSON
@@ -447,7 +450,7 @@ class ScriptGroupController {
 		}
 		list4.sort{a,b -> a?.scriptName <=> b?.scriptName}
 		
-		[scripts:list4,scriptNameList:scriptGroupInstance.scriptList,scriptGroupInstance: scriptGroupInstance]
+		[scripts:list4,scriptNameList:scriptGroupInstance.scriptList,scriptGroupInstance: scriptGroupInstance , value : params.value]
 	}
 
     /**
@@ -2151,7 +2154,65 @@ class ScriptGroupController {
 		redirect(action:"list")
 		return
 	}
+//------------------------------------------------------------------------------------------------------	
+	/**
+	 * The function used to arrange the  script group script list according to module wise.
+	 * @return
+	 */
+	def moduleWiseScriptList(){
+		def scriptGroup  = ScriptGroup.findByName(params.name)
+		redirect(action:"edit" , params:[name:scriptGroup])
+	}
+	/**
+	 * The function used to arrange the script group script list according to random wise.
+	 * @return
+	 */
+	def randomScriptList(){
+		def scriptGroup = ScriptGroup?.findByName(params?.name)
+		redirect(action:"edit", params: [name :scriptGroup])
+	}
 	
-	
+	/**
+	 * The function used to download the consolidated script list according to module wise.
+	 * It display the report like a work book  contains
+	 * Summary page  - Include the  number of script count in each module and total number of scripts.
+	 * Script list shows corresponding to the module in each page.
+	 * @return
+	 */
+	 
+	def downloadScriptList() {
+		try{
+			def requestGetRealPath = request.getRealPath("/")
+			def scriptMap = scriptService.getScriptsMap(requestGetRealPath)
+			def detailDataMap = [:]
+			Map coverPageMap = [:]
+			Map detailsMap = [:]
+			List scriptNameList = []
+			Map moduleNameMap = [:]
+			//For summary page
+			scriptMap.each{ moduleName, scripts ->
+				detailsMap.put(moduleName, scripts.size())
+			}
+			coverPageMap.put("Details", detailsMap)
+			detailDataMap.put("coverPage", coverPageMap)
+			// For script list display according to the module wise
+			scriptMap.each{moduleName,scriptList ->
+				scriptNameList = []
+				scriptList.each{ scriptName ->
+					scriptNameList.add(scriptName)
+				}
+				detailDataMap.put(moduleName, scriptNameList)
+			}
+			params.format = EXPORT_EXCEL_FORMAT
+			params.extension = EXPORT_EXCEL_EXTENSION
+			response.contentType = grailsApplication.config.grails.mime.types[params.format]
+			def fileName = "Consolidated_Script_Details"
+			response.setHeader("Content-disposition", "attachment; filename="+fileName +".${params.extension}")
+			excelExportService.exportScript(params.format,response.outputStream,detailDataMap)
+			log.info "Completed excel export............. "
+		}catch(Exception e ){
+			println "ERROR"+ e.getMessage()
+		}
+	}
 	
 }

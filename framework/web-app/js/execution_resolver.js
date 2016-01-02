@@ -662,9 +662,32 @@ function clickCheckbox(me) {
 		flagMark = false
 	}
 }
+/**
+ * Function used to check the current device status is FREE  and available or not
+ * @param deviceStatus
+ */
 
-
-
+function deviceStatusCheck(device,deviceStatus){
+	if((deviceStatus != "FREE" && deviceStatus !=  'null')){
+		alert("Device is currently not available for execution");
+	}else if(device == 'null' ){ 
+		 alert("Device name is not configured")
+	 }
+	
+}
+/**
+ * Function check failed scripts available in execution
+ * @param executionInstance
+ */
+function failureScriptCheck(executionName){
+	$.get('failureScriptCheck', {
+		executionName : executionName,
+	}, function(data) {
+		if(data == 'false'){
+			alert(" No Failed scripts availble for rerun execution");
+		}		
+	});
+}
 /**
  * Function to mark individual execution results in execution page.
  * 

@@ -48,4 +48,16 @@ class ExcelExportService {
 
 		exporter.exportData(outputStream, dataMap)
 	}
+	/**
+  	 *  Function used to export the  
+	 * @param type
+	 * @param outputStream
+	 * @param dataMap
+	 * @throws ExportingException
+	 */
+	
+	public void exportScript(String type, OutputStream outputStream, Map dataMap)throws ExportingException{
+		ExcelExporter exporter = new ExcelExporter()
+		exporter.exportScriptData(outputStream, dataMap)	
+	}
 }

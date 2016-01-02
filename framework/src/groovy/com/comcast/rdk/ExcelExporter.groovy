@@ -163,5 +163,104 @@ class ExcelExporter extends AbstractExporter {
 			throw new ExportingException("Error during export", e)
 		}
 	}
+	@Override
+	protected void exportScriptData(OutputStream outputStream)
+	throws ExportingException {
+		// TODO Auto-generated method stub
 
+	}
+	/**
+	 * The function generate the  summary and module wise script list page.   
+	 * @param outputStream
+	 * @param dataMap
+	 * @return
+	 */
+	
+	def exportScriptData(OutputStream outputStream, Map dataMap){	
+		try{
+			def builder = new ExcelBuilder()
+			boolean isHeaderEnabled = true
+			if(getParameters().containsKey("header.enabled")){
+				isHeaderEnabled = getParameters().get("header.enabled")
+			}
+			def sheetsList = dataMap.keySet()
+			builder {
+				workbook(outputStream: outputStream){
+					sheetsList.each{   sheetName->
+						//Summary page information 
+						if(sheetName.equals("coverPage")){
+							Map coverPageMap = dataMap.get(sheetName)
+							List columnWidthList=[0.05,0.05,0.05,0.05,0.05,0.4,0.4]
+							sheet(name: "Summary" ?: "Export", widths: columnWidthList){
+								int rowIndex = 0
+								//Default format
+								format(name: "header"){
+									font(name: "arial", bold: true)
+								}
+								format(name: "titlecell"){
+									font(name: "arial", bold: true)
+								}
+								format(name: "cell"){
+									font(name: "arial", bold: false)
+								}
+								Set keySet = coverPageMap.keySet()
+								Map resultMap = coverPageMap.get("Details")
+								Set kSet = resultMap.keySet()
+								// Headings
+								cell(row: rowIndex, column: 5, value: "Module Name", format: "header")
+								cell(row: rowIndex, column: 5+1, value: "Script Count", format: "header")
+								rowIndex = 1
+								int totalScriptCount = 0 ;
+								// Content 								
+								kSet.eachWithIndex { field, index ->
+									String label = getLabel(field)
+									cell(row: rowIndex, column: 5, value: label, format: "cell")
+									String value = resultMap.get(field)
+									totalScriptCount += Integer.parseInt(value)
+									cell(row: rowIndex, column: 5+1, value: value, format: "cell")
+									rowIndex ++
+								}	
+								// shows the total number of scripts count 							
+								rowIndex++
+								cell(row: rowIndex, column: 5, value: "Total Script Count", format: "header")
+								cell(row: rowIndex, column: 5+1, value: totalScriptCount?.toString() , format: "header")
+																
+							}
+						}else{  // Diffrent sheets
+							int rowIndex = 0
+							if(!sheetName.equals("CoverPage")){
+								List columnWidthList=[0.2,0.6]
+								//module wise script list iteration 
+								sheet(name: sheetName ?: "Export", widths:columnWidthList ){
+									format(name: "header"){
+										font(name: "arial", bold: true)
+									}
+									format(name: "cell"){
+										font(name: "arial", bold: false)
+									}
+									List data = dataMap?.get(sheetName)
+									// shows script list including sl no and scipt name
+									cell(row: rowIndex, column: 0, value: "Sl No", format: "header")
+									cell(row: rowIndex, column: 0+1, value: "Script Name", format: "header")
+									rowIndex = 1	
+									int scriptCount = 1							
+									data?.each { script ->
+										cell(row: rowIndex, column: 0,  value:scriptCount?.toString(), format: "cell")
+										cell(row: rowIndex, column: 0+1, value: script, format: "cell")
+										scriptCount++
+										rowIndex++
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		builder.write()		
+		}catch(Exception e){
+			println "ERROR"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
 }
+

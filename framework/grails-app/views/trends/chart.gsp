@@ -55,13 +55,12 @@
 		$("#next").hide();
 		$("#home").hide();
 	});
-	
 </script>
 </head>
 <body>
 	<div id="chart1"></div>
-	<div>
-		<h1>Result Analysis</h1>
+	<div>&emsp;
+		<h1>&emsp;&emsp;&emsp;Result Analysis</h1>
 		<g:if test="${flash.message}">
 			<div class="message" role="status">
 				${flash.message}
@@ -77,7 +76,7 @@
 		<br>
 		<div>
 			<g:hiddenField name="startIndex" value="${startIndex}" />
-			<g:hiddenField name="endIndex" value="${endIndex}" />
+			<g:hiddenField name="endIndex" value="${endIndex}" />&emsp;&emsp;&emsp;&emsp;
 			<input onclick="showExecutionBased();" type="radio"
 				name="chartOption" value="ExecutionBased" checked="checked" />Compare
 			Results by Execution Name &emsp;<input onclick="showDeviceBased();"
@@ -89,7 +88,7 @@
 		<div id="executionbased">
 			<table class="noClass" style="border: 1; border-color: black;">
 				<tr>
-					<td style="vertical-align: top;">Select Execution Names</td>
+					<td style="vertical-align: top;">&emsp;&emsp;&emsp;&emsp;Select Execution Names</td>
 					<td  id="executionNameList"><g:select id="executionId" multiple="true"
 							style="height:200px;width:400px" name="execution"
 							from="${executionList}" optionKey="id" value=""

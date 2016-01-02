@@ -489,7 +489,7 @@ class ExecutescriptService {
 	}
 
 
-	/**
+/**
 	 * Re run the tests if the status of script execution is not failure
 	 * @param realPath
 	 * @param filePath
@@ -498,17 +498,71 @@ class ExecutescriptService {
 	 */
 	def reRunOnFailure(final String realPath, final String filePath, final String execName, final String uniqueExecutionName, final String appUrl){
 		try {
-				def aborted=false
+		def newExecName
+		def aborted=false
 		Execution executionInstance = Execution.findByName(execName)
+		int executionCount=0
+		int execCnt = 0
+		int execCount =0
+		try{
+			def executionList = Execution?.findAll()
+			if(execName?.toString()?.contains("_RERUN")){
+				def execNameSplitList = execName.toString().tokenize("_")
+				if(execNameSplitList[2]){
+					executionCount =Integer.parseInt(execNameSplitList[2])
+					executionCount++
+					newExecName =  execNameSplitList[0]+"_RERUN_"+executionCount
+					//if(Execution?.findByName(newExecName?.toString())){
+					if(executionList?.toString().contains(newExecName?.toString())){
+						executionList?.each { exName ->
+							if(exName?.toString().contains(execNameSplitList[0]?.toString())){
+								execCount++
+							}
+						}
+						newExecName = execNameSplitList[0]+"_RERUN_"+(execCount)
+					}else{
+						newExecName =newExecName
+					}
+				}else{				
+				newExecName  = execName
+				//if(Execution?.findByName(execName?.toString())){
+				if(executionList?.toString().contains(execName?.toString())){
+					def lastExecname  = executionList.find{ it  ->
+						it?.toString().contains(execName?.toString())
+					}
+					
+					def newExecNameList = lastExecname.toString().tokenize("_")
+					execCnt = Integer.parseInt(newExecNameList[2])
+					execCnt++
+					newExecName = execName+"_"+execCnt
+				}				
+				}
+			}else{ 
+				newExecName = execName +"_RERUN_"+1
+				if( Execution.findByName(newExecName?.toString() )){
+					def lastExecname  = executionList.find{ it  ->
+						it?.toString().contains(execName?.toString())
+					}
+					def newExecNameList = lastExecname.toString().tokenize("_")
+					execCnt = Integer.parseInt(newExecNameList[2])
+					execCnt++
+					newExecName = execName+"_RERUN_"+(execCnt)
+				}else{
+				newExecName= newExecName
+				}		
+			}	
+		} catch(Exception e){
+			println " ERROR"+e.getMessage()
+			e.printStackTrace()			
+		}	
 		def exeId = executionInstance?.id
 		def resultArray = Execution.executeQuery("select a.result from Execution a where a.name = :exName",[exName: execName])
 		def result = resultArray[0]
-		def newExecName
+		
 		Execution rerunExecutionInstance
 		def executionSaveStatus = true
 		if(result != SUCCESS_STATUS){
-			def scriptName
-			
+			def scriptName			
 			def scriptGroupInstance = ScriptGroup.findByName(executionInstance?.scriptGroup)
 			/**
 			 * Get all devices for execution
@@ -518,13 +572,19 @@ class ExecutescriptService {
 			executionDeviceList.each{ execDeviceInstance ->
 				if(execDeviceInstance.status != SUCCESS_STATUS){
 					Device deviceInstance = Device.findByStbName(execDeviceInstance?.device)
-					if(cnt == 0){
-						newExecName = execName + RERUN
+					def executionResultList
+					ExecutionResult.withTransaction {
+						executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
+					}
+					def resultSize = executionResultList.size()
+					if(cnt == 0){							
+						 			
+								
 						scriptName = executionInstance?.script
 						def deviceName = deviceInstance?.stbName
 						if(executionDeviceList.size() > 1){
 							deviceName = MULTIPLE
-						}
+						}									
 						executionSaveStatus = executionService.saveExecutionDetails(newExecName, scriptName, deviceName, scriptGroupInstance,appUrl,"false","false","false","false")
 						cnt++
 						Execution.withTransaction{
@@ -542,19 +602,12 @@ class ExecutescriptService {
 							executionDevice.status = UNDEFINED_STATUS
 							executionDevice.save(flush:true)
 						}
-						executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbIp, deviceInstance?.logTransferPort)
-						def executionResultList
-						ExecutionResult.withTransaction {
-							executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
-						}
+						executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbIp, deviceInstance?.logTransferPort)				
 						def scriptInstance
 						def htmlData
-
-						def resultSize = executionResultList.size()
+						
 						int counter = 0
-						def isMultiple = TRUE
-						
-						
+						def isMultiple = TRUE						
 						// adding log transfer to server for reruns 
 						Properties props = new Properties()
 						try {
@@ -579,11 +632,11 @@ class ExecutescriptService {
 						} catch (Exception e) {
 							e.printStackTrace()
 						}
-						executionResultList.each{ executionResult ->
-							if(!executionResult.status.equals(SKIPPED)){
+						executionResultList.each{ executionResult ->												
+								if(!executionResult.status.equals(SKIPPED)){
 //								scriptInstance = Script.findByName(executionResult?.script)
 								def scriptFile = ScriptFile.findByScriptName(executionResult?.script)
-								scriptInstance = scriptService.getScript(realPath,scriptFile?.moduleName,scriptFile?.scriptName)
+								scriptInstance = scriptService.getScript(realPath,scriptFile?.moduleName,scriptFile?.scriptName)								
 								counter ++
 								if(counter == resultSize){
 									isMultiple = FALSE
@@ -592,8 +645,7 @@ class ExecutescriptService {
 								if(executionService.validateScriptBoxTypes(scriptInstance,deviceInstance)){
 									aborted = executionService.abortList.contains(exeId?.toString())
 									if(!aborted){
-										htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null,"false")
-										
+										htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null,"false")										
 									}
 								}
 								}
@@ -634,12 +686,13 @@ class ExecutescriptService {
 				executionService.saveExecutionStatus(aborted, executionInstance1?.id)
 			}
 		}
+		//}
+		
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
+			
 	}
-
-
 	/**
 	 * Called from REST API : To save the result details
 	 * @param executionId

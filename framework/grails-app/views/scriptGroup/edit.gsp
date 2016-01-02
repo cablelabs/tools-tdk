@@ -229,8 +229,23 @@
 				 <br>
 				 ${scriptGroupInstance} &emsp;&emsp;&emsp; &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;  Scripts Count : ${scriptGroupInstance.scriptList.size()} 
 					<ul id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 380px; overflow: auto;">
-						<g:if test="${scriptGroupInstance}">
+						<g:if test="${scriptGroupInstance}"><%--
 						<g:each in='${scriptGroupInstance.scriptList}' var="script">
+						--%>
+							<%--  New Modification for random and module wise sort--%>
+							
+						<% 
+							def scriptList =scriptGroupInstance?.scriptList
+							if( value != null && value?.toString().equals("randomlist")){
+								scriptList?.sort{  a,b -> a.id <=> b.id }	
+							}else if(value != null  && value?.toString()?.equals("modulescriptlist")){
+								scriptList?.sort{  a,b -> a.moduleName <=> b.moduleName }	
+							}	
+							else {
+								scriptList = scriptList 
+							}																
+						%>
+						<g:each in='${scriptList}' var="script">	
 						<g:if test="${script}">
 						<% 
 							String idSgScript = script?.id;
@@ -247,13 +262,23 @@
 					</ul>
 				</td>
 				<td style="width: 8%">
-					<br>
+				
+			<%-- The new change module wise or random wise --%>
+				<br> <br> <g:submitToRemote class="buttons" value="Module Wise Sort"
+						before="moduleWiseSort('${scriptGroupInstance}')"
+						style=" min-width:150px;" title="Module wise script list sort" />
+					<br> <br> <g:submitToRemote class="buttons"
+						value="     Random Sort     " controller="scriptGroup"
+						style="min-width:150px;"
+						before="randomSort('${scriptGroupInstance}')"
+						title="Random wise script list sort" onclick="random();" /> <br> <br>
+			
+					
 					<input type="image" src= "../images/reorder_up.png" value="Move Up" onclick="moveUp();return false;"  title  = " Move Up "> <br><br>
 					<input type="image" src="../images/reorder_down.png" value="Move Down" onclick="moveDown();return false;"  title  = " Move Down ">
 				</td>
 			</tr>
 		</table>
-		
 	<%--<fieldset class="buttons">--%>
 	<div style="width : 90%; text-align: center;">
 	<span class="buttons"><input type="button" class="save" value="${message(code: 'default.button.update.label', default: 'Update')}" onclick="updateSG()"></span>

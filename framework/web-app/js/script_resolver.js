@@ -25,11 +25,12 @@ $(document).ready(function() {
 			'add_script' : function(node) {
 				hideSearchoptions();
 				createScriptForm();
-			}
+			},
+			'download_script' : function(node){
+				downloadScriptList();	
+			}	
 		}
 	});
-	
-	
 	$('.file').contextMenu('script_childs_menu', {
 		bindings : {
 			'edit_script' : function(node) {					
@@ -85,19 +86,37 @@ $(document).ready(function() {
 	
 });
 
+function downloadScriptList(){	
+	var value  = confirm("Do you want to download  consolidated scripts details ?");
+	if(value == true){
+		$.get('downloadScriptList',{},function(data){
+			window.location = "downloadScriptList";
+		});
+	}
+}
+/**
+ * function will shows the upload option 
+ */
 function showUploadOption(){
 	$("#responseDiv123").hide();
-	$("#up_load").show();		
+	$("#up_load").show();
+	$("#list-scriptDetails").hide();
 }
+/**
+ * Function will hide the upload option.
+ */
 
 function hideUploadOption(){
 	$("#responseDiv123").show();
-	$("#up_load").hide();		
+	$("#up_load").hide();
+	$("#list-scriptDetails").hide();
 }
 
 var displayedGroups = [];
 
-// method returns script file list on hovering over test suite
+/**
+ * Method returns script file list on hovering over test suite.
+ */
 function getScriptsList(val, scriptGroup, scriptInstanceTotal, totalScripts){
 	var group = val.id;
 	if(displayedGroups.indexOf(group) < 0){
@@ -126,6 +145,10 @@ function getScriptsList(val, scriptGroup, scriptInstanceTotal, totalScripts){
 		}
 	}
 }
+/**
+ * Add scripts on the script group
+ */
+
 function addScripts() {
 	var re = document.getElementById("resultElement");
 	var selectable = document.getElementById("selectable");
@@ -150,6 +173,9 @@ function addScripts() {
 	}
 
 }
+/**
+ * Remove scripts from the script group 
+ */
 
 function removeScripts(){
 	var re = document.getElementById("sgResultElement");
@@ -178,6 +204,9 @@ function removeScripts(){
 	
 	
 }
+/**
+ * Move up scripts in the script group 
+ */
 
 function moveUp() {
 	var re = document.getElementById("sgResultElement");
@@ -201,6 +230,11 @@ function moveUp() {
 		alert("Please select a script to move up");
 	}
 }
+
+
+/**
+ * Move down scripts in the script group   
+ */
 
 function moveDown() {
 	var re = document.getElementById("sgResultElement");
@@ -264,7 +298,9 @@ function refreshElements(){
 	 document.getElementById("sgResultElement").value = [];
 }
 
-//updateScriptGrp
+/**
+ * updateScriptGrp
+ */
 
 function updateSG() {
 	var sortable = document.getElementById("sortable");
@@ -294,6 +330,9 @@ function updateSG() {
 		$.post('updateScriptGrp', {id: id, version:version, idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data);  });
 	}
 }
+/**
+ *  function for for create script group 
+ */
 function createSG() {
 	var sortable = document.getElementById("sortable");
 
@@ -317,6 +356,8 @@ function createSG() {
 }
 function createScriptForm() {
 	checkAnyEditingScript();
+	$("#list-scriptDetails").hide();
+	$("#responseDiv123").show();
 	$.get('createScript', function(data) { $("#responseDiv").html(data); });
 }
 
@@ -334,8 +375,6 @@ function checkAnyEditingScript(){
 		clearLock(scriptName);
 	}
 }
-
-
 function showScript(idVal, flag) {
 	checkAnyEditingScript();
 	$.get('editScript', {id: idVal , flag : flag}, function(data) { $("#responseDiv").html(data); });
@@ -348,15 +387,87 @@ function removeScript(id){
 }
 
 function createScriptGrpForm() {	
+	$("#list-scriptDetails").hide();
+	$("#responseDiv123").show()
 	checkAnyEditingScript();
 	$.get('create', function(data) { $("#responseDiv").html(data); });
 }
-
-function editScriptGroup(id) {
+/**
+ * function for the module wise script list refreshment 
+ * @param name
+ */
+function moduleWiseSort(name){	
+	var value1
+	var value 
+	if( confirm("please save the script group changes before applying sort !")){
+		value1 = true 
+	}else{
+		value1  = false 
+	}
+	if(value1 == false ){
+	$.get('moduleWiseScriptList', {name: name}, function(data) { $(name).html(data);});
+	value ="modulescriptlist"
+	moduleWiseScriptList(name,value);
+	}else {	
+		value = "normal"
+		hideUploadOption();
+		hideAllSearchoptions();
+		checkAnyEditingScript();
+		$.get('edit',{name:name, value :value}, function(data){
+			$("#responseDiv").html(data); });
+		$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });
+		
+	}
+}
+/**
+ * Fuction for loading the edit Module wise selection based on the script.   
+ * @param name
+ */
+function moduleWiseScriptList(name,value){
 	hideUploadOption();
 	hideAllSearchoptions();
 	checkAnyEditingScript();
-	$.get('edit', {name: id}, function(data) { $("#responseDiv").html(data); });
+	$.get('edit',{name:name, value :value}, function(data){
+		$("#responseDiv").html(data); });
+	$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });
+}
+/**
+ * Random script list creation based on the script group selection.
+ * @param name
+ */
+function randomSort(name){	
+	var value1
+	var value
+	if( confirm("Please update current script group changes if you want")){
+		value1 = true 
+	}else{
+		value1  = false 
+	}	
+	 if( value1  == false ){
+		 value = "randomlist"
+		$.get('randomScriptList', {name: name}, function(data) { $(name).html(data);});
+		moduleWiseScriptList(name,value);
+		 
+	 }else{	
+		 value = "normal"
+			hideUploadOption();
+			hideAllSearchoptions();
+			checkAnyEditingScript();
+			$.get('edit',{name:name, value :value}, function(data){
+				$("#responseDiv").html(data); });
+			$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });	 
+	 }	
+}
+/**
+ *  When clicking the script group diplay details 
+ * @param id
+ */
+function editScriptGroup(id) {
+	var value = "normal"
+	hideUploadOption();
+	hideAllSearchoptions();
+	checkAnyEditingScript();
+	$.get('edit', {name: id , value : value}, function(data) { $("#responseDiv").html(data); });
 	$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });
 }
 
@@ -403,14 +514,17 @@ function hideAllSearchoptions(){
 }
 
 function displayAdvancedSearch(){	
+	$("#list-scriptDetails").show();
 	$("#advancedSearch").show();
 	$("#minSearch").hide();
 	$('.veruthe').empty();
 	$('.responseclass').empty();
 }
+	
 
 function showMinSearch(){	
 	$("#advancedSearch").hide();
+	$("#list-scriptDetails").hide();
 	$("#minSearch").show();
 	$('.veruthe').empty();
 }

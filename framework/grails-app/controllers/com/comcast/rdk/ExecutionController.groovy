@@ -2558,5 +2558,233 @@ class ExecutionController {
 		String data = ""+scripts?.toString()
 		render data
 	}
+		/**
+	 * Function for using the repeat execution option in the show log page based on the  test suite.
+	 * params : -
+	 * 		1) ExecutionName
+	 * 		2) ScriptGroup
+	 * 		3) Device
+	 * 		4) Scripts
+	 * 		5) BenchMark enabled 
+	 * 		6) System diagonistics 
+	 * 		7) Rerun 
+	 * 		  
+	 * 
+	 * @return
+	 */
+	def repeatExecution(){
+		try{
+			int execCnt = 0
+			def executionInstance =  Execution.findByName(params?.executionName)
+			def execName1 =  executionInstance?.name
+			if(!(execName1.toString().contains("RERUN"))){
+				int executionCount=0
+				int execCount = 0
+				int testCount = 0
+				def newExecutionName
+				def executionList = Execution?.findAll()
+				if(Execution?.findByName(execName1?.toString())){
+					if(execName1?.toString().contains("_") &&  !(execName1?.toString()?.contains("_RERUN"))){
+						def execNameSplitList = execName1.toString().tokenize("_")
+						executionCount =Integer.parseInt(execNameSplitList[1])
+						executionCount++
+						newExecutionName =  execNameSplitList[0]+"_"+executionCount
+						//if(executionList?.toString().contains(newExecutionName?.toString())){
+						if(Execution?.findByName(newExecutionName?.toString())){
+							executionList?.each { exName ->
+								if(exName?.toString().contains(execNameSplitList[0]?.toString())){
+									execCount++
+								}
+							}
+							newExecutionName = execNameSplitList[0]+"_"+(execCount)
+						}else{
+							newExecutionName =newExecutionName
+						}
+					}else{
+						newExecutionName = execName1 +"_"+1
+						//if(executionList?.toString().contains(newExecutionName?.toString())){
+						if(Execution.findByName(newExecutionName.toString())){
+							def lastExecname  = executionList.find{ it  ->
+								it?.toString().contains(execName1?.toString())
+							}
+							def newExecNameList = lastExecname.toString().tokenize("_")
+							execCnt = Integer.parseInt(newExecNameList[1])
+							execCnt++
+							newExecutionName = execName1+"_"+(execCnt)
+						}else{
+							newExecutionName = newExecutionName
+						}
+					}
+				}
+				if( params?.script?.toString()?.equals("") ){
+					def executionInstance1 =  Execution.findByName(params?.executionName)
+					def deviceInstance = Device?.findByStbName(params.device)
+					String execName = newExecutionName
+					def executionName =  execName
+					def executionNameForCheck
+					def isBenchMark = FALSE
+					def isSystemDiagnostics = FALSE
+					def isLogReqd = FALSE
+					def rerun = FALSE
+					boolean aborted = false
+					def scriptGroupInstance
+					if( executionInstance?.isBenchMarkEnabled){
+						isBenchMark = TRUE
+					}
+					if(executionInstance?.isSystemDiagnosticsEnabled){
+						isSystemDiagnostics =TRUE
+					}
+					if(executionInstance?.isStbLogRequired){
+						isLogReqd = TRUE
+					}
+					String url = getApplicationUrl()
+					String filePath = "${request.getRealPath('/')}//fileStore"
+					boolean validScript = false
+					def deviceId
+					deviceId = deviceInstance?.id
+					String devStatus = ""
+					def scriptGroup
+					boolean allocated = false
+					try {
+						devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+						synchronized (lock) {
+							if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+								devStatus = "BUSY"
+							}else{
+								if((devStatus.equals( Status.FREE.toString() ))){
+									if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+										allocated = true
+										executionService.deviceAllocatedList.add(deviceInstance?.id)
+										Thread.start{
+											deviceStatusService.updateOnlyDeviceStatus(deviceInstance, Status.FREE.toString())
+										}
+									}
+								}
+							}
+						}
+					}
+					catch(Exception eX){
+						log.error "Error "+eX.getMessage()
+						eX.printStackTrace()
+					}
+					if(params?.scriptGroup){
+						scriptGroupInstance  =  ScriptGroup?.findByName(params?.scriptGroup,[lock: true])
+					}
+					String scripts   = null
+					def saveExecutionDetails = true
+					if( devStatus.equals( Status.FREE.toString())){
+						if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+							allocated = true
+							executionService.deviceAllocatedList.add(deviceInstance?.id)
+						}
+						int scriptCnt = 0
+						if(scriptGroupInstance?.scriptList?.size() > 0){
+							scriptCnt= scriptGroupInstance?.scriptList?.size()
+						}
+						def executionDevice
+						saveExecutionDetails = executionService.saveExecutionDetails(execName?.toString(), scripts, deviceInstance?.toString(), scriptGroupInstance ,url?.toString(),isBenchMark?.toString(),isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString())
+						if(saveExecutionDetails){
+							try {
+								executionDevice = new ExecutionDevice()
+								executionDevice.execution = Execution.findByName(execName)
+								executionDevice.dateOfExecution = new Date()
+								executionDevice.device = deviceInstance?.stbName
+								executionDevice.deviceIp = deviceInstance?.stbIp
+								executionDevice.status = UNDEFINED_STATUS
+								executionDevice.save(flush:true)
+							}catch (Exception e ){
+								log.error "Error "+e.getMessage()
+								e.printStackTrace()
+							}
+							if(saveExecutionDetails){
+								if(params?.scriptGroup){
+									scriptGroupInstance  =  ScriptGroup?.findByName(params?.scriptGroup,[lock: true])
+								}
+								String myGroup = "TestSuite"
+								executescriptService.executescriptsOnDevice(execName?.toString(), deviceId?.toString(), executionDevice, scripts, scriptGroupInstance?.id.toString(), executionName?.toString(),
+										filePath, getRealPath(),myGroup?.toString(), url?.toString(), isBenchMark?.toString(), isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString())
+							}else{
+								flash.message =  " Save Execution status is null  "
+							}
+						}else{
+							flash.message = "Execution Details not saved  properly "
+						}
+					}else {
+						flash.message= " Device Status is BUSY  so not possible trigger the execution "
+					}
+				}else{
+					flash.message= "Script not possible to rereun"
+				}
+			}else{
+				flash.message = " Execution name contains the RERUN"
+			}
+		} catch(Exception e){
+			println "ERROR "+ e.getMessage()
+			e.printStackTrace()
+		}
+		redirect( view:"create")
+	}
+	/**
+	 * Function for rerun on failure option in the show log page 
+	 * Execute failure scripts according to the test suite which user selection.
+	 * @return
+	 */
+	def rerunOnFailure(){
+		try{
+			String devStatus = ""
+			def deviceInstance
+			String url = getApplicationUrl()
+			String filePath = "${request.getRealPath('/')}//fileStore"
+			def executionInstance = Execution?.findByName(params?.executionName)
+			if(params.device){
+				deviceInstance = Device.findByStbName(params.device)
+				devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+				if(devStatus.equals( Status.FREE.toString())){
+					def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
+					def executionResultList
+					executionDeviceList.each {  execDeviceInstance ->
+						ExecutionResult.withTransaction {
+							executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
+						}
+					}
+					boolean value  = false
+					executionResultList.each{ executionResultInstance ->
+						if(executionResultInstance?.status.equals("FAILURE")){
+							value = true
+						}
+					}
+					if(value ==  true ){
+						String uniqueName = executionInstance?.toString()+"12"
+						executescriptService?.reRunOnFailure(getRealPath(), filePath , params?.executionName,uniqueName, url )
+					}else{
+						flash.message = "Failue script list not found in the suite"
+					}
+				}else {
+					flash.message =" Device is not free to execute"
+				}
+			}
+		}catch(Exception e){
+			println "ERROR "+ e.getMessage()
+			e.printStackTrace()
+		}
+		redirect(view : "create")
+	}
+	def failureScriptCheck(){
+		def executionInstance = Execution?.findByName(params?.executionName)
+		def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
+		def executionResultList
+		executionDeviceList.each {  execDeviceInstance ->
+			ExecutionResult.withTransaction {
+				executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
+			}
+		}
+		boolean value  = false
+		executionResultList.each{ executionResultInstance ->
+			if(executionResultInstance?.status.equals("FAILURE")){
+				value = true
+			}
+		}
+		render value	
+	}
 
 }

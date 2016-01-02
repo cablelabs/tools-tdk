@@ -33,7 +33,8 @@
 	<script type="text/javascript">
 
 	$(document).ready(function() {
-
+		$("#list-scriptDetails").show();
+		//$("#responseDiv123").hide();
 		var scriptId = $("#currentScriptId").val();
 		if(scriptId!=null && scriptId!=""){
 			editScript(scriptId);
@@ -152,6 +153,50 @@
 						    	 <img src="../images/more.png" title="Advanced Search" onclick="displayAdvancedSearch();" style="display:none;"></img>						    	
 						    	</g:form>						
 							</div>
+							
+								<!-- 	Here the new changes starts 				
+						
+					 -->
+							
+					<div style="width: 86%; max-height: 600px; display: none ;"
+						id="list-scriptDetails" class="content scaffold-list"
+						id="scriptDetails">
+						<table id="scriptTable" class="display">
+							<thead>
+								<tr>
+									<th colspan="3" align="center" style="width: 50%;"><h1>Script
+											Details Summary</h1></th>
+								</tr>
+								<tr align="left">
+									<th width="15%">Sl No</th>
+									<th>Module Name</th>
+									<th>Script Count</th>
+								</tr>
+							</thead>
+							<br>
+							<br>
+							<tbody align="left">
+								<%int moduleCount =0  %>
+								<g:each in="${scriptGroupMap}" var=" name">
+									<tr class="odd">
+										<% 	moduleCount++ %>
+										<td>
+											${moduleCount}
+										</td>
+										<td>
+											${name.key}
+										</td>
+										<td>
+											${name.value.size()}
+										</td>
+									</tr>
+								</g:each>
+							</tbody>
+						</table>
+					</div>
+						<!-- End -->
+												
+							
 							<div id="advancedSearch" style="display:none;width: 100%; overflow: auto;">
 								<g:form controller="scriptGroup" >
 								<table>
@@ -197,6 +242,9 @@
 							<div id="responseDiv" style="width: 100%;overflow: auto;" class="responseclass">							    
 							</div>
 						</div>
+						
+						
+					
 					<div class="contextMenu" id="up_load" align="center"
 						style="width: 950px; height: 900px;">
 						<br> <br> <br> <br>
@@ -226,6 +274,7 @@
 						before="refreshListStart()" action="scriptListRefresh;"
 						value="ScriptList Refresh" onFailure="scriptRefreshFailure()"
 						onSuccess="scriptRefreshSuccess()" /></li>
+			<li id="download_script"> <img src="../images/script_download.png" height="15px" width="15px"/>Download Script Details </li> 
 			</ul>
 		</div>
 	      	

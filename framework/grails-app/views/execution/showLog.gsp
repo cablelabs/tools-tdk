@@ -275,6 +275,48 @@ function hideParameters(k){
 			</table>	
 		</td>
 	</tr>
+	<%
+	 def deviceName = executionInstance.device
+	 def deviceInstance =  Device.findByStbName(deviceName.toString())
+	 String deviceStatus = deviceInstance?.deviceStatus
+	 %>	
+	 	<%-- only test suite execution completed then shows the rerun on failure and repeat execution option  --%>
+			<g:if test = "${(executionInstance?.executionStatus).equals("COMPLETED")}" >
+				<g:if test="${executionInstance?.scriptGroup}">
+				<tr class="even" id="testing">
+					<td colspan="2">
+						<table>						
+							<tr align="center" style="background: #DFDFDF;">
+								<%--<td><g:link action="repeatExecution "  onclick="deviceStatusCheck('${deviceStatus}');"
+										params="[executionName : executionInstance?.name , device  : executionInstance?.device , scriptGroup : executionInstance?.scriptGroup , script : executionInstance?.script, devices :executionInstance?.device?.size(), rerun :1, isBenchMark :executionInstance?.isBenchMarkEnabled , isSystemDiagonisticEnabled : executionIntstance?.isSystemDiagnosticsEnabled  ]">
+										<b>Repeat Execution</b>
+									</g:link></td>
+								<td><g:link action="rerunOnFailure"  onclick = "deviceStatusCheck('${deviceStatus}')"
+										params="[executionName : executionInstance , device  : executionInstance?.device, scriptGroup : executionInstance?.scriptGroup , script : executionInstance?.script   ]">
+										<b> Rerun On Failure Scripts </b>
+									</g:link></td>
+							--%>
+							<td><g:submitToRemote value="Repeat Execution"
+											url="[action: 'repeatExecution',params:[executionName : executionInstance?.name , device  : executionInstance?.device , scriptGroup : executionInstance?.scriptGroup , script : executionInstance?.script, devices :executionInstance?.device?.size(), rerun :1, isBenchMark :executionInstance?.isBenchMarkEnabled , isSystemDiagonisticEnabled :executionIntstance?.isSystemDiagnosticsEnabled ]]"
+										    before="deviceStatusCheck('${deviceInstance}','${deviceStatus}');" />
+									</td>
+								<td><g:submitToRemote value="Rerun On Failure Scripts"
+											url="[action :'rerunOnFailure', params:[executionName : executionInstance , device  : executionInstance?.device, scriptGroup : executionInstance?.scriptGroup , script : executionInstance?.script]]"
+											before="deviceStatusCheck('${deviceInstance}','${deviceStatus}');"
+											onLoading="failureScriptCheck('${executionInstance}');" />
+								</td>
+							
+							
+							
+							
+							
+							
+							</tr>
+						</table>
+					</td>
+				</tr>
+			</g:if>
+	</g:if>
 	<tr class="even">	
 		<%--<td class="tdhead" style="vertical-align: middle; text-align: center;">
 		  <g:if test="${executionInstance?.script}">
