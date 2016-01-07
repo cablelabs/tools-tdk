@@ -159,14 +159,15 @@ export TDK_BIN_PATH=$TDK_PATH/build/bin
 export LIBDIR=$TDK_LIB_PATH
 export TARGETDIR=$TDK_BIN_PATH
 
-ls ${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh
-if (($? == 0)); then
-    echo "Mediaplayer_stub present"
-    source ${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh
-else
-    echo "pri file not present"
+if [ "$ENABLE_TDK" == 1 ]; then
+	ls ${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh
+	if (($? == 0)); then
+    		echo "Mediaplayer_stub present"
+    		source ${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh
+	else
+    		echo "pri file not present"
+	fi
 fi
-
 TDK_PATH=$TDK_PATH/platform/
 # functional modules
 
