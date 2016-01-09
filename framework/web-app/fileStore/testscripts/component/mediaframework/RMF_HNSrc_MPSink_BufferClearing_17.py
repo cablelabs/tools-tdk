@@ -154,30 +154,37 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                 FirstStream_Mediatime=Mediatime[1];
                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,Expected_Result,src_parameter,src_element);
                                                                                 if Expected_Result in result.upper():
-                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,Expected_Result,src_parameter,src_element);
-                                                                                        if Expected_Result in result.upper():
-                                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,Expected_Result,src_parameter,src_element);
-                                                                                                if Expected_Result in result.upper():
-                                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Open',obj,Expected_Result,open_parameter_name,open_parameter_value);
-                                                                                                        if Expected_Result in result.upper():
-                                                                                                                #Setting the MPSink Element with x,y co-ordiantes
-                                                                                                                result=Create_and_ExecuteTestStep('RMF_Element_MpSink_SetVideoRectangle',obj,Expected_Result,videorec_parameter_name,videorec_parameter_value);
-                                                                                                                if Expected_Result in result.upper():
-                                                                                                                        #Selecting the source for MPSink
-                                                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Sink_SetSource',obj,Expected_Result,setsource_parameter_name,setsource_parameter_value);
-                                                                                                                        if Expected_Result in result.upper():
+        	                                					result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,Expected_Result,sink_parameter,sink_element);
+											if Expected_Result in result.upper():
+                	                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,Expected_Result,src_parameter,src_element);
+                        	                                                                if Expected_Result in result.upper():
+                                	                                                                result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,Expected_Result,src_parameter,src_element);
 
-                                                                                                                                #Play the HNSRC-->MPSINK pipeline
-                                                                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
-                                                                                                                                if Expected_Result in result.upper():
-                                                                                                                                        time.sleep(8);
-                                                                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
-                                                                                                                                        if Expected_Result in result.upper():
-                                                                                                                                                SecondStream_Mediatime=Mediatime[1];
-                                                                                                                                                if float(SecondStream_Mediatime) < float(FirstStream_Mediatime):
-                                                                                                                                                        tdkTestObj.setResultStatus("SUCCESS");
-                                                                                                                                                else:
-                                                                                                                                                        tdkTestObj.setResultStatus("FAILURE");
+
+										                        if Expected_Result in result.upper():
+									                  	               #Initiazing the MPSink Element
+									                        	        result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,Expected_Result,sink_parameter,sink_element);
+                                                	                                                	if Expected_Result in result.upper():
+                                        	                                                                	result=Create_and_ExecuteTestStep('RMF_Element_Open',obj,Expected_Result,open_parameter_name,open_parameter_value);
+	                                                                	                                        if Expected_Result in result.upper():
+                	                                        	                                                        #Setting the MPSink Element with x,y co-ordiantes
+        	                                                                	                                        result=Create_and_ExecuteTestStep('RMF_Element_MpSink_SetVideoRectangle',obj,Expected_Result,videorec_parameter_name,videorec_parameter_value);
+                        	                                                        	                                if Expected_Result in result.upper():
+                                	                                                        	                                #Selecting the source for MPSink
+                                        	                                                        	                        result=Create_and_ExecuteTestStep('RMF_Element_Sink_SetSource',obj,Expected_Result,setsource_parameter_name,setsource_parameter_value);
+                                                	                                                        	                if Expected_Result in result.upper():
+
+                                                        	                                                        	                #Play the HNSRC-->MPSINK pipeline
+                                                                	                                                        	        result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+                                                                        	                                                        	if Expected_Result in result.upper():
+                                                                                	                                                        	time.sleep(8);
+	                                                                                	                                                        result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
+        	                                                                                	                                                if Expected_Result in result.upper():
+                	                                                                                	                                                SecondStream_Mediatime=Mediatime[1];
+                        	                                                                                	                                        if float(SecondStream_Mediatime) < float(FirstStream_Mediatime):
+                                	                                                                                	                                        tdkTestObj.setResultStatus("SUCCESS");
+                                                                                              	                                	            	else:
+                                                                                                                                                        	tdkTestObj.setResultStatus("FAILURE");
 
 
                                                 #Close the Hnsrc Element
