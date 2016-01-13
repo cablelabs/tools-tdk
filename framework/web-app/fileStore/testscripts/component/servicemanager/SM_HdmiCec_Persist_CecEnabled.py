@@ -153,9 +153,6 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
 
-				print "Wait 20s for CEC persistent file to be created"
-				sleep(20)
-
                                 #Verify the presence of the cecData file
                                 print "Verify the presence of CEC data"
                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckCecData');
