@@ -74,7 +74,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         tdkTestObj = obj.createTestStep('DS_EnableHDCP');
                         #Passing default values for enabling HDCP
                         key = '0'
-                        keySize = 0
+                        keySize = 1148
                         protectContent = 1
                         tdkTestObj.addParameter("hdcpKey",key);
                         tdkTestObj.addParameter("keySize",keySize);
