@@ -2341,11 +2341,9 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
 	char *ownerName=(char*)req["owner_name"].asCString();
 	std::string testenvPath = getenv("OPENSOURCETEST_PATH");
 	testenvPath.append("../");
-
-	std::string path;
-	strcpy((char*)path.c_str(),getenv("TDK_PATH"));	
-	strcat((char*)path.c_str(),"/");
-	strcat((char*)path.c_str(),appname);
+	std::string path = getenv("TDK_PATH");
+	path.append("/");
+	path.append(appname);
 	DEBUG_PRINT(DEBUG_ERROR,"\nAppPath:%s, appname:%s\n",path.c_str(), appname);
 
 	if(idChild == 0)
