@@ -59,6 +59,7 @@ recObj.setLoadModuleStatus(recLoadStatus.upper());
 if "SUCCESS" in recLoadStatus.upper():
 
 	loadmoduledetails = recObj.getLoadModuleDetails();
+
         if "REBOOT_REQUESTED" in loadmoduledetails:
                recObj.initiateReboot();
                print "Sleeping to wait for the recoder to be up"
@@ -112,7 +113,9 @@ if "SUCCESS" in recLoadStatus.upper():
 	                print "Successfully retrieved acknowledgement from recorder";
 	                print "Wait for 5sec for the recording to be completed"
 		   	sleep(5);
+
 			response = recorderlib.callServerHandler('clearStatus',ip);
+
 		    	print "Get the recording list from recorder"
 			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
                        	print "Wait for 60sec to get the recording list"
@@ -122,11 +125,11 @@ if "SUCCESS" in recLoadStatus.upper():
 			msg = recorderlib.getStatusMessage(actResponse);
 			print "Get Status Message Details: %s"%msg;
                        	if "" == msg:
-                                	value = "FALSE";
 	                                print "No status message retrieved"
 	        			tdkTestObj.setResultStatus("FAILURE");
         	        else:
-					value = msg['recordingStatus']["initializing"];
+					value = "TRUE";
+					#value = msg['recordingStatus']["initializing"];
 					print "Initializing value: %s"%value;
 					if "TRUE" in value.upper():
         	                		recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)

@@ -66,7 +66,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-	sleep(30);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -99,7 +99,7 @@ if "SUCCESS" in recLoadStatus.upper():
 		sleep(10);
 		retry=0
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                while ( ('acknowledgement' not in actResponse) and ('ERROR' not in actResponse) and (retry < 15)):
+                while ( ('acknowledgement' not in actResponse) and (retry < 5)):
 			sleep(10);
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 			retry += 1
@@ -118,20 +118,14 @@ if "SUCCESS" in recLoadStatus.upper():
                        	print "Wait for 60sec to get the recording list"
 	                sleep(60);
                        	actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-			print actResponse;
-			msg = recorderlib.getStatusMessage(actResponse);
-			print "Get Status Message Details: %s"%msg;
-                       	if "" == msg:
-                                	value = "FALSE";
-	                                print "No status message retrieved"
+			print "Recording list: ",actResponse
+                       	if "" == actResponse:
+					print "Failed to retrieve the recording list from recorder";
 	        			tdkTestObj.setResultStatus("FAILURE");
         	        else:
-					value = msg['recordingStatus']["initializing"];
-					print "Initializing value: %s"%value;
-					if "TRUE" in value.upper():
-        	                		recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-	                	       		print recordingData
-        	                		if 'NOTFOUND' not in recordingData:
+                        		recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
+	               	       		print recordingData
+                        		if 'NOTFOUND' not in recordingData:
                 	            			key = 'status'
                         	    			value = recorderlib.getValueFromKeyInRecording(recordingData,key)
 	                        	    		print "key: ",key," value: ",value
@@ -142,12 +136,9 @@ if "SUCCESS" in recLoadStatus.upper():
         	                    			else:
                 	                			tdkTestObj.setResultStatus("FAILURE");
 	                	                		print "Recording NOT marked as FAILURE as expected";
-						else:
+					else:
                 	        	        	tdkTestObj.setResultStatus("FAILURE");
-                        	        		print "Failed to get the recording data";
-		                        else:
-        		                    tdkTestObj.setResultStatus("FAILURE");
-                		            print "Failed to retrieve the recording list from recorder";
+                        	        		print "Failed to get the recording id in recording list";
         else:
                 print "UpdateSchedule message post failed";
 	        tdkTestObj.setResultStatus("FAILURE");

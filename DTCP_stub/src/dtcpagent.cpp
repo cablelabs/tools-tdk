@@ -29,8 +29,8 @@ bool dtcpProcessReleasePacket()
     int returnCode = DTCP_SUCCESS;
     DTCP_SESSION_HANDLE srcHandle;
     DTCP_SESSION_HANDLE sinkHandle;
-    const int tsLength = 188;
-    string testTSStream = "47 17 bc 13 3a 8d ba 2a 67 b0 26 ea b9 67 28 8f c8 31 b7 1a 59 77 76 f7 dc 5a 83 73 dd dd 69 9a 9e f4 28 2c 62 c9 ae c2 0e e8 07 97 9a 4b 1d 8a 83 29 b5 ee 75 28 31 d4 3a 5e 6b e6 71 4f ee 9a f7 76 ee 3d 0f a6 6b cf 00 97 00 00 18 01 88 2b 00 0a 5d c0 49 16 41 1a 4d 03 0a 19 48 ba 19 58 80 22 8a 85 43 22 14 f9 d3 07 53 d1 41 13 c4 93 71 e9 53 b7 7b 04 55 9e d0 d1 7c 1c 57 89 1e 71 c1 b6 9d 72 c1 78 c5 47 10 7e 94 40 7d 70 3b 15 71 3c 6e c0 94 01 d7 b8 86 ba ba a7 29 94 a8 c3 2f 9a 93 30 61 28 32 ed 03 3e 12 ad 0f b0 80 f4 53 96 d0 d5 31 6c 39 16 f4 e4 af f8"; // 188 bytes
+    const int tsLength = 192;
+    string testTSStream = "4c 18 5a 50 47 17 bc 13 3a 8d ba 2a 67 b0 26 ea b9 67 28 8f c8 31 b7 1a 59 77 76 f7 dc 5a 83 73 dd dd 69 9a 9e f4 28 2c 62 c9 ae c2 0e e8 07 97 9a 4b 1d 8a 83 29 b5 ee 75 28 31 d4 3a 5e 6b e6 71 4f ee 9a f7 76 ee 3d 0f a6 6b cf 00 97 00 00 18 01 88 2b 00 0a 5d c0 49 16 41 1a 4d 03 0a 19 48 ba 19 58 80 22 8a 85 43 22 14 f9 d3 07 53 d1 41 13 c4 93 71 e9 53 b7 7b 04 55 9e d0 d1 7c 1c 57 89 1e 71 c1 b6 9d 72 c1 78 c5 47 10 7e 94 40 7d 70 3b 15 71 3c 6e c0 94 01 d7 b8 86 ba ba a7 29 94 a8 c3 2f 9a 93 30 61 28 32 ed 03 3e 12 ad 0f b0 80 f4 53 96 d0 d5 31 6c 39 16 f4 e4 af f8"; // 192 bytes
 
     /*Get the source handler from the list*/
     if(!srcSessionHandlerList.empty())
@@ -103,7 +103,7 @@ bool dtcpProcessReleasePacket()
         }
         printf("\n");
         DEBUG_PRINT(DEBUG_TRACE,"dataLength = %d\n",packetSrc->dataLength);
-        DEBUG_PRINT(DEBUG_TRACE,"\ndataOutPtr (first 188 bytes): ");
+        DEBUG_PRINT(DEBUG_TRACE,"\ndataOutPtr (first 192 bytes): ");
         for (int i = 0; i < tsLength; i++) {
             printf("%x ", packetSrc->dataOutPtr[i]);
         }
@@ -146,7 +146,7 @@ bool dtcpProcessReleasePacket()
     {
         packetSink->dataInPtr[x] = packetSrc->dataOutPtr[i];
     }
-    DEBUG_PRINT(DEBUG_TRACE,"Encrypted TS Stream (first 188 bytes): ");
+    DEBUG_PRINT(DEBUG_TRACE,"Encrypted TS Stream (first 192 bytes): ");
     for (int i = 0; i < tsLength; i++) {
         printf("%x ", packetSink->dataInPtr[i]);
     }

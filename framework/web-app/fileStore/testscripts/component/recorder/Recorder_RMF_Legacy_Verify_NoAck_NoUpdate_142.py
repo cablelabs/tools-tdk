@@ -55,19 +55,19 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_Legacy_Verify_NoAck_NoUpdate_142'
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
+#Set the module loading status
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        #Set the module loading status
-        recObj.setLoadModuleStatus(recLoadStatus);
-
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
                recObj.initiateReboot();
+               print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-	print "Sleeping to wait for the recoder to be up"
 
+	response = recorderlib.callServerHandler('clearStatus',ip);
 
 	#Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -83,21 +83,14 @@ if "SUCCESS" in recLoadStatus.upper():
         
 	jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
-        expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-        print "Update Schedule Details: %s"%actResponse;
-	sleep(60);
-
+	sleep(10);
+	actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+	print "Retrieve Status Details: %s"%actResponse;
+	
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
-
-        #Primitive test case which associated to this script
-        tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
-        expectedResult="SUCCESS";
 
         #Frame json message
         jsonMsgNoUpdate = "{\"noUpdate\":{\"dvrProtocolVersion\":\"6\"}}";
@@ -105,55 +98,26 @@ if "SUCCESS" in recLoadStatus.upper():
         expResponse = "noUpdate";
         tdkTestObj.executeTestCase(expectedResult);
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-        print "noUpdate Details: %s"%actResponse;
-
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "noUpdate message post success";
-                print "Wait for 60s to get acknowledgement"
-                sleep(60);
-                #Check for acknowledgement from recorder
-                tdkTestObj.executeTestCase(expectedResult);
-		print "Looping till acknowledgement is received"
-		loop = 0;
-		while loop < 5:
-	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	                #print "Retrieve Status Details: %s"%actResponse;
-			sleep(10);
-			loop = loop+1;
-		if 'acknowledgement' in actResponse:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "Received acknowledgement from recoder";
-                elif 'acknowledgement' not in actResponse:
-                    tdkTestObj.setResultStatus("SUCCESS");
-                    print "No acknowledgement from recorder";	    
-		    tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
-                    tdkTestObj1.executeTestCase(expectedResult);
-                    print "Sending getRecordings to get the recording list"
-                    recorderlib.callServerHandler('clearStatus',ip)
-                    recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
-		    print "Wait for 60 seconds to get response from the recorder"
-		    sleep(60);
-                    actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                    print "Recording List: %s" %actResponse;
-		    actResponse = actResponse.replace("\"","");
-                    print "Response Details: %s"%actResponse;
-                    if "dvrProtocolVersion:7" in actResponse:
+                print "Sending getRecordings to get the recording list"
+                recorderlib.callServerHandler('clearStatus',ip)
+                recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+		print "Wait for 60 seconds to get response from recorder"
+		sleep(60);
+                actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                print "Recording List: %s" %actResponse;
+		actResponse = actResponse.replace("\"","");
+                if "dvrProtocolVersion:7" in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "Recorder did nothing upon receiving noUpdate message"
-                    else:
+                else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Recorder updated dvrProtocolVersion upon receiving noUpdate message"
-                else:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "Failed to retrieve acknowledgement from recorder";
         else:
             tdkTestObj.setResultStatus("FAILURE");
             print "noUpdate message post failed";
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
-else:
-    print "Failed to load Recorder module";
-    #Set the module loading status
-    recObj.setLoadModuleStatus("FAILURE");

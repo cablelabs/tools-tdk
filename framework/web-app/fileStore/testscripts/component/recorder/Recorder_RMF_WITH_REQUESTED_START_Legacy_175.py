@@ -122,7 +122,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	        		tdkTestObj.setResultStatus("FAILURE");
         	        else:
 				value = msg['recordingStatus']["initializing"];
-				print "Initializing value: %s"%value;
+				print "Initializing value: "%value;
 				if "TRUE" in value.upper():
         	                	recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
 	                	 	print recordingData
