@@ -1083,48 +1083,61 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 	/*The below code block is for handling thr test app scenario*/
 	else if (strcmp(owner, IARM_BUS_DUMMYMGR_NAME) == 0) {
 		DEBUG_PRINT(DEBUG_TRACE,"\nInside DummyMgr event handler\n");
-		int dummydata=0;
-		char evtname;
+		 int dummydata=0;
+                 char evtname;
 		strcpy(g_ManagerName,IARM_BUS_DUMMYMGR_NAME);
 
 		/* Handle events here */
-		IARM_Bus_DUMMYMGR_EventData_tp *eventData = (IARM_Bus_DUMMYMGR_EventData_tp *)data;
-
+                IARM_Bus_DUMMYMGR_EventData_t *eventData = (IARM_Bus_DUMMYMGR_EventData_t *)data;
 		switch(eventId) {
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYX:
-			dummydata=eventData->data.dummy0.dummyData;
+                        DEBUG_PRINT(DEBUG_LOG,"\nData received from event X: %s",eventData->data.dummy0.dummyData);
+			if(strncmp(DUMMYDATA_X,eventData->data.dummy0.dummyData,128)==0)
+                        {
+                                DEBUG_PRINT(DEBUG_LOG,"Data received successfully");
+                                DEBUG_PRINT(DEBUG_LOG,"\nReceived i:%s",eventData->data.dummy0.dummyData);
+                        }
 			evtname='X';
-			DEBUG_PRINT(DEBUG_LOG,"\nReceived i:%d",eventData->data.dummy0.dummyData);
 			DEBUG_PRINT(DEBUG_LOG,"\nReceived Event - X : IARM_BUS_DUMMYMGR_EVENT_DUMMYX \r\n");
 			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy0.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy0.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 			strcpy(LastEvent , "IARM_BUS_DUMMYMGR_EVENT_DUMMYX");
 			fill_LastReceivedKey(__func__,LastEvent, EvtTime);
-			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving IARM_BUS_DUMMYMGR_EVENT_DUMMYX %d was %lf seconds\r\n",eventData->data.dummy0.dummyData, EvtTime);
+			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving IARM_BUS_DUMMYMGR_EVENT_DUMMYX %s was %lf seconds\r\n",eventData->data.dummy0.dummyData, EvtTime);
 			break;
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYY:
-			dummydata=eventData->data.dummy1.dummyData;
+                        DEBUG_PRINT(DEBUG_LOG,"\nData received from event Y: %s",eventData->data.dummy0.dummyData);
+			if(strncmp(DUMMYDATA_Y,eventData->data.dummy0.dummyData,128)==0)
+                        {
+                                DEBUG_PRINT(DEBUG_LOG,"Data received successfully");
+                        	DEBUG_PRINT(DEBUG_LOG,"\nReceived j:%s",eventData->data.dummy0.dummyData);
+                        }
+
 			evtname='Y';
-			DEBUG_PRINT(DEBUG_LOG,"\nReceived j:%d",eventData->data.dummy1.dummyData);
 			DEBUG_PRINT(DEBUG_LOG,"\nReceived Event - Y : IARM_BUS_DUMMYMGR_EVENT_DUMMYY \r\n");
 					
-			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy1.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy1.clock_when_event_sent.tv_nsec)) / (double)BILLION;
+			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy0.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy0.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 			strcpy(LastEvent , "IARM_BUS_DUMMYMGR_EVENT_DUMMYY");
 			fill_LastReceivedKey(__func__,LastEvent, EvtTime);
-			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving IARM_BUS_DUMMYMGR_EVENT_DUMMYY %d was %lf seconds\r\n",eventData->data.dummy1.dummyData, EvtTime);
+			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving IARM_BUS_DUMMYMGR_EVENT_DUMMYY %s was %lf seconds\r\n",eventData->data.dummy0.dummyData, EvtTime);
 			break;
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYZ:
-			dummydata=eventData->data.dummy2.dummyData;
+                        DEBUG_PRINT(DEBUG_LOG,"\nData received from event Z: %s",eventData->data.dummy0.dummyData);
+			if(strncmp(DUMMYDATA_Z,eventData->data.dummy0.dummyData,128)==0)
+                        {
+                                DEBUG_PRINT(DEBUG_LOG,"Data received successfully");
+                        	DEBUG_PRINT(DEBUG_ERROR,"\nReceived k:%s",eventData->data.dummy0.dummyData);
+                        }
+
 			evtname='Z';
-			DEBUG_PRINT(DEBUG_ERROR,"\nReceived k:%d",eventData->data.dummy2.dummyData);
 			DEBUG_PRINT(DEBUG_LOG,"\nReceived Event - Z : IARM_BUS_DUMMYMGR_EVENT_DUMMYZ \r\n"); // TWC Change-2
 			/* Removing lock when event is received by stub*/
 			pthread_mutex_lock(&lock);
 			pthread_cond_signal(&cond);
 			pthread_mutex_unlock(&lock);
-			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy2.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy2.clock_when_event_sent.tv_nsec)) / (double)BILLION;
+			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy0.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy0.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 			strcpy(LastEvent , "IARM_BUS_DUMMYMGR_EVENT_DUMMYZ");
 			fill_LastReceivedKey(__func__,LastEvent, EvtTime);
-			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving IARM_BUS_DUMMYMGR_EVENT_DUMMYZ %d was %lf seconds\r\n",eventData->data.dummy2.dummyData, EvtTime);
+			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving IARM_BUS_DUMMYMGR_EVENT_DUMMYZ %s was %lf seconds\r\n",eventData->data.dummy0.dummyData, EvtTime);
 			break;
 		}
 		if(g_iter<EVTDATA_MAX_SIZE)
@@ -2618,4 +2631,5 @@ extern "C" void DestroyObject(IARMBUSAgent *stubobj)
         DEBUG_PRINT(DEBUG_LOG,"Destroying IARMBUS Agent object\n");
         delete stubobj;
 }
+
 

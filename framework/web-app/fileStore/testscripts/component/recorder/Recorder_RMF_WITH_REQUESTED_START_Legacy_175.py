@@ -85,7 +85,7 @@ if "SUCCESS" in recLoadStatus.upper():
         startTime = "0";
 
         #Frame json message
-	jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+ recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":"+now+",\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
+	jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+ recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+startTime+",\"start\":"+now+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":"+now+",\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -107,7 +107,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 	tdkTestObj.setResultStatus("SUCCESS");
 	                print "Successfully retrieved acknowledgement from recorder";
 			print "Wait for recording to complete"
-                        sleep(120);
+                        sleep(250);
 			print "Sending getRecordings to get the recording list"
                         recorderlib.callServerHandler('clearStatus',ip)
                         recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
@@ -115,39 +115,21 @@ if "SUCCESS" in recLoadStatus.upper():
                         sleep(60)
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                         print "Recording List: %s" %actResponse;
-			msg = recorderlib.getStatusMessage(actResponse);
-                        if "NOSTATUS" == msg:
-                               	value = "FALSE";
-	                        print "No status message retrieved"
-	        		tdkTestObj.setResultStatus("FAILURE");
-        	        else:
-				value = msg['recordingStatus']["initializing"];
-				print "Initializing value: "%value;
-				if "TRUE" in value.upper():
-        	                	recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-	                	 	print recordingData
-        	                	if 'NOTFOUND' not in recordingData:
-                	         		key = 'status'
-                        	 		value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-	                        	 	print "key: ",key," value: ",value
-               	            			if "" != value.upper():
-                		                	print "Recording status set";
-                      	        			tdkTestObj.setResultStatus("SUCCESS");
-               	            				if "COMPLETE" == value.upper():
-                       	        				tdkTestObj.setResultStatus("SUCCESS");
-	                	                		print "Recording marked as COMPLETE";
-       		                    			else:
-               		                			tdkTestObj.setResultStatus("FAILURE");
-                		                		print "Recording not marked as COMPLETE";
-       		                    		else:
-                		                	print "Recording status not set";
-               		                		tdkTestObj.setResultStatus("FAILURE");
-					else:
-               	        	        	tdkTestObj.setResultStatus("FAILURE");
-                       	        		print "Failed to get the recording data";
-	                        else:
-       		                    tdkTestObj.setResultStatus("FAILURE");
-               		            print "Failed to retrieve the recording list from recorder";
+        	        recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
+	               	print recordingData
+        	        if 'NOTFOUND' not in recordingData:
+                	    key = 'status'
+                            value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+	                    print "key: ",key," value: ",value
+               	            if "COMPLETE" == value.upper():
+                       	        tdkTestObj.setResultStatus("SUCCESS");
+	                	print "Recording marked as COMPLETE";
+       		            else:
+               		        tdkTestObj.setResultStatus("FAILURE");
+                		print "Recording not marked as COMPLETE";
+		        else:
+               	             tdkTestObj.setResultStatus("FAILURE");
+                       	     print "Failed to get the recording data";
 		else:
                 	tdkTestObj.setResultStatus("FAILURE");
                     	print "Failed to retrieve acknowledgement from recorder";

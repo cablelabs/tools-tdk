@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <module name="recorder" testGroup="Component">
     <primitiveTests>
       <primitiveTest id="514" name="Recorder_checkRecording_status" version="1">
@@ -34,17 +33,27 @@
           <parameter name="Recording_Id" value=""/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name="Recorder_SetValuesInRmfconfig" id=" " version="1">
+      <primitiveTest id=" " name="Recorder_SetValuesInRmfconfig" version="1">
         <function>TestMgr_Recorder_SetValuesInRmfconfig</function>
         <parameters>
           <parameter name="Keyword" value=""/>
           <parameter name="Value" value=""/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name="Recorder_PresenceOfRecordingMetaData" id=" " version="1">
+      <primitiveTest id=" " name="Recorder_PresenceOfRecordingMetaData" version="1">
         <function>TestMgr_Recorder_PresenceOfRecordingMetaData</function>
         <parameters>
           <parameter name="Recording_Id" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="Recorder_clearOcapri_log" version="1">
+        <function>TestMgr_Recorder_clearOcapri_log</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest name="Recorder_checkOcapri_log" id=" " version="1">
+        <function>TestMgr_Recorder_checkOcapri_log</function>
+        <parameters>
+          <parameter name="pattern" value=""/>
         </parameters>
       </primitiveTest>
     </primitiveTests>

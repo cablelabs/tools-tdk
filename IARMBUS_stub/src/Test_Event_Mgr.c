@@ -16,6 +16,7 @@
 #include "libIARM.h"
 #include "libIBus.h"
 #include "dummytestmgr.h"
+#include "string.h"
 
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -63,7 +64,7 @@ int main(int argc, char **argv)
 {
 	printf("\nStarting Dummy Manager\n");
 
-	IARM_Bus_DUMMYMGR_EventData_t eventData;
+	IARM_Bus_DUMMYMGR_EventData_t eventData1 , eventData2 , eventData3;
 	IARM_Bus_Init(IARM_BUS_DUMMYMGR_NAME);
 	IARM_Bus_Connect();
 	IARM_Bus_RegisterEvent(IARM_BUS_DUMMYMGR_EVENT_MAX);
@@ -77,12 +78,12 @@ int main(int argc, char **argv)
 	pthread_mutex_unlock(&lock);
 
 	/* Populate Event Data Here */
-	eventData.data.dummy0.dummyData = 1;
-	IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYX, &eventData, sizeof(eventData));
-	eventData.data.dummy1.dummyData = 2;
-	IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYY, &eventData, sizeof(eventData));
-	eventData.data.dummy2.dummyData = 3;
-	IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYZ, &eventData, sizeof(eventData));
+        strcpy(eventData1.data.dummy0.dummyData,DUMMYDATA_X);
+	strcpy(eventData2.data.dummy0.dummyData,DUMMYDATA_Y);
+	strcpy(eventData3.data.dummy0.dummyData,DUMMYDATA_Z);
+	IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYX, &eventData1, sizeof(eventData1));
+	IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYY, &eventData2, sizeof(eventData2));
+	IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYZ, &eventData3, sizeof(eventData3));
 
 	/* Lock to get app synced */
 	pthread_mutex_lock(&lock);

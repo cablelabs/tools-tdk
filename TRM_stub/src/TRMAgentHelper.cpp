@@ -24,7 +24,7 @@ static bool responseSuccess = false;
 static char responseStr[OUTPUT_LEN];
 static char cancelRecReqId[GUID_LEN];
 static const unsigned int kRecorderClientId = 0xFFFFFF00;
-static const unsigned int kTestAppClientId = 0x00000001;
+static const unsigned long kTestAppClientId = 0xFFFFFFEFF;
 static bool bSelectOnConflict = false;
 #define TRM_RESPONSE_TIMEOUT (10*1000*1000)
 #define MAX_RETRY 5
@@ -584,14 +584,7 @@ bool TRMClient::validateTunerReservation(string device, string locator, int acti
 
     do
     {
-        if (TRM::Activity::kRecord == activityType)
-        {
-            ret = url_request_post( (char *) &out[0], len, kRecorderClientId);
-        }
-        else
-        {
-            ret = url_request_post( (char *) &out[0], len, kTestAppClientId);
-        }
+        ret = url_request_post( (char *) &out[0], len, kTestAppClientId);
         retry_count --;
     } while ((ret == false) && (retry_count >0));
 

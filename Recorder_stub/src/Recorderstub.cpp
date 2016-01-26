@@ -37,12 +37,13 @@ bool RecorderAgent::initialize(IN const char* szVersion, IN RDKTestAgent *ptrAge
 {
 	DEBUG_PRINT(DEBUG_TRACE, "Registering wrapper functions with the agent\n");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_ScheduleRecording,"TestMgr_Recorder_ScheduleRecording");
-	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_checkRecording_status,"TestMgr_Recorder_checkRecording_status");
+	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_checkOcapri_log,"TestMgr_Recorder_checkOcapri_log");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_SendRequest,"TestMgr_Recorder_SendRequest");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_SendRequestToDeleteFile,"TestMgr_Recorder_SendRequestToDeleteFile");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_DeleteRecordingMetaData,"TestMgr_Recorder_DeleteRecordingMetaData");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_SetValuesInRmfconfig,"TestMgr_Recorder_SetValuesInRmfconfig");
         ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_PresenceOfRecordingMetaData,"TestMgr_Recorder_PresenceOfRecordingMetaData");
+	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_clearOcapri_log,"TestMgr_Recorder_clearOcapri_log");
 	
 	return TEST_SUCCESS;
 }
@@ -207,27 +208,57 @@ bool RecorderAgent::Recorder_ScheduleRecording(IN const Json::Value& request, OU
         DEBUG_PRINT(DEBUG_TRACE, "Recorder_ScheduleRecording ---> Exit\n");
         return TEST_SUCCESS;
 }
+
 /**************************************************************************
-  Function name : RecorderAgent::Recorder_checkRecording_status()
+Function name : RecorderAgent::Recorder_clearOcapri_log()
 
-Arguments     : Input argument is Recording_Id. Output argument is details,result.
+Arguments     : None
 
-Description   : Returns Generated Json Message in details.
+Description   : This will clear the ocapri log
  ***************************************************************************/
-bool RecorderAgent::Recorder_checkRecording_status(IN const Json::Value& request, OUT Json::Value& response)
+bool RecorderAgent::Recorder_clearOcapri_log(IN const Json::Value& request, OUT Json::Value& response)
 {
-        DEBUG_PRINT(DEBUG_TRACE, "checkRecording_status ---> Entry\n");
+        DEBUG_PRINT(DEBUG_TRACE, "clearOcapri_log ---> Entry\n");
+        string clearLogCmd = "cat /dev/null > " OCAPRI_LOG_PATH;      
+        DEBUG_PRINT(DEBUG_TRACE, "clearLogCmd: %s\n",clearLogCmd.c_str());
+        try
+        {
+                system((char *)clearLogCmd.c_str());
+                DEBUG_PRINT(DEBUG_TRACE,"Clear Ocapri Log Success\n");
+                response["result"]="SUCCESS";
+                response["details"]="Cleared Ocapri Log";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured while clearing Ocapri Log\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to clear Ocapri Log";
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"clearOcapri_log ---> Exit\n");
+        return TEST_SUCCESS;
+} 
+
+
+/**************************************************************************
+Function name : RecorderAgent::Recorder_checkOcapri_log()
+
+Arguments     : Input argument is a pattern. Output argument is details,result.
+
+Description   : To check whether  pattern is there in ocapri log. Returns Generated Json Message in details.
+ ***************************************************************************/
+bool RecorderAgent::Recorder_checkOcapri_log(IN const Json::Value& request, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "checkOcapri_log ---> Entry\n");
+
+        string pattern = request["pattern"].asCString();
 
         string recording_id, RecorderLogFilePath, line_Recorder_Log, entry_pos, rec;
-        recording_id = request["Recording_Id"].asString();
 
         std::string strCmd;
         strCmd = getenv ("TDK_PATH");
         strCmd.append("/");
         strCmd.append(RECORDER_LOG_PATH);
         
-//        string log_copying = "cp -r " OCAPRI_LOG_PATH " " RECORDER_LOG_PATH;
-//        string permission = "chmod 777 " RECORDER_LOG_PATH;
 
         string log_copying = "cp -r " OCAPRI_LOG_PATH " ";
         log_copying.append(strCmd);
@@ -236,7 +267,6 @@ bool RecorderAgent::Recorder_checkRecording_status(IN const Json::Value& request
 
         DEBUG_PRINT(DEBUG_LOG,"copying is %s\n", log_copying.c_str());
         DEBUG_PRINT(DEBUG_LOG,"chmod is %s\n", permission.c_str());
-//        RecorderLogFilePath = RECORDER_LOG_PATH;
         RecorderLogFilePath = strCmd;
 
         //* To handle exception for system call
@@ -247,7 +277,7 @@ bool RecorderAgent::Recorder_checkRecording_status(IN const Json::Value& request
         }
         catch(...)
         {
-                DEBUG_PRINT(DEBUG_ERROR,"Exception occured\n");
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured while copying ocapri log file\n");
                 return TEST_FAILURE;
         }
 
@@ -260,38 +290,33 @@ bool RecorderAgent::Recorder_checkRecording_status(IN const Json::Value& request
                 {
                         if(getline(RecorderLogFile,line_Recorder_Log)>0)
                         {
-                                if(line_Recorder_Log.find(RECORDER_PATTERN) != string::npos)
+                                if(line_Recorder_Log.find(pattern) != string::npos)
                                 {
-                                        if(line_Recorder_Log.find(recording_id) != string::npos)
-                                        {
-                                                response["result"] = "SUCCESS";
-                                                response["details"] = line_Recorder_Log.c_str();
-//                                                response["log-path"]= RECORDER_LOG_PATH;
-                                                response["log-path"]= strCmd.c_str();
-                                                break;
-                                        }
+                                        response["result"] = "SUCCESS";
+                                        response["details"] = line_Recorder_Log.c_str();
+                                        response["log-path"]= strCmd.c_str();
+                                        break;
+                                       
                                 }
                         }
                         else
                         {
                                 response["result"] = "FAILURE";
                                 response["details"] = "No Pattern found in Log file";
-//                                response["log-path"]= RECORDER_LOG_PATH;
                                 response["log-path"]= strCmd.c_str();
                         }
 
                 }
                 RecorderLogFile.close();
-                response["result"] = "SUCCESS";
         }
         else
         {
                 DEBUG_PRINT(DEBUG_TRACE,"Unable to open %s\n", RecorderLogFilePath.c_str());
-                DEBUG_PRINT(DEBUG_TRACE,"CheckRecording_status ---> Exit\n");
+                DEBUG_PRINT(DEBUG_TRACE,"checkOcapri_log ---> Exit\n");
                 response["result"] = "FAILURE";
                 response["details"] = "Unable to open the log file";
         }
-        DEBUG_PRINT(DEBUG_TRACE,"CheckRecording_status ---> Exit\n");
+        DEBUG_PRINT(DEBUG_TRACE,"checkOcapri_log ---> Exit\n");
         return TEST_SUCCESS;
 }
 
@@ -564,12 +589,13 @@ bool RecorderAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentOb
                 return TEST_FAILURE;
 	}
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_ScheduleRecording");
-	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_checkRecording_status");
+	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_checkOcapri_log");
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_SendRequest");
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_SendRequestToDeleteFile");
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_DeleteRecordingMetaData");
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_SetValuesInRmfconfig");
         ptrAgentObj->UnregisterMethod("TestMgr_Recorder_PresenceOfRecordingMetaData");
+	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_clearOcapri_log");
 	
 	/* All done, close things cleanly */
 	return TEST_SUCCESS;

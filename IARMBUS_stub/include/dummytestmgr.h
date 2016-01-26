@@ -17,11 +17,18 @@
 #include "libIBus.h"
 #include <stdbool.h>
 #include <pthread.h>
+#include <string.h>
+#include <time.h>
 
 #define IARM_BUS_DUMMYMGR_NAME			  "Test_Event_Mgr"
 
 #define IARM_BUS_DUMMYMGR_API_HANDLER_READY "HandlerReady"
 
+#define DUMMYDATA_X "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+#define DUMMYDATA_Y "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+
+#define DUMMYDATA_Z "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
 typedef struct {
     bool stopped;
 }IARM_Bus_DUMMYMGR_HandlerReady_Param_t;
@@ -43,16 +50,12 @@ typedef struct _DUMMYMGR_EventData_t {
     union {
         struct _EventData_DUMMY_0{
                 /* Declare Event Data structure for DUMMYMGR_EVENT_DUMMY0 */
-                int dummyData;
+                char dummyData[128];
+                struct timespec clock_when_event_sent;   /*!< clock val at send */
         } dummy0;
-        struct _EventData_DUMMY_1{
-                /* Declare Event Data structure for DUMMYMGR_EVENT_DUMMY1 */
-                int dummyData;
-        } dummy1;
-        struct _EventData_DUMMY_2{
-                /* Declare Event Data structure for DUMMYMGR_EVENT_DUMMY2 */
-                int dummyData;
-        } dummy2;
+#if 0
+
+#endif
     } data;
 } IARM_Bus_DUMMYMGR_EventData_t;
 /*

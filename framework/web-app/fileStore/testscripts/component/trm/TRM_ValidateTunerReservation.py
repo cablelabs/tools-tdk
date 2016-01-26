@@ -127,6 +127,72 @@ if "SUCCESS" in result.upper():
     else:
         tdkTestObj.setResultStatus("FAILURE");
 
+
+    #Primitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
+
+    deviceNo = 0
+    duration = 10000
+    startTime = 0
+    # Record channel 2
+    locator = tdkTestObj.getStreamDetails('02').getOCAPID()
+    recordingId = "RecordIdCh01"
+    hot = 0
+
+    print "DeviceNo:%d Locator:%s recordingId:%s hot:%d duration:%d startTime:%d"%(deviceNo,locator,recordingId,hot,duration,startTime)
+
+    tdkTestObj.addParameter("deviceNo",deviceNo);
+    tdkTestObj.addParameter("duration",duration);
+    tdkTestObj.addParameter("locator",locator);
+    tdkTestObj.addParameter("startTime", startTime);
+    tdkTestObj.addParameter("recordingId",recordingId);
+    tdkTestObj.addParameter("hot",hot);
+
+    expectedRes = "SUCCESS"
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedRes);
+
+    #Get the result of execution
+    result = tdkTestObj.getResult();
+    print "[TEST EXECUTION RESULT] : %s" %result;
+    details = tdkTestObj.getResultDetails();
+    print "[TEST EXECUTION DETAILS] : %s" %details;
+
+    if "SUCCESS" in result.upper():
+        #Set the result status of execution
+        tdkTestObj.setResultStatus("SUCCESS");
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+
+    time.sleep(2)
+
+    #Validate recording reservation
+    tdkTestObj = obj.createTestStep('TRM_ValidateTunerReservation');
+
+    print "Validate recording reservation on deviceNo:%d Locator:%s"%(deviceNo,locator)
+
+    tdkTestObj.addParameter("deviceNo",deviceNo);
+    tdkTestObj.addParameter("activity",2);
+    tdkTestObj.addParameter("locator",locator);
+
+    expectedRes = "SUCCESS"
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedRes);
+
+    #Get the result of execution
+    result = tdkTestObj.getResult();
+    print "[TEST EXECUTION RESULT] : %s" %result;
+    details = tdkTestObj.getResultDetails();
+    print "[TEST EXECUTION DETAILS] : %s" %details;
+
+    if "SUCCESS" in result.upper():
+        #Set the result status of execution
+        tdkTestObj.setResultStatus("SUCCESS");
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+
     #unloading trm module
     obj.unloadModule("trm");
 else:
