@@ -23,6 +23,8 @@ $(document).ready(function() {
 		bindings : {
 			'add_device' : function(node) {
 				createDevice();
+			},'upload_device':function(node){
+				uploadDevice();
 			}
 		}
 	});
@@ -43,12 +45,28 @@ $(document).ready(function() {
 	var decider_id = $("#decider").val();
 });
 
+/**
+ * Function shows the upload device page option  
+ */
+function uploadDevice(){
+	$("#responseDiv").hide();
+	$("#up_load").show();
+}
+/**
+ * function for hide upload device option 
+ */
+function hideUploadOption(){
+	$("#responseDiv").show();
+	$("#up_load").hide();
+}
 
 function createDevice() {	
+	hideUploadOption();
 	$.get('createDevice', function(data) { $("#responseDiv").html(data); });
 }
 
 function showDevice(id,flag) {
+	hideUploadOption();
 	$.get('editDevice', {id: id, flag:flag}, function(data) { $("#responseDiv").html(data); });
 }
 

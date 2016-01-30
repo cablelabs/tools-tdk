@@ -18,6 +18,9 @@ import static com.comcast.rdk.Constants.*
 import grails.converters.JSON
 import java.sql.Timestamp
 import java.util.concurrent.ExecutorService
+import groovy.xml.StreamingMarkupBuilder
+import groovy.xml.MarkupBuilder
+
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject
@@ -1354,6 +1357,236 @@ class DeviceGroupController {
 		println " device obj "+deviceObj
 		render deviceObj
 	}
+	/**
+	 * Function is used to download the device details as the .xml file 
+	 * @return
+	 */
+	def downloadDeviceXml(){			
+		def deviceInstance = Device?.findById(params?.id)
+		if(deviceInstance){
+			def streamsDetails = [:]
+			def deviceRadioStreamList = DeviceRadioStream.findAllByDevice(deviceInstance)
+			def deviceStreamList = DeviceStream?.findAllByDevice(deviceInstance)		
+			//For streaming details 
+			deviceStreamList?.each{ 
+				streamsDetails.put(it.stream?.toString(),it.ocapId?.toString())
+			}
+			//For radio streaming details  
+			deviceRadioStreamList.each {
+				streamsDetails?.put(it.stream?.toString(),it.ocapId?.toString())
+			}		
+			def writer = new StringWriter()
+			def xml = new MarkupBuilder(writer)
+			String deviceData
+			try{
+				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
+				xml.xml(){
+					xml.device(){
+						mkp.yield "\r\n  "
+						mkp.comment "Unique name for the STB"
+						xml.stb_name(deviceInstance?.stbName)
+						mkp.yield "\r\n  "
+						mkp.comment "Unique IP for the STB "
+						xml.stb_ip(deviceInstance?.stbIp)
+						mkp.yield "\r\n  "
+						mkp.comment " BoxType for STB  "
+						xml.box_type(deviceInstance?.boxType)
+						mkp.yield "\r\n  "
+						mkp.comment "BoxManufacture for the STB"
+						xml.box_manufacture(deviceInstance?.boxManufacturer)
+						mkp.yield "\r\n  "
+						mkp.comment "SoC vendour for the STB"
+						xml.soc_vendour(deviceInstance?.soCVendor)
+						BoxType boxTypeInastnce = BoxType.findByName(deviceInstance?.boxType?.toString())
+						if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
+						|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+							mkp.yield "\r\n  "
+							mkp.comment "RecorderId for Gateway device"
+							xml.recorder_id(deviceInstance?.recorderId)
+							mkp.yield "\r\n  "
+							mkp.comment "Streaming deatils with Ocap id "
+							xml.streams(){
+								mkp.yield "\r\n "
+								mkp.comment "<stream id='streamId'>OCAP_ID</stream>"
+								streamsDetails.each { streamid,ocapid->
+									xml.stream(id:streamid , ocapid?.toString())
+								}
+							}
+							if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+								mkp.yield "\r\n  "
+								mkp.comment "Gateway IP for Terminal-RNG box"
+								xml.gateway_ip(deviceInstance?.gatewayIp)
+							}
+						}else{
+							if(deviceInstance?.gatewayIp){
+								mkp.yield "\r\n  "
+								mkp.comment "Gateway IP for  IPClient STB"
+								xml.gateway_ip(deviceInstance?.gatewayIp)
+							}else{
+								mkp.yield "\r\n  "
+								mkp.comment "Gateway IP for IPClient STB"
+								xml.gateway_ip("")
+							}
+						}
+					}
+				}
+				deviceData= writer.toString()
+			} catch(Exception e){
+				println "Error "+e.getMessage()
+				e.printStackTrace()
+			}
+			if(deviceData){
+				params.format = "text"
+				params.extension = "xml"
+				response.setHeader("Content-Type", "application/octet-stream;")
+				response.setHeader("Content-Disposition", "attachment; filename=\""+ deviceInstance?.toString()+".xml\"")
+				response.setHeader("Content-Length", ""+deviceData.length())
+				response.outputStream << deviceData.getBytes()
+			}else{
+				flash.message = "Download failed due to device information not available."
+				redirect(action: "list")
+			}
+		}else{
+			flash.message ="Device does not exist"
+			redirect(action:"list")
+		}
+	}	
+	/**
+	 * Function is used to upload xml file, extract the content and create new device
+	 * @return
+	 */
+	def uploadDevice(){
+		String xmlContent=""
+		def data = null
+		def node
+		def uploadedFile = request.getFile('file')
+		if( uploadedFile.originalFilename.endsWith(".xml")) {
+			String fileName = uploadedFile?.originalFilename?.replace(".xml","")
+			if(Device.findByStbName(fileName.trim())){
+				flash.message="Device with name "+ fileName +" already exists"
+			}else{
+				InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
+				def fileContent = reader?.readLines()
+				if(fileContent){
+					fileContent?.each{ xmlData->
+						xmlContent += xmlData +"\n"
+					}
+					if(fileContent && fileContent.size() > 0){
+						XmlParser parser = new XmlParser();
+						node = parser.parseText(xmlContent)
+						List<String> streams= new ArrayList<String>()
+						List<String> ocapId= new ArrayList<String>()
+						def deviceName =  node?.device?.stb_name?.text()?.trim()
+						def  deviceIp =node?.device?.stb_ip?.text()?.trim()
+						String boxType = node?.device?.box_type?.text()?.trim()
+						def recorderId = node?.device?.recorder_id?.text()?.trim()
+						def socVendor = node?.device?.soc_vendour?.text()?.trim()
+						def boxManufacture = node?.device.box_manufacture?.text()?.trim()
+						def gateway = node?.device?.gateway_name?.text()?.trim()
+						def boxTypeObj = BoxType.findByName(boxType)
+						def boxManufactureObj = BoxManufacturer.findByName(boxManufacture)
+						def socVendorObj = SoCVendor.findByName(socVendor)						
+						node?.device?.streams?.stream?.each{
+							streams.add(it?.@id)
+							ocapId.add(it?.text()?.trim())
+						}
+						if(!boxType){
+							flash.message ="BoxType should not be empty "
+						}else if(!boxTypeObj){
+							flash.message= " No valid boxtype available with name"
+						}else if(Device.findByStbName(deviceName)){
+							flash.message= " Device name is already exists "
+						}else if(!deviceName){
+							flash.message= "Device should not be empty "
+						}else if(!deviceIp){
+							flash.message="Device IP should not be empty"
+						}else if(deviceIp && Device.findByStbIp(deviceIp)){
+							flash.message="Device IP already exist"
+						}else if(!socVendor){
+							flash.message="SOC Vendour should not be empty "
+						}else if(socVendor && !SoCVendor.findByName(socVendor)){
+							flash.message= " No valid soc vendour available with name"
+						}else if(!boxManufacture){
+							flash.message= "Box manufacture should not be empty "
+						}else if(boxManufacture && !BoxManufacturer.findByName(boxManufacture)){
+							flash.message=" No valid box manufacture available with name"
+						}else{
+							BoxType boxTypeInastnce = BoxType.findByName(boxType)
+							boolean valid = true
+							if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
+							|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+
+								if(recorderId?.trim()?.length() ==  0){
+									valid = false
+									flash.message ="Recorder id should not blank "
+								}else if(streams){
+									if(validateOcapIds(streams,ocapId)){
+										if(checkDuplicateOcapId(ocapId)){
+											valid = false
+											flash.message=" Duplicate Ocap id"
+										}
+									}else{
+										valid = false
+										flash.message= " Stream information is not is not correct "
+									}
+								}
+							}else{
+								if(gateway){
+									if(!Device.findByStbName(gateway)){
+										valid = false
+										flash.message=" No valid device available with name "
+									}
+								}
+							}
+							if(valid){
+								try{
+									int status = 0
+									Device deviceInstance = new Device()
+									deviceInstance.stbName = deviceName
+									deviceInstance.stbIp = deviceIp
+									deviceInstance.soCVendor = socVendorObj
+									deviceInstance.boxType=boxTypeObj
+									deviceInstance.boxManufacturer =boxManufactureObj
+
+									if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_CLIENT)){
+										status = 1
+										deviceInstance.gatewayIp =gateway
+
+									}else if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
+									|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+										status = 2
+										deviceInstance.recorderId = recorderId
+										deviceInstance.macId =""
+									}
+
+									if(status > 0 && deviceInstance.save(flush:true)){
+										if(status == 2){								
+											devicegroupService.saveToDeviceGroup(deviceInstance)
+											saveDeviceStream(streams, ocapId, deviceInstance)
+										}
+										flash.message=" Device saved successfully"
+									}else{
+										flash.message=" Device not saved"
+									}
+
+								}catch (Exception e){
+									println "ERROR"+e.getMessage()
+									e.printStackTrace()
+									flash.message("Device not saved ")
+								}
+							}
+						}
+					}else{
+						flash.message ="File content is empty"
+					}
+				}
+			}
+		}else{
+			flash.message="Error, The file extension is not in .xml format"
+		}
+		redirect(action:"list")
+		return
+	}	
 }
 
 

@@ -190,8 +190,8 @@ if "SUCCESS" in mfLoadModuleStatus.upper() and "SUCCESS" in iarmModuleStatus.upp
                                                                                 if Expected_Result in result.upper():
                                                                                         Mediatime[1]=float(Mediatime[1]);
 											print "New Time ", Mediatime[1], "Initial Time", initialmediatime
-                                                                                        if Mediatime[1] <= initialmediatime:
-                                                                                                print "SUCCESS: Mediatime did not increase during standby"
+                                                                                        if Mediatime[1] >= initialmediatime:
+                                                                                                print "SUCCESS: Mediatime will increase during standby because the buffer position will keep remains "
                                                                                                 tdkTestObj.setResultStatus("SUCCESS");
                                                                                         else:
                                                                                                 print "FAILURE: Mediatime increased during standby"

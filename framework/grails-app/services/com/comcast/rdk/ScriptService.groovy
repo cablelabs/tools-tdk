@@ -355,6 +355,20 @@ class ScriptService {
 	  }
 	  return scriptNameList
   }
+  /**
+   * Function for return the total scripts list 
+   * @param realPath
+   * @return
+   */
+  
+  def getScriptsList(def realPath ){
+	  if( scriptsList == null || scriptsList.size() == 0 ){
+		  initializeScriptsData(realPath)
+	  }
+	  return scriptsList
+  }
+
+  
   
 	def getScriptFileObj(realPath,dirName,fileName){
 		dirName = dirName?.trim()

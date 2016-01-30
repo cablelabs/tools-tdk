@@ -672,6 +672,8 @@ function deviceStatusCheck(device,deviceStatus){
 		alert("Device is currently not available for execution");
 	}else if(device == 'null' ){ 
 		 alert("Device name is not configured")
+	 }else{
+		 executionTriggeredPopUp()		 
 	 }
 	
 }
@@ -679,15 +681,27 @@ function deviceStatusCheck(device,deviceStatus){
  * Function check failed scripts available in execution
  * @param executionInstance
  */
-function failureScriptCheck(executionName){
+function failureScriptCheck(executionName,device,deviceStatus){
 	$.get('failureScriptCheck', {
 		executionName : executionName,
 	}, function(data) {
 		if(data == 'false'){
-			alert(" No Failed scripts availble for rerun execution");
-		}		
+			alert(" No Failed scripts availble for rerun execution");			
+		}else{
+			deviceStatusCheck(device,deviceStatus)			
+		}			
 	});
+		
 }
+
+/**
+ * function will shows pop up 
+ */
+function  executionTriggeredPopUp(){
+	alert("Excution Triggered ");	
+}
+
+
 /**
  * Function to mark individual execution results in execution page.
  * 

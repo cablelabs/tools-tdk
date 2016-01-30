@@ -1221,14 +1221,11 @@ class JobSchedulerService implements Job{
 
 		new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
 		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1)
-		if(isLogReqd){
+		if(isLogReqd?.toString()?.equals("true")){
 			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
 		}
 		return htmlData
 	}
-			
-			
-			
 			/**
 			 * Refreshes the status in agent as it is called with flag false
 			 * @param deviceInstance

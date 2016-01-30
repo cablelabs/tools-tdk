@@ -44,12 +44,16 @@ $(document).ready(function() {
 	$("#deviceid").addClass("changecolor");
 });
 
-
+function hideUpload(){
+	$("#responseDiv").show();
+	$("#up_load").hide();
+}
 function createDeviceGroup() {	
+	hideUpload();
 	$.get('create', function(data) { $("#responseDiv").html(data); });
 }
-
-function showDeviceGroup(id) {	
+function showDeviceGroup(id) {
+	hideUpload();
 	$.get('edit', {id: id}, function(data) { $("#responseDiv").html(data); });
 }
 

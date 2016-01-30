@@ -23,36 +23,34 @@
 			<ul>
 				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
 				<li><g:link class="list" action="list"><g:message code="default.list.label" args="[entityName]" /></g:link></li>
-				<li><g:link class="create" action="createFunction"> <g:message code="Create Function" /></g:link></li>
-				<li><g:link class=" create" action= " createParameter"> <g:message code= "Create Parameter"/></g:link></li>			
+				<%--<li><g:link class="create" action="create"> <g:message code="Create Module" /></g:link></li>
+				--%><li><g:link class=" create" action= " createParameter"> <g:message code= "Create Parameter"/></g:link></li>			
 			</ul>
 		</div>
 	
 		<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
 		</g:if>
-
-		<div id="create-module" class="content scaffold-create" role="main"    style= " height:250px;">
+		<div id="create-function" class="content scaffold-create" role="main"   style="height:250px">
 		<br>
 		<br>
-		
-		
-			<h1><g:message code="default.create.label" args="[entityName]" /></h1>	
-			<g:hasErrors bean="${moduleInstance}">
+		    <g:set var="entityName1" value="${message(code: 'function.label', default: 'Function')}" />
+			<h1><g:message code="default.create.label" args="[entityName1]"  /></h1>			
+			<g:hasErrors bean="${functionInstance}">
 			<ul class="errors" role="alert">
-				<g:eachError bean="${moduleInstance}" var="error">
+				<g:eachError bean="${functionInstance}" var="error">
 				<li <g:if test="${error in org.springframework.validation.FieldError}">data-field-id="${error.field}"</g:if>><g:message error="${error}"/></li>
 				</g:eachError>
 			</ul>
 			</g:hasErrors>
-			<g:form action="save" >
+			<g:form action="saveFunction" >
 				<fieldset class="form">
-					<g:render template="form"/>				
+					<g:render template="functionform"/>
 				</fieldset>
-				<%--<fieldset class="buttons">
-					<g:submitButton name="create" class="save" value="${message(code: 'default.button.create.label', default: 'Create')}" />
+				<%-- <fieldset class="buttons">					
 				</fieldset> --%>
-			</g:form>			
+			</g:form>
 		</div>
 	</body>
 </html>
+

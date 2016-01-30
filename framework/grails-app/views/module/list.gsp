@@ -21,8 +21,12 @@
 		<a href="#list-module" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		<div class="nav" role="navigation">
 			<ul>
+				<%-- For Function ,module and parameter creates--%>
 				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
 				<li><g:link class="create" action="create"><g:message code="default.create.label" args="[entityName]" /></g:link></li>
+				<li> <g:link class="create" action="createFunction" > Create Function </g:link></li>
+				<li><g:link class ="create" action="createParameter"> Create Parameters </g:link></li>			
+				
 			</ul>
 		</div>
 		<div id="list-module" class="content scaffold-list" role="main">

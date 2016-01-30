@@ -65,7 +65,12 @@ class ScriptGroupController {
 		scriptGroupMap?.keySet()?.sort{a,b -> a <=> b}
 		scriptGroupMap = new TreeMap(scriptGroupMap)
 		def lists = ScriptGroup.executeQuery('select name from ScriptGroup')
-		[scriptGroupInstanceList: lists, scriptGroupInstanceTotal: lists.size(),error: params.error, scriptId: params.scriptId, scriptGroupId:params.scriptGroupId, scriptInstanceTotal: scriptNameList.size(), scriptGroupMap:scriptGroupMap]
+		def testGroup = Module.findAll()
+		def moduleMap =[:]
+		testGroup.each { moduleName  ->
+			moduleMap.put(moduleName,moduleName.testGroup)
+		}
+		[scriptGroupInstanceList: lists, scriptGroupInstanceTotal: lists.size(),error: params.error, scriptId: params.scriptId, scriptGroupId:params.scriptGroupId, scriptInstanceTotal: scriptNameList.size(), scriptGroupMap:scriptGroupMap, testGroup : moduleMap]
 	}
 	
 	/**
@@ -726,9 +731,8 @@ class ScriptGroupController {
      * @return
      */
     def saveScript() {
-		
         def error = ''
-		def scriptList = scriptService.getScriptNameList()
+		def scriptList = scriptService.getScriptsList(request.getRealPath("/"))
         if(scriptList?.contains(params?.name?.trim())){
 			render("Duplicate Script Name not allowed. Try Again.")
         }else if((!params?.ptest) || params?.ptest == "default" ){
@@ -1281,7 +1285,15 @@ class ScriptGroupController {
 			}
 		}
 		
-        render(template: "searchList", model: [scriptList : scripts])
+		
+		String value = ""
+		if(scripts == null || scripts.empty){
+			value = "false"
+		}else{
+			 value = "true"
+		}
+		
+        render(template: "searchList", model: [scriptList : scripts, value : value])
     }
     
     /**
@@ -2154,24 +2166,45 @@ class ScriptGroupController {
 		redirect(action:"list")
 		return
 	}
-//------------------------------------------------------------------------------------------------------	
+		
 	/**
-	 * The function used to arrange the  script group script list according to module wise.
-	 * @return
+	 * Function for saving the current script group script list while clicking the module wise/ random wise sort
 	 */
-	def moduleWiseScriptList(){
-		def scriptGroup  = ScriptGroup.findByName(params.name)
-		redirect(action:"edit" , params:[name:scriptGroup])
-	}
-	/**
-	 * The function used to arrange the script group script list according to random wise.
-	 * @return
-	 */
-	def randomScriptList(){
-		def scriptGroup = ScriptGroup?.findByName(params?.name)
-		redirect(action:"edit", params: [name :scriptGroup])
-	}
 	
+	
+ def scriptGroupListSave(){	 	 
+		def scriptGroupInstance = ScriptGroup.get(params.id)
+		boolean  value = false
+		try{
+			if(scriptGroupInstance){
+				scriptGroupInstance.name = params.get("name")
+				scriptGroupInstance.scriptList.clear();
+				def idList = params?.idList
+				idList = idList.replaceAll("sgscript-","")
+				idList = idList.replaceAll("end","")
+				StringTokenizer st = new StringTokenizer(idList,",")
+				while(st.hasMoreTokens()){
+					String token = st.nextToken()
+					if(token && token.size()>0){
+						ScriptFile sctFile = ScriptFile.findById(token)
+						if(sctFile && !scriptGroupInstance?.scriptList?.contains(sctFile)){
+							scriptGroupInstance.addToScriptList(sctFile)
+						}
+					}
+				}
+				if(!scriptGroupInstance?.save()){
+					value = false
+				}else{
+					value = true
+				}
+			}
+		}catch(Exception e){
+			println " ERROR "+ e.getMessage()
+			e.printStackTrace()
+		}
+		 render value
+	 }
+
 	/**
 	 * The function used to download the consolidated script list according to module wise.
 	 * It display the report like a work book  contains
@@ -2179,7 +2212,6 @@ class ScriptGroupController {
 	 * Script list shows corresponding to the module in each page.
 	 * @return
 	 */
-	 
 	def downloadScriptList() {
 		try{
 			def requestGetRealPath = request.getRealPath("/")

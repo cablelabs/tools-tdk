@@ -61,6 +61,7 @@ class ExecutescriptService {
 	 * Injects dataSource.
 	 */
 	def dataSource
+	public static volatile Object  lock = new Object()
 	
 	/**
 	 * Sets the transactional to false as it is causing many issues
@@ -236,8 +237,7 @@ class ExecutescriptService {
 			else{
 				
 				
-				if((timeDifference >= execTime) && (execTime != 0))	{
-					
+				if((timeDifference >= execTime) && (execTime != 0))	{					
 					File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 					def absolutePath = layoutFolder.absolutePath
 					String[] cmd = [
@@ -497,72 +497,67 @@ class ExecutescriptService {
 	 * @return
 	 */
 	def reRunOnFailure(final String realPath, final String filePath, final String execName, final String uniqueExecutionName, final String appUrl){
-		try {
+	try {
 		def newExecName
 		def aborted=false
 		Execution executionInstance = Execution.findByName(execName)
 		int executionCount=0
 		int execCnt = 0
 		int execCount =0
-		try{
-			def executionList = Execution?.findAll()
-			if(execName?.toString()?.contains("_RERUN")){
-				def execNameSplitList = execName.toString().tokenize("_")
-				if(execNameSplitList[2]){
-					executionCount =Integer.parseInt(execNameSplitList[2])
-					executionCount++
-					newExecName =  execNameSplitList[0]+"_RERUN_"+executionCount
-					//if(Execution?.findByName(newExecName?.toString())){
-					if(executionList?.toString().contains(newExecName?.toString())){
-						executionList?.each { exName ->
-							if(exName?.toString().contains(execNameSplitList[0]?.toString())){
-								execCount++
-							}
+		def executionList = Execution?.findAll()
+		if(execName?.toString()?.contains("_RERUN")){
+			def execNameSplitList = execName.toString().tokenize("_")
+			if(execNameSplitList[2]){
+				executionCount =Integer.parseInt(execNameSplitList[2])
+				executionCount++
+				newExecName =  execNameSplitList[0]+"_RERUN_"+executionCount
+				if(executionList?.toString().contains(newExecName?.toString())){
+					executionList?.each { exName ->
+						if(exName?.toString().contains(execNameSplitList[0]?.toString())){
+							execCount++
 						}
-						newExecName = execNameSplitList[0]+"_RERUN_"+(execCount)
-					}else{
-						newExecName =newExecName
 					}
-				}else{				
+					newExecName = execNameSplitList[0]+"_RERUN_"+(execCount)
+				}else{
+					newExecName =newExecName
+				}
+			}else{
 				newExecName  = execName
-				//if(Execution?.findByName(execName?.toString())){
+				//	if(Execution?.findByName(execName?.toString())){
 				if(executionList?.toString().contains(execName?.toString())){
 					def lastExecname  = executionList.find{ it  ->
 						it?.toString().contains(execName?.toString())
 					}
-					
 					def newExecNameList = lastExecname.toString().tokenize("_")
 					execCnt = Integer.parseInt(newExecNameList[2])
 					execCnt++
 					newExecName = execName+"_"+execCnt
-				}				
 				}
-			}else{ 
-				newExecName = execName +"_RERUN_"+1
-				if( Execution.findByName(newExecName?.toString() )){
-					def lastExecname  = executionList.find{ it  ->
-						it?.toString().contains(execName?.toString())
-					}
-					def newExecNameList = lastExecname.toString().tokenize("_")
-					execCnt = Integer.parseInt(newExecNameList[2])
-					execCnt++
-					newExecName = execName+"_RERUN_"+(execCnt)
-				}else{
+			}
+		}else{
+			newExecName = execName +"_RERUN_"+1
+			if( Execution.findByName(newExecName?.toString() )){
+				def lastExecname  = executionList.find{ it  ->
+					it?.toString().contains(execName?.toString())
+				}
+				def newExecNameList = lastExecname.toString().tokenize("_")
+				execCnt = Integer.parseInt(newExecNameList[2])
+				execCnt++
+				newExecName = execName+"_RERUN_"+(execCnt)
+			}else{
 				newExecName= newExecName
-				}		
-			}	
-		} catch(Exception e){
-			println " ERROR"+e.getMessage()
-			e.printStackTrace()			
-		}	
+			}
+		}
+
+
 		def exeId = executionInstance?.id
 		def resultArray = Execution.executeQuery("select a.result from Execution a where a.name = :exName",[exName: execName])
 		def result = resultArray[0]
-		
+
 		Execution rerunExecutionInstance
 		def executionSaveStatus = true
 		if(result != SUCCESS_STATUS){
-			def scriptName			
+			def scriptName
 			def scriptGroupInstance = ScriptGroup.findByName(executionInstance?.scriptGroup)
 			/**
 			 * Get all devices for execution
@@ -572,20 +567,48 @@ class ExecutescriptService {
 			executionDeviceList.each{ execDeviceInstance ->
 				if(execDeviceInstance.status != SUCCESS_STATUS){
 					Device deviceInstance = Device.findByStbName(execDeviceInstance?.device)
+					 
+					String status1 = ""
+					boolean allocated = false
+					try {
+						status1 = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+						synchronized (lock) {
+							if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+								status1 = "BUSY"
+							}else{
+								if((status1.equals( Status.FREE.toString() ))){
+									if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+										allocated = true
+										executionService.deviceAllocatedList.add(deviceInstance?.id)
+										Thread.start{
+											deviceStatusService.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
+										}
+									}
+								}
+							}
+						}
+
+					}
+					catch(Exception eX){
+						println  " ERROR "+ eX.printStackTrace()
+					}
+					//if(status1.equals( Status.FREE.toString())){
+
 					def executionResultList
 					ExecutionResult.withTransaction {
 						executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
 					}
+
+
 					def resultSize = executionResultList.size()
-					if(cnt == 0){							
-						 			
-								
+					if(cnt == 0){
 						scriptName = executionInstance?.script
 						def deviceName = deviceInstance?.stbName
 						if(executionDeviceList.size() > 1){
 							deviceName = MULTIPLE
-						}									
+						}
 						executionSaveStatus = executionService.saveExecutionDetails(newExecName, scriptName, deviceName, scriptGroupInstance,appUrl,"false","false","false","false")
+
 						cnt++
 						Execution.withTransaction{
 							rerunExecutionInstance = Execution.findByName(newExecName)
@@ -602,97 +625,110 @@ class ExecutescriptService {
 							executionDevice.status = UNDEFINED_STATUS
 							executionDevice.save(flush:true)
 						}
-						executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbIp, deviceInstance?.logTransferPort)				
+						executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbIp, deviceInstance?.logTransferPort)
 						def scriptInstance
 						def htmlData
-						
+
 						int counter = 0
-						def isMultiple = TRUE						
-						// adding log transfer to server for reruns 
+						def isMultiple = TRUE
+						// adding log transfer to server for reruns
 						Properties props = new Properties()
 						try {
 							props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
-							// initiating log transfer 
+							// initiating log transfer
 							if(executionResultList.size() > 0){
 								if(props.get("logServerUrl")){
 									Runnable runnable = new Runnable(){
-										public void run(){
-											def startStatus = initiateLogTransfer(newExecName, props.get("logServerUrl"), props.get("logServerAppName"), deviceInstance)
+												public void run(){
+													def startStatus = initiateLogTransfer(newExecName, props.get("logServerUrl"), props.get("logServerAppName"), deviceInstance)
 													if(startStatus){
 														println "Log transfer job created for $execName"
 													}
 													else{
 														println "Cannot create Log transfer job for $execName"
 													}
-										}
-									}
+												}
+											}
 									executorService.execute(runnable);
 								}
 							}
 						} catch (Exception e) {
 							e.printStackTrace()
 						}
-						executionResultList.each{ executionResult ->												
-								if(!executionResult.status.equals(SKIPPED)){
-//								scriptInstance = Script.findByName(executionResult?.script)
+						executionResultList.each{ executionResult ->
+							if(!executionResult.status.equals(SKIPPED)){
+								//	scriptInstance = Script.findByName(executionResult?.script)
 								def scriptFile = ScriptFile.findByScriptName(executionResult?.script)
-								scriptInstance = scriptService.getScript(realPath,scriptFile?.moduleName,scriptFile?.scriptName)								
+								scriptInstance = scriptService.getScript(realPath,scriptFile?.moduleName,scriptFile?.scriptName)
 								counter ++
 								if(counter == resultSize){
 									isMultiple = FALSE
 								}
 								if(scriptInstance){
-								if(executionService.validateScriptBoxTypes(scriptInstance,deviceInstance)){
-									aborted = executionService.abortList.contains(exeId?.toString())
-									if(!aborted){
-										htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null,"false")										
+									if(executionService.validateScriptBoxTypes(scriptInstance,deviceInstance)){
+										aborted = executionService.abortList.contains(exeId?.toString())
+										if(!aborted){
+											htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null,"false")
+										}
 									}
-								}
 								}
 							}
 						}
 						try {
 							// stopping log transfer
-								if(executionResultList.size() > 0){
-									if(props.get("logServerUrl")){
-										Runnable runnable = new Runnable(){
-													void run() {
-														def status = stopLogTransfer(newExecName, props.get("logServerUrl"), props.get("logServerAppName"))
-														if(status){
-															println "Stopped Log transfer job for $execName"
-														}
-														else {
-															println "Log transfer job scheduled for $execName failed to stop"
-														}
-													};
-												}
-										executorService.execute(runnable);
-									}
+							if(executionResultList.size() > 0){
+								if(props.get("logServerUrl")){
+									Runnable runnable = new Runnable(){
+												void run() {
+													def status = stopLogTransfer(newExecName, props.get("logServerUrl"), props.get("logServerAppName"))
+													if(status){
+														println "Stopped Log transfer job for $execName"
+													}
+													else {
+														println "Log transfer job scheduled for $execName failed to stop"
+													}
+												};
+											}
+									executorService.execute(runnable);
 								}
+							}
 						} catch (Exception e) {
 							e.printStackTrace()
 						}
 					}
+				//}
+					
+					if(allocated && executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+						executionService.deviceAllocatedList.remove(deviceInstance?.id)
+					}
+										
 				}
 			}
-			
+
 			Execution execution = Execution.findByName(newExecName)
 			if(aborted && executionService.abortList.contains(exeId?.toString())){
 				executionService.abortList.remove(exeId?.toString())
 			}
-			
+
 			Execution.withTransaction {
 				Execution executionInstance1 = Execution.findByName(newExecName)
 				executionService.saveExecutionStatus(aborted, executionInstance1?.id)
 			}
 		}
-		//}
-		
-		} catch (Exception e) {
-			e.printStackTrace()
-		}
-			
+
+	} catch (Exception e) {
+		e.printStackTrace()
 	}
+			
+	
+
+		
+	
+	
+	
+	
+	}	
+	
 	/**
 	 * Called from REST API : To save the result details
 	 * @param executionId
@@ -1233,7 +1269,7 @@ class ExecutescriptService {
 				executionDeviceObj1 = executionDeviceObj
 			}
 
-			if((executionDeviceObj1) && (rerun)){
+			if((executionDeviceObj1) && (rerun.equals("on"))){
 				htmlData = reRunOnFailure(realPath,filePath,execName,executionName,url)
 				output.append(htmlData)
 			}

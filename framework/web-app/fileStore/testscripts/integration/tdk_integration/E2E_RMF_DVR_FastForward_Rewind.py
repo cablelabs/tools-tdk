@@ -3,7 +3,7 @@
 <xml>
   <id>1679</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>12</version>
+  <version>15</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_FastForward_Rewind</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -30,24 +30,26 @@
   <box_types>
     <box_type>IPClient-3</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
+    <!--  -->
+    <box_type>IPClient-4</box_type>
+    <!--  -->
+    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 import time;
+import tdkintegration;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
@@ -81,7 +83,8 @@ def fastforward_Start(obj):
     tdkTestObj = obj.createTestStep('TDKE2E_Rmf_LinearTv_Dvr_Play');
 
     #set the dvr play url
-    #streamDetails = tdkTestObj.getStreamDetails("01");
+    streamDetails = tdkTestObj.getStreamDetails("01");
+	
 
 
     if matchList:
@@ -90,7 +93,8 @@ def fastforward_Start(obj):
 
       #fetch recording id from list matchList.
       recordID = matchList[1]
-      url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=4.00&time_pos=0.00'
+      url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] + '&0&play_speed=4.00&time_pos=0.00');
+
 
       print "The Play DVR Url Requested: %s"%url
       tdkTestObj.addParameter("playUrl",url);
@@ -136,7 +140,7 @@ def rewind_End(obj):
          #fetch recording id from list matchList.
          recordID = matchList[1]
 
-         url = 'http://'+ streamDetails.getGatewayIp() + ':8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
+         url = tdkintegration.E2E_getStreamingURL(obj, "DVR" , streamDetails.getGatewayIp() , recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00');
          print "The Play DVR Url Requested: %s"%url
          tdkTestObj.addParameter("playUrl",url);
          #Rewind speed
@@ -170,7 +174,7 @@ def rewind_End(obj):
                  
     return retValue
     
-obj.configureTestCase(ip,port,'E2E_RMF_MDVR_DVR_FastForward_Rewind');
+obj.configureTestCase(ip,port,'E2E_RMF_DVR_FastForward_Rewind');
 
 #Get the result of connection with test component and STB
 result =obj.getLoadModuleResult();

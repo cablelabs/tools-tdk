@@ -165,10 +165,31 @@ class ModuleController {
      * Create Module, Function and parameter types
      * @return
      */
-    def create() {        
-        [moduleInstance: new Module(params), functionInstance : new Function(params), parameterTypeInstance : new ParameterType(params)]
-    }
+    def create() {  
+		int max ;
+		params.max = Math.min(max ?: 10, 100)	
+		def groupsInstance = utilityService.getGroup()
+		def moduleInstanceList = Module.findAllByGroupsOrGroupsIsNull(groupsInstance, params)
+		def moduleInstanceListCnt = Module.findAllByGroupsOrGroupsIsNull(groupsInstance)
+        [moduleInstance: new Module(params), functionInstance : new Function(params), parameterTypeInstance : new ParameterType(params),moduleInstanceList: moduleInstanceList, moduleInstanceTotal: moduleInstanceListCnt.size()]
 
+    }
+	
+	/**
+	 * create  function 
+	 */
+	def createFunction(){
+		[functionInstance :  new Function(params)]
+		
+		
+	}
+	/**
+	 * Create parameters 
+	 */
+	def createParameter(){
+		[parameterTypeInstance  : new ParameterType(params)]
+		
+	}
     def save() {
         def moduleInstance = new Module(params)
 		moduleInstance.groups = utilityService.getGroup()
@@ -188,11 +209,11 @@ class ModuleController {
     def saveFunction() {
         def functionInstance = new Function(params)
         if (!functionInstance.save(flush: true)) {
-            render(view: "create", model: [functionInstance: functionInstance])
+            render(view: "createFunction", model: [functionInstance: functionInstance])
             return
         }
         flash.message = message(code: 'default.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
-        redirect(action: "create")
+        redirect(action: "createFunction")
     }
     
     /**
@@ -203,11 +224,11 @@ class ModuleController {
     def saveParameter() {
         def parameterTypeInstance = new ParameterType(params)
         if (!parameterTypeInstance.save(flush: true)) {
-            render(view: "create", model: [parameterTypeInstance: parameterTypeInstance])
+            render(view: "createParameter", model: [parameterTypeInstance: parameterTypeInstance])
             return
         }
         flash.message = message(code: 'default.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])
-        redirect(action: "create")
+        redirect(action: "createParameter")
     }
 	
 	def updateTimeOut(){
