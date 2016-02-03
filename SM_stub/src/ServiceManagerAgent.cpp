@@ -337,7 +337,10 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
         DEBUG_PRINT(DEBUG_LOG,"\n%s registration status = %d\n", serviceName.toUtf8().constData(), registerStatus);
 
 #ifdef HAS_API_HDMI_CEC
-	registerStatus = startHdmiCecService();
+        if (serviceName == HdmiCecService::SERVICE_NAME)
+        {
+                registerStatus = startHdmiCecService();
+        }
 #endif
 
         return registerStatus;
