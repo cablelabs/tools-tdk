@@ -372,7 +372,7 @@ DEBUG_PRINT(DEBUG_TRACE, "Streaming URL : %s\n",url.c_str());
         pos = urlIn.find(":8080");
         urlIn = urlIn.replace(0,pos,http);
     #else
-        string urlIn = url;
+        urlIn = url;
     #endif
         DEBUG_PRINT(DEBUG_TRACE, "IPCLIENT:Final URL passed: %s\n",urlIn.c_str());
         return urlIn;
