@@ -339,6 +339,7 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
 #ifdef HAS_API_HDMI_CEC
         if (serviceName == HdmiCecService::SERVICE_NAME)
         {
+                DEBUG_PRINT(DEBUG_LOG,"\n%s create hdmicec handle\n", serviceName.toUtf8().constData());
                 registerStatus = startHdmiCecService();
         }
 #endif
@@ -409,8 +410,10 @@ bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Js
 		response["result"]="SUCCESS";
 		sprintf(stringDetails,"%s unregistration success", serviceName.c_str());
 #ifdef HAS_API_HDMI_CEC
-		//TODO: Uncomment once PACXG1V3-5284 is fixed
-		//stopHdmiCecService();
+                if (QString::fromStdString(serviceName) == HdmiCecService::SERVICE_NAME)
+                {
+                        stopHdmiCecService();
+                }
 #endif
 	}
 	else
