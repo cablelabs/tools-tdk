@@ -44,6 +44,7 @@ bool RecorderAgent::initialize(IN const char* szVersion, IN RDKTestAgent *ptrAge
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_SetValuesInRmfconfig,"TestMgr_Recorder_SetValuesInRmfconfig");
         ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_PresenceOfRecordingMetaData,"TestMgr_Recorder_PresenceOfRecordingMetaData");
 	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_clearOcapri_log,"TestMgr_Recorder_clearOcapri_log");
+	ptrAgentObj->RegisterMethod(*this,&RecorderAgent::Recorder_ExecuteCmd,"TestMgr_Recorder_ExecuteCmd");
 	
 	return TEST_SUCCESS;
 }
@@ -491,6 +492,56 @@ bool RecorderAgent::Recorder_PresenceOfRecordingMetaData(IN const Json::Value& r
         DEBUG_PRINT(DEBUG_TRACE,"Recorder_PresenceOfRecordingMetaData ---> Exit\n");
         return TEST_SUCCESS;
 }
+/**************************************************************************
+ * Function name : RecorderAgent::Recorder_ExecuteCmd()
+ *
+ * Arguments     : Input arguments are command to execute in box
+ *
+ * Description   : This will execute linux commands in box
+ * ***************************************************************************/
+bool RecorderAgent::Recorder_ExecuteCmd(IN const Json::Value& request, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "Recorder_ExecuteCmd ---> Entry\n");
+        string fileinfo = request["command"].asCString();
+        FILE *fp = NULL;
+        char readRespBuff[BUFF_LENGTH];
+        string popenBuff;
+
+        /*Frame the command  */
+        string path = "";
+        path.append(fileinfo);
+
+        DEBUG_PRINT(DEBUG_TRACE, "Command Request Framed: %s\n",path.c_str());
+
+        fp = popen(path.c_str(),"r");
+
+        /*Check for popen failure*/
+        if(fp == NULL)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "popen() failure";
+                DEBUG_PRINT(DEBUG_ERROR, "popen() failure for %s\n", path.c_str());
+
+                return TEST_FAILURE;
+        }
+
+        /*copy the response to a buffer */
+        while(fgets(readRespBuff,sizeof(readRespBuff),fp) != NULL)
+        {
+                popenBuff += readRespBuff;
+        }
+
+        pclose(fp);
+
+        DEBUG_PRINT(DEBUG_TRACE, "\n\nResponse: %s\n",popenBuff.c_str());
+        response["result"] = "SUCCESS";
+        response["details"] = popenBuff;
+        DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
+        DEBUG_PRINT(DEBUG_TRACE, "Recorder_ExecuteCmd -->Exit\n");
+        return TEST_SUCCESS;
+
+}
+
 
 /**************************************************************************
  * Function name : RecorderAgent::Recorder_SetValuesInRmfconfig()
@@ -596,6 +647,7 @@ bool RecorderAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentOb
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_SetValuesInRmfconfig");
         ptrAgentObj->UnregisterMethod("TestMgr_Recorder_PresenceOfRecordingMetaData");
 	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_clearOcapri_log");
+	ptrAgentObj->UnregisterMethod("TestMgr_Recorder_ExecuteCmd");
 	
 	/* All done, close things cleanly */
 	return TEST_SUCCESS;

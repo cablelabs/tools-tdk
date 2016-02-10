@@ -121,12 +121,12 @@ if "SUCCESS" in recLoadStatus.upper():
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                         print actResponse;
 			timestampValue = recorderlib.getTimeStampFromStatus(actResponse)
+                        currentAsOfValue = recorderlib.getCurrentAsOfFromStatus(actResponse)
                         print "Timestamp in recording status: ",timestampValue
+                        print "currentAsOfValue in recording status: ",currentAsOfValue
                         if timestampValue != 0:
-                        	currentTime = int(round(time.time() * 1000))
-                                print "currentTime: %s"%currentTime;
-                                diffTime = currentTime - timestampValue;
-                                if diffTime <= 180000:
+                                diffTime = timestampValue - currentAsOfValue;
+                                if diffTime >= 0:
                                 	print "Recorder has send the timestamp in recording status"
                                         tdkTestObj.setResultStatus("SUCCESS");
                                 else:

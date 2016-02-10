@@ -464,6 +464,39 @@ def getTimeStampFromStatus(jsonData):
 
 ########## End of Function getTimeStampFromStatus ##########
 
+def getCurrentAsOfFromStatus(jsonData):
+        ret = 0
+        try:
+                jsonList = json.loads(jsonData, strict=False)
+        except ValueError, e:
+                print e
+                return ret
+        except:
+                print "Unexpected error:", sys.exc_info()[0]
+                return ret
+
+        #Check if status is not empty
+        if jsonList == []:
+                print "ERROR: No status available"
+                return ret
+
+        #Get dictionary content inside list status
+        for my_item in jsonList:
+                try:
+                        if 'recordingStatus' in my_item['statusMessage']:
+                                status = my_item['statusMessage']
+                                currentAsOf = status ['recordingStatus'] ["currentAsOf"]
+                                print "CurrentAsOf = ",currentAsOf
+                                return int(currentAsOf)
+                except KeyError, e:
+                        print "Invalid key %s" % str(e)
+
+        print "ERROR: currentAsOf info not found!"
+        return ret
+
+########## End of Function getCurrentAsOfFromStatus ##########
+
+
 def getTimeStampListFromStatus(jsonData):
         ret = []
         try:

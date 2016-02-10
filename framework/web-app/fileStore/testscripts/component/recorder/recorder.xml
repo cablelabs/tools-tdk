@@ -50,10 +50,16 @@
         <function>TestMgr_Recorder_clearOcapri_log</function>
         <parameters/>
       </primitiveTest>
-      <primitiveTest name="Recorder_checkOcapri_log" id=" " version="1">
+      <primitiveTest id=" " name="Recorder_checkOcapri_log" version="1">
         <function>TestMgr_Recorder_checkOcapri_log</function>
         <parameters>
           <parameter name="pattern" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name="Recorder_ExecuteCmd" id=" " version="1">
+        <function>TestMgr_Recorder_ExecuteCmd</function>
+        <parameters>
+          <parameter name="command" value=""/>
         </parameters>
       </primitiveTest>
     </primitiveTests>
