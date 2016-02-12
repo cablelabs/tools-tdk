@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <module name="tr69" testGroup="Component">
+    <primitiveTests>
+      <primitiveTest id="585" name="Tr069_Get_Profile_Parameter_Values" version="1">
+        <function>TestMgr_GetParameterValue</function>
+        <parameters>
+          <parameter name="path" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="592" name="Tr069_Verify_Profile_Parameter_Values" version="1">
+        <function>TestMgr_VerifyParameterValue</function>
+        <parameters>
+          <parameter name="path" value=""/>
+          <parameter name="paramValue" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="Tr069_Get_Profile_Parameter_Values_by_host-if" version="1">
+        <function>TestMgr_Get_Profile_Parameter_Values_by_host-if</function>
+        <parameters>
+          <parameter name="tr069ParamName" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name="TR069_Set_Profile_Parameter_Values_by_host-if" id=" " version="2">
+        <function>TestMgr_Set_Profile_Parameter_Values_by_host-if</function>
+        <parameters>
+          <parameter name="tr069ParamName" value=""/>
+          <parameter name="tr069ParamValue" value="2"/>
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <module name='openSource_components' testGroup='OpenSource'>
+    <primitiveTests>
+      <primitiveTest name='OpenSource_Comp_Test' id='53' version='1'>
+        <function>TestMgr_Opensource_Test_Execute</function>
+        <parameters>
+          <parameter name='Opensource_component_type' value='' />
+          <parameter name='Display_option' value='' />
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

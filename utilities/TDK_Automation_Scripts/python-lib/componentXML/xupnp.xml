@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xml>
+  <module name="xupnp" testGroup="Component">
+    <primitiveTests>
+      <primitiveTest id="" name="XUPNP_CheckXDiscOutputFile" version="1">
+        <function>TestMgr_XUPNP_CheckXDiscOutputFile</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="XUPNP_ReadXDiscOutputFile" version="1">
+        <function>TestMgr_XUPNP_ReadXDiscOutputFile</function>
+        <parameters>
+          <parameter name="paramName" value="sno"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="XUPNP_GetUpnpResult" version="1">
+        <function>TestMgr_XUPNP_GetUpnpResult</function>
+        <parameters>
+          <parameter name="paramName" value="sno"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="XUPNP_BroadcastEvent" version="1">
+        <function>TestMgr_XUPNP_BroadcastEvent</function>
+        <parameters>
+          <parameter name="error" value="0"/>
+          <parameter name="eventLog" value="TestXcalLog"/>
+          <parameter name="payload" value="TestPayload"/>
+          <parameter name="state" value="1"/>
+          <parameter name="stateId" value="0"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="XUPNP_ModifyBasicDeviceXml" version="1">
+        <function>TestMgr_XUPNP_ModifyBasicDeviceXml</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="XUPNP_CheckXMLRestoration" version="1">
+        <function>TestMgr_XUPNP_CheckXMLRestoration</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="XUPNP_ReadXcalDeviceLogFile" version="1">
+        <function>TestMgr_XUPNP_ReadXcalDeviceLogFile</function>
+        <parameters/>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>
