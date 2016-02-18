@@ -143,22 +143,19 @@ if "SUCCESS" in recLoadStatus.upper():
                                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
                                 secondRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1))
                                 thirdRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+2))
-                                #print recordingData
-				#print secondRecordingData
-				#print thirdRecordingData
                                 if 'NOTFOUND' not in recordingData and 'NOTFOUND' not in secondRecordingData and 'NOTFOUND' not in thirdRecordingData:
                                         firstError = recorderlib.getValueFromKeyInRecording(recordingData,'error')
                                         secError = recorderlib.getValueFromKeyInRecording(secondRecordingData,'error')
                                         thirdError = recorderlib.getValueFromKeyInRecording(thirdRecordingData,'error')
                                         if "USER_STOP" in firstError.upper() and "USER_STOP" in secError.upper() and "USER_STOP" in thirdError.upper():
                                                 tdkTestObj.setResultStatus("SUCCESS");
-                                                print "Cancel recording completed successfully";
+                                                print "Cancel recordings completed successfully";
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
-                                                print "Cancel recording not completed successfully";
+                                                print "Cancel recordings not completed successfully";
                                 else:
-					print "Recorder Failed to smear out notifications for cancelled recordings";
-					tdkTestObj.setResultStatus("FAILURE");
+					print "Recorder failed to smear out notifications for cancelled recordings";
+					#tdkTestObj.setResultStatus("FAILURE");
                                 	print "Sending getRecordings to get the recording list"
                                 	recorderlib.callServerHandler('clearStatus',ip)
                                 	recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
@@ -166,6 +163,25 @@ if "SUCCESS" in recLoadStatus.upper():
                                 	sleep(60)
                                 	actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                                 	print "Recording List: %s" %actResponse;
+	                                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
+        	                        secondRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1))
+                	                thirdRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+2))
+	                                print recordingData
+        	                        print secondRecordingData
+                	                print thirdRecordingData
+					if 'NOTFOUND' not in recordingData and 'NOTFOUND' not in secondRecordingData and 'NOTFOUND' not in thirdRecordingData:
+						firstError = recorderlib.getValueFromKeyInRecording(recordingData,'error')
+	                                        secError = recorderlib.getValueFromKeyInRecording(secondRecordingData,'error')
+        	                                thirdError = recorderlib.getValueFromKeyInRecording(thirdRecordingData,'error')
+                	                        if "USER_STOP" in firstError.upper() and "USER_STOP" in secError.upper() and "USER_STOP" in thirdError.upper():
+                        	                        tdkTestObj.setResultStatus("SUCCESS");
+                                	                print "Cancel recordings completed successfully";
+                                        	else:
+                                                	tdkTestObj.setResultStatus("FAILURE");
+                                                	print "Cancel recordings not completed successfully";
+					else:
+	                                        print "Recorder failed to send USER_STOP error for cancelled recordings";
+	                                        tdkTestObj.setResultStatus("FAILURE");
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve acknowledgement from recorder";

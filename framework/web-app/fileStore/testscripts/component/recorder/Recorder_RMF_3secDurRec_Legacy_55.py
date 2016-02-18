@@ -130,12 +130,12 @@ if "SUCCESS" in recLoadStatus.upper():
                         	    			value = recorderlib.getValueFromKeyInRecording(recordingData,key)
 	                        	    		print "key: ",key," value: ",value
         	                    			print "Successfully retrieved the recording list from recorder";
-                	            			if "FAILURE" in value.upper():
+                	            			if "FAILED" in value.upper():
                         	        			tdkTestObj.setResultStatus("SUCCESS");
-	                	                		print "Recording marked as FAILURE as expected";
+	                	                		print "Recording marked as FAILED as expected";
         	                    			else:
                 	                			tdkTestObj.setResultStatus("FAILURE");
-	                	                		print "Recording NOT marked as FAILURE as expected";
+	                	                		print "Recording NOT marked as FAILED as expected";
 					else:
                 	        	        	tdkTestObj.setResultStatus("FAILURE");
                         	        		print "Failed to get the recording id in recording list";

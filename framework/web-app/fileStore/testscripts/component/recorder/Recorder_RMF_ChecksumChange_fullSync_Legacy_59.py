@@ -78,16 +78,14 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule
         requestID = str(randint(10,500));
         recordingID = str(randint(10000, 500000));
-	#genIdInput = "FSL59";
-	genIdInput = "TDK123";
+	genId = "TDK123";
 	duration = "60000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
         startTime = "0";
 
         #Frame json message
-	jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+ recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
-     
+	jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genId+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+ recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -108,113 +106,83 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in actResponse:
                 	tdkTestObj.setResultStatus("SUCCESS");
 	                print "Successfully retrieved acknowledgement from recorder";
-	                print "Wait for the recording to be completed"
+	                print "Wait for 70s for the recording to be completed"
 		   	sleep(70);
                     	# Reboot the STB
+			response = recorderlib.callServerHandler('clearStatus',ip);
 		    	print "Rebooting the STB to get the recording list from full sync"
 		    	recObj.initiateReboot();
 		    	print "Sleeping to wait for the recoder to be up"
 		   	sleep(300);
-		    	response = recorderlib.callServerHandler('clearStatus',ip);
-		    	#Frame json message
-		    	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
                     	expResponse = "noUpdate";
-		    	tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
-                    	tdkTestObj1.executeTestCase(expectedResult);
+		    	tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
+                    	tdkTestObj.executeTestCase(expectedResult);
                     	actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
                     	if expResponse in actResponse:
                         	print "No Update Schedule message post success";
                         	print "Wait for some time to get the recording list"
 	                        sleep(180);
-	                        tdkTestObj1.setResultStatus("SUCCESS");
+	                        tdkTestObj.setResultStatus("SUCCESS");
         	                #Check for acknowledgement from recorder
-                	        tdkTestObj1.executeTestCase(expectedResult);
                         	actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-				print "Recording list: " ,actResponse;
+				print "Response after first full sync: " ,actResponse;
 				msg = recorderlib.getStatusMessage(actResponse);
                         	if "NOSTATUS" == msg:
-                                	value = "FALSE";
-	                                print "No status message retrieved"
+					print "Full sync failed";
 	        			tdkTestObj.setResultStatus("FAILURE");
         	                else:
-					value = msg['recordingStatus']["initializing"];
-					print "initializing : ",initializing
-					if "TRUE" in value.upper():
-        	                		recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-	                	       		print recordingData
-        	                		if 'NOTFOUND' not in recordingData:
-	                        			tdkTestObj1.setResultStatus("SUCCESS");
-                	            			key = 'status'
-                        	    			value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-	                        	    		print "key: ",key," value: ",value
-        	                    			print "Successfully retrieved the recording list from recorder";
-        	                    			print "Full sync successfull";
+					print "Full sync successful";
+        	                	recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
+	                	       	print recordingData
+        	                	if 'NOTFOUND' not in recordingData:
+                                        	status = recorderlib.getValueFromKeyInRecording(recordingData,'status')
+						if "COMPLETE" in status.upper():
+	                        			tdkTestObj.setResultStatus("SUCCESS");
+                                			# Reboot the STB again
+                                			response = recorderlib.callServerHandler('clearStatus',ip);
+                                			print "Rebooting the STB again to get the recording list from full sync"
+                                			print "This reboot is without recording changes, full sync should not happen"
+                                			recObj.initiateReboot();
+                                			print "Sleeping to wait for the recoder to be up"
+                                			sleep(300);
+                                			expResponse = "noUpdate";
+                                			tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
+                                			tdkTestObj.executeTestCase(expectedResult);
+                                			actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
+                                			if expResponse in actResponse:
+                                        			print "No Update Schedule message post success";
+                                        			print "Wait for some time to get the recording list"
+                                        			sleep(180);
+                                        			tdkTestObj.setResultStatus("SUCCESS");
+                                        			tdkTestObj.executeTestCase(expectedResult);
+                                        			actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                                        			print "Response after second full sync: " ,actResponse;
+                                        			msg = recorderlib.getStatusMessage(actResponse);
+                                        			if 'NOSTATUS' == msg:
+                                                			print "Full sync did not happen as expected"
+                                                			tdkTestObj.setResultStatus("SUCCESS");
+                                    				else:
+					                                print "Full sync happened again"
+									tdkTestObj.setResultStatus("FAILURE");
+                                        				recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
+                                        				print recordingData
+                                			else:
+                                        			print "No Update Schedule message post failed";
+                                        			tdkTestObj.setResultStatus("FAILURE");
 						else:
-                	        	        	tdkTestObj1.setResultStatus("FAILURE");
-                        	        		print "Failed to get the recording data";
-        	                    			print "Full sync failed";
-                    		# Reboot the STB
-				response = recorderlib.callServerHandler('clearStatus',ip);
-			    	print "Rebooting the STB again to get the recording list from full sync"
-			    	print "This reboot is without recording changes, full sync should not happen"
-			    	recObj.initiateReboot();
-			    	print "Sleeping to wait for the recoder to be up"
-			   	sleep(300);
-			    	#Frame json message
-			    	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
-	                    	expResponse = "noUpdate";
-			    	tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
-                	    	tdkTestObj1.executeTestCase(expectedResult);
-                    		actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-	                    	print "No Update Schedule Details: %s"%actResponse;
-        	            	if expResponse in actResponse:
-	                        	print "No Update Schedule message post success";
-        	                	print "Wait for some time to get the recording list"
-	        	                sleep(180);
-	                	        tdkTestObj1.setResultStatus("SUCCESS");
-	        	                #Check for acknowledgement from recorder
-        	        	        tdkTestObj1.executeTestCase(expectedResult);
-                	        	actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-					print actResponse;
-					msg = recorderlib.getStatusMessage(actResponse);
-					print "Get Status Message Details: %s"%msg;
-                	        	if (("" == msg) or ('NOSTATUS' == msg) or ("recordingStatus" not in msg)):
-	                        	        print "No status message retrieved as expected"
-	        				tdkTestObj.setResultStatus("SUCCESS");
-	        	                else:
-						value = msg['recordingStatus']["initializing"];
-						print "Initializing value: %s"%value;
-						if "TRUE" in value.upper():
-        	                			recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-		                	       		print recordingData
-        		                		if 'NOTFOUND' not in recordingData:
-	                	        			tdkTestObj1.setResultStatus("SUCCESS");
-                	        	        		print "Failed to get the recording data as expected";
-        	        	            			print "Full sync failed";
-							else:
-        	        	        	        	tdkTestObj1.setResultStatus("FAILURE");
-                		            			key = 'status'
-                        		    			value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-	                        		    		print "key: ",key," value: ",value
-        	                    				print "Successfully retrieved the recording list from recorder";
-        	                    				print "Full sync successfull, it was not expected";
-						else:
-		        		        	tdkTestObj1.setResultStatus("FAILURE");
-                				        print "Failed to retrieve the recording list from recorder";
-                    		else:
-                        		print "No Update Schedule message post failed";
-		                        tdkTestObj1.setResultStatus("FAILURE");
+							tdkTestObj.setResultStatus("FAILURE");
+							print "Scheduled recording not in complete state";
+					else:
+                	        	       	tdkTestObj.setResultStatus("FAILURE");
+                        	        	print "Failed to get the recording data";
                     	else:
                         	print "No Update Schedule message post failed";
-	                        tdkTestObj1.setResultStatus("FAILURE");
+	                        tdkTestObj.setResultStatus("FAILURE");
 		else:
                 	tdkTestObj.setResultStatus("FAILURE");
                     	print "Failed to retrieve acknowledgement from recorder";
         else:
 	        tdkTestObj.setResultStatus("FAILURE");
                 print "updateSchedule message post failure";
+
         recObj.unloadModule("Recorder");
-else:
-	print "Failed to load Recorder module";
-    	#Set the module loading status
-    	recObj.setLoadModuleStatus("FAILURE");

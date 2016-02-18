@@ -46,6 +46,7 @@ TestcaseID: CT_DTCP_32</synopsis>
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 import dtcp;
+from random import randint
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("dtcp","2.0");
@@ -69,15 +70,16 @@ if "SUCCESS" in loadmodulestatus.upper():
   expectedresult="SUCCESS";
   #Pre-cond: Init,StartSource,CreateSrcSession,CreateSinkSession
   dtcp.init(tdkTestObj,expectedresult);
-  dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":3})
-  result = dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':5021})
+  dtcp.setLogLevel(tdkTestObj,expectedresult,kwargs={"level":5})
+  port = randint(5001, 6000);
+  result = dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
   if expectedresult in result:
         dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
-        dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':5021,'uniqueKey':0,'maxPacketSize':4096})
+        dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':port,'uniqueKey':0,'maxPacketSize':4096})
         dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
         dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
         #Stopsource without deleting active sessions
-        dtcp.stopSource(tdkTestObj,expectedresult)
+        dtcp.stopSource(tdkTestObj,"FAILURE")
   else:
         print "DTCP StartSource failed"
 
@@ -94,6 +96,7 @@ if "SUCCESS" in loadmodulestatus.upper():
       dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"deviceType":1})
       dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
   dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
+  dtcp.stopSource(tdkTestObj,expectedresult)
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");
