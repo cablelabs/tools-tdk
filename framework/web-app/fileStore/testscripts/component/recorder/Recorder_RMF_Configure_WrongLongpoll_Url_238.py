@@ -52,7 +52,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_Configure_WrongLongpoll_Url');
+recObj.configureTestCase(ip,port,'Recorder_RMF_Configure_WrongLongpoll_Url_238');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
@@ -88,7 +88,24 @@ if "SUCCESS" in recLoadStatus.upper():
         if "wrongLongPoll" in actResponse:
             tdkTestObj.setResultStatus("SUCCESS");
             print "Alternate URL enabled for Long poll server";
-            sleep(150); 
+            #To clear the ocapri log
+            tdkTestObj1 = recObj.createTestStep('Recorder_clearOcapri_log');
+            tdkTestObj1.executeTestCase(expectedResult);
+            result = tdkTestObj1.getResult();
+            if "SUCCESS" in result:
+                tdkTestObj1.setResultStatus("SUCCESS");
+                print "Cleared the ocapri log ";
+            else:
+                tdkTestObj1.setResultStatus("FAILURE");
+                print "Ocapri log is not cleared ";
+
+            # Reboot the STB
+            print "Rebooting the STB to get the recording list from full sync"
+            recObj.initiateReboot();
+            print "Sleeping to wait for the recoder to be up"
+            sleep(300);
+            #sleep to wait error code to come after multiple retries to get the connection to long poll
+            sleep(250); 
             tdkTestObj2=recObj.createTestStep('Recorder_checkOcapri_log');
             pattern = "RDK-10029"
             tdkTestObj2.addParameter("pattern",pattern);
@@ -104,15 +121,20 @@ if "SUCCESS" in recLoadStatus.upper():
                 print "Error Log RDK-10029 for Long poll server connection lost is NOT found "; 
            
             #To clear the wrong Long poll Url
-            tdkTestObj.executeTestCase(expectedResult);
+            tdkTestObj2.executeTestCase(expectedResult);
             actResponse = recorderlib.callServerHandlerWithType('clearAlternateURL','LPServer',ip);
             print actResponse;
             if "cleared" in actResponse:
-                tdkTestObj.setResultStatus("SUCCESS");
+                tdkTestObj2.setResultStatus("SUCCESS");
                 print "Alternate URL of Long poll Server reverted";
             else:
-                tdkTestObj.setResultStatus("FAILURE");
+                tdkTestObj2.setResultStatus("FAILURE");
                 print "Alternate URL of Long poll Server is not reverted";
+
+            recObj.initiateReboot();
+            print "Sleeping to wait for the recoder to be up"
+            sleep(300);
+
       
         else:
             tdkTestObj.setResultStatus("FAILURE");

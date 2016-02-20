@@ -52,7 +52,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_Configure_WrongRWS_Url');
+recObj.configureTestCase(ip,port,'Recorder_RMF_Configure_WrongRWS_Url_239');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
@@ -97,12 +97,13 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj1.setResultStatus("SUCCESS");
                 print "Cleared the ocapri log ";
             else:
-                tdkTestObj1.setResultStatus("SUCCESS");
+                tdkTestObj1.setResultStatus("FAILURE");
                 print "Ocapri log is not cleared ";
+            sleep(30);
             
             requestID = str(randint(10, 500));
             recordingID = str(randint(10000, 500000));
-            duration = "60000";
+            duration = "240000";
             startTime = "0";
             ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
             now = "curTime"
@@ -112,7 +113,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
             actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
             #Waiting for the error code in ocapri log after multiple connection retry requests to RWS
-            sleep (150);
+            sleep (250);
             tdkTestObj2=recObj.createTestStep('Recorder_checkOcapri_log');
             pattern = "RDK-10028"
             tdkTestObj2.addParameter("pattern",pattern);
@@ -124,7 +125,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj2.setResultStatus("SUCCESS");
                 print "Error Log RDK-10028 for RWS server connection lost is found ";
             else:
-                tdkTestObj2.setResultStatus("SUCCESS");
+                tdkTestObj2.setResultStatus("FAILURE");
                 print "Error Log RDK-10028 for RWS server connection lost is NOT found "; 
          
             #To clear the wrong RWS Server Url

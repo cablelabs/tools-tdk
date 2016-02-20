@@ -92,7 +92,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_Disable_LongpollServer_During_Recording');
+recObj.configureTestCase(ip,port,'Recorder_RMF_Disable_LongpollServer_During_Recording_241');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
@@ -121,7 +121,7 @@ if "SUCCESS" in recLoadStatus.upper():
         tdkTestObj.executeTestCase(expectedResult);
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        duration = "240000";
+        duration = "600000";
         startTime = "0";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime"
@@ -134,7 +134,7 @@ if "SUCCESS" in recLoadStatus.upper():
             tdkTestObj1.setResultStatus("SUCCESS");
             print "Cleared the ocapri log ";
         else:
-            tdkTestObj1.setResultStatus("SUCCESS");
+            tdkTestObj1.setResultStatus("FAILURE");
             print "Ocapri log is not cleared ";
 
         #Frame json message to schedule a recording
@@ -150,7 +150,7 @@ if "SUCCESS" in recLoadStatus.upper():
         if "Disabled" in actResponse:
             tdkTestObj.setResultStatus("SUCCESS");
             print "Long poll server is disabled";
-            sleep(200);
+            sleep(400);
             tdkTestObj2=recObj.createTestStep('Recorder_checkOcapri_log');
             pattern = "RDK-10029"
             tdkTestObj2.addParameter("pattern",pattern);
@@ -168,9 +168,11 @@ if "SUCCESS" in recLoadStatus.upper():
             #To clear the wrong Long poll Url
             tdkTestObj.executeTestCase(expectedResult);
             actResponse = recorderlib.callServerHandlerWithType('clearAlternateURL','LPServer',ip);
+            print actResponse
 
             #To enable the long poll server
             actResponse = recorderlib.callServerHandlerWithType('enableServer','LPServer',ip);
+            print actResponse
       
         else:
             tdkTestObj.setResultStatus("FAILURE");
