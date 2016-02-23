@@ -11,6 +11,8 @@
  */
 
 #include "IARMBUSAgent.h"
+#include <cstring>
+#include <sstream>
 
 std::ostringstream gsysMgrdata;
 std::ostringstream gEventdata;
@@ -1085,14 +1087,14 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 		DEBUG_PRINT(DEBUG_TRACE,"\nInside DummyMgr event handler\n");
 		 int dummydata=0;
                  char evtname;
-		strcpy(g_ManagerName,IARM_BUS_DUMMYMGR_NAME);
+		 strcpy(g_ManagerName,IARM_BUS_DUMMYMGR_NAME);
 
 		/* Handle events here */
                 IARM_Bus_DUMMYMGR_EventData_t *eventData = (IARM_Bus_DUMMYMGR_EventData_t *)data;
 		switch(eventId) {
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYX:
                         DEBUG_PRINT(DEBUG_LOG,"\nData received from event X: %s",eventData->data.dummy0.dummyData);
-			if(strncmp(DUMMYDATA_X,eventData->data.dummy0.dummyData,128)==0)
+			if(strncmp(dummydata_x,eventData->data.dummy0.dummyData,128)==0)
                         {
                                 DEBUG_PRINT(DEBUG_LOG,"Data received successfully");
                                 DEBUG_PRINT(DEBUG_LOG,"\nReceived i:%s",eventData->data.dummy0.dummyData);
@@ -1106,7 +1108,7 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 			break;
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYY:
                         DEBUG_PRINT(DEBUG_LOG,"\nData received from event Y: %s",eventData->data.dummy0.dummyData);
-			if(strncmp(DUMMYDATA_Y,eventData->data.dummy0.dummyData,128)==0)
+			if(strncmp(dummydata_y,eventData->data.dummy0.dummyData,128)==0)
                         {
                                 DEBUG_PRINT(DEBUG_LOG,"Data received successfully");
                         	DEBUG_PRINT(DEBUG_LOG,"\nReceived j:%s",eventData->data.dummy0.dummyData);
@@ -1122,7 +1124,7 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 			break;
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYZ:
                         DEBUG_PRINT(DEBUG_LOG,"\nData received from event Z: %s",eventData->data.dummy0.dummyData);
-			if(strncmp(DUMMYDATA_Z,eventData->data.dummy0.dummyData,128)==0)
+			if(strncmp(dummydata_z,eventData->data.dummy0.dummyData,128)==0)
                         {
                                 DEBUG_PRINT(DEBUG_LOG,"Data received successfully");
                         	DEBUG_PRINT(DEBUG_ERROR,"\nReceived k:%s",eventData->data.dummy0.dummyData);
@@ -1842,9 +1844,25 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
 	const char* appname=(char*)req["appname"].asCString();
 	const char* argv1=(char*)req["argv1"].asCString();
 	const char* apptype=(char*)req["apptype"].asCString();
+        int iterationcount=req["iterationcount"].asInt();
+        char argv2[8];
+        sprintf(argv2,"%d",iterationcount);
 	std::string path;
-	path = g_tdkPath + "/" + appname +" " + argv1;
+	path = g_tdkPath + "/" + appname +" " + argv1 + argv2;
+
 	syncCount = 0;
+        memset(dummydata_x,'\0',128);
+        memset(dummydata_x,'x',127);
+        strncpy(dummydata_x,argv2,strlen(argv2));
+        memset(dummydata_y,'\0',128);
+        memset(dummydata_y,'y',127);
+        strncpy(dummydata_y,argv2,strlen(argv2));
+        memset(dummydata_z,'\0',128);
+        memset(dummydata_z,'z',127);
+        strncpy(dummydata_z,argv2,strlen(argv2));
+        DEBUG_PRINT(DEBUG_LOG,"dummydata_x:%s\n",dummydata_x);
+        DEBUG_PRINT(DEBUG_LOG,"dummydata_y:%s\n",dummydata_y);
+        DEBUG_PRINT(DEBUG_LOG,"dummydata_z:%s\n",dummydata_z);
 
 	if (strcmp (apptype, "background") == 0)
 	{
@@ -2354,9 +2372,11 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
 	char *ownerName=(char*)req["owner_name"].asCString();
 	std::string testenvPath = getenv("OPENSOURCETEST_PATH");
 	testenvPath.append("../");
-	std::string path = getenv("TDK_PATH");
-	path.append("/");
-	path.append(appname);
+
+	std::string path;
+	strcpy((char*)path.c_str(),getenv("TDK_PATH"));	
+	strcat((char*)path.c_str(),"/");
+	strcat((char*)path.c_str(),appname);
 	DEBUG_PRINT(DEBUG_ERROR,"\nAppPath:%s, appname:%s\n",path.c_str(), appname);
 
 	if(idChild == 0)

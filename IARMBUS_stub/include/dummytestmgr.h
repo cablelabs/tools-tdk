@@ -24,11 +24,12 @@
 
 #define IARM_BUS_DUMMYMGR_API_HANDLER_READY "HandlerReady"
 
-#define DUMMYDATA_X "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
-#define DUMMYDATA_Y "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+char dummydata_x[128];
+char dummydata_y[128];
+char dummydata_z[128];
+int iterationcount;
 
-#define DUMMYDATA_Z "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
 typedef struct {
     bool stopped;
 }IARM_Bus_DUMMYMGR_HandlerReady_Param_t;

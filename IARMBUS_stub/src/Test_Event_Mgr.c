@@ -17,6 +17,7 @@
 #include "libIBus.h"
 #include "dummytestmgr.h"
 #include "string.h"
+#include <stdlib.h>
 
 static pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
@@ -71,16 +72,24 @@ int main(int argc, char **argv)
 	IARM_Bus_RegisterCall(IARM_BUS_DUMMYMGR_API_DummyAPI0,  	_dummyAPI0);
 	IARM_Bus_RegisterCall(IARM_BUS_DUMMYMGR_API_DummyAPI1,  	_dummyAPI1);
 	IARM_Bus_RegisterCall(IARM_BUS_DUMMYMGR_API_HANDLER_READY,	_handlerReady);
-
 	/* Lock to get app synced */
 	pthread_mutex_lock(&lock);
 	pthread_cond_wait(&cond,&lock);
 	pthread_mutex_unlock(&lock);
 
 	/* Populate Event Data Here */
-        strcpy(eventData1.data.dummy0.dummyData,DUMMYDATA_X);
-	strcpy(eventData2.data.dummy0.dummyData,DUMMYDATA_Y);
-	strcpy(eventData3.data.dummy0.dummyData,DUMMYDATA_Z);
+        memset(eventData1.data.dummy0.dummyData,'\0',128);
+        memset(eventData1.data.dummy0.dummyData,'x',127);
+        strncpy(eventData1.data.dummy0.dummyData,argv[1],strlen(argv[1]));
+        printf("messagesize:%d\n",sizeof(eventData1.data.dummy0.dummyData));
+        memset(eventData2.data.dummy0.dummyData,'\0',128);
+        memset(eventData2.data.dummy0.dummyData,'y',127);
+        strncpy(eventData2.data.dummy0.dummyData,argv[1],strlen(argv[1]));
+        printf("messagesize:%d\n",sizeof(eventData2.data.dummy0.dummyData));
+        memset(eventData3.data.dummy0.dummyData,'\0',128);
+        memset(eventData3.data.dummy0.dummyData,'z',127);
+	strncpy(eventData3.data.dummy0.dummyData,argv[1],strlen(argv[1]));
+        printf("messagesize:%d\n",sizeof(eventData3.data.dummy0.dummyData));
 	IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYX, &eventData1, sizeof(eventData1));
 	IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYY, &eventData2, sizeof(eventData2));
 	IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYZ, &eventData3, sizeof(eventData3));

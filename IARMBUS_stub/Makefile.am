@@ -27,7 +27,7 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmbus/ \
 
 lib_LTLIBRARIES = libiarmbusstub.la
 libiarmbusstub_la_SOURCES = src/IARMBUSStub.cpp
-libiarmbusstub_la_LIBADD = -lglib-2.0 -lIARMBus -ldirect -lfusion -ldbus-1 -lz
+libiarmbusstub_la_LIBADD = -lIARMBus 
 libiarmbusstub_la_includedir = ${includedir}
 libiarmbusstub_la_include_HEADERS = ${top_srcdir}/IARMBUS_stub/include/IARMBUSAgent.h
 

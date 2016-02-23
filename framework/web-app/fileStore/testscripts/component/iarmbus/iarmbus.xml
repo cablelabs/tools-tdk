@@ -107,6 +107,7 @@
           <parameter name="appname" value="/tst_iarmbus"/>
           <parameter name="argv1" value="ON"/>
           <parameter name="apptype" value="normal"/>
+          <parameter name="iterationcount" value="0"/>
         </parameters>
       </primitiveTest>
       <primitiveTest id="" name="IARMBUSPERF_Disconnect" version="1">

@@ -18,7 +18,7 @@ lib_LTLIBRARIES = libtrmstub.la
 libtrmstub_la_SOURCES = src/TRMAgent.cpp \
                         src/TRMAgentHelper.cpp
 
-libtrmstub_la_LIBADD = -lrmfosal -lrmfosalutils -ltrm -lpthread -lrdkloggers -ljansson -llog4c
+libtrmstub_la_LIBADD = -ltrm 
 libtrmstub_la_includedir = ${includedir}
 libtrmstub_la_include_HEADERS = ${top_srcdir}/TRM_stub/include/TRMAgentHelper.h \
                                 ${top_srcdir}/TRM_stub/include/TRMAgent.h

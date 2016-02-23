@@ -93,6 +93,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 tdkTestObj.addParameter("appname","Test_Event_Mgr");
                                 tdkTestObj.addParameter("argv1","");
                                 tdkTestObj.addParameter("apptype","background");
+                                tdkTestObj.addParameter("iterationcount",i);
                                 expectedresult="SUCCESS"
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
@@ -160,7 +161,6 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                                 tdkTestObj.executeTestCase(expectedresult);
                                                                 actualresult = tdkTestObj.getResult();
                                                                 details=tdkTestObj.getResultDetails();
-                                                                print details;
                                                                 #Check for SUCCESS/FAILURE return value of IARMBUS_GetLastReceivedEventDetails
                                                                 if "SUCCESS" in expectedresult:
                                                                         print "SUCCESS: GetLastReceivedEventDetails executed Successfully"

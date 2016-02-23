@@ -15,5 +15,5 @@ AM_CXXFLAGS = -DUSE_DEVICE_SETTINGS_SERVICE -DSCREEN_CAPTURE $(SM_STUB_CFLAG_HYB
 
 lib_LTLIBRARIES = libservicemanagerstub.la
 libservicemanagerstub_la_SOURCES = src/ServiceManagerAgent.cpp
-libservicemanagerstub_la_LIBADD = -lservicemanager $(GST_LIBS) $(TDK_GST_LIBS) -ludev  -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata
+libservicemanagerstub_la_LIBADD = -lservicemanager
 libservicemanagerstub_la_includedir = ${includedir}
