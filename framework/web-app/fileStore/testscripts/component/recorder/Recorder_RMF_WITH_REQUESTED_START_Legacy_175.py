@@ -25,7 +25,7 @@
   <!-- execution_time is the time out time for test execution -->
   <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -82,11 +82,13 @@ if "SUCCESS" in recLoadStatus.upper():
 	duration = "120000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
-        startTime = "0";
+        startTime = "10000";
+	reqStartTime = "70000"
 
         #Frame json message
-	jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+ recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+startTime+",\"start\":"+now+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":"+now+",\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
-
+	# recording Start time is calculated as (epoch + requestedStart)
+	# recording End time is calculated as ( epoch + start + duration)
+	jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"schedule\":[{\"recordingId\":\""+ recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":"+reqStartTime+",\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
@@ -106,12 +108,14 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in actResponse:
                 	tdkTestObj.setResultStatus("SUCCESS");
 	                print "Successfully retrieved acknowledgement from recorder";
+			print "Wait for recording to start"
+			sleep(70)
 			print "Wait for recording to complete"
-                        sleep(250);
+                        sleep(150);
 			print "Sending getRecordings to get the recording list"
                         recorderlib.callServerHandler('clearStatus',ip)
-                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-                        print "Wait for 60 sec to get response from recorder"
+                        recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+                        print "Wait for 60 seconds to get response from recorder"
                         sleep(60)
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                         print "Recording List: %s" %actResponse;

@@ -207,7 +207,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 tdkTestObj.executeTestCase(expectedresult);
                 #Get the Actual result of streaming Interface
                 actualresult = tdkTestObj.getResult();
-     	        RequestURL = "{\"updateSchedule\":{\"requestId\":\"789"+"\",\"generationId\":\""+genIdInput+"\",\"schedule\":[{\"recordingId\":\""+recording_id_256+"\",\"locator\":[\"ocap://0x125d\"],\"epoch\":curTime,\"start\":0,\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_256_Dvr_PlayBack_04"+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
+     	        RequestURL = "{\"updateSchedule\":{\"requestId\":\"789"+"\",\"generationId\":\""+genIdInput+"\",\"schedule\":[{\"recordingId\":\""+recording_id_256+"\",\"locator\":[\"ocap://0x125d\"],\"epoch\":curTime,\"start\":0,\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_256_Dvr_PlayBack_04"+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
                 #compare the actual result with expected result
                 if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");

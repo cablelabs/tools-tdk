@@ -99,7 +99,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                             
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
-                            print "SUCCESS: Requested Invalid resource is allocated successfully for the application"%details; 
+                            print "SUCCESS: Requested Invalid resource is allocated successfully for the application %s" %details; 
                             #calling IARMBUS API               "IARM_BusDaemon_ReleaseOwnership"
                             tdkTestObj =  obj.createTestStep('IARMBUS_ReleaseResource');
                             tdkTestObj.addParameter("resource_type",10);

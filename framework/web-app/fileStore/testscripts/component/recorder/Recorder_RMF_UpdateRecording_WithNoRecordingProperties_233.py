@@ -85,7 +85,7 @@ if "SUCCESS" in recLoadStatus.upper():
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
 
         #Frame json message
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"fullSchedule\":true,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"start\":"+startTime+",\"duration\":"+duration+",\"ppv\":false,\"entitlementId\":0,\"properties\":{\"title\":\"Recording_"+recordingID+"\",\"requestedStart\":"+startTime+"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"fullSchedule\":true,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"start\":"+startTime+",\"duration\":"+duration+",\"ppv\":false,\"entitlementId\":0,\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\",\"requestedStart\":"+startTime+"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
         actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
 
         if "updateSchedule" in actResponse:

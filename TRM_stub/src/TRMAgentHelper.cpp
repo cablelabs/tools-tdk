@@ -14,7 +14,7 @@
 
 using namespace std;
 
-static rmf_osal_Mutex g_mutex = 0;
+static pthread_mutex_t helper_mutex;
 static int trm_socket_fd = -1;
 static int isConnectedToTRM = 0;
 static const char* ip = "127.0.0.1";
@@ -24,10 +24,13 @@ static bool responseSuccess = false;
 static char responseStr[OUTPUT_LEN];
 static char cancelRecReqId[GUID_LEN];
 static const unsigned int kRecorderClientId = 0xFFFFFF00;
-static const unsigned long kTestAppClientId = 0xFFFFFFEFF;
+static const unsigned int kTestAppClientId = 0xFFFFFFEF;
 static bool bSelectOnConflict = false;
-#define TRM_RESPONSE_TIMEOUT (10*1000*1000)
-#define MAX_RETRY 5
+
+bool TRMClient::inited = false;
+static TRMClient* trmClient = NULL;
+std::map<int,TRM::TunerReservation> TRMClient::tunerReservationDb;
+static int dbCount = 0;
 
 // Helper function to connect to TRM server
 static int connect_to_trm()
@@ -36,9 +39,9 @@ static int connect_to_trm()
     int socket_error = 0;
     struct sockaddr_in trm_address;
 
-    //RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Entry %s():%d : Connection status (%d)\n",__FUNCTION__, __LINE__, isConnectedToTRM);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Entry %s():%d : Connection status (%d)\n",__FUNCTION__, __LINE__, isConnectedToTRM);
 
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
 
     if (isConnectedToTRM == 0)
     {
@@ -90,9 +93,9 @@ static int connect_to_trm()
         }
     }
 
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 
-    //RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d : Connection status(%d) socket_error(%d)\n",__FUNCTION__, __LINE__, isConnectedToTRM,socket_error);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d : Connection status(%d) socket_error(%d)\n",__FUNCTION__, __LINE__, isConnectedToTRM,socket_error);
     return socket_error;
 }
 
@@ -211,7 +214,7 @@ void processBuffer( const char* buf, int len)
 }
 
 // Helper function to get Response from TRM server
-static void get_response (void* arg)
+static void* get_response (void* arg)
 {
     int read_trm_count = 0;
     char *buf = NULL;
@@ -303,6 +306,8 @@ static void get_response (void* arg)
     }
 
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+
+    return NULL;
 }
 
 bool waitForTRMResponse()
@@ -326,93 +331,56 @@ bool waitForTRMResponse()
     return responseSuccess;
 }
 
-bool TRMClient::inited = false;
-static TRMClient* trmClient = NULL;
-std::map<int,TRM::TunerReservation> TRMClient::tunerReservationDb;
-static int j = 0;
-
 void TRMClient::init()
 {
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TRMClient::init = %d\n" , inited);
     if ( false == inited )
     {
-        if( ! g_thread_supported() )
-            g_thread_init( NULL );
+        /*Connect To TRM */
+        connect_to_trm();
+
         rdk_logger_init(DEBUG_CONF_FILE);
-        rmf_osal_init( NULL, NULL );
-        inited = true;
-        rmf_Error ret = rmf_osal_mutexNew( &g_mutex);
 
-        if (RMF_SUCCESS != ret ) {
-            RDK_LOG( RDK_LOG_ERROR, "LOG.RDK.TEST", "%s() - rmf_osal_mutexNew failed. Error = %d\n", __FUNCTION__, ret);
-        } 
-        else {
-            rmf_osal_ThreadId threadId;
-            rmf_osal_threadCreate( get_response, NULL,
-                               RMF_OSAL_THREAD_PRIOR_DFLT, RMF_OSAL_THREAD_STACK_SIZE,
-                               &threadId,"TunerRsv" );
+        /*Mutex Init*/
+        pthread_mutex_init(&helper_mutex, NULL);
 
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s():%d Created thread to get response from TRM\n" , __FUNCTION__, __LINE__);
-        }
+        /* Create a Thread to Process TRM Response */
+        pthread_t trm_thread;
+	int ret = pthread_create(&trm_thread, NULL, get_response, (void *)trm_socket_fd);
+        if( ret ) {
+		RDK_LOG( RDK_LOG_ERROR, "LOG.RDK.TEST", "%s():%d pthread_create returned error code: %d\n", __FUNCTION__, __LINE__, ret);
+     	}
+	else {
+        	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s():%d Created thread to get response from TRM\n" , __FUNCTION__, __LINE__);
+	}
+
+	inited = true;
     }
 }
 
 TRMClient::TRMClient()
 {
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TRMClient Constr Entry Addr = %p\n" , this);
+
     init();
 
-    tunerStopCond = g_cond_new();
-    tunerStopMutex = g_mutex_new ();
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     trmClient = this;
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
+
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TRMClient Constr Exit\n");
 }
 
 TRMClient::~TRMClient()
 {
-    g_mutex_lock ( tunerStopMutex );
-    resrvResponseReceived = true;
-    reservationSuccess = false;
-    g_cond_signal(tunerStopCond);
-    g_mutex_unlock ( tunerStopMutex );
-
-    rmf_osal_mutexAcquire( g_mutex);
-    trmClient = NULL;
-    rmf_osal_mutexRelease( g_mutex);
-    g_cond_free(tunerStopCond);
-    g_mutex_free( tunerStopMutex);
-
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TRMClient Destr Entry Addr = %p\n", trmClient);
+    pthread_mutex_lock ( &helper_mutex );
+    responseReceived = true;
+    responseSuccess = false;
     bSelectOnConflict = false;
-}
-
-bool TRMClient::waitForResrvResponse()
-{
-    GTimeVal timeVal;
-    g_mutex_lock ( tunerStopMutex );
-    while (false == resrvResponseReceived )
-    {
-        g_get_current_time (&timeVal);
-        g_time_val_add (&timeVal, TRM_RESPONSE_TIMEOUT);
-        if ( false == g_cond_timed_wait (tunerStopCond,tunerStopMutex,&timeVal) )
-        {
-            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(): TRM reservation response timedout\n",__FUNCTION__);
-            break;
-        }
-        else
-        {
-            RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(): TRM reservation response received\n",__FUNCTION__);
-        }
-    }
-    g_mutex_unlock (tunerStopMutex);
-    return reservationSuccess;
-}
-
-void TRMClient::notifyResrvResponse(bool success)
-{
-    g_mutex_lock ( tunerStopMutex );
-    resrvResponseReceived = true;
-    reservationSuccess = success;
-    g_cond_signal ( tunerStopCond);
-    g_mutex_unlock (tunerStopMutex);
+    trmClient = NULL;
+    pthread_mutex_unlock( &helper_mutex);
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TRMClient Destr Exit\n");
 }
 
 bool TRMClient::getAllTunerStates(char *output)
@@ -584,7 +552,14 @@ bool TRMClient::validateTunerReservation(string device, string locator, int acti
 
     do
     {
-        ret = url_request_post( (char *) &out[0], len, kTestAppClientId);
+        if (TRM::Activity::kRecord == activityType)
+        {
+            ret = url_request_post( (char *) &out[0], len, kRecorderClientId);
+        }
+        else
+        {
+            ret = url_request_post( (char *) &out[0], len, kTestAppClientId);
+        }
         retry_count --;
     } while ((ret == false) && (retry_count >0));
 
@@ -625,11 +600,10 @@ bool TRMClient::reserveTunerForRecord( const string device, const string recordi
     int len = strlen((const char*)&out[0]);
     int retry_count = 10;
 
-    g_mutex_lock ( tunerStopMutex );
-    resrvResponseReceived = false;
-    reservationSuccess = false;
-    g_cond_signal(tunerStopCond);
-    g_mutex_unlock ( tunerStopMutex );
+    pthread_mutex_lock ( &helper_mutex );
+    responseReceived = false;
+    responseSuccess = false;
+    pthread_mutex_unlock ( &helper_mutex );
 
     do
     {
@@ -640,7 +614,7 @@ bool TRMClient::reserveTunerForRecord( const string device, const string recordi
 
     if (ret == true)
     {
-        ret = waitForResrvResponse();
+        ret = waitForTRMResponse();
     }
 
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
@@ -668,11 +642,10 @@ bool TRMClient::reserveTunerForLive( const string device, const string locator,
     int len = strlen((const char*)&out[0]);
     int retry_count = 10;
 
-    g_mutex_lock ( tunerStopMutex );
-    resrvResponseReceived = false;
-    reservationSuccess = false;
-    g_cond_signal(tunerStopCond);
-    g_mutex_unlock ( tunerStopMutex );
+    pthread_mutex_lock ( &helper_mutex );
+    responseReceived = false;
+    responseSuccess = false;
+    pthread_mutex_unlock ( &helper_mutex );
 
     do
     {
@@ -682,7 +655,7 @@ bool TRMClient::reserveTunerForLive( const string device, const string locator,
 
     if (ret == true)
     {
-        ret = waitForResrvResponse();
+        ret = waitForTRMResponse();
     }
 
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
@@ -831,8 +804,8 @@ bool TRMClient::addToReservationDb(TRM::TunerReservation resv)
         RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Adding token: [%s]\n", __FUNCTION__, resv.getReservationToken().c_str());
         TRM::TunerReservation *copyReservation = new TRM::TunerReservation();
         *copyReservation = resv;
-        tunerReservationDb[j]=*copyReservation;
-        j++;
+        tunerReservationDb[dbCount]=*copyReservation;
+        dbCount++;
 
 	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TunerReservationDB after entry insertion\n");
 	std::map<int, TRM::TunerReservation >::iterator it;
@@ -857,7 +830,7 @@ bool TRMClient::removeFromReservationDb(const string reservationToken)
             {
 		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Removing token: [%s]\n", __FUNCTION__, reservationToken.c_str());
                 tunerReservationDb.erase(it++);
-                j--;
+                dbCount--;
                 bRetValue = true;
             }
             else
@@ -891,7 +864,7 @@ CTRMMonitor::CTRMMonitor()
 
 void CTRMMonitor::operator() (const TRM::ReserveTunerResponse &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     if ( NULL == trmClient )
     {
 	RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Matching TRM client not found\n", __FUNCTION__);
@@ -942,14 +915,16 @@ void CTRMMonitor::operator() (const TRM::ReserveTunerResponse &msg)
             int statusCode = status.getStatusCode();
 	    RDK_LOG( RDK_LOG_WARN , "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Status NOT OK. statusCode = %d\n", __FUNCTION__, statusCode);
         }
-        trmClient->notifyResrvResponse( success );
+
+    	responseReceived = true;
+    	responseSuccess = success;
     }
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::CancelRecording &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     if ( NULL == trmClient )
     {
         RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(CancelRecording) - Matching TRM client not found\n", __FUNCTION__);
@@ -959,22 +934,22 @@ void CTRMMonitor::operator() (const TRM::CancelRecording &msg)
 	RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(CancelRecording) - Sending cancelledRecording response\n", __FUNCTION__);
         trmClient->cancelledRecording(msg.getReservationToken());
     }
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::NotifyTunerReservationRelease &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     string reason = msg.getReason();
     //Remove reservations which get released due to expiration
     TRMClient::removeFromReservationDb(msg.getReservationToken());
     RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(NotifyTunerReservationRelease) - reason:  %s\n",  __FUNCTION__, reason.c_str());
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::ReleaseTunerReservationResponse &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     bool isReleased = msg.isReleased();
 
     responseReceived = true;
@@ -990,12 +965,12 @@ void CTRMMonitor::operator() (const TRM::ReleaseTunerReservationResponse &msg)
 	int statusCode = msg.getStatus().getStatusCode();
         RDK_LOG( RDK_LOG_WARN, "LOG.RDK.TEST", "%s(ReleaseTunerReservationResponse) - Tuner release failed. statusCode=%d\n", __FUNCTION__,statusCode);
     }
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::ValidateTunerReservationResponse &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     bool isValid = msg.isValid();
 
     responseReceived = true;
@@ -1010,12 +985,12 @@ void CTRMMonitor::operator() (const TRM::ValidateTunerReservationResponse &msg)
         int statusCode = msg.getStatus().getStatusCode();
         RDK_LOG( RDK_LOG_WARN, "LOG.RDK.TEST", "%s(ValidateTunerReservationResponse) - Reservation not valid. statusCode = %d\n", __FUNCTION__,statusCode);
     }
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::CancelRecordingResponse &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     bool isCanceled = msg.isCanceled();
 
     responseReceived = true;
@@ -1031,12 +1006,12 @@ void CTRMMonitor::operator() (const TRM::CancelRecordingResponse &msg)
         int statusCode = msg.getStatus().getStatusCode();
         RDK_LOG( RDK_LOG_WARN, "LOG.RDK.TEST", "%s(CancelRecordingResponse) - Cancellation failed. statusCode = %d\n", __FUNCTION__,statusCode);
     }
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::GetAllTunerIdsResponse &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     responseReceived = true;
     int statusCode = msg.getStatus().getStatusCode();
     if (TRM::ResponseStatus::kOk == statusCode)
@@ -1044,12 +1019,12 @@ void CTRMMonitor::operator() (const TRM::GetAllTunerIdsResponse &msg)
     else
 	responseSuccess = false;
     RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s(GetAllTunerIdsResponse) StatusCode = %d\n", __FUNCTION__,statusCode);
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::GetAllTunerStatesResponse &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     responseReceived = true;
     int statusCode = msg.getStatus().getStatusCode();
 
@@ -1059,12 +1034,12 @@ void CTRMMonitor::operator() (const TRM::GetAllTunerStatesResponse &msg)
         responseSuccess = false;
 
     RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s(GetAllTunerStatesResponse) StatusCode = %d\n", __FUNCTION__,statusCode);
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::GetAllReservationsResponse &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     responseReceived = true;
     int statusCode = msg.getStatus().getStatusCode();
     if (TRM::ResponseStatus::kOk == statusCode)
@@ -1072,12 +1047,12 @@ void CTRMMonitor::operator() (const TRM::GetAllReservationsResponse &msg)
     else
         responseSuccess = false;
     RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s(GetAllReservationsResponse) StatusCode = %d\n", __FUNCTION__,statusCode);
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::GetVersionResponse &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     responseReceived = true;
     int statusCode = msg.getStatus().getStatusCode();
     if (TRM::ResponseStatus::kOk == statusCode)
@@ -1085,12 +1060,12 @@ void CTRMMonitor::operator() (const TRM::GetVersionResponse &msg)
     else
         responseSuccess = false;
     RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s(GetVersionResponse) StatusCode = %d\n", __FUNCTION__,statusCode);
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::NotifyTunerReservationUpdate &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     TRM::TunerReservation resv = msg.getTunerReservation();
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s(NotifyTunerReservationUpdate)\nDevice:[%s] Activity:[%s] Locator:[%s] StartTime: [%lld] Duration: [%d] Token:[%s]\n",
                                 __FUNCTION__,
@@ -1100,12 +1075,12 @@ void CTRMMonitor::operator() (const TRM::NotifyTunerReservationUpdate &msg)
 				resv.getStartTime(),
 				resv.getDuration(),
                                 resv.getReservationToken().c_str());
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::NotifyTunerReservationConflicts &msg)
 {
-    rmf_osal_mutexAcquire( g_mutex);
+    pthread_mutex_lock( &helper_mutex);
     const TRM::ReserveTunerResponse::ConflictCT &conflicts =  msg.getConflicts();
     if (conflicts.size() != 0)
     {
@@ -1172,7 +1147,7 @@ void CTRMMonitor::operator() (const TRM::NotifyTunerReservationConflicts &msg)
     {
         RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Found no conflict\n", __FUNCTION__);
     }
-    rmf_osal_mutexRelease( g_mutex);
+    pthread_mutex_unlock( &helper_mutex);
 }
 
 void CTRMMonitor::operator() (const TRM::NotifyTunerStatesUpdate &msg)

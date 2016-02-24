@@ -17,7 +17,11 @@
 #include <json/json.h>
 #include <jsonrpc/jsonrpc.h>
 #include <iostream>
-
+#include <time.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
+#include <stdlib.h>
 /* debug message */
 typedef enum _DEBUG_LEVEL_
 {
@@ -44,7 +48,13 @@ typedef enum _DEBUG_LEVEL_
     do{\
             if(eDebugLevel <= DEBUG_ENABLE)\
             {\
-                fprintf(stdout,"\n\n%s %s : Function Name: %s; Line: %d :- \n",__DATE__,__TIME__,__FUNCTION__,__LINE__);\
+                char buffer[30];\
+                struct timeval tv;\
+                time_t curtime;\
+                gettimeofday(&tv, NULL); \
+                curtime=tv.tv_sec;\
+                strftime(buffer,30,"%m-%d-%Y  %T",localtime(&curtime));\
+                fprintf(stdout,"\n\n%s: Function Name: %s; Line: %d :- \n",buffer,__FUNCTION__,__LINE__);\
                 fprintf(stdout,pui8Debugmsg);\
                 fflush(stdout);\
             }\

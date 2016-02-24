@@ -69,7 +69,7 @@ if "SUCCESS" in recLoadStatus.upper():
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-	sleep(30);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -87,7 +87,7 @@ if "SUCCESS" in recLoadStatus.upper():
         now = "curTime"
 
         #Frame json message
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -95,43 +95,43 @@ if "SUCCESS" in recLoadStatus.upper():
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
-                tdkTestObj.executeTestCase(expectedResult);
-		print "Waiting to get acknowledgment status"
-		sleep(5);
-		retry = 0;
+                print "Waiting to get acknowledgement"
+                sleep(10);
+                #Check for acknowledgement from recorder
+		print "Looping till acknowledgement is received"
+		loop = 0;
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-		while (( ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
-			sleep(5);
+		while 'acknowledgement' not in actResponse and loop < 5:
 	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-			retry = retry+1;
+			sleep(10);
+			loop = loop+1;
 		print "Retrieve Status Details: %s"%actResponse;
                 if 'acknowledgement' in actResponse:
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be partially completed"
 		    sleep(60)
+		    response = recorderlib.callServerHandler('clearStatus',ip);
                     # Reboot the STB
 		    print "Rebooting the STB to cause power interrupt"
 		    recObj.initiateReboot();
 		    print "Sleeping to wait for the recoder to be up"
 		    sleep(300);
 		    #Frame json message
-		    tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
-                    tdkTestObj1.executeTestCase(expectedResult);
+		    tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
+                    tdkTestObj.executeTestCase(expectedResult);
 		    print "Get the recording list from recorder"
    		    recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
 		    print "Wait for 60sec to get the recording list"
 		    sleep(60)
                     actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-		    print actResponse;
+		    print "Recording List: ", actResponse;
                     recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
                     print recordingData
                     if 'NOTFOUND' not in recordingData:
 			    print "Successfully retrieved recording ID in recording list";
-                            key = 'error'
-                            value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                            print "key: ",key," value: ",value
-                            if "POWER_INTERRUPTION" in value.upper():
+                            error = recorderlib.getValueFromKeyInRecording(recordingData,'error')
+                            if "POWER_INTERRUPTION" in error.upper():
                                 print "Power interruption happened properly when recording is inprogress";
                                 response = recorderlib.callServerHandler('clearStatus',ip);
                                 print "Clear Status after getting status from RWS: %s"%response;
@@ -141,19 +141,16 @@ if "SUCCESS" in recLoadStatus.upper():
                                 recordingData = recorderlib.getRecordingFromRecId(response,recordingID)
                                 print recordingData
                                 if 'NOTFOUND' in recordingData:
-                                        tdkTestObj1.setResultStatus("SUCCESS");
+                                        tdkTestObj.setResultStatus("SUCCESS");
                                         print "No redundant recording status retrieved from recorder"
                                 else:
-                                        tdkTestObj1.setResultStatus("FAILURE");
+                                        tdkTestObj.setResultStatus("FAILURE");
                                         print "Redundant recording status retrieved from recorder"
-                            elif "BADVALUE" in value.upper():
-                             	tdkTestObj1.setResultStatus("FAILURE");
-                                print "No error/status field for this recording Id"
                             else:
-                                tdkTestObj1.setResultStatus("FAILURE");
+                                tdkTestObj.setResultStatus("FAILURE");
                                 print "Power interruption not happened properly when recording is inprogress";
                     else:
-                            tdkTestObj1.setResultStatus("FAILURE");
+                            tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve recording ID in recording list";
                 else:
                     tdkTestObj.setResultStatus("FAILURE");

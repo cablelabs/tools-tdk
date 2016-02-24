@@ -9,30 +9,69 @@
 #============================================================================
 
 # Module Imports
-import tftpy
+import socket
 import sys
+import json
+
+#------------------------------------------------------------------------------
+# Methods
+#------------------------------------------------------------------------------
+
+def isValidIpv6Address(ip):
+                try:
+                        socket.inet_pton(socket.AF_INET6, ip)
+                except socket.error:  # not a valid address
+                        return False
+                return True
+
+def getSocketInstance(ip):
+                if isValidIpv6Address(ip):
+                        tcpClient = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+                else:
+                        tcpClient = socket.socket()
+                return tcpClient
 
 # Check the number of arguments and print the syntax if args not equal to 5
-if ( (len(sys.argv)) != 5):
-        print "Usage : python " + sys.argv[0] + " Device_IP_Address PortNumber Remote_File_Path Local_file_path"
-	print "eg    : python " + sys.argv[0] + " 192.168.160.130 8088 \"/version.txt\" \"/filestore/version/version.txt\""
-	exit()
+if((len(sys.argv))!=5):
+        print "Usage : python " + sys.argv[0] + " DeviceIP AgentMonitorPortNumber BoxFileName TMFileName"
+        print "eg    : python " + sys.argv[0] + " 192.168.160.189 8090 \"/version.txt\" \"111_222_333_version.txt\""
+	sys.exit()
 
 # Assigning IP address, port number and path of source and destination files
-ipaddrs = sys.argv[1]
-port = int (sys.argv[2])
-remotefile = sys.argv[3]
-localfile = sys.argv[4]
+deviceIP = sys.argv[1]
+agentMonitorPort = int (sys.argv[2])
+boxFile = sys.argv[3]
+tmFile = sys.argv[4]
 
-# Connect to TFTP server and download the file
 try:
-	client = tftpy.TftpClient (ipaddrs, port)
-	client.download (remotefile, localfile)
-       
+	tcpClient = getSocketInstance(deviceIP)
+	tcpClient.connect((deviceIP, agentMonitorPort))
+
+	# Sending message to push the logs from STB to TM
+	jsonMsg = {'jsonrpc':'2.0','id':'2','method':'PushLog','STBfilename':boxFile,'TMfilename':tmFile}
+	query = json.dumps(jsonMsg)
+	tcpClient.send(query) #Sending json query
+
+	result = tcpClient.recv(1048) #Receiving response
+	tcpClient.close()
+
+	resultIndex = result.find("result") + len("result"+"\":\"")
+	message = result[resultIndex:]
+	message = message[:(message.find("\""))]
+	print message
+	sys.stdout.flush()
+
+except socket.error:
+	print "ERROR: Unable to connect agent.."
+	sys.stdout.flush()
+	sys.exit()
+
 except TypeError:
-      	print "Connection Error!!! Transfer of " + remotefile + " Failed: Make sure Agent is running"
+	print "Connection Error!!! Transfer of " + boxFile + " Failed: Make sure Agent is running"
+	sys.exit()
 
 except:
-      	print "Error!!! Transfer of " + remotefile + " Failed.."
+	print "Error!!! Transfer of " + boxFile + " Failed.."
+	sys.exit()
 
-# End of File
+#End of file

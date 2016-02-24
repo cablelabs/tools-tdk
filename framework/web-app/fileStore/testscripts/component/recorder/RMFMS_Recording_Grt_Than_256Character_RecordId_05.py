@@ -96,7 +96,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 #compare the actual result with expected result
                 if expectedresult in actualresult:
                         time.sleep(10);
-			RequestURL="{\"updateSchedule\":{\"requestId\":\"7\",\"generationId\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recording_id))+"\",\"locator\":[\"ocap://"+validid+"\"],\"epoch\":curTime,\"start\":"+start_time+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recording_id))+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+			RequestURL="{\"updateSchedule\":{\"requestId\":\"7\",\"generationId\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recording_id))+"\",\"locator\":[\"ocap://"+validid+"\"],\"epoch\":curTime,\"start\":"+start_time+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+str(int(recording_id))+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 			serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
 			if "updateSchedule" in serverResponse:
                                 print "updateSchedule message post success";

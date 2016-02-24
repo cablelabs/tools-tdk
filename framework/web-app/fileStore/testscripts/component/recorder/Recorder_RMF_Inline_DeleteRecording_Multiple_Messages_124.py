@@ -55,30 +55,24 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_Inline_DeleteRecording_Multiple_M
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
+#Set the module loading status
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        #Set the module loading status
-        recObj.setLoadModuleStatus(recLoadStatus);
-
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
                recObj.initiateReboot();
+               print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-	print "Sleeping to wait for the recoder to be up"
-
         
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
- 	print "No Update Schedule Details: %s"%actResponse;
-	sleep(60);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
-        print "Clear Status Details: %s"%response;
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -87,7 +81,8 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        duration = "240000";
+        #duration = "240000";
+	duration = "45000"
         startTime = "0";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         ocapId2 = tdkTestObj.getStreamDetails('02').getOCAPID()
@@ -95,63 +90,51 @@ if "SUCCESS" in recLoadStatus.upper():
         now = "curTime"
 
         #Frame json message
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P2\"},{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+ocapId2+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P2\"},{\"recordingId\":\""+str(int(recordingID)+2)+"\",\"locator\":[\"ocap://"+ocapId3+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+str(int(recordingID)+2)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P2\"}]}}";
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P2\"},{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+ocapId2+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P2\"},{\"recordingId\":\""+str(int(recordingID)+2)+"\",\"locator\":[\"ocap://"+ocapId3+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+str(int(recordingID)+2)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P2\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
         actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
-        print "Update Schedule Details: %s"%actResponse;
-
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
-                print "Wait for 60s to get acknowledgement"
-                sleep(60);
+                sleep(10);
                 #Check for acknowledgement from recorder
-                tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
 		loop = 0;
-		while loop < 5:
+                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+		while (('acknowledgement' not in actResponse) and (loop < 5)):
 	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	                #print "Retrieve Status Details: %s"%actResponse;
 			sleep(10);
 			loop = loop+1;
-		if 'acknowledgement' not in actResponse:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "Received Empty/Error status";
-                elif 'acknowledgement' in actResponse:
+		print "Retrieve Status Details: %s"%actResponse;
+                if 'acknowledgement' in actResponse:
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
-		    jsonMsgNoUpdate = "{\"updateSchedule\":{\"generationId\":\"0\"}}";
-		    actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
-                    sleep(60);
+		    sleep(60);
+
+		    recorderlib.callServerHandler('clearStatus',ip)
 
                     #Frame json message for update recording
                     jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P0\"},{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"deletePriority\":\"P0\"},{\"recordingId\":\""+str(int(recordingID)+2)+"\",\"deletePriority\":\"P0\"}]}}";
 
                     expResponse = "updateRecordings";
-                    tdkTestObj.executeTestCase(expectedResult);
                     actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgUpdateRecording,ip);
-                    print "updateRecordings Details: %s"%actResponse;
                     if expResponse in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "updateRecordings message post success";
-                        print "Wait for 60s to get acknowledgement"
-                        sleep(60);
+                        sleep(10);
                         #Check for acknowledgement from recorder
-                        tdkTestObj.executeTestCase(expectedResult);
                         print "Looping till acknowledgement is received"
                         loop = 0;
-                        while loop < 5:
+			actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                        while (('acknowledgement' not in actResponse) and (loop < 5)):
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                #print "Retrieve Status Details: %s"%actResponse;
                                 sleep(10);
                                 loop = loop+1;
-			if 'acknowledgement' not in actResponse:
-                            tdkTestObj.setResultStatus("FAILURE");
-                            print "Received Empty/Error status";
-                        elif 'acknowledgement' in actResponse:
+			print "Retrieve Status Details: %s"%actResponse;
+                        if 'acknowledgement' in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully retrieved acknowledgement from recorder";
                             tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
@@ -163,26 +146,26 @@ if "SUCCESS" in recLoadStatus.upper():
                             sleep(60)
                             actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                             print "Recording List: %s" %actResponse;
-                            recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
-                            secondRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1))
-                            thirdRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+2))
-                            print recordingData,secondRecordingData,thirdRecordingData
-                            if 'NOTFOUND' not in recordingData or 'NOTFOUND' not in secondRecordingData or 'NOTFOUND' not in thirdRecordingData:
-                                key = 'status'
-                                value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                secondRecValue = recorderlib.getValueFromKeyInRecording(secondRecordingData,key)
-                                thirdRecValue = recorderlib.getValueFromKeyInRecording(thirdRecordingData,key)
-                                print "key: ",key," value: ",value," secondRecValue: ",secondRecValue," thirdRecValue: ",thirdRecValue
-                                print "Successfully retrieved the recording list from recorder";
-                                if "ERASED" in value.upper() and "ERASED" in secondRecValue.upper() and "ERASED" in thirdRecValue.upper():
+                            firstRec = recorderlib.getRecordingFromRecId(actResponse,recordingID)
+                            secondRec = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1))
+                            thirdRec = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+2))
+                            print firstRec
+			    print secondRec 
+			    print thirdRec
+                            if 'NOTFOUND' not in firstRec and 'NOTFOUND' not in secondRec and 'NOTFOUND' not in thirdRec:
+                                firstRecValue = recorderlib.getValueFromKeyInRecording(firstRec,'deletePriority')
+                                secondRecValue = recorderlib.getValueFromKeyInRecording(secondRec,'deletePriority')
+                                thirdRecValue = recorderlib.getValueFromKeyInRecording(thirdRec,'deletePriority')
+				if "P0" in firstRecValue.upper() and "P0" in secondRecValue.upper() and "P0" in thirdRecValue.upper():
+                                #if "ERASED" in firstRecValue.upper() and "ERASED" in secondRecValue.upper() and "ERASED" in thirdRecValue.upper():
                                     tdkTestObj1.setResultStatus("SUCCESS");
-                                    print "Delete recording happened properly";
+                                    print "Deletion Priority set properly";
                                 else:
                                     tdkTestObj1.setResultStatus("FAILURE");
-                                    print "Delete recording not happened properly";
+                                    print "Delete Priority not set properly";
                             else:
                                 tdkTestObj1.setResultStatus("FAILURE");
-                                print "Failed to retrieve the recording list from recorder";
+                                print "Failed to retrieve one or more recording data";
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve acknowledgement from recorder";
@@ -195,7 +178,3 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
-else:
-    print "Failed to load Recorder module";
-    #Set the module loading status
-    recObj.setLoadModuleStatus("FAILURE");

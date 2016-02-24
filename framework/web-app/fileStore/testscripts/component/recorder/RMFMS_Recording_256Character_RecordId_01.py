@@ -100,7 +100,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 if expectedresult in actualresult:
                         print "Recorder received the requested recording url";
                         tdkTestObj.setResultStatus("SUCCESS");
-			RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recording_id+"\",\"locator\":[\"ocap://"+validid+"\"],\"epoch\":"+now+",\"start\":"+start_time+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_256\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+			RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recording_id+"\",\"locator\":[\"ocap://"+validid+"\"],\"epoch\":"+now+",\"start\":"+start_time+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_256\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 			serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
                         if "updateSchedule" in serverResponse:
                                 print "updateSchedule message post success";

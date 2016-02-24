@@ -6,25 +6,11 @@
 # not be used, copied, distributed or otherwise  disclosed in whole or in part
 # without the express written permission of Comcast.
 # ============================================================================
-# Copyright (c) 2013 Comcast. All rights reserved.
+# Copyright (c) 2014 Comcast. All rights reserved.
 # ============================================================================
 #
-import tftpy
-import sys
 
-IP = <ipaddress>
-PORT = <port> 
-RemoteFile = "/version.txt"
-LocalFile = <localfile>
-
-try:
-	client = tftpy.TftpClient( IP, PORT )
-	client.download( RemoteFile, LocalFile )
-       
-except TypeError:
-       	print "Connection Error!!! Transfer of " + RemoteFile + " Failed: Make sure Agent is running"
-
-except:
-       	print "Error!!! Transfer of " + RemoteFile + " Failed.."
- 
-
+PORT=69
+SRC="$(dirname $1)"
+cd $SRC
+tftp -l $(basename $1) -r $2 -p $3 $PORT

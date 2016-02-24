@@ -91,7 +91,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         now = "curTime";
 
         #Frame json message
-        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
         print "serverResponse : %s" %serverResponse;
@@ -112,8 +112,8 @@ if "SUCCESS" in loadmodulestatus.upper():
 			print "Sending getRecordings to get the recording list"
 			recorderlib.callServerHandler('clearStatus',ip)
 			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-			print "Wait for 3 min to get response from recorder"
-			sleep(180)
+			print "Wait for 60s to get response from recorder"
+			sleep(60)
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 			print "Recording List: %s" %actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);

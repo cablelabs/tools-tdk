@@ -69,7 +69,7 @@ class RecordList:
 	#------------------------------------------------------------------------------
 	# __init__ and __del__ block
 	#------------------------------------------------------------------------------
-	def __init__(self, ipaddress, portnumber, path, url, execId, execDevId, execResId, testCaseId, deviceId):
+	def __init__(self, ipaddress, portnumber, path, tmLogpath, url, execId, execDevId, execResId, testCaseId, deviceId):
 		try:
 			self.ipaddress = ipaddress
 			self.portnumber = portnumber
@@ -80,6 +80,7 @@ class RecordList:
 			self.execResId = execResId
 			self.testCaseId = testCaseId
 			self.deviceId = deviceId
+			self.tmLogpath = tmLogpath
 			self.logpath = ""
 			self.numOfRecordings = 0
 			self.recordingObj = None
@@ -111,7 +112,7 @@ class RecordList:
 		
 		obj = TDKScriptingLibrary("mediaframework","2.0");
 
-		obj.configureTestCase(self.url,self.path,self.execId,self.execDevId,self.execResId,self.ipaddress,self.portnumber,69,8088,self.testCaseId,self.deviceId,"false","false","false",'RMF_Dvr_CreateNew_Recording');
+		obj.configureTestCase(self.url,self.path,self.tmLogpath,self.execId,self.execDevId,self.execResId,self.ipaddress,self.portnumber,69,8088,self.testCaseId,self.deviceId,"false","false","false",'RMF_Dvr_CreateNew_Recording');
 
     		#Get the result of connection with test component and STB
     		result = obj.getLoadModuleResult();
@@ -181,7 +182,7 @@ class RecordList:
         # Return Value : 0 on success and 1 on failure
 
      		obj = TDKScriptingLibrary("mediaframework","2.0");
-    		obj.configureTestCase(self.url,self.path,self.execId,self.execDevId,self.execResId,self.ipaddress,self.portnumber,69,8088,self.testCaseId,self.deviceId,"false","false","false",'RMF_DVR_Get_Recording_List');
+    		obj.configureTestCase(self.url,self.path,self.tmLogpath,self.execId,self.execDevId,self.execResId,self.ipaddress,self.portnumber,69,8088,self.testCaseId,self.deviceId,"false","false","false",'RMF_DVR_Get_Recording_List');
 
      		#Get the result of connection with test component and STB
      		result =obj.getLoadModuleResult();
@@ -421,7 +422,7 @@ class PrimitiveTestCase:
     	#------------------------------------------------------------------------------
     	# __init__ and __del__ block
     	#------------------------------------------------------------------------------
-	def __init__(self, name, url, execId, execDeviceId, execResId, ipAddr, realPath, tcpClient, logTransferPort, testcaseId, deviceId):
+	def __init__(self, name, url, execId, execDeviceId, execResId, ipAddr, realPath, logPath, tcpClient, logTransferPort, testcaseId, deviceId):
 		try:
 			self.url = url
 			self.execID = execId
@@ -431,6 +432,7 @@ class PrimitiveTestCase:
 			self.testcaseId = testcaseId
 			self.deviceId = deviceId
 			self.realpath = realPath
+			self.logpath = logPath
 			self.tcpClient = tcpClient
 			self.testCaseName = name
 			self.logTransferPort = logTransferPort
@@ -763,8 +765,8 @@ class PrimitiveTestCase:
                 return result
 
 	########## End of Function ##########
-	''' 
-	def initiateRecorderApp(self, arg):
+
+#	def initiateRecorderApp(self, arg):
 
 	# To start recorder application
 
@@ -773,61 +775,101 @@ class PrimitiveTestCase:
 	# Parameters   : argument
 	# Return Value : console output of the app
 
-		outdata = startRecorderApp(self.realpath, arg)
-		sys.stdout.flush()
-		return outdata
+	#	outdata = startRecorderApp(self.realpath, arg)
+	#	sys.stdout.flush()
+	#	return outdata
 	
 	########## End of Function ##########
-	''' 
-	def downloadFile(self, IP, PORT, RemoteFile, LocalFile):
+
+
+	def isValidIpv6Address(self,deviceIP):
+
+        # To check if ip address is in valid ipv6 format
+
+        # Syntax       : OBJ.isValidIpv6Address()
+        # Description  : To check if ip address is in valid ipv6 format
+        # Parameters   : None
+        # Return Value : Returns true or false
+
+                try:
+                        socket.inet_pton(socket.AF_INET6, deviceIP)
+                except socket.error:  # not a valid address
+                        return False
+                return True
+
+        ########## End of Function ##########
+
+        def getSocketInstance(self,deviceIP):
+
+        # Creates a socket instance depending on ip version
+
+        # Syntax       : OBJ.getSocketInstance()
+        # Description  : Creates a socket instance depending on ip version
+        # Parameters   : None
+        # Return Value : Returns socket descriptor
+
+                if self.isValidIpv6Address(deviceIP):
+                        tcpClient = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+                else:
+                        tcpClient = socket.socket()
+                return tcpClient
+
+        ########## End of Function ##########
+
+	def downloadFile(self, deviceIP, agentMonitorPort, boxFile, tmFile):
 	
 	# Download a file
 
 	# Syntax       : OBJ.downloadFile()
 	# Description  : To download a file 
-	# Parameters   : IP         - IP address of the remote machine where the file resides
-	#                PORT       - Port using for download
-	#                RemoteFile - Remote file location
-	#                LocalFile  - Local file location where the file to be downloaded.
+	# Parameters   : deviceIP         - IP address of the remote machine where the file resides
+	#                agentMonitorPort - Port using for download
+	#                boxFile          - Remote file location
+	#                tmFile           - Local file name in which the file has to be downloaded.
 	# Return Value : returns status
             
         	status = 0
-        	try:
-                	client = tftpy.TftpClient(IP, PORT)
-                	client.download(RemoteFile, LocalFile)
+		print "File to be transferred : ", boxFile
+		print "File in Test Manager : ", tmFile
+		try:
+			tcpClient = self.getSocketInstance(deviceIP)
+			tcpClient.connect((deviceIP, agentMonitorPort))
                 	status = 1
-			print "Remote Path from box:",RemoteFile
-			print "Local Path:",LocalFile
+
+			jsonMsg = {'jsonrpc':'2.0','id':'2','method':'PushLog','STBfilename':boxFile,'TMfilename':tmFile}
+			query = json.dumps(jsonMsg)
+			tcpClient.send(query) #Sending json query
+
+			result = tcpClient.recv(1048) #Receiving response
+			tcpClient.close()
+
+			resultIndex = result.find("result") + len("result"+"\":\"")
+			message = result[resultIndex:]
+			message = message[:(message.find("\""))]
 			sys.stdout.flush()
 
-       		except TypeError:
-                	print "Connection Error : Transfer of " + RemoteFile + " Failed.."
+		except socket.error:
+			print "#TDK_@error-ERROR: Unable to connect agent.."
 			sys.stdout.flush()
-       		except IOError:
-			print "Remote Path from box:",RemoteFile
-                        print "Local Path:",LocalFile
-                	print "IO Error : Transfer of " + RemoteFile + " Failed.."
-			print "Failed to find destination file path or permission denied"
-			sys.stdout.flush()
-        	except:
-                	print "ERROR : Transfer of " + RemoteFile + " Failed.." 
-			sys.stdout.flush()
+			sys.exit()
+
 	       	return status
 
 	########## End of Function ##########
 
-    	def transferLogs(self, sourceLogPath, multiLog):
-	
+	def transferLogs(self, boxLogPath, multiLog):
+
 	# For transfering logs using tftp
 
 	# Syntax       : OBJ.transferLogs()
 	# Description  : To transfer log files 
-	# Parameters   : logpath  - Path of logfile in remote machine
+	# Parameters   : boxLogpath  - Path of logfile in remote machine
 	#                multilog - 'true' for multiple logs,'false' for single log
 	# Return Value : none
             
         	ipAddress = self.ip
         	port = self.logTransferPort
+
 		#dir = self.realpath + str(self.execID) previously it was like this
 		'''#TODO: Commented below block. Verify if it is OK.  This block was  unnecessarily creating a logpth/executionid folder
 		dir = self.realpath + str(self.execID)
@@ -845,11 +887,8 @@ class PrimitiveTestCase:
                                 print "\n Error in log Directory path \n"
 		'''
 		#TODO
-		destinationLogPath = self.realpath + "logs/" + str(self.execID) + "/" + str(self.execDevId) + "/" + str(self.resultId) + "/" 
-		#destinationLogPath = self.realpath +  str(self.execID) + "/" + str(self.execDevId) + "/" 
+		destinationLogPath = str(self.execID) + "_" + str(self.execDevId) + "_" + str(self.resultId) + "_"
 		timeStamp = strftime("%d%m%y%H%M%S", gmtime())
-                if not os.path.exists(destinationLogPath):
-                        os.makedirs(destinationLogPath)
 
 	#
 	#  If there are multiple logs, logdetails file will be downloaded first. All the application logs
@@ -858,21 +897,29 @@ class PrimitiveTestCase:
 	#
 
 		if (multiLog == "true"):
-			summaryFile = destinationLogPath + str(self.execID) + "_" + "TestSummary" + "_" + timeStamp
-			self.downloadFile (ipAddress, port, sourceLogPath, summaryFile)
-			logDetails = open (summaryFile, "r")
-			logDetails.readline()
-			line = logDetails.readline()
-			while(line != ''):
-				time.sleep(1)
-				path = line.split(";")[-1]
-				path = path.replace('"', '').strip()
-				path = path.strip("\n")
-				localFileName = path.split("/")[-1]
-				localFileName = destinationLogPath + str(self.execID) + "_" + localFileName + "_" + timeStamp
-				self.downloadFile(ipAddress, port, path, localFileName)
-				line = logDetails.readline()
-			logDetails.close()
+			summaryFile = destinationLogPath + "TestSummary" + "_" + timeStamp
+			self.downloadFile (ipAddress, port, boxLogPath, summaryFile)
+			summaryFile = self.logpath + "/" + summaryFile
+			tmFileName = 'NULL'
+			print "Summary File : ", summaryFile
+			try:
+                                logDetails = open (summaryFile, "r")
+                                logDetails.readline()
+                                line = logDetails.readline()
+                                while(line != ''):
+                                        time.sleep(1)
+                                        path = line.split(";")[-1]
+                                        path = path.replace('"', '').strip()
+                                        path = path.strip("\n")
+                                        localFileName = path.split("/")[-1]
+                                        localFileName = destinationLogPath + localFileName + "_" + timeStamp
+                                        self.downloadFile(ipAddress, port, path, localFileName)
+                                        line = logDetails.readline()
+                                logDetails.close()
+                        except IOError:
+                                print "#TDK_@error-ERROR : Unable to fetch summary file for transferring logs !!! "
+                                sys.stdout.flush()
+                                exit()
 
 	#
 	#  If there is only single log, that file will be downloaded from the logpath and timestamp(GMT)
@@ -880,10 +927,11 @@ class PrimitiveTestCase:
 	#
 
 		elif( multiLog == "false"):
-			localFileName = sourceLogPath.split("/")[-1]
-			localFileName = destinationLogPath + str(self.execID) + "_" + localFileName + "_" + timeStamp
-			self.downloadFile(ipAddress, port, sourceLogPath, localFileName)
-		return localFileName
+			tmFileName = boxLogPath.split("/")[-1]
+			tmFileName = destinationLogPath + tmFileName + "_" + timeStamp
+			self.downloadFile(ipAddress, port, boxLogPath, tmFileName)
+
+		return tmFileName
 
 	########## End of Function ##########
 
@@ -899,15 +947,14 @@ class PrimitiveTestCase:
 		ipAddress = self.ip
 		port = self.logTransferPort
 		recordedUrlLogPath = infoFileName
-
-		destinationLogPath = self.realpath + "fileStore/" 
-		destinationLogPath = destinationLogPath + str(self.execID) + "_RecordedUrlsLog.txt"
-		if self.downloadFile(ipAddress, port, recordedUrlLogPath, destinationLogPath) == 0:
+		tmFile = str(self.execID) + "_" + str(self.execDevId) + "_" + str(self.resultId) + "_" + "RecordedUrlsLog.txt"
+		if self.downloadFile(ipAddress, port, recordedUrlLogPath, tmFile) == 0:
                         print "#TDK_@error-ERROR : Unable to fetch recording details !!! "
                 	sys.stdout.flush()
 			exit()
 		else:
-    			dvrObj = dvrlib.DVRDetails (destinationLogPath)
+			tmFile = self.logpath + "/" + tmFile
+			dvrObj = dvrlib.DVRDetails (tmFile)
 
 		sys.stdout.flush()
 		return dvrObj
@@ -928,7 +975,7 @@ class PrimitiveTestCase:
 		returnvalue = 1
 		obj = self.getStreamDetails('01')
 		gatewayip = obj.getGatewayIp()
-		recobj = RecordList(str(gatewayip),8087,self.realpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
+		recobj = RecordList(str(gatewayip),8087,self.realpath,self.logpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
 		returnvalue = recobj.initiateDvrRecording(duration, recordID, title)
 		time.sleep(8)
 		return returnvalue
@@ -947,7 +994,7 @@ class PrimitiveTestCase:
 		returnvalue = 1
 		obj = self.getStreamDetails('01')
 		gatewayip = obj.getGatewayIp()
-		recobj = RecordList(str(gatewayip),8087,self.realpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
+		recobj = RecordList(str(gatewayip),8087,self.realpath,self.logpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
 		reclist = recobj.findMatchingRecording(recordId,"RecordID")
 		print "Record Details : ", reclist
 		return reclist
@@ -966,7 +1013,7 @@ class PrimitiveTestCase:
 		returnvalue = 1
 		obj = self.getStreamDetails('01')
 		gatewayip = obj.getGatewayIp()
-		recobj = RecordList(str(gatewayip),8087,self.realpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
+		recobj = RecordList(str(gatewayip),8087,self.realpath,self.logpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
 		reclist = recobj.findMatchingRecording(title,"Title")
                 print "Record Details : ", reclist
                 return reclist
@@ -990,7 +1037,7 @@ class PrimitiveTestCase:
 			returnvalue = 1
 			obj = self.getStreamDetails('01')
 			gatewayip = obj.getGatewayIp()
-			recobj = RecordList(str(gatewayip),8087,self.realpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
+			recobj = RecordList(str(gatewayip),8087,self.realpath,self.logpath,self.url,self.execID,self.execDevId, self.resultId, self.testcaseId, self.deviceId)
 			returnvalue,reclist = recobj.getRecordDetail(duration)
 			if(returnvalue == 0):
 				destinationLogPath = self.realpath + "/fileStore/recordDetails.txt"
@@ -1010,15 +1057,14 @@ class PrimitiveTestCase:
 		else:
 
                 	recordedUrlLogPath = infoFileName
-
-                	destinationLogPath = self.realpath + "/fileStore/"
-                	destinationLogPath = destinationLogPath + "recordDetails.txt"
-                	if self.downloadFile(ipAddress, port, recordedUrlLogPath, destinationLogPath) == 0:
-                	        print "#TDK_@error-ERROR : Unable to fetch recording details !!! "
-                		sys.stdout.flush()
+			tmFile = str(self.execID) + "_" + str(self.execDevId) + "_" + str(self.resultId) + "_" + "recordDetails.txt"
+			if self.downloadFile(ipAddress, port, recordedUrlLogPath, tmFile) == 0:
+			        print "#TDK_@error-ERROR : Unable to fetch recording details !!! "
+				sys.stdout.flush()
 				exit()
                 	else:
-                        	recordingObj = recordinglib.RecordingDetails (destinationLogPath)
+				tmFile = self.logpath + "/" + tmFile
+				recordingObj = recordinglib.RecordingDetails (tmFile)
 
                 	sys.stdout.flush()
                 	return recordingObj
@@ -1152,22 +1198,24 @@ class TDKScriptingLibrary:
 
 	########## End of Function ##########
 
-	def configureTestCase(self, url, path, execId, execDeviceId, execResId, deviceIp, devicePort, logTransferPort,\
+	def configureTestCase(self, url, path, logpath, execId, execDeviceId, execResId, deviceIp, devicePort, logTransferPort,\
 				statusPort, testcaseID, deviceId, performanceBenchMarkingEnabled, performanceSystemDiagnosisEnabled, \
 				scriptSuiteEnabled, executionName):
 	# Configures the testcase for Execution
 
-	# Syntax       : OBJ.configureTestCase(url, path, execId, execDeviceId, execResId, 
+	# Syntax       : OBJ.configureTestCase(url, path, logpath, execId, execDeviceId, execResId,
 	#                                    deviceIp, devicePort, logTransferPort, statusPort, testcaseID, deviceId,
 	#				     performanceBenchMarkingEnabled, performanceSystemDiagnosisEnabled, scriptSuiteEnabled,
 	#				     executionName)
 	# eg           : obj.configureTestCase ('http://192.168.160.248:8080/rdk-test-tool', 
 	#                                       '/opt/comcast/software/tomcat/current/webapps/rdk-test-tool/',
+	#                                       '/opt/comcast/software/tomcat/current/webapps/rdk-test-tool/logs/',
 	#                                       25, 3333, 29, ip, port, 69, 8088, 55, 66, 'true', 'true', 'true', 'CT_IARMBUS_3');
 	# Description  : Obtain the device ip and port number,
 	#                Create a TCP connection to the device under Test
 	# Parameters   : url           - url to fetch webservice calls
-	#                path	       - Path to save the files tranferred from the box
+	#                path	       - Path to TM files (to read config files)
+	#                logpath       - Path to save the files tranferred from the box
 	#                execId        - Execution id
 	#                execDeviceId  - Device id for that execution
 	#                execResId     - Result id
@@ -1186,7 +1234,6 @@ class TDKScriptingLibrary:
 	#                socket.error - Error while opening socket
     	
 		try:
-			
 			self.url = url
 			self.execID = execId
 			self.resultId = execResId
@@ -1197,6 +1244,7 @@ class TDKScriptingLibrary:
 			self.portValue = devicePort
 			self.tcpClient = self.getSocketInstance()
 			self.realpath = path
+			self.logpath = logpath
 			self.performanceBenchMarkingEnabled = performanceBenchMarkingEnabled  
 			self.performanceSystemDiagnosisEnabled = performanceSystemDiagnosisEnabled 
 			self.scriptSuiteEnabled = scriptSuiteEnabled
@@ -1232,7 +1280,6 @@ class TDKScriptingLibrary:
 			
                         try:
                                 loadstring = urllib.urlopen(url).read()
-
                                 if "null" in loadstring:
                                         self.logTransferPort = logTransferPort
                                         self.statusPort = statusPort
@@ -1395,7 +1442,7 @@ class TDKScriptingLibrary:
 	# Return Value: An instance of PrimitiveTestCase 
     	
 		sys.stdout.flush()
-		testObj = PrimitiveTestCase(testCaseName, self.url, self.execID, self.execDevId, self.resultId, self.IP, self.realpath, self.tcpClient, self.logTransferPort, self.testcaseId, self.deviceId)
+		testObj = PrimitiveTestCase(testCaseName, self.url, self.execID, self.execDevId, self.resultId, self.IP, self.realpath, self.logpath, self.tcpClient, self.logTransferPort, self.testcaseId, self.deviceId)
 		testObj.setParentTestCase(self)
 		if bXmlLogEnabledForTestFn == True:
 			testFnEl=self.xmlLogDom.createElement("TestFunction")

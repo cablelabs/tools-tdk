@@ -37,10 +37,11 @@ extern 	     std::fstream go_ConfigFile;
 extern 	     std::fstream go_PortforwardFile;
 extern 	     Json::Rpc::TcpServer go_Server;
 bool   	     bBenchmarkEnabled;
+std::string GetSubString (std::string strLine, std::string strDelimiter);
 
 /* Constants */
 #define LIB_NAME_SIZE 50       // Maximum size of component interface library name
-#define COMMAND_SIZE  100      // Maximum size of command
+#define COMMAND_SIZE  500      // Maximum size of command
 #define ERROR_SIZE    50       // Maximum size of error string
 #define BUFFER_SIZE   64       // Maximum size of buffer
 
@@ -59,6 +60,7 @@ bool   	     bBenchmarkEnabled;
 #define DISABLE_TDK_SCRIPT   "$TDK_PATH/DisableTDK.sh"      // Script to disable TDK
 #define EXECUTE_LOGGER_SCRIPT   "$TDK_PATH/file_copy.sh"      // Script to package log files
 #define LOG_REMOVAL_SCRIPT "$TDK_PATH/RemoveLogs.sh"       // Script to remove obsolete log files
+#define PUSH_LOG_SCRIPT "$TDK_PATH/PushLogs.sh"       // Script to push log files
 #define GET_DEVICES_SCRIPT   "$TDK_PATH/get_moca_devices.sh"      // Script to find connected devices
 #define SET_ROUTE_SCRIPT     "$TDK_PATH/configure_iptables.sh"    // Script to set port forwarding rules to connected devices
 #define SYSSTAT_SCRIPT       "sh $TDK_PATH/runSysStat.sh"	  // Script to get system diagnostic info from sar command
@@ -1850,6 +1852,91 @@ bool RpcMethods::RPCRemoveLogs (const Json::Value& request, Json::Value& respons
     return bRet;
 
 } /* End of RPCRemoveLogs */
+
+
+
+/********************************************************************************************************************
+ Purpose:               RPC Method to push the required files from box to test manager
+
+ Parameters:
+                             request [IN]       - Json request.
+                             response [OUT]  - Json response with result "SUCCESS/FAILURE".
+
+ Return:                 bool  -      Always returning true from this function, with details in response[result].
+
+*********************************************************************************************************************/
+bool RpcMethods::RPCPushLog (const Json::Value& request, Json::Value& response)
+{
+    bool bRet = true;
+    std::string strFilePath;
+    std::string strManagerIP;
+    std::fstream go_ConfigFile;
+    void *pvReturnValue;
+    char szCommand[COMMAND_SIZE];
+    const char* pszSTBFileName = NULL;
+    const char* pszTMFileName = NULL;
+
+    cout << "Received query: \n" << request << endl;
+
+    /* Constructing JSON response */
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+    response["result"] = "SUCCESS";
+
+    if (request["STBfilename"] != Json::Value::null)
+    {
+        pszSTBFileName = request["STBfilename"].asCString();
+    }
+
+    if (request["TMfilename"] != Json::Value::null)
+    {
+        pszTMFileName = request["TMfilename"].asCString();
+    }
+
+    /* Extracting path to file */
+    strFilePath = RpcMethods::sm_strTDKPath;
+    strFilePath.append(CONFIGURATION_FILE);
+
+    /* Open the configuration file and extracts Test manager IP address */
+    go_ConfigFile.open (strFilePath.c_str(), ios::in);
+    if (go_ConfigFile.is_open())
+    {
+        DEBUG_PRINT (DEBUG_LOG, "\nConfiguration file %s found \n", SHOW_DEFINE (CONFIGURATION_FILE));
+
+        /* Parsing configuration file to get manager IP */
+        pvReturnValue = getline (go_ConfigFile, strManagerIP);
+        go_ConfigFile.close();
+        if (pvReturnValue)
+        {
+            strManagerIP = GetSubString (strManagerIP, "@");
+            RpcMethods::sm_szManagerIP = strManagerIP.c_str();
+            DEBUG_PRINT (DEBUG_LOG, "Test Manager IP is %s \n", RpcMethods::sm_szManagerIP);
+        }
+        else
+        {
+            DEBUG_PRINT (DEBUG_ERROR, "Failed to extract Test Manager IP Address");
+            response["result"] = "FAILURE";
+            response["details"] = "Failed to extract Test Manager IP Address";
+            return bRet;
+        }
+    }
+    else
+    {
+        DEBUG_PRINT (DEBUG_TRACE, "\nAlert!!! Configuration file %s not found \n", SHOW_DEFINE(CONFIGURATION_FILE));
+        response["result"] = "FAILURE";
+        response["details"] = "Configuration file not found";
+        return bRet;
+    }
+
+    /* Constructing the command to invoke script */
+    sprintf (szCommand, "%s %s %s %s", SHOW_DEFINE(PUSH_LOG_SCRIPT), pszSTBFileName, pszTMFileName, sm_szManagerIP); //Constructing Command
+
+    system (szCommand); //Calling the script to remove unwanted logs
+    sleep (2);
+
+    return bRet;
+
+} /* End of RPCPushLog */
 
 
 /* To enable port forwarding. In gateway boxes only  */

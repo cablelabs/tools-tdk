@@ -16,14 +16,11 @@
 #------------------------------------------------------------------------------
 import sys
 import json
-import tftpy
 import socket
-import select
 
 #------------------------------------------------------------------------------
 # Methods
 #------------------------------------------------------------------------------
-
 def isValidIpv6Address(ip):
                 try:
                         socket.inet_pton(socket.AF_INET6, ip)
@@ -38,21 +35,21 @@ def getSocketInstance(ip):
                         tcpClient = socket.socket()
                 return tcpClient
 
-def consoleLogTransfer(deviceIP,agentPort,logTransferPort,fileName,localFilePath):
 
-        # Syntax       : consoleLogTransfer.consoleLogTransfer (deviceIP,agentPort,logTransferPort,fileName,localFilePath)
+def consoleLogTransfer(deviceIP,agentMonitorPort,boxFileName,tmFileName):
+
+        # Syntax       : consoleLogTransfer.consoleLogTransfer (deviceIP,agentMonitorPort,boxFileName,tmFileName)
         # Description  : Sends a json query to get path to console log file and transfer the same.
         # Parameters   : deviceIP - IP address of the device under test.
-	#		 agentPort - Port Number of the device under test. 
-	#		 logTransferPort - Port Number for log transfer using TFTP.
-	#		 fileName - Name of log file.
-	#		 localFilePath - Path to which the file is transferred.
+	#		 agentMonitorPort - Port Number of the device under test.
+	#		 boxFileName - Name of log file in box.
+	#		 tmFileName - Name in which the file is saved in TM after transferring.
         # Return Value : Nil
 
 	# Sending JSON request to get log path
 	try:
 		tcpClient = getSocketInstance(deviceIP)
-        	tcpClient.connect((deviceIP, agentPort))
+		tcpClient.connect((deviceIP, agentMonitorPort))
 
        		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'GetAgentConsoleLogPath'}
      		query = json.dumps(jsonMsg)
@@ -75,18 +72,37 @@ def consoleLogTransfer(deviceIP,agentPort,logTransferPort,fileName,localFilePath
 	# Transferring file using TFTP
 	try:
 
-		remoteFile = message + "/" + fileName
-		localFile = localFilePath + "/" + fileName
-		print localFile
-		print remoteFile
-		client = tftpy.TftpClient( deviceIP, logTransferPort )
-		client.download( remoteFile, localFile, timeout=20 )
+		boxFile = message + "/" + boxFileName
+		tmFile = tmFileName
+		tcpClient = getSocketInstance(deviceIP)
+		tcpClient.connect((deviceIP, agentMonitorPort))
+
+		# Sending message to push the logs from STB to TM
+		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'PushLog','STBfilename':boxFile,'TMfilename':tmFile}
+		query = json.dumps(jsonMsg)
+		tcpClient.send(query) #Sending json query
+
+		result = tcpClient.recv(1048) #Receiving response
+		tcpClient.close()
+
+		resultIndex = result.find("result") + len("result"+"\":\"")
+		message = result[resultIndex:]
+		message = message[:(message.find("\""))]
+
+		print message
+		sys.stdout.flush()
+
+        except socket.error:
+		print "ERROR: Unable to connect agent.."
+		sys.stdout.flush()
+		sys.exit()
+
 	except TypeError:
-      		print "Connection Error!!! Transfer of " + remoteFile + " Failed: Make sure Agent is running"
+		print "Connection Error!!! Transfer of " + boxFile + " Failed: Make sure Agent is running"
 		sys.exit()
 
 	except:
-      		print "Error!!! Transfer of " + remoteFile + " Failed.."
+		print "Error!!! Transfer of " + boxFile + " Failed.."
 		sys.exit()
 
 # End of File

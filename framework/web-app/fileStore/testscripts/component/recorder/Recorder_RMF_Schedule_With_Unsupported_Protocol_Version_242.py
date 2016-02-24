@@ -52,7 +52,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_UpdateSchedule_Inline_LongPoll_3');
+recObj.configureTestCase(ip,port,'Recorder_RMF_Schedule_With_Unsupported_Protocol_Version_242');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
@@ -91,7 +91,7 @@ if "SUCCESS" in recLoadStatus.upper():
         now = "curTime"
 
         #Frame json message with unsupported protocol version
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"100\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"100\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -102,6 +102,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
                 print "Wait for 60s to get acknowledgement"
+                sleep(60);
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
@@ -118,14 +119,14 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
-                    sleep(90);
+                    sleep(60);
 		    tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
                     tdkTestObj1.executeTestCase(expectedResult);
                     print "Sending getRecordings to get the recording list"
                     recorderlib.callServerHandler('clearStatus',ip)
                     recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
                     print "Wait for 1 min to get response from recorder"
-                    sleep(60);
+                    sleep(120);
                     actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                     print "Recording List: %s" %actResponse;
                     recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);

@@ -86,7 +86,7 @@ if "SUCCESS" in recLoadStatus.upper():
         genIdInput = "test_2_b";
 
         #Frame json message
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
@@ -119,7 +119,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                                 print "Scheduled recording completed successfully";
 						#STEP3: SEND legacy "updateRecordings" payload containing "generationId": "test2b"
                                                 genIdInput = "test2b";
-                                                jsonMsg = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"requestId\":\""+requestID+"\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P2\",\"properties\":{\"title\":\"Recording_"+recordingID+"\"}}]}}";
+                                                jsonMsg = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"requestId\":\""+requestID+"\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P2\",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"}}]}}";
                                                 expResponse = "updateRecordings";
                                                 actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
                                                 if expResponse in actResponse:

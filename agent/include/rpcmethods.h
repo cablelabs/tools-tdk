@@ -29,8 +29,6 @@
 #define NULL_LOG "/dev/null"
 #define CONFIGURATION_FILE "tdkconfig.ini"
 #define PORT_FORWARD_RULE_FILE "forwardRule.ini"
-//Revering the any address facility due to the log transfer failurs 
-#define START_TFTP_SERVER "udpsvd -vE 0.0.0.0 69 tftpd"
 
 
 #define STR(x)   #x
@@ -49,7 +47,6 @@ class RpcMethods
         static FILE *sm_pLogStream;
         static int sm_nConsoleLogFlag;
         static int sm_nAgentPID;
-        static int sm_nTFTPAgentPID;
         static int sm_nModuleCount;
         static int sm_nRouteSetFlag;
         static int sm_nGetDeviceFlag;
@@ -86,7 +83,8 @@ class RpcMethods
         bool RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response);
         bool RPCPerformanceBenchMarking (const Json::Value& request, Json::Value& response);
         bool RPCExecuteLoggerScript (const Json::Value& request, Json::Value& response);
-	 bool RPCRemoveLogs (const Json::Value& request, Json::Value& response);
+	bool RPCRemoveLogs (const Json::Value& request, Json::Value& response);
+	bool RPCPushLog (const Json::Value& request, Json::Value& response);
 
         /* Below methods are applicable only for Gateway boxes */
         #ifdef PORT_FORWARD

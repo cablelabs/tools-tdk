@@ -93,7 +93,6 @@ struct sProcessInfo
 
 /* Initialization */
 int RpcMethods::sm_nAgentPID = 0;
-int RpcMethods::sm_nTFTPAgentPID = 0;
 int RpcMethods::sm_nRouteSetFlag = FLAG_NOT_SET;
 int RpcMethods::sm_nGetDeviceFlag = FLAG_NOT_SET;
 int RpcMethods::sm_nConsoleLogFlag = FLAG_NOT_SET;
@@ -998,29 +997,6 @@ void *AgentExecuter (void *pProcessDetails)
             /* Modifying child process name to tdk_agent */
             strncpy (pProcessInfo -> pProcessName[0], "tdk_agent", pProcessInfo -> nProcessNameSize);
 
-            /* To check if tftp server process is already running */
-            if ((RpcMethods::sm_nTFTPAgentPID ==0) || (0 != kill(RpcMethods::sm_nTFTPAgentPID, 0)))
-            {
-                /* Start tftp server for logfile transfer */
-                nPID = RETURN_SUCCESS;
-                nPID = fork();
-                if (nPID == RETURN_SUCCESS)
-                {
-                    /* Modifying child process name to tdk_agent_tftp */
-                    strncpy (pProcessInfo -> pProcessName[0], "tdk_agent_tftp", pProcessInfo -> nProcessNameSize);
-                    system (START_TFTP_SERVER);
-                    exit(0);
-                }
-                else if (nPID < RETURN_SUCCESS)
-                {
-                    DEBUG_PRINT (DEBUG_ERROR, "\n Alert!!! Couldnot start tftp server for logfile transfer \n");
-                }
-                else
-                {
-                    RpcMethods::sm_nTFTPAgentPID = nPID; //Save process id in a static variable
-                }
-            }
-
             /* Starting agent */
             nReturnValue = Agent();
             if(nReturnValue == RETURN_FAILURE)
@@ -1115,6 +1091,7 @@ int AgentMonitor (char **pProcessName, int nProcessNameSize)
 
     /* Registering methods to agent monitor */
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCResetAgent, std::string("ResetAgent")));
+    o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCPushLog, std::string("PushLog")));
     /* TO DO : Below rpc to be removed from agent monitor. Retaining so that it wont break Test Manager logic */
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetRDKVersion, std::string("GetRDKVersion")));
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetAgentConsoleLogPath, std::string("GetAgentConsoleLogPath")));	

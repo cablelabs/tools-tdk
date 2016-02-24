@@ -2,7 +2,7 @@ include ../def.inc
 default: build
 
 CC      = g++
-CFLAGS  = -Wall -g -DGCC4_XXX -Wno-format -Wunused -DUSE_CC_GETTIMEOFDAY -DRMF_OSAL_FEATURE_IPV6 -DRMF_OSAL_LITTLE_ENDIAN -DDEBUG_CONF_FILE="\"/etc/debug.ini\""
+CFLAGS  = -Wall -g -DGCC4_XXX -Wno-format -Wunused -DUSE_CC_GETTIMEOFDAY -DDEBUG_CONF_FILE="\"/etc/debug.ini\""
 
 #
 # Source files
@@ -62,7 +62,7 @@ CFLAGS  += $(INCLUDES)
 
 LDOPTS  += -L $(IMAGE_PATH)/usr/local/lib \
            -L $(IMAGE_PATH)/usr/lib \
-           -lrmfosal -lrmfosalutils -ltrm -lpthread -lrdkloggers -ljansson -llog4c
+           -ltrm
 
 build: clean library install
 	@echo "Build Finished...."

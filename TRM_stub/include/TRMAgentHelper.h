@@ -17,18 +17,13 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <uuid/uuid.h>
-#include <glib.h>
 #include <unistd.h>
 
 #include <vector>
 #include <map>
 #include <string>
 
-#include "rmf_osal_thread.h"
-#include "rmf_osal_util.h"
-#include "rmf_osal_init.h"
 #include "rdk_debug.h"
-#include "rmf_osal_sync.h"
 
 #include "trm/Messages.h"
 #include "trm/MessageProcessor.h"
@@ -38,6 +33,8 @@
 
 #define OUTPUT_LEN 2040 // max limit in TDK framework is 2048
 #define GUID_LEN   64
+#define MAX_RETRY 5
+
 enum Type {
     REQUEST = 0x1234,
     RESPONSE = 0x1800,
@@ -65,7 +62,6 @@ public:
     TRMClient();
     ~TRMClient();
     void setToken( const std::string& token);
-    void notifyResrvResponse(bool success);
 
     static bool addToReservationDb(TRM::TunerReservation resv);
     static bool removeFromReservationDb(const std::string token);
@@ -75,11 +71,6 @@ private:
     static bool inited;
     char guid[GUID_LEN];
     std::string token;
-    bool waitForResrvResponse();
-    GCond* tunerStopCond;
-    GMutex* tunerStopMutex;
-    bool reservationSuccess;
-    bool resrvResponseReceived;
     static std::map<int,TRM::TunerReservation> tunerReservationDb;
 };
 

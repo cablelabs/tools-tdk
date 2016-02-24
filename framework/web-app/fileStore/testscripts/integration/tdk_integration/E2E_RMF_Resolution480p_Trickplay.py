@@ -72,6 +72,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         if "SUCCESS" in result:
                 #Calling DS_IsDisplayConnectedStatus function to check for display connection status
                 isDisplay = devicesettings.dsIsDisplayConnected(dsObj)
+		getResolution = ""
                 if "TRUE" in isDisplay:
                     #Save a copy of current resolution
                     copyResolution = devicesettings.dsGetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0"});
@@ -79,14 +80,17 @@ if "SUCCESS" in loadmodulestatus.upper():
                     resolution="480p";
                     # Check if current value is already 480p
                     if resolution not in copyResolution:
-                            devicesettings.dsSetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':resolution});
+			    #Check if 480p is a supported resolution
+			    actualresult,dstdkObj,resolutions = tdklib.Create_ExecuteTestcase(dsObj,'DS_Resolution', 'SUCCESS', verifyList ={},port_name = "HDMI0");
+			    if resolution in resolutions:
+				getResolution = devicesettings.dsSetResolution(dsObj,"SUCCESS",kwargs={'portName':"HDMI0",'resolution':resolution});
                     else:
                             print "Resolution value already at %s"%copyResolution
-
+		
                 #calling DS_ManagerDeInitialize to DeInitialize API
                 result = devicesettings.dsManagerDeInitialize(dsObj)
 
-                if "TRUE" in isDisplay:
+                if "TRUE" in isDisplay and resolution in getResolution:
                     # Step2: Reboot the box
                     dsObj.initiateReboot();
 
