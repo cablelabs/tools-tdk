@@ -29,6 +29,13 @@ import tdklib
 from random import randint
 from time import sleep
 
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15]))[20:24])
+
 def startRecorderApp(realpath,arg):
 
 	# To start recorder application
@@ -92,7 +99,8 @@ def startRecorderApp(realpath,arg):
 	
 ########## End of Function startRecorderApp ##########
 
-LOIPADDR = '127.0.0.1'
+#DVRSIMIPADDR = '127.0.0.1'
+DVRSIMIPADDR = get_ip_address('eth0')
 
 def callServerHandler(methodName,gwIp):
 
@@ -108,7 +116,7 @@ def callServerHandler(methodName,gwIp):
         # Return Value : Console output of the curl command
 
         try:
-                serverIp = LOIPADDR
+                serverIp = DVRSIMIPADDR
 	
         except:
                 print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
@@ -162,7 +170,7 @@ def callServerHandlerWithMsg(methodName,jsonMsg,gwIp):
         # Return Value : Console output of the curl command
 
         try:
-                serverIp = LOIPADDR
+                serverIp = DVRSIMIPADDR
         except:
                 print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
 		outdata = "ERROR: Unable to fetch recorder server IP"
@@ -220,7 +228,7 @@ def callServerHandlerWithType(methodName,type,gwIp):
         # Return Value : Console output of the curl command
 
         try:
-                serverIp = LOIPADDR
+                serverIp = DVRSIMIPADDR
         except:
                 print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
                 outdata = "ERROR: Unable to fetch recorder server IP"
@@ -271,7 +279,7 @@ def callServerHandlerWithTypeAndNewUrl(methodName,type,gwIp,url):
         # Return Value : Console output of the curl command
 
         try:
-                serverIp = LOIPADDR
+                serverIp = DVRSIMIPADDR
         except:
                 print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
                 outdata = "ERROR: Unable to fetch recorder server IP"
@@ -397,7 +405,7 @@ def getStatusMessage(jsonData):
                 if 'recordingStatus' in my_item['statusMessage']:
                         return my_item['statusMessage']
 
-        print "ERROR: StatusMessage not found!"
+        print "ERROR: recordingStatus not found in StatusMessage!"
         return ret
 
 ########## End of Function getStatusMessage ##########

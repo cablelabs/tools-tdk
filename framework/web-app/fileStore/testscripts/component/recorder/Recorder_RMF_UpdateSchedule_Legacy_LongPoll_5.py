@@ -30,6 +30,8 @@
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
+    <box_type>Emulator-HYB</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
@@ -77,7 +79,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
  	print "No Update Schedule Details: %s"%actResponse;
 
-	sleep(60);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -109,7 +111,6 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
                 print "Wait for 60s to get acknowledgement"
-                sleep(60);
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
@@ -126,6 +127,7 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
+                    sleep(60);
 		    tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
                     tdkTestObj1.executeTestCase(expectedResult);
                     print "Sending getRecordings to get the recording list"
