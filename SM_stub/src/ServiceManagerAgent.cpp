@@ -1183,57 +1183,70 @@ bool ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& r
 	    ptrService = ServiceManager::getInstance()->getGlobalService(DEVICE_SETTING_SERVICE_NAME);
             if (ptrService != NULL)
             {
-		QVariantList paramList;
+               QList<QString> method_list;
+                method_list << "downloadIP" << "ecm_ip" << "boxIP" << "estb_ip" << "macAddress" << "estb_mac" << "ecm_mac" << "ethernet_mac" << "MODEL_NUM" << "imageVersion" << "BUILD_TYPE" << "DAC_INIT_TIMESTAMP" ;
+                QVariantList paramList;
                 ServiceParams inParams;
-		ServiceParams outResult;
-  		QString methodType = "ecm_mac";
-		//QString methodType = "estb_mac";
-		char stringDetails[STR_DETAILS_50] = {'\0'};
+                ServiceParams outResult;
+                QString methodType;
+//              QString methodType = "ecm_mac";
+                //QString methodType = "estb_mac";
+                char stringDetails[STR_DETAILS_50] = {'\0'};
+                QString details;
 
-		paramList.append(methodType);
-		inParams["params"] = paramList;
-                outResult = ptrService->callMethod(DeviceSettingService::METHOD_DEVICE_GET_DEVICE_INFO, inParams);
-
-		QString data;
-                foreach (QVariant value, outResult)
+                /*invoke METHOD_DEVICE_GET_DEVICE_INFO with each method type in method_list*/
+                for(int i=0; i<method_list.size(); i++)
                 {
-		    if (!(value.toString().isNull() || value.toString().isEmpty()))
-		    {
-                        data += value.toString();
-                        data += "  ";
-		    }
+                        methodType = method_list.at(i);
+                        paramList.append(methodType);
+                        inParams["params"] = paramList;
+                        outResult = ptrService->callMethod(DeviceSettingService::METHOD_DEVICE_GET_DEVICE_INFO, inParams);
+
+                        QString data;
+                        foreach (QVariant value, outResult)
+                        {
+                                if (!(value.toString().isNull() || value.toString().isEmpty()))
+                                {
+                                        data += value.toString();
+                                        data += "  ";
+                                }
+                        }
+
+                        sprintf(stringDetails,"%s: %s ", methodType.toUtf8().constData(), data.toUtf8().constData());
+                        details.append(stringDetails);
+                        printf("method and o/p is %s\n", stringDetails);
+                        paramList.clear();
+                        inParams.clear();
+                        outResult.clear();
                 }
 
-		if (data.isEmpty())
-		{
-		    response["result"]="FAILURE";
-		}
-		else
-		{
-              	    response["result"]="SUCCESS";
-		}
-
-		sprintf(stringDetails,"%s: %s", methodType.toUtf8().constData(), data.toUtf8().constData());
-		response["details"]=stringDetails;
+                printf("Details: %s \n", details.toUtf8().constData());
+                details.remove('\n');
+                response["details"] = details.toUtf8().constData();
+                if (details.isEmpty())
+               {
+                        response["details"] = "device info is empty";
+                }
+                response["result"]="SUCCESS";
+                return TEST_SUCCESS;
             }
-	    else
-	    {
-		response["result"]="FAILURE";
-		response["details"]="Failed to get serviceManager instance using getGlobalService";
+            else
+            {
+                response["details"]="Failed to get serviceManager instance using getGlobalService";
             }
         }
-	else
-	{
-		response["result"]="FAILURE";
-		response["details"]="Service does not exists";
-	}
+        else
+        {
+                response["details"]="Service does not exists";
+        }
 #else
-	response["result"]="FAILURE";
-	response["details"]="DeviceSetting Service unsupported";
+        response["details"]="DeviceSetting Service unsupported";
 #endif
-	DEBUG_PRINT(DEBUG_TRACE,"SM_DeviceSetting_GetDeviceInfo ---->Exit\n");
-	return TEST_SUCCESS;
+        DEBUG_PRINT(DEBUG_TRACE,"SM_DeviceSetting_GetDeviceInfo ---->Exit\n");
+        response["result"]="FAILURE";
+        return TEST_FAILURE;
 }
+
 
 /***************************************************************************
  *Function name : SM_ScreenCapture_Upload
