@@ -103,6 +103,7 @@ class BootStrap {
 		primitiveService.initializePrimitiveTests(rootFile.file.getAbsolutePath())
 //		scriptService?.createSuite()
 		executionService.handleInprogressExecutionOnStartup()
+		executionService.tftpServerStartUp(rootFile.file.getAbsolutePath())
 		
 		/*List<Script> scriptList = Script.list()
 		

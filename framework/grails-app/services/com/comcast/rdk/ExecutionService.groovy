@@ -38,6 +38,12 @@ class ExecutionService {
     def grailsApplication
 	
 	/**
+	 * Inject the execute Script service
+	 */
+	//def executescriptService
+
+	
+	/**
 	 * transient variable to keep the list of execution to be aborted
 	 */
 	public static volatile List abortList = []
@@ -139,7 +145,8 @@ class ExecutionService {
 	
 	def getLogFileNames(final String realPath, final String executionId, final String executionDeviceId, final String executionResId){
 		def mapVals = [:]
-		def summaryFilePath = "${realPath}//logs//${executionId}//${executionDeviceId}//${executionResId}"//_TestSummary"
+		/*
+		 * def summaryFilePath = "${realPath}//logs//${executionId}//${executionDeviceId}//${executionResId}"//_TestSummary"
 		try{
 			File directory = new File(summaryFilePath);
 			List<File> foundFiles = new ArrayList<File>()
@@ -183,7 +190,8 @@ class ExecutionService {
 				dir.eachFile {
 					if (it.isFile()) {
 						String fileName = it.getName()
-						if(fileName.startsWith( executionId )){
+					
+						if(fileName.startsWith( executionId )){				
 							fileName = fileName.replaceFirst( executionId+UNDERSCORE, "" )
 							mapVals.put( fileName.trim(), "" )
 						}
@@ -195,10 +203,8 @@ class ExecutionService {
 		}
 		catch(Exception ex){
 			mapVals = [:]
-		}
-		
-		try{
-			
+		}*/		
+		try{			
 			List<File> foundFiles = new ArrayList<File>()
 			def summaryFilePath1 = "${realPath}//logs//stblogs//${executionId}//${executionDeviceId}//${executionResId}"
 			File directory = new File(summaryFilePath1);
@@ -209,10 +215,7 @@ class ExecutionService {
 						foundFiles << new File("${realPath}//logs//stblogs//${executionId}//${executionDeviceId}//${executionResId}//${fileName}")
 				}
 			}
-			}
-			
-			
-	
+			}	
 			if(foundFiles?.size() > 0){
 			   def fileAppendTimestamp
 			   def summaryFileName
@@ -227,7 +230,7 @@ class ExecutionService {
 				def dir = new File(filePath)
 				dir.eachFile {
 					if (it.isFile()) {
-						String fileName = it.getName()
+						String fileName = it.getName()						
 						if(fileName.startsWith( executionId )){
 							fileName = fileName.replaceFirst( executionId+UNDERSCORE, "" )
 							mapVals.put( fileName.trim(), "" )
@@ -243,9 +246,14 @@ class ExecutionService {
 		}
 		return mapVals
 	}
-
-	
-	
+	/**
+	 * Function for get all crash file list
+	 * @param realPath
+	 * @param executionId
+	 * @param executionDeviceId
+	 * @param executionResId
+	 * @return
+	 */
 	def getCrashLogFileNames(final String realPath, final String executionId, final String executionDeviceId, final String executionResId){
 		def mapVals = [:]
 		try{
@@ -547,7 +555,7 @@ class ExecutionService {
     def executeVersionTransferScript(final String realPath, final String filePath, final String executionName, def exectionDeviceId, final String stbIp, final String logTransferPort){
         try{
 	        def executionInstance = Execution.findByName(executionName)
-	        String fileContents = new File(filePath+DOUBLE_FWD_SLASH+VERSIONTRANSFER_FILE).text
+	        /*String fileContents = new File(filePath+DOUBLE_FWD_SLASH+VERSIONTRANSFER_FILE).text
 	        
 	        fileContents = fileContents.replace(IP_ADDRESS, STRING_QUOTES+stbIp+STRING_QUOTES)
 			
@@ -557,7 +565,7 @@ class ExecutionService {
 	        fileContents = fileContents.replace(LOCALFILE, STRING_QUOTES+versionFilePath+STRING_QUOTES)
 	        
 	        String versionFile = TEMP_VERSIONFILE_NAME
-			new File("${realPath}//logs//version//${executionInstance?.id}//${exectionDeviceId?.toString()}").mkdirs()
+			//new File("${realPath}//logs//version//${executionInstance?.id}//${exectionDeviceId?.toString()}").mkdirs()
 	        File versnFile = new File(filePath, versionFile)
 	        boolean isVersionFileCreated = versnFile.createNewFile()
 	        if(isVersionFileCreated) {
@@ -568,9 +576,24 @@ class ExecutionService {
 	        versnNewPrintWriter.flush()
 			versnNewPrintWriter.close()
 	        executeScript( versnFile.getPath() )
-	        versnFile.delete()
+	        versnFile.delete()*/
+			Device device = Device.findByStbIp(stbIp)			
+			String versionFileName = "${executionInstance?.id}_${exectionDeviceId?.toString()}_version.txt"
+			def versionFilePath = "${realPath}//logs//version//${executionInstance?.id}//${exectionDeviceId?.toString()}"
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				device.stbIp,
+				device.agentMonitorPort,
+				"/version.txt",
+				versionFileName				
+			]			
+			ScriptExecutor scriptExecutor = new ScriptExecutor()
+			def outputData = scriptExecutor.executeScript(cmd,1)		
+			copyVersionLogsIntoDir(realPath, versionFilePath)			
 			
-			Device device = Device.findByStbIp(stbIp)
 			def devName
 			ExecutionDevice.withTransaction {
 				devName = ExecutionDevice.get(exectionDeviceId)?.device
@@ -579,6 +602,7 @@ class ExecutionService {
 			if(devName){
 				dev = Device.findByStbName(devName)
 			}
+			// FOR CLIENT BOXES
 			if(dev?.boxType?.type?.equalsIgnoreCase(BOXTYPE_CLIENT)){
 				getDeviceDetails(dev,logTransferPort,realPath)
 			}
@@ -588,34 +612,86 @@ class ExecutionService {
 		}		
     }
 	
-	
-	def getDeviceDetails(Device device, def logTransferPort, def realPath){
-		
+	/**
+	 * Function for copy the version file into  logs directory using TFTP Server
+	 * @param realPath
+	 * @param logTransferFilePath
+	 * @return
+	 */
+	def copyVersionLogsIntoDir(def realPath, def logTransferFilePath){
 		try {
-			new File("${realPath}//logs//devicelogs//${device?.stbName}").mkdirs()
+			String logsPath = realPath.toString()+"/logs/logs/"
+			File logDir  = new File(logsPath)
+			if(logDir.isDirectory()){
+				logDir.eachFile{ file->
+					if(file?.toString().contains("version.txt")){
+						def logFileName =  file.getName().split("_")
+						def  versionFileName = logFileName[1]+"_"+logFileName.last()
+						new File(logTransferFilePath?.toString()).mkdirs()
+						File logTransferPath  = new File(logTransferFilePath)
+						if(file.exists()){
+							boolean fileMoved = file.renameTo(new File(logTransferPath, versionFileName));
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
 
+	/**
+	 * Copy the device logs file into devicelog directory using TFTP server.
+	 * @param realPath
+	 * @param logTransferFilePath
+	 * @return
+	 */
+	def copyDeviceLogIntoDir(def realPath, def logTransferFilePath){
+		try {
+			String logsPath = realPath.toString()+"/logs/logs/"
+			File logDir  = new File(logsPath)
+			if(logDir.isDirectory()){
+				logDir.eachFile{ file->
+					
+					def logFileName =  file.getName().split("_")
+					new File(logTransferFilePath?.toString()).mkdirs()
+					File logTransferPath  = new File(logTransferFilePath)
+					if(file.exists()){
+						boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+
+	/**
+	 * Function for fetching client device details 
+	 */
+	def getDeviceDetails(Device device, def logTransferPort, def realPath){		
+		try {
 		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
 		def absolutePath = layoutFolder.absolutePath
 		def filePath = "${realPath}//logs//devicelogs//${device?.stbName}//"
-		
 		String[] cmd = [
 			"python",
 			absolutePath,
-			device?.stbIp,
-			logTransferPort,
+			device?.stbIp,			
+			device?.agentMonitorPort,		
 			"/var/TDK/trDetails.log",
-			filePath+"${device?.stbName}.txt"
+			"${device?.stbName}"+"_"+"${device?.stbName}.txt" 
 		]
-
 	    ScriptExecutor scriptExecutor = new ScriptExecutor()
 	    def outputData = scriptExecutor.executeScript(cmd,1)
-		
+		copyDeviceLogIntoDir(realPath,filePath)
 		parseAndSaveDeviceDetails(device, filePath)		
 		} catch (Exception e) {
 			e.printStackTrace()
 		}		
-	}
-    
+	}   
 	
 	def parseAndSaveDeviceDetails(Device device, def filePath){
 
@@ -1856,4 +1932,36 @@ class ExecutionService {
 		return timeString
 	}
 	
+	
+	/**
+	 * Function for start up the  tftp server in Test manager side
+	 * @return
+	 */
+	
+	def tftpServerStartUp(def realPath){		
+		try{
+			def filePath = realPath?.toString()+"/fileStore/"
+			String fileName = realPath?.toString()+"/fileStore/tftp_server.py"
+			File file = new File(fileName)
+			boolean value=file.setExecutable(true)
+			
+				String logFilePath = realPath+"/logs/logs/"
+				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//tftp_server.py").file
+				def absolutePath = layoutFolder.absolutePath
+				String[] cmd = [
+					"sudo",
+					PYTHON_COMMAND,
+					absolutePath,
+					"69",
+					logFilePath
+				]
+				Process pb = Runtime.getRuntime().exec(cmd);
+				ScriptExecutor scriptExecutor = new ScriptExecutor()
+				def outputData = scriptExecutor.executeScript(cmd,1)
+				println " TFTP SERVER START UP  "+ outputData
+		}catch(Exception e){
+			println e.getMessage()
+			e.printStackTrace()
+		}
+	}		
 }

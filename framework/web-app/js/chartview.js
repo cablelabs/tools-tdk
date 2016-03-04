@@ -48,6 +48,19 @@ function showChart1(){
 		}
 	}
 }
+
+/**
+ * Function for hide buttons (home,next, previous buttons)  
+ */
+function hideOptions(){
+	$("#previous").hide();
+	$("#next").hide();	
+	$("#previous1").hide();
+	$("#next1").hide();	
+	$("#home").hide();
+	$("#home1").hide();	
+}
+
 /**
  * Plotting the bar chart  on the bases of the script group.
  */
@@ -87,11 +100,7 @@ function showBarChart(){
 	}
 	// plotting the  graph for Execution Status  
 	if(chartType == "ExecutionStatus"){
-		$("#previous").hide();
-		$("#next").hide();	
-		$("#previous1").hide();
-		$("#next1").hide();	
-
+		hideOptions();
 		$.get('getStatusChartData', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList}, function(data) {
 			if(data.execName.length  == 1  ){
 				alert(" Please select  more than one execution name");
@@ -365,6 +374,7 @@ function showLineChart(){
 		}
 	}
 	if(chartType == "ExecutionStatus"){
+		hideOptions();		
 		$.get('getStatusChartData1', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList,startIndex:startIndex,endIndex:endIndex}, function(data) {	
 			if(data.execName.length  == 1  ){
 				alert(" Please select  more than one execution name");

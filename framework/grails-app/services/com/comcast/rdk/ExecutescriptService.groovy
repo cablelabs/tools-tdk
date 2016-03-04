@@ -128,13 +128,21 @@ class ExecutescriptService {
 		scriptData = scriptData.replace( CLIENTLIST , mocaString )
 		
 		String gatewayIp = deviceInstance?.gatewayIp
+		String logFilePath = realPath?.toString()+"logs/logs/"
 		
 		def sFile = ScriptFile.findByScriptNameAndModuleName(scriptInstance?.name,scriptInstance?.primitiveTest?.module?.name)
-
-		scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath +SINGLE_QUOTES + COMMA_SEPERATOR +
-				executionId  + COMMA_SEPERATOR + executionDevice?.id + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance?.statusPort + COMMA_SEPERATOR +
+				
+		scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES +logFilePath+SINGLE_QUOTES + COMMA_SEPERATOR +
+				executionId  + COMMA_SEPERATOR + executionDevice?.id + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.agentMonitorPort + COMMA_SEPERATOR + deviceInstance?.statusPort + COMMA_SEPERATOR +
 				sFile?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR + SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +
-				SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR)
+			SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR)
+		
+		
+		/*scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath + SINGLE_QUOTES  + COMMA_SEPERATOR +
+			executionId  + COMMA_SEPERATOR + executionDevice?.id + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance?.statusPort + COMMA_SEPERATOR +
+			sFile?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR + SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +
+			SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR)*/
+		
 
 		scriptData	 = scriptData + "\nprint \"SCRIPTEND#!@~\";"
 		Date date = new Date()
@@ -163,11 +171,13 @@ class ExecutescriptService {
 			}
 		} catch (Exception e) {
 			e.printStackTrace()
-		}
+		}	
+		String outData = executionService.executeScript( file.getPath() , execTime, uniqueExecutionName , scriptInstance.name)		
+		file.delete()  
 		
+		def logPath = "${realPath}/logs//${executionId}//${executionDevice?.id}//${executionResultId}//"		
+		copyLogsIntoDir(realPath,logPath)
 		
-		String outData = executionService.executeScript( file.getPath() , execTime, uniqueExecutionName , scriptInstance.name)
-		file.delete()
 		outData?.eachLine { line ->
 			htmlData += (line + HTML_BR )
 		}
@@ -196,12 +206,13 @@ class ExecutescriptService {
 			if(htmlData.contains(KEY_SCRIPTEND)){
 				htmlData = htmlData.replaceAll(KEY_SCRIPTEND,"")
 			}
-			def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
+			//def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
+			def logTransferFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
 			def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
-			new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-			logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
-			if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
-				transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
+			//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+			logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath)
+			if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){				
+				transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId , realPath)
 			}
 			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 			Thread.sleep(4000)
@@ -234,9 +245,7 @@ class ExecutescriptService {
 					executionService.updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 //				}
 			}
-			else{
-				
-				
+			else{			
 				if((timeDifference >= execTime) && (execTime != 0))	{					
 					File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 					def absolutePath = layoutFolder.absolutePath
@@ -268,8 +277,9 @@ class ExecutescriptService {
 		}
 		if(!executionService.abortList.contains(executionInstance?.id?.toString())){
 		String performanceFilePath
+		String performanceFileName 
 		if(isBenchMark.equals(TRUE) || isSystemDiagnostics.equals(TRUE)){
-			new File("${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+			performanceFileName = "${executionId}_${executionDevice?.id}_${executionResultId}"
 			performanceFilePath = "${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}//"
 		}
 
@@ -282,12 +292,14 @@ class ExecutescriptService {
 				absolutePath,
 				deviceInstance?.stbIp,
 				deviceInstance?.stbPort,
-				deviceInstance?.logTransferPort,
-				KEY_PERFORMANCE_BM,
-				performanceFilePath
+				deviceInstance?.agentMonitorPort,
+				KEY_PERFORMANCE_BM,				
+				performanceFileName 
 			]
+			
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 			htmlData += scriptExecutor.executeScript(cmd,1)
+			copyPerformanceLogIntoDir(realPath, performanceFilePath)
 		}
 		if(isSystemDiagnostics.equals(TRUE)){
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
@@ -297,20 +309,24 @@ class ExecutescriptService {
 				absolutePath,
 				deviceInstance?.stbIp,
 				deviceInstance?.stbPort,
-				deviceInstance?.logTransferPort,
+				deviceInstance?.agentMonitorPort,  
 				KEY_PERFORMANCE_SD,
-				performanceFilePath
+				performanceFileName 
+				
 			]
+		
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 			htmlData += scriptExecutor.executeScript(cmd,10)
+			copyPerformanceLogIntoDir(realPath, performanceFilePath)			
 		}
-		def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
+		//def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
+		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+		def logTransferFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 
-		new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
+		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName ,realPath)
 		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
-			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
+			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId,realPath)
 		}
 		}
 		Date endTime = new Date()
@@ -331,10 +347,135 @@ class ExecutescriptService {
 			executionService.updateTotalExecutionTime(timeDiff?.toString(), executionId)
 		} catch (Exception e) {
 			e.printStackTrace()
-		}
+		}		
 		return htmlData
+		
+	}		
+	/**
+	 * The function for performance related log transfer using TFTP server  		
+	 * @param realPath
+	 * @param logTransferFilePath
+	 * @return
+	 */
+	def copyAgentconsoleLogIntoDir(def realPath, def logTransferFilePath){
+		try {
+			String logsPath = realPath.toString()+"/logs/logs/"			
+
+			File logDir  = new File(logsPath)
+			if(logDir.isDirectory()){
+				logDir.eachFile{ file->
+					if(file.toString()?.contains("AgentConsoleLog.txt")){
+					def logFileName =  file.getName().split("_")					
+					new File(logTransferFilePath?.toString()).mkdirs()
+					File logTransferPath  = new File(logTransferFilePath)
+					if(file.exists()){
+						boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));						
+					}
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+	/**
+	 * Function For Tranfer the performance related file using tftp 
+	 * @param realPath
+	 * @param logTransferFilePath
+	 * @return
+	 */
+	
+	def copyPerformanceLogIntoDir(def realPath, def logTransferFilePath){
+		try {
+			String logsPath = realPath.toString()+"/logs/logs/"
+
+			File logDir  = new File(logsPath)
+			if(logDir.isDirectory()){
+				logDir.eachFile{ file->
+					if(file.toString()?.contains("benchmark.log") || file.toString()?.contains("memused.log") || file.toString()?.contains("cpu.log")){
+						def logFileName =  file.getName().split("_")
+						new File(logTransferFilePath?.toString()).mkdirs()
+						File logTransferPath  = new File(logTransferFilePath)
+						if(file.exists()){
+							boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
 	}
 		
+/**
+ * Function for copy the stblogs from tftp server
+ * @param realPath
+ * @param logTransferFilePath
+ * @param name
+ * @return
+ */
+	
+	def copyStbLogsIntoDir(def realPath, def logTransferFilePath ){
+		try {
+			String logsPath = realPath.toString()+"/logs/logs/"
+			File logDir  = new File(logsPath)
+			if(logDir.isDirectory()){
+				logDir.eachFile{ file->		
+					def logFileName =  file.getName().split("_")
+					def fName = file.getName()
+					fName = fName?.replaceFirst(logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
+					new File(logTransferFilePath?.toString()).mkdirs()
+					File logTransferPath  = new File(logTransferFilePath)
+					if(file.exists()){						
+						boolean fileMoved = file.renameTo(new File(logTransferPath,fName.trim()));						
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+	
+	
+	/**
+	 * Function for transfer the open sourse logs from "tftp server 
+	 * @param realPath
+	 * @param logTransferFilePath
+	 * @return
+	 */
+	def copyLogsIntoDir(def realPath, def logTransferFilePath ){
+		try {
+			String logsPath = realPath.toString()+"/logs/logs/"
+			File logDir  = new File(logsPath)
+			if(logDir.isDirectory()){
+				logDir.eachFile{ file->
+					def logFileName =  file.getName().split("_")								
+					if (file.isFile()) {
+						String fileName = file.getName()
+						fileName = fileName.replaceAll("\\s","")
+						if(fileName.toString().contains("\$:")){							
+							fileName = fileName.replaceAll('\\$:',"Undefined")
+						}									
+						if(fileName.startsWith( logFileName[0] )){
+							fileName = fileName.replaceFirst( logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
+							fileName= logFileName[0]+UNDERSCORE+fileName
+							new File(logTransferFilePath?.toString()).mkdirs()
+							File logTransferPath  = new File(logTransferFilePath)
+							if(file.exists()){
+								boolean fileMoved = file.renameTo(new File(logTransferPath, fileName.trim()));				
+							}
+						}
+					}			
+				}
+			}
+		} catch (Exception e) {
+			log.error  " Error"+e.getMessage()
+			e.printStackTrace()
+		}		
+	}
 	/** 
 	 *  Method to check whether the execution result is having any result update or not.
 	 *  Check If execution result  got any update or it is initial status.
@@ -390,7 +531,7 @@ class ExecutescriptService {
 	 * @param deviceInstance
 	 * @return
 	 */
-	def logTransfer(def deviceInstance, def logTransferFilePath, def logTransferFileName){
+	def logTransfer(def deviceInstance, def logTransferFilePath, def logTransferFileName , def realPath){
 		Thread.sleep(4000)
 		try{			
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callConsoleLogTransfer.py").file
@@ -400,12 +541,14 @@ class ExecutescriptService {
 				absolutePath,
 				deviceInstance?.stbIp,
 				deviceInstance?.agentMonitorPort,
-				deviceInstance?.logTransferPort,
+				//deviceInstance?.logTransferPort, avoid in TFTP issue
 				"AgentConsole.log",
-				logTransferFilePath			
-			]
+				//logTransferFilePath	
+				logTransferFileName
+			]			
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
-			def resetExecutionData = scriptExecutor.executeScript(cmd,1)		
+			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			copyAgentconsoleLogIntoDir(realPath,logTransferFilePath)
 			Thread.sleep(4000)
 		}
 		catch(Exception e){			
@@ -1950,7 +2093,7 @@ class ExecutescriptService {
 		return htmlData
 	}
 	
-	def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId){
+	def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId  ,def realPath){
 		try {
 			def module
 			def stbLogFiles
@@ -1960,44 +2103,44 @@ class ExecutescriptService {
 					stbLogFiles = module?.stbLogFiles
 				}
 			}
-
 			def destFolder = grailsApplication.parentContext.getResource("//logs//stblogs//execId_logdata.txt").file
 			def destPath = destFolder.absolutePath
 			
 			
 			def filePath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
-			def directoryPath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
-			new File(directoryPath).mkdirs()
-			
-			stbLogFiles?.each{ name -> 
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+			def directoryPath =  "${execId}_${execDeviceId}_${execResultId}"
+			def stbFilePath = "${realPath}/logs//stblogs//${execId}//${execDeviceId}//${execResultId}//"
+			stbLogFiles?.each{ name ->
+				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
 
-			File fileStore = grailsApplication.parentContext.getResource("//fileStore//").file
-			def fileStorePath = fileStore.absolutePath
+				File fileStore = grailsApplication.parentContext.getResource("//fileStore//").file
+				def fileStorePath = fileStore.absolutePath
 
-			def absolutePath = layoutFolder.absolutePath
-			String fName = name?.replaceAll("//", "_")
-			fName = fName?.replaceAll("/", "_")
-			
-			if((absolutePath) && !(absolutePath.isEmpty())){
+				def absolutePath = layoutFolder.absolutePath
+				String fName = name?.replaceAll("//", "_")
+				fName = fName?.replaceAll("/", "_")
+				
+				if((absolutePath) && !(absolutePath.isEmpty())){
 
-				String[] cmd = [
-					"python",
-					absolutePath,
-					dev?.stbIp,
-					dev?.logTransferPort,
-					name,
-					directoryPath+"//"+fName
-				]
-				try {
-					ScriptExecutor scriptExecutor = new ScriptExecutor()
-					def outputData = scriptExecutor.executeScript(cmd,1)
-				}catch (Exception e) {
-				println " error >> "+e.getMessage()
-					e.printStackTrace()
+					String[] cmd = [
+						"python",
+						absolutePath,
+						dev?.stbIp,
+						dev?.agentMonitorPort,//dev?.logTransferPort TFTP 						
+						name,
+						directoryPath+"_"+fName // fileName
+					]
+					try {
+						ScriptExecutor scriptExecutor = new ScriptExecutor()
+						def outputData = scriptExecutor.executeScript(cmd,1)
+						copyStbLogsIntoDir(realPath,stbFilePath )
+						
+					}catch (Exception e) {
+						println " error >> "+e.getMessage()
+						e.printStackTrace()
+					}
 				}
-			}
-			
+
 			}
 		} catch (Exception e) {
 			println " ERROR "+e.getMessage()
