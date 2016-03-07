@@ -1,7 +1,10 @@
 
 QT += widgets network core gui
-DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE DEBUG_LEVEL_TRACE RDK2DOT0
+DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION DEBUG_LEVEL_TRACE RDK2DOT0
 DEFINES += $(CEC_PERSIST_NAME)
+greaterThan(QT_MAJOR_VERSION, 4) {
+        DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+}
 
 INCLUDEPATH += ${SM_STUB_ROOT_PATH}/include
 INCLUDEPATH += ${SM_STUB_ROOT_PATH}/../agent/include
@@ -12,6 +15,7 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/ccec/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/osal/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmbus/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds/
+INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds-rpc/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/host/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/qt5/QtCore \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWidgets \
@@ -20,6 +24,7 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/qt5/QtCore \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKit \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKitWidgets \
                ${STAGING_DIR_TARGET}/usr/include/qt5/include
+INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmmgrs/sysmgr
 
 cross_compile:DEFINES+=CROSS_COMPILED_FOR_DEVICE
 
@@ -38,6 +43,8 @@ LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
 LIBS += -lservicemanager -lRCEC -lRCECOSHal -lRCECIARMBusHal -ludev -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata
 
 HEADERS += $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/hdmicecservice.h \
+	   $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/applicationservice.h
 
 SOURCES += src/ServiceManagerAgent.cpp \
            servicemanager/src/services/hdmicecservice.cpp       \
+	   servicemanager/src/services/applicationservice.cpp

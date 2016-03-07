@@ -93,6 +93,12 @@ using namespace std;
 #endif
 
 #endif
+#ifdef HAS_API_APPLICATION
+#include "applicationservice.h"
+#include "libIBus.h"
+#define CONFIG_FILE "/opt/rmfconfig.ini"
+#define IARM_BUS_TDK_NAME "TDK_Agent"
+#endif
 
 #define IN
 #define OUT
@@ -160,6 +166,10 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		bool SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_HdmiCec_FlushCecData(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT Json::Value& response);
+                /*ApplicationService APIs*/
+                bool SM_AppService_GetAppInfo(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_AppService_SetConnectionReset(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_AppService_Restore_rmfconfig(IN const Json::Value& req, OUT Json::Value& response);
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
 		

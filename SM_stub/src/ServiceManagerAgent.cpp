@@ -12,6 +12,52 @@
 
 #include "ServiceManagerAgent.h"
 
+#ifdef HAS_API_APPLICATION
+#define OCAP_LOG "/opt/logs/ocapri_log.txt"
+#define IP_FILE "/opt/ip.txt"
+
+QString listToString(QVariantList conInfo);
+
+/*parses and returns contents of QVariantMap as QStrings*/
+QString mapToString(QVariantMap infoMap)
+{
+        QString details;
+
+        QVariantMap::const_iterator itr;
+        for(itr = infoMap.constBegin(); itr != infoMap.constEnd(); itr++)
+        {
+                details += itr.key();
+                details += ": ";
+                if(itr.value().type() == QVariant::String)
+                        details += itr.value().toString();
+                else if(itr.value().type() == QVariant::List)
+                        details += listToString(itr.value().toList());
+                details += "; ";
+        }
+        return details;
+}
+
+
+/*parses and returns contents of QVariantList as QStrings*/
+QString listToString(QVariantList conInfo)
+{
+        QString details;
+
+        details += "[ ";
+        for(int i=0; i<conInfo.size(); i++)
+        {
+                if(conInfo[i].type() == QVariant::Map)
+                        details += mapToString(conInfo[i].toMap());
+                else if(conInfo[i].type() == QVariant::String)
+                {
+                        details += conInfo[i].toString();
+                        details += " ";
+                }
+        }
+        details += " ]";
+        return details;
+}
+#endif
 #ifdef HAS_API_HDMI_CEC
 std::string rdkLogPath = getenv("RDK_LOG_PATH");
 std::string tdkPath = getenv("TDK_PATH");
@@ -149,6 +195,10 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_CheckStatus,"TestMgr_SM_HdmiCec_CheckStatus");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_FlushCecData,"TestMgr_SM_HdmiCec_FlushCecData");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_CheckCecData,"TestMgr_SM_HdmiCec_CheckCecData");
+        /*ApplicationService APIs*/
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AppService_GetAppInfo,"TestMgr_SM_AppService_GetAppInfo");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AppService_SetConnectionReset,"TestMgr_SM_AppService_setConnectionReset");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AppService_Restore_rmfconfig,"TestMgr_SM_AppService_Restore_rmfconfig");
 
 	return TEST_SUCCESS;
 }
@@ -187,6 +237,11 @@ std::string ServiceManagerAgent::testmodulepre_requisites()
         }
 #endif
 
+#ifdef HAS_API_APPLICATION
+        IARM_Bus_Init(IARM_BUS_TDK_NAME);
+        IARM_Bus_Connect();
+#endif
+
         DEBUG_PRINT(DEBUG_TRACE,"testmodulepre_requisites() ---> Exit\n");
 
         return "SUCCESS";
@@ -200,6 +255,11 @@ std::string ServiceManagerAgent::testmodulepre_requisites()
 
 bool ServiceManagerAgent::testmodulepost_requisites()
 {
+
+#ifdef HAS_API_APPLICATION
+        IARM_Bus_Disconnect();
+        IARM_Bus_Term();
+#endif	
         return TEST_SUCCESS;
 }
 
@@ -326,6 +386,12 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
                 serviceStruct.createFunction = &createHdmiCecService;
         }
 #endif
+#ifdef HAS_API_APPLICATION
+        else if (serviceName == ApplicationService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createApplicationService;
+        }
+#endif
 	else
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\nUnsupported service %s\n", serviceName.toUtf8().constData());
@@ -412,7 +478,7 @@ bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Js
 #ifdef HAS_API_HDMI_CEC
                 if (QString::fromStdString(serviceName) == HdmiCecService::SERVICE_NAME)
                 {
-                        stopHdmiCecService();
+                        //stopHdmiCecService();
                 }
 #endif
 	}
@@ -1194,7 +1260,7 @@ bool ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& r
                 char stringDetails[STR_DETAILS_50] = {'\0'};
                 QString details;
 
-                /*invoke METHOD_DEVICE_GET_DEVICE_INFO with each method type in method_list*/
+		/*invoke METHOD_DEVICE_GET_DEVICE_INFO with each method type in method_list*/
                 for(int i=0; i<method_list.size(); i++)
                 {
                         methodType = method_list.at(i);
@@ -1976,6 +2042,157 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT
         return TEST_SUCCESS;
 }
 
+bool ServiceManagerAgent::SM_AppService_GetAppInfo(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_AppService_GetAppInfo---->Entry\n");
+
+#ifdef HAS_API_APPLICATION
+        Service* ptrService = NULL;
+        if (ServiceManager::getInstance()->doesServiceExist(ApplicationService::SERVICE_NAME))
+        {
+                ptrService = ServiceManager::getInstance()->getGlobalService(ApplicationService::SERVICE_NAME);
+                if (ptrService != NULL)
+                {
+                        ServiceParams inParams;
+                        QVariantList conInfoList;
+                        QString conInfo;
+
+                        ServiceParams outResult = ptrService->callMethod("getAppInfo", inParams);
+                        conInfoList = outResult["appConnectionInfo"].toList();
+                        if(conInfoList.isEmpty())
+                        {
+                                response["result"]="FAILURE";
+                                response["details"]="appConnectionInfo is empty";
+                                return TEST_FAILURE;
+                        }
+                        conInfo = listToString(conInfoList);
+                        DEBUG_PRINT(DEBUG_TRACE,"APPINFO: \n %s \n",conInfo.toUtf8().constData());
+
+                        response["details"] = conInfo.toUtf8().constData();
+                        response["result"]="SUCCESS";
+                        return TEST_SUCCESS;
+                }
+                else
+                        response["details"] = "AppService creation failed";
+        }
+        else
+                response["details"] = "AppService not registered";
+
+        response["result"] = "FAILURE";
+#endif
+        return TEST_FAILURE;
+}
+
+
+bool ServiceManagerAgent::SM_AppService_SetConnectionReset(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_AppService_setConnectionReset--->Entry\n");
+
+#ifdef HAS_API_APPLICATION
+        if(&req["applicationID"]==NULL || &req["connectionID"]==NULL || &req["connectionResetLevel"]==NULL)
+        {
+                response["result"]="FAILURE";
+                response["details"]="App details not provided";
+                return TEST_FAILURE;
+        }
+
+        char cmd[100] = {'\0'};
+        char cmd_ip[200] = {'\0'};
+        char ip[20] = {'\0'};
+        FILE* fp;
+        QString appId = req["applicationID"].asCString();
+        QString conId = req["connectionID"].asCString();
+        QString resetLevel = req["connectionResetLevel"].asCString();
+
+        Service* ptrService = NULL;
+        if (ServiceManager::getInstance()->doesServiceExist(ApplicationService::SERVICE_NAME))
+        {
+                ptrService = ServiceManager::getInstance()->getGlobalService(ApplicationService::SERVICE_NAME);
+                if (ptrService != NULL)
+                {
+                        ServiceParams inParams;
+                        ServiceParams outParams;
+                        QVariantList inList;
+
+                        inList << appId << conId << resetLevel;
+                        inParams["params"] = inList;
+                        outParams = ptrService->callMethod("setConnectionReset", inParams);
+
+                        if(outParams["resetSent"].toBool() && outParams["success"].toBool())
+                        {
+                                sprintf(cmd, "tail -n 100 %s | grep -i \"Disconnect connection\"", OCAP_LOG);
+                                /*reset request is handled asynchronously by streamer, hence have to wait for those logs*/
+                                for(int i=0; i<10; i++)
+                                {
+                                        if(!system(cmd))
+                                        {
+                                                sprintf(cmd_ip, "tail -n 100 %s | grep -i \"Connected to\" | cut -d '(' -f2 |  cut -d ')' -f1 > %s", OCAP_LOG, IP_FILE);
+                                                if(!system(cmd_ip))
+                                                {
+                                                        fp = fopen(IP_FILE, "r");
+                                                        if(fp)
+                                                        {
+                                                                if(fgets(ip, sizeof(ip), fp) != NULL)
+                                                                {
+                                                                        int j = 0;
+                                                                        while(ip[j] != '\n' && ip[j] != '\0')
+                                                                                j++;
+                                                                        if(ip[j] == '\n')
+                                                                                ip[j] = '\0';
+                                                                        printf("ip is: %s\n", ip);
+                                                                        DEBUG_PRINT(DEBUG_TRACE,"Connection reset succesfully in %d\n",i);
+                                                                        response["details"] = ip;
+                                                                        printf("ip is: %s\n", ip);
+                                                                        response["result"]="SUCCESS";
+                                                                        return TEST_SUCCESS;
+                                                                }
+                                                        }
+                                                }
+                                                break;
+                                        }
+                                        sleep(1);
+                                }
+                                DEBUG_PRINT(DEBUG_TRACE,"Connection reset failed, cmd= %s \n", cmd);
+                                response["details"] = "setConnectionReset failed";
+                        }
+                        else
+                                response["details"] = "setConnectionReset failed";
+                }
+                else
+                        response["details"] = "AppService creation failed";
+        }
+        else
+                response["details"] = "AppService not registered";
+
+        response["result"] = "FAILURE";
+#endif
+        return TEST_FAILURE;
+}
+
+/*this function serves as ths post-requisite of recorder-stub, to restore rmfconfig.ini to its actual form*/
+bool ServiceManagerAgent::SM_AppService_Restore_rmfconfig(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_AppService_Restore_rmfconfig--->Entry\n");
+
+#ifdef HAS_API_APPLICATION
+        char cmd[30] = {'\0'};
+
+        sprintf(cmd, "rm %s", CONFIG_FILE);
+        if( !system(cmd) )
+        {
+                response["details"] = "REBOOT";
+                response["result"] = "SUCCESS";
+                DEBUG_PRINT(DEBUG_TRACE,"rmfconfig removed from opt, cmd = %s\n", cmd);
+        }
+        else
+        {
+                response["details"] = "config not in opt";
+                response["result"] = "SUCCESS";
+                DEBUG_PRINT(DEBUG_TRACE,"rmfconfig not in opt\n");
+        }
+#endif
+        return TEST_SUCCESS;
+}
 
 /**************************************************************************
  * Function Name: CreateObject
@@ -2047,6 +2264,10 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_CheckStatus");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_FlushCecData");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_CheckCecData");
+        /*ApplicationService APIs*/
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_AppService_GetAppInfo");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_AppService_SetConnectionReset");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_AppService_Restore_rmfconfig");
 
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;
