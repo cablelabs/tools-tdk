@@ -16,6 +16,7 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/osal/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmbus/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds-rpc/
+INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds-hal/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/host/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/qt5/QtCore \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWidgets \
