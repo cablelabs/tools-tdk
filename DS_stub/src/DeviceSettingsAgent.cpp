@@ -16,6 +16,32 @@
 PowerChangeNotify power_obj;
 DispChangeNotify display_obj;
 
+//Check if given process is running
+bool checkRunningProcess(const char *processName)
+{
+    char output[LINE_LEN] = {'\0'};
+    char strCmd[STR_LEN] = {'\0'};
+    FILE *fp = NULL;
+    bool running = false;
+
+    sprintf(strCmd,"pidof %s",processName);
+    fp = popen(strCmd, "r");
+    /* Read the output */
+    if (fp != NULL)
+    {
+        if (fgets(output, sizeof(output)-1, fp) != NULL) {
+            running = true;
+        }
+        DEBUG_PRINT(DEBUG_TRACE, "%s process id: %s\n",processName, output);
+        pclose(fp);
+    }
+    else {
+        DEBUG_PRINT(DEBUG_ERROR, "Failed to get status of process %s\n",processName);
+    }
+
+    return running;
+}
+
 /***************************************************************************
  *Function name	: DeviceSettingsAgent 
  *Descrption	: This is a constructor function for DeviceSettingsAgent class. 
@@ -2386,33 +2412,13 @@ bool DeviceSettingsAgent::VOPTYPE_enableHDCP(IN const Json::Value& req, OUT Json
                 if (useMfrKey)
                 {
                         //Check if mfrMgrMain process in running
-                        char output[LINE_LEN] = {'\0'};
-                        char strCmd[STR_LEN] = {'\0'};
-                        FILE *fp = NULL;
-
-                        sprintf(strCmd,"pidstat | grep %s",MFRMGR);
-                        fp = popen(strCmd, "r");
-                        if (fp != NULL)
+                        bool running = checkRunningProcess(MFRMGR);
+                        if ( !running )
                         {
-                            /* Read the output */
-                            while (fgets(output, sizeof(output)-1, fp) != NULL) {
-                                DEBUG_PRINT(DEBUG_TRACE, "command output %s\n",output);
-                            }
-                            pclose(fp);
-
-                            if (!strstr(output,MFRMGR))
-                            {
                                 DEBUG_PRINT(DEBUG_TRACE, "%s process is not running\n",MFRMGR);
                                 response["result"] = "FAILURE";
                                 response["details"] = "mfrMgrMain process not running to get Mfr HDCP Key";
                                 return TEST_FAILURE;
-                            }
-                        }
-                        else {
-                            DEBUG_PRINT(DEBUG_ERROR, "popen error. Failed to check if %s process running\n",MFRMGR);
-                            response["result"] = "FAILURE";
-                            response["details"] = "System error. Failed to check if mfrMgrMain process running";
-                            return TEST_FAILURE;
                         }
 
                         int IsMfrDataRead = false;

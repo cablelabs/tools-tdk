@@ -40,6 +40,8 @@
 
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
+#define STR_LEN                128
+#define LINE_LEN               1024
 #define EVTDATA_MAX_SIZE 3
 #define PRE_REQ_CHECK "pre_requisite_chk.txt"
 #define DAEMON_EXE "IARMDaemonMain"

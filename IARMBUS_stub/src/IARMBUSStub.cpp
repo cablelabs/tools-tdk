@@ -50,13 +50,11 @@ static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 static    IARM_Bus_DUMMYMGR_HandlerReady_Param_t handler_param;
 
-
 /**************************************************************************
  *
  * Function Name        : prereqcheck
  * Descrption   : This function will get the existense of pre- requisite app
- *                 nd return SUCESS or FAILURE status to the
- *                caller.
+ *                and return SUCCESS or FAILURE status to the caller
  *
  * @param retval [in] ownerName - owner(manager) to be checked.
  *		 [out]- bool - SUCCESS / FAILURE
@@ -64,15 +62,12 @@ static    IARM_Bus_DUMMYMGR_HandlerReady_Param_t handler_param;
 
 bool prereqcheck(char *ownerName )
 {
-	std::string pre_req_chk;
-	std::string pre_req_chk_file;
-	pre_req_chk_file= g_tdkPath + "/" + PRE_REQ_CHECK;
-	pre_req_chk ="pidstat | grep Main >" + pre_req_chk_file;
-	int offset;
-	std::string line;
-	std::ifstream Myfile;
-	char *appName = (char*)malloc(sizeof(char*)*20);
-	memset(appName , '\0', (sizeof(char)*20));
+        char output[LINE_LEN] = {'\0'};
+    	char strCmd[STR_LEN] = {'\0'};
+    	FILE *fp = NULL;
+    	bool running = false;
+
+	char appName[20] = {'\0'};
 	if ((strcmp(ownerName, "Daemon")  == 0)||(strcmp(ownerName,IARM_BUS_DUMMYMGR_NAME) ==0))
         {
 		strcpy(appName,DAEMON_EXE);	
@@ -99,46 +94,26 @@ bool prereqcheck(char *ownerName )
 	}
 	else
 	{
-		DEBUG_PRINT(DEBUG_ERROR,"Invalid Owner Name\n");
+		DEBUG_PRINT(DEBUG_ERROR,"Invalid Owner Name: %s\n", ownerName);
 		return TEST_FAILURE;
 	}
-	
-	 //* To handle exception for system call
-	try
-	{
-		system((char *)pre_req_chk.c_str());
-	}
-	catch(...)
-	{
-		DEBUG_PRINT(DEBUG_ERROR,"Exception occured during pidstat\n");
-		DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
-		return TEST_FAILURE;
-	}
-	Myfile.open (pre_req_chk_file.c_str());
 
-	if(Myfile.is_open())
-	{
-		while(!Myfile.eof())
-		{
-			getline(Myfile,line);
-			if ((offset = line.find(appName, 0)) != std::string::npos) {
-				Myfile.close();
-				if( remove( pre_req_chk_file.c_str() ) != 0 )
-				{
-					DEBUG_PRINT(DEBUG_ERROR,"\nFailed to remove file\n");
-				}
-				DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites present\n");
-				return TEST_SUCCESS;
-			}
-		}
-		DEBUG_PRINT(DEBUG_ERROR,"\nPre-Requisites not present\n");
-		return TEST_FAILURE;
-	}
-	else
-	{
-		DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open this file.\n");
-		return TEST_FAILURE;
-	}
+    	sprintf(strCmd,"pidof %s",appName);
+    	fp = popen(strCmd, "r");
+    	/* Read the output */
+    	if (fp != NULL)
+    	{
+            if (fgets(output, sizeof(output)-1, fp) != NULL) {
+                running = true;
+            }
+            DEBUG_PRINT(DEBUG_TRACE, "%s process id: %s\n",appName, output);
+            pclose(fp);
+    	}
+    	else {
+            DEBUG_PRINT(DEBUG_ERROR, "Failed to get status of process %s\n",appName);
+    	}
+
+	return running;
 }
 
 /*This is a constructor function for IARMBUSAgent class*/

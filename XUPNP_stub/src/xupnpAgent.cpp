@@ -62,6 +62,33 @@ bool readLogFile(const char *filename, const string parameter)
     return false;
 }
 
+//Check if given process is running
+bool checkRunningProcess(const char *processName)
+{
+    char output[LINE_LEN] = {'\0'};
+    char strCmd[STR_LEN] = {'\0'};
+    FILE *fp = NULL;
+    bool running = false;
+
+    sprintf(strCmd,"pidof %s",processName);
+    fp = popen(strCmd, "r");
+    /* Read the output */
+    if (fp != NULL)
+    {
+        if (fgets(output, sizeof(output)-1, fp) != NULL) {
+	    running = true;
+        }
+	DEBUG_PRINT(DEBUG_TRACE, "%s process id: %s\n",processName, output);
+	pclose(fp);
+    }
+    else {
+        DEBUG_PRINT(DEBUG_ERROR, "Failed to get status of process %s\n",processName);
+    }
+
+    return running;
+}
+
+
 /*************************************************************************
 Function name : XUPNPAgent::XUPNPAgent
 
@@ -115,54 +142,23 @@ std::string XUPNPAgent::testmodulepre_requisites()
     char output[LINE_LEN] = {'\0'};
     char strCmd[STR_LEN] = {'\0'};
     FILE *fp = NULL;
+    bool running = false;
 
     //1. Check if xdiscovery process is running
-    sprintf(strCmd,"pidstat | grep %s",XDISCOVERY);
-    fp = popen(strCmd, "r");
-    if (fp != NULL)
-    {
-        /* Read the output */
-        if (fgets(output, sizeof(output)-1, fp) != NULL) {
-            DEBUG_PRINT(DEBUG_TRACE, "%s process is running\n%s\n",XDISCOVERY,output);
-            pclose(fp);
-        }
-        else {
+    running = checkRunningProcess(XDISCOVERY);
+    if (false == running) {
             DEBUG_PRINT(DEBUG_TRACE, "%s process is not running\n",XDISCOVERY);
             DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
-            pclose(fp);
             return "FAILURE:xdiscovery process is not running";
-        }
-    }
-    else {
-        DEBUG_PRINT(DEBUG_ERROR, "Failed to get status of process %s\n",XDISCOVERY);
-        return "FAILURE:Failed to get status of xdiscovery process";
     }
 
 #ifdef HYBRID
     //2. Check if xcal-device process is running
-    fp = NULL;
-    memset(output,'\0',sizeof(output));
-    memset(strCmd,'\0',sizeof(strCmd));
-
-    sprintf(strCmd,"pidstat | grep %s",XCALDEVICE);
-    fp = popen(strCmd, "r");
-    if (fp != NULL)
-    {
-        /* Read the output */
-        if (fgets(output, sizeof(output)-1, fp) != NULL) {
-            DEBUG_PRINT(DEBUG_TRACE, "%s process is running\n%s\n",XCALDEVICE,output);
-            pclose(fp);
-        }
-        else {
+    running = checkRunningProcess(XCALDEVICE);
+    if (false == running) {
             DEBUG_PRINT(DEBUG_TRACE, "%s process is not running\n",XCALDEVICE);
             DEBUG_PRINT(DEBUG_TRACE, "XUPNP testmodule pre_requisites --> Exit\n");
-            pclose(fp);
             return "FAILURE:xcal-device process is not running";
-        }
-    }
-    else {
-        DEBUG_PRINT(DEBUG_ERROR, "Failed to get status of process %s\n",XCALDEVICE);
-        return "FAILURE:Failed to get status of xcal-device process";
     }
 #endif
 
