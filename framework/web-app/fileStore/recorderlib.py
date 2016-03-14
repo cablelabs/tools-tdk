@@ -287,7 +287,7 @@ def callServerHandlerWithTypeAndNewUrl(methodName,type,gwIp,url):
                 return outdata
 
         # Constructing Query Command
-        cmd = 'curl '+'-g '+'\''+'http://'+serverIp+':8080/DVRSimulator/'+methodName+'?boxIp='+gwIp+'&serverType='+type+'&newURL='+'http://'+serverIp+':8080/DVRSimulator/'+url+'\''
+        cmd = 'curl '+'-g '+'\''+'http://'+serverIp+':8080/DVRSimulator/'+methodName+'?boxIp='+gwIp+'&serverType='+type+'&newURL='+'http://'+serverIp+':80/DVRSimulator/'+url+'\''
 
         class Timout(Exception):
                 pass

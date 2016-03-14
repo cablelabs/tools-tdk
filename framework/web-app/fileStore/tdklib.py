@@ -930,7 +930,7 @@ class PrimitiveTestCase:
 			tmFileName = boxLogPath.split("/")[-1]
 			tmFileName = destinationLogPath + tmFileName + "_" + timeStamp
 			self.downloadFile(ipAddress, port, boxLogPath, tmFileName)
-
+			tmFileName = self.logpath + tmFileName
 		return tmFileName
 
 	########## End of Function ##########

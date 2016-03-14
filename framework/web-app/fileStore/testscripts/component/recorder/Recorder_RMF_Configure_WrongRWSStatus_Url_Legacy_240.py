@@ -3,9 +3,9 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Recorder_RMF_Configure_WrongRWSStatus_Url_240</name>
+  <name>Recorder_RMF_Configure_WrongRWSStatus_Url_Legacy_240</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -52,7 +52,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_Configure_WrongRWSStatus_Url');
+recObj.configureTestCase(ip,port,'Recorder_RMF_Configure_WrongRWSStatus_Url_Legacy_240');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
@@ -96,7 +96,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj1.setResultStatus("SUCCESS");
                 print "Cleared the ocapri log ";
             else:
-                tdkTestObj1.setResultStatus("SUCCESS");
+                tdkTestObj1.setResultStatus("FAILURE");
                 print "Ocapri log is not cleared ";
 
             #recObj.initiateReboot();
@@ -111,7 +111,7 @@ if "SUCCESS" in recLoadStatus.upper():
             jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
             actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
-            sleep(150);
+            sleep(700);
             tdkTestObj2=recObj.createTestStep('Recorder_checkOcapri_log');
             pattern = "RDK-10028"
             tdkTestObj2.addParameter("pattern",pattern);
@@ -136,7 +136,7 @@ if "SUCCESS" in recLoadStatus.upper():
             else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Alternate URL of RWSStatus server is not reverted";
-      
+
         else:
             tdkTestObj.setResultStatus("FAILURE");
             print "Alternate URL NOT enabled for RWS Status server";
