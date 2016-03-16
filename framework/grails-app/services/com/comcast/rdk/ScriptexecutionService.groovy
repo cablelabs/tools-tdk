@@ -752,7 +752,7 @@ class ScriptexecutionService {
 			executionId  + COMMA_SEPERATOR + execDeviceId + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance?.statusPort + COMMA_SEPERATOR +
 			sFile?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR+ SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +
 			SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR )//+ gatewayIp + COMMA_SEPERATOR)*/
-		String logFilePath = realPath?.toString()+"logs/logs/"
+		String logFilePath = realPath?.toString()+"/logs/logs/"
 		scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES +logFilePath+SINGLE_QUOTES + COMMA_SEPERATOR +
 			executionId  + COMMA_SEPERATOR +  execDeviceId + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.agentMonitorPort + COMMA_SEPERATOR + deviceInstance?.statusPort + COMMA_SEPERATOR +
 			sFile?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR + SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +

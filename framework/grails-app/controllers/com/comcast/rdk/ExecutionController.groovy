@@ -1950,7 +1950,8 @@ class ExecutionController {
 			Device device = Device.findByStbIpAndStbPort(deviceIP,agentPort)
 			if(device){
 				resultNode = new JsonObject()
-				resultNode.addProperty("logTransferPort",device?.logTransferPort.toString())
+//				resultNode.addProperty("logTransferPort",device?.logTransferPort.toString())
+				resultNode.addProperty("logTransferPort",device?.agentMonitorPort?.toString())
 				resultNode.addProperty("statusPort",device?.statusPort.toString())
 			}
 		}

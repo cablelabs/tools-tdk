@@ -597,6 +597,7 @@ def getRecordingFromRecId(jsonData,recordingId):
 
 def getValueFromKeyInRecording(recording,key):
         value = "BADVALUE"
+        ret = []
 
         try:
                 if "NOTFOUND" == recording:
@@ -604,15 +605,15 @@ def getValueFromKeyInRecording(recording,key):
                         return value
 
                 if key in ['volume','start','duration','playbackLocator']:
-			#Extract dictionary from content list value
-			content = {}
-			if 'content' in recording:
-				for line in recording['content']:
-					content.update(line)
-				print "Recording content value: ",content
-                        	value = content[key]
-			else:
-				print "Recording missing content value"
+                        #Extract dictionary from content list value
+                        content = {}
+                        if 'content' in recording:
+                                for line in recording['content']:
+                                        value = line[key]
+                                        ret.append(value)
+                                return ret
+                        else:
+                                print "Recording missing content value"
                 else:
                         value = recording[key]
         except KeyError, e:

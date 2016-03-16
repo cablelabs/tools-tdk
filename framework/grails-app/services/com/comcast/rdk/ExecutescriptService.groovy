@@ -128,7 +128,7 @@ class ExecutescriptService {
 		scriptData = scriptData.replace( CLIENTLIST , mocaString )
 		
 		String gatewayIp = deviceInstance?.gatewayIp
-		String logFilePath = realPath?.toString()+"logs/logs/"
+		String logFilePath = realPath?.toString()+"/logs/logs/"
 		
 		def sFile = ScriptFile.findByScriptNameAndModuleName(scriptInstance?.name,scriptInstance?.primitiveTest?.module?.name)
 				
@@ -364,7 +364,7 @@ class ExecutescriptService {
 			File logDir  = new File(logsPath)
 			if(logDir.isDirectory()){
 				logDir.eachFile{ file->
-					if(file.toString()?.contains("AgentConsoleLog.txt")){
+					if(file?.name?.contains("AgentConsoleLog.txt")){
 					def logFileName =  file.getName().split("_")					
 					new File(logTransferFilePath?.toString()).mkdirs()
 					File logTransferPath  = new File(logTransferFilePath)
@@ -375,7 +375,7 @@ class ExecutescriptService {
 				}
 			}
 		} catch (Exception e) {
-			log.error  " Error"+e.getMessage()
+			println  " Error"+e.getMessage()
 			e.printStackTrace()
 		}
 	}
@@ -404,7 +404,7 @@ class ExecutescriptService {
 				}
 			}
 		} catch (Exception e) {
-			log.error  " Error"+e.getMessage()
+			println  " Error"+e.getMessage()
 			e.printStackTrace()
 		}
 	}
@@ -434,7 +434,7 @@ class ExecutescriptService {
 				}
 			}
 		} catch (Exception e) {
-			log.error  " Error"+e.getMessage()
+			println  " Error"+e.getMessage()
 			e.printStackTrace()
 		}
 	}
@@ -459,7 +459,7 @@ class ExecutescriptService {
 						if(fileName.toString().contains("\$:")){							
 							fileName = fileName.replaceAll('\\$:',"Undefined")
 						}									
-						if(fileName.startsWith( logFileName[0] )){
+						if(fileName?.startsWith( logFileName[0] ) && logFileName.length() > 1){
 							fileName = fileName.replaceFirst( logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
 							fileName= logFileName[0]+UNDERSCORE+fileName
 							new File(logTransferFilePath?.toString()).mkdirs()
@@ -472,7 +472,7 @@ class ExecutescriptService {
 				}
 			}
 		} catch (Exception e) {
-			log.error  " Error"+e.getMessage()
+			println  " Error"+e.getMessage()
 			e.printStackTrace()
 		}		
 	}
@@ -547,7 +547,7 @@ class ExecutescriptService {
 				logTransferFileName
 			]			
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
-			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			def resetExecutionData = scriptExecutor.executeScript(cmd,2)
 			copyAgentconsoleLogIntoDir(realPath,logTransferFilePath)
 			Thread.sleep(4000)
 		}

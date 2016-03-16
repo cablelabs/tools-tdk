@@ -1946,6 +1946,16 @@ class ExecutionService {
 			boolean value=file.setExecutable(true)
 			
 				String logFilePath = realPath+"/logs/logs/"
+				File logdir = new File(logFilePath)
+				
+				try {
+					if(!logdir?.exists()){
+						logdir?.mkdirs()
+					}
+				} catch (Exception e) {
+					e.printStackTrace()
+				}
+				
 				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//tftp_server.py").file
 				def absolutePath = layoutFolder.absolutePath
 				String[] cmd = [
@@ -1955,10 +1965,22 @@ class ExecutionService {
 					"69",
 					logFilePath
 				]
-				Process pb = Runtime.getRuntime().exec(cmd);
-				ScriptExecutor scriptExecutor = new ScriptExecutor()
-				def outputData = scriptExecutor.executeScript(cmd,1)
-				println " TFTP SERVER START UP  "+ outputData
+				
+				Thread.start{
+					println " TDK TM : Starting TFTP Server..."
+					try {
+//						Process pb = Runtime.getRuntime().exec(cmd);
+						ScriptExecutor scriptExecutor = new ScriptExecutor()
+						def outputData = scriptExecutor.executeScript(cmd,0)
+					} catch (Exception e) {
+						println " ERROR in TFTP start "+e.getMessage()
+						e.printStackTrace()
+					}
+				}
+				
+//				ScriptExecutor scriptExecutor = new ScriptExecutor()
+//				def outputData = scriptExecutor.executeScript(cmd,1)
+				
 		}catch(Exception e){
 			println e.getMessage()
 			e.printStackTrace()

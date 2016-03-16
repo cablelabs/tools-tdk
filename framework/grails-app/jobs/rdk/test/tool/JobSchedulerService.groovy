@@ -1293,7 +1293,7 @@ class JobSchedulerService implements Job{
 	 */
 	def copyLogsIntoDir(def realPath, def logTransferFilePath ){
 		try {
-			String logsPath = realPath.toString()+"logs/logs/"
+			String logsPath = realPath.toString()+"/logs/logs/"
 			File logDir  = new File(logsPath)
 			if(logDir.isDirectory()){
 				logDir.eachFile{ file->
