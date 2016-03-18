@@ -21,11 +21,13 @@ static const char* ip = "127.0.0.1";
 static int port = 9987;
 static bool responseReceived = false;
 static bool responseSuccess = false;
+static bool resrvResponseReceived = false;
+static bool reservationSuccess = false;
 static char responseStr[OUTPUT_LEN];
 static char cancelRecReqId[GUID_LEN];
 static const unsigned int kRecorderClientId = 0xFFFFFF00;
 static const unsigned int kTestAppClientId = 0xFFFFFFEF;
-static bool bSelectOnConflict = false;
+static bool bSelectNewOnConflict = false;
 
 bool TRMClient::inited = false;
 static TRMClient* trmClient = NULL;
@@ -331,6 +333,29 @@ bool waitForTRMResponse()
     return responseSuccess;
 }
 
+
+bool waitForResrvResponse()
+{
+    int retry_count = 0;
+    while ((false == resrvResponseReceived) && (retry_count < MAX_RETRY))
+    {
+        sleep(1);
+        retry_count++;
+    }
+
+    if( false == resrvResponseReceived )
+    {
+        RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Timeout. Failed to get response msg within %d sec(s)\n", __FUNCTION__, retry_count);
+    }
+    else
+    {
+        RDK_LOG( RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Received response in %d sec(s)\n", __FUNCTION__, retry_count);
+    }
+
+    return reservationSuccess;
+}
+
+
 void TRMClient::init()
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TRMClient::init = %d\n" , inited);
@@ -377,7 +402,9 @@ TRMClient::~TRMClient()
     pthread_mutex_lock ( &helper_mutex );
     responseReceived = true;
     responseSuccess = false;
-    bSelectOnConflict = false;
+    resrvResponseReceived = true;
+    reservationSuccess = false;
+    bSelectNewOnConflict = false;
     trmClient = NULL;
     pthread_mutex_unlock( &helper_mutex);
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TRMClient Destr Exit\n");
@@ -590,7 +617,7 @@ bool TRMClient::reserveTunerForRecord( const string device, const string recordi
     else if (true == hot)
         activity.addDetail("hot", "true");
 
-    bSelectOnConflict = conflict;
+    bSelectNewOnConflict = conflict;
 
     TRM::TunerReservation resrv( device, locator, startTime, duration, activity);
     TRM::ReserveTuner msg(guid, device, resrv);
@@ -599,11 +626,8 @@ bool TRMClient::reserveTunerForRecord( const string device, const string recordi
     out.push_back(0);
     int len = strlen((const char*)&out[0]);
     int retry_count = 10;
-
-    pthread_mutex_lock ( &helper_mutex );
-    responseReceived = false;
-    responseSuccess = false;
-    pthread_mutex_unlock ( &helper_mutex );
+    resrvResponseReceived = false;
+    reservationSuccess = false;
 
     do
     {
@@ -614,7 +638,7 @@ bool TRMClient::reserveTunerForRecord( const string device, const string recordi
 
     if (ret == true)
     {
-        ret = waitForTRMResponse();
+        ret = waitForResrvResponse();
     }
 
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
@@ -633,7 +657,7 @@ bool TRMClient::reserveTunerForLive( const string device, const string locator,
     uuid_generate(value);
     uuid_unparse(value, guid);
     TRM::Activity activity(TRM::Activity::kLive);
-    bSelectOnConflict = conflict;
+    bSelectNewOnConflict = conflict;
 
     TRM::TunerReservation resrv( device, locator, startTime, duration, activity);
     TRM::ReserveTuner msg(guid, device, resrv);
@@ -641,11 +665,8 @@ bool TRMClient::reserveTunerForLive( const string device, const string locator,
     out.push_back(0);
     int len = strlen((const char*)&out[0]);
     int retry_count = 10;
-
-    pthread_mutex_lock ( &helper_mutex );
-    responseReceived = false;
-    responseSuccess = false;
-    pthread_mutex_unlock ( &helper_mutex );
+    resrvResponseReceived = false;
+    reservationSuccess = false;
 
     do
     {
@@ -655,8 +676,33 @@ bool TRMClient::reserveTunerForLive( const string device, const string locator,
 
     if (ret == true)
     {
-        ret = waitForTRMResponse();
+        ret = waitForResrvResponse();
     }
+
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+    return ret;
+}
+
+bool TRMClient::cancelLiveReservation(TRM::TunerReservation resrv)
+{
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
+    bool ret = false;
+    std::vector<uint8_t> out;
+    uuid_t value;
+    uuid_generate(value);
+    uuid_unparse(value, guid);
+
+    TRM::ReserveTuner msg(guid, resrv.getDevice(), resrv);
+    JsonEncode(msg, out);
+    out.push_back(0);
+    int len = strlen((const char*)&out[0]);
+    int retry_count = 10;
+
+    do
+    {
+        ret = url_request_post( (char *) &out[0], len, kTestAppClientId);
+        retry_count --;
+    } while ((ret == false) && (retry_count >0));
 
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
     return ret;
@@ -788,9 +834,31 @@ bool TRMClient::cancelRecording(string locator)
     return ret;
 }
 
-void TRMClient::setToken( const string& token)
+bool TRMClient::cancelRecordingReservation(string reservationToken)
 {
-    this->token = token;
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
+
+    bool ret = false;
+    std::vector<uint8_t> out;
+    uuid_t value;
+    uuid_generate(value);
+    uuid_unparse(value, cancelRecReqId);
+
+    TRM::CancelRecording msg(cancelRecReqId, reservationToken);
+    TRM::JsonEncode(msg, out);
+    out.push_back(0);
+    int len = strlen((const char*)&out[0]);
+    int retry_count = 10;
+
+    do
+    {
+        ret = url_request_post( (char *) &out[0], len, kTestAppClientId);
+        retry_count --;
+    } while ((ret == false) && (retry_count >0));
+
+    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
+
+    return ret;
 }
 
 bool TRMClient::addToReservationDb(TRM::TunerReservation resv)
@@ -865,13 +933,16 @@ CTRMMonitor::CTRMMonitor()
 void CTRMMonitor::operator() (const TRM::ReserveTunerResponse &msg)
 {
     pthread_mutex_lock( &helper_mutex);
+
+    resrvResponseReceived = true;
+    reservationSuccess = false;
+
     if ( NULL == trmClient )
     {
 	RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Matching TRM client not found\n", __FUNCTION__);
     }
     else
     {
-        bool success = false;
         TRM::ResponseStatus status = msg.getStatus();
         TRM::TunerReservation resv = msg.getTunerReservation();
         if ( status == TRM::ResponseStatus::kOk )
@@ -905,8 +976,7 @@ void CTRMMonitor::operator() (const TRM::ReserveTunerResponse &msg)
                 }
                 else
                 {
-                    trmClient->setToken( resv.getReservationToken());
-                    success = TRMClient::addToReservationDb(resv);
+                    reservationSuccess = TRMClient::addToReservationDb(resv);
                 }
             }
         }
@@ -915,9 +985,6 @@ void CTRMMonitor::operator() (const TRM::ReserveTunerResponse &msg)
             int statusCode = status.getStatusCode();
 	    RDK_LOG( RDK_LOG_WARN , "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Status NOT OK. statusCode = %d\n", __FUNCTION__, statusCode);
         }
-
-    	responseReceived = true;
-    	responseSuccess = success;
     }
     pthread_mutex_unlock( &helper_mutex);
 }
@@ -1081,16 +1148,19 @@ void CTRMMonitor::operator() (const TRM::NotifyTunerReservationUpdate &msg)
 void CTRMMonitor::operator() (const TRM::NotifyTunerReservationConflicts &msg)
 {
     pthread_mutex_lock( &helper_mutex);
+
+    string cancelLoc;
+    TRM::TunerReservation cancelResv;
     const TRM::ReserveTunerResponse::ConflictCT &conflicts =  msg.getConflicts();
     if (conflicts.size() != 0)
     {
         TRM::TunerReservation resv = msg.getTunerReservation();
-        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Activity:[%s] Locator:[%s] Token:[%s]\n",
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Existing Activity:[%s] Locator:[%s] Token:[%s]\n",
                                                  (const char *)resv.getActivity().getActivity(),
                                                  resv.getServiceLocator().c_str(),
                                                  resv.getReservationToken().c_str());
 
-        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Found %d conflict(s) with:\n", __FUNCTION__,conflicts.size());
+        RDK_LOG( RDK_LOG_ERROR , "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Found %d conflict(s) with new:\n", __FUNCTION__,conflicts.size());
 
         TRM::ReserveTunerResponse::ConflictCT::const_iterator it = conflicts.begin();
         for (it = conflicts.begin(); it != conflicts.end(); it++)
@@ -1109,36 +1179,20 @@ void CTRMMonitor::operator() (const TRM::NotifyTunerReservationConflicts &msg)
                 TRMClient::addToReservationDb(*it);
 
                 //Select which reservation to keep between conflict
-                //bSelectOnConflict = false (select existing reservation, cancel new reservation), [DEFAULT action]
-                //                  = true  (select new reservation, cancel existing reservation)
-                string cancelLoc;
-                int cancelActivity;
-                string cancelDevice;
-
-                if (bSelectOnConflict)
+                //bSelectNewOnConflict = false (select existing reservation, cancel new reservation), [DEFAULT action]
+                //                     = true  (select new reservation, cancel existing reservation)
+                //Get the user's choice to either cancel new Recording or cancel existing Live
+                RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "NotifyTunerReservationConflicts - select new reservation = %d \n", bSelectNewOnConflict);
+                cancelLoc = (*it).getServiceLocator();
+                if (bSelectNewOnConflict)
                 {
-                    RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "NotifyTunerReservationConflicts - User selected to keep new reservation to resolve conflict\n");
-                    cancelLoc = resv.getServiceLocator();
-                    cancelActivity = resv.getActivity().getActivity();
-                    cancelDevice = resv.getDevice();
+                    RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "User selected new recording reservation and cancel existing live reservation to resolve conflict\n");
+                    cancelResv = resv;
                 }
                 else
                 {
-                    RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "NotifyTunerReservationConflicts - User selected to keep existing reservation to resolve conflict\n");
-                    cancelLoc = (*it).getServiceLocator();
-                    cancelActivity = (*it).getActivity().getActivity();
-                    cancelDevice = (*it).getDevice();
-                }
-
-                if (cancelActivity == TRM::Activity::kLive)
-                {
-                    RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Releasing tuner on live\n", __FUNCTION__);
-                    trmClient->releaseTunerReservation(cancelDevice, cancelLoc, cancelActivity);
-                }
-                else if (cancelActivity == TRM::Activity::kRecord)
-                {
-                    RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Cancelling recording\n", __FUNCTION__);
-                    trmClient->cancelRecording(cancelLoc);
+                    RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "User selected existing live reservation and cancel new recording reservation to resolve conflict\n");
+                    cancelResv = *it;
                 }
             }
         }
@@ -1148,6 +1202,18 @@ void CTRMMonitor::operator() (const TRM::NotifyTunerReservationConflicts &msg)
         RDK_LOG( RDK_LOG_INFO , "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Found no conflict\n", __FUNCTION__);
     }
     pthread_mutex_unlock( &helper_mutex);
+
+    if (cancelResv.getActivity().getActivity() == TRM::Activity::kLive)
+    {
+         RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Cancelling live\n", __FUNCTION__);
+         cancelResv.setServiceLocator(cancelLoc);
+         trmClient->cancelLiveReservation(cancelResv);
+    }
+    else if (cancelResv.getActivity().getActivity() == TRM::Activity::kRecord)
+    {
+        RDK_LOG(RDK_LOG_ERROR, "LOG.RDK.TEST", "%s(NotifyTunerReservationConflicts) - Cancelling recording\n", __FUNCTION__);
+        trmClient->cancelRecordingReservation(cancelResv.getReservationToken());
+    }
 }
 
 void CTRMMonitor::operator() (const TRM::NotifyTunerStatesUpdate &msg)

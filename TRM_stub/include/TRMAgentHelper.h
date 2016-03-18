@@ -53,6 +53,8 @@ public:
     bool reserveTunerForRecord( std::string device, std::string recordingId, std::string locator, uint64_t startTime=0, uint64_t duration=0,
                                 bool hot=false, bool conflict = false);
     bool reserveTunerForLive( std::string device, std::string locator, uint64_t startTime=0, uint64_t duration=0, bool conflict = false);
+    bool cancelRecordingReservation(std::string reservationToken); // To be called during conflict resolution
+    bool cancelLiveReservation(TRM::TunerReservation resrv); // To be called during conflict resolution
     bool releaseTunerReservation(std::string device, std::string locator, int activityType);
     bool cancelledRecording(std::string reservationToken); /*This function shall be called by the application once cancelRecording event is handled*/
     bool cancelRecording(std::string locator);
@@ -61,7 +63,6 @@ public:
 
     TRMClient();
     ~TRMClient();
-    void setToken( const std::string& token);
 
     static bool addToReservationDb(TRM::TunerReservation resv);
     static bool removeFromReservationDb(const std::string token);
@@ -70,7 +71,6 @@ private:
     TRMClient* impl;
     static bool inited;
     char guid[GUID_LEN];
-    std::string token;
     static std::map<int,TRM::TunerReservation> tunerReservationDb;
 };
 

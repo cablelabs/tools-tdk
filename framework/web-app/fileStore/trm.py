@@ -72,6 +72,10 @@ def reserveForLive(obj,expectedresult,kwargs={}):
     tdkTestObj.addParameter("locator",locator);
     tdkTestObj.addParameter("startTime", startTime);
 
+    if 'selectOnConflict' in kwargs:
+        conflict = int(kwargs["selectOnConflict"])
+        tdkTestObj.addParameter("selectOnConflict", conflict);
+
     #Execute the test case in STB
     tdkTestObj.executeTestCase(expectedresult);
 
@@ -117,6 +121,10 @@ def reserveForRecord(obj,expectedresult,kwargs={}):
     tdkTestObj.addParameter("startTime", startTime);
     tdkTestObj.addParameter("recordingId",recordingId);
     tdkTestObj.addParameter("hot",hot);
+
+    if 'selectOnConflict' in kwargs:
+        conflict = int(kwargs["selectOnConflict"])
+        tdkTestObj.addParameter("selectOnConflict", conflict);
 
     #Execute the test case in STB
     tdkTestObj.executeTestCase(expectedresult);
