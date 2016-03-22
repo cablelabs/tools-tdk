@@ -1938,52 +1938,114 @@ class ExecutionService {
 	 * @return
 	 */
 	
-	def tftpServerStartUp(def realPath){		
+	def tftpServerStartUp(def realPath){
 		try{
 			def filePath = realPath?.toString()+"/fileStore/"
 			String fileName = realPath?.toString()+"/fileStore/tftp_server.py"
 			File file = new File(fileName)
 			boolean value=file.setExecutable(true)
+
+			String logFilePath = realPath+"/logs/logs/"
+			File logdir = new File(logFilePath)
+
+			try {
+				if(!logdir?.exists()){
+					logdir?.mkdirs()
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//tftp_server.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				"sudo",
+				PYTHON_COMMAND,
+				absolutePath,
+				"69",
+				logFilePath
+			]
+
+			StringBuilder builder = new  StringBuilder();
+			builder.append("sudo python '").append(absolutePath).append("' 69 '").append(logFilePath).append("'")
+			String command = builder?.toString()
 			
-				String logFilePath = realPath+"/logs/logs/"
-				File logdir = new File(logFilePath)
-				
+			Thread.start{
+				println " TDK TM : Starting TFTP Server..."
 				try {
-					if(!logdir?.exists()){
-						logdir?.mkdirs()
+					def outputData
+					File newScript = new File(filePath, "tftp_script.sh");
+					boolean isFileCreated = newScript.createNewFile()
+					if(isFileCreated) {
+						newScript.setExecutable(true, false )
 					}
+
+					PrintWriter fileNewPrintWriter = newScript.newPrintWriter();
+					fileNewPrintWriter.println('echo "Starting tftp script execution"')
+					fileNewPrintWriter.println(command )
+					fileNewPrintWriter.println('echo "tftp script execution started"')
+					fileNewPrintWriter.flush()
+					fileNewPrintWriter.close()
+
+					def absPath = newScript.absolutePath
+					
+					if(absPath != null){
+
+						String[] cmdd = [
+							"sh",
+							absPath
+						]
+
+						Process process = null;
+						try {
+							ProcessBuilder processBuilder = new ProcessBuilder(cmdd);
+							process = processBuilder.start();
+							InputStream inputStream = process.getInputStream();
+							setUpStreamGobbler(inputStream, System.out);
+
+							InputStream errorStream = process.getErrorStream();
+							setUpStreamGobbler(errorStream, System.err);
+							System.out.println("never returns");
+							process.waitFor();
+						} catch (IOException e) {
+							throw new RuntimeException(e);
+						} catch (InterruptedException e) {
+							throw new RuntimeException(e);
+						}
+					}
+
 				} catch (Exception e) {
 					e.printStackTrace()
 				}
-				
-				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//tftp_server.py").file
-				def absolutePath = layoutFolder.absolutePath
-				String[] cmd = [
-					"sudo",
-					PYTHON_COMMAND,
-					absolutePath,
-					"69",
-					logFilePath
-				]
-				
-				Thread.start{
-					println " TDK TM : Starting TFTP Server..."
-					try {
-//						Process pb = Runtime.getRuntime().exec(cmd);
-						ScriptExecutor scriptExecutor = new ScriptExecutor()
-						def outputData = scriptExecutor.executeScript(cmd,0)
-					} catch (Exception e) {
-						println " ERROR in TFTP start "+e.getMessage()
-						e.printStackTrace()
-					}
-				}
-				
-//				ScriptExecutor scriptExecutor = new ScriptExecutor()
-//				def outputData = scriptExecutor.executeScript(cmd,1)
-				
+			}
+
 		}catch(Exception e){
 			println e.getMessage()
 			e.printStackTrace()
 		}
-	}		
+	}
+	
+
+ public static void setUpStreamGobbler(final InputStream is, final PrintStream ps) {
+	final InputStreamReader streamReader = new InputStreamReader(is);
+	new Thread(new Runnable() {
+	   public void run() {
+		  BufferedReader br = new BufferedReader(streamReader);
+		  String line = null;
+		  try {
+			 while ((line = br.readLine()) != null) {
+				ps.println("process stream: " + line);
+			 }
+		  } catch (IOException e) {
+			 e.printStackTrace();
+		  } finally {
+			 try {
+				br.close();
+			 } catch (IOException e) {
+				e.printStackTrace();
+			 }
+		  }
+	   }
+	}).start();
+ }
 }

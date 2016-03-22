@@ -52,19 +52,41 @@ public class DeviceStatusUpdater {
 		
 		def ipAddress
 		NetworkInterface nface
-		Enumeration ne = NetworkInterface.getNetworkInterfaces();
-		while (ne.hasMoreElements()) {
-			NetworkInterface netFace = (NetworkInterface) ne.nextElement();
-			Enumeration ae = netFace.getInetAddresses();
-			while (ae.hasMoreElements()) {
-				InetAddress address = (InetAddress) ae.nextElement();
-				if(InetAddressValidator.getInstance().isValidInet4Address(address.getHostAddress())){
-					if(!address.isLoopbackAddress()){
-						ipAddress = address.getHostAddress()
+		
+		File configFile = grailsApplication.parentContext.getResource("/fileStore/tm.config").file
+		
+		def nwInterface = getDefaultNetworkInterface(configFile)
+		if(nwInterface != null){
+			NetworkInterface  netFace = NetworkInterface.getByName(nwInterface)
+			if(netFace){
+				Enumeration ae = netFace?.getInetAddresses();
+				while (ae?.hasMoreElements()) {
+					InetAddress address = (InetAddress) ae.nextElement();
+					if(InetAddressValidator.getInstance().isValidInet4Address(address.getHostAddress())){
+						if(!address.isLoopbackAddress()){
+							ipAddress = address.getHostAddress()
+						}
 					}
 				}
 			}
 		}
+		
+		if(ipAddress == null ){
+			Enumeration ne = NetworkInterface.getNetworkInterfaces();
+			while (ne.hasMoreElements()) {
+				NetworkInterface netFace = (NetworkInterface) ne.nextElement();
+				Enumeration ae = netFace.getInetAddresses();
+				while (ae.hasMoreElements()) {
+					InetAddress address = (InetAddress) ae.nextElement();
+					if(InetAddressValidator.getInstance().isValidInet4Address(address.getHostAddress())){
+						if(!address.isLoopbackAddress()){
+							ipAddress = address.getHostAddress()
+						}
+					}
+				}
+			}
+		}
+		
 		List childDeviceList = []
 		deviceList?.each{ dev ->
 			def device
@@ -116,31 +138,53 @@ public class DeviceStatusUpdater {
 		def ipAddress
 
 		NetworkInterface nface
-
-		Enumeration ne = NetworkInterface.getNetworkInterfaces();
-
-		while (ne.hasMoreElements()) {
-
-			NetworkInterface netFace = (NetworkInterface) ne.nextElement();
-
-			Enumeration ae = netFace.getInetAddresses();
-
-			while (ae.hasMoreElements()) {
-
-				InetAddress address = (InetAddress) ae.nextElement();
-
-				if(InetAddressValidator.getInstance().isValidInet4Address(address.getHostAddress())){
-
-					if(!address.isLoopbackAddress()){
-
-						ipAddress = address.getHostAddress()
-
+		
+		File configFile = grailsApplication.parentContext.getResource("/fileStore/tm.config").file
+		
+		def nwInterface = getDefaultNetworkInterface(configFile)
+		if(nwInterface != null){
+			NetworkInterface  netFace = NetworkInterface.getByName(nwInterface)
+			if(netFace){
+				Enumeration ae = netFace?.getInetAddresses();
+				while (ae.hasMoreElements()) {
+					InetAddress address = (InetAddress) ae.nextElement();
+					if(InetAddressValidator.getInstance().isValidInet4Address(address.getHostAddress())){
+						if(!address.isLoopbackAddress()){
+							ipAddress = address.getHostAddress()
+						}
 					}
-
 				}
-
 			}
-
+		}
+		
+		if(ipAddress == null ){
+			
+			
+			Enumeration ne = NetworkInterface.getNetworkInterfaces();
+	
+			while (ne.hasMoreElements()) {
+	
+				NetworkInterface netFace = (NetworkInterface) ne.nextElement();
+	
+				Enumeration ae = netFace.getInetAddresses();
+	
+				while (ae.hasMoreElements()) {
+	
+					InetAddress address = (InetAddress) ae.nextElement();
+	
+					if(InetAddressValidator.getInstance().isValidInet4Address(address.getHostAddress())){
+	
+						if(!address.isLoopbackAddress()){
+	
+							ipAddress = address.getHostAddress()
+	
+						}
+	
+					}
+	
+				}
+	
+			}
 		}
 
 		int port = Integer.parseInt(device?.statusPort)
@@ -170,6 +214,24 @@ public class DeviceStatusUpdater {
 
 		return outData;
 
+	}
+	
+	public static getDefaultNetworkInterface(File configFile){
+		try {
+		Properties prop = new Properties();
+		if(configFile.exists()){
+			InputStream is = new FileInputStream(configFile);
+			prop.load(is);
+			def value = prop.getProperty("interface");
+			if(value){
+				return value
+			}
+
+		}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		return null
 	}
 }
 
