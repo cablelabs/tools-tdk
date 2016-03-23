@@ -42,6 +42,7 @@ Test Type: Negative</synopsis>
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 import trm;
+from time import sleep;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -72,18 +73,21 @@ if "SUCCESS" in result.upper():
         # Frame different request URL for each client box
         streamId = '0'+str(deviceNo+1)
         recordingId = 'RecordIdCh'+streamId
-        trm.reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':10000,'startTime':0,'recordingId':recordingId,'hot':0})
+        trm.reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':20000,'startTime':0,'recordingId':recordingId,'hot':0})
 
     # Step2: Record a new channel when all tuners are already busy recording
     streamId = '0'+str(maxTuner+1)
     recordingId = 'RecordIdCh'+streamId
-    trm.reserveForRecord(obj,'FAILURE',kwargs={'deviceNo':maxTuner,'streamId':streamId,'duration':10000,'startTime':0,'recordingId':recordingId,'hot':0})
+    trm.reserveForRecord(obj,'FAILURE',kwargs={'deviceNo':maxTuner,'streamId':streamId,'duration':20000,'startTime':0,'recordingId':recordingId,'hot':0})
 
     # Step3: Cancel recording on channel 1
     trm.cancelRecording(obj,'SUCCESS',kwargs={'streamId':'01'})
 
     # Step4: Record the new channel again
-    trm.reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':maxTuner,'streamId':streamId,'duration':10000,'startTime':0,'recordingId':recordingId,'hot':0})
+    trm.reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':maxTuner,'streamId':streamId,'duration':20000,'startTime':0,'recordingId':recordingId,'hot':0})
+
+    # Add sleep to release all reservations
+    sleep(20)
 
     #unloading trm module
     obj.unloadModule("trm");

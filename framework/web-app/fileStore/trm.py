@@ -229,6 +229,8 @@ def getAllTunerStates(obj,expectedresult):
     else:
         tdkTestObj.setResultStatus("FAILURE");
 
+    return details
+
 #######################################################
 
 def getAllReservations(obj,expectedresult,kwargs={}):

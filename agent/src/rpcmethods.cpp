@@ -777,7 +777,11 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
     pszModuleName = request ["param1"].asCString();
     if (NULL != pszModuleName && (LIB_NAME_SIZE - 12) > strlen (pszModuleName))
     {
+#ifdef YOCTO_LIB_LOADING
+        sprintf (szLibName, "lib%sstub.so.0", pszModuleName);
+#else
         sprintf (szLibName, "lib%sstub.so", pszModuleName);
+#endif        
         strLoadModuleDetails = LoadLibrary (szLibName);
     }
     else
@@ -872,7 +876,11 @@ bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& respo
 	
     /* Extracting module name and constructing corresponding library name */
     pszModuleName = request["param1"].asCString();
-    sprintf (szLibName, "lib%sstub.so", pszModuleName);
+#ifdef YOCTO_LIB_LOADING
+        sprintf (szLibName, "lib%sstub.so.0", pszModuleName);
+#else
+        sprintf (szLibName, "lib%sstub.so", pszModuleName);
+#endif    
     std::string strLibName (szLibName);
 
     /* Invoking UnloadLibrary() to unload module */

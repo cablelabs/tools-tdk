@@ -70,6 +70,26 @@ if "SUCCESS" in result.upper():
         obj.unloadModule("trm");
         exit()
 
+    # Get all Tuner states
+    print "Get all Tuner states"
+    tdkTestObj = obj.createTestStep('TRM_GetAllTunerStates');
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase("SUCCESS");
+
+    #Get the result of execution
+    result = tdkTestObj.getResult();
+    print "[TEST EXECUTION RESULT] : %s" %result;
+    details = tdkTestObj.getResultDetails();
+    print "[TEST EXECUTION DETAILS] : %s" %details;
+
+    #Set the result status of execution
+    if "SUCCESS" in result.upper():
+        tdkTestObj.setResultStatus("SUCCESS");
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+    # Get all Tuner states End
+
     #Primitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
 
@@ -78,9 +98,9 @@ if "SUCCESS" in result.upper():
     hot = 0
     deviceNo1 = 0
 
-    print "Start " , maxTuner-1, " recordings from device 1 on different channels"
+    print "\nStart " , maxTuner-2, " recordings from device 1 on different channels\n"
     # Start recording channel 1-4 from device 1
-    for channelNo in range(0,maxTuner-1):
+    for channelNo in range(0,maxTuner-2):
         # Frame different request URL for each client box
         streamId = '0'+str(channelNo+1)
         locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
@@ -115,7 +135,7 @@ if "SUCCESS" in result.upper():
     # Start recording channel 1-4 from device 1 end
 
     # Start live tuning channel5 from device 1
-    print "Start live tuning from device 1 on another new channel"
+    print "\nStart live tuning from device 1 on another new channel\n"
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
 
     streamId = '0'+str(channelNo+2)
@@ -146,7 +166,7 @@ if "SUCCESS" in result.upper():
     # All tuners are busy now
 
     # Start live tuning channel 6 from device 2
-    print "Start live tuning from device 2 on another new channel"
+    print "\nStart live tuning from device 2 on another new channel\n"
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
 
     deviceNo2 = 1

@@ -75,13 +75,13 @@ if "SUCCESS" in result.upper():
         trm.reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':10000,'startTime':0,'recordingId':recordingId,'hot':0})
 
     # Step2: Device1 live tune channel 1
-    trm.reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':'01','duration':1000,'startTime':0})
+    trm.reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':'01','duration':10000,'startTime':0})
 
     # Step3: Device1 cancel ongoing recording on channel 1
     trm.cancelRecording(obj,'SUCCESS',kwargs={'streamId':'01'})
 
     # Step4: Device1 live tune channel 1
-    trm.reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':'01','duration':1000,'startTime':0})
+    trm.reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':'01','duration':10000,'startTime':0})
 
     #unloading trm module
     obj.unloadModule("trm");

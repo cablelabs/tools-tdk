@@ -42,6 +42,7 @@ Test Type: Negative</synopsis>
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 import trm;
+from time import sleep
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -67,7 +68,7 @@ if "SUCCESS" in result.upper():
         obj.unloadModule("trm");
         exit()
 
-    duration = 10000
+    duration = 20000
     startTime = 0
 
     # Step1: Start live tuning two different channels on first 2 tuners
@@ -91,6 +92,9 @@ if "SUCCESS" in result.upper():
 
     # Get all Tuner states
     trm.getAllTunerStates(obj,'SUCCESS')
+
+    # Add sleep to release all reservations
+    sleep(20)
 
     #unloading trm module
     obj.unloadModule("trm");

@@ -42,6 +42,7 @@ Test Type: Negative</synopsis>
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 from trm import getMaxTuner,reserveForRecord
+from time import sleep
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -73,8 +74,10 @@ if "SUCCESS" in result.upper():
                 expectedRes = "FAILURE"
             else:
                 expectedRes = "SUCCESS"
-            reserveForRecord(obj,expectedRes,kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':10000,'startTime':0,'recordingId':recordingId,'hot':0})
+            reserveForRecord(obj,expectedRes,kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':20000,'startTime':0,'recordingId':recordingId,'hot':0})
         # End for loop
+        # Add sleep to release all reservations
+        sleep(20)
 
     #unloading trm module
     obj.unloadModule("trm");

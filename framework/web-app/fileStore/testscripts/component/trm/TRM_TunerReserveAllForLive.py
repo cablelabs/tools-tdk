@@ -44,6 +44,7 @@ Test Type: Positive</synopsis>
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 from trm import getMaxTuner,reserveForLive
+from time import sleep
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -70,8 +71,11 @@ if "SUCCESS" in result.upper():
         for deviceNo in range(0,maxTuner-1):
             # Frame different request URL for each client box
             streamId = '0'+str(deviceNo+1)
-            reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':1000,'startTime':0})
+            reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':10000,'startTime':0})
         # End for loop
+
+        # Add sleep to release all reservations
+	sleep(10)
 
     #unloading trm module
     obj.unloadModule("trm");

@@ -41,6 +41,7 @@ Testcase ID: CT_TRM_45</synopsis>
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 from trm import getMaxTuner,reserveForLive,reserveForRecord,getAllTunerStates
+from time import sleep
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -66,28 +67,39 @@ if "SUCCESS" in result.upper():
         obj.unloadModule("trm");
         exit()
 
+    # Get all Tuner states
+    initStates = getAllTunerStates(obj,'SUCCESS')
+
+    tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
+
     # Step1: Device 1: Start as many recordings as the number of tuners
     for deviceNo in range(0,maxTuners):
         # Frame different request URL for each client box
         streamId = '0'+str(deviceNo+1)
         recordingId = 'RecordIdCh'+streamId
-        reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':streamId,'duration':10000,'startTime':0,'recordingId':recordingId,'hot':0})
+        reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':streamId,'duration':20000,'startTime':0,'recordingId':recordingId,'hot':0})
 
     # Step2: Device 2 to Device 5 tune L2 to L5
+    # One tuner is reserved for either recording or live local streaming for the gateway device itself and hence cannot be used for Live streaming of Remote/Xi device
     for deviceNo in range(1,maxTuners):
         # Frame different request URL for each client box
         streamId = '0'+str(deviceNo+1)
-        reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':10000,'startTime':0})
+        locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+        if locator not in initStates:
+            reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':20000,'startTime':0})
 
     # Step3: Channel change on Device 2 from L2 to new channel
     streamId = '0'+str(maxTuners+1)
-    reserveForLive(obj,'FAILURE',kwargs={'deviceNo':1,'streamId':streamId,'duration':10000,'startTime':0})
+    reserveForLive(obj,'FAILURE',kwargs={'deviceNo':1,'streamId':streamId,'duration':20000,'startTime':0})
 
     # Step4: Channel change on Device 2 back from new channel to L2
-    reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':1,'streamId':'02','duration':10000,'startTime':0})
+    reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':1,'streamId':'02','duration':20000,'startTime':0})
 
     # Get all Tuner states
     getAllTunerStates(obj,'SUCCESS')
+
+    # Add sleep to release all reservations
+    sleep(20)
 
     #unloading trm module
     obj.unloadModule("trm");

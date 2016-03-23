@@ -67,9 +67,9 @@ if "SUCCESS" in result.upper():
     streamId = '01'
 
     # Send first recording request from device 1
-    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':streamId,'duration':1000,'startTime':startTime,'recordingId':'RecordIdCh01','hot':0})
+    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':streamId,'duration':10000,'startTime':startTime,'recordingId':'RecordIdCh01','hot':0})
     # Send second recording request from device 2
-    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':1,'streamId':streamId,'duration':1000,'startTime':startTime,'recordingId':'RecordIdCh02','hot':0})
+    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':1,'streamId':streamId,'duration':10000,'startTime':startTime,'recordingId':'RecordIdCh02','hot':0})
 
     #unloading trm module
     obj.unloadModule("trm");

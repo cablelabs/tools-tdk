@@ -70,17 +70,20 @@ if "SUCCESS" in result.upper():
     duration = 10000
     startTime = 0
 
-    # Step1: Device1 start recording on channel 1
-    trm.reserveForRecord(obj,"SUCCESS",kwargs={'deviceNo':0,'streamId':'01','duration':duration,'startTime':startTime,'recordingId':'RecordIdCh01','hot':0})
-
-    # Step2: Start live tuning on all the remaining tuners on different channels from different devices
-    for deviceNo in range(1,maxTuner):
+    # Step1: Start live tuning on all the remaining tuners on different channels from different devices
+    for deviceNo in range(0,maxTuner-2):
         # Frame different request URL for each client box
         streamId = '0'+str(deviceNo+1)
         trm.reserveForLive(obj,"SUCCESS",kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':duration,'startTime':startTime})
 
-    # Step3: Device1 live tune channel 1
-    trm.reserveForLive(obj,"SUCCESS",kwargs={'deviceNo':0,'streamId':'01','duration':duration,'startTime':startTime})
+    # Step2: Device1 start recording on channel 5
+    streamId = '0'+str(deviceNo+2)
+    trm.reserveForRecord(obj,"SUCCESS",kwargs={'deviceNo':0,'streamId':streamId,'duration':duration,'startTime':startTime,'recordingId':'RecordIdCh01','hot':0})
+
+    # Step3: Device1 live tune channel 5
+    trm.reserveForLive(obj,"SUCCESS",kwargs={'deviceNo':0,'streamId':streamId,'duration':duration,'startTime':startTime})
+
+    trm.getAllTunerStates(obj,'SUCCESS')
 
     #unloading trm module
     obj.unloadModule("trm");
