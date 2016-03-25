@@ -75,11 +75,11 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
         sleep(10);
+        #Pre-requisite
+        response = recorderlib.callServerHandler('clearStatus',ip);
         response = recorderlib.callServerHandler('retrieveStatus',ip);
         print "Retrieve Status Details: %s"%response;
 
-        #Pre-requisite
-        response = recorderlib.callServerHandler('clearStatus',ip);
 
         #Execute updateSchedule
         requestID = str(randint(10, 500));
@@ -96,7 +96,6 @@ if "SUCCESS" in loadmodulestatus.upper():
         serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL,ip);
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success for recording 1";
-                sleep(10);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while (('acknowledgement' not in recResponse) and (retry < 10 )):
@@ -107,7 +106,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 if "acknowledgement" in recResponse:
                         print "Simulator Server received the recorder acknowledgement for recording 1";
                         print "Wait for some time to make partial recording 1";
-                        sleep(20);
+                        sleep(90);
                         print "Send request for recording 2";
 
                         requestID2 = str(randint(10, 500));
@@ -117,7 +116,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 			
 			response = recorderlib.callServerHandler('clearStatus',ip);
                         #Frame json message
-                        RequestURL2 = "{\"updateSchedule\":{\"requestId\":\""+requestID2+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID2+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime2+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID2+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+                        RequestURL2 = "{\"updateSchedule\":{\"requestId\":\""+requestID2+"\",\"generationId\":\""+genIdInput+"\",\"fullSchedule\":true,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID2+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime2+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID2+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
                         serverResponse2 = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL2,ip);
                         if "updateSchedule" in serverResponse2:
                                 print "updateSchedule message post success for recording 2";
@@ -129,12 +128,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         retry += 1
                                 print "Retrieve Status Details for recording 2: ",recResponse2;
                                 print "Wait for recording 2 to complete";
-                                sleep(60);
-				response = recorderlib.callServerHandler('clearStatus',ip);
-				print "Get the list of recordings"
-				recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-				print "Wait for 60 sec to fetch the list"
-				sleep(60);
+                                sleep(30);
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 print "Recording list: ",actResponse;
                                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
@@ -179,3 +173,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #unloading Recorder module
         obj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    obj.setLoadModuleStatus("FAILURE");

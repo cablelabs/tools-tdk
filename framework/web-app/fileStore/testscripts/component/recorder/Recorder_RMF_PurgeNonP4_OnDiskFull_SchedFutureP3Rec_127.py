@@ -21,7 +21,7 @@
   <!--  -->
   <execution_time>60</execution_time>
   <!--  -->
-  <long_duration>false</long_duration>
+  <long_duration>true</long_duration>
   <!-- execution_time is the time out time for test execution -->
   <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
@@ -55,19 +55,17 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_PurgeNonP4_OnDiskFull_SchedFuture
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
-recObj.setLoadModuleStatus(recLoadStatus);
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+               print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+               print "Waiting for the recoder to be up"
 	       sleep(300);
-
-        print "Waiting for the recoder to be up"
-
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');

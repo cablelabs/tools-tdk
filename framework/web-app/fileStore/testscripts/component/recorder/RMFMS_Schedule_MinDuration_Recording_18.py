@@ -98,7 +98,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
         #5mins duration
-        duration = "5000";
+        duration = "6000";
         startTime = "60000";
         genIdInput = "TDK456";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
@@ -122,7 +122,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 			#WAIT for start time to elapse
 			sleep(60);
 			#WAIT for recording duration to elapse
-                        sleep(6);
+                        sleep(10);
 			print "Sending getRecordings to get the recording list"
 			recorderlib.callServerHandler('clearStatus',ip)
 			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
@@ -131,6 +131,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 			print "Recording List: %s" %actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                        print recordingData
                         if ('NOTFOUND' not in recordingData):
                                 key = 'status'
                                 value = recorderlib.getValueFromKeyInRecording(recordingData,key)

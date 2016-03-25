@@ -39,8 +39,10 @@
 '''
 #use tdklib library,which provides a wrapper for tdk test case script
 import tdklib;
+import time;
 import recorderlib
 from time import sleep
+from random import randint
 
 
 #IP and Port of box, No need to change,
@@ -55,13 +57,10 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_RWSStatusOutage_CheckConnectionRe
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
-recObj.setLoadModuleStatus(recLoadStatus);
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
-
-        #Set the module loading status
-        recObj.setLoadModuleStatus(recLoadStatus);
 
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
@@ -83,17 +82,18 @@ if "SUCCESS" in recLoadStatus.upper():
         recorderlib.callServerHandlerWithType('disableServer','RWSStatus',ip)
         status = recorderlib.callServerHandlerWithType('isEnabledServer','RWSStatus',ip)
         print "RWSStatus server status: ",status
+        
         if "FALSE" in status.upper():
-                print "Waiting to get connection retrial attempts from recorder"
-                #sleep(550)
-		sleep(240)
+                print "Waiting for 550s to get connection retrial attempts from recorder"
+                sleep(550)
 
                 #Checkpoint-1: Get the time between each re-trials
                 print "Checking status of disabled servers"
                 rwsstatus = recorderlib.callServerHandlerWithType('retrieveDisabledStatus','RWSStatus',ip)
                 print "RWSStatus Status: ",rwsstatus
+                
                 #Check if status is not empty
-                if ( "[]" == rwsstatus ):
+                if ( "[]" in rwsstatus ):
                         print "ERROR: No connection retry from recorder"
                         tdkTestObj.setResultStatus("FAILURE")
                 else:
@@ -102,7 +102,10 @@ if "SUCCESS" in recLoadStatus.upper():
                         print "RWS status server timelist = ",ret
 			if (0 == len(ret)):
 			    tdkTestObj.setResultStatus("FAILURE")
-			    print "No connection retry from recorder"
+			    print "ERROR: No connection retry from recorder"
+                        elif (1 == len(ret)):
+                            tdkTestObj.setResultStatus("FAILURE")
+                            print "Only one connection retry from recorder in 550s"
 			else:
                             for x in range(len(ret)-1):
                                 intervalCurr = int( (ret[x+1] - ret[x])/1000 )

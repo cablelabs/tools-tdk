@@ -105,7 +105,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
                 if "updateSchedule" in serverResponse:
                         print "updateSchedule message post success";
-                        print "Wait for more than duration of the recording"
+                        print "Wait for less than duration of the recording"
                         sleep(60);
                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                         print "Retrieve Status Details: ",recResponse;
@@ -130,11 +130,11 @@ if "SUCCESS" in recLoadStatus.upper():
                                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                                 print recordingData;
                                 if 'NOTFOUND' == recordingData:
-                                       	tdkTestObj.setResultStatus("SUCCESS");
+                                       	tdkTestObj.setResultStatus("FAILURE");
                                         print "Recording not found in list";
                                 else:
-					tdkTestObj.setResultStatus("FAILURE");
-					print "Inline recording started while LPServer was down";
+					tdkTestObj.setResultStatus("SUCCESS");
+                                        print "Inline recording started as soon as LPServer connection re-established before the duration of recording";
                 else:
                         print "updateSchedule message post failure";
                         tdkTestObj.setResultStatus("FAILURE");

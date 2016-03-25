@@ -61,86 +61,97 @@ obj.setLoadModuleStatus(loadmodulestatus);
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in loadmodulestatus.upper():
 
+        print "Rebooting box for setting configuration"
 	loadmoduledetails = obj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
-               print "Rebooting box for setting configuration"
                obj.initiateReboot();
-               print "Waiting for the recorder to be up"
 	       sleep(300);
+        print "Waiting for the recorder to be up"
 
-        #Pre-requisite
-        response = recorderlib.callServerHandler('clearStatus',ip);
 
         #Prmitive test case which associated to this Script
         tdkTestObj = obj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
 
+        print "Sending noUpdate to get the recording list after full sync"
+        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
+        sleep(10);
+
+        #Pre-requisite
+        response = recorderlib.callServerHandler('clearStatus',ip);
+        print "Clear Status Details: %s"%response;
+        response = recorderlib.callServerHandler('retrieveStatus',ip);
+        print "Retrieve Status Details: %s"%response;
+
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        #Recording with 1 min duration
+        #Schedule Hot Inline Recording with 1 min duration
         duration = "60000";
-        startTime = "0"
+        startTime = "60000";
+        genIdInput = "TDK456";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
 
         #Frame json message
-        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+
         serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL,ip);
+        print "serverResponse : %s" %serverResponse;
 
         if "updateSchedule" in serverResponse:
-                print "updateSchedule message post success";
-                sleep(20);
+                print "updateSchedule message post success 1";
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
-                while (('statusMessage' not in recResponse) and (retry < 10 )):
+                while (( ([] == recResponse) or ('acknowledgement' not in recResponse) ) and (retry < 10 )):
                         sleep(10);
                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                         retry += 1
                 print "Retrieve Status Details: ",recResponse;
                 if "acknowledgement" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
-                        recResponse = recorderlib.callServerHandler('clearStatus',ip);
-                        print "Wait 60s for recording to complete";
-                        sleep(60)
+                        sleep(130);
                         print "Delete the recording";
                         #Frame json message for update recording
-                        requestID = str(randint(10, 500));
-                        jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P0\"}]}}";
+                        jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P0\"}]}}";
                         actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgUpdateRecording,ip);
+                        print "updateRecordings Details: %s"%actResponse;
                         if "updateRecordings" in actResponse:
                                 print "updateRecordings message post success";
-                                sleep(30);
-                                retry = 0
+                                sleep(60);
+                                print "Sending getRecordings to get the recording list"
+                                recorderlib.callServerHandler('clearStatus',ip)
+                                recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                                print "Wait for 1 min to get response from recorder"
+                                sleep(60)
                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                while (('statusMessage' not in recResponse) and (retry < 10 )):
-                                        sleep(10);
-                                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        retry += 1
-                                print "Retrieve Status Details: ",recResponse;
                                 recordingData = recorderlib.getRecordingFromRecId(recResponse,recordingID);
+                                print recordingData
                                 if ('NOTFOUND' not in recordingData):
-                                        value = recorderlib.getValueFromKeyInRecording(recordingData,'status')
-                                        print "recordingID: ",recordingID," status: ",value
-                                        if "ERASED" in value.upper():
+                                        key = 'status'
+                                        value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                                        print "key: ",key," value: ",value
+                                        if "COMPLETE" in value.upper():
                                                 tdkTestObj.setResultStatus("SUCCESS");
-                                                print "Recorder sent Erased notification to the RWS for deleted recording";
+                                                print "Recorder has sent status = COMPLETE";
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
-                                                print "Recording is not in erased state";
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "Recorder did not send recordingStatus notification to the RWS for deleted recording";
+                                                print "Recorder has not COMPLETE";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "updateRecordings message post failed";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "Simulator Server did not receive recorder acknowledgement";
+                        print "Simulator Server NOT received the recorder acknowledgement";
         else:
                 tdkTestObj.setResultStatus("FAILURE");
-                print "updateSchedule message post failed";
+                print "updateSchedule message post failed 1";
 
         #unloading Recorder module
         obj.unloadModule("Recorder");
+
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    obj.setLoadModuleStatus("FAILURE");

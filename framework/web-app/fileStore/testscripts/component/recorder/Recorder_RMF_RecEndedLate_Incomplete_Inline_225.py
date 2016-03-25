@@ -87,7 +87,7 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule
         requestID = str(randint(10,500));
         recordingID = str(randint(10000, 500000));
-        duration = "300000";
+        duration = "60000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
         startTime = "0";
@@ -130,9 +130,9 @@ if "SUCCESS" in recLoadStatus.upper():
                 exit();
         print "Successfully retrieved acknowledgement from recorder";
         print "Wait for the recording to complete partially"
-        sleep(60);
+        sleep(30);
 	#Now send one more update schedule to change the duration of the recording, i.e set it to 15 seconds
-        duration = "15000";
+        duration = "120000";
 
         #Frame json message
         jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+ recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
@@ -169,13 +169,12 @@ if "SUCCESS" in recLoadStatus.upper():
                 recObj.unloadModule("Recorder");
                 exit();
         print "Successfully retrieved acknowledgement from recorder";
-	sleep(20);
+	sleep(180);
         print "Sending getRecordings to get the recordings list"
 	tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
         tdkTestObj1.executeTestCase(expectedResult);
         recorderlib.callServerHandler('clearStatus',ip);
         recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-        tdkTestObj1.setResultStatus("FAILURE");
 	print "Wait for 60 seconds to get response from recorder"
 	sleep(60)
 	actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
@@ -229,6 +228,8 @@ if "SUCCESS" in recLoadStatus.upper():
                 recObj.unloadModule("Recorder");
                 exit();
         print "error marked as ENDED_LATE";         
+        #unloading Recorder module
+        recObj.unloadModule("Recorder");
 else:
 	print "Failed to load Recorder module";
         #Set the module loading status

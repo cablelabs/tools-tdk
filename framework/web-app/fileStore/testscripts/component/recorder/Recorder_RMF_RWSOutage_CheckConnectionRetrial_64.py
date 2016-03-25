@@ -55,22 +55,17 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_RWSOutage_CheckConnectionRetrial_
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
-recObj.setLoadModuleStatus(recLoadStatus);
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        #Set the module loading status
-        recObj.setLoadModuleStatus(recLoadStatus);
-
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+               print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+               print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-
-        print "Sleeping to wait for the recoder to be up"
-
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -92,7 +87,7 @@ if "SUCCESS" in recLoadStatus.upper():
         print "RWSStatus server status: ",status2
 
         if( ("FALSE" in status.upper()) and ("FALSE" in status2.upper()) ):
-                print "Waiting to get connection retrial attempts from recorder"
+                print "Waiting for 550s to get connection retrial attempts from recorder"
                 sleep(550)
 
                 #Checkpoint-1: Get the time between each re-trials
@@ -102,17 +97,22 @@ if "SUCCESS" in recLoadStatus.upper():
                 status2 = recorderlib.callServerHandlerWithType('retrieveDisabledStatus','RWSServer',ip)
                 print "RWSserver Status: ",status2
                 #Check if status is not empty
-                if ( [] == status ):
+                if ( '[]' in status ):
                         print "ERROR: No status available for RWSStatus"
                         tdkTestObj.setResultStatus("FAILURE")
-		elif ( [] == status2 ):
+		elif ( '[]' in status2 ):
 			print "ERROR: No status available for RWSServer"
 			tdkTestObj.setResultStatus("FAILURE")
                 else:
+                        #Get retry interval for RWS status server
                         intervalPrev = 0
                         ret = recorderlib.getTimeListFromStatus(status)
                         print "RWS status server timelist = ",ret
-                        for x in range(len(ret)-1):
+                        if (1 == len(ret)):
+                            tdkTestObj.setResultStatus("FAILURE")
+                            print "Only one connection retry from recorder in 550s"
+                        else:
+                            for x in range(len(ret)-1):
                                 intervalCurr = int( (ret[x+1] - ret[x])/1000 )
                                 print "Retry interval for RWS status server: ",intervalCurr,"sec"
                                 if intervalCurr <= intervalPrev:
@@ -122,10 +122,15 @@ if "SUCCESS" in recLoadStatus.upper():
                                         print "Retry interval for RWS status server incrementing from ",intervalPrev,"sec to ",intervalCurr,"sec"
                                 intervalPrev = intervalCurr
 
+                        #Get retry interval for RWSserver
                         intervalPrev = 0
                         ret = recorderlib.getTimeListFromStatus(status2)
                         print "RWS server timelist = ",ret
-                        for x in range(len(ret)-1):
+                        if (1 == len(ret)):
+                            tdkTestObj.setResultStatus("FAILURE")
+                            print "Only one connection retry from recorder in 550s"
+                        else:
+                            for x in range(len(ret)-1):
                                 intervalCurr = int( (ret[x+1] - ret[x])/1000 )
                                 print "Retry interval for RWSServer: ",intervalCurr,"sec"
                                 if intervalCurr <= intervalPrev:

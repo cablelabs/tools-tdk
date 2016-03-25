@@ -118,7 +118,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(60);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while (( ([] == recResponse) or ('ack' not in recResponse) ) and (retry < 10 )):
@@ -128,14 +127,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "Retrieve Status Details: ",recResponse;
                 if "ack" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
-                        sleep(150);
-			print "Sending getRecordings to get the recording list"
-			recorderlib.callServerHandler('clearStatus',ip)
-			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-			print "Wait for 3 min to get response from recorder"
-			sleep(180)
+                        sleep(70);
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-			print "Recording List: %s" %actResponse;
+                        sleep(5)
+			print "Details from RWS POST Server: %s" %actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                         print recordingData;
                         if ('NOTFOUND' not in recordingData):

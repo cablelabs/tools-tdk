@@ -58,7 +58,6 @@ print "Recorder module loading status :%s" %loadmodulestatus ;
 #Set the module loading status
 obj.setLoadModuleStatus(loadmodulestatus);
 
-#Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in loadmodulestatus.upper():
 
 	print "Rebooting box for setting configuration"
@@ -69,10 +68,10 @@ if "SUCCESS" in loadmodulestatus.upper():
 	print "Waiting for the recoder to be up"
 
 
-        #Prmitive test case which associated to this Script
-        tdkTestObj = obj.createTestStep('Recorder_SendRequest');
-        expectedResult="SUCCESS";
-        tdkTestObj.executeTestCase(expectedResult);
+	#Primitive test case which associated to this Script
+	tdkTestObj = obj.createTestStep('Recorder_SendRequest');
+	expectedResult="SUCCESS";
+	tdkTestObj.executeTestCase(expectedResult);		
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -80,94 +79,73 @@ if "SUCCESS" in loadmodulestatus.upper():
         response = recorderlib.callServerHandler('retrieveStatus',ip);
         print "Retrieve Status Details: %s"%response;
 
-        #Complete a recording to change check sum
-        requestID = str(randint(10, 500));
-        recordingID = str(randint(10000, 500000));
-        #5mins duration
-        duration = "30000";
-        startTime = "0";
-        genIdInput = "TDK456";
-        ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
-        now = "curTime";
-
-        #Frame json message
-        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-        serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL,ip);
-        print "serverResponse : %s" %serverResponse;
-        sleep(60);
-
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        #5mins duration
+	#5mins duration
         duration = "300000";
         startTime = "0";
-        genIdInput = "TDK456";
+	genIdInput = "TDK456";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
 
         #Frame json message
         RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-
-        serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL,ip);
-        print "serverResponse : %s" %serverResponse;
-
-        if "updateSchedule" in serverResponse:
-                print "updateSchedule message post success";
-                sleep(30);
+		
+	serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL,ip);
+	print "serverResponse : %s" %serverResponse;
+				
+	if "updateSchedule" in serverResponse:
+		print "updateSchedule message post success";
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                retry = 0;
+		retry = 0;
                 while (( ([] == recResponse) or ('ack' not in recResponse) ) and (retry < 10 )):
-                        sleep(10);
-                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                        retry += 1
-                print "Retrieve Status Details: ",recResponse;
-                if "ack" in recResponse:
-                        print "Simulator Server received the recorder acknowledgement";
-                        print "Rebooting the box to get full sync..."
-
-                        obj.initiateReboot();
-                        print "Sleeping to wait for the recoder to be up"
-                        sleep(300);
+			sleep(10);
+			recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+			retry += 1
+		print "Retrieve Status Details: ",recResponse;
+		if "ack" in recResponse:
+			print "Simulator Server received the recorder acknowledgement";
+                        sleep(60);
+			print "Rebooting the box to interrupt the recording"
+			obj.initiateReboot();
+			print "Sleeping to wait for the recoder to be up"
+			sleep(300);
 			response = recorderlib.callServerHandler('clearStatus',ip);
-                        print "Sending noUpdate to get the recording list"
-                        RequestURL = "{\"noUpdate\":{}}";
-                        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
-                        if "noUpdate" in serverResponse:
-                                print "NoUpdate message post success";
-                                print "Wait for 180sec to get the recording list"
-                                sleep(180);
-                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                print "Recording List: %s" %actResponse;
+                        tdkTestObj = obj.createTestStep('Recorder_SendRequest');
+                        tdkTestObj.executeTestCase(expectedResult);
+                        print "Sending getRecordings to get the recording list"
+                        recorderlib.callServerHandler('clearStatus',ip)
+                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                        print "Wait for 1 min to get response from recorder"
+                        sleep(60)
+                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
+                        print "Recording List: %s" %actResponse;
 
-                                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
-                                print recordingData;
-                                if ('NOTFOUND' not in recordingData):
-                                        key = 'error'
-                                        value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                        print "key: ",key," value: ",value
-                                        if "POWER_INTERRUPTION" in value.upper():
-                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                print "Recording had power interruption";
-                                        elif "BADVALUE" == value.upper():
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "Recording did not have error field";
-                                        else:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "Recording did not have power interruption";
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "Recording not found";
-                        else:
+                        recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                        print recordingData;
+                        if ('NOTFOUND' not in recordingData):
+                            key = 'error'
+                            value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                            print "key: ",key," value: ",value
+                            if "POWER_INTERRUPTION" in value.upper():
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                print "Recording had power interruption";
+                            elif "BADVALUE" == value.upper():
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "NoUpdate message post failed";
-                else:
-                        tdkTestObj.setResultStatus("FAILURE");
+                                print "Recording did not have error field";
+                            else:
+                                tdkTestObj.setResultStatus("FAILURE");
+                                print "Recording did not have power interruption";
+                        else:
+                            tdkTestObj.setResultStatus("FAILURE");
+                            print "Recording not found";
+		else:
+			tdkTestObj.setResultStatus("FAILURE");
                         print "Simulator Server failed to receive acknowledgement from recorder";
-        else:
-                print "updateSchedule message post failure";
+	else:
+		print "updateSchedule message post failure";
                 tdkTestObj.setResultStatus("FAILURE");
 
-        #unloading Recorder module
-        obj.unloadModule("Recorder");
-
+	#unloading Recorder module
+	obj.unloadModule("Recorder");

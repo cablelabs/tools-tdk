@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_SchedRec_Legacy_FailedStatus_112</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -35,6 +35,7 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
@@ -77,8 +78,6 @@ if "SUCCESS" in loadmodulestatus.upper():
         print "Sending noUpdate to get the recording list after full sync"
         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
         sleep(10);
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -101,7 +100,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(120);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while (( ([] == recResponse) or ('acknowledgement' not in recResponse) ) and (retry < 10 )):
@@ -111,11 +109,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "Retrieve Status Details: ",recResponse;
                 if "acknowledgement" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
-                        print "Sending getRecordings to get the recording list"
-                        recorderlib.callServerHandler('clearStatus',ip)
-                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-                        print "Wait for 60 seconds to get response from recorder"
-                        sleep(60)
+                        sleep(90)
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                         print "Retrieve Status Details: ",actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
@@ -157,3 +151,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #unloading Recorder module
         obj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    obj.setLoadModuleStatus("FAILURE");

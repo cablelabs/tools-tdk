@@ -117,7 +117,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(60);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while (( ([] == recResponse) or ('ack' not in recResponse) ) and (retry < 10 )):
@@ -127,32 +126,22 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "Retrieve Status Details: ",recResponse;
                 if "ack" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
-                        sleep(180);
+                        sleep(60);
 			print "Sending getRecordings to get the recording list"
 			recorderlib.callServerHandler('clearStatus',ip)
 			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
 			print "Wait for 3 min to get response from recorder"
-			sleep(180)
+			sleep(60)
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 			print "Recording List: %s" %actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                         print recordingData;
-                        if ('NOTFOUND' not in recordingData):
-                                key = 'status'
-                                value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                                print "key: ",key," value: ",value
-                                if "FAILED" in value.upper():
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        print "Recording has failed status for invalid ocap id";
-                                elif "BADVALUE" == value.upper():
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "Recording did not have status field";
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "Recording not have failed status for invalid ocap id";
+                        if ('NOTFOUND' in recordingData):
+                            tdkTestObj.setResultStatus("SUCCESS");
+                            print "Recording not found since failed recordings are immediately erased ";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "Recording not found";
+                                print "Recording details found";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Simulator Server failed to receive acknowledgement from recorder";

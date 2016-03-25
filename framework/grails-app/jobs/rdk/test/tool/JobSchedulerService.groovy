@@ -956,7 +956,7 @@ class JobSchedulerService implements Job{
 				"/version.txt",//here defines the log server transfer path
 				versionFileName
 			]
-			println " CMD for  Version.TXT "+ cmd
+			
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def outputData = scriptExecutor.executeScript(cmd,1)
 			copyVersionLogsIntoDir(realPath, versionFilePath)
@@ -1276,7 +1276,7 @@ class JobSchedulerService implements Job{
 				"AgentConsole.log",
 				logTransferFileName // File Name 				
 			]
-			println " cmd  *** logTransfer job scheduler"+ cmd 
+		
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 			copyAgentconsoleLogIntoDir(realPath,logTransferFilePath)

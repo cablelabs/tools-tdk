@@ -112,7 +112,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	                print "Successfully retrieved acknowledgement from recorder";
 	                print "Wait for 5sec for the recording to be completed"
 		   	sleep(5);
-			response = recorderlib.callServerHandler('clearStatus',ip);
+			#response = recorderlib.callServerHandler('clearStatus',ip);
 		    	print "Get the recording list from recorder"
 			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
                        	print "Wait for 60sec to get the recording list"

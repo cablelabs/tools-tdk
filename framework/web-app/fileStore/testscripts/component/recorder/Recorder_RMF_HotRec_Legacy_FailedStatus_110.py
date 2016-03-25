@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_HotRec_Legacy_FailedStatus_110</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -35,6 +35,7 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
@@ -73,13 +74,13 @@ if "SUCCESS" in loadmodulestatus.upper():
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
 
-        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
-        sleep(10);
-        response = recorderlib.callServerHandler('retrieveStatus',ip);
-        print "Retrieve Status Details: %s"%response;
-
+	serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
+	sleep(10);
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
+	response = recorderlib.callServerHandler('retrieveStatus',ip);
+        print "Retrieve Status Details: %s"%response;
+
 
         #Execute updateSchedule
         requestID = str(randint(10, 500));
@@ -99,7 +100,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(60);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while (( ([] == recResponse) or ('acknowledgement' not in recResponse) ) and (retry < 10 )):
@@ -109,13 +109,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "Retrieve Status Details: ",recResponse;
                 if "acknowledgement" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
+                        sleep(30)
                         print "Sending getRecordings to get the recording list"
-                        recorderlib.callServerHandler('clearStatus',ip)
-                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-                        print "Wait for 60 seconds to get response from recorder"
-                        sleep(60)
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                        print "Retrieve Status Details2: ",actResponse;
+			print "Retrieve Status Details2: ",actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                         print recordingData;
                         if ('NOTFOUND' not in recordingData):
@@ -131,7 +128,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                             elif "INCOMPLETE" in value.upper():
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "Recorder has sent status = InComplete";
-                            elif "COMPLETE" in value.upper():
+			    elif "COMPLETE" in value.upper():
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "Recorder has sent status = Complete";
                             elif "STARTEDINCOMPLETE" in value.upper():
@@ -145,13 +142,17 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 print "Recorder has sent some other status";
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
-			    print "Recorder has not sent any status, expected status=failed";
+                            print "Recorder has not sent any status, expected status=failed";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
-			print "Simulator Server failed to receive acknowledgement from recorder";
+                        print "Simulator Server failed to receive acknowledgement from recorder";
         else:
                 print "updateSchedule message post failure";
                 tdkTestObj.setResultStatus("FAILURE");
 
         #unloading Recorder module
         obj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    obj.setLoadModuleStatus("FAILURE");

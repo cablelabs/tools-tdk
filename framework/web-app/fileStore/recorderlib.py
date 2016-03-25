@@ -661,62 +661,63 @@ def checkDiskFullWithRecordings(gwIp,tdkTestObj,numOfTuners,recDuration,priority
         inProgress = 0
 
         #Start hot recording on all the tuners
+	baseRecID = randint(10000, 500000)
         for n in range(0,numOfTuners):
                 requestID = str(randint(10, 500))
-                recordingID = str(randint(10000, 500000))
+                recordingID = str(baseRecID+n)
                 startTime = "0"
                 duration = str(recDuration)
                 streamId = '0'+str(n+1)
                 ocapId = tdkTestObj.getStreamDetails(streamId).getOCAPID()
                 now = "curTime"
+		reqStartTime = "0"
 
                 #Frame json message to schedule recording
-                jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"title\":\"RecordingTitle_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\""+priority+"\"}]}}"
+                jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":"+reqStartTime+",\"title\":\"RecordingTitle_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\""+priority+"\"}]}}"
 
                 #Send update msg to simulator server
-                callServerHandler('clearStatus',gwIp)
+		callServerHandler('clearStatus',gwIp)
                 callServerHandlerWithMsg('updateMessage',jsonMsg,gwIp)
                 #Wait to send next request
-                sleep(30)
-                #Get recordings list and check for error code of scheduled recording
-                callServerHandler('clearStatus',gwIp)
-                callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',gwIp)
-                #Wait to get response from recorder
-                sleep(120)
-                recResponse = callServerHandler('retrieveStatus',gwIp)
-                #Look for recordings field in response
-                recordings = getRecordings(recResponse)
-                if [] == recordings:
-                        print "No recordings found in response: ",recResponse
-                else:
-			print "recordings found in response: ",recResponse
-
-                        recordingData = getRecordingFromRecId(recResponse,recordingID)
-                        print "Recording Details: ",recordingData
-                        if "NOTFOUND" == recordingData:
-                                print "Recording ",recordingID," not found in recording list: ",recResponse
-				#TODO: Remove later
-				#RDKTT-404 (only failed recordings shown so may be recording actually started)
-				print "Assuming recording ",recordingID," scheduled successfully"
-				inProgress = 1
-                        else:
-                                status = getValueFromKeyInRecording(recordingData,'status')
-				error = getValueFromKeyInRecording(recordingData,'error')
-				if "BADVALUE" == error:
-					print "No error in scheduled recording"
-					if "PENDING" == status.upper():
-						print "Recording ",recordingID," in pending state"
-						print "Not waiting for recording to complete"
-					else:
-						print "Recording ",recordingID," scheduled successfully"
-						inProgress = 1
-				else:
-					print "Failed to record due to error: ",error,"status: ",status
-					if "SPACE_FULL" == error:
-						print "DiskFull!! Could not schedule recording ",recordingID
-						diskFull = 1
-						break
+                sleep(20)
+		recResponse = callServerHandler('retrieveStatus',gwIp)
+		print recResponse
+		recordingData = getRecordingFromRecId(recResponse,recordingID)
+		if "NOTFOUND" != recordingData:
+			error = getValueFromKeyInRecording(recordingData,'error')
+			if "SPACE_FULL" == error:
+				print "DiskFull!! Could not schedule recording ",recordingID
+				diskFull = 1
+				break
         #hot recording on all the tuners - End
+
+	callServerHandler('clearStatus',gwIp)
+	callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',gwIp)
+	#Wait to get response from recorder
+	sleep(60)
+	recResponse = callServerHandler('retrieveStatus',gwIp)
+	print "Recording List:", recResponse
+        for n in range(0,numOfTuners):
+                recordingID = str(baseRecID+n)
+		recordingData = getRecordingFromRecId(recResponse,recordingID)
+		print recordingData
+        	if "NOTFOUND" == recordingData:
+                	print "Recording ",recordingID," not found in recording list"
+                else:
+                        status = getValueFromKeyInRecording(recordingData,'status')
+                        error = getValueFromKeyInRecording(recordingData,'error')
+                        if "BADVALUE" == error:
+                        	if "PENDING" == status.upper():
+                                	print "Recording ",recordingID," in pending state"
+                                else:
+                                        print "Recording ",recordingID," scheduled successfully"
+                                        inProgress = 1
+                        else:
+                        	print "Failed to record due to error: ",error,"status: ",status
+                                if "SPACE_FULL" == error:
+                                	print "DiskFull!! Could not schedule recording ",recordingID
+                                        diskFull = 1
+	#Check if any recording is in progress - End
 
         if 1 == inProgress:
                 print "Started ",priority," recordings of duration ",recDuration
@@ -861,20 +862,16 @@ def verifyCompletedRecording(recording,reqRecording):
                                 elif "" == playbackLocator:
                                         print "Recording playbackLocator is null"
                                         ret = "FALSE"
-                                #Check value of volume
-                                elif "/opt" not in volume:
-                                        print "Recording media volume location is not /opt"
-                                        ret = "FALSE"
                                 #Check playbackLocator value contains recordingId
                                 elif str(recordingId) not in playbackLocator:
                                         print "Recording playbackLocator does not contain recordingId ",playbackLocator
                                         ret = "FALSE"
                                 #Check actual start and expected start time values
-                                elif expectedStart > start:
-                                        print "Recording expected start time is greater than actual start time ",expectedStart,start
-                                        ret = "FALSE"
+                                #elif expectedStart > start:
+                                        #print "Recording expected start time is greater than actual start time ",expectedStart,start
+                                        #ret = "FALSE"
                                 #Check that actualStart and requestedStart is not more than max deviation threshold (30sec)
-                                elif start - expectedStart > MAX_DEVIATION_THRESHOLD:
+                                elif abs (start - expectedStart) > MAX_DEVIATION_THRESHOLD:
                                         print "Recording actualStart and requestedStart is more than max deviation threshold"
                                         ret = "FALSE"
                                 #Check that difference between actual duration and requested duration is not more than max deviation threshold (30sec)

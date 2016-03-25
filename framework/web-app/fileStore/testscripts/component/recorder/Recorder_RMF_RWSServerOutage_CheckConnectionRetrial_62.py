@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_RWSServerOutage_CheckConnectionRetrial_62</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -35,6 +35,7 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk test case script
@@ -55,22 +56,17 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_RWSServerOutage_CheckConnectionRe
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
-recObj.setLoadModuleStatus(recLoadStatus);
+recObj.setLoadModuleStatus(recLoadStatus.upper());
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
-        #Set the module loading status
-        recObj.setLoadModuleStatus(recLoadStatus);
-
-        print "Rebooting box for setting configuration"
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
+               print "Rebooting box for setting configuration"
                recObj.initiateReboot();
+               print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-
-        print "Sleeping to wait for the recoder to be up"
-
 
         #Primitive test case which associated to this script
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
@@ -85,8 +81,9 @@ if "SUCCESS" in recLoadStatus.upper():
         recorderlib.callServerHandlerWithType('disableServer','RWSServer',ip)
         status = recorderlib.callServerHandlerWithType('isEnabledServer','RWSServer',ip)
         print "RWS server status: ",status
+        serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
         if "FALSE" in status.upper():
-                print "Waiting to get connection retrial attempts from recorder"
+                print "Waiting for 550s to get connection retrial attempts from recorder"
                 sleep(550)
 
                 #Checkpoint-1: Get the time between each re-trials
@@ -94,14 +91,21 @@ if "SUCCESS" in recLoadStatus.upper():
                 rwsstatus = recorderlib.callServerHandlerWithType('retrieveDisabledStatus','RWSServer',ip)
                 print "RWSServer Status: ",rwsstatus
                 #Check if status is not empty
-                if ( [] == rwsstatus ):
-                        print "ERROR: No status available for RWSServer"
+                if ( "[]" in rwsstatus ):
+                        print "ERROR: No connection retry from recorder"
                         tdkTestObj.setResultStatus("FAILURE")
                 else:
                         intervalPrev = 0
                         ret = recorderlib.getTimeListFromStatus(rwsstatus)
                         print "RWSServer timelist = ",ret
-                        for x in range(len(ret)-1):
+                        if (0 == len(ret)):
+                            tdkTestObj.setResultStatus("FAILURE")
+                            print "ERROR: No connection retry from recorder"
+                        elif (1 == len(ret)):
+                            tdkTestObj.setResultStatus("FAILURE")
+                            print "Only one connection retry from recorder in 550s"
+                        else:
+                            for x in range(len(ret)-1):
                                 intervalCurr = int( (ret[x+1] - ret[x])/1000 )
                                 print "Retry interval for RWSServer: ",intervalCurr,"sec"
                                 if intervalCurr <= intervalPrev:

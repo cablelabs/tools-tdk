@@ -97,7 +97,6 @@ if "SUCCESS" in recLoadStatus.upper():
 
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(15);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while ( ('acknow' not in recResponse) and (retry < 10 ) ):
@@ -113,8 +112,8 @@ if "SUCCESS" in recLoadStatus.upper():
                         print "Sending getRecordings to get the recording list"
                         recorderlib.callServerHandler('clearStatus',ip)
                         recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-                        print "Wait for 3 min to get response from recorder"
-                        sleep(180)
+                        print "Wait for 1 min to get response from recorder"
+                        sleep(60)
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                         print "Recording List: %s" %actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);

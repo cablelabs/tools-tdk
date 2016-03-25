@@ -2732,15 +2732,16 @@ class ExecutionController {
 	 */
 	def rerunOnFailure(){
 		try{
-			String devStatus = ""
+			//String devStatus = ""
 			def deviceInstance
 			String url = getApplicationUrl()
 			String filePath = "${request.getRealPath('/')}//fileStore"
 			def executionInstance = Execution?.findByName(params?.executionName)
 			if(params.device){
 				deviceInstance = Device.findByStbName(params.device)
-				devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
-				if(devStatus.equals( Status.FREE.toString())){
+				//devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+				//if(devStatus.equals( Status.FREE.toString())){ 				
+				if(deviceInstance?.deviceStatus?.toString()?.equals(Status.FREE.toString())){				
 					def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
 					def executionResultList
 					executionDeviceList.each {  execDeviceInstance ->

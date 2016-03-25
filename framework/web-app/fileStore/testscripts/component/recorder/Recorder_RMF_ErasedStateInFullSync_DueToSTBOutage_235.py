@@ -137,47 +137,57 @@ if "SUCCESS" in recLoadStatus.upper():
                                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                                 retry += 1
                                         print "Recording List: ",recResponse;
-                                        recordingData = recorderlib.getRecordingFromRecId(recResponse,recordingID);
-                                        if ('NOTFOUND' not in recordingData):
-                                                value = recorderlib.getValueFromKeyInRecording(recordingData,'status')
-                                                print "recordingID: ",recordingID," status: ",value
-                                                if "ERASED" in value.upper():
-                                                        tdkTestObj.setResultStatus("SUCCESS");
-                                                        print "Recording is in ERASED state as expected";
-                                                else:
-                                                        tdkTestObj.setResultStatus("FAILURE");
-                                                        print "Recording is not in ERASED state";
-                                        else:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "Recorder did not update recording list with deleted recording";
-
-                                        # Test start -- Full Sync not working
-                                        recResponse = recorderlib.callServerHandler('clearStatus',ip);
-                                        print "Sending getRecordings to get the recording list"
-                                        jsonMsgGetRec = "{\"getRecordings\":{}}";
-                                        actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgGetRec,ip);
-                                        sleep(30)
-                                        retry = 0
-                                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        while (('statusMessage' not in recResponse) and (retry < 10 )):
+                                        if 'recordingStatus' not in recResponse:
+                                            print "Recording list not retrieved via full sync"
+                                            recResponse = recorderlib.callServerHandler('clearStatus',ip);
+                                            print "Sending getRecordings to get the recording list"
+                                            jsonMsgGetRec = "{\"getRecordings\":{}}";
+                                            actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgGetRec,ip);
+                                            sleep(30)
+                                            retry = 0
+                                            recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                                            while (('statusMessage' not in recResponse) and (retry < 10 )):
                                                 sleep(20);
                                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                                 retry += 1
-                                        print "Recording List: ",recResponse;
-                                        recordingData = recorderlib.getRecordingFromRecId(recResponse,recordingID);
-                                        if ('NOTFOUND' not in recordingData):
+                                            print "Recording List: ",recResponse;
+                                            recordingData = recorderlib.getRecordingFromRecId(recResponse,recordingID);
+                                            if ('NOTFOUND' not in recordingData):
                                                 value = recorderlib.getValueFromKeyInRecording(recordingData,'status')
-                                                print "recordingID: ",recordingID," status: ",value
+                                                priority = recorderlib.getValueFromKeyInRecording(recordingData,'deletePriority')
+                                                print "recordingID: ",recordingID," status: ",value, "deletePriority: ", priority
                                                 if "ERASED" in value.upper():
                                                         tdkTestObj.setResultStatus("SUCCESS");
                                                         print "Recording is in ERASED state as expected";
+                                                elif "P0" in priority.upper():
+                                                        tdkTestObj.setResultStatus("SUCCESS");
+                                                        print "Recording not erased as disk not full"
                                                 else:
                                                         tdkTestObj.setResultStatus("FAILURE");
                                                         print "Recording is not in ERASED state";
-                                        else:
+                                            else:
                                                 tdkTestObj.setResultStatus("FAILURE");
                                                 print "Recorder did not update recording list with deleted recording";
-                                        # Test end
+                                        else:
+                                            print "Recording list retrieved via full sync"
+                                            recordingData = recorderlib.getRecordingFromRecId(recResponse,recordingID);
+                                            print recordingData
+                                            if ('NOTFOUND' not in recordingData):
+                                                value = recorderlib.getValueFromKeyInRecording(recordingData,'status')
+                                                priority = recorderlib.getValueFromKeyInRecording(recordingData,'deletePriority')
+                                                print "recordingID: ",recordingID," status: ",value, "deletePriority: ", priority
+                                                if "ERASED" in value.upper():
+                                                        tdkTestObj.setResultStatus("SUCCESS");
+                                                        print "Recording is in ERASED state as expected";
+                                                elif "P0" in priority.upper():
+                                                        tdkTestObj.setResultStatus("SUCCESS");
+                                                        print "Recording not erased as disk not full"
+                                                else:
+                                                        tdkTestObj.setResultStatus("FAILURE");
+                                                        print "Recording is not in ERASED state";
+                                            else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "Recorder did not update recording list with deleted recording";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "updateRecordings message post failed";

@@ -31,15 +31,11 @@ Test case ID : CT_DS_109</synopsis>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
     <!--  -->
     <box_type>IPClient-3</box_type>
     <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>

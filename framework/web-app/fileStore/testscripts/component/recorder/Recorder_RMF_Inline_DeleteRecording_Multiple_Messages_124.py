@@ -98,7 +98,6 @@ if "SUCCESS" in recLoadStatus.upper():
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
-                sleep(10);
                 #Check for acknowledgement from recorder
 		print "Looping till acknowledgement is received"
 		loop = 0;
@@ -124,7 +123,6 @@ if "SUCCESS" in recLoadStatus.upper():
                     if expResponse in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "updateRecordings message post success";
-                        sleep(10);
                         #Check for acknowledgement from recorder
                         print "Looping till acknowledgement is received"
                         loop = 0;
@@ -137,6 +135,7 @@ if "SUCCESS" in recLoadStatus.upper():
                         if 'acknowledgement' in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully retrieved acknowledgement from recorder";
+                            sleep(30);
                             tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
                             tdkTestObj1.executeTestCase(expectedResult);
                             print "Sending getRecordings to get the recording list"
@@ -157,7 +156,6 @@ if "SUCCESS" in recLoadStatus.upper():
                                 secondRecValue = recorderlib.getValueFromKeyInRecording(secondRec,'deletePriority')
                                 thirdRecValue = recorderlib.getValueFromKeyInRecording(thirdRec,'deletePriority')
 				if "P0" in firstRecValue.upper() and "P0" in secondRecValue.upper() and "P0" in thirdRecValue.upper():
-                                #if "ERASED" in firstRecValue.upper() and "ERASED" in secondRecValue.upper() and "ERASED" in thirdRecValue.upper():
                                     tdkTestObj1.setResultStatus("SUCCESS");
                                     print "Deletion Priority set properly";
                                 else:
@@ -178,3 +176,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE");

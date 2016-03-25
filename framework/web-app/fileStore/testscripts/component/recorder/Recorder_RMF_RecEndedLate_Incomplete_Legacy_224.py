@@ -70,7 +70,7 @@ if "SUCCESS" in recLoadStatus.upper():
         jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
         print "No Update Schedule Details: %s"%actResponse;
-        sleep(30);
+        sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -85,7 +85,7 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule
         requestID = str(randint(10,500));
         recordingID = str(randint(10000, 500000));
-        duration = "300000";
+        duration = "60000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
         startTime = "0";
@@ -128,9 +128,9 @@ if "SUCCESS" in recLoadStatus.upper():
                 exit();
         print "Successfully retrieved acknowledgement from recorder";
         print "Wait for the recording to complete partially "
-        sleep(60);
+        sleep(30);
 	#Now send one more update schedule to change the duration of the recording, i.e set it to 15 seconds
-        duration = "15000";
+        duration = "120000";
 
         #Frame json message
         jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+ recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
@@ -225,6 +225,8 @@ if "SUCCESS" in recLoadStatus.upper():
                 recObj.unloadModule("Recorder");
                 exit();
         print "error marked as ENDED_LATE";         
+        #unloading Recorder module
+        recObj.unloadModule("Recorder");
 else:
 	print "Failed to load Recorder module";
         #Set the module loading status

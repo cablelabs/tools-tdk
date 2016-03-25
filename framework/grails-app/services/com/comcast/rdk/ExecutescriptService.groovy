@@ -1360,7 +1360,8 @@ class ExecutescriptService {
 												def executionResult = new ExecutionResult()
 												executionResult.execution = execInstance
 												executionResult.executionDevice = executionDevice1
-												executionResult.script = scriptInstanceObj?.name
+											//	executionResult.script = scriptInstanceObj?.name
+												executionResult.script = script.name
 												executionResult.device = deviceInstanceObj?.stbName
 												executionResult.execDevice = null
 												executionResult.deviceIdString = deviceInstanceObj?.id?.toString()

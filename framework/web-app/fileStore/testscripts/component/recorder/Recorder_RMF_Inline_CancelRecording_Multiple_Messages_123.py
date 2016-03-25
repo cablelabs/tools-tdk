@@ -97,7 +97,6 @@ if "SUCCESS" in recLoadStatus.upper():
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
-                sleep(10);
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
@@ -112,8 +111,6 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be in progress"
-		    #jsonMsgNoUpdate = "{\"updateSchedule\":{\"generationId\":\"0\"}}";
-		    #actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
                     sleep(60);
 
 		    response = recorderlib.callServerHandler('clearStatus',ip);
@@ -126,7 +123,6 @@ if "SUCCESS" in recLoadStatus.upper():
                     if expResponse in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "updateRecordings message post success";
-                        sleep(10);
                         #Check for acknowledgement from recorder
                         tdkTestObj.executeTestCase(expectedResult);
                         print "Looping till acknowledgement is received"
@@ -139,10 +135,15 @@ if "SUCCESS" in recLoadStatus.upper():
 			print "Retrieve Status Details: %s"%actResponse;
                         if 'acknowledgement' in actResponse:
                                 print "Successfully retrieved acknowledgement from recorder";
-
+                                sleep(30)
+                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                                print "Recording list: ",actResponse;
                                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
                                 secondRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1))
                                 thirdRecordingData = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+2))
+                                print recordingData
+                                print secondRecordingData
+                                print thirdRecordingData
                                 if 'NOTFOUND' not in recordingData and 'NOTFOUND' not in secondRecordingData and 'NOTFOUND' not in thirdRecordingData:
                                         firstError = recorderlib.getValueFromKeyInRecording(recordingData,'error')
                                         secError = recorderlib.getValueFromKeyInRecording(secondRecordingData,'error')
@@ -194,3 +195,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE");

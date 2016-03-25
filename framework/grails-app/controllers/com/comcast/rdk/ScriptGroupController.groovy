@@ -733,7 +733,9 @@ class ScriptGroupController {
     def saveScript() {
         def error = ''
 		def scriptList = scriptService.getScriptsList(request.getRealPath("/"))
-        if(scriptList?.contains(params?.name?.trim())){
+        // if(scriptList?.contains(params?.name?.trim())){
+	   // Issue fix - Duplicate script created with same name
+        if(scriptList?.toString()?.contains(params?.name?.trim()?.toString())){
 			render("Duplicate Script Name not allowed. Try Again.")
         }else if((!params?.ptest) || params?.ptest == "default" ){
 			render("Please select a valid primitive test !!!")

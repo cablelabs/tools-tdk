@@ -79,8 +79,8 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        #25mins duration
-        duration = "1500000"
+        #10mins duration
+        duration = "600000"
         startTime = "0"
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime"
@@ -91,29 +91,31 @@ if "SUCCESS" in recLoadStatus.upper():
 
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(15);
-                recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                retry = 0;
-                while ( (len(recResponse) == 5) and (retry < 10 ) ):
-                        sleep(10);
-                        recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                        retry += 1
-                print "Retrieve Status Details: ",recResponse
-                if len(recResponse) > 5:
+                print "Looping till acknowledgement is received"
+                loop = 0;
+                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                while (('ack' not in actResponse) and (loop < 5)):
+                    actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                    sleep(10);
+                    loop = loop+1;
+                print "Retrieve Status Details: ",actResponse
+                if "acknowledgement" in actResponse:
                         print "Simulator Server received the recorder acknowledgement";
                         response = recorderlib.callServerHandler('clearStatus',ip)
-                        print "Wait for 10 min before causing power interrupt"
-                        sleep(600)
+                        print "Wait for 5 min before causing power interrupt"
+                        sleep(120)
                         obj.initiateReboot();
                         print "Waiting for 5min for recoder to be up"
                         sleep(300);
-                        print "Wait for remaining 15 min recording to complete"
-                        sleep(900)
+                        tdkTestObj = obj.createTestStep('Recorder_SendRequest');
+                        tdkTestObj.executeTestCase(expectedResult);
+                        print "Wait for remaining 5 min recording to complete"
+                        sleep(200)
                         print "Sending getRecordings to get the recording list"
                         recorderlib.callServerHandler('clearStatus',ip)
                         recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
                         #Wait to get response from recorder
-                        sleep(240)
+                        sleep(60)
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                         print "Recording List: %s" %actResponse
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
@@ -122,16 +124,17 @@ if "SUCCESS" in recLoadStatus.upper():
                                 print "RecordingId not found in list"
 			else:
                                 print "Recording data for recordingID ",recordingID, " is ",recordingData
-				reqRecording = {"recordingId":recordingID,"duration":1500000,"deletePriority":"P3"}
-				result = recorderlib.verifyCompletedRecording(recordingData,reqRecording)
-				print "Recording verification result: ",result
-                        	if "FALSE" in result:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        errorValue = recorderlib.getValueFromKeyInRecording(recordingData,'error')
-                                        print "Recording failed with error: ",errorValue
-                                else:
+                                statusValue = recorderlib.getValueFromKeyInRecording(recordingData,'status')
+                                actualduration = recorderlib.getValueFromKeyInRecording(recordingData,'duration')
+                                totalduration = actualduration[0] + actualduration[1]
+                                print "status: ", statusValue
+                                print "actualduration:" , totalduration
+                                if "INCOMPLETE" in statusValue.upper() and (len(actualduration) == 2): 
                                         tdkTestObj.setResultStatus("SUCCESS");
-					print "Recording passed verification after power interruption"
+                                        print "Recording passed verification after power interruption"
+                                else:
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        print "Recording NOT passed verification after power interruption"
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Simulator Server failed to receive acknowledgement from recorder";

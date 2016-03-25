@@ -65,10 +65,9 @@ if "SUCCESS" in recLoadStatus.upper():
                recObj.initiateReboot();
 	       print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-
-	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
-        actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-	sleep(30);
+	       jsonMsgNoUpdate = "{\"noUpdate\":{}}";
+               actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
+	       sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -100,7 +99,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 sleep(5);
                 retry=0
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                while (( ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
+                while (( ('ack' not in actResponse) ) and (retry < 10)):
                         sleep(5);
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                         retry += 1
@@ -108,17 +107,15 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "Successfully retrieved acknowledgement from recorder";
+                        # Reboot the STB
+                        print "Rebooting the STB to get the recording list from full sync"
+                        recObj.initiateReboot();
+                        print "Sleeping to wait for the recoder to be up"
+                        sleep(300);
                         tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
                         tdkTestObj1.executeTestCase(expectedResult);
-                        print "Sending getRecordings to get the recording list"
-                        recorderlib.callServerHandler('clearStatus',ip)
-                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-                        print "Wait for 1 min to get response from recorder"
-                        sleep(60)
-                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                        print "Recording List: %s" %actResponse;
-                        recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
-                        print recordingData
+                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                        print actResponse;
                         actResponse = actResponse.replace("\"","");
                         print "Response Details: %s"%actResponse;
                         if "dvrProtocolVersion:7" in actResponse:

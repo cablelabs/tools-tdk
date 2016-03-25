@@ -66,10 +66,9 @@ if "SUCCESS" in recLoadStatus.upper():
                recObj.initiateReboot();
 	       print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-        
-	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
-        actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-	sleep(10);
+	       jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
+               actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
+	       sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -95,9 +94,9 @@ if "SUCCESS" in recLoadStatus.upper():
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
-                sleep(10);
+                print "Wait for acknowledgement"
+                sleep(20);
                 #Check for acknowledgement from recorder
-                tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
 		loop = 0;
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
@@ -111,19 +110,19 @@ if "SUCCESS" in recLoadStatus.upper():
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
 		    sleep(60)
+                    response = recorderlib.callServerHandler('clearStatus',ip);
 		    # Reboot the STB
 		    print "Rebooting the STB to get the recording list from full sync"
 		    recObj.initiateReboot();
 		    print "Sleeping to wait for the recoder to be up"
 		    sleep(300);
-		    response = recorderlib.callServerHandler('clearStatus',ip);
 		    #Frame json message
 		    jsonMsgNoUpdate = "{\"noUpdate\":{}}";
                     expResponse = "noUpdate";
                     actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
                     if expResponse in actResponse:
                         print "No Update Schedule message post success";
-                        print "Wait for 60s to get the recording list"
+                        print "Wait to get the recording list"
                         sleep(120);
                         tdkTestObj.setResultStatus("SUCCESS");
                         #Check for acknowledgement from recorder
@@ -131,7 +130,6 @@ if "SUCCESS" in recLoadStatus.upper():
 			print "Response Details: %s"%actResponse;
 			actResponse = actResponse.replace("\"","");
 			actResponse = actResponse.replace(" ","");
-                        #print "Response Details: %s"%actResponse;
                         if "dvrProtocolVersionChanged:false" in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully advertised DVR protocol version Changed as false"

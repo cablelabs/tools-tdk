@@ -43,8 +43,6 @@ import tdklib;
 import recorderlib
 from random import randint
 from time import sleep
-from trm import getMaxTuner
-
 
 #IP and Port of box, No need to change,
 #This will be replaced with corresponding Box IP and port while executing script
@@ -60,16 +58,8 @@ print "Recorder module loading status : %s" %recLoadStatus;
 #Set the module loading status
 recObj.setLoadModuleStatus(recLoadStatus);
 
-trmObj = tdklib.TDKScriptingLibrary("trm","2.0");
-trmObj.configureTestCase(ip,port,'Recorder_RMF_Check_Status_Four_Parallel_Inprogress_Recordings_Legacy_251');
-#Get the result of connection with test component and STB
-trmLoadStatus = trmObj.getLoadModuleResult();
-print "[TRM LIB LOAD STATUS]  :  %s" %trmLoadStatus;
-#Set the module loading status
-trmObj.setLoadModuleStatus(trmLoadStatus);
-
 #Check for SUCCESS/FAILURE of Recorder module
-if "SUCCESS" in recLoadStatus.upper() and "SUCCESS" in trmLoadStatus.upper() :
+if "SUCCESS" in recLoadStatus.upper():
 
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
@@ -194,10 +184,7 @@ if "SUCCESS" in recLoadStatus.upper() and "SUCCESS" in trmLoadStatus.upper() :
         
         #unloading Recorder module
         recObj.unloadModule("Recorder");
-        print "unload trm"
-        trmObj.unloadModule("trm");
 else:
-    print "Failed to load Recorder or TRM module";
+    print "Failed to load Recorder module";
     #Set the module loading status
     recObj.setLoadModuleStatus("FAILURE");
-    trmObj.setLoadModuleStatus("FAILURE");

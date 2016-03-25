@@ -115,6 +115,9 @@ if "SUCCESS" in recLoadStatus.upper():
                         status = recorderlib.callServerHandlerWithType('isEnabledServer','RWSServer',ip)
                         print "RWSserver status: ",status
               
+                        print "Wait for recorder to start connection retries"
+                        sleep(60)
+
                         recResponse = recorderlib.callServerHandler('clearStatus',ip);
                         print "Delete the recording...";
                         #Frame json message for update recording
@@ -127,12 +130,9 @@ if "SUCCESS" in recLoadStatus.upper():
                                 sleep(60);
                                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 print "Retrieve Status with RWS down: ",recResponse;
-                                if 'RWSStatus' in recResponse:
+                                if 'statusMessage' in recResponse:
                                         print "Simulator received response with RWS down"
                                         tdkTestObj.setResultStatus("FAILURE");
-                                elif 'RWSServer' in recResponse:
-                                        print "Recorder communicated with RWSServer in disabled state"
-                                        tdkTestObj.setResultStatus("FAILURE")
                                 else:
                                         print "Recorder did not send recordingStatus notification to the RWS for deleted recording"
                                         print "Rebooting STB for full sync"
