@@ -13,6 +13,8 @@
 import grails.util.Environment;
 
 import java.io.IOException
+
+import com.comcast.rdk.ExecutionService;
 import com.comcast.rdk.ScriptFile
 import com.comcast.rdk.ScriptGroup
 import com.comcast.rdk.User
@@ -150,7 +152,17 @@ class BootStrap {
     }
 	
     
-    def destroy = {        
+    def destroy = {   
+		if(ExecutionService.tftpProcess != null){
+			println " Stopping tftp "
+			try {
+				ExecutionService.tftpProcess?.destroy()
+				ExecutionService.tftpProcess?.exitValue()
+			} catch (Exception e) {
+				println "ERROR "+ e.getMessage()
+				e.printStackTrace()
+			}
+		}
 		SocketPortConnector.closeServerSocket()
     }
 	

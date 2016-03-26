@@ -2577,6 +2577,7 @@ class ExecutionController {
 		try{
 			int execCnt = 0
 			def executionInstance =  Execution.findByName(params?.executionName)
+			def  multipleScript = []
 			def execName1 =  executionInstance?.name
 			if(!(execName1.toString().contains("RERUN"))){
 				int executionCount=0
@@ -2617,7 +2618,6 @@ class ExecutionController {
 						}
 					}
 				}
-				if( params?.script?.toString()?.equals("") ){
 					def executionInstance1 =  Execution.findByName(params?.executionName)
 					def deviceInstance = Device?.findByStbName(params.device)
 					String execName = newExecutionName
@@ -2671,7 +2671,7 @@ class ExecutionController {
 					if(params?.scriptGroup){
 						scriptGroupInstance  =  ScriptGroup?.findByName(params?.scriptGroup,[lock: true])
 					}
-					String scripts   = null
+				def scripts = null
 					def saveExecutionDetails = true
 					if( devStatus.equals( Status.FREE.toString())){
 						if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
@@ -2683,7 +2683,17 @@ class ExecutionController {
 							scriptCnt= scriptGroupInstance?.scriptList?.size()
 						}
 						def executionDevice
+					def execResult
+
+					if(params?.script.equals(MULTIPLESCRIPT)){
+						execResult = ExecutionResult?.findAllByExecution(executionInstance)
+						int scriptCount  = execResult?.size()
+						//For multiple script execution
+						saveExecutionDetails = executionService.saveExecutionDetailsOnMultipleScripts(execName?.toString(), MULTIPLESCRIPT, deviceInstance?.toString(), scriptGroupInstance,url?.toString(),isBenchMark?.toString(),isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString(),scriptCount)
+					}else{
+						//For test suite execution
 						saveExecutionDetails = executionService.saveExecutionDetails(execName?.toString(), scripts, deviceInstance?.toString(), scriptGroupInstance ,url?.toString(),isBenchMark?.toString(),isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString())
+					}
 						if(saveExecutionDetails){
 							try {
 								executionDevice = new ExecutionDevice()
@@ -2701,7 +2711,15 @@ class ExecutionController {
 								if(params?.scriptGroup){
 									scriptGroupInstance  =  ScriptGroup?.findByName(params?.scriptGroup,[lock: true])
 								}
-								String myGroup = "TestSuite"
+							String myGroup = ""
+							if(params?.script?.toString()?.equals("Multiple Scripts")){
+								myGroup = SINGLE_SCRIPT
+								scripts = execResult?.script
+
+							} else{
+								myGroup = "TestSuite"
+
+							}
 								executescriptService.executescriptsOnDevice(execName?.toString(), deviceId?.toString(), executionDevice, scripts, scriptGroupInstance?.id.toString(), executionName?.toString(),
 										filePath, getRealPath(),myGroup?.toString(), url?.toString(), isBenchMark?.toString(), isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString())
 							}else{
@@ -2712,9 +2730,6 @@ class ExecutionController {
 						}
 					}else {
 						flash.message= " Device Status is BUSY  so not possible trigger the execution "
-					}
-				}else{
-					flash.message= "Script not possible to rereun"
 				}
 			}else{
 				flash.message = " Execution name contains the RERUN"
@@ -2723,7 +2738,7 @@ class ExecutionController {
 			println "ERROR "+ e.getMessage()
 			e.printStackTrace()
 		}
-		redirect( view:"create")
+		redirect( view:"create")		
 	}
 	/**
 	 * Function for rerun on failure option in the show log page 

@@ -54,6 +54,8 @@ class ExecutionService {
 	
 	public static volatile Map executionProcessMap = [:]
 	
+	public static transient Process tftpProcess
+	
     
     /**
      * Get the name of the day from the number used in cronschedule
@@ -604,7 +606,7 @@ class ExecutionService {
 			}
 			// FOR CLIENT BOXES
 			if(dev?.boxType?.type?.equalsIgnoreCase(BOXTYPE_CLIENT)){
-				getDeviceDetails(dev,logTransferPort,realPath)
+				getDeviceDetails(dev,device.agentMonitorPort,realPath)
 			}
 			
         }
@@ -626,11 +628,13 @@ class ExecutionService {
 				logDir.eachFile{ file->
 					if(file?.toString().contains("version.txt")){
 						def logFileName =  file.getName().split("_")
-						def  versionFileName = logFileName[1]+"_"+logFileName.last()
-						new File(logTransferFilePath?.toString()).mkdirs()
-						File logTransferPath  = new File(logTransferFilePath)
-						if(file.exists()){
-							boolean fileMoved = file.renameTo(new File(logTransferPath, versionFileName));
+						if(logFileName?.length > 0){
+							def  versionFileName = logFileName[1]+"_"+logFileName.last()
+							new File(logTransferFilePath?.toString()).mkdirs()
+							File logTransferPath  = new File(logTransferFilePath)
+							if(file.exists()){
+								boolean fileMoved = file.renameTo(new File(logTransferPath, versionFileName));
+							}
 						}
 					}
 				}
@@ -655,10 +659,12 @@ class ExecutionService {
 				logDir.eachFile{ file->
 					
 					def logFileName =  file.getName().split("_")
+					if(logFileName?.length > 0){
 					new File(logTransferFilePath?.toString()).mkdirs()
 					File logTransferPath  = new File(logTransferFilePath)
 					if(file.exists()){
 						boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
+						}
 					}
 				}
 			}
@@ -681,7 +687,7 @@ class ExecutionService {
 			absolutePath,
 			device?.stbIp,			
 			device?.agentMonitorPort,		
-			"/var/TDK/trDetails.log",
+			"/version.txt",
 			"${device?.stbName}"+"_"+"${device?.stbName}.txt" 
 		]
 	    ScriptExecutor scriptExecutor = new ScriptExecutor()
@@ -1958,42 +1964,23 @@ class ExecutionService {
 
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//tftp_server.py").file
 			def absolutePath = layoutFolder.absolutePath
-			String[] cmd = [
-				"sudo",
-				PYTHON_COMMAND,
-				absolutePath,
-				"69",
-				logFilePath
-			]
+			
 
-			StringBuilder builder = new  StringBuilder();
-			builder.append("sudo python '").append(absolutePath).append("' 69 '").append(logFilePath).append("'")
-			String command = builder?.toString()
 			
 			Thread.start{
 				println " TDK TM : Starting TFTP Server..."
 				try {
 					def outputData
-					File newScript = new File(filePath, "tftp_script.sh");
-					boolean isFileCreated = newScript.createNewFile()
-					if(isFileCreated) {
-						newScript.setExecutable(true, false )
-					}
 
-					PrintWriter fileNewPrintWriter = newScript.newPrintWriter();
-					fileNewPrintWriter.println('echo "Starting tftp script execution"')
-					fileNewPrintWriter.println(command )
-					fileNewPrintWriter.println('echo "tftp script execution started"')
-					fileNewPrintWriter.flush()
-					fileNewPrintWriter.close()
-
-					def absPath = newScript.absolutePath
 					
-					if(absPath != null){
-
+					if(absolutePath != null){
+						
 						String[] cmdd = [
-							"sh",
-							absPath
+							"sudo",
+							PYTHON_COMMAND,
+							absolutePath,
+							"69",
+							logFilePath
 						]
 
 						Process process = null;
@@ -2006,6 +1993,8 @@ class ExecutionService {
 							InputStream errorStream = process.getErrorStream();
 							setUpStreamGobbler(errorStream, System.err);
 							System.out.println("never returns");
+							tftpProcess = process
+						   
 							process.waitFor();
 						} catch (IOException e) {
 							throw new RuntimeException(e);

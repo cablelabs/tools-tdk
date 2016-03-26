@@ -366,6 +366,7 @@ class ExecutescriptService {
 				logDir.eachFile{ file->
 					if(file?.name?.contains("AgentConsoleLog.txt")){
 					def logFileName =  file.getName().split("_")					
+						if(logFileName?.length > 0){
 					new File(logTransferFilePath?.toString()).mkdirs()
 					File logTransferPath  = new File(logTransferFilePath)
 					if(file.exists()){
@@ -373,6 +374,7 @@ class ExecutescriptService {
 					}
 					}
 				}
+			}
 			}
 		} catch (Exception e) {
 			println  " Error"+e.getMessage()
@@ -395,6 +397,7 @@ class ExecutescriptService {
 				logDir.eachFile{ file->
 					if(file.toString()?.contains("benchmark.log") || file.toString()?.contains("memused.log") || file.toString()?.contains("cpu.log")){
 						def logFileName =  file.getName().split("_")
+						if(logFileName?.length > 0){
 						new File(logTransferFilePath?.toString()).mkdirs()
 						File logTransferPath  = new File(logTransferFilePath)
 						if(file.exists()){
@@ -402,6 +405,7 @@ class ExecutescriptService {
 						}
 					}
 				}
+			}
 			}
 		} catch (Exception e) {
 			println  " Error"+e.getMessage()
@@ -424,12 +428,14 @@ class ExecutescriptService {
 			if(logDir.isDirectory()){
 				logDir.eachFile{ file->		
 					def logFileName =  file.getName().split("_")
-					def fName = file.getName()
-					fName = fName?.replaceFirst(logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
-					new File(logTransferFilePath?.toString()).mkdirs()
-					File logTransferPath  = new File(logTransferFilePath)
-					if(file.exists()){						
-						boolean fileMoved = file.renameTo(new File(logTransferPath,fName.trim()));						
+					if(logFileName?.length >= 3){
+						def fName = file.getName()
+						fName = fName?.replaceFirst(logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
+						new File(logTransferFilePath?.toString()).mkdirs()
+						File logTransferPath  = new File(logTransferFilePath)
+						if(file.exists()){						
+							boolean fileMoved = file.renameTo(new File(logTransferPath,fName.trim()));						
+						}
 					}
 				}
 			}
@@ -452,29 +458,31 @@ class ExecutescriptService {
 			File logDir  = new File(logsPath)
 			if(logDir.isDirectory()){
 				logDir.eachFile{ file->
-					def logFileName =  file.getName().split("_")								
-					if (file.isFile()) {
-						String fileName = file.getName()
-						fileName = fileName.replaceAll("\\s","")
-						if(fileName.toString().contains("\$:")){							
-							fileName = fileName.replaceAll('\\$:',"Undefined")
-						}									
-						if(fileName?.startsWith( logFileName[0] ) && logFileName.length() > 1){
-							fileName = fileName.replaceFirst( logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
-							fileName= logFileName[0]+UNDERSCORE+fileName
-							new File(logTransferFilePath?.toString()).mkdirs()
-							File logTransferPath  = new File(logTransferFilePath)
-							if(file.exists()){
-								boolean fileMoved = file.renameTo(new File(logTransferPath, fileName.trim()));				
+					def logFileName =  file.getName().split("_")
+					if(logFileName?.length >= 3){
+						if (file.isFile()) {
+							String fileName = file.getName()
+							fileName = fileName.replaceAll("\\s","")
+							if(fileName.toString().contains("\$:")){
+								fileName = fileName.replaceAll('\\$:',"Undefined")
+							}
+							if(fileName.startsWith( logFileName[0] )){
+								fileName = fileName.replaceFirst( logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
+								fileName= logFileName[0]+UNDERSCORE+fileName
+								new File(logTransferFilePath?.toString()).mkdirs()
+								File logTransferPath  = new File(logTransferFilePath)
+								if(file.exists()){
+									boolean fileMoved = file.renameTo(new File(logTransferPath, fileName.trim()));
+								}
 							}
 						}
-					}			
+					}
 				}
 			}
 		} catch (Exception e) {
 			println  " Error"+e.getMessage()
 			e.printStackTrace()
-		}		
+		}
 	}
 	/** 
 	 *  Method to check whether the execution result is having any result update or not.
@@ -541,9 +549,7 @@ class ExecutescriptService {
 				absolutePath,
 				deviceInstance?.stbIp,
 				deviceInstance?.agentMonitorPort,
-				//deviceInstance?.logTransferPort, avoid in TFTP issue
 				"AgentConsole.log",
-				//logTransferFilePath	
 				logTransferFileName
 			]			
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
@@ -1360,7 +1366,7 @@ class ExecutescriptService {
 												def executionResult = new ExecutionResult()
 												executionResult.execution = execInstance
 												executionResult.executionDevice = executionDevice1
-											//	executionResult.script = scriptInstanceObj?.name
+												//executionResult.script = scriptInstanceObj?.name
 												executionResult.script = script.name
 												executionResult.device = deviceInstanceObj?.stbName
 												executionResult.execDevice = null
@@ -2107,7 +2113,6 @@ class ExecutescriptService {
 			def destFolder = grailsApplication.parentContext.getResource("//logs//stblogs//execId_logdata.txt").file
 			def destPath = destFolder.absolutePath
 			
-			
 			def filePath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
 			def directoryPath =  "${execId}_${execDeviceId}_${execResultId}"
 			def stbFilePath = "${realPath}/logs//stblogs//${execId}//${execDeviceId}//${execResultId}//"
@@ -2132,6 +2137,7 @@ class ExecutescriptService {
 						directoryPath+"_"+fName // fileName
 					]
 					try {
+						
 						ScriptExecutor scriptExecutor = new ScriptExecutor()
 						def outputData = scriptExecutor.executeScript(cmd,1)
 						copyStbLogsIntoDir(realPath,stbFilePath )

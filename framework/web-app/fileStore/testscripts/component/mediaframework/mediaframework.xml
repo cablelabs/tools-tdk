@@ -20,7 +20,7 @@
       <primitiveTest id="279" name="RMF_MPSink_SetGetVolume" version="1">
         <function>TestMgr_MPSink_SetGetVolume</function>
         <parameters>
-          <parameter name="Volume" value="4.0000"/>
+          <parameter name="Volume" value="0.9000"/>
         </parameters>
       </primitiveTest>
       <primitiveTest id="287" name="RMF_HNSrcMPSink_Video_MuteUnmute" version="1">
