@@ -72,7 +72,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
  	print "No Update Schedule Details: %s"%actResponse;
-	sleep(60);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -103,23 +103,23 @@ if "SUCCESS" in recLoadStatus.upper():
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
-                print "Wait for 60s to get acknowledgement"
-                sleep(60);
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
-		print "Looping till acknowledgement is received"
-		loop = 0;
-		while loop < 5:
-	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	                #print "Retrieve Status Details: %s"%actResponse;
-			sleep(10);
-			loop = loop+1;
+                print "Looping till acknowledgement is received"
+                loop = 0;
+                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                while (('ack' not in actResponse) and (loop < 5)):
+                    actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                    sleep(10);
+                    loop = loop+1;
+                print "Retrieve Status Details: ",actResponse;
 		if 'acknowledgement' not in actResponse:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Received Empty/Error status";
                 elif 'acknowledgement' in actResponse:
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
+                    sleep(60);
                     print "Rebooting the STB to interupt when recording is in progress"
                     recObj.initiateReboot();
                     print "Sleeping to wait for the recoder to be up"
@@ -134,19 +134,10 @@ if "SUCCESS" in recLoadStatus.upper():
                     print "Wait for 60 seconds to get response from recorder"
                     sleep(60)
                     actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                    print "Recording List: %s" %actResponse;
-                    msg = recorderlib.getStatusMessage(actResponse);
-		    print "Get Status Message Details: %s"%msg;
-                    if "" == msg and "recordingStatus" not in msg:
-                        value = "FALSE";
-                        print "No status message retrieved"
-                    else:
-		        value = msg['recordingStatus']["initializing"];
-			print "Initializing value: %s"%value;
-		    if "TRUE" in value.upper():
-                        recordingData = recorderlib.getRecordingFromField(actResponse,"error","MULTIPLE_SEGMENTS")
-                       	print recordingData
-                        if 'NOTFOUND' not in recordingData:
+                    print actResponse
+                    recordingData = recorderlib.getRecordingFromField(actResponse,"error","MULTIPLE_SEGMENTS")
+                    print recordingData
+                    if 'NOTFOUND' not in recordingData:
                             key = 'error'
                             value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                             print "key: ",key," value: ",value
@@ -159,12 +150,9 @@ if "SUCCESS" in recLoadStatus.upper():
                             else:
                               	tdkTestObj1.setResultStatus("FAILURE");
                                 print "Received multiple segments error";
-			else:
-                            tdkTestObj1.setResultStatus("SUCCESS");
-                            print "No recordings found with error MULTIPLE_SEGMENTS";
                     else:
-                        tdkTestObj1.setResultStatus("FAILURE");
-                        print "Failed to retrieve the recording list from recorder";
+                        tdkTestObj1.setResultStatus("SUCCESS");
+                        print "No recordings found with error MULTIPLE_SEGMENTS";
                 else:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Failed to retrieve acknowledgement from recorder";

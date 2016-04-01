@@ -117,24 +117,25 @@ function hideParameters(k){
 
 <g:if test="${executionDeviceInstanceList?.size() > 0}">
 
-<g:each in="${executionDeviceInstanceList}" status="k"  var="executionDeviceInstance">
-<table id="logtable" >
-	<tr>
-		<th colspan="2">Execution Details</th>	
-	</tr>
-	<tr class="trborder even">
-		<td colspan="2" align="right">
-		<g:link action="writexmldata" params="[execName:"${executionInstance?.name}"]" >Download Result(xml)</g:link>
-		<br>
-		<g:link action="exportToExcel" params="[id:"${executionInstance?.id}"]" >Download Raw Report(Excel)</g:link>		
-		<br>
-		<g:link action="exportConsolidatedToExcel" params="[id:"${executionInstance?.id}"]" >Download Consolidated Report(Excel)</g:link>
-		
-		</td>		
-	</tr>		
-	<tr class="trborder even">
-		<td class="tdhead">Device Name</td>
-		<td >${executionDeviceInstance?.device}</td>				
+	<g:each in="${executionDeviceInstanceList}" status="k"
+		var="executionDeviceInstance">
+		<table id="logtable">
+			<tr>
+				<th colspan="2">Execution Details</th>
+			</tr>
+			<tr class="trborder even">
+				<td colspan="2" align="right"><g:link action="writexmldata"
+						params="[execName:"${executionInstance?.name}"]" >Download Result(xml)</g:link>
+					<br> <g:link action="exportToExcel" params="[id:"${executionInstance?.id}"]" >Download Raw Report(Excel)</g:link>
+					<br> <g:link action="exportConsolidatedToExcel" params="[id:"${executionInstance?.id}"]" >Download Consolidated Report(Excel)</g:link>
+
+				</td>
+			</tr>
+			<tr class="trborder even">
+				<td class="tdhead">Device Name</td>
+				<td>
+					${executionDeviceInstance?.device}
+				</td>				
 	</tr>
 	<tr class="odd">
 		<td class="tdhead">IP</td>
@@ -275,15 +276,16 @@ function hideParameters(k){
 			</table>	
 		</td>
 	</tr>
+	
 	<%
 	 def deviceName = executionInstance.device
 	 def deviceInstance =  Device.findByStbName(deviceName.toString())
 	 String deviceStatus = deviceInstance?.deviceStatus
 	 %>	
-	 	<%-- only test suite execution completed then shows the rerun on failure and repeat execution option  --%>
-			<g:if test = "${(executionInstance?.executionStatus).equals("COMPLETED")}" >
-				<g:if test="${executionInstance?.scriptGroup}">
-				<tr class="even" id="testing">
+	 	<%-- For Test Suite / Multiple scripts execution completed then shows the rerun on failure and repeat execution option  --%>
+		<g:if test = "${(executionInstance?.executionStatus).equals("COMPLETED")}" >
+			<g:if test="${executionInstance?.scriptGroup  || executionInstance?.script?.toString()?.equals("Multiple Scripts")}">
+						<tr class="even" id="testing">
 					<td colspan="2">
 						<table>						
 							<tr align="center" style="background: #DFDFDF;">
@@ -302,15 +304,8 @@ function hideParameters(k){
 									</td>
 								<td><g:submitToRemote value="Rerun On Failure Scripts"
 											url="[action :'rerunOnFailure', params:[executionName : executionInstance , device  : executionInstance?.device, scriptGroup : executionInstance?.scriptGroup , script : executionInstance?.script]]"
-											before="deviceStatusCheck('${deviceInstance}','${deviceStatus}');"
-											onLoading="failureScriptCheck('${executionInstance}');" />
-								</td>
-							
-							
-							
-							
-							
-							
+											before="failureScriptCheck('${executionInstance}','${deviceInstance}','${deviceStatus}'  );" />
+								</td>					
 							</tr>
 						</table>
 					</td>
@@ -502,9 +497,6 @@ function hideParameters(k){
 							<tr class="fnhead">
 								<td class="tdhead" colspan="4">Memory Utilization</td>														
 							</tr>
-
-
-
 												<tr class="fnhead1">
 													<td class="tdhead" style="max-width: 20px"></td>
 													<td class="tdhead">Free Memory (KB)</td>

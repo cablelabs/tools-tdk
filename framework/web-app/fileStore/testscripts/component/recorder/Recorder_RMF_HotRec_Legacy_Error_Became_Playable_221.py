@@ -148,10 +148,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                             value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                             print "key: ",key," value: ",value
                             if "BECAME_PLAYABLE" in value.upper():
-                                tdkTestObj.setResultStatus("SUCCESS");
+                                tdkTestObj.setResultStatus("FAILURE");
                                 print "Recorder has sent Error = BECAME_PLAYABLE as expected";
                             else:
-                                tdkTestObj.setResultStatus("FAILURE");
+                                tdkTestObj.setResultStatus("SUCCESS");
                                 print "Recorder has not sent Error = BECAME_PLAYABLE";
                         else:
                             tdkTestObj.setResultStatus("SUCCESS");

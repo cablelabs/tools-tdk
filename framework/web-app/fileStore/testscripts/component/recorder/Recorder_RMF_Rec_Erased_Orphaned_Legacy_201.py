@@ -70,7 +70,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         actResponse =recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
  	print "No Update Schedule Details: %s"%actResponse;
-	sleep(30);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -118,9 +118,8 @@ if "SUCCESS" in recLoadStatus.upper():
         	recObj.unloadModule("Recorder");
 		exit();
         print "Successfully retrieved acknowledgement from recorder";
-        # Reboot the STB
 	print "Wait for the recording to complete "
-	sleep(180);
+	sleep(130);
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
@@ -130,9 +129,9 @@ if "SUCCESS" in recLoadStatus.upper():
         print "Wait for 60 seconds to get response from recorder"
         sleep(60)
         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-        print "Recording List: %s" %actResponse;
+        #print "Recording List: %s" %actResponse;
 	msg = recorderlib.getStatusMessage(actResponse);
-	print "Get Status Message Details: %s"%msg;
+	#print "Get Status Message Details: %s"%msg;
         if "" == msg:
                	value = "FALSE";
 	        print "No status message retrieved"
@@ -171,26 +170,43 @@ if "SUCCESS" in recLoadStatus.upper():
         	recObj.unloadModule("Recorder");
 		exit();
 	print "Recording marked as COMPLETE ";
+
 	# code for deleting the metadata
-	tdkTestObj1=recObj.createTestStep('Recorder_DeleteRecordingMetaData');
-        expectedResult="SUCCESS";
+	#tdkTestObj1=recObj.createTestStep('Recorder_DeleteRecordingMetaData');
+        #expectedResult="SUCCESS";
         #Delete properties file
-        tdkTestObj1.addParameter("Recording_Id",recordingID);
+        #tdkTestObj1.addParameter("Recording_Id",recordingID);
         #Execute the test case in STB
-        tdkTestObj1.executeTestCase(expectedResult);
+        #tdkTestObj1.executeTestCase(expectedResult);
         #Get the actual result and details of execution
-        result = tdkTestObj1.getResult();
-        details = tdkTestObj1.getResultDetails();
-        print result,",",recordingID," ",details
-        if "FAILURE" in result:
-        	print "Failed to delete metadata file"
-                tdkTestObj1.setResultStatus("FAILURE");
-        	recObj.unloadModule("Recorder");
-		exit();
-        print "Deleted metadata file"
-        sleep(5);
+        #result = tdkTestObj1.getResult();
+        #details = tdkTestObj1.getResultDetails();
+        #print result,",",recordingID," ",details
+        #if "FAILURE" in result:
+        	#print "Failed to delete metadata file"
+                #tdkTestObj1.setResultStatus("FAILURE");
+        	#recObj.unloadModule("Recorder");
+		#exit();
+        #print "Deleted metadata file"
+        #sleep(5);
 	# end of code for deleting the metadata
 	# Perform 2nd  recording
+
+        tdkTestObj1 = recObj.createTestStep('Recorder_ExecuteCmd');
+        expectedResult="SUCCESS";
+        #commandf = "find -type f | xargs grep -rls " +recordingID+ "| xargs rm -rf"
+        tdkTestObj1.addParameter("command","find /tmp/mnt/diska3/persistent/dvr/recdbser/ -type f | xargs grep -rls " +recordingID+ "| xargs rm -rf");
+        #Execute the test case in STB
+        tdkTestObj1.executeTestCase("SUCCESS");
+        result = tdkTestObj1.getResult();
+        print "[TEST EXECUTION RESULT] : %s" %result;
+        if "SUCCESS" in result:
+            tdkTestObj1.setResultStatus("SUCCESS");
+        else:
+            tdkTestObj1.setResultStatus("FAILURE");
+
+        sleep(40);
+
         requestID2 = str(randint(10,500));
         recordingID2 = str(randint(10000, 500000));
 	duration = "120000";
@@ -221,7 +237,7 @@ if "SUCCESS" in recLoadStatus.upper():
 		sleep(5);
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 		retry += 1
-	print "Retrieve Status Details: %s"%actResponse;
+	#print "Retrieve Status Details: %s"%actResponse;
         if (('ERROR' in actResponse)):
 		tdkTestObj.setResultStatus("FAILURE");
         	print "Received Empty/Error status";
@@ -237,32 +253,26 @@ if "SUCCESS" in recLoadStatus.upper():
 	print "Wait for the recording to complete "
 	sleep(180);
 	# end of Perform 2nd  recording
+        #Reboot the STB before starting the recording
+        print "Rebooting the STB to get the recording list from full sync"
+        recObj.initiateReboot();
+        print "Sleeping to wait for the recoder to be up"
+        sleep(300);
+
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
-        print "Sending getRecordings to get the recording list"
-        recorderlib.callServerHandler('clearStatus',ip)
-        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-        print "Wait for 60 seconds to get response from recorder"
+        #print "Sending getRecordings to get the recording list"
+        #recorderlib.callServerHandler('clearStatus',ip)
+        #recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+        #print "Wait for 60 seconds to get response from recorder"
+        #sleep(60)
+        #Frame json message
+        jsonMsgNoUpdate = "{\"noUpdate\":{}}";
+        actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip)
         sleep(60)
         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
         print "Recording List: %s" %actResponse;
-	msg = recorderlib.getStatusMessage(actResponse);
-	print "Get Status Message Details: %s"%msg;
-        if "" == msg:
-               	value = "FALSE";
-	        print "No status message retrieved"
-	     	tdkTestObj.setResultStatus("FAILURE");
-        	recObj.unloadModule("Recorder");
-		exit();
-        print "Retrieved status message";
-	value = msg['recordingStatus']["initializing"];
-	print "Initializing value: %s"%value;
-	if "TRUE" not in value.upper():
-           	print "Failed to retrieve the recording list from recorder";
-	        tdkTestObj.setResultStatus("FAILURE");
-        	recObj.unloadModule("Recorder");
-		exit();
         print "Retrieved the recording list from recorder";
         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
         print recordingData
@@ -305,3 +315,9 @@ if "SUCCESS" in recLoadStatus.upper():
 		exit();
 	print "error marked as ORPHANED";
 	# end of check for status and error of 1st recording ... erased and orphaned 
+        #unloading Recorder module
+        recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE");

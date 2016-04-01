@@ -95,8 +95,6 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
                 tdkTestObj.executeTestCase(expectedResult);
-		print "Waiting to get acknowledgment status"
-		sleep(10);
 		retry=0
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 while ( ('acknowledgement' not in actResponse) and (retry < 5)):
@@ -145,3 +143,8 @@ if "SUCCESS" in recLoadStatus.upper():
 
 	#Unload recorder module
         recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE");
+

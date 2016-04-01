@@ -141,6 +141,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 if "acknowledgement" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                        print actResponse
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                         print recordingData;
                         if ('NOTFOUND' not in recordingData):
@@ -148,10 +149,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                             value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                             print "key: ",key," value: ",value
                             if "BECAME_PLAYABLE" in value.upper():
-                                tdkTestObj.setResultStatus("SUCCESS");
+                                tdkTestObj.setResultStatus("FAILURE");
                                 print "Recorder has sent Error = BECAME_PLAYABLE as expected";
                             else:
-                                tdkTestObj.setResultStatus("FAILURE");
+                                tdkTestObj.setResultStatus("SUCCESS");
                                 print "Recorder has not sent Error = BECAME_PLAYABLE";
                         else:
                             tdkTestObj.setResultStatus("SUCCESS");
@@ -186,4 +187,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #unloading Recorder module
         obj.unloadModule("Recorder");
-
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    obj.setLoadModuleStatus("FAILURE");

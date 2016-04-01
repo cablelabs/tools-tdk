@@ -70,7 +70,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
  	print "No Update Schedule Details: %s"%actResponse;
-	sleep(30);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -114,7 +114,7 @@ if "SUCCESS" in recLoadStatus.upper():
 		sleep(5);
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 		retry += 1
-	print "Retrieve Status Details: %s"%actResponse;
+	#print "Retrieve Status Details: %s"%actResponse;
         if (('[]' in actResponse) or ('ERROR' in actResponse)):
 		tdkTestObj.setResultStatus("FAILURE");
         	print "Received Empty/Error status";
@@ -129,39 +129,54 @@ if "SUCCESS" in recLoadStatus.upper():
         print "Successfully retrieved acknowledgement from recorder";
 	print "Wait for the recording to complete partially"
 	sleep(180);
+
 	# code for deleting the metadata
-	tdkTestObj1=recObj.createTestStep('Recorder_DeleteRecordingMetaData');
-        expectedResult="SUCCESS";
+	#tdkTestObj1=recObj.createTestStep('Recorder_DeleteRecordingMetaData');
+        #expectedResult="SUCCESS";
         #Delete properties file
-        tdkTestObj1.addParameter("Recording_Id",recordingID);
+        #tdkTestObj1.addParameter("Recording_Id",recordingID);
         #Execute the test case in STB
-        tdkTestObj1.executeTestCase(expectedResult);
+        #tdkTestObj1.executeTestCase(expectedResult);
         #Get the actual result and details of execution
-        result = tdkTestObj1.getResult();
-        details = tdkTestObj1.getResultDetails();
-        print result,",",recordingID," ",details
-        if "FAILURE" in result:
-        	print "Failed to delete metadata file"
-                tdkTestObj1.setResultStatus("FAILURE");
-        	recObj.unloadModule("Recorder");
-		exit();
-        print "Deleted metadata file"
-        sleep(5);
+        #result = tdkTestObj1.getResult();
+        #details = tdkTestObj1.getResultDetails();
+        #print result,",",recordingID," ",details
+        #if "FAILURE" in result:
+        	#print "Failed to delete metadata file"
+                #tdkTestObj1.setResultStatus("FAILURE");
+        	#recObj.unloadModule("Recorder");
+		#exit();
+        #print "Deleted metadata file"
+        #sleep(30);
 	# end of code for deleting the metadata
 	# reboot and resume the recording
+
+        tdkTestObj1 = recObj.createTestStep('Recorder_ExecuteCmd');
+        expectedResult="SUCCESS";
+        tdkTestObj1.addParameter("command","find /tmp/mnt/diska3/persistent/dvr/recdbser/ -type f  ! -name  \"*.*\" | xargs grep -rls " +recordingID+ "| xargs rm -rf");
+        #Execute the test case in STB
+        tdkTestObj1.executeTestCase("SUCCESS");
+        result = tdkTestObj1.getResult();
+        print "[TEST EXECUTION RESULT] : %s" %result;
+        if "SUCCESS" in result:
+            tdkTestObj1.setResultStatus("SUCCESS");
+        else:
+            tdkTestObj1.setResultStatus("FAILURE");
+        sleep(3);
+        
 	print "Rebooting the STB"
 	recObj.initiateReboot();
 	print "STB is up after reboot"
 	print "Sleeping to wait for the recoder to be up"
 	sleep(300);
 	print "Wait for the recording to complete"
-	sleep(1200);
-	print "Sending getRecordings to get the recording list"
-	recorderlib.callServerHandler('clearStatus',ip);
-	recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+	sleep(1000);
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
+	print "Sending getRecordings to get the recording list"
+	recorderlib.callServerHandler('clearStatus',ip);
+	recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
 	print "Wait for 60 seconds to get response from recorder"
 	sleep(60)
 	actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
@@ -223,6 +238,8 @@ if "SUCCESS" in recLoadStatus.upper():
 		exit();
 	print "error marked as STARTED_LATE";
 	# end of check for status and error of 1st recording ... erased and orphaned 
+        #unloading Recorder module
+        recObj.unloadModule("Recorder");
 else:
 	print "Failed to load Recorder module";
     	#Set the module loading status

@@ -672,7 +672,8 @@ class ExecutionController {
 												executionDevice.status = UNDEFINED_STATUS
 												if(executionDevice.save(flush:true)){
 													String getRealPathString  = getRealPath()
-													executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
+													// version .txt file changes .
+													executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
 													//scriptexecutionService.executeScriptGroup(scriptGroup, boxType, execName, executionDevice?.id.toString(), deviceInstance, url, filePath, getRealPathString, callbackUrl, imageName )
 													def rerun = null
 													if(rerun1?.equals(TRUE)){
@@ -1122,7 +1123,7 @@ class ExecutionController {
 								return
 							}
 							else{								
-								executionService.executeVersionTransferScript(request.getRealPath('/'),filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
+								executionService.executeVersionTransferScript(request.getRealPath('/'),filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
 							}
 							if(deviceList.size() > 1){
 								executescriptService.executeScriptInThread(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
@@ -2342,7 +2343,7 @@ class ExecutionController {
 										executionDevice.status = UNDEFINED_STATUS
 										if(executionDevice.save(flush:true)){
 											String getRealPathString  = getRealPath()
-											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
+											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
 											def rerun = null
 											if(reRunOnFailure?.equals(TRUE)){
 												rerun = "on"

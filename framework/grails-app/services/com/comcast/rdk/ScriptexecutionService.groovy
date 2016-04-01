@@ -816,7 +816,7 @@ class ScriptexecutionService {
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor(executionName)
 			outData += scriptExecutor.executeScript(cmd,1)
-			executescriptService.copyPerformanceLogIntoDir(realPath, performanceFilePath)
+			executescriptService.copyPerformanceLogIntoDir(realPath, performanceFilePath,executionId,executionDeviceInstance?.id,executionResultId )
 		}
 		if(isSystemDiagnostics.equals(TRUE)){
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
@@ -834,7 +834,7 @@ class ScriptexecutionService {
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor(executionName)
 			outData += scriptExecutor.executeScript(cmd,10)
-			executescriptService.copyPerformanceLogIntoDir(realPath, performanceFilePath)
+			executescriptService.copyPerformanceLogIntoDir(realPath, performanceFilePath ,executionId,executionDeviceInstance?.id,executionResultId)
 		}
 		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
 			executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId,realPath)
@@ -845,7 +845,7 @@ class ScriptexecutionService {
 		//new File("${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}").mkdirs()
 		def logTransferFileName1 = "${executionId}_${execDeviceId}_${executionResultId}_AgentConsoleLog.txt"
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}//"
-		executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName1, realPath)
+		executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName1, realPath,executionId,execDeviceId,executionResultId)
 
 		
 		outData?.eachLine { line ->
@@ -855,7 +855,7 @@ class ScriptexecutionService {
 		file.delete()			
 		//TFTP  New Changes 
 		def logPath = "${realPath}/logs//${executionId}//${execDeviceId}//${executionResultId}//"
-		executescriptService.copyLogsIntoDir(realPath,logPath)
+		executescriptService.copyLogsIntoDir(realPath,logPath, executionId,execDeviceId,executionResultId)
 		String outputData = htmlData
 		
 		Date execEndDate = new Date()

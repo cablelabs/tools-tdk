@@ -637,9 +637,11 @@ void RpcMethods::ResetCrashStatus()
 *********************************************************************************************************************/
 void RpcMethods::CallReboot()
 {
-    DEBUG_PRINT (DEBUG_ERROR, "Going for a REBOOT !!!\n\n");
-    system ("source /rebootNow.sh");
-	
+   DEBUG_PRINT (DEBUG_ERROR, "Box Going for a REBOOT !!!\n\n");
+   if(-1 == (system("sleep 10 && reboot && source /rebootNow.sh &")))
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "Error: failed to reboot\n");
+        }	
 } /* End of CallReboot */
 
 

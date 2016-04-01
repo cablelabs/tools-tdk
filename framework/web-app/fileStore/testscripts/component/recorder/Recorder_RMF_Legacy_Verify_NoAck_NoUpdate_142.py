@@ -128,6 +128,9 @@ if "SUCCESS" in recLoadStatus.upper():
                     if "dvrProtocolVersion:7" in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "Recorder did nothing upon receiving noUpdate message"
+                    elif "dvrProtocolVersion:0" in actResponse:
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        print "Recorder did nothing upon receiving noUpdate message, using default version 0"
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Recorder updated dvrProtocolVersion upon receiving noUpdate message"

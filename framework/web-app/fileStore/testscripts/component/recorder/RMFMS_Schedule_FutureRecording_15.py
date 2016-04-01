@@ -83,8 +83,8 @@ if "SUCCESS" in loadmodulestatus.upper():
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
         #5mins duration
-        duration = "180000";
-        startTime = "100";
+        duration = "120000";
+        startTime = "100000";
         genIdInput = "TDK456";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
@@ -97,7 +97,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(60);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while (( ([] == recResponse) or ('ack' not in recResponse) ) and (retry < 10 )):
@@ -112,7 +111,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 			recorderlib.callServerHandler('clearStatus',ip)
 			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
 			print "Wait for 3 min to get response from recorder"
-			sleep(180)
+			sleep(60)
 			actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 			print "Recording List: %s" %actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
@@ -142,4 +141,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #unloading Recorder module
         obj.unloadModule("Recorder");
-
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    obj.setLoadModuleStatus("FAILURE");

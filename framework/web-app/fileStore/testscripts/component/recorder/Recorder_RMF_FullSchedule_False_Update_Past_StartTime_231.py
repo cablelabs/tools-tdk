@@ -72,7 +72,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
  	print "No Update Schedule Details: %s"%actResponse;
-	sleep(60);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -174,7 +174,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                 statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
                                 print "key: ",key," value: ",value," startValue: ",startValue
                                 print "Successfully retrieved the recording list from recorder";
-                                if "COMPLETE" in statusValue.upper() and (int(startValue)-30000) <= int(value) <= (int(startValue)+30000):
+                                if "COMPLETE" in statusValue.upper() and (startValue[0]-30000) <= int(value) <= (startValue[0]+30000):
                                     tdkTestObj.setResultStatus("SUCCESS");
                                     print "Start Time updated correctly";
                                 elif "BADVALUE" in statusValue.upper():

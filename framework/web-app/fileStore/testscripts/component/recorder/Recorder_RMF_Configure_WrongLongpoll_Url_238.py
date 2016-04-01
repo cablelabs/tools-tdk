@@ -105,7 +105,7 @@ if "SUCCESS" in recLoadStatus.upper():
             print "Sleeping to wait for the recoder to be up"
             sleep(300);
             #sleep to wait error code to come after multiple retries to get the connection to long poll
-            sleep(250); 
+            sleep(450); 
             tdkTestObj2=recObj.createTestStep('Recorder_checkOcapri_log');
             pattern = "RDK-10029"
             tdkTestObj2.addParameter("pattern",pattern);

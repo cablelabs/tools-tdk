@@ -94,7 +94,6 @@ if "SUCCESS" in loadmodulestatus.upper():
         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(10);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while (( ('ack' not in recResponse) ) and (retry < 10 )):
@@ -105,7 +104,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 if "ack" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
 			print "Wait for recording to complete"
-                        sleep(30);
+                        sleep(50);
 			print "Sending getRecordings to get the recording list"
 			recorderlib.callServerHandler('clearStatus',ip)
 			recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
@@ -140,3 +139,8 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #unloading Recorder module
         obj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    obj.setLoadModuleStatus("FAILURE");    
+

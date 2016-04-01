@@ -272,7 +272,7 @@ class JobSchedulerService implements Job{
 									}
 
 								}
-								executeVersionTransferScript(realpath, filePath, executionName, executionDevice?.id, deviceInstance.stbIp, deviceInstance?.logTransferPort)
+								executeVersionTransferScript(realpath, filePath, executionName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
 								int scriptGrpSize = 0
 								int scriptCounter = 0
 								def isMultiple = "true"
@@ -813,7 +813,7 @@ class JobSchedulerService implements Job{
 							executionDevice.status = UNDEFINED_STATUS
 							executionDevice.save(flush:true)
 						}
-						executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbIp, deviceInstance?.logTransferPort)
+						executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
 						def executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
 						def scriptInstance
 						def htmlData
@@ -914,7 +914,7 @@ class JobSchedulerService implements Job{
 	 * @param logTransferPort
 	 * @return
 	 */
-	def executeVersionTransferScript(final String realPath, final String filePath, final String executionName, def exectionDeviceId, final String stbIp, final String logTransferPort){
+	def executeVersionTransferScript(final String realPath, final String filePath, final String executionName, def exectionDeviceId, final String stbName, final String logTransferPort){
 		try{
 			def executionInstance = Execution.findByName(executionName)
 			/*String fileContents = new File(filePath+DOUBLE_FWD_SLASH+VERSIONTRANSFER_FILE).text
@@ -942,7 +942,7 @@ class JobSchedulerService implements Job{
 
 			Device device
 			Device.withTransaction{
-				device = Device.findByStbIp(stbIp)
+				device = Device.findByStbName(stbName)
 			}
 			String versionFileName = "${executionInstance?.id}_${exectionDeviceId?.toString()}_version.txt"
 			def versionFilePath = "${realPath}//logs//version//${executionInstance?.id}//${exectionDeviceId?.toString()}"
@@ -951,14 +951,14 @@ class JobSchedulerService implements Job{
 			String[] cmd = [
 				PYTHON_COMMAND,
 				absolutePath,
-				stbIp,
+				device.stbIp,
 				device.agentMonitorPort,
-				"/version.txt",//here defines the log server transfer path
+				"/version.txt",
 				versionFileName
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def outputData = scriptExecutor.executeScript(cmd,1)
-			copyVersionLogsIntoDir(realPath, versionFilePath)
+			copyVersionLogsIntoDir(realPath, versionFilePath, executionInstance?.id, exectionDeviceId?.toString())
 			
 		
 			if(device?.boxType?.type?.equalsIgnoreCase(BOXTYPE_CLIENT)){
@@ -1100,12 +1100,12 @@ class JobSchedulerService implements Job{
 		def logTransferFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName, realPath)
+		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName, realPath, executionId,executionDevice?.id,executionResultId  )
 
 		file.delete()		
 		// TFTP transfer --->>>
 		def logPath = "${realPath}/logs//${executionId}//${executionDevice?.id}//${executionResultId}//"
-		copyLogsIntoDir(realPath,logPath)
+		copyLogsIntoDir(realPath,logPath ,executionId,executionDevice?.id, executionResultId)
 		
 		outData?.eachLine { line ->
 			htmlData += (line + HTML_BR )
@@ -1228,7 +1228,7 @@ class JobSchedulerService implements Job{
 			
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 			htmlData += scriptExecutor.executeScript(cmd,1)
-			copyPerformanceLogIntoDir(realPath, performanceFilePath)	
+			copyPerformanceLogIntoDir(realPath, performanceFilePath,executionId,executionDevice?.id, executionResultId)	
 		}
 		if(isSystemDiagnostics.equals("true")){
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
@@ -1244,14 +1244,14 @@ class JobSchedulerService implements Job{
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 			htmlData += scriptExecutor.executeScript(cmd,1)
-			copyPerformanceLogIntoDir(realPath, performanceFilePath)			
+			copyPerformanceLogIntoDir(realPath, performanceFilePath,executionId,executionDevice?.id, executionResultId)			
 		}
 		//def logTransferFileName1 = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
 		def logTransferFileName1 = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
 		def logTransferFilePath1 = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 
 		new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1,realPath)
+		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1,realPath,executionId,executionDevice?.id, executionResultId)
 		if(isLogReqd?.toString()?.equals("true")){
 			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId, realPath)
 		}
@@ -1262,7 +1262,7 @@ class JobSchedulerService implements Job{
 	 * @param deviceInstance
 	 * @return
 	 */
-	def logTransfer1(def deviceInstance, def logTransferFilePath, def logTransferFileName, def realPath){
+	def logTransfer1(def deviceInstance, def logTransferFilePath, def logTransferFileName, def realPath , def executionId, def executionDeviceId , def executionResultId){
 		Thread.sleep(4000)
 		try{
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callConsoleLogTransfer.py").file
@@ -1277,7 +1277,7 @@ class JobSchedulerService implements Job{
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
-			copyAgentconsoleLogIntoDir(realPath,logTransferFilePath)
+		copyAgentconsoleLogIntoDir(realPath,logTransferFilePath,executionId,executionDeviceId,executionResultId  )
 			Thread.sleep(4000)
 		}
 		catch(Exception e){
@@ -1289,25 +1289,29 @@ class JobSchedulerService implements Job{
 	 * @param logTransferFilePath
 	 * @return
 	 */
-	def copyLogsIntoDir(def realPath, def logTransferFilePath ){
+	def copyLogsIntoDir(def realPath, def logTransferFilePath , def executionId, def executionDeviceId , def executionResultId ){
 		try {
 			String logsPath = realPath.toString()+"/logs/logs/"
 			File logDir  = new File(logsPath)
 			if(logDir.isDirectory()){
 				logDir.eachFile{ file->
-					def logFileName =  file?.getName()?.split("_")
-					if (file?.isFile() && logFileName.length >= 3 ) {
-						String fileName = file.getName()
-						if(fileName.toString().contains("\$:")){							
-							fileName = fileName.replaceAll('\\$:',"Undefined")
-						}	
-						if(fileName.startsWith( logFileName[0] )){							
-							fileName = fileName.replaceFirst( logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )							
-							fileName= logFileName[0]+UNDERSCORE+fileName
-							new File(logTransferFilePath?.toString()).mkdirs()
-							File logTransferPath  = new File(logTransferFilePath)
-							if(file.exists()){
-								boolean fileMoved = file.renameTo(new File(logTransferPath, fileName.trim()));
+					if(!(file?.toString()?.contains("version.txt") || file.toString()?.contains("benchmark.log") || file.toString()?.contains("memused.log") || file.toString()?.contains("cpu.log") || file?.toString()?.contains("AgentConsoleLog.log"))){
+						def logFileName =  file?.getName()?.split("_")
+						if (file?.isFile() && logFileName.length >= 3 ) {
+						if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
+								String fileName = file.getName()
+								if(fileName.toString().contains("\$:")){
+									fileName = fileName.replaceAll('\\$:',"Undefined")
+								}
+								if(fileName.startsWith( logFileName[0] )){
+									fileName = fileName.replaceFirst( logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
+									fileName= logFileName[0]+UNDERSCORE+fileName
+									new File(logTransferFilePath?.toString()).mkdirs()
+									File logTransferPath  = new File(logTransferFilePath)
+									if(file.exists()){
+										boolean fileMoved = file.renameTo(new File(logTransferPath, fileName.trim()));
+									}
+								}
 							}
 						}
 					}
@@ -1367,7 +1371,7 @@ class JobSchedulerService implements Job{
 						
 						ScriptExecutor scriptExecutor = new ScriptExecutor()
 						def outputData = scriptExecutor.executeScript(cmd,1)
-						copyStbLogsIntoDir(realPath,stbFilePath )
+						copyStbLogsIntoDir(realPath,stbFilePath,execId, execDeviceId,execResultId )
 					}catch (Exception e) {
 						e.printStackTrace()
 					}
@@ -1384,22 +1388,23 @@ class JobSchedulerService implements Job{
 	 * @return
 	 */
 	
-	def copyAgentconsoleLogIntoDir(def realPath, def logTransferFilePath){
+	def copyAgentconsoleLogIntoDir(def realPath, def logTransferFilePath , def executionId, def executionDeviceId , def executionResultId){
 		try {
-			String logsPath = realPath.toString()+"/logs/logs/"			
-
+			String logsPath = realPath.toString()+"/logs/logs/"
 			File logDir  = new File(logsPath)
 			if(logDir.isDirectory()){
 				logDir.eachFile{ file->
 					if(file.toString()?.contains("AgentConsoleLog.txt")){
-					def logFileName =  file.getName().split("_")					
-						if(logFileName?.length > 0){
-					new File(logTransferFilePath?.toString()).mkdirs()
-					File logTransferPath  = new File(logTransferFilePath)
-					if(file.exists()){
-						boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));						
+						def logFileName =  file.getName().split("_")
+						if(logFileName?.length >= 3){
+						if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
+								new File(logTransferFilePath?.toString()).mkdirs()
+								File logTransferPath  = new File(logTransferFilePath)
+								if(file.exists()){
+									boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
+								}
 							}
-					}
+						}
 					}
 				}
 			}
@@ -1415,7 +1420,7 @@ class JobSchedulerService implements Job{
 	 * @return
 	 */
 	
-	def copyPerformanceLogIntoDir(def realPath, def logTransferFilePath){
+	def copyPerformanceLogIntoDir(def realPath, def logTransferFilePath  , def executionId, def executionDeviceId , def executionResultId){
 		try {
 			String logsPath = realPath.toString()+"/logs/logs/"
 
@@ -1424,11 +1429,14 @@ class JobSchedulerService implements Job{
 				logDir.eachFile{ file->
 					if(file.toString()?.contains("benchmark.log") || file.toString()?.contains("memused.log") || file.toString()?.contains("cpu.log")){
 						def logFileName =  file.getName().split("_")
-						if(logFileName?.length > 0){
+						if(logFileName?.length >= 3){
+						if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
+								
 							new File(logTransferFilePath?.toString()).mkdirs()
 							File logTransferPath  = new File(logTransferFilePath)
 							if(file.exists()){
 								boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
+							}
 							}
 						}
 					}
@@ -1447,7 +1455,7 @@ class JobSchedulerService implements Job{
 	 * @return
 	 */
 	
-	def copyVersionLogsIntoDir(def realPath, def logTransferFilePath){
+	def copyVersionLogsIntoDir(def realPath, def logTransferFilePath , def executionId, def executionDeviceId ){
 		try {
 			String logsPath = realPath.toString()+"/logs/logs/"
 			File logDir  = new File(logsPath)
@@ -1456,12 +1464,14 @@ class JobSchedulerService implements Job{
 					if(file?.toString().contains("version.txt")){
 						def logFileName =  file.getName().split("_")
 						if(logFileName?.length > 0){
+							if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString())){
 							def  versionFileName = logFileName[1]+"_"+logFileName.last()
 							new File(logTransferFilePath?.toString()).mkdirs()
 							File logTransferPath  = new File(logTransferFilePath)
 							if(file.exists()){
 								boolean fileMoved = file.renameTo(new File(logTransferPath, versionFileName));
 							}
+						}
 						}
 					}
 				}
@@ -1478,21 +1488,25 @@ class JobSchedulerService implements Job{
 	 * @param logTransferFilePath
 	 * @return
 	 */
-	def copyStbLogsIntoDir(def realPath, def logTransferFilePath ){		
+	def copyStbLogsIntoDir(def realPath, def logTransferFilePath , def executionId, def executionDeviceId , def executionResultId ){
 		try {
 			String logsPath = realPath.toString()+"/logs/logs/"
 			File logDir  = new File(logsPath)
 			if(logDir.isDirectory()){
 				logDir.eachFile{ file->
+					if(!(file?.toString()?.contains("version.txt") || file.toString()?.contains("benchmark.log") || file.toString()?.contains("memused.log") || file.toString()?.contains("cpu.log") || file?.toString()?.contains("AgentConsoleLog.log"))){
 					def logFileName =  file.getName().split("_")
 					if(logFileName?.length >= 3){
-						def fName = file.getName()
-						fName = fName?.replaceFirst(logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
-						new File(logTransferFilePath?.toString()).mkdirs()
-						File logTransferPath  = new File(logTransferFilePath)
-						if(file.exists()){
-							boolean fileMoved = file.renameTo(new File(logTransferPath,fName.trim()));
+						if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
+							def fName = file.getName()
+							fName = fName?.replaceFirst(logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
+							new File(logTransferFilePath?.toString()).mkdirs()
+							File logTransferPath  = new File(logTransferFilePath)
+							if(file.exists()){
+								boolean fileMoved = file.renameTo(new File(logTransferPath,fName.trim()));
+							}
 						}
+					}
 					}
 				}
 			}
@@ -1555,7 +1569,7 @@ class JobSchedulerService implements Job{
 	 * @param deviceInstance
 	 * @return
 	 */
-	def logTransfer(def deviceInstance, def logTransferFilePath, def logTransferFileName , def realPath){
+	def logTransfer(def deviceInstance, def logTransferFilePath, def logTransferFileName , def realPath , def executionId, def executionDeviceId , def executionResultId){
 		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callConsoleLogTransfer.py").file
 		def absolutePath = layoutFolder.absolutePath
 		String[] cmd = [
@@ -1563,15 +1577,13 @@ class JobSchedulerService implements Job{
 			absolutePath,
 			deviceInstance?.stbIp,
 			deviceInstance?.agentMonitorPort,
-			deviceInstance?.logTransferPort,
-			"${logTransferFileName}_AgentConsole.log",
+			"AgentConsole.log",
 			logTransferFileName
 			//logTransferFilePath
-
 		]
 		ScriptExecutor scriptExecutor = new ScriptExecutor()
 		def resetExecutionData = scriptExecutor.executeScript(cmd,1)
-		copyAgentconsoleLogIntoDir(realPath,logTransferFilePath)
+		copyAgentconsoleLogIntoDir(realPath,logTransferFilePath,executionId,executionDeviceId,executionResultId  )
 		Thread.sleep(4000)
 	}
 

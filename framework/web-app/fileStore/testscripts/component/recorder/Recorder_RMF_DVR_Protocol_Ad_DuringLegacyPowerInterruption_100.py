@@ -121,6 +121,9 @@ if "SUCCESS" in recLoadStatus.upper():
                         if "dvrProtocolVersion:7" in actResponse:
                                 tdkTestObj.setResultStatus("SUCCESS");
                                 print "Successfully advertised DVR protocol version 7"
+                        elif "dvrProtocolVersion:0" in actResponse:
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                print "Recorder advertised default DVR protocol version 0"
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "Failed to advertise DVR protocol version 7"

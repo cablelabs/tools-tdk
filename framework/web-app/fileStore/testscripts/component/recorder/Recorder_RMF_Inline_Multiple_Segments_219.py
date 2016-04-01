@@ -136,36 +136,24 @@ if "SUCCESS" in recLoadStatus.upper():
                     sleep(60)
                     actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                     print "Recording List: %s" %actResponse;
-                    msg = recorderlib.getStatusMessage(actResponse);
-		    print "Get Status Message Details: %s"%msg;
-                    if "" == msg and "recordingStatus" not in msg:
-                        value = "FALSE";
-                        print "No status message retrieved"
-                    else:
-			value = msg['recordingStatus']["initializing"];
-			print "Initializing value: %s"%value;
-		    if "TRUE" in value.upper():
-                        recordingData = recorderlib.getRecordingFromField(actResponse,"error","MULTIPLE_SEGMENTS")
-                       	print recordingData
-                       	if 'NOTFOUND' not in recordingData:
-                            key = 'error'
-                            value = recorderlib.getValueFromKeyInRecording(recordingData,key)
-                            print "key: ",key," value: ",value
-                            if "MULTIPLE_SEGMENTS" not in value.upper():
-                                tdkTestObj1.setResultStatus("SUCCESS");
-                                print "Multiple segments error not in recording status";
-                            elif "BADVALUE" in value.upper():
-                                tdkTestObj1.setResultStatus("FAILURE");
-                                print "Status field not in recording status";
-                            else:
-                                tdkTestObj1.setResultStatus("FAILURE");
-                                print "Received multiple segments error";
-	                else:
+                    recordingData = recorderlib.getRecordingFromField(actResponse,"error","MULTIPLE_SEGMENTS")
+                    print recordingData
+                    if 'NOTFOUND' not in recordingData:
+                        key = 'error'
+                        value = recorderlib.getValueFromKeyInRecording(recordingData,key)
+                        print "key: ",key," value: ",value
+                        if "MULTIPLE_SEGMENTS" not in value.upper():
+                            tdkTestObj1.setResultStatus("SUCCESS");
+                            print "Multiple segments error not in recording status";
+                        elif "BADVALUE" in value.upper():
+                            tdkTestObj1.setResultStatus("FAILURE");
+                            print "Status field not in recording status";
+                        else:
+                            tdkTestObj1.setResultStatus("FAILURE");
+                            print "Received multiple segments error";
+	            else:
                             tdkTestObj1.setResultStatus("SUCCESS");
                             print "No recordings found with error MULTIPLE_SEGMENTS";
-                    else:
-                        tdkTestObj1.setResultStatus("FAILURE");
-                        print "Failed to retrieve the recording list from recorder";
                 else:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Failed to retrieve acknowledgement from recorder";

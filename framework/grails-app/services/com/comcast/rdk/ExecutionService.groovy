@@ -554,7 +554,7 @@ class ExecutionService {
 	 * @param logTransferPort
 	 * @return
 	 */
-    def executeVersionTransferScript(final String realPath, final String filePath, final String executionName, def exectionDeviceId, final String stbIp, final String logTransferPort){
+    def executeVersionTransferScript(final String realPath, final String filePath, final String executionName, def exectionDeviceId, final String stbName, final String logTransferPort){
         try{
 	        def executionInstance = Execution.findByName(executionName)
 	        /*String fileContents = new File(filePath+DOUBLE_FWD_SLASH+VERSIONTRANSFER_FILE).text
@@ -579,7 +579,7 @@ class ExecutionService {
 			versnNewPrintWriter.close()
 	        executeScript( versnFile.getPath() )
 	        versnFile.delete()*/
-			Device device = Device.findByStbIp(stbIp)			
+			Device device = Device.findByStbName(stbName)						
 			String versionFileName = "${executionInstance?.id}_${exectionDeviceId?.toString()}_version.txt"
 			def versionFilePath = "${realPath}//logs//version//${executionInstance?.id}//${exectionDeviceId?.toString()}"
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
@@ -594,7 +594,7 @@ class ExecutionService {
 			]			
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def outputData = scriptExecutor.executeScript(cmd,1)		
-			copyVersionLogsIntoDir(realPath, versionFilePath)			
+			copyVersionLogsIntoDir(realPath, versionFilePath, executionInstance?.id , exectionDeviceId?.toString())			
 			
 			def devName
 			ExecutionDevice.withTransaction {
@@ -620,7 +620,7 @@ class ExecutionService {
 	 * @param logTransferFilePath
 	 * @return
 	 */
-	def copyVersionLogsIntoDir(def realPath, def logTransferFilePath){
+	def copyVersionLogsIntoDir(def realPath, def logTransferFilePath,  def executionId , def executionDeviceId){
 		try {
 			String logsPath = realPath.toString()+"/logs/logs/"
 			File logDir  = new File(logsPath)
@@ -629,11 +629,13 @@ class ExecutionService {
 					if(file?.toString().contains("version.txt")){
 						def logFileName =  file.getName().split("_")
 						if(logFileName?.length > 0){
-							def  versionFileName = logFileName[1]+"_"+logFileName.last()
-							new File(logTransferFilePath?.toString()).mkdirs()
-							File logTransferPath  = new File(logTransferFilePath)
-							if(file.exists()){
-								boolean fileMoved = file.renameTo(new File(logTransferPath, versionFileName));
+							if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString())){
+								def  versionFileName = logFileName[1]+"_"+logFileName.last()
+								new File(logTransferFilePath?.toString()).mkdirs()
+								File logTransferPath  = new File(logTransferFilePath)
+								if(file.exists()){
+									boolean fileMoved = file.renameTo(new File(logTransferPath, versionFileName));
+								}
 							}
 						}
 					}
@@ -656,8 +658,7 @@ class ExecutionService {
 			String logsPath = realPath.toString()+"/logs/logs/"
 			File logDir  = new File(logsPath)
 			if(logDir.isDirectory()){
-				logDir.eachFile{ file->
-					
+				logDir.eachFile{ file->					
 					def logFileName =  file.getName().split("_")
 					if(logFileName?.length > 0){
 					new File(logTransferFilePath?.toString()).mkdirs()
@@ -687,7 +688,7 @@ class ExecutionService {
 			absolutePath,
 			device?.stbIp,			
 			device?.agentMonitorPort,		
-			"/version.txt",
+			"/opt/TDK/trDetails.log",
 			"${device?.stbName}"+"_"+"${device?.stbName}.txt" 
 		]
 	    ScriptExecutor scriptExecutor = new ScriptExecutor()

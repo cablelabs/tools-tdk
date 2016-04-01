@@ -237,11 +237,6 @@ std::string ServiceManagerAgent::testmodulepre_requisites()
         }
 #endif
 
-#ifdef HAS_API_APPLICATION
-        IARM_Bus_Init(IARM_BUS_TDK_NAME);
-        IARM_Bus_Connect();
-#endif
-
         DEBUG_PRINT(DEBUG_TRACE,"testmodulepre_requisites() ---> Exit\n");
 
         return "SUCCESS";
@@ -255,11 +250,6 @@ std::string ServiceManagerAgent::testmodulepre_requisites()
 
 bool ServiceManagerAgent::testmodulepost_requisites()
 {
-
-#ifdef HAS_API_APPLICATION
-        IARM_Bus_Disconnect();
-        IARM_Bus_Term();
-#endif	
         return TEST_SUCCESS;
 }
 
@@ -2089,6 +2079,10 @@ bool ServiceManagerAgent::SM_AppService_SetConnectionReset(IN const Json::Value&
         DEBUG_PRINT(DEBUG_TRACE,"SM_AppService_setConnectionReset--->Entry\n");
 
 #ifdef HAS_API_APPLICATION
+
+        IARM_Bus_Init(IARM_BUS_TDK_NAME);
+        IARM_Bus_Connect();
+
         if(&req["applicationID"]==NULL || &req["connectionID"]==NULL || &req["connectionResetLevel"]==NULL)
         {
                 response["result"]="FAILURE";
@@ -2165,6 +2159,9 @@ bool ServiceManagerAgent::SM_AppService_SetConnectionReset(IN const Json::Value&
                 response["details"] = "AppService not registered";
 
         response["result"] = "FAILURE";
+
+        IARM_Bus_Disconnect();
+        IARM_Bus_Term();
 #endif
         return TEST_FAILURE;
 }

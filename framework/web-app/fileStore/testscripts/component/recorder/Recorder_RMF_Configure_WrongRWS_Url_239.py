@@ -113,7 +113,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
             actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
             #Waiting for the error code in ocapri log after multiple connection retry requests to RWS
-            sleep (250);
+            sleep (450);
             tdkTestObj2=recObj.createTestStep('Recorder_checkOcapri_log');
             pattern = "RDK-10028"
             tdkTestObj2.addParameter("pattern",pattern);

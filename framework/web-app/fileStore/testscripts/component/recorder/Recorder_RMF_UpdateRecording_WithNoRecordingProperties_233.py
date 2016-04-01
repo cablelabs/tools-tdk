@@ -141,7 +141,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "Failed to get recording info using getRecordings"
                             else:
-                                reqRecording = {"recordingId":recordingID,"duration":120000,"deletePriority":"P3"}
+                                reqRecording = {"recordingId":recordingID,"duration":300000,"deletePriority":"P3"}
                                 ret = recorderlib.verifyCompletedRecording(recordingData,reqRecording)
                                 if "FALSE" in ret:
                                     tdkTestObj.setResultStatus("FAILURE");

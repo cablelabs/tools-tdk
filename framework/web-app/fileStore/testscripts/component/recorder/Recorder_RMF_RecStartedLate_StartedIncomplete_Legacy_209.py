@@ -109,16 +109,19 @@ def ScheduleRec():
 
 	        requestID = str(randint(10,500));
 	        recordingID = str(randint(10000, 500000));
-		duration = "1200000";
+		duration = "300000";
         	ocapId = tdkTestObj.getStreamDetails('01').getOCAPID();
 	        now = "curTime";
         	startTime = "0";
-		requestedStart = str(int(time.time())*1000 - 600000);
+		#requestedStart = str(int(time.time())*1000 - 600000);
+		#requestedStart = "60000";
 		genIdInput = recordingID;
 
 
 	        #Frame json message
-		jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":\""+requestedStart+"\",\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
+		#jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":\""+requestedStart+"\",\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
+		jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":-60000,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}"
+
 
 	        expResponse = "updateSchedule";
 	        tdkTestObj.executeTestCase(expectedResult);
@@ -154,7 +157,7 @@ def ScheduleRec():
 			exit();
 	        print "Successfully retrieved acknowledgement from recorder";
 		print "Wait for the recording to complete";
-		sleep(1200);
+		sleep(500);
 	        tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
         	expectedResult="SUCCESS";
                 print "Sending getRecordings to get the recording list"
