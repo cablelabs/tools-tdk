@@ -89,7 +89,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #Frame json message
         jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-        SchedulejsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+ocapId2+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        SchedulejsonMsg = "{\"updateSchedule\":{\"requestId\":\""+str(int(requestID)+1)+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+str(int(recordingID)+1)+"\",\"locator\":[\"ocap://"+ocapId2+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+str(int(recordingID)+1)+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -97,8 +97,6 @@ if "SUCCESS" in recLoadStatus.upper():
  	ScheduleResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',SchedulejsonMsg,ip);
         if expResponse in actResponse and expResponse in ScheduleResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
-                print "updateSchedule message post success";
-		sleep(10)
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
@@ -111,6 +109,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "Successfully retrieved acknowledgement from recorder";
+                        sleep(60);
                         # Reboot the STB
                         print "Rebooting the STB to get the recording list from full sync"
                         recObj.initiateReboot();
@@ -119,6 +118,7 @@ if "SUCCESS" in recLoadStatus.upper():
 			actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
                         tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
                         tdkTestObj1.executeTestCase(expectedResult);
+                        sleep(60);
                         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                         print actResponse;
                         recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)

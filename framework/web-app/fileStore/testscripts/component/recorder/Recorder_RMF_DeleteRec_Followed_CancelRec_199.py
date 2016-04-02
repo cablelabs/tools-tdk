@@ -72,7 +72,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
  	print "No Update Schedule Details: %s"%actResponse;
-	sleep(60);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -103,24 +103,23 @@ if "SUCCESS" in recLoadStatus.upper():
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
-                print "Wait for 60s to get acknowledgement"
-                sleep(60);
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
-		print "Looping till acknowledgement is received"
-		loop = 0;
-		while loop < 5:
-	                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	                #print "Retrieve Status Details: %s"%actResponse;
-			sleep(10);
-			loop = loop+1;
+                print "Looping till acknowledgement is received"
+                loop = 0;
+                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                while (('ack' not in actResponse) and (loop < 5)):
+                    actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                    sleep(10);
+                    loop = loop+1;
+                print "Retrieve Status Details: ",actResponse;
 		if 'acknowledgement' not in actResponse:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Received Empty/Error status";
                 elif 'acknowledgement' in actResponse:
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
-                    
+                    sleep(70); 
                     #Frame json message for update recording
                     jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P0\"}]}}";
 
@@ -131,24 +130,28 @@ if "SUCCESS" in recLoadStatus.upper():
                     if expResponse in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "updateRecordings message post success";
-                        print "Wait for 60s to get acknowledgement"
-                        sleep(60);
                         #Check for acknowledgement from recorder
                         tdkTestObj.executeTestCase(expectedResult);
                         print "Looping till acknowledgement is received"
                         loop = 0;
-                        while loop < 5:
-                                actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                #print "Retrieve Status Details: %s"%actResponse;
-                                sleep(10);
-                                loop = loop+1;
+                        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                        while (('ack' not in actResponse) and (loop < 5)):
+                            actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
+                            sleep(10);
+                            loop = loop+1;
+                        print "Retrieve Status Details: ",actResponse;
 			if 'acknowledgement' not in actResponse:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Received Empty/Error status";
                         elif 'acknowledgement' in actResponse:
                             print "Successfully retrieved acknowledgement from recorder";
-	                    #Check for acknowledgement from recorder
+                            sleep(30)
                             tdkTestObj.executeTestCase(expectedResult);
+                            print "Sending getRecordings to get the recording list"
+                            recorderlib.callServerHandler('clearStatus',ip)
+                            recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                            print "Wait for 60 seconds to get response from recorder"
+                            sleep(60);
                             actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 			    recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
 	                    print recordingData
@@ -157,18 +160,22 @@ if "SUCCESS" in recLoadStatus.upper():
                 	        value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                         	print "key: ",key," value: ",value
                                 print "Successfully retrieved the recording list from recorder";
-				if "ERASED" in value.upper():
-                                	print "Recording erased status received successfully";
+				if "COMPLETE" in value.upper():
+                                	print "Recording COMPLETE status received successfully";
                                 	response = recorderlib.callServerHandler('clearStatus',ip);
                                         print "Clear Status after getting status from RWS: %s"%response;
                                         jsonMsgCancelRecording = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"cancelRecordings\":[\""+recordingID+"\"]}}";
                                         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgCancelRecording,ip);
                                         print "updateSchedule Details for CancelRecording: %s"%actResponse;
-                                        sleep(60);
-                                        response = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        sleep(60);
-                                        print "Retrieve Status after getting status from RWS: %s"%response;
-                                        recordingData = recorderlib.getRecordingFromRecId(response,recordingID)
+                                        sleep(30);
+
+                                        recorderlib.callServerHandler('clearStatus',ip)
+                                        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                                        print "Wait for 1 min to get response from recorder"
+                                        sleep(60)
+                                        response = recorderlib.callServerHandler('retrieveStatus',ip)
+                                        print "Recording List: %s" %response;
+                                        recordingData = recorderlib.getRecordingFromRecId(response,recordingID);
                                         print recordingData
                                         if 'NOTFOUND' not in recordingData:
                                                 key = 'status'

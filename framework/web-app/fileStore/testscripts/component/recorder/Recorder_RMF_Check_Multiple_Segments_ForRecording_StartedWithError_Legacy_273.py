@@ -65,7 +65,7 @@ if "SUCCESS" in recLoadStatus.upper():
         recLoadDetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in recLoadDetails:
                print "Rebooting box for setting configuration"
-               RecObj.initiateReboot();
+               recObj.initiateReboot();
                print "Waiting for 5min for the recoder to be up"
 	       sleep(300);
 

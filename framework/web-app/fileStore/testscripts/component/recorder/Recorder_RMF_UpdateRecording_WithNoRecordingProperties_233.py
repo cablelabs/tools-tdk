@@ -76,22 +76,20 @@ if "SUCCESS" in recLoadStatus.upper():
         tdkTestObj.executeTestCase(expectedResult);
 
         #Execute updateSchedule
-        requestID = str(randint(10, 500))
-        recordingID = 'A'+str(randint(100000000, 500000000))+str(randint(10000000, 50000000))
-        duration = "300000"
-        epochTime = int(time()) * 1000
-        epochTime += 30000
-        startTime = str(epochTime)
+        requestID = str(randint(10, 500));
+        recordingID = str(randint(10000, 500000));
+        duration = "60000";
+        startTime = "0";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
+        now = "curTime"
 
         #Frame json message
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"fullSchedule\":true,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"start\":"+startTime+",\"duration\":"+duration+",\"ppv\":false,\"entitlementId\":0,\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\",\"requestedStart\":"+startTime+"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
-        actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+       
+        actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
 
         if "updateSchedule" in actResponse:
                 print "Inline updateSchedule message post success";
-                print "Waiting to get acknowledgement for updateSchedule"
-                sleep(20);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while ( ('acknowledgement' not in recResponse) and (retry < 10) ):
@@ -103,6 +101,8 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in recResponse:
 
                     print "Successfully retrieved acknowledgement from recorder for updateSchedule";
+                    sleep(70);
+
                     response = recorderlib.callServerHandler('clearStatus',ip);
                     tdkTestObj.executeTestCase(expectedResult);
                     #Frame json message for update recording
@@ -112,8 +112,6 @@ if "SUCCESS" in recLoadStatus.upper():
 
                     if "updateRecordings" in actResponse:
                         print "updateRecordings message post success";
-                        print "Waiting to get acknowledgement for updateRecordings"
-                        sleep(20);
                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                         retry = 0;
                         while ( ('acknowledgement' not in recResponse) and (retry < 10) ):
@@ -124,15 +122,14 @@ if "SUCCESS" in recLoadStatus.upper():
 
                         if 'acknowledgement' in recResponse:
                             print "Successfully retrieved acknowledgement from recorder for updateRecordings";
-                            print "Waiting for 5 mins for recording to be completed"
-                            sleep(300)
+                            sleep(30);
                             print "Sending getRecordings request to get the recording list"
                             response = recorderlib.callServerHandler('clearStatus',ip)
 
                             jsonMsg = "{\"getRecordings\":{}}"
                             serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip)
-                            print "Waiting for 3 mins to get recording list"
-                            sleep(180)
+                            print "Waiting for 1 mins to get recording list"
+                            sleep(60)
                             recResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                             print "Recording List: %s" %recResponse;
                             recordingData = recorderlib.getRecordingFromRecId(recResponse,recordingID);
@@ -141,7 +138,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "Failed to get recording info using getRecordings"
                             else:
-                                reqRecording = {"recordingId":recordingID,"duration":300000,"deletePriority":"P3"}
+                                reqRecording = {"recordingId":recordingID,"duration":60000,"deletePriority":"P3"}
                                 ret = recorderlib.verifyCompletedRecording(recordingData,reqRecording)
                                 if "FALSE" in ret:
                                     tdkTestObj.setResultStatus("FAILURE");
