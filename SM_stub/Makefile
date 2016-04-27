@@ -50,7 +50,7 @@ INCLUDES  +=    -I include \
 
 
 #LIBs common for Both CLIENT and GATEWAY
-LDOPTS += -lservicemanager -l:libgobject-2.0.so.0 -l:libgio-2.0.so.0 -l:libgstapp-0.10.so.0 -l:libgstinterfaces-0.10.so.0 -l:libgstreamer-0.10.so.0 -l:libgmodule-2.0.so.0 -l:libgstcontroller-0.10.so.0 
+LDOPTS += -lservicemanager -l:libgobject-2.0.so.0 -l:libgio-2.0.so.0 -l:libgmodule-2.0.so.0 
 
 
 LIBOPTS   := -shared

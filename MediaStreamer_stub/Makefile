@@ -50,10 +50,6 @@ LDOPTS    +=    -L $(IMAGE_PATH)/mnt/nfs/bin/target-snmp/lib      \
                 -L $(IMAGE_PATH)/mnt/nfs/bin \
 		-ltinyxml -l:libnetsnmp.so.15 -l:libnetsnmpagent.so.15 -l:libnetsnmphelpers.so.15 -lpodmgr -lsectionfilter -linbsimanager -linbsectionfilter -lqamsrc -l:libgio-2.0.so.0 -lglib-2.0 -llog4c -l:libgobject-2.0.so.0 -lhnsource -lrdkloggers -l:libhnsource.so.0
 
-SOURCES   := $(RDK_BUILD_DIR)/mediaframework/core/rmfbase.cpp \
-	     $(RDK_BUILD_DIR)/mediaframework/mediaplayersink/mediaplayersink.cpp \
-             $(RDK_BUILD_DIR)/mediaframework/hnsource/hnsource.cpp
-
 CFLAGS += -g -Wall -Wno-format -Wunused -DUSE_CC_GETTIMEOFDAY -DRMF_OSAL_FEATURE_IPV6 -DRMF_OSAL_LITTLE_ENDIAN  -DXONE_STB -DUSE_HW_DEMUX -DUSE_QAMSRC -DUSE_TRANSCODEFILTER -DUSE_FRONTPANEL -DUSE_DTCP -DUSE_HNSINK -DUSE_HNSRC -DUSE_DVR -DUSE_VODSRC -DUSE_MEDIAPLAYERSINK -DSRC_INIT_IN_CONSTRUCTOR -DRMF_STREAMER -DENABLE_AUTODISCOVERY_FOR_VOD   -DQAMSRC_FACTORY -DQAMSRC_PMTBUFFER_PROPERTY -DRECORDER_SUPPORT -DTEST_WITH_PODMGR -DIPPV_CLIENT_ENABLED -DUSE_POD_IPC -DOOBSI_SUPPORT -DDEBUG_CONF_FILE="\"debug.ini\"" -DENV_CONF_FILE="\"rmfconfig.ini\""
 endif
 

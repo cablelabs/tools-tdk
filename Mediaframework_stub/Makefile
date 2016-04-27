@@ -82,9 +82,7 @@ LIBMF     := libmediaframeworkstub.so
 # Library built by this makefile
 #
 LIB        = $(LIBDIR)/$(LIBMF)
-SOURCES   += $(SRC_DIR)*.cpp	\
-		$(RDK_BUILD_DIR)/mediaframework/mediaplayersink/mediaplayersink.cpp	\
-		$(RDK_BUILD_DIR)/mediaframework/dvr/source/DVRSource.cpp
+SOURCES   += $(SRC_DIR)*.cpp	
 #
 # Intermediate files
 #
