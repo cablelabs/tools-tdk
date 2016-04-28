@@ -1,0 +1,3 @@
+trash.png  - Copyright (C) Marcius Brandao
+https://code.google.com/p/redefoks/ 
+http://dev.perl.org/licenses/artistic.html

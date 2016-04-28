@@ -3,7 +3,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
+  <version>5</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_Configure_WrongLongpoll_Url_238</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -105,13 +105,21 @@ if "SUCCESS" in recLoadStatus.upper():
             print "Sleeping to wait for the recoder to be up"
             sleep(300);
             #sleep to wait error code to come after multiple retries to get the connection to long poll
-            sleep(450); 
+            print "Checking ocapri_log" 
             tdkTestObj2=recObj.createTestStep('Recorder_checkOcapri_log');
             pattern = "RDK-10029"
             tdkTestObj2.addParameter("pattern",pattern);
             tdkTestObj2.executeTestCase(expectedResult);  
             result = tdkTestObj2.getResult();
             details = tdkTestObj2.getResultDetails();
+            loop=0;
+             
+            while (('SUCCESS' not in result) and (loop < 5)):
+                sleep(300);
+                tdkTestObj2.executeTestCase(expectedResult);  
+                result = tdkTestObj2.getResult();
+                details = tdkTestObj2.getResultDetails();
+                loop = loop+1;
             print result,",Details of log ",details
             if "SUCCESS" in result:
                 tdkTestObj2.setResultStatus("SUCCESS");

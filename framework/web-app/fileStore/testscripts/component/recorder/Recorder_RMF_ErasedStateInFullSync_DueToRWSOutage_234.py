@@ -123,7 +123,7 @@ if "SUCCESS" in recLoadStatus.upper():
                         #Frame json message for update recording
                         requestID = str(randint(10, 500));
                         jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P0\"}]}}";
-                        actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgUpdateRecording,ip);
+                        actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgUpdateRecording,ip);
                         if "updateRecordings" in actResponse:
                                 print "updateRecordings message post success";
                                 #Wait for 60s and retrieve status - expect no response 
@@ -135,11 +135,6 @@ if "SUCCESS" in recLoadStatus.upper():
                                         tdkTestObj.setResultStatus("FAILURE");
                                 else:
                                         print "Recorder did not send recordingStatus notification to the RWS for deleted recording"
-                                        print "Rebooting STB for full sync"
-                                        recObj.initiateReboot();
-                                        print "Waiting for the recorder to be up"
-                                        sleep(300)
-
                                         print "Restore RWS"
                                         #Enable RWS status server
                                         recorderlib.callServerHandlerWithType('enableServer','RWSStatus',ip)
@@ -153,6 +148,11 @@ if "SUCCESS" in recLoadStatus.upper():
 
                                         #wait for 60s for recorder to connect to rws
                                         sleep(60)
+                                        print "Rebooting STB for full sync"
+                                        recObj.initiateReboot();
+                                        print "Waiting for the recorder to be up"
+                                        sleep(300)
+
                                         print "Sending noUpdate to get the recording list after full sync"
                                         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip)
                                         sleep(30)

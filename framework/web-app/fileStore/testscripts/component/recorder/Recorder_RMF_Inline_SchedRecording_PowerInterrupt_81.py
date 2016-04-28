@@ -94,7 +94,6 @@ if "SUCCESS" in loadmodulestatus.upper():
         RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 	serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL,ip);
         print "serverResponse : %s" %serverResponse;
-	sleep(60);
 
         #Execute updateSchedule
         requestID = str(randint(10, 500));
@@ -114,7 +113,6 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(90);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while (( ([] == recResponse) or ('ack' not in recResponse) ) and (retry < 10 )):
@@ -124,19 +122,20 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "Retrieve Status Details: ",recResponse;
                 if "ack" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
+                        sleep(90);
+			response = recorderlib.callServerHandler('clearStatus',ip);
                         print "Rebooting the box to get full sync..."
 
                         obj.initiateReboot();
                         print "Sleeping to wait for the recoder to be up"
                         sleep(300);
-			response = recorderlib.callServerHandler('clearStatus',ip);
                         print "Sending noUpdate to get the recording list"
                         RequestURL = "{\"noUpdate\":{}}";
                         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',RequestURL,ip);
                         if "noUpdate" in serverResponse:
                                 print "NoUpdate message post success";
                                 print "Wait for 180sec to get the recording list"
-                                sleep(180);
+                                sleep(60);
                                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                                 print "Recording List: %s" %actResponse;
 
@@ -170,4 +169,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #unloading Recorder module
         obj.unloadModule("Recorder");
-
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    obj.setLoadModuleStatus("FAILURE"); 

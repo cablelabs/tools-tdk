@@ -15,7 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_261 -Recordings should always transition to "StartedInComplete" Not "Started" if it has started with status "StartedWithError"</synopsis>
+  <synopsis>CT_Recoder_DVR_Protocol_261 -Recordings should always transition to "InComplete" Not "Started" if it has started with status "StartedWithError"</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -141,7 +141,7 @@ def ScheduleRec():
                     elif 'acknowledgement' in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "Successfully retrieved acknowledgement from recorder";
-                        sleep(60)
+                        sleep(80)
                         # Reboot the STB before starting the recording
                         print "Rebooting the STB to get the recording list from full sync"
                         recObj.initiateReboot();
@@ -165,12 +165,12 @@ def ScheduleRec():
                             statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
                             print "Successfully retrieved the recording list from recorder";
                             tdkTestObj.setResultStatus("SUCCESS");
-                            if "STARTEDINCOMPLETE" in statusValue.upper():
+                            if "INCOMPLETE" in statusValue.upper():
                                 tdkTestObj.setResultStatus("SUCCESS");
-                                print "Recording completed successfully.";
+                                print "Recording status set to INCOMPLETE";
                             else:
                                 tdkTestObj.setResultStatus("FAILURE");
-                                print "Recording not completed successfully";
+                                print "Recording status NOT set to INCOMPLETE";
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to retrieve the recording list from recorder";

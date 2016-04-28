@@ -95,7 +95,6 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
                 print "Wait for acknowledgement"
-                sleep(20);
                 #Check for acknowledgement from recorder
 		print "Looping till acknowledgement is received"
 		loop = 0;
@@ -109,7 +108,7 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
                     print "Wait for 60s for the recording to be completed"
-		    sleep(60)
+		    sleep(70)
                     response = recorderlib.callServerHandler('clearStatus',ip);
 		    # Reboot the STB
 		    print "Rebooting the STB to get the recording list from full sync"
@@ -125,7 +124,7 @@ if "SUCCESS" in recLoadStatus.upper():
                     if expResponse in actResponse:
                         print "No Update Schedule message post success";
                         print "Wait to get the recording list"
-                        sleep(120);
+                        sleep(60);
                         tdkTestObj1.setResultStatus("SUCCESS");
                         #Check for acknowledgement from recorder
                         tdkTestObj1.executeTestCase(expectedResult);
@@ -135,9 +134,6 @@ if "SUCCESS" in recLoadStatus.upper():
                         if "dvrProtocolVersion:7" in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully advertised DVR protocol version 7"
-                        elif "dvrProtocolVersion:0" in actResponse:
-                            tdkTestObj.setResultStatus("SUCCESS");
-                            print "Recorder advertised default protocol version 0"
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
                             print "Failed to advertise DVR protocol version 7"
@@ -153,3 +149,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE");	

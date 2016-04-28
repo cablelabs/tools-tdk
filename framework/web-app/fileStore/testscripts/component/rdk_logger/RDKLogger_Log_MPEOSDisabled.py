@@ -72,9 +72,9 @@ if "SUCCESS" in result.upper():
     obj.setLoadModuleStatus("SUCCESS");
 
     #Primitive test case which associated to this Script
-    tdkTestObj = obj.createTestStep('RDKLogger_Log');
+    tdkTestObj = obj.createTestStep('RDKLogger_Log_MPEOSDisabled');
 
-    expectedRes = "FAILURE"
+    expectedRes = "SUCCESS"
 
     module = "TEST1"
     print "Requested module: %s"%module
@@ -91,7 +91,7 @@ if "SUCCESS" in result.upper():
     print "[TEST EXECUTION RESULT] : %s" %result;
     details = tdkTestObj.getResultDetails();
     #Set the result status of execution
-    if "FAILURE" in result.upper():
+    if "SUCCESS" in result.upper():
         tdkTestObj.setResultStatus("SUCCESS");
         print "Logging failed with MPEOS Disabled";
     else:

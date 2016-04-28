@@ -124,6 +124,81 @@ bool CheckLog(const char* search)
     return false;
 }
 
+bool createTdkDebugIniFile(bool enableMPELog=true)
+{
+        // Make a copy of debug.ini file for testing
+        ifstream  src(DEBUG_CONF_FILE, ios::binary);
+        ofstream  dst(tdkDebugIniFile, ios::binary);
+
+        if(!src || !dst)
+        {
+            DEBUG_PRINT(DEBUG_TRACE, "Error opening files!\n");
+            return false;
+        }
+
+        if (!enableMPELog)
+        {
+            //Disable MPEOS debug support
+            string strTemp;
+            while(getline(src,strTemp)){
+                if (strTemp.find("EnableMPELog = TRUE") != std::string::npos) {
+                    dst << "EnableMPELog = FALSE" << endl;
+                }
+                else {
+                    dst << strTemp << endl;
+                }
+            }
+        }
+        else
+        {
+            dst << src.rdbuf();
+        }
+
+        src.close();
+        dst.close();
+
+        // Now edit temp debug.ini file to add modules and env variables
+        // for simulating test scenarios
+        fstream debugFile;
+        string line;
+        debugFile.open (tdkDebugIniFile, ios::in | ios::out | ios::app);
+        if (debugFile.is_open())
+        {
+            debugFile << "LOG.RDK.TEST1 = ALL DEBUG TRACE" << endl;
+            debugFile << "LOG.RDK.TEST2 = NONE ALL" << endl;
+            debugFile << "LOG.RDK.TEST3 = ALL NONE" << endl;
+            debugFile << "LOG.RDK.TEST4 = TRACE" << endl;
+            debugFile << "LOG.RDK.TEST5 = !TRACE" << endl;
+            debugFile << "LOG.RDK.TEST6 = " << endl;
+
+            //Print temp debug.ini file contents
+            debugFile.clear();                  // clear fail and eof bits
+            debugFile.seekg(0, ios::beg);       // back to the start!
+
+            DEBUG_PRINT(DEBUG_TRACE, "\n==== Start %s ====================\n", tdkDebugIniFile.c_str());
+            while(debugFile.good())
+            {
+                    getline(debugFile,line);
+                    // Ignore commented lines
+                    if (line[0] == '#')
+                        continue;
+                    DEBUG_PRINT(DEBUG_TRACE, "%s", line.c_str());
+            }
+            DEBUG_PRINT(DEBUG_TRACE, "\n====== End %s ====================\n\n", tdkDebugIniFile.c_str());
+            // end of printing temp debug.ini
+
+            debugFile.close();
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\n%s: Unable to create test conf file %s\n",__FUNCTION__,tdkDebugIniFile.c_str());
+                return false;
+        }
+
+        return true;
+}
+
+
 /*************************************************************************
 Function name : RDKLoggerAgent::RDKLoggerAgent
 
@@ -163,6 +238,7 @@ bool RDKLoggerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAge
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_Msg, "TestMgr_RDKLogger_Log_Msg");
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_SetLogLevel, "TestMgr_RDKLogger_SetLogLevel");
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_GetLogLevel, "TestMgr_RDKLogger_GetLogLevel");
+        ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_MPEOSDisabled,"TestMgr_RDKLogger_Log_MPEOSDisabled");
 
         return TEST_SUCCESS;
 }
@@ -179,49 +255,9 @@ std::string RDKLoggerAgent::testmodulepre_requisites()
 	DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule pre_requisites --> Entry\n");
 
 	// Make a copy of debug.ini file for testing
-     	ifstream  src(DEBUG_CONF_FILE, ios::binary);
-     	ofstream  dst(tdkDebugIniFile, ios::binary);
-     	dst << src.rdbuf();
-
-    	src.close();
-    	dst.close();
-
-	// Edit temp debug.ini file to add modules and env variables
-	// for simulating test scenarios
-	fstream debugFile;
-	string line;
-        debugFile.open (tdkDebugIniFile, ios::in | ios::out | ios::app);
-        if (debugFile.is_open())
+        if (false == createTdkDebugIniFile())
         {
-            debugFile << "LOG.RDK.TEST1 = ALL DEBUG TRACE" << endl;
-	    debugFile << "LOG.RDK.TEST2 = NONE ALL" << endl;
-  	    debugFile << "LOG.RDK.TEST3 = ALL NONE" << endl;
-            debugFile << "LOG.RDK.TEST4 = TRACE" << endl;
-	    debugFile << "LOG.RDK.TEST5 = !TRACE" << endl;
-	    debugFile << "LOG.RDK.TEST6 = " << endl;
-
-	    //Print temp debug.ini file contents
-	    debugFile.clear();                  // clear fail and eof bits
-	    debugFile.seekg(0, ios::beg);       // back to the start!
-
-	    DEBUG_PRINT(DEBUG_TRACE, "\n==== Start %s ====================\n", tdkDebugIniFile.c_str());
-	    while(debugFile.good())
-            {
-            	    getline(debugFile,line);
-            	    // Ignore commented lines
-            	    if (line[0] == '#')
-                	continue;
-		    DEBUG_PRINT(DEBUG_TRACE, "%s", line.c_str());
-            }
-	    DEBUG_PRINT(DEBUG_TRACE, "\n====== End %s ====================\n\n", tdkDebugIniFile.c_str());
-	    // end of printing temp debug.ini
-
-	    debugFile.close();
-        }
-        else
-        {
-                DEBUG_PRINT(DEBUG_ERROR,"\n%s: Unable to open conf file %s\n",__FUNCTION__,tdkDebugIniFile.c_str());
-		return "FAILURE<DETAILS>Failed to open conf file";
+                return "FAILURE<DETAILS>Failed to create test conf file";
         }
 
         // Initialize the temp conf file
@@ -260,9 +296,22 @@ bool RDKLoggerAgent::testmodulepost_requisites()
   	else
 	{
 		DEBUG_PRINT(DEBUG_TRACE, "%s file successfully deleted\n", tdkDebugIniFile.c_str());
-		DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule post requisites --> Exit");
 	}
 
+        // De-Initialize rdklogger
+        rdk_Error ret = rdk_logger_deinit();
+        if ( RDK_SUCCESS != ret)
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "Failed to de-init rdk logger. ErrCode = %d\n", ret);
+                DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule post requisites --> Exit");
+                return TEST_FAILURE;
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "rdk logger de-init successful\n");
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule post requisites --> Exit");
        	return TEST_SUCCESS;
 }
 
@@ -848,6 +897,91 @@ bool RDKLoggerAgent::RDKLoggerAgent_GetLogLevel(IN const Json::Value& req, OUT J
 	return TEST_FAILURE;
 }
 
+bool RDKLoggerAgent::RDKLoggerAgent_Log_MPEOSDisabled(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_MPEOSDisabled --->Entry\n");
+        rdk_Error ret = RDK_SUCCESS;
+
+        // Remove the local copy of debug.ini file created in testmodulepre_requisites
+        if( remove( tdkDebugIniFile.c_str() ) != 0 )
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Error deleting file %s\n", tdkDebugIniFile.c_str());
+                response["result"] = "FAILURE";
+                response["details"] = "Error deleting temp debug.ini file";
+
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_MPEOSDisabled --> Exit");
+                return TEST_FAILURE;
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "%s file successfully deleted\n", tdkDebugIniFile.c_str());
+        }
+
+        // De-Initialize rdklogger with EnableMPELog enabled in testmodulepre_requisites
+        ret = rdk_logger_deinit();
+        if ( RDK_SUCCESS != ret)
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "Failed to de-init rdk logger. ErrCode = %d\n", ret);
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to de-init rdk logger";
+
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_MPEOSDisabled --> Exit");
+                return TEST_FAILURE;
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "rdk logger de-init successful\n");
+        }
+
+        // create a new local copy of debug.ini file with MPEOS debug support disabled
+        if (false == createTdkDebugIniFile(false))
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "Failed to create test conf file with MPEOS debug support disabled\n");
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to create conf file with MPEOS debug support disabled";
+
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_MPEOSDisabled --> Exit");
+                return TEST_FAILURE;
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "Creation of test conf file with MPEOS debug support disabled successful\n");
+        }
+
+        // Initialize the temp conf file with MPEOS debug support disabled
+        ret = rdk_logger_init(tdkDebugIniFile.c_str());
+        if ( RDK_SUCCESS != ret)
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "Failed to init rdk logger with EnableMPELog false. ErrCode = %d\n", ret);
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to init rdk logger with MPEOS disabled";
+
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_MPEOSDisabled --> Exit");
+                return TEST_FAILURE;
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "rdk logger init successful\n");
+        }
+
+        //Log test message with MPEOS disabled
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST1", "Log message with EnableMPELog False\n");
+        if (false == CheckLog("Log message with EnableMPELog False"))
+        {
+                response["result"] = "SUCCESS";
+                response["details"] = "rdk logging failed with MPEOS disabled";
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_MPEOSDisabled -->Exit\n");
+                return TEST_SUCCESS;
+        }
+        else
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "rdk logging success with MPEOS disabled";
+                DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_MPEOSDisabled -->Exit\n");
+                return TEST_FAILURE;
+        }
+}
+
 /**************************************************************************
 Function Name   : CreateObject
 
@@ -891,6 +1025,7 @@ bool RDKLoggerAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgent
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_Msg");
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_SetLogLevel");
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_GetLogLevel");
+        ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_MPEOSDisabled");
 
         return TEST_SUCCESS;
 }

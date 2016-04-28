@@ -172,3 +172,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE"); 

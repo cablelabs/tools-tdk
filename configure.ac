@@ -1,3 +1,12 @@
+dnl ============================================================================
+dnl COMCAST C O N F I D E N T I A L AND PROPRIETARY
+dnl ============================================================================
+dnl This file (and its contents) are the intellectual property of Comcast. It may
+dnl not be used, copied, distributed or otherwise disclosed in whole or in part
+dnl without the express written permission of Comcast.
+dnl ============================================================================
+dnl Copyright (c) 2014 Comcast. All rights reserved.
+dnl ============================================================================
 dnl                                               -*- Autoconf -*-
 dnl Process this file with autoconf to produce a configure script.
 

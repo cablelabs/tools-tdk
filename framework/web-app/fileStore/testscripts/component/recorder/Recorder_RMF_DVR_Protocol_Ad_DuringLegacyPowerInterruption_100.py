@@ -96,7 +96,6 @@ if "SUCCESS" in recLoadStatus.upper():
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
-                sleep(5);
                 retry=0
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 while (( ('ack' not in actResponse) ) and (retry < 10)):
@@ -107,6 +106,8 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "Successfully retrieved acknowledgement from recorder";
+                        sleep(30);
+                        response = recorderlib.callServerHandler('clearStatus',ip);
                         # Reboot the STB
                         print "Rebooting the STB to get the recording list from full sync"
                         recObj.initiateReboot();
@@ -121,9 +122,6 @@ if "SUCCESS" in recLoadStatus.upper():
                         if "dvrProtocolVersion:7" in actResponse:
                                 tdkTestObj.setResultStatus("SUCCESS");
                                 print "Successfully advertised DVR protocol version 7"
-                        elif "dvrProtocolVersion:0" in actResponse:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "Recorder advertised default DVR protocol version 0"
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "Failed to advertise DVR protocol version 7"
@@ -136,3 +134,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE");	

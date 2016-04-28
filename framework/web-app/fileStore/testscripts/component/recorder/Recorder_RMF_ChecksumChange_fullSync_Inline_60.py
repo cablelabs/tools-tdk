@@ -120,7 +120,7 @@ if "SUCCESS" in recLoadStatus.upper():
                     	if expResponse in actResponse:
                         	print "No Update Schedule message post success";
                         	print "Wait for some time to get the recording list"
-	                        sleep(180);
+	                        sleep(60);
 	                        tdkTestObj.setResultStatus("SUCCESS");
         	                #Check for acknowledgement from recorder
                         	actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
@@ -151,7 +151,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                 			if expResponse in actResponse:
                                         			print "No Update Schedule message post success";
                                         			print "Wait for some time to get the recording list"
-                                        			sleep(180);
+                                        			sleep(60);
                                         			tdkTestObj.setResultStatus("SUCCESS");
                                         			tdkTestObj.executeTestCase(expectedResult);
                                         			actResponse = recorderlib.callServerHandler('retrieveStatus',ip);

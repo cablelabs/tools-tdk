@@ -80,6 +80,21 @@ if "SUCCESS" in loadmodulestatus.upper():
         response = recorderlib.callServerHandler('retrieveStatus',ip);
         print "Retrieve Status Details: %s"%response;
 
+        #Complete a recording to change check sum
+        requestID = str(randint(10, 500));
+        recordingID = str(randint(10000, 500000));
+        #5mins duration
+        duration = "30000";
+        startTime = "0";
+        genIdInput = "TDK456";
+        ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
+        now = "curTime";
+
+        #Frame json message
+        RequestURL = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\""+genIdInput+"\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        serverResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',RequestURL,ip);
+        print "serverResponse : %s" %serverResponse;
+
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
@@ -107,7 +122,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "Retrieve Status Details: ",recResponse;
                 if "ack" in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
-                        sleep(60);
+                        sleep(90);
                         print "Rebooting the box to get full sync..."
                         obj.initiateReboot();
                         print "Sleeping to wait for the recoder to be up"
@@ -148,3 +163,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 
         #unloading Recorder module
         obj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    obj.setLoadModuleStatus("FAILURE");

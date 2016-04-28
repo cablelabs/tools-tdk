@@ -71,7 +71,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
  	print "No Update Schedule Details: %s"%actResponse;
-	sleep(30);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -100,7 +100,6 @@ if "SUCCESS" in recLoadStatus.upper():
                 #Check for acknowledgement from recorder
                 tdkTestObj.executeTestCase(expectedResult);
 		print "Looping till acknowledgement is received"
-                sleep(5);
                 retry=0
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 while (( ('ack' not in actResponse) ) and ('ERROR' not in actResponse) and (retry < 15)):
@@ -111,6 +110,8 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "Successfully retrieved acknowledgement from recorder";
+                        sleep(30);
+                        response = recorderlib.callServerHandler('clearStatus',ip);
                         # Reboot the STB
                         print "Rebooting the STB to get the recording list from full sync"
                         recObj.initiateReboot();
@@ -144,3 +145,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE");

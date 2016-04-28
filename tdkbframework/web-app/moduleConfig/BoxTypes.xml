@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Box xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SetTopBox>
+    <BoxType>X1</BoxType>
+    <BoxType>X2</BoxType>
+    <BoxType>X3</BoxType>
+    <BoxType>X4</BoxType>
+    <BoxType>XG5</BoxType>
+  </SetTopBox>  
+  <BoxModel>
+  	<ModelType>Intel</ModelType>
+  	<ModelType>PACE</ModelType>
+  	<ModelType>AARIS-Intel</ModelType>
+  	<ModelType>ARM</ModelType>
+  </BoxModel>
+</Box>

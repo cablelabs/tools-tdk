@@ -1,3 +1,13 @@
+#  ============================================================================
+#  COMCAST C O N F I D E N T I A L AND PROPRIETARY
+#  ============================================================================
+#  This file (and its contents) are the intellectual property of Comcast. It may
+#  not be used, copied, distributed or otherwise disclosed in whole or in part
+#  without the express written permission of Comcast.
+#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ============================================================================
+
 ######################################################################################################
 # DEBUG_LEVEL shall be TRACE/ERROR/LOG                                                               #
 # RDK_VERSION shall be RDK1DOT2/RDK1DOT3/RDK2DOT0 based on the RDK version in the target box         #

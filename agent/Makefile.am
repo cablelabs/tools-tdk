@@ -6,6 +6,5 @@ AM_CXXFLAGS = -DYOCTO_LIB_LOADING -DDEBUG_LEVEL_TRACE -DRDKVERSION="\"${RDK_VERS
 bin_PROGRAMS = rdk_tdk_agent_process
 rdk_tdk_agent_processdir = ${bindir}
 rdk_tdk_agent_process_SOURCES = src/agentmain.cpp src/rpcmethods.cpp
-rdk_tdk_agent_process_SCRIPTS = scripts/runSysStat.sh scripts/TDK_version.txt scripts/RemoveLogs.sh scripts/file_copy.sh
 rdk_tdk_agent_process_LDADD = -ljsoncpp -ljsonrpc-cpp -ldl -lpthread
 rdk_tdk_agent_process_includedir = ${includedir}

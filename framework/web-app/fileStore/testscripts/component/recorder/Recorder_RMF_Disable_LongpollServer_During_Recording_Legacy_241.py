@@ -109,14 +109,23 @@ if "SUCCESS" in recLoadStatus.upper():
         if "Disabled" in actResponse:
             tdkTestObj.setResultStatus("SUCCESS");
             print "Long poll server is disabled";
-            sleep(400);
+            print "Checking ocapri_log"
             tdkTestObj2=recObj.createTestStep('Recorder_checkOcapri_log');
             pattern = "RDK-10029"
             tdkTestObj2.addParameter("pattern",pattern);
             tdkTestObj2.executeTestCase(expectedResult);  
             result = tdkTestObj2.getResult();
             details = tdkTestObj2.getResultDetails();
+
+            loop=0
+            while (('SUCCESS' not in result) and (loop < 5)):
+                sleep(300);
+                tdkTestObj2.executeTestCase(expectedResult);
+                result = tdkTestObj2.getResult();
+                details = tdkTestObj2.getResultDetails();
+                loop = loop+1;
             print result,",Details of log ",details
+
             if "SUCCESS" in result:
                 tdkTestObj2.setResultStatus("SUCCESS");
                 print "Error Log RDK-10029 for Long poll server connection lost is found ";
@@ -132,6 +141,8 @@ if "SUCCESS" in recLoadStatus.upper():
             #To enable the long poll server
             actResponse = recorderlib.callServerHandlerWithType('enableServer','LPServer',ip);
             print actResponse
+            print "Wait for recorder to connect to longpoll server"
+            sleep(250);
       
         else:
             tdkTestObj.setResultStatus("FAILURE");

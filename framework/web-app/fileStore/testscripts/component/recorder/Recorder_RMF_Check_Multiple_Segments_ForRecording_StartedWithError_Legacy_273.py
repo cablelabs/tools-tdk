@@ -120,9 +120,9 @@ if "SUCCESS" in recLoadStatus.upper():
             elif 'acknowledgement' in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "Successfully retrieved acknowledgement from recorder";
-                sleep(60)
+                sleep(80)
                 # Reboot the STB before starting the recording
-                print "Rebooting the STB to get the recording list from full sync"
+                print "Rebooting the STB to get the recording list"
                 recObj.initiateReboot();
                 print "Sleeping to wait for the recoder to be up"
                 sleep(300);
@@ -141,9 +141,9 @@ if "SUCCESS" in recLoadStatus.upper():
                     statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
                     print "Successfully retrieved the recording list from recorder";
                     tdkTestObj.setResultStatus("SUCCESS");
-                    if "STARTEDINCOMPLETE" in statusValue.upper():
+                    if "INCOMPLETE" in statusValue.upper():
                         tdkTestObj.setResultStatus("SUCCESS");
-                        print "Recording with status STARTEDINCOMPLETE";
+                        print "Recording with status INCOMPLETE";
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Recording status STARTEDINCOMPLETE not set successfully";
@@ -152,12 +152,12 @@ if "SUCCESS" in recLoadStatus.upper():
                      print "Failed to retrieve the recording list from recorder";
 
                 # Reboot the STB to get the recording as multiple segements
-                print "Rebooting the STB to get the recording list from full sync"
+                print "Rebooting the STB to get the recording list"
                 recObj.initiateReboot();
                 print "Sleeping to wait for the recoder to be up"
                 sleep(300);
                 print "Wait for the recording to complete"
-                #sleep(300);
+                sleep(300);
 
                 tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
                 tdkTestObj.executeTestCase(expectedResult);

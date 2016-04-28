@@ -1,3 +1,5 @@
+## Copyright (c) 2013 Comcast. All rights reserved.
+
 ACLOCAL_AMFLAGS = -Im4 --install
 
 AM_CPPFLAGS = -c ${COPTS} -fPIC

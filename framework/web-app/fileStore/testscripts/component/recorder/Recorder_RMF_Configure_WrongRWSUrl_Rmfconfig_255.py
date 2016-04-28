@@ -65,7 +65,7 @@ MFLoadStatus = obj.getLoadModuleResult();
 print "MF module loading status : %s" %MFLoadStatus
 
 #Check for SUCCESS/FAILURE of Recorder module
-if "SUCCESS" in recLoadStatus.upper():
+if "SUCCESS" in recLoadStatus.upper() and "SUCCESS" in MFLoadStatus.upper() :
 
 	loadmoduledetails = recObj.getLoadModuleDetails();
         if "REBOOT_REQUESTED" in loadmoduledetails:
@@ -129,19 +129,29 @@ if "SUCCESS" in recLoadStatus.upper():
         recLoadStatus = recObj.getLoadModuleResult();
         print "Recorder module loading status : %s" %recLoadStatus;
         recObj.setLoadModuleStatus(recLoadStatus);
-   
+       
+        print "Checking ocapri_log" 
         tdkTestObj2=recObj.createTestStep('Recorder_checkOcapri_log');
         pattern = "RDK-10028"
         tdkTestObj2.addParameter("pattern",pattern);
         tdkTestObj2.executeTestCase(expectedResult);  
         result = tdkTestObj2.getResult();
         details = tdkTestObj2.getResultDetails();
+
+        loop=0
+        while (('SUCCESS' not in result) and (loop < 5)):
+            sleep(300);
+            tdkTestObj2.executeTestCase(expectedResult);
+            result = tdkTestObj2.getResult();
+            details = tdkTestObj2.getResultDetails();
+            loop = loop+1;
+
         print result,",Details of log ",details
         if "SUCCESS" in result:
             tdkTestObj2.setResultStatus("SUCCESS");
             print "Error Log RDK-10028 for RWS server connection lost is found ";
         else:
-            tdkTestObj2.setResultStatus("SUCCESS");
+            tdkTestObj2.setResultStatus("FAILURE");
             print "Error Log RDK-10028 for RWS server connection lost is NOT found "; 
        
         rmfConfObj = recObj.createTestStep('Recorder_SetValuesInRmfconfig');
@@ -169,6 +179,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+        obj.unloadModule("mediaframework");
 else:
     print "Failed to load Recorder module";
     #Set the module loading status

@@ -110,13 +110,22 @@ if "SUCCESS" in recLoadStatus.upper():
             jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
             actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
-            sleep(700);
+            print "Checking ocapri_log"
             tdkTestObj2=recObj.createTestStep('Recorder_checkOcapri_log');
             pattern = "RDK-10028"
             tdkTestObj2.addParameter("pattern",pattern);
             tdkTestObj2.executeTestCase(expectedResult);  
             result = tdkTestObj2.getResult();
             details = tdkTestObj2.getResultDetails();
+            
+            loop=0
+            while (('SUCCESS' not in result) and (loop < 5)):
+                sleep(300);
+                tdkTestObj2.executeTestCase(expectedResult);
+                result = tdkTestObj2.getResult();
+                details = tdkTestObj2.getResultDetails();
+                loop = loop+1;
+
             print result,",Details of log ",details
             if "SUCCESS" in result:
                 tdkTestObj2.setResultStatus("SUCCESS");
@@ -135,6 +144,8 @@ if "SUCCESS" in recLoadStatus.upper():
             else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Alternate URL of RWSStatus server is not reverted";
+            #wait for rws status server to reconnect
+            sleep(60);
 
         else:
             tdkTestObj.setResultStatus("FAILURE");

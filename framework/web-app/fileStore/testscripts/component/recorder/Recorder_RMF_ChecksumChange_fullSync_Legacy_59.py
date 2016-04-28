@@ -107,7 +107,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	                print "Wait for 70s for the recording to be completed"
 		   	sleep(70);
                     	# Reboot the STB
-			response = recorderlib.callServerHandler('clearStatus',ip);
+                        response = recorderlib.callServerHandler('clearStatus',ip);
 		    	print "Rebooting the STB to get the recording list from full sync"
 		    	recObj.initiateReboot();
 		    	print "Sleeping to wait for the recoder to be up"
@@ -119,7 +119,7 @@ if "SUCCESS" in recLoadStatus.upper():
                     	if expResponse in actResponse:
                         	print "No Update Schedule message post success";
                         	print "Wait for some time to get the recording list"
-	                        sleep(180);
+	                        sleep(60);
 	                        tdkTestObj.setResultStatus("SUCCESS");
         	                #Check for acknowledgement from recorder
                         	actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
@@ -150,7 +150,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                 			if expResponse in actResponse:
                                         			print "No Update Schedule message post success";
                                         			print "Wait for some time to get the recording list"
-                                        			sleep(180);
+                                        			sleep(60);
                                         			tdkTestObj.setResultStatus("SUCCESS");
                                         			tdkTestObj.executeTestCase(expectedResult);
                                         			actResponse = recorderlib.callServerHandler('retrieveStatus',ip);

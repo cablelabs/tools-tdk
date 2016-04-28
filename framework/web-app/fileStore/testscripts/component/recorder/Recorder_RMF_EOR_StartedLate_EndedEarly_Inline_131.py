@@ -67,7 +67,7 @@ if "SUCCESS" in recLoadStatus.upper():
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         actResponse =recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
  	print "No Update Schedule Details: %s"%actResponse;
-	sleep(30);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -107,6 +107,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in actResponse:
                 	tdkTestObj.setResultStatus("SUCCESS");
 	                print "Successfully retrieved acknowledgement from recorder";
+                        sleep(60);
                     	# Reboot the STB
 		    	print "Rebooting the STB"
 		    	recObj.initiateReboot();

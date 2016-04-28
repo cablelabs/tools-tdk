@@ -110,7 +110,6 @@ if "SUCCESS" in recLoadStatus.upper():
                         #Frame json message for update recording
                         requestID = str(randint(10, 500));
                         jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P0\"}]}}";
-                        #jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P4\"}]}}";
                         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgUpdateRecording,ip);
                         if "updateRecordings" in actResponse:
                                 print "updateRecordings message post success";
@@ -120,6 +119,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                         print "Recorder already sent notification to RWS for deleted recording"
                                         tdkTestObj.setResultStatus("FAILURE");
                                 else:
+                                        sleep(30);
                                         print "Recorder yet to send notification to RWS for deleted recording"
                                         print "Rebooting STB for causing outage"
                                         recObj.initiateReboot();
@@ -128,7 +128,6 @@ if "SUCCESS" in recLoadStatus.upper():
                                         print "Sending noUpdate to get the recording list after full sync"
                                         jsonMsgNoUpdate = "{\"noUpdate\":{}}";
                                         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-                                        #actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
                                         sleep(30)
                                         retry = 0
                                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);

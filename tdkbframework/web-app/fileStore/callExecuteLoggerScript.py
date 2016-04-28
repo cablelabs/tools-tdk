@@ -1,0 +1,56 @@
+#
+# ============================================================================
+# COMCAST C O N F I D E N T I A L AND PROPRIETARY
+# ============================================================================
+# This file (and its contents) are the intellectual property of Comcast.  It may
+# not be used, copied, distributed or otherwise  disclosed in whole or in part
+# without the express written permission of Comcast.
+# ============================================================================
+# Copyright (c) 2014 Comcast. All rights reserved.
+# ============================================================================
+#
+
+# Module Imports
+import sys
+import socket
+import json
+
+# Check the number of arguments and print the syntax if args not equal to 4
+if ( (len(sys.argv)) != 4):
+        print "Usage : python " + sys.argv[0] + " Device_IP_Address Port_Number DeviceName"
+	print "eg    : python " + sys.argv[0] + " 192.168.160.130 8088 TVM_XG1"
+	exit()
+
+# Assigning IP address, port number and devicename
+ipaddrs = sys.argv[1]
+deviceport = int (sys.argv[2])
+devicename = sys.argv[3]
+
+# Sending json request and receiving response
+try:
+	tcpClient = socket.socket()
+	tcpClient.connect((ipaddrs, deviceport))
+
+	jsonMsg = {'jsonrpc':'2.0','id':'2','method':'executeLoggerScript','argument':devicename}
+	query = json.dumps(jsonMsg)
+	tcpClient.send(query) #Sending json query
+
+	result = tcpClient.recv(1048) #Receiving response
+
+	tcpClient.close()
+
+	if "Method not found" in result:
+		print "Agent not registered with RPC Method"
+		exit()
+
+	# Extracting result from response message
+	resultIndex = result.find("result") + len("result"+"\":\"")
+	message = result[resultIndex:]
+	message = message[:(message.find("\""))]
+	print message.upper()
+
+except socket.error:
+	print "Unable to reach agent"
+	exit()
+
+# End of File
