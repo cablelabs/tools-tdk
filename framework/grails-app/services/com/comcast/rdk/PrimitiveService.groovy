@@ -45,7 +45,16 @@ class PrimitiveService {
 				});
 			def list = []
 			files.each { file ->
-				def node = new XmlParser().parse(file)
+				def lines = file?.readLines()
+				int indx = lines?.findIndexOf { it.startsWith("<?xml")}
+				String xmlComtent =""
+				while(indx < lines.size()){
+							xmlComtent = xmlComtent + lines.get(indx)+"\n"
+							indx++
+				}
+				def parser = new XmlParser();
+				def node = parser.parseText(xmlComtent?.toString())		
+				//def node = new XmlParser().parse(file)
 				def pList = []
 				node.each{
 						try {
@@ -154,8 +163,17 @@ class PrimitiveService {
 		Map primitiveMap = [:]
 		try {
 			File primitiveXml = new File(filePath)
-			def local = new XmlParser()
-			def node = local.parse(primitiveXml)
+			//def local = new XmlParser()
+			//def node = local.parse(primitiveXml)
+			def lines = primitiveXml?.readLines()
+			int indx = lines?.findIndexOf { it.startsWith("<?xml")}
+			String xmlContent =""
+			while(indx < lines.size()){
+						xmlContent = xmlContent + lines.get(indx)+"\n"
+						indx++
+			}
+			def parser = new XmlParser();			
+			def node = parser.parseText(xmlContent?.toString())
 
 
 			node.each{
