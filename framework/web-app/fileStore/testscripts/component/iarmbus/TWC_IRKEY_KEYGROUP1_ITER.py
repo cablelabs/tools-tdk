@@ -1,3 +1,12 @@
+#  ============================================================================
+#  COMCAST C O N F I D E N T I A L AND PROPRIETARY
+#  ============================================================================
+#  This file (and its contents) are the intellectual property of Comcast.  It may
+#  not be used, copied, distributed or otherwise  disclosed in whole or in part
+#  without the express written permission of Comcast.
+#  ============================================================================
+#  Copyright (c) 2016 Comcast. All rights reserved.
+#  ============================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
@@ -99,8 +108,10 @@ if "SUCCESS" in loadmodulestatus.upper():
 		#print obj.realpath;
 		data = f.readlines();
 		#expectedresult="SUCCESS/FAILURE"
-		print data
+		#print data
 		for line in data:
+			if line[0] == '#':
+				continue
 			print line
 			print "got line"
 			Eline = line.split("\n");

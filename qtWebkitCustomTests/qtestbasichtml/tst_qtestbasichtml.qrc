@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>resources/movie.avi</file>
-        <file>resources/SVGSource.html</file>
-    </qresource>
-</RCC>

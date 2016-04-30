@@ -1,9 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>resources/cssoutline.html</file>
-        <file>resources/textstyle.html</file>
-        <file>resources/backgroundImage.html</file>
-        <file>resources/textpadding.html</file>
-        <file>resources/textborder.html</file>
-    </qresource>
-</RCC>

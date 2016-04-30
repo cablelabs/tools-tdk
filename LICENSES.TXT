@@ -747,3 +747,16 @@ WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+-------------------------------------------
+
+trash.png  - Copyright (C) Marcius Brandao
+https://code.google.com/p/redefoks/
+http://dev.perl.org/licenses/artistic.html
+
+-------------------------------------------
+
+https://creativecommons.org/licenses/by/2.5/
+http://famfamfam.com/lab/icons/silk/
+
+-------------------------------------------
