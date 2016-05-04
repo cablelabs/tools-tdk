@@ -187,6 +187,7 @@ class ScriptExecutor {
 			if(StringUtils.hasText(errorData)){
 				if(errorData?.trim().contains(outputData?.trim())){
 					outputData = "\n" + errorData
+				}else if(outputData?.trim().contains(errorData?.trim())){
 				}else{
 					outputData += "\n" + errorData
 				}

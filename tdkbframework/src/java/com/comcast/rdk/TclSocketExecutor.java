@@ -124,7 +124,7 @@ public class TclSocketExecutor {
 	
 	public static String getModuleName(String param) {
 		String moduleName = "";
-		if (param.contains("Device.WiFi.")) {
+		if (param.contains("Device.WiFi.") || param.contains("Device.X_CISCO_COM_Security") || param.contains("Device.DHCPv4")) {
 			moduleName = "wifiagent";
 		}
 		return moduleName;
@@ -309,7 +309,7 @@ public class TclSocketExecutor {
 	}
 
 	private static void loadModule(String module, BufferedReader buf,
-			PrintWriter pw) {
+			PrintWriter pw) throws Exception {
 		try {
 			String val;
 			Builder builder = new Builder();
@@ -333,12 +333,13 @@ public class TclSocketExecutor {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			exitExecution();
+//			exitExecution();
+			throwError();
 		}
 	}
 
 	private static void unloadModule(String module, PrintWriter pw,
-			BufferedReader buf) {
+			BufferedReader buf) throws Exception {
 		try {
 			Builder builder;
 			builder = new Builder();
@@ -351,7 +352,8 @@ public class TclSocketExecutor {
 		} catch (Exception e) {
 			System.out.println(" Error in unloadModule "+e.getMessage());
 			e.printStackTrace();
-			exitExecution();
+//			exitExecution();
+			throwError();
 		}
 	}
 

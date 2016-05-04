@@ -321,7 +321,7 @@ class TclExecutionService {
 											return
 										}
 										else{
-											executionService.executeVersionTransferScript(realPath, filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
+											executionService.executeVersionTransferScript(realPath, filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
 										}
 										if(deviceList.size() > 1){
 											executeScriptInThread(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
@@ -1151,7 +1151,7 @@ class TclExecutionService {
 								executionDevice.category = Utility.getCategory(category)
 								executionDevice.save(flush:true)
 							}
-							executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbIp, deviceInstance?.logTransferPort)
+							executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
 							def executionResultList
 							try{
 								ExecutionResult.withTransaction {

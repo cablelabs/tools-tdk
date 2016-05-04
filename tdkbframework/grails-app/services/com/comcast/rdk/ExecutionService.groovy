@@ -1946,6 +1946,7 @@ class ExecutionService {
 								try {
 									def executionResult = new ExecutionResult()
 									executionResult.execution = execInstance
+									executionResult.category = execution?.category
 									executionResult.executionDevice = excutionDev
 									executionResult.script = script
 									executionResult.device = deviceInstance

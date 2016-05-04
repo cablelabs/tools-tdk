@@ -680,7 +680,7 @@ class ScriptGroupController {
 		if(file.exists()){
 			String s = ""
 			List line = file.readLines()
-			int indx = 0
+			 int indx = line?.findIndexOf {  it.startsWith("'''")} 
 			String scriptContent = ""
 			if(line.get(indx).startsWith("'''"))	{
 					indx++

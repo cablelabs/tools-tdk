@@ -497,7 +497,7 @@ function loadXMLDoc() {
 		}
 		
 		var category = document.getElementById("filter").value;
-		if(prevCategory == null || prevCategory=== category){
+		if(prevCategory == null || prevCategory != category){
 			paginateOffset = 0;
 		}
 		xmlhttp.open("GET", url+"/execution/create?t=" + Math.random()+"&max=10&offset="+paginateOffset+"&devicetable=true&flagMark="+flagMark+"&category="+category, true);

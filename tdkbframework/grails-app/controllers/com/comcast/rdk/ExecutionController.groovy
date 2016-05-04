@@ -766,7 +766,7 @@ class ExecutionController {
 												executionDevice.category = category
 												if(executionDevice.save(flush:true)){
 													String getRealPathString  = getRealPath()
-													executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
+													executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
 												//	scriptexecutionService.executeScriptGroup(scriptGroup, boxType, execName, executionDevice?.id.toString(), deviceInstance,url, filePath, getRealPathString, callbackUrl, imageName, category )
 													def rerun = null
 													if(rerun1?.equals(TRUE)){
@@ -865,7 +865,7 @@ class ExecutionController {
 			deviceList?.each{ device ->
 				//devices.addProperty(device.stbName.toString()+LEFT_PARANTHESIS+device.stbIp.toString()+RIGHT_PARANTHESIS+LEFT_PARANTHESIS+device.boxType.toString()+RIGHT_PARANTHESIS, device.deviceStatus.toString())
 				// Adding device category to the JSON
-				devices.addProperty(device.stbName.toString()+LEFT_PARANTHESIS+device.stbIp.toString()+RIGHT_PARANTHESIS+LEFT_PARANTHESIS+device.boxType.toString()+RIGHT_PARANTHESIS, device.deviceStatus.toString(), device.category.toString())
+				devices.addProperty(device.stbName.toString()+LEFT_PARANTHESIS+device.stbIp.toString()+RIGHT_PARANTHESIS+LEFT_PARANTHESIS+device.boxType.toString()+RIGHT_PARANTHESIS+LEFT_PARANTHESIS+device.category.toString()+RIGHT_PARANTHESIS,device.deviceStatus.toString())
 			}
 		} catch (Exception e) {
 			
@@ -2449,7 +2449,7 @@ class ExecutionController {
 //									executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptName, deviceName, null,url)
 									//executionSaveStatus =  executionService.saveExecutionDetails(execName, scriptName, deviceName, null,url,timeInfo,performance,reRunOnFailure,FALSE)
 									executionSaveStatus =  executionService.saveExecutionDetails(execName,[scriptName:scriptName, deviceName:deviceName, scriptGroupInstance:null,
-										appUrl:url, isBenchMark:timeInfo, isSystemDiagnostics:performance, rerun:reRunOnFailure, isLogReqd:FALSE,category:category])
+										appUrl:url, isBenchMark:timeInfo, isSystemDiagnostics:performance, rerun:reRunOnFailure, isLogReqd:FALSE,category:category.toString()])
 								} catch (Exception e) {
 									executionSaveStatus = false
 								}
@@ -2466,7 +2466,7 @@ class ExecutionController {
 										executionDevice.category = category
 										if(executionDevice.save(flush:true)){
 											String getRealPathString  = getRealPath()
-											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
+											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
 											def rerun = null
 											if(reRunOnFailure?.equals(TRUE)){
 												rerun = "on"
@@ -2476,7 +2476,7 @@ class ExecutionController {
 												
 											}else{										
 											htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
-													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,isLog)
+													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,isLog,category.toString())
 											
 											// The Execution is done through only one device 
 //											htmlData = executescriptService.executescriptsOnDevice(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,

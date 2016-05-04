@@ -209,6 +209,12 @@ class PrimitiveService {
 		}
 		return scriptDirName
 	}
+	
+	def getCategory(def moduleName){
+		Module moduleObj = Module.findByName(moduleName)
+		return moduleObj?.getCategory()?.toString();
+	}
+	
 	def getPrimitiveTest(def filePath,def primitiveTestName){
 		def newFilePath = null
 		def testScriptsPath = null
@@ -218,6 +224,9 @@ class PrimitiveService {
 			categoryFound = primitiveListMap.get('RDKV')?.contains(primitiveTestName?.trim())
 			if(!categoryFound) {
 				categoryFound = primitiveListMap.get('RDKB')?.contains(primitiveTestName?.trim())
+				if(!categoryFound){
+					categoryFound = primitiveListMap.get('RDKB')?.contains(primitiveTestName)
+				}
 				if(categoryFound){
 					testScriptsPath = FileStorePath.RDKB.value()
 				}

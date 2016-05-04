@@ -425,7 +425,7 @@ class ScriptexecutionService {
 		String curlCommand
 
 		try{
-			if(callbackUrl.contains("jenkins")){
+			if(callbackUrl?.contains("jenkins")){
 				def newDataString = thirdPartyJsonResult(execName,url,executionStartTime,imageName,boxType,realPath)
 				newDataString  = newDataString.replaceAll("\"", "\\\\\\\\\\\\\"")
 				curlCommand = getCurlCommand( newDataString , callbackUrl)
@@ -897,7 +897,7 @@ class ScriptexecutionService {
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 			}
-			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName, realPath)
+			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath, executionId,execDeviceId, executionResultId)
 			if(isLogReqd){
 				executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId, realPath)
 			}	
@@ -1166,7 +1166,7 @@ class ScriptexecutionService {
 						def scriptMap = scriptService.getScriptNameModuleNameMapping(realPath)
 						def moduleName =scriptMap.get(execResObj?.script)
 						Module module= Module.findByName(moduleName)
-						def script = scriptService.getScript(realPath,moduleName, execResObj?.script)
+						def script = scriptService.getScript(realPath,moduleName, execResObj?.script,module?.category)
 							if(module?.testGroup?.groupValue?.toString()?.equals("E2E") ){
 								List val1 = systemMap.get(module.toString());
 								if(!val1){

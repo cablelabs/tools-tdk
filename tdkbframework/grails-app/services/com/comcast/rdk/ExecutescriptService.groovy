@@ -701,7 +701,7 @@ class ExecutescriptService {
 							executionDevice.category = Utility.getCategory(category)
 							executionDevice.save(flush:true)
 						}
-						executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbIp, deviceInstance?.logTransferPort)
+						executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
 						def executionResultList
 						try{
 						ExecutionResult.withTransaction {
@@ -1386,7 +1386,6 @@ class ExecutescriptService {
 	 * @param grailsApplication
 	 */
 	public boolean restartExecution(ExecutionDevice execDevice, def grailsApplication){
-		println " RESTART exection ------->>>>>"+ execDevice
 		String htmlData = ""
 		StringBuilder output = new StringBuilder()
 		int scriptCounter = 0
@@ -1439,7 +1438,6 @@ class ExecutescriptService {
 				e.printStackTrace()
 			}
 			
-			println " execution Result "+  exResults
 			
 			exResults.each {
 				try {
@@ -1479,10 +1477,8 @@ class ExecutescriptService {
 															catch(Exception eX){
 															}
 														}
-														println " here the status  device status "+devStatus
 												if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()))&& !pause){
 													
-													println " Execution begins ----->>>"+ scriptFile.category
 													htmlData = executeScript(exResult?.execution?.name, execDevice, script1 , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple,exResult,execution?.isStbLogRequired,scriptFile.category?.toString())
 															output.append(htmlData)
 															if(!thirdParyExecution){
@@ -1630,7 +1626,7 @@ class ExecutescriptService {
 			
 			def scriptId
 			String deviceID = deviceInstance?.id
-			executionService.executeVersionTransferScript(realPath,filePath,execName, executionDevice?.id, deviceInstance?.stbIp, deviceInstance?.logTransferPort)
+			executionService.executeVersionTransferScript(realPath,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
 			try {
 				htmlData = repeatExecutionOnDevice(execName,deviceID , executionDevice, "", scriptGroupInstance?.id, execName,
 					filePath, realPath, TEST_SUITE, url, isBenchMark, isSystemDiagnostics, rerun,isLogReqd)

@@ -1585,8 +1585,12 @@ class ScriptGroupController {
 	def exportScript(def params){
 		def sMap = scriptService.getScriptNameModuleNameMapping(getRealPath())
 		def category = params?.category
+		
 		def moduleName = sMap.get(params?.id)
 		def scriptDir = primitiveService.getScriptDirName(moduleName)
+		if(category == null){
+			category = primitiveService.getCategory(moduleName)
+		}
 		def path = getTestScriptPath(category) + FILE_SEPARATOR + scriptDir+ FILE_SEPARATOR +moduleName + FILE_SEPARATOR + params?.id+".py"
 		File sFile = new File(path)
 		if(sFile.exists()){
