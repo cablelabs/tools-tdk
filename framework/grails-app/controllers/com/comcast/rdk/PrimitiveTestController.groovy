@@ -167,8 +167,19 @@ class PrimitiveTestController {
 					def primitiveFile = new File(getPrimitiveFilePath(moduleObj?.getName()))
 					
 					if(primitiveFile.exists()){
-						def data = primitiveFile.readBytes()
-					def root = new XmlSlurper().parse(primitiveFile)
+						def data = primitiveFile.readLines()
+						int indx = data?.findIndexOf { it.startsWith("<?xml")}
+						String xmlContent =""
+						while(indx < data.size()){
+									xmlContent = xmlContent + data.get(indx)+"\n"
+									indx++
+						}
+						
+						//def parser = new XmlParser();
+						def parser = new XmlSlurper()
+						def root = parser.parseText(xmlContent?.toString())
+			
+					//def root = new XmlSlurper().parse(primitiveFile)
 					def list1 = []
                         if(params.parameterTypeIds) {
                             params.parameterTypeIds.split(", ").each {

@@ -134,7 +134,7 @@ CREATE TABLE `device` (
   CONSTRAINT `FKB06B1E567F41D9E1` FOREIGN KEY (`box_manufacturer_id`) REFERENCES `box_manufacturer` (`id`),
   CONSTRAINT `FKB06B1E56984B586A` FOREIGN KEY (`groups_id`) REFERENCES `groups` (`id`),
   CONSTRAINT `FKB06B1E56DB9F6C41` FOREIGN KEY (`box_type_id`) REFERENCES `box_type` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=80 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=81 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -172,7 +172,6 @@ CREATE TABLE `device_device` (
   CONSTRAINT `FKABF7505FEC4FF12A` FOREIGN KEY (`device_id`) REFERENCES `device` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
 
 
 --
@@ -278,7 +277,7 @@ CREATE TABLE `execute_method_result` (
   PRIMARY KEY (`id`),
   KEY `FKA1287DF19FCEDC3B` (`execution_result_id`),
   CONSTRAINT `FKA1287DF19FCEDC3B` FOREIGN KEY (`execution_result_id`) REFERENCES `execution_result` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6970 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=7084 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
@@ -321,7 +320,7 @@ CREATE TABLE `execution` (
   KEY `FKBEF90B18984B586A` (`groups_id`),
   CONSTRAINT `FKBEF90B18984B586A` FOREIGN KEY (`groups_id`) REFERENCES `groups` (`id`),
   CONSTRAINT `FKBEF90B18D2187869` FOREIGN KEY (`third_party_execution_details_id`) REFERENCES `third_party_execution_details` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1018 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1031 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
@@ -345,7 +344,7 @@ CREATE TABLE `execution_device` (
   PRIMARY KEY (`id`),
   KEY `FKE2CBE55D8358C58A` (`execution_id`),
   CONSTRAINT `FKE2CBE55D8358C58A` FOREIGN KEY (`execution_id`) REFERENCES `execution` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1017 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=1030 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 
@@ -379,9 +378,8 @@ CREATE TABLE `execution_result` (
   CONSTRAINT `FKFAAE8F241B03E2FC` FOREIGN KEY (`exec_device_id`) REFERENCES `device` (`id`),
   CONSTRAINT `FKFAAE8F248358C58A` FOREIGN KEY (`execution_id`) REFERENCES `execution` (`id`),
   CONSTRAINT `FKFAAE8F24F5E1059B` FOREIGN KEY (`execution_device_id`) REFERENCES `execution_device` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5336 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=5422 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
 
 --
 -- Table structure for table `function`
@@ -409,7 +407,7 @@ CREATE TABLE `function` (
 
 LOCK TABLES `function` WRITE;
 /*!40000 ALTER TABLE `function` DISABLE KEYS */;
-INSERT INTO `function` VALUES (2,0,'RDKB',26,'WECB_GetParamAttributes'),(3,0,'RDKB',26,'WECB_AddObject'),(4,0,'RDKB',26,'WECB_SetParamValues'),(5,0,'RDKB',26,'WECB_GetParamNames'),(6,0,'RDKB',26,'WECB_SetSessionId'),(7,0,'RDKB',26,'WECB_SetCommit'),(8,0,'RDKB',26,'WECB_GetParamValues'),(9,0,'RDKB',26,'WECB_SetParamAttribute'),(10,0,'RDKB',26,'WECB_DelObject'),(11,0,'RDKB',27,'AdvancedConfig_AddObject'),(12,0,'RDKB',27,'AdvancedConfig_Get'),(13,0,'RDKB',27,'AdvancedConfig_Set'),(14,0,'RDKB',27,'AdvancedConfig_DelObject'),(15,0,'RDKB',19,'ExecuteSNMPCommand'),(16,0,'RDKB',19,'LogValidation'),(17,0,'RDKB',27,'WebPA_SendRequest'),(101,0,'RDKB',38,'CosaCM_GetResetCount'),(102,0,'RDKB',38,'CosaCM_GetCMErrorCodewords'),(108,0,'RDKB',39,'wifi_getencryptmethod'),(110,0,'RDKB',41,'Moca_Enable'),(111,0,'RDKB',42,'CosaWIFI_DmlWiFiSsidGetNumberOfEntries'),(112,0,'RDKB',42,'CosaWIFI_DmlWiFiAPGetNumberOfEntries'),(113,0,'RDKB',42,'CosaWIFI_DmlWiFiRadioApplyCfg'),(133,0,'RDKB',45,'CCSPMBUS_Init'),(134,0,'RDKB',45,'CCSPMBUS_LoadCfg'),(135,0,'RDKB',45,'CCSPMBUS_LoadDmXml'),(136,0,'RDKB',45,'CCSPMBUS_Exit'),(137,0,'RDKB',45,'CCSPMBUS_RegisterPath'),(138,0,'RDKB',45,'CCSPMBUS_RegisterBase'),(139,0,'RDKB',45,'CCSPMBUS_RegisterEvent'),(140,0,'RDKB',45,'CCSPMBUS_UnRegisterEvent'),(141,0,'RDKB',45,'CCSPMBUS_GetRegisteredComponents'),(142,0,'RDKB',45,'CCSPMBUS_IsSystemReady'),(143,0,'RDKB',45,'CCSPMBUS_GetHealth'),(144,0,'RDKB',45,'CCSPMBUS_SendSignal'),(145,0,'RDKB',45,'CCSPMBUS_BusCheck'),(146,0,'RDKB',45,'CCSPMBUS_CheckNamespaceDataType'),(147,0,'RDKB',45,'CCSPMBUS_DiskComponentSupportingDynamicTbl'),(148,0,'RDKB',45,'CCSPMBUS_DiskNamespaceSupportedByComponent'),(149,0,'RDKB',45,'CCSPMBUS_DumpComponentRegistry'),(150,0,'RDKB',45,'CCSPMBUS_GetAllocMemory'),(151,0,'RDKB',45,'CCSPMBUS_GetMaxMemory'),(152,0,'RDKB',45,'CCSPMBUS_InformEndSession'),(153,0,'RDKB',45,'CCSPMBUS_QueryStatus'),(154,0,'RDKB',45,'CCSPMBUS_RegisterCapabilities'),(155,0,'RDKB',45,'CCSPMBUS_ReqSessionId'),(156,0,'RDKB',45,'CCSPMBUS_UnRegisterComponent'),(157,0,'RDKB',45,'CCSPMBUS_UnRegisterNamespace'),(160,0,'RDKB',38,'CosaCM_GetLoopDiagnosticsStart'),(161,0,'RDKB',38,'CosaCM_GetLoopDiagnosticsDetails'),(162,0,'RDKB',38,'COSACM_GetDHCPInfo'),(163,0,'RDKB',38,'COSACM_GetDOCSISInfo'),(164,0,'RDKB',38,'COSACM_GetLog'),(165,0,'RDKB',38,'COSACM_SetLog'),(166,0,'RDKB',38,'CosaCM_GetUpstreamChannelId'),(175,0,'RDKB',38,'COSACM_SetLoopDiagnosticsStart'),(176,0,'RDKB',38,'CosaCM_SetUpstreamChannelId'),(177,0,'RDKB',38,'CosaCM_GetStartDSFrequency'),(178,0,'RDKB',38,'CosaCM_SetStartDSFrequency'),(179,0,'RDKB',38,'COSACM_GetDocsisLog'),(180,0,'RDKB',38,'COSACM_GetDownstreamChannel'),(181,0,'RDKB',38,'COSACM_GetUpstreamChannel'),(182,0,'RDKB',38,'CosaCM_GetProvType'),(183,0,'RDKB',38,'CosaCM_GetIPv6DHCPInfo'),(190,0,'RDKB',51,'MTA_agent_SetParameterAttr'),(191,0,'RDKB',51,'MTA_agent_SetParameterValues'),(192,0,'RDKB',51,'MTA_agent_Init'),(193,0,'RDKB',51,'MTA_agent_Terminate'),(194,0,'RDKB',51,'MTA_agent_GetParameterValues'),(195,0,'RDKB',51,'MTA_agent_GetParameterNames'),(196,0,'RDKB',51,'MTA_agent_GetParameterAttr'),(197,0,'RDKB',51,'MTA_agent_Commit'),(198,0,'RDKB',51,'MTA_agent_GetParameterNames_NextLevel'),(199,0,'RDKB',51,'MTA_agent_AddTbl'),(200,0,'RDKB',51,'MTA_agent_DelTble'),(201,0,'RDKB',51,'MTA_agent_GetHealth'),(202,0,'RDKB',51,'MTA_agent_SetSessionId'),(217,0,'RDKB',54,'WIFIAgent_Get'),(218,0,'RDKB',54,'WIFIAgent_AddObject'),(219,0,'RDKB',54,'WIFIAgent_DelObject'),(220,0,'RDKB',54,'WIFIAgent_GetAttr'),(221,0,'RDKB',54,'WIFIAgent_SetSessionId'),(222,0,'RDKB',54,'WIFIAgent_Set'),(223,0,'RDKB',54,'WIFIAgent_SetCommit'),(224,0,'RDKB',54,'WIFIAgent_SetAttr'),(225,0,'RDKB',54,'WIFIAgent_GetNames'),(226,0,'RDKB',54,'WIFIAgent_GetHealth'),(227,0,'RDKB',54,'WIFIAgent_Set_Get'),(228,0,'RDKB',38,'COSACM_SetMDDIPOverride_ArgMemory_unalloc'),(229,0,'RDKB',38,'COSACM_GetMDDIPOverride_ArgMemory_unalloc'),(230,0,'RDKB',38,'COSACM_GetCMCert_ArgMemory_unalloc'),(231,0,'RDKB',38,'COSACM_GetMarket'),(233,0,'RDKB',38,'COSACM_GetCMCertStatus_InvalidArg'),(234,0,'RDKB',38,'COSACM_GetCPEList_InvalidArg'),(235,0,'RDKB',38,'COSACM_GetMDDIPOverride'),(236,0,'RDKB',38,'COSACM_CableModemInitialize'),(237,0,'RDKB',38,'COSACM_GetCMCert'),(238,0,'RDKB',38,'COSACM_CableModemRemove'),(239,0,'RDKB',38,'COSACM_CableModemCreate'),(240,0,'RDKB',38,'COSACM_GetCMCertStatus'),(241,0,'RDKB',38,'COSACM_GetCPEList'),(242,0,'RDKB',38,'COSACM_GetMarket_ArgMemory_unalloc'),(243,0,'RDKB',38,'COSACM_SetMDDIPOverride'),(244,0,'RDKB',38,'CosaCM_GetTelephonyTftpStatus'),(246,0,'RDKB',55,'CMAgent_Get'),(247,0,'RDKB',55,'CMAgent_AddObject'),(248,0,'RDKB',55,'CMAgent_DelObject'),(249,0,'RDKB',55,'CMAgent_GetAttr'),(250,0,'RDKB',55,'CMAgent_GetNames'),(251,0,'RDKB',55,'CMAgent_GetHealth'),(252,0,'RDKB',55,'CMAgent_Set'),(253,0,'RDKB',55,'CMAgent_SetAttr'),(254,0,'RDKB',38,'CosaCM_GetTelephonyDHCPStatus'),(255,0,'RDKB',55,'CMAgent_SetCommit'),(256,0,'RDKB',55,'CMAgent_SetSessionId'),(258,0,'RDKB',55,'CMAgent_Set_Get'),(259,0,'RDKB',38,'COSACM_GetCMErrorCodewords_InvalidArg'),(260,0,'RDKB',38,'CosaCM_GetTelephonyRegistrationStatus'),(264,0,'RDKB',38,'CosaCM_GetStatus'),(265,0,'RDKB',56,'TR069Agent_GetParameterValues'),(266,0,'RDKB',56,'TR069Agent_SetParameterValues'),(267,0,'RDKB',56,'TR069Agent_Terminate'),(268,0,'RDKB',56,'TR069Agent_Init'),(269,0,'RDKB',56,'TR069Agent_GetParameterNames'),(270,0,'RDKB',56,'TR069Agent_SetParameterAttr'),(271,0,'RDKB',56,'TR069Agent_GetParameterAttr');
+INSERT INTO `function` VALUES (2,0,'RDKB',26,'WECB_GetParamAttributes'),(3,0,'RDKB',26,'WECB_AddObject'),(4,0,'RDKB',26,'WECB_SetParamValues'),(5,0,'RDKB',26,'WECB_GetParamNames'),(6,0,'RDKB',26,'WECB_SetSessionId'),(7,0,'RDKB',26,'WECB_SetCommit'),(8,0,'RDKB',26,'WECB_GetParamValues'),(9,0,'RDKB',26,'WECB_SetParamAttribute'),(10,0,'RDKB',26,'WECB_DelObject'),(11,0,'RDKB',27,'AdvancedConfig_AddObject'),(12,0,'RDKB',27,'AdvancedConfig_Get'),(13,0,'RDKB',27,'AdvancedConfig_Set'),(14,0,'RDKB',27,'AdvancedConfig_DelObject'),(15,0,'RDKB',19,'ExecuteSNMPCommand'),(16,0,'RDKB',19,'LogValidation'),(17,0,'RDKB',27,'WebPA_SendRequest'),(101,0,'RDKB',38,'CosaCM_GetResetCount'),(102,0,'RDKB',38,'COSACM_GetCMErrorCodewords'),(108,0,'RDKB',39,'wifi_getencryptmethod'),(110,0,'RDKB',41,'Moca_Enable'),(111,0,'RDKB',42,'CosaWIFI_DmlWiFiSsidGetNumberOfEntries'),(112,0,'RDKB',42,'CosaWIFI_DmlWiFiAPGetNumberOfEntries'),(113,0,'RDKB',42,'CosaWIFI_DmlWiFiRadioApplyCfg'),(133,0,'RDKB',45,'CCSPMBUS_Init'),(134,0,'RDKB',45,'CCSPMBUS_LoadCfg'),(135,0,'RDKB',45,'CCSPMBUS_LoadDmXml'),(136,0,'RDKB',45,'CCSPMBUS_Exit'),(137,0,'RDKB',45,'CCSPMBUS_RegisterPath'),(138,0,'RDKB',45,'CCSPMBUS_RegisterBase'),(139,0,'RDKB',45,'CCSPMBUS_RegisterEvent'),(140,0,'RDKB',45,'CCSPMBUS_UnRegisterEvent'),(141,0,'RDKB',45,'CCSPMBUS_GetRegisteredComponents'),(142,0,'RDKB',45,'CCSPMBUS_IsSystemReady'),(143,0,'RDKB',45,'CCSPMBUS_GetHealth'),(144,0,'RDKB',45,'CCSPMBUS_SendSignal'),(145,0,'RDKB',45,'CCSPMBUS_BusCheck'),(146,0,'RDKB',45,'CCSPMBUS_CheckNamespaceDataType'),(147,0,'RDKB',45,'CCSPMBUS_DiskComponentSupportingDynamicTbl'),(148,0,'RDKB',45,'CCSPMBUS_DiskNamespaceSupportedByComponent'),(149,0,'RDKB',45,'CCSPMBUS_DumpComponentRegistry'),(150,0,'RDKB',45,'CCSPMBUS_GetAllocMemory'),(151,0,'RDKB',45,'CCSPMBUS_GetMaxMemory'),(152,0,'RDKB',45,'CCSPMBUS_InformEndSession'),(153,0,'RDKB',45,'CCSPMBUS_QueryStatus'),(154,0,'RDKB',45,'CCSPMBUS_RegisterCapabilities'),(155,0,'RDKB',45,'CCSPMBUS_ReqSessionId'),(156,0,'RDKB',45,'CCSPMBUS_UnRegisterComponent'),(157,0,'RDKB',45,'CCSPMBUS_UnRegisterNamespace'),(160,0,'RDKB',38,'CosaCM_GetLoopDiagnosticsStart'),(161,0,'RDKB',38,'CosaCM_GetLoopDiagnosticsDetails'),(162,0,'RDKB',38,'COSACM_GetDHCPInfo'),(163,0,'RDKB',38,'COSACM_GetDOCSISInfo'),(164,0,'RDKB',38,'COSACM_GetLog'),(165,0,'RDKB',38,'COSACM_SetLog'),(166,0,'RDKB',38,'CosaCM_GetUpstreamChannelId'),(175,0,'RDKB',38,'CosaCM_SetLoopDiagnosticsStart'),(176,0,'RDKB',38,'CosaCM_SetUpstreamChannelId'),(177,0,'RDKB',38,'CosaCM_GetStartDSFrequency'),(178,0,'RDKB',38,'CosaCM_SetStartDSFrequency'),(179,0,'RDKB',38,'COSACM_GetDocsisLog'),(180,0,'RDKB',38,'COSACM_GetDownstreamChannel'),(181,0,'RDKB',38,'COSACM_GetUpstreamChannel'),(182,0,'RDKB',38,'CosaCM_GetProvType'),(183,0,'RDKB',38,'CosaCM_GetIPv6DHCPInfo'),(190,0,'RDKB',51,'MTA_agent_SetParameterAttr'),(191,0,'RDKB',51,'MTA_agent_SetParameterValues'),(192,0,'RDKB',51,'MTA_agent_Init'),(193,0,'RDKB',51,'MTA_agent_Terminate'),(194,0,'RDKB',51,'MTA_agent_GetParameterValues'),(195,0,'RDKB',51,'MTA_agent_GetParameterNames'),(196,0,'RDKB',51,'MTA_agent_GetParameterAttr'),(197,0,'RDKB',51,'MTA_agent_Commit'),(198,0,'RDKB',51,'MTA_agent_GetParameterNames_NextLevel'),(199,0,'RDKB',51,'MTA_agent_AddTbl'),(200,0,'RDKB',51,'MTA_agent_DelTble'),(201,0,'RDKB',51,'MTA_agent_GetHealth'),(202,0,'RDKB',51,'MTA_agent_SetSessionId'),(217,0,'RDKB',54,'WIFIAgent_Get'),(218,0,'RDKB',54,'WIFIAgent_AddObject'),(219,0,'RDKB',54,'WIFIAgent_DelObject'),(220,0,'RDKB',54,'WIFIAgent_GetAttr'),(221,0,'RDKB',54,'WIFIAgent_SetSessionId'),(222,0,'RDKB',54,'WIFIAgent_Set'),(223,0,'RDKB',54,'WIFIAgent_SetCommit'),(224,0,'RDKB',54,'WIFIAgent_SetAttr'),(225,0,'RDKB',54,'WIFIAgent_GetNames'),(226,0,'RDKB',54,'WIFIAgent_GetHealth'),(227,0,'RDKB',54,'WIFIAgent_Set_Get'),(228,0,'RDKB',38,'COSACM_SetMDDIPOverride_ArgMemory_unalloc'),(229,0,'RDKB',38,'COSACM_GetMDDIPOverride_ArgMemory_unalloc'),(230,0,'RDKB',38,'COSACM_GetCMCert_ArgMemory_unalloc'),(231,0,'RDKB',38,'COSACM_GetMarket'),(233,0,'RDKB',38,'COSACM_GetCMCertStatus_InvalidArg'),(234,0,'RDKB',38,'COSACM_GetCPEList_InvalidArg'),(235,0,'RDKB',38,'COSACM_GetMDDIPOverride'),(236,0,'RDKB',38,'COSACM_CableModemInitialize'),(237,0,'RDKB',38,'COSACM_GetCMCert'),(238,0,'RDKB',38,'COSACM_CableModemRemove'),(239,0,'RDKB',38,'COSACM_CableModemCreate'),(240,0,'RDKB',38,'COSACM_GetCMCertStatus'),(241,0,'RDKB',38,'COSACM_GetCPEList'),(242,0,'RDKB',38,'COSACM_GetMarket_ArgMemory_unalloc'),(243,0,'RDKB',38,'COSACM_SetMDDIPOverride'),(244,0,'RDKB',38,'CosaCM_GetTelephonyTftpStatus'),(246,0,'RDKB',55,'CMAgent_Get'),(247,0,'RDKB',55,'CMAgent_AddObject'),(248,0,'RDKB',55,'CMAgent_DelObject'),(249,0,'RDKB',55,'CMAgent_GetAttr'),(250,0,'RDKB',55,'CMAgent_GetNames'),(251,0,'RDKB',55,'CMAgent_GetHealth'),(252,0,'RDKB',55,'CMAgent_Set'),(253,0,'RDKB',55,'CMAgent_SetAttr'),(254,0,'RDKB',38,'CosaCM_GetTelephonyDHCPStatus'),(255,0,'RDKB',55,'CMAgent_SetCommit'),(256,0,'RDKB',55,'CMAgent_SetSessionId'),(258,0,'RDKB',55,'CMAgent_Set_Get'),(259,0,'RDKB',38,'COSACM_GetCMErrorCodewords_InvalidArg'),(260,0,'RDKB',38,'CosaCM_GetTelephonyRegistrationStatus'),(264,0,'RDKB',38,'CosaCM_GetStatus'),(265,0,'RDKB',56,'TR069Agent_GetParameterValues'),(266,0,'RDKB',56,'TR069Agent_SetParameterValues'),(267,0,'RDKB',56,'TR069Agent_Terminate'),(268,0,'RDKB',56,'TR069Agent_Init'),(269,0,'RDKB',56,'TR069Agent_GetParameterNames'),(270,0,'RDKB',56,'TR069Agent_SetParameterAttr'),(271,0,'RDKB',56,'TR069Agent_GetParameterAttr');
 /*!40000 ALTER TABLE `function` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -554,7 +552,6 @@ CREATE TABLE `module_stb_log_files` (
   CONSTRAINT `FKB2064C8B9E2CF16A` FOREIGN KEY (`module_id`) REFERENCES `module` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
-
 
 --
 -- Table structure for table `parameter`
@@ -872,7 +869,7 @@ CREATE TABLE `script_group` (
   UNIQUE KEY `name` (`name`),
   KEY `FKB4D8260B984B586A` (`groups_id`),
   CONSTRAINT `FKB4D8260B984B586A` FOREIGN KEY (`groups_id`) REFERENCES `groups` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=171 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=172 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1205,4 +1202,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-05-02 16:20:35
+-- Dump completed on 2016-05-03 13:48:33

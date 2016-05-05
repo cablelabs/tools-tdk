@@ -2097,6 +2097,7 @@ class ScriptGroupController {
 		def fileName
 		String xml
 		def node
+		String category = ""
 		String  idList
 		boolean valid = false
 		if(params?.scriptGroupXml){
@@ -2123,6 +2124,7 @@ class ScriptGroupController {
 							xml = s
 							XmlParser parser = new XmlParser();
 							node = parser.parseText(xml)
+							category = node?.script_group?.category?.text()
 							List<String> names = new ArrayList<String>()
 							node?.script_group?.scripts?.script_name?.each{
 								names.add(it.text())
@@ -2153,6 +2155,7 @@ class ScriptGroupController {
 								}
 								if(valid){
 									scriptGroupInstance.name = fileName
+									scriptGroupInstance.category = Utility.getCategory(category)
 									if(scriptGroupInstance.save(flush:true)){
 										scriptGroup?.addProperty("STATUS","SUCCESS")
 										scriptGroup.addProperty("Remarks","Script group created success fully ")
@@ -2273,6 +2276,7 @@ class ScriptGroupController {
 			xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
 			xml.xml(){
 				xml.script_group(){
+					xml.category(scriptGrpName?.category?.toString())
 					xml.scripts(){
 						scriptGrpName?.scriptList.each{ scriptName ->
 							xml.script_name(scriptName)
@@ -2313,6 +2317,7 @@ class ScriptGroupController {
 		def node
 		String s = ""
 		String  idList
+		String categ = ""
 		int indx = 0
 		if(uploadedFile){
 			if( uploadedFile?.originalFilename?.endsWith(".xml")) {
@@ -2335,7 +2340,7 @@ class ScriptGroupController {
 
 							XmlParser parser = new XmlParser();
 							node = parser.parseText(xmlContent)
-
+							categ = node?.script_group?.category?.text()
 							node.script_group.scripts.script_name.each{
 								names.add(it.text())
 							}
@@ -2351,6 +2356,7 @@ class ScriptGroupController {
 								flash.message ="  Test suite xml doesnot contain valid script  list... "
 							}else{
 								ScriptGroup scriptGroupInstance = new ScriptGroup()
+								scriptGroupInstance.category = Utility.getCategory(categ)
 								names?.each{ token ->
 									if(token && token.size()>0){
 										ScriptFile sctFile = ScriptFile.findByScriptName(token?.trim())

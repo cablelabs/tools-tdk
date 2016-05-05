@@ -2189,7 +2189,16 @@ class JobSchedulerService implements Job{
 
 	def getPrimitiveTest(def filePath,def primitiveTestName){
 		File primitiveXml = new File(filePath)
-		def node = new XmlParser().parse(primitiveXml)
+		//def node = new XmlParser().parse(primitiveXml)
+		def lines = primitiveXml?.readLines()
+		int indx = lines?.findIndexOf { it.startsWith("<?xml")}
+		String xmlContent =""
+		while(indx < lines.size()){
+					xmlContent = xmlContent + lines.get(indx)+"\n"
+					indx++
+		}
+		def parser = new XmlParser();
+		def node = parser.parseText(xmlContent?.toString())
 
 		Map primitiveMap = [:]
 		node.each{
