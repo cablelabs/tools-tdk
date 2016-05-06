@@ -83,6 +83,7 @@ Copyright (c) 2016 Comcast. All rights reserved.
         <parameters>
           <parameter name="event_id" value="0"/>
           <parameter name="owner_name" value="Daemon"/>
+          <parameter name="evt_handler" value="evtHandler"/>
         </parameters>
       </primitiveTest>
       <primitiveTest id="23" name="IARMBUS_UnRegisterEventHandler" version="14">
@@ -224,6 +225,14 @@ Copyright (c) 2016 Comcast. All rights reserved.
         <parameters>
           <parameter name="event_id" value="0"/>
           <parameter name="owner_name" value="IRMgr"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name="IARMBUS_RemoveEventHandler" id=" " version="1">
+        <function>TestMgr_IARMBUS_RemoveEventHandler</function>
+        <parameters>
+          <parameter name="event_id" value="0"/>
+          <parameter name="evt_handler" value="Daemon"/>
+          <parameter name="owner_name" value="evtHandler"/>
         </parameters>
       </primitiveTest>
     </primitiveTests>

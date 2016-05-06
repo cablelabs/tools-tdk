@@ -73,6 +73,7 @@ class IARMBUSAgent : public RDKTestStubInterface
 		bool IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT Json::Value& response);
 		bool IARMBUSAgent_ReleaseResource(IN const Json::Value& req, OUT Json::Value& response);
 		bool IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response);
+		bool IARMBUSAgent_RemoveEventHandler(IN const Json::Value& req, OUT Json::Value& response);
 		bool IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response);
 		bool IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json::Value& response);
 		bool IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Value& response);

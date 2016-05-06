@@ -5,30 +5,30 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>8</version>
+  <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>IARMBUS_Single_Sender_Multiple_Receiver_Test</name>
+  <name>IARMBus_Verify_after_UnRegister_Multiple_EventHandler_124</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id>22</primitive_test_id>
+  <primitive_test_id> </primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
-  <primitive_test_name>IARMBUS_RegisterEventHandler</primitive_test_name>
+  <primitive_test_name>IARMBUSPERF_UnRegisterEventHandler</primitive_test_name>
   <!--  -->
-  <primitive_test_version>15</primitive_test_version>
+  <primitive_test_version>1</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis></synopsis>
+  <synopsis>IARMBUS-After IARM_Bus_UnRegisterEventHandler() all registered event handlers for the given event are removed, and the handlers are not invoked.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>3</execution_time>
+  <execution_time>10</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -45,8 +45,6 @@
     <!--  -->
     <box_type>Terminal-RNG</box_type>
     <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
     <!--  -->
   </box_types>
@@ -54,7 +52,6 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
-  <script_tags />
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
@@ -69,7 +66,7 @@ obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'IR_event_performance');
+obj.configureTestCase(ip,port,'IARMBus_Verify_after_UnRegister_Multiple_EventHandler_124');
 
 loadmodulestatus =obj.getLoadModuleResult();
 print "Iarmbus module loading status :  %s" %loadmodulestatus ;
@@ -161,6 +158,43 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 if expectedresult in actualresult:
                                         tdkTestObj.setResultStatus("SUCCESS");
                                         print "SUCCESS: UnRegister Event Handler for IR key events";
+
+                                        #Prmitive test case which associated to this Script
+                                        tdkTestObj = obj.createTestStep('IARMBUS_InvokeEventTransmitterApp');
+                                        #registering event handler for IR Key events
+                                        tdkTestObj.addParameter("owner_name","IRMgr");
+                                        tdkTestObj.addParameter("event_id",0);
+                                        tdkTestObj.addParameter("evttxappname","gen_single_event");
+                                        tdkTestObj.addParameter("keyType",32768);
+                                        tdkTestObj.addParameter("keyCode",301);
+                                        expectedresult="SUCCESS"
+                                        tdkTestObj.executeTestCase(expectedresult);
+                                        actualresult = tdkTestObj.getResult();
+                                        #details=tdkTestObj.getResultDetails();
+                                        #Check for SUCCESS/FAILURE return value
+                                        if expectedresult in actualresult:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                print "SUCCESS: Second application Invoked successfully";
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "FAILURE: Second application failed to execute";
+                                        time.sleep(2);
+                                        #Prmitive test case which associated to this Script
+                                        tdkTestObj = obj.createTestStep('IARMBUS_GetLastReceivedEventPerformanceDetails');
+                                        expectedresult="FAILURE"
+                                        tdkTestObj.executeTestCase(expectedresult);
+                                        actualresult = tdkTestObj.getResult();
+                                        details=tdkTestObj.getResultDetails();
+                                        print details;
+                                        #Check for SUCCESS/FAILURE return value of IARMBUS_GetLastReceivedEventDetails
+                                        if expectedresult in actualresult:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                print "SUCCESS: GetLastReceivedEventDetails failed";
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "FAILURE: GetLastReceivedEventDetails executed successfully";
+
+                                        
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
                                         print "FAILURE : IARM_Bus_UnRegisterEventHanlder failed. %s " %details;

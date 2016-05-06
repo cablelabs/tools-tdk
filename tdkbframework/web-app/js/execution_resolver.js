@@ -495,8 +495,38 @@ function loadXMLDoc() {
 		if(flagMark == true){
 			$('.markAll').prop('checked', true);
 		}
+		var category = document.getElementById("filter").value;
+		xmlhttp.open("GET", url+"/execution/create?t=" + Math.random()+"&max=10&offset="+paginateOffset+"&devicetable=true&flagMark="+flagMark+"&category="+category, true);
+		if(flagMark == true){
+			$('.markAll').prop('checked', true);
+		}
+	}
+	xmlhttp.send();
+}
+
+function categoryChange() {
+	
+	var xmlhttp;	
+	var url = $("#url").val();
+	var paginateOffset = $("#pageOffset").val();
+	if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+		xmlhttp = new XMLHttpRequest();
+	} else {// code for IE6, IE5
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	xmlhttp.onreadystatechange = function() {
+		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+			document.getElementById("list-executor").innerHTML = xmlhttp.responseText;
+			timedRefresh();			
+		}
+	} 
+	if(paginateOffset != undefined){
+		if(flagMark == true){
+			$('.markAll').prop('checked', true);
+		}
 		
 		var category = document.getElementById("filter").value;
+		var prevCategory = document.getElementById("selectedFilter").value;
 		if(prevCategory == null || prevCategory != category){
 			paginateOffset = 0;
 		}
@@ -747,5 +777,7 @@ function mark(me) {
 			});
 		}
 	}
+	
+
 
 }

@@ -143,6 +143,7 @@ bool IARMBUSAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgent
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_RequestResource, "TestMgr_IARMBUS_RequestResource");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_ReleaseResource, "TestMgr_IARMBUS_ReleaseResource");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_RegisterEventHandler, "TestMgr_IARMBUS_RegisterEventHandler");
+	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_RemoveEventHandler, "TestMgr_IARMBUS_RemoveEventHandler");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler, "TestMgr_IARMBUS_UnRegisterEventHandler");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_RegisterEvent, "TestMgr_IARMBUS_RegisterEvent");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_RegisterCall, "TestMgr_IARMBUS_RegisterCall");
@@ -1146,17 +1147,27 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, 
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
 	memset(resultDetails , '\0', (sizeof(char)*16));
-	if(&req["event_id"]==NULL || &req["owner_name"]==NULL)
+	if(&req["event_id"]==NULL || &req["owner_name"]==NULL || &req["evt_handler"]==NULL)
 	{
 		return TEST_FAILURE;
 	}
 	int eventId=req["event_id"].asInt();
 	char *ownerName=(char*)req["owner_name"].asCString();
+        char *eventhandler=(char*)req["evt_handler"].asCString();
 	if(prereqcheck(ownerName))
 	{
 	DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_RegisterEventHandler from IARMBUSAgent_RegisterEventHandler \n");
 	/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
-	retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandler);
+	//retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandler);
+        if (strcmp(eventhandler,"NULL")==0)
+        {
+                retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, NULL);
+        }
+        else
+        {
+                retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandler);
+        }
+
 	/*Checking the return value of API*/
 	/*Filling json response with SUCCESS status*/	
 	response["result"]=getResult(retval,resultDetails);
@@ -2558,6 +2569,71 @@ bool IARMBUSAgent::GetLastReceivedEventPerformanceDetails(IN const Json::Value& 
 	return true;
 }
 
+/**************************************************************************
+ * Function Name        : IARMBUSAgent_RemoveEventHandler
+ * Description  : IARMBUSAgent_RegisterEventHandler wrapper function will be used to call
+ *                IARMBUS API "IARM_Bus_RemoveEventHandler".
+ *
+ * @param [in] req- has "event_id" , "evt_handler" and "owner_name" which are input to IARM_Bus_RegisterEventHandler.
+ * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
+ ***************************************************************************/
+
+bool IARMBUSAgent::IARMBUSAgent_RemoveEventHandler(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_RemoveEventHandler --->Entry \n");
+        IARM_Result_t retval=IARM_RESULT_SUCCESS;
+        char *resultDetails;
+        resultDetails=(char *)malloc(sizeof(char)*16);
+        memset(resultDetails , '\0', (sizeof(char)*16));
+        if(&req["event_id"]==NULL || &req["owner_name"]==NULL || &req["evt_handler"]==NULL)
+        {
+		DEBUG_PRINT(DEBUG_ERROR,"\n NULL param passed \n");
+                return TEST_FAILURE;
+        }
+        int eventId=req["event_id"].asInt();
+        char *ownerName=(char*)req["owner_name"].asCString();
+        char *eventhandler=(char*)req["evt_handler"].asCString();
+        if(prereqcheck(ownerName))
+        {
+        DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_RemoveEventHandler from IARMBUSAgent_RemoveEventHandler \n");
+        /*Calling IARMBUS API IARM_Bus_RemoveEventHandler */
+	if (strcmp(eventhandler,"NULL")==0)
+	{
+        	retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, NULL);
+	}
+	else if (strcmp(eventhandler,"evtHandler")==0)
+	{
+	        retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandler);
+	}
+	else if (strcmp(eventhandler,"evtHandler1")==0)
+	{
+	        retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept1);
+	}
+	else if (strcmp(eventhandler,"evtHandler2")==0)
+	{
+	        retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept2);
+	}
+	else if (strcmp(eventhandler,"evtHandler3")==0)
+	{
+	        retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept3);
+	}
+        /*Checking the return value of API*/
+        /*Filling json response with SUCCESS status*/
+        response["result"]=getResult(retval,resultDetails);
+        response["details"]=resultDetails;
+        free(resultDetails);
+        DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_RemoveEventHandler --->Exit \n");
+        return TEST_SUCCESS;
+        }
+        else
+        {
+        response["result"]="FAILURE";
+        response["details"]="Pre-Requisite check Failed for the given Owner";
+        free(resultDetails);
+        DEBUG_PRINT(DEBUG_ERROR,"\n IARMBUSAgent_RemoveEventHandler -- Pre-Requisite check Failed for the given Owner \n");
+        return TEST_FAILURE;
+        }
+}
 
 /**************************************************************************
  * Function Name	: CreateObject
@@ -2593,6 +2669,7 @@ bool IARMBUSAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RequestResource");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_ReleaseResource");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RegisterEventHandler");
+	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RemoveEventHandler");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_UnRegisterEventHandler");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RegisterEvent");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RegisterCall");

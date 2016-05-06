@@ -242,7 +242,7 @@ $(document).ready(function() {
 				<td style="width: 84%;">
 					<div style="width: 100%; overflow: auto;">
 						
-						<g:select name="filter" id="filter" from="${['RDKB','RDKV', 'RDKB_TCL']}" noSelection="['All':'All']" value="${category }" onchange="loadXMLDoc()"/>
+						<g:select name="filter" id="filter" from="${['RDKB','RDKV', 'RDKB_TCL']}" noSelection="['All':'All']" value="${category}" onchange="categoryChange();"/>
 						
 							<div style="width: 96%; overflow: auto; text-align: right; vertical-align: top;">
 							<g:form controller="execution">
@@ -382,6 +382,7 @@ $(document).ready(function() {
 
 	<g:hiddenField name = "selectedDevice" id = "selectedDevice" value = ""/>
 	<g:hiddenField name = "deviceInstance" id = "deviceInstance" value = "${deviceInstanceTotal}"/>
+	<g:hiddenField name = "selectedFilter" id = "selectedFilter" value = "${category}"/>
 
 </body>
 </html> 
