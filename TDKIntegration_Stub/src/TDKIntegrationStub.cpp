@@ -344,7 +344,14 @@ DEBUG_PRINT(DEBUG_TRACE, "Streaming URL : %s\n",url.c_str());
         return url;
 #else
  #ifndef STAND_ALONE_CLIENT
-        string cmd = "arp -n -i "+string(CLIENT_MOCA_INTERFACE)+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+       streaming_interface=fetchStreamingInterface();
+       found=streaming_interface.find("FAILURE");
+       if (found!=std::string::npos)
+       {
+          DEBUG_PRINT(DEBUG_ERROR, "Failed to fetch proper Interface name\n");
+          return "FAILURE<DETAILS>Failed to fetch proper interface name";
+       }
+        string cmd = "arp -n -i "+streaming_interface+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
         FILE* pipe = popen(cmd.c_str(), "r");
         if (!pipe)
         {
