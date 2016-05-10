@@ -22,7 +22,7 @@ static int port = 9987;
 static bool responseReceived = false;
 static bool responseSuccess = false;
 static bool resrvResponseReceived = false;
-static bool reservationSuccess = false;
+static string reservationSuccess = "";
 static char responseStr[OUTPUT_LEN];
 static char cancelRecReqId[GUID_LEN];
 static const unsigned int kRecorderClientId = 0xFFFFFF00;
@@ -334,7 +334,7 @@ bool waitForTRMResponse()
 }
 
 
-bool waitForResrvResponse()
+string waitForResrvResponse()
 {
     int retry_count = 0;
     while ((false == resrvResponseReceived) && (retry_count < MAX_RETRY))
@@ -403,7 +403,7 @@ TRMClient::~TRMClient()
     responseReceived = true;
     responseSuccess = false;
     resrvResponseReceived = true;
-    reservationSuccess = false;
+    reservationSuccess = "";
     bSelectNewOnConflict = false;
     trmClient = NULL;
     pthread_mutex_unlock( &helper_mutex);
@@ -601,8 +601,8 @@ bool TRMClient::validateTunerReservation(string device, string locator, int acti
 
 //startTime: start time of the reservation in milliseconds from the epoch.
 //duration: reservation period measured from the start in milliseconds.
-bool TRMClient::reserveTunerForRecord( const string device, const string recordingId, const string locator,
-        uint64_t startTime, uint64_t duration, bool hot, bool conflict)
+string TRMClient::reserveTunerForRecord( const string device, const string recordingId, const string locator,
+        uint64_t startTime, uint64_t duration, bool hot, const string token, bool conflict)
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     bool ret = false;
@@ -619,7 +619,7 @@ bool TRMClient::reserveTunerForRecord( const string device, const string recordi
 
     bSelectNewOnConflict = conflict;
 
-    TRM::TunerReservation resrv( device, locator, startTime, duration, activity);
+    TRM::TunerReservation resrv( device, locator, startTime, duration, activity, token);
     TRM::ReserveTuner msg(guid, device, resrv);
 
     JsonEncode(msg, out);
@@ -627,7 +627,7 @@ bool TRMClient::reserveTunerForRecord( const string device, const string recordi
     int len = strlen((const char*)&out[0]);
     int retry_count = 10;
     resrvResponseReceived = false;
-    reservationSuccess = false;
+    reservationSuccess = "";
 
     do
     {
@@ -638,17 +638,17 @@ bool TRMClient::reserveTunerForRecord( const string device, const string recordi
 
     if (ret == true)
     {
-        ret = waitForResrvResponse();
+        waitForResrvResponse();
     }
 
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
-    return ret;
+    return reservationSuccess;
 }
 
 //startTime: start time of the reservation in milliseconds from the epoch.
 //duration: reservation period measured from the start in milliseconds.
-bool TRMClient::reserveTunerForLive( const string device, const string locator,
-        uint64_t startTime, uint64_t duration, bool conflict)
+string TRMClient::reserveTunerForLive( const string device, const string locator,
+        uint64_t startTime, uint64_t duration, const string token, bool conflict)
 {
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Enter %s():%d \n" , __FUNCTION__, __LINE__);
     bool ret = false;
@@ -659,14 +659,14 @@ bool TRMClient::reserveTunerForLive( const string device, const string locator,
     TRM::Activity activity(TRM::Activity::kLive);
     bSelectNewOnConflict = conflict;
 
-    TRM::TunerReservation resrv( device, locator, startTime, duration, activity);
+    TRM::TunerReservation resrv( device, locator, startTime, duration, activity, token);
     TRM::ReserveTuner msg(guid, device, resrv);
     JsonEncode(msg, out);
     out.push_back(0);
     int len = strlen((const char*)&out[0]);
     int retry_count = 10;
     resrvResponseReceived = false;
-    reservationSuccess = false;
+    reservationSuccess = "";
 
     do
     {
@@ -676,11 +676,11 @@ bool TRMClient::reserveTunerForLive( const string device, const string locator,
 
     if (ret == true)
     {
-        ret = waitForResrvResponse();
+        waitForResrvResponse();
     }
 
     RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Exit %s():%d \n" , __FUNCTION__, __LINE__);
-    return ret;
+    return reservationSuccess;
 }
 
 bool TRMClient::cancelLiveReservation(TRM::TunerReservation resrv)
@@ -861,12 +861,12 @@ bool TRMClient::cancelRecordingReservation(string reservationToken)
     return ret;
 }
 
-bool TRMClient::addToReservationDb(TRM::TunerReservation resv)
+string TRMClient::addToReservationDb(TRM::TunerReservation resv)
 {
 	if (resv.getReservationToken().empty())
 	{
 	    RDK_LOG(RDK_LOG_WARN, "LOG.RDK.TEST", "%s() - Invalid reservation entry. Skipping DB update\n",__FUNCTION__);
-	    return false;
+	    return "";
 	}
 
         RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Adding token: [%s]\n", __FUNCTION__, resv.getReservationToken().c_str());
@@ -885,7 +885,7 @@ bool TRMClient::addToReservationDb(TRM::TunerReservation resv)
 				(*it).second.getServiceLocator().c_str(),
 				(*it).second.getReservationToken().c_str());
 	}
-	return true;
+	return resv.getReservationToken();
 }
 
 bool TRMClient::removeFromReservationDb(const string reservationToken)
@@ -935,7 +935,7 @@ void CTRMMonitor::operator() (const TRM::ReserveTunerResponse &msg)
     pthread_mutex_lock( &helper_mutex);
 
     resrvResponseReceived = true;
-    reservationSuccess = false;
+    reservationSuccess = "";
 
     if ( NULL == trmClient )
     {
@@ -983,7 +983,22 @@ void CTRMMonitor::operator() (const TRM::ReserveTunerResponse &msg)
         else
         {
             int statusCode = status.getStatusCode();
-	    RDK_LOG( RDK_LOG_WARN , "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Status NOT OK. statusCode = %d\n", __FUNCTION__, statusCode);
+            RDK_LOG( RDK_LOG_WARN , "LOG.RDK.TEST", "%s(ReserveTunerResponse) - Status NOT OK. statusCode = %d\n", __FUNCTION__, statusCode);
+
+            if ( status == TRM::ResponseStatus::kGeneralError )
+                reservationSuccess = "GeneralError";
+            else if ( status == TRM::ResponseStatus::kMalFormedRequest )
+                reservationSuccess = "MalFormedRequest";
+            else if ( status == TRM::ResponseStatus::kUnRecognizedRequest )
+                reservationSuccess = "UnRecognizedRequest";
+            else if ( status == TRM::ResponseStatus::kInvalidToken )
+                reservationSuccess = "InvalidToken";
+            else if ( status == TRM::ResponseStatus::kInvalidState )
+                reservationSuccess = "InvalidState";
+            else if ( status == TRM::ResponseStatus::kUserCancellation )
+                reservationSuccess = "UserCancellation";
+            else if ( status == TRM::ResponseStatus::kInsufficientResource )
+                reservationSuccess = "InsufficientResource";
         }
     }
     pthread_mutex_unlock( &helper_mutex);

@@ -333,6 +333,12 @@ bool TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Jso
     unsigned long long startTimeAdd = req["startTime"].asDouble();
     bool hot = req["hot"].asInt();
     bool select= req["selectOnConflict"].asInt();
+    std::string outToken = "";
+    std::string inToken = "";
+    if( NULL != &req["token"] )
+    {
+        inToken = req["token"].asString();
+    }
 
     if (TOTAL_DEVICE_NUMBER < deviceNo)
     {
@@ -348,13 +354,25 @@ bool TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Jso
 
     try
     {
-        if (!pTrmClient->reserveTunerForRecord(deviceNames[deviceNo], recordingId, locator, startTime, duration, hot, select))
+        outToken = pTrmClient->reserveTunerForRecord(deviceNames[deviceNo], recordingId, locator, startTime, duration, hot, inToken, select);
+        if ("" == outToken)
         {
+            DEBUG_PRINT(DEBUG_ERROR,"TRM failed to reserve tuner for record\n");
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to reserve tuner for record";
-            DEBUG_PRINT(DEBUG_ERROR,"TRM failed to reserve tuner for record\n");
-            DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForRecord --->Exit\n");
-            return TEST_FAILURE;
+        }
+        else if ( (std::string::npos != outToken.find("-")) )
+        {
+            //Valid token is of format aa-bb-cc-dd-ee
+            DEBUG_PRINT(DEBUG_TRACE, "output token = %s \n", outToken.c_str());
+            response["result"] = "SUCCESS";
+            response["details"] = outToken;
+        }
+        else
+        {
+            DEBUG_PRINT(DEBUG_ERROR,"TRM failed to reserve tuner for record with error code = %s\n", outToken.c_str());
+            response["result"] = "FAILURE";
+            response["details"] = outToken;
         }
     }
     catch(...)
@@ -366,10 +384,6 @@ bool TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Jso
         return TEST_FAILURE;
     }
 
-    //sleep (2);
-
-    response["result"] = "SUCCESS";
-    response["details"] = "TRM reserve tuner for record success";
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForRecord --->Exit\n");
     return TEST_SUCCESS;
 }
@@ -395,6 +409,12 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
     duration = req["duration"].asDouble();
     unsigned long long startTimeAdd = req["startTime"].asDouble();
     bool select= req["selectOnConflict"].asInt();
+    std::string outToken = "";
+    std::string inToken = "";
+    if( NULL != &req["token"] )
+    {
+        inToken = req["token"].asString();
+    }
 
     if (TOTAL_DEVICE_NUMBER < deviceNo)
     {
@@ -410,13 +430,25 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
 
     try
     {
-        if (!pTrmClient->reserveTunerForLive(deviceNames[deviceNo], locator, startTime, duration, select))
+        outToken = pTrmClient->reserveTunerForLive(deviceNames[deviceNo], locator, startTime, duration, inToken, select);
+        if ("" == outToken)
         {
+            DEBUG_PRINT(DEBUG_ERROR,"TRM failed to reserve tuner for live\n");
             response["result"] = "FAILURE";
             response["details"] = "TRM failed to reserve tuner for live";
-            DEBUG_PRINT(DEBUG_ERROR,"TRM failed to reserve tuner for live\n");
-            DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForLive --->Exit\n");
-            return TEST_FAILURE;
+        }
+        else if ( (std::string::npos != outToken.find("-")) )
+        {
+            //Valid token is of format aa-bb-cc-dd-ee
+            DEBUG_PRINT(DEBUG_TRACE, "output token = %s \n", outToken.c_str());
+            response["result"] = "SUCCESS";
+            response["details"] = outToken;
+        }
+        else
+        {
+            DEBUG_PRINT(DEBUG_ERROR,"TRM failed to reserve tuner for live with error code = %s\n", outToken.c_str());
+            response["result"] = "FAILURE";
+            response["details"] = outToken;
         }
     }
     catch(...)
@@ -428,10 +460,6 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
         return TEST_FAILURE;
     }
 
-    //sleep (2);
-
-    response["result"] = "SUCCESS";
-    response["details"] = "TRM reserve tuner for live success";
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForLive --->Exit\n");
     return TEST_SUCCESS;
 }

@@ -31,7 +31,7 @@ Copyright (c) 2016 Comcast. All rights reserved.
         <function>TestMgr_TRM_GetVersion</function>
         <parameters/>
       </primitiveTest>
-      <primitiveTest id=" " name="TRM_TunerReserveForRecord" version="2">
+      <primitiveTest id=" " name="TRM_TunerReserveForRecord" version="3">
         <function>TestMgr_TRM_TunerReserveForRecord</function>
         <parameters>
           <parameter name="recordingId" value="CNN"/>
@@ -41,9 +41,10 @@ Copyright (c) 2016 Comcast. All rights reserved.
           <parameter name="deviceNo" value="0"/>
           <parameter name="hot" value="0"/>
           <parameter name="selectOnConflict" value="0"/>
+          <parameter name="token" value=""/>
         </parameters>
       </primitiveTest>
-      <primitiveTest id=" " name="TRM_TunerReserveForLive" version="2">
+      <primitiveTest id=" " name="TRM_TunerReserveForLive" version="3">
         <function>TestMgr_TRM_TunerReserveForLive</function>
         <parameters>
           <parameter name="duration" value="0"/>
@@ -51,6 +52,7 @@ Copyright (c) 2016 Comcast. All rights reserved.
           <parameter name="startTime" value="0"/>
           <parameter name="deviceNo" value="0"/>
           <parameter name="selectOnConflict" value="0"/>
+          <parameter name="token" value=""/>
         </parameters>
       </primitiveTest>
       <primitiveTest id=" " name="TRM_ValidateTunerReservation" version="3">

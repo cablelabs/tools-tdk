@@ -50,9 +50,9 @@ public:
     bool getAllReservations(std::string filterDevice, char *output);
     bool getVersion(void);
     bool validateTunerReservation(std::string device, std::string locator, int activityType);
-    bool reserveTunerForRecord( std::string device, std::string recordingId, std::string locator, uint64_t startTime=0, uint64_t duration=0,
-                                bool hot=false, bool conflict = false);
-    bool reserveTunerForLive( std::string device, std::string locator, uint64_t startTime=0, uint64_t duration=0, bool conflict = false);
+    std::string reserveTunerForRecord( std::string device, std::string recordingId, std::string locator, uint64_t startTime=0, uint64_t duration=0,
+                                bool hot = false, std::string token = "", bool conflict = false);
+    std::string reserveTunerForLive( std::string device, std::string locator, uint64_t startTime=0, uint64_t duration=0, std::string token = "", bool conflict = false);
     bool cancelRecordingReservation(std::string reservationToken); // To be called during conflict resolution
     bool cancelLiveReservation(TRM::TunerReservation resrv); // To be called during conflict resolution
     bool releaseTunerReservation(std::string device, std::string locator, int activityType);
@@ -64,7 +64,7 @@ public:
     TRMClient();
     ~TRMClient();
 
-    static bool addToReservationDb(TRM::TunerReservation resv);
+    static std::string addToReservationDb(TRM::TunerReservation resv);
     static bool removeFromReservationDb(const std::string token);
 
 private:

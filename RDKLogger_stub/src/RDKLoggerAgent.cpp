@@ -298,6 +298,7 @@ bool RDKLoggerAgent::testmodulepost_requisites()
 		DEBUG_PRINT(DEBUG_TRACE, "%s file successfully deleted\n", tdkDebugIniFile.c_str());
 	}
 
+#if 0
         // De-Initialize rdklogger
         rdk_Error ret = rdk_logger_deinit();
         if ( RDK_SUCCESS != ret)
@@ -310,6 +311,7 @@ bool RDKLoggerAgent::testmodulepost_requisites()
         {
                 DEBUG_PRINT(DEBUG_TRACE, "rdk logger de-init successful\n");
         }
+#endif
 
         DEBUG_PRINT(DEBUG_TRACE, "RDKlogger testmodule post requisites --> Exit");
        	return TEST_SUCCESS;
