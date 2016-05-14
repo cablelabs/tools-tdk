@@ -65,6 +65,7 @@ std::string cecRdkLogFile = "cec_log.txt";
 std::string cecTdkLogFile = "cec_tdk.log";
 static bool gDebugLogEnabled = false;
 static HdmiCecService *pHdmiService = NULL;
+static HdmiListener *pHdmiListener = NULL;
 
 static void checkDebugLogEnabled(void)
 {
@@ -132,6 +133,34 @@ void stopHdmiCecService(void)
                 DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service does not exist");
         }
 }
+
+/***************************************************************************
+ *Function name	: HdmiListener 
+ *Descrption	: This is a constructor function for HdmiListener class. 
+ *****************************************************************************/ 
+HdmiListener::HdmiListener()
+{
+	DEBUG_PRINT(DEBUG_LOG,"HdmiListener Initialized");
+}
+
+void HdmiListener::onServiceEvent(const QString& event, ServiceParams params)
+{
+	DEBUG_PRINT(DEBUG_TRACE, "onServiceEvent Entry");
+	if (event == HdmiCecService::EVENT_ON_CEC_ADDRESS_CHANGE)
+	{
+		DEBUG_PRINT(DEBUG_LOG, "Received \"cecAddressesChanged\" event");
+        	QByteArray data;
+        	QVariantHash CECAddresses;
+        	QVariantHash logicalAddress;
+
+        	CECAddresses = params;
+        	logicalAddress = CECAddresses["logicalAddresses"].toHash();
+       	 	data = CECAddresses["physicalAddress"].toByteArray();
+        	DEBUG_PRINT(DEBUG_LOG, "Physical Address : %x : %x :%x :%x \n", data.at(0),data.at(1),data.at(2),data.at(3));
+        	DEBUG_PRINT(DEBUG_LOG, "device type=%s, logical address = %d \n",logicalAddress["deviceType"].toString().toStdString().c_str(),logicalAddress["logicalAddress"].toInt());
+    	}
+		
+}
 #endif
 
 /***************************************************************************
@@ -191,6 +220,7 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices,"TestMgr_SM_HdmiCec_GetConnectedDevices");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_SendMessage,"TestMgr_SM_HdmiCec_SendMessage");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_OnMessage,"TestMgr_SM_HdmiCec_OnMessage");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_GetCECAddresses,"TestMgr_SM_HdmiCec_GetCECAddresses");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_ClearCecLog,"TestMgr_SM_HdmiCec_ClearCecLog");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_CheckStatus,"TestMgr_SM_HdmiCec_CheckStatus");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HdmiCec_FlushCecData,"TestMgr_SM_HdmiCec_FlushCecData");
@@ -1132,10 +1162,23 @@ bool ServiceManagerAgent::SM_Services_RegisterForEvents(IN const Json::Value& re
 	event_list.append(QString::fromStdString(eventName));
 	//ServiceParams params;
 	ServiceListener *listener=NULL;
-	bool register_flag=false;
 	Service* ptr_service=NULL;
-	/*Calling getGlobalService API to get the service instance*/
+	bool register_flag=false;
+#ifdef HAS_API_HDMI_CEC
+        if (QString::fromUtf8(serviceName.c_str()) == HdmiCecService::SERVICE_NAME)
+        {
+		ptr_service = pHdmiService;
+		pHdmiListener = new HdmiListener();
+		listener = pHdmiListener;
+        }
+	else
+	{
+		/*Calling getGlobalService API to get the service instance*/
+		ptr_service = ServiceManager::getInstance()->getGlobalService(QString::fromStdString(serviceName));
+	}
+#else
 	ptr_service = ServiceManager::getInstance()->getGlobalService(QString::fromStdString(serviceName));
+#endif
 	if(ptr_service != NULL)
 	{
 		/*registering events for a given service*/
@@ -1188,10 +1231,22 @@ bool ServiceManagerAgent::SM_Services_UnRegisterForEvents(IN const Json::Value& 
         event_list.append(QString::fromStdString(eventName));
         //ServiceParams params;
         ServiceListener *listener=NULL;
+	Service* ptr_service=NULL;
         bool unregister_flag=false;
-        Service* ptr_service=NULL;
-        /*Calling getGlobalService API to get the service instance*/
-        ptr_service = ServiceManager::getInstance()->getGlobalService(QString::fromStdString(serviceName));
+#ifdef HAS_API_HDMI_CEC
+        if (QString::fromUtf8(serviceName.c_str()) == HdmiCecService::SERVICE_NAME)
+        {
+		ptr_service = pHdmiService;
+		listener = pHdmiListener;
+        }
+	else
+	{
+		/*Calling getGlobalService API to get the service instance*/
+		ptr_service = ServiceManager::getInstance()->getGlobalService(QString::fromStdString(serviceName));
+	}
+#else
+	ptr_service = ServiceManager::getInstance()->getGlobalService(QString::fromStdString(serviceName));
+#endif
         if(ptr_service != NULL)
         {
                 /*registering events for a given service*/
@@ -1217,6 +1272,14 @@ bool ServiceManagerAgent::SM_Services_UnRegisterForEvents(IN const Json::Value& 
                 response["details"]="SM getGlobalService failed";
                 DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
         }
+#ifdef HAS_API_HDMI_CEC
+	if(pHdmiListener != NULL)
+	{
+		delete pHdmiListener;
+		pHdmiListener = NULL;
+                DEBUG_PRINT(DEBUG_LOG,"Delete %p\n", pHdmiListener);
+	}
+#endif
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_UnRegisterForEvents ---->Exit\n");
         return TEST_SUCCESS;
 }
@@ -1920,6 +1983,54 @@ bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT 
 }
 
 /***************************************************************************
+ *Function name : SM_HdmiCec_GetCECAddresses
+ *Descrption    : This will get the logical and physical addresses of connected devices 
+ *parameter [in]: NONE.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HdmiCec_GetCECAddresses(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetCECAddresses ---->Entry\n");
+
+#ifdef HAS_API_HDMI_CEC
+	HdmiCecService *ptr_service = pHdmiService;
+        if(ptr_service != NULL)
+        {	
+		char physAddr[STR_DETAILS_20] = {'\0'};
+                QVariantHash CECAddresses;
+		QByteArray  physicalAddr;
+		QVariantHash logicalAddr;
+		QString addr = "{" ;	
+		CECAddresses = ptr_service->getCECAddresses();
+		physicalAddr = CECAddresses["physicalAddress"].toByteArray();
+		logicalAddr = CECAddresses["logicalAddress"].toHash();
+		sprintf(physAddr,"%x%x%x%x", physicalAddr.at(0), physicalAddr.at(1), physicalAddr.at(2), physicalAddr.at(3));
+		addr += "\"physicalAddress\":\"";
+		addr +=  physAddr;
+		addr += "\",";
+		addr += "\"logicalAddress\":" + logicalAddr["logicalAddress"].toString() + ",";
+		addr += "\"deviceType\":\"" + logicalAddr["deviceType"].toString() + "\"";
+		addr += "}";
+		DEBUG_PRINT(DEBUG_TRACE,"CECAddress details: %s\n", addr.toUtf8().constData());
+                response["result"]="SUCCESS";
+                response["details"]=addr.toUtf8().constData();
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create HdmiCec Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create HdmiCec Service handler.";
+        }
+#else
+	DEBUG_PRINT(DEBUG_TRACE,"HdmiCec Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="HdmiCec Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetCECAddresses ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/***************************************************************************
  *Function name : SM_HdmiCec_OnMessage
  *Descrption    : This will be fired when a message is sent from an HDMI device to STB.
  *parameter [in]: req - message.
@@ -2257,6 +2368,7 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_GetConnectedDevices");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_SendMessage");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_OnMessage");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_GetCECAddresses");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_ClearCecLog");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_CheckStatus");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_HdmiCec_FlushCecData");

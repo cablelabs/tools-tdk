@@ -24,6 +24,7 @@
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 #include "servicemanager.h"
+#include "servicelistener.h"
 using namespace std;
 
 // Includes for services
@@ -162,6 +163,7 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		bool SM_HdmiCec_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_HdmiCec_GetCECAddresses(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_HdmiCec_FlushCecData(IN const Json::Value& req, OUT Json::Value& response);
@@ -174,4 +176,12 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
 		
 };
+
+class HdmiListener : public ServiceListener 
+{
+public:
+	HdmiListener();
+	void onServiceEvent(const QString& event, ServiceParams params);
+};
+ 
 #endif //__SERVICEMANAGER_AGENT_H__

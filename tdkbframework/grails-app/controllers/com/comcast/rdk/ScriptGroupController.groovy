@@ -773,7 +773,7 @@ class ScriptGroupController {
 		if(file.exists()){
 			String s = ""
 			List line = file.readLines()
-			int indx = 0
+			 int indx = line?.findIndexOf {  it.startsWith("'''")} 
 			String scriptContent = ""
 			if(line.get(indx).startsWith("'''"))	{
 				indx++
@@ -994,7 +994,15 @@ class ScriptGroupController {
 				if(!file.exists()){
 					file.createNewFile()
 				}
-				String data = "'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
+				File pyHeader = new File( "${request.getRealPath('/')}//fileStore//pyHeader.txt")
+				def pyHeaderContentList = pyHeader?.readLines()
+				String pyHeaderContent = ""
+				pyHeaderContentList.each {
+					pyHeaderContent += it?.toString()+"\n"
+				}
+				String data =pyHeaderContent+"'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
+				
+				//String data = "'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
 				file.write(data)
 				saveScript = true
 			} catch (Exception e) {
@@ -1255,7 +1263,15 @@ class ScriptGroupController {
 			if(!file.exists()){
 				file.createNewFile()
 			}
-			String data = "'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
+			File pyHeader = new File( "${request.getRealPath('/')}//fileStore//pyHeader.txt")
+			def pyHeaderContentList = pyHeader?.readLines()
+			String pyHeaderContent = ""
+			pyHeaderContentList.each {
+				pyHeaderContent += it?.toString()+"\n"
+			}
+			String data =pyHeaderContent+"'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea			
+			
+			//String data = "'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
 			file.write(data)
 			if(params?.prevScriptName != params?.name && params?.prevScriptName?.trim() != params?.name?.trim()){
 				//File file1 = new File( "${request.getRealPath('/')}//fileStore//testscripts/"+scriptsDirName1+"/"+dirname+"/"+params?.prevScriptName?.trim()+".py");

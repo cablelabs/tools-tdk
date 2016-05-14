@@ -734,7 +734,7 @@ class ScriptService {
 			if(file.exists()){
 				String s = ""
 				List line = file.readLines()
-				int indx = 0
+				int indx = line?.findIndexOf { it.startsWith("'''")}
 				String scriptContent = ""
 				if(line.get(indx).startsWith("'''"))	{
 					indx++
@@ -878,7 +878,7 @@ class ScriptService {
 		if(file.exists()){
 			String s = ""
 			List line = file.readLines()
-			int indx = 0
+			int indx = line?.findIndexOf { it.startsWith("'''")}
 			String scriptContent = ""
 			if(line.get(indx).startsWith("'''"))	{
 					indx++
@@ -892,7 +892,6 @@ class ScriptService {
 					indx++
 				}
 			}
-			
 			
 			String xml = s
 			XmlParser parser = new XmlParser();

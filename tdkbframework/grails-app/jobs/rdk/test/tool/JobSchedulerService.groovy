@@ -2445,7 +2445,7 @@ class JobSchedulerService implements Job{
 			//String s = ""
 			StringBuilder s = new StringBuilder()
 			List line = file.readLines()
-			int indx = 0
+			int indx = line?.findIndexOf {  it.startsWith("'''")} 
 			String scriptContent = ""
 			if(line.get(indx).startsWith("'''"))	{
 					indx++
@@ -2587,9 +2587,17 @@ class JobSchedulerService implements Job{
 		try {
 			//File primitiveXml = new File(filePath)
 			File primitiveXml = new File(newFilePath)
-			def local = new XmlParser()
-			def node = local.parse(primitiveXml)
-
+		//	def local = new XmlParser()
+		//	def node = local.parse(primitiveXml)
+		def lines = primitiveXml?.readLines()
+		int indx = lines?.findIndexOf { it.startsWith("<?xml")}
+		String xmlContent =""
+		while(indx < lines.size()){
+					xmlContent = xmlContent + lines.get(indx)+"\n"
+					indx++
+		}
+		def parser = new XmlParser();
+		def node = parser.parseText(xmlContent?.toString())
 			
 			node.each{
 				it.primitiveTests.each{
@@ -2631,7 +2639,15 @@ class JobSchedulerService implements Job{
 	
 	def getPrimitiveTest1(def filePath,def primitiveTestName){
 		File primitiveXml = new File(filePath)
-		def node = new XmlParser().parse(primitiveXml)
+		def lines = primitiveXml?.readLines()
+		int indx = lines?.findIndexOf { it.startsWith("<?xml")}
+		String xmlContent =""
+		while(indx < lines.size()){
+					xmlContent = xmlContent + lines.get(indx)+"\n"
+					indx++
+		}
+		def parser = new XmlParser();
+		def node = parser.parseText(xmlContent?.toString())
 		
 		Map primitiveMap = [:]
 		node.each{
