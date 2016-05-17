@@ -182,8 +182,17 @@ class PrimitiveTestController {
 					def primitiveFile = new File(getPrimitiveFilePath(moduleObj?.getName(), category))
 					
 					if(primitiveFile.exists()){
-						def data = primitiveFile.readBytes()
-					def root = new XmlSlurper().parse(primitiveFile)
+						//def data = primitiveFile.readBytes()
+					//def root = new XmlSlurper().parse(primitiveFile)
+						def data = primitiveFile.readLines()
+						int indx = data?.findIndexOf { it.startsWith("<?xml")}
+						String xmlContent =""
+						while(indx < data.size()){
+									xmlContent = xmlContent + data.get(indx)+"\n"
+									indx++
+						}					
+						def parser = new XmlSlurper()
+						def root = parser.parseText(xmlContent?.toString())
 					def list1 = []
                         if(params.parameterTypeIds) {
                             params.parameterTypeIds.split(", ").each {
@@ -294,7 +303,14 @@ class PrimitiveTestController {
 								if(!file.exists()){
 									file.createNewFile()
 								}
-								file.write(writer.toString())
+								File xmlHeader = new File( "${request.getRealPath('/')}//fileStore//xmlHeader.txt")
+								def xmlHeaderContentList = xmlHeader?.readLines()
+								String xmlHeaderContent = ""
+								xmlHeaderContentList.each {
+									xmlHeaderContent += it?.toString()+"\n"
+								}
+								file.write(xmlHeaderContent+writer.toString())
+								//file.write(writer.toString())
 								primitiveService.addToPrimitiveList(params?.testName,moduleObj.getName(), category)
 							} catch (Exception e) {
 								e.printStackTrace()
@@ -413,7 +429,17 @@ class PrimitiveTestController {
 		def fun = Function.get(params?.functionValue as Long)
 		def primitiveFile = new File(primitiveFilePath)
 		if(primitiveFile.exists()){
-			def root = new XmlSlurper().parse(primitiveFile)
+			//def root = new XmlSlurper().parse(primitiveFile)
+			def lines = primitiveFile?.readLines()
+			int indx = lines?.findIndexOf { it.startsWith("<?xml")}
+			String xmlComtent =""
+			while(indx < lines.size()){
+						xmlComtent = xmlComtent + lines.get(indx)+"\n"
+						indx++
+			}
+			def parser = new XmlParser();
+			def root = parser.parseText(xmlComtent)
+
 
 			def list1 = []
 			if(params.parameterTypeIds) {

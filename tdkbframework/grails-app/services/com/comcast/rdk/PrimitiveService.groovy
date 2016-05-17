@@ -199,7 +199,16 @@ class PrimitiveService {
 		}
 		primitivePath = primitivePath + scriptDirName + FILE_SEPARATOR + moduleName + FILE_SEPARATOR + moduleName+".xml"
 		File primitiveFile = new File(primitivePath)
-		def root = new XmlSlurper().parse(primitiveFile)
+		//def root = new XmlSlurper().parse(primitiveFile)
+		def data = primitiveFile.readLines()
+		int indx = data?.findIndexOf { it.startsWith("<?xml")}
+		String xmlContent =""
+		while(indx < data.size()){
+					xmlContent = xmlContent + data.get(indx)+"\n"
+					indx++
+		}
+		def parser = new XmlSlurper()
+		def root = parser.parseText(xmlContent?.toString())		
 		def primitiveNode = root.module.primitiveTests.primitiveTest.find{ it.@name == primitiveTestName }
 		primitiveNode.replaceNode{}
 		def writer = new FileWriter(primitiveFile)
