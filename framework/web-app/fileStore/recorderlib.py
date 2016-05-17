@@ -595,6 +595,32 @@ def getRecordingFromRecId(jsonData,recordingId):
 
 ########## End of Function getRecordingFromRecId ##########
 
+def getTotalNumberofRecordings(jsonData):
+        ret = 0
+        try:
+                jsonList = json.loads(jsonData, strict=False)
+        except ValueError, e:
+                print e
+                return ret
+        except:
+                print "Unexpected error:", sys.exc_info()[0]
+                return ret
+
+        #Check if status is not empty
+        if jsonList == []:
+                print "ERROR: No status available"
+                return ret
+
+        #Get statusMessage from status list
+        for my_item in jsonList:
+                recordings = {}
+                if 'recordingStatus' in my_item['statusMessage']:
+                        recordings = my_item['statusMessage']
+                        ret = len(recordings['recordingStatus']['recordings'])
+        return ret
+
+########## End of Function getTotalNumberofRecordings ##########
+
 def getValueFromKeyInRecording(recording,key):
         value = "BADVALUE"
         ret = []
@@ -688,7 +714,7 @@ def checkDiskFullWithRecordings(gwIp,tdkTestObj,numOfTuners,recDuration,priority
 			if "SPACE_FULL" == error:
 				print "DiskFull!! Could not schedule recording ",recordingID
 				diskFull = 1
-				break
+				return diskFull
         #hot recording on all the tuners - End
 
 	callServerHandler('clearStatus',gwIp)
@@ -717,6 +743,7 @@ def checkDiskFullWithRecordings(gwIp,tdkTestObj,numOfTuners,recDuration,priority
                                 if "SPACE_FULL" == error:
                                 	print "DiskFull!! Could not schedule recording ",recordingID
                                         diskFull = 1
+                                        return diskFull
 	#Check if any recording is in progress - End
 
         if 1 == inProgress:
