@@ -109,7 +109,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 print "Ocapri log is not cleared ";
 
             # Reboot the STB
-            print "Rebooting the STB to get the recording list from full sync"
+            print "Rebooting the STB"
             recObj.initiateReboot();
             print "Sleeping to wait for the recoder to be up"
             sleep(300);

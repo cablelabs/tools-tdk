@@ -1,12 +1,3 @@
-#  ============================================================================
-#  COMCAST C O N F I D E N T I A L AND PROPRIETARY
-#  ============================================================================
-#  This file (and its contents) are the intellectual property of Comcast.  It may
-#  not be used, copied, distributed or otherwise  disclosed in whole or in part
-#  without the express written permission of Comcast.
-#  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
@@ -92,8 +83,8 @@ if "SUCCESS" in recLoadStatus.upper():
         print "RWS server status: ",status
         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip);
         if "FALSE" in status.upper():
-                print "Waiting for 550s to get connection retrial attempts from recorder"
-                sleep(550)
+                print "Waiting for 50s to get connection retrial attempts from recorder"
+                sleep(50)
 
                 #Checkpoint-1: Get the time between each re-trials
                 print "Checking status of disabled servers"
@@ -143,9 +134,15 @@ if "SUCCESS" in recLoadStatus.upper():
                 else:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "Enabled RWS Server"
+                #wait for rws server to reconnect
+                sleep(60)
         else:
                 print "Failed to disable RWS Server. Exiting.."
                 tdkTestObj.setResultStatus("FAILURE");
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE");

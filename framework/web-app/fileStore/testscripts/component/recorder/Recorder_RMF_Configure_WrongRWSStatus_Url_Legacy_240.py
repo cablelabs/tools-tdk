@@ -1,12 +1,3 @@
-#  ============================================================================
-#  COMCAST C O N F I D E N T I A L AND PROPRIETARY
-#  ============================================================================
-#  This file (and its contents) are the intellectual property of Comcast.  It may
-#  not be used, copied, distributed or otherwise  disclosed in whole or in part
-#  without the express written permission of Comcast.
-#  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
@@ -28,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>60</execution_time>
+  <execution_time>30</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -66,6 +57,12 @@ recObj.configureTestCase(ip,port,'Recorder_RMF_Configure_WrongRWSStatus_Url_Lega
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
 
+obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+obj.configureTestCase(ip,port,'Recorder_RMF_Configure_WrongRWSStatus_Url_Legacy_240');
+MFLoadStatus = obj.getLoadModuleResult();
+print "MF module loading status : %s" %MFLoadStatus
+
+
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 
@@ -93,7 +90,47 @@ if "SUCCESS" in recLoadStatus.upper():
         #Checking whether alternate wrong url is configured or not
         actResponse = recorderlib.callServerHandlerWithType('isAlternateURLEnabled','RWSStatus',ip);
         print actResponse; 
-    
+
+        #Primitive test case which associated to this script
+        rmfConfObj = recObj.createTestStep('Recorder_SetValuesInRmfconfig');
+        expectedResult="SUCCESS";
+        #Set 2 parameters
+        Keyword="FEATURE.RWS.POST.URL";
+        rmfConfObj.addParameter("Keyword",Keyword);
+        Value="http://96.114.220.106:80/DVRSimulator/wrongRWSStatus";
+        rmfConfObj.addParameter("Value",Value);
+        #Execute the test case in STB
+        rmfConfObj.executeTestCase(expectedResult);
+        #Get the actual result and details of execution
+        result = rmfConfObj.getResult();
+        details1 = rmfConfObj.getResultDetails();
+        print result,","," ",details1
+        if "FAILURE" in result:
+                print "Failed to change the RWS Url"
+                rmfConfObj.setResultStatus("FAILURE");
+                recObj.unloadModule("Recorder");
+                exit();
+        print "Changed the RWS Url"
+        rmfConfObj.setResultStatus("SUCCESS");
+
+        Keyword="FEATURE.SECURE_RWS.POST.URL";
+        rmfConfObj.addParameter("Keyword",Keyword);
+        Value="http://96.114.220.106:80/DVRSimulator/wrongRWSStatus";
+        rmfConfObj.addParameter("Value",Value);
+        #Execute the test case in STB
+        rmfConfObj.executeTestCase(expectedResult);
+        #Get the actual result and details of execution
+        result = rmfConfObj.getResult();
+        details2 = rmfConfObj.getResultDetails();
+        print result,","," ",details1
+        if "FAILURE" in result:
+                print "Failed to change the RWS Secure Url"
+                rmfConfObj.setResultStatus("FAILURE");
+                recObj.unloadModule("Recorder");
+                exit();
+        print "Changed the RWS Secure Url"
+        rmfConfObj.setResultStatus("SUCCESS");
+
         if "wrongRWSStatus" in actResponse:
             tdkTestObj.setResultStatus("SUCCESS");
             print "Alternate URL enabled for RWS Status server";
@@ -107,8 +144,25 @@ if "SUCCESS" in recLoadStatus.upper():
             else:
                 tdkTestObj1.setResultStatus("FAILURE");
                 print "Ocapri log is not cleared ";
+    
+            #unloading Recorder module
+            recObj.unloadModule("Recorder");
+            sleep(30);
+            #Reboot the STB
+            obj.initiateReboot();
+            print "Sleeping to wait for the recoder to be up"
+            sleep(300);
+        
+            #Test component to be tested
+            recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
+            recObj.configureTestCase(ip,port,'Recorder_RMF_Configure_WrongRWSStatus_Url_Legacy_240');
+            #Get the result of connection with test component and STB
+            recLoadStatus = recObj.getLoadModuleResult();
+            print "Recorder module loading status : %s" %recLoadStatus;
+            recObj.setLoadModuleStatus(recLoadStatus);
+            tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
+            tdkTestObj.executeTestCase(expectedResult);
 
-            #recObj.initiateReboot();
             requestID = str(randint(10, 500));
             recordingID = str(randint(10000, 500000));
             duration = "60000";
@@ -143,9 +197,8 @@ if "SUCCESS" in recLoadStatus.upper():
             else:
                 tdkTestObj2.setResultStatus("FAILURE");
                 print "Error Log RDK-10028 for RWS Status server connection lost is NOT found "; 
-         
+            
             #To clear the wrong RWS Status Server Url
-            tdkTestObj.executeTestCase(expectedResult);
             actResponse = recorderlib.callServerHandlerWithType('clearAlternateURL','RWSStatus',ip);
             print actResponse;
             if "cleared" in actResponse:
@@ -154,9 +207,50 @@ if "SUCCESS" in recLoadStatus.upper():
             else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Alternate URL of RWSStatus server is not reverted";
+     
+            rmfConfObj = recObj.createTestStep('Recorder_SetValuesInRmfconfig');
+            expectedResult="SUCCESS";
+            #Set 2 parameters
+            Keyword="FEATURE.RWS.POST.URL";
+            rmfConfObj.addParameter("Keyword",Keyword);
+            rmfConfObj.addParameter("Value",details1);
+            expectedResult="SUCCESS";
+            #Execute the test case in STB
+            rmfConfObj.executeTestCase(expectedResult);
+            #Get the actual result and details of execution
+            result = rmfConfObj.getResult();
+            details = rmfConfObj.getResultDetails();
+            print result,","," ",details
+            if "FAILURE" in result:
+                print "Failed to revert the RWS Url"
+                rmfConfObj.setResultStatus("FAILURE");
+                recObj.unloadModule("Recorder");
+                exit();
+            print "Reverted the RWS Url"
+            rmfConfObj.setResultStatus("SUCCESS");
 
-            #wait for rws status server to reconnect
-            sleep(60);
+            Keyword="FEATURE.SECURE_RWS.POST.URL";
+            rmfConfObj.addParameter("Keyword",Keyword);
+            rmfConfObj.addParameter("Value",details2);
+            expectedResult="SUCCESS";
+            #Execute the test case in STB
+            rmfConfObj.executeTestCase(expectedResult);
+            #Get the actual result and details of execution
+            result = rmfConfObj.getResult();
+            details = rmfConfObj.getResultDetails();
+            print result,","," ",details
+            if "FAILURE" in result:
+                print "Failed to revert the Secure RWS Url"
+                rmfConfObj.setResultStatus("FAILURE");
+                recObj.unloadModule("Recorder");
+                exit();
+            print "Reverted the RWS Secure Url"
+            rmfConfObj.setResultStatus("SUCCESS");
+
+            recObj.initiateReboot();
+            obj.resetConnectionAfterReboot();
+            print "Sleeping to wait for the recoder to be up"
+            sleep(300);
 
         else:
             tdkTestObj.setResultStatus("FAILURE");
@@ -164,6 +258,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+        obj.unloadModule("mediaframework");
 else:
     print "Failed to load Recorder module";
     #Set the module loading status

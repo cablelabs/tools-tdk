@@ -1,18 +1,9 @@
-#  ============================================================================
-#  COMCAST C O N F I D E N T I A L AND PROPRIETARY
-#  ============================================================================
-#  This file (and its contents) are the intellectual property of Comcast.  It may
-#  not be used, copied, distributed or otherwise  disclosed in whole or in part
-#  without the express written permission of Comcast.
-#  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_Configure_WrongRWSUrl_Rmfconfig_255</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -28,7 +19,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>60</execution_time>
+  <execution_time>90</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -109,7 +100,25 @@ if "SUCCESS" in recLoadStatus.upper() and "SUCCESS" in MFLoadStatus.upper() :
                 exit();
         print "Changed the RWS Url"
         rmfConfObj.setResultStatus("SUCCESS");
-        sleep(20);      
+
+        Keyword="FEATURE.SECURE_RWS.GET.URL";
+        rmfConfObj.addParameter("Keyword",Keyword);
+        Value="http://96.114.220.106:8080/DVRSimulator/wrongRWS";
+        rmfConfObj.addParameter("Value",Value);
+        #Execute the test case in STB
+        rmfConfObj.executeTestCase(expectedResult);
+        #Get the actual result and details of execution
+        result = rmfConfObj.getResult();
+        details2 = rmfConfObj.getResultDetails();
+        print result,","," ",details1
+        if "FAILURE" in result:
+                print "Failed to change the RWS Secure Url"
+                rmfConfObj.setResultStatus("FAILURE");
+                recObj.unloadModule("Recorder");
+                exit();
+        print "Changed the RWS Secure Url"
+        rmfConfObj.setResultStatus("SUCCESS");
+        sleep(10);      
  
         #To clear the ocapri log
         tdkTestObj1 = recObj.createTestStep('Recorder_clearOcapri_log');
@@ -129,7 +138,6 @@ if "SUCCESS" in recLoadStatus.upper() and "SUCCESS" in MFLoadStatus.upper() :
         obj.initiateReboot();
         print "Sleeping to wait for the recoder to be up"
         sleep(300); 
-        #recObj.initiateReboot();
    
         #Test component to be tested
         recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
@@ -148,8 +156,8 @@ if "SUCCESS" in recLoadStatus.upper() and "SUCCESS" in MFLoadStatus.upper() :
         details = tdkTestObj2.getResultDetails();
 
         loop=0
-        while (('SUCCESS' not in result) and (loop < 5)):
-            sleep(300);
+        while (('SUCCESS' not in result) and (loop < 10)):
+            sleep(400);
             tdkTestObj2.executeTestCase(expectedResult);
             result = tdkTestObj2.getResult();
             details = tdkTestObj2.getResultDetails();
@@ -168,7 +176,6 @@ if "SUCCESS" in recLoadStatus.upper() and "SUCCESS" in MFLoadStatus.upper() :
         #Set 2 parameters
         Keyword="FEATURE.RWS.GET.URL";
         rmfConfObj.addParameter("Keyword",Keyword);
-        Value="http://96.114.220.106:8080/DVRSimulator/wrongRWS";
         rmfConfObj.addParameter("Value",details1);
         expectedResult="SUCCESS";
         #Execute the test case in STB
@@ -184,7 +191,28 @@ if "SUCCESS" in recLoadStatus.upper() and "SUCCESS" in MFLoadStatus.upper() :
                 exit();
         print "Reverted the RWS Url"
         rmfConfObj.setResultStatus("SUCCESS");    
-      
+
+        Keyword="FEATURE.SECURE_RWS.GET.URL";
+        rmfConfObj.addParameter("Keyword",Keyword);
+        rmfConfObj.addParameter("Value",details2);
+        expectedResult="SUCCESS";
+        #Execute the test case in STB
+        rmfConfObj.executeTestCase(expectedResult);
+        #Get the actual result and details of execution
+        result = rmfConfObj.getResult();
+        details = rmfConfObj.getResultDetails();
+        print result,","," ",details
+        if "FAILURE" in result:
+                print "Failed to revert the Secure RWS Url"
+                rmfConfObj.setResultStatus("FAILURE");
+                recObj.unloadModule("Recorder");
+                exit();
+        print "Reverted the RWS Secure Url"
+        rmfConfObj.setResultStatus("SUCCESS");    
+        recObj.initiateReboot();
+        obj.resetConnectionAfterReboot();
+        print "Sleeping to wait for the recoder to be up"
+        sleep(300);
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");

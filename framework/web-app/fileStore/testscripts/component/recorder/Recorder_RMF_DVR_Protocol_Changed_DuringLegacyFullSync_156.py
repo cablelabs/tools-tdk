@@ -1,12 +1,3 @@
-#  ============================================================================
-#  COMCAST C O N F I D E N T I A L AND PROPRIETARY
-#  ============================================================================
-#  This file (and its contents) are the intellectual property of Comcast.  It may
-#  not be used, copied, distributed or otherwise  disclosed in whole or in part
-#  without the express written permission of Comcast.
-#  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
@@ -75,9 +66,10 @@ if "SUCCESS" in recLoadStatus.upper():
                recObj.initiateReboot();
 	       print "Sleeping to wait for the recoder to be up"
 	       sleep(300);
-	       jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
-               actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
-	       sleep(10);
+
+        jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
+        actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
+        sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
@@ -95,7 +87,7 @@ if "SUCCESS" in recLoadStatus.upper():
         now = "curTime"
 
         #Frame json message
-        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+        jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"5\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+duration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
@@ -115,7 +107,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in actResponse:
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
-                    print "Wait for 60s for the recording to be completed"
+                    print "Wait for the recording to be completed"
 		    sleep(70)
                     response = recorderlib.callServerHandler('clearStatus',ip);
 		    # Reboot the STB
@@ -137,12 +129,12 @@ if "SUCCESS" in recLoadStatus.upper():
 			print "Response Details: %s"%actResponse;
 			actResponse = actResponse.replace("\"","");
 			actResponse = actResponse.replace(" ","");
-                        if "dvrProtocolVersionChanged:false" in actResponse:
+                        if "dvrProtocolVersionChanged:true" in actResponse:
                             tdkTestObj.setResultStatus("SUCCESS");
-                            print "Successfully advertised DVR protocol version Changed as false"
+                            print "Successfully advertised DVR protocol version Changed as true"
                         else:
                             tdkTestObj.setResultStatus("FAILURE");
-                            print "Failed to advertise DVR protocol version changed parameter as false"
+                            print "Failed to advertise DVR protocol version changed parameter as true"
                     else:
                             print "No Update Schedule message post failed";
                             tdkTestObj.setResultStatus("FAILURE");
