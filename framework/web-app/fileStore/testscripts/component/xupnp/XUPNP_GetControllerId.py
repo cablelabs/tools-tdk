@@ -12,7 +12,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>XUPNP_GetControllerId</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -93,11 +93,13 @@ if "SUCCESS" in iarmLoadStatus.upper():
                                 details = tdkTestObj.getResultDetails();
                                 print "GetSystemIds Result : %s"%actualresult;
                                 print "GetSystemIds Details : %s"%details;
-                                details1 = details.replace('\\\"systemids\\\":\\\"' , '')
-                                details2 = details1.replace('\\' , '')
-                                details3 = details2.replace('\"' , '')
-                                list1 = dict(item.split(":") for item in details3.split(";"))
-                                print "Controller ID - %s "  %list1["controllerId"];
+                                details = details.replace('\\\"systemids\\\":\\\"', '')
+                                details = details.replace('\\', '')
+                                details = details.replace('\"', '')
+                                print "Discovered devices list:"
+                                for subList in details.split(","):
+                                        d = dict(item.split(":") for item in subList.split(";"))
+                                        print "Controller ID - %s "  %d["controllerId"];
                                 #Check for SUCCESS return value of XUPNP_GetUpnpResult
                                 if "SUCCESS" in actualresult.upper():
                                         tdkTestObj.setResultStatus("SUCCESS");
