@@ -869,14 +869,27 @@ string TRMClient::addToReservationDb(TRM::TunerReservation resv)
 	    return "";
 	}
 
-        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Adding token: [%s]\n", __FUNCTION__, resv.getReservationToken().c_str());
-        TRM::TunerReservation *copyReservation = new TRM::TunerReservation();
-        *copyReservation = resv;
-        tunerReservationDb[dbCount]=*copyReservation;
-        dbCount++;
+        std::map<int, TRM::TunerReservation >::iterator it;
+        for(it = tunerReservationDb.begin(); it != tunerReservationDb.end(); it++)
+        {
+            if ( (*it).second.getReservationToken() == resv.getReservationToken() )
+            {
+                RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Duplicate token [%s] not added to DB\n", resv.getReservationToken().c_str());
+                break;
+            }
+        }
 
-	RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TunerReservationDB after entry insertion\n");
-	std::map<int, TRM::TunerReservation >::iterator it;
+        if ( it == tunerReservationDb.end() )
+        {
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "%s() - Adding token: [%s]\n", __FUNCTION__, resv.getReservationToken().c_str());
+            TRM::TunerReservation *copyReservation = new TRM::TunerReservation();
+            *copyReservation = resv;
+            tunerReservationDb[dbCount]=*copyReservation;
+            dbCount++;
+        }
+
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Listing current TunerReservationDB:\n");
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\n==================================================================================================\n");
 	for(it = tunerReservationDb.begin(); it != tunerReservationDb.end(); it++)
 	{
 	    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\nACTIVITY:[%s] DEVICE:[%s] LOCATOR:[%s] TOKEN:[%s]\n",
@@ -885,6 +898,7 @@ string TRMClient::addToReservationDb(TRM::TunerReservation resv)
 				(*it).second.getServiceLocator().c_str(),
 				(*it).second.getReservationToken().c_str());
 	}
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\n==================================================================================================\n");
 	return resv.getReservationToken();
 }
 
@@ -913,7 +927,8 @@ bool TRMClient::removeFromReservationDb(const string reservationToken)
         }
         else
         {
-	    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "TunerReservationDB after entry removal\n");
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Listing current TunerReservationDB:\n");
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\n==================================================================================================\n");
             for(it = tunerReservationDb.begin(); it != tunerReservationDb.end(); it++)
             {
 		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\nACTIVITY:[%s] DEVICE:[%s] LOCATOR:[%s] TOKEN:[%s]\n",
@@ -922,6 +937,7 @@ bool TRMClient::removeFromReservationDb(const string reservationToken)
 				(*it).second.getServiceLocator().c_str(),
 				(*it).second.getReservationToken().c_str());
             }
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\n==================================================================================================\n");
         }
         return bRetValue;
 }

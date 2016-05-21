@@ -14,21 +14,21 @@
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>TRM_CT_46</name>
+  <name>TRM_CT_47</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id>598</primitive_test_id>
+  <primitive_test_id> </primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TRM_TunerReserveForLive</primitive_test_name>
   <!--  -->
-  <primitive_test_version>0</primitive_test_version>
+  <primitive_test_version>4</primitive_test_version>
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Automation of RDK-16023 to verify that repeated reserve tuner requests either all succeed or all fail with "InvalidState" reserveTunerResponse when requested with same token and device ID. Testcase ID: CT_TRM_46</synopsis>
+  <synopsis>Automation of RDK-16023 to verify that repeated reserve tuner requests fail with "InvalidToken" reserveTunerResponse when requested with same token and different device IDs. Testcase ID: CT_TRM_47</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>20</execution_time>
+  <execution_time>5</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -44,11 +44,12 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-from trm import reserveForLive
+from trm import getMaxTuner,reserveForLive
 from time import sleep
 
 #IP and Port of box, No need to change,
@@ -68,68 +69,50 @@ obj.setLoadModuleStatus(result.upper());
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in result.upper():
 
-    duration = 900000
+    duration = 20000
     startTime = 0
     streamId = '01'
-    deviceNo = 0
-    maxCount = 9
 
-    token = reserveForLive(obj,"SUCCESS",kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':1200000,'startTime':startTime})
+    token = reserveForLive(obj,"SUCCESS",kwargs={'deviceNo':0,'streamId':streamId,'duration':duration,'startTime':startTime})
 
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
     locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+    #Use same token to reserve tuner multiple times and expect all reservations to fail with InvalidState or InvalidToken Error OR all should be success
+    for deviceNo in range(1,10):
 
-    for loop in range(1,101):
+        print "DeviceNo:%d Locator:%s duration:%d startTime:%d token:%s"%(deviceNo,locator,duration,startTime,token)
 
-        print "------ Test loop %d start ------ \n"%loop
+        tdkTestObj.addParameter("deviceNo",deviceNo);
+        tdkTestObj.addParameter("duration",duration);
+        tdkTestObj.addParameter("locator",locator);
+        tdkTestObj.addParameter("startTime", startTime);
+        tdkTestObj.addParameter("token", token);
 
-        #Use same token to reserve tuner multiple times and expect all reservations to fail with InvalidState or InvalidToken Error OR all should be success
-        successCount = 0
-        for testCount in range(1,maxCount+1):
+        expectedRes = "FAILURE"
 
-            print "DeviceNo:%d Locator:%s duration:%d startTime:%d token:%s"%(deviceNo,locator,duration,startTime,token)
+        #Execute the test case in STB
+        tdkTestObj.executeTestCase(expectedRes);
 
-            tdkTestObj.addParameter("deviceNo",deviceNo);
-            tdkTestObj.addParameter("duration",duration);
-            tdkTestObj.addParameter("locator",locator);
-            tdkTestObj.addParameter("startTime", startTime);
-            tdkTestObj.addParameter("token", token);
+        #Get the result of execution
+        result = tdkTestObj.getResult();
+        print "Result: [%s]"%result
+        details = tdkTestObj.getResultDetails();
+        print "Details: [%s]"%details;
 
-            expectedRes = "FAILURE"
-
-            #Execute the test case in STB
-            tdkTestObj.executeTestCase(expectedRes);
-
-            #Get the result of execution
-            result = tdkTestObj.getResult();
-            print "Result: [%s]"%result
-            details = tdkTestObj.getResultDetails();
-            print "Details: [%s]"%details;
-
-            if "SUCCESS" in result.upper():
-                successCount += 1
-
-            #Set the result status of execution
-            if "FAILURE" in result.upper():
-                if "InvalidState" in details:
-                    tdkTestObj.setResultStatus("SUCCESS");
-                else:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "Reservation did not fail with InvalidState response code"
+        #Set the result status of execution
+        if "FAILURE" in result.upper():
+            if "InvalidToken" in details:
+                tdkTestObj.setResultStatus("SUCCESS");
             else:
-                if testCount == maxCount and successCount != maxCount:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "All reservations did not succeed"
-                else:
-                    tdkTestObj.setResultStatus("SUCCESS");
-            print "\n"
-        # End inner for loop
+                tdkTestObj.setResultStatus("FAILURE");
+                print "Reservation did not fail with InvalidToken response code"
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+        print "\n"
+    # End for loop
 
-        print "------ Test loop %d end ------ \n"%loop
-    # End outer for loop
-
-    #Add sleep to release all reservations
-    sleep(120)
+    # Add sleep to release all reservations
+    sleep(10)
 
     #unloading trm module
     obj.unloadModule("trm");

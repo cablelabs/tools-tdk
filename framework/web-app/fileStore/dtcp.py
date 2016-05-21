@@ -25,6 +25,7 @@ import time;
 #
 def init(tdkTestObj,expectedresult):
 
+        print "\n"
 	fnName="DTCPMgrInitialize";
 	#Add parameters to test object
 	tdkTestObj.addParameter("funcName", fnName); 
@@ -33,7 +34,7 @@ def init(tdkTestObj,expectedresult):
         #Get the result of execution
         result = tdkTestObj.getResult();
         details = tdkTestObj.getResultDetails();
-	print "Input: [funcName:%s]"%(fnName)
+	print "%s"%(fnName)
 	print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
  	print "Details: [%s]"%details
 
@@ -51,6 +52,7 @@ def init(tdkTestObj,expectedresult):
 
 def startSource(tdkTestObj,expectedresult,kwargs={}):
 
+        print "\n"
         fnName="DTCPMgrStartSource";
         #Add parameters to test object
 	ifName=str(kwargs["ifName"])
@@ -63,7 +65,7 @@ def startSource(tdkTestObj,expectedresult,kwargs={}):
         #Get the result of execution
         result = tdkTestObj.getResult();
         details = tdkTestObj.getResultDetails();
-	print "Input: [funcName:%s ifName:%s port: %d]"%(fnName,ifName,port);
+	print "%s [ifName:%s port:%d]"%(fnName,ifName,port);
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
 
@@ -80,6 +82,7 @@ def startSource(tdkTestObj,expectedresult,kwargs={}):
 
 def stopSource(tdkTestObj,expectedresult):
 
+        print "\n"
         fnName="DTCPMgrStopSource"
         #Add parameters to test object
         tdkTestObj.addParameter("funcName", fnName)
@@ -88,7 +91,7 @@ def stopSource(tdkTestObj,expectedresult):
         #Get the result of execution
         result = tdkTestObj.getResult()
         details = tdkTestObj.getResultDetails()
-        print "Input: [funcName:%s]"%(fnName)
+        print "%s"%(fnName)
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
 
@@ -105,6 +108,7 @@ def stopSource(tdkTestObj,expectedresult):
 
 def createSourceSession(tdkTestObj,expectedresult,kwargs={}):
 
+        print "\n"
         fnName="DTCPMgrCreateSourceSession";
 
         #Add parameters to test object
@@ -124,7 +128,7 @@ def createSourceSession(tdkTestObj,expectedresult,kwargs={}):
         #Get the result of execution
         result = tdkTestObj.getResult();
         details = tdkTestObj.getResultDetails();
-	print "Input: [funcName:%s sinkIp:%s keyLabel:%d pcpPacketSize:%d maxPacketSize:%d]"%(fnName,sinkIp,keyLabel,pcpPacketSize,maxPacketSize);
+	print "%s [sinkIp:%s keyLabel:%d pcpPacketSize:%d maxPacketSize:%d]"%(fnName,sinkIp,keyLabel,pcpPacketSize,maxPacketSize);
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
 
@@ -141,6 +145,7 @@ def createSourceSession(tdkTestObj,expectedresult,kwargs={}):
 
 def createSinkSession(tdkTestObj,expectedresult,kwargs={}):
 
+        print "\n"
         fnName="DTCPMgrCreateSinkSession";
 
         #Add parameters to test object
@@ -160,7 +165,7 @@ def createSinkSession(tdkTestObj,expectedresult,kwargs={}):
         #Get the result of execution
         result = tdkTestObj.getResult();
         details = tdkTestObj.getResultDetails();
-	print "Input: [funcName:%s srcIp:%s srcPort:%d uniqueKey:%d maxPacketSize:%d]"%(fnName,srcIp,srcPort,uniqueKey,maxPacketSize)
+	print "%s [srcIp:%s srcPort:%d uniqueKey:%d maxPacketSize:%d]"%(fnName,srcIp,srcPort,uniqueKey,maxPacketSize)
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
 
@@ -177,6 +182,7 @@ def createSinkSession(tdkTestObj,expectedresult,kwargs={}):
 
 def processPacket(tdkTestObj,expectedresult,kwargs={}):
 
+        print "\n"
         fnName="DTCPMgrProcessPacket"
 
         #Add parameters to test object
@@ -186,7 +192,7 @@ def processPacket(tdkTestObj,expectedresult,kwargs={}):
         #Get the result of execution
         result = tdkTestObj.getResult()
         details = tdkTestObj.getResultDetails()
-	print "Input: [funcName:%s]"%(fnName)
+	print "%s"%(fnName)
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
 	time.sleep(10);
@@ -203,6 +209,7 @@ def processPacket(tdkTestObj,expectedresult,kwargs={}):
 
 def releasePacket(tdkTestObj,expectedresult,kwargs={}):
 
+        print "\n"
         fnName="DTCPMgrReleasePacket"
         #Add parameters to test object
         tdkTestObj.addParameter("funcName", fnName)
@@ -211,7 +218,7 @@ def releasePacket(tdkTestObj,expectedresult,kwargs={}):
         #Get the result of execution
         result = tdkTestObj.getResult()
         details = tdkTestObj.getResultDetails()
-        print "Input: [funcName:%s]"%(fnName)
+        print "%s"%(fnName)
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
         #Set the result status of execution
@@ -227,6 +234,7 @@ def releasePacket(tdkTestObj,expectedresult,kwargs={}):
 
 def deleteSession(tdkTestObj,expectedresult,kwargs={}):
 
+        print "\n"
         fnName="DTCPMgrDeleteDTCPSession"
         #Add parameters to test object
         deviceType=int(kwargs["deviceType"])
@@ -237,7 +245,7 @@ def deleteSession(tdkTestObj,expectedresult,kwargs={}):
         #Get the result of execution
         result = tdkTestObj.getResult()
         details = tdkTestObj.getResultDetails()
-        print "Input: [funcName:%s deviceType:%d]"%(fnName,deviceType)
+        print "%s [deviceType:%d (0-source 1-sink 2-all) ]"%(fnName,deviceType)
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
         #Set the result status of execution
@@ -252,6 +260,7 @@ def deleteSession(tdkTestObj,expectedresult,kwargs={}):
 
 def getSessionInfo(tdkTestObj,expectedresult,kwargs={}):
 
+        print "\n"
         fnName="DTCPMgrGetSessionInfo"
 
         #Add parameters to test object
@@ -263,7 +272,7 @@ def getSessionInfo(tdkTestObj,expectedresult,kwargs={}):
         #Get the result of execution
         result = tdkTestObj.getResult()
         details = tdkTestObj.getResultDetails()
-        print "Input: [funcName:%s deviceType:%d]"%(fnName,deviceType)
+        print "%s [deviceType:%d (0-source 1-sink 2-all) ]"%(fnName,deviceType)
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
         #Set the result status of execution
@@ -278,6 +287,7 @@ def getSessionInfo(tdkTestObj,expectedresult,kwargs={}):
 
 def getNumSessions(tdkTestObj,expectedresult,kwargs={}):
 
+        print "\n"
         fnName="DTCPMgrGetNumSessions";
         #Add parameters to test object
         deviceType=int(kwargs["deviceType"])
@@ -288,7 +298,7 @@ def getNumSessions(tdkTestObj,expectedresult,kwargs={}):
         #Get the result of execution
         result = tdkTestObj.getResult();
         details = tdkTestObj.getResultDetails();
-        print "Input: [funcName:%s deviceType:%d]"%(fnName,deviceType);
+        print "%s [deviceType:%d (0-source 1-sink 2-all) ]"%(fnName,deviceType);
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Num of type(%d) sessions: [%s]"%(deviceType,details)
 
@@ -303,6 +313,7 @@ def getNumSessions(tdkTestObj,expectedresult,kwargs={}):
 
 def setLogLevel(tdkTestObj,expectedresult,kwargs={}):
 
+        print "\n"
         fnName="DTCPMgrSetLogLevel";
         #Add parameters to test object
         level=int(kwargs["level"])
@@ -313,7 +324,7 @@ def setLogLevel(tdkTestObj,expectedresult,kwargs={}):
         #Get the result of execution
         result = tdkTestObj.getResult();
         details = tdkTestObj.getResultDetails();
-        print "Input: [funcName:%s level:%d]"%(fnName,level);
+        print "%s [level:%d]"%(fnName,level);
         print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
         print "Details: [%s]"%details
 

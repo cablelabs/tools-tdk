@@ -24,7 +24,10 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>To stop DTCP-IP source without deleting active source and sink sessions. 
+  <synopsis>To stop DTCP-IP source without deleting active source and sink sessions.
+There can be two approach for this (Refer RDKTT-641):
+1) Cleanup of in-use sessions in DTCPMgrStopSource(), as done in intel
+2) Return error from DTCPMgrStopSource() if there exist any in-use session, as done in broadcom.
 TestType: Positive
 TestcaseID: CT_DTCP_32</synopsis>
   <!--  -->
@@ -70,7 +73,7 @@ obj.configureTestCase(ip,port,'DTCP_StopSrcwithActiveSessions_32');
 loadmodulestatus = obj.getLoadModuleResult();
 print "DTCP module loading status :  %s" %loadmodulestatus;
 #Set the module loading status
-obj.setLoadModuleStatus(loadmodulestatus);
+obj.setLoadModuleStatus(loadmodulestatus.upper());
 
 if "SUCCESS" in loadmodulestatus.upper():
   #Primitive test case which associated to this Script
@@ -83,31 +86,93 @@ if "SUCCESS" in loadmodulestatus.upper():
   port = randint(5001, 6000);
   result = dtcp.startSource(tdkTestObj,expectedresult,kwargs={'ifName':'lo','port':port})
   if expectedresult in result:
-        dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
+
+        print "\nCreate sessions"
         dtcp.createSinkSession(tdkTestObj,expectedresult,kwargs={'srcIp':'127.0.0.1','srcPort':port,'uniqueKey':0,'maxPacketSize':4096})
         dtcp.createSourceSession(tdkTestObj,expectedresult,kwargs={'sinkIp':'127.0.0.1','keyLabel':0,'pcpPacketSize':0,'maxPacketSize':4096})
         dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':2})
-        #Stopsource without deleting active sessions
-        dtcp.stopSource(tdkTestObj,"FAILURE")
-  else:
-        print "DTCP StartSource failed"
 
-  #Post-Cond: Delete all sessions
-  #Delete all source sessions
-  srcNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0}))
-  for index in range (0,srcNum):
-      dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"deviceType":0})
-      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":0})
-  dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
-  #Delete all sink sessions
-  sinkNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1}))
-  for index in range (0,sinkNum):
-      dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"deviceType":1})
-      dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
-  dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
-  dtcp.stopSource(tdkTestObj,expectedresult)
+        #Stop source without deleting active sessions
+        print "\n"
+        fnName="DTCPMgrStopSource"
+        #Add parameters to test object
+        tdkTestObj.addParameter("funcName", fnName)
+        #Execute the test case in STB
+        tdkTestObj.executeTestCase("FAILURE")
+        #Get the result of execution
+        result = tdkTestObj.getResult()
+        details = tdkTestObj.getResultDetails()
+        print "%s"%(fnName)
+        print "Result: [%s]"%(result)
+        print "Details: [%s]"%details
+        tdkTestObj.setResultStatus("SUCCESS");
+
+        #Return error from DTCPMgrStopSource() if there exist any in-use session
+        if "FAILURE" == result:
+            #Delete all sessions and Stop source again
+            print "\nDelete source sessions"
+            srcNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0}))
+            for index in range (0,srcNum):
+                #dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"deviceType":0})
+                dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":0})
+
+            print "\nDelete sink sessions"
+            sinkNum = int(dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1}))
+            for index in range (0,sinkNum):
+                #dtcp.getSessionInfo(tdkTestObj,expectedresult,kwargs={"deviceType":1})
+                dtcp.deleteSession(tdkTestObj,expectedresult,kwargs={"deviceType":1})
+
+            print "\nGet number of src and sink sessions after deleting sessions"
+            dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':0})
+            dtcp.getNumSessions(tdkTestObj,expectedresult,kwargs={'deviceType':1})
+
+            print "\nStop source after sessions cleanup"
+            dtcp.stopSource(tdkTestObj,expectedresult)
+        #Cleanup of in-use sessions in DTCPMgrStopSource()
+        else:
+            print "\nGet number of src and sink sessions after stop source"
+
+            print "\n"
+            fnName="DTCPMgrGetNumSessions";
+            #Add parameters to test object
+            deviceType=0
+            tdkTestObj.addParameter("funcName", fnName);
+            tdkTestObj.addParameter("intParam2", deviceType);
+            #Execute the test case in STB
+            tdkTestObj.executeTestCase(expectedresult);
+            #Get the result of execution
+            result = tdkTestObj.getResult();
+            details = tdkTestObj.getResultDetails();
+            print "%s [deviceType:%d (0-source 1-sink 2-all) ]"%(fnName,deviceType);
+            print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
+            print "Num of type(%d) sessions: [%s]"%(deviceType,details)
+
+            #Set the result status of execution
+            if expectedresult in result and "0" in details:
+                tdkTestObj.setResultStatus("SUCCESS");
+            else:
+                tdkTestObj.setResultStatus("FAILURE");
+
+            print "\n"
+            fnName="DTCPMgrGetNumSessions";
+            #Add parameters to test object
+            deviceType=1
+            tdkTestObj.addParameter("funcName", fnName);
+            tdkTestObj.addParameter("intParam2", deviceType);
+            #Execute the test case in STB
+            tdkTestObj.executeTestCase(expectedresult);
+            #Get the result of execution
+            result = tdkTestObj.getResult();
+            details = tdkTestObj.getResultDetails();
+            print "%s [deviceType:%d (0-source 1-sink 2-all) ]"%(fnName,deviceType);
+            print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
+            print "Num of type(%d) sessions: [%s]"%(deviceType,details)
+
+            #Set the result status of execution
+            if expectedresult in result and "1" in details:
+                tdkTestObj.setResultStatus("SUCCESS");
+            else:
+                tdkTestObj.setResultStatus("FAILURE");
 
   #Unload the dtcp module
   obj.unloadModule("dtcp");
-else:
-  print"DTCP module load failed";
