@@ -5,14 +5,14 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_ErasedStateInFullSync_DueToRWSOutage_234</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -24,7 +24,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Recorder should include in full sync any recordings that are deleted by user but not previously notified due to RWS outage.</synopsis>
+  <synopsis>Recorder should include in full sync any recordings that are deleted by user but not previously notified due to RWS outage</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -44,6 +44,7 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
@@ -100,7 +101,6 @@ if "SUCCESS" in recLoadStatus.upper():
 
         if "updateSchedule" in serverResponse:
                 print "updateSchedule message post success";
-                sleep(20);
                 recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                 retry = 0;
                 while (('statusMessage' not in recResponse) and (retry < 10 )):
@@ -108,11 +108,10 @@ if "SUCCESS" in recLoadStatus.upper():
                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
                         retry += 1
                 print "Retrieve Status Details: ",recResponse;
-                #if "acknowledgement" in recResponse:
                 if 'statusMessage' in recResponse:
                         print "Simulator Server received the recorder acknowledgement";
                         print "Wait for 60s for recording to complete";
-                        sleep(60)
+                        sleep(70)
                  
                         #Disable RWS status server
                         recorderlib.callServerHandlerWithType('disableServer','RWSStatus',ip)
@@ -164,24 +163,20 @@ if "SUCCESS" in recLoadStatus.upper():
 
                                         print "Sending noUpdate to get the recording list after full sync"
                                         serverResponse = recorderlib.callServerHandlerWithMsg('updateMessage',"{\"noUpdate\":{}}",ip)
-                                        sleep(30)
-                                        retry = 0
+                                        sleep(60)
                                         recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                        while (('statusMessage' not in recResponse) and (retry < 10 )):
-                                                sleep(20);
-                                                recResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-                                                retry += 1
                                         print "Recording List: ",recResponse;
                                         recordingData = recorderlib.getRecordingFromRecId(recResponse,recordingID);
                                         if ('NOTFOUND' not in recordingData):
                                                 value = recorderlib.getValueFromKeyInRecording(recordingData,'status')
                                                 print "recordingID: ",recordingID," status: ",value
-                                                if "ERASED" in value.upper():
+                                                #Recording should be there untill any space requirement arises
+                                                if "COMPLETE" in value.upper():
                                                         tdkTestObj.setResultStatus("SUCCESS");
-                                                        print "Recording is in ERASED state as expected";
+                                                        print "Recording is in COMPLETE state as expected";
                                                 else:
                                                         tdkTestObj.setResultStatus("FAILURE");
-                                                        print "Recording is not in ERASED state";
+                                                        print "Recording is not in COMPLETE state";
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
                                                 print "Recorder did not update recording list with deleted recording";
@@ -204,12 +199,13 @@ if "SUCCESS" in recLoadStatus.upper():
                                         if ('NOTFOUND' not in recordingData):
                                                 value = recorderlib.getValueFromKeyInRecording(recordingData,'status')
                                                 print "recordingID: ",recordingID," status: ",value
-                                                if "ERASED" in value.upper():
+                                                #Recording should be there untill any space requirement arises
+                                                if "COMPLETE" in value.upper():
                                                         tdkTestObj.setResultStatus("SUCCESS");
-                                                        print "Recording is in ERASED state as expected";
+                                                        print "Recording is in COMPLETE state as expected";
                                                 else:
                                                         tdkTestObj.setResultStatus("FAILURE");
-                                                        print "Recording is not in ERASED state";
+                                                        print "Recording is not in COMPLETE state";
                                         else:
                                                 tdkTestObj.setResultStatus("FAILURE");
                                                 print "Recorder did not update recording list with deleted recording";

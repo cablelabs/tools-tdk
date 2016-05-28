@@ -24,7 +24,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_DVR_PROTOCOL_153 - Recorder should not send Erased state while canceling a future recording using Legacy fullschedule = truemechanism</synopsis>
+  <synopsis>CT_DVR_PROTOCOL_153 - Recorder should send Erased state while canceling a future recording using Legacy fullschedule = truemechanism</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -166,13 +166,13 @@ if "SUCCESS" in recLoadStatus.upper():
                                 	print "Successfully retrieved the recording list from recorder for future recording";
                                 	if "ERASED" in value.upper():
 						tdkTestObj.setResultStatus("SUCCESS");		
-                            	            	print "Not received Erased messsage";
+                            	            	print "Received Erased messsage";
                                         elif "BADVALUE" in value.upper():
                                                 tdkTestObj.setResultStatus("FAILURE");
                                                 print "No status field for this recording Id";
                                 	else:
                                 		tdkTestObj.setResultStatus("FAILURE");
-                                        	print "Received erased failure message";
+                                        	print "NOT Received erased failure message";
                               	else:
                               		tdkTestObj.setResultStatus("FAILURE");
                                 	print "Failed to retrieve the recording list from recorder for future recording";

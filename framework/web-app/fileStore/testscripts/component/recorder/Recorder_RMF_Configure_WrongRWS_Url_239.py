@@ -1,9 +1,18 @@
+#  ============================================================================
+#  COMCAST C O N F I D E N T I A L AND PROPRIETARY
+#  ============================================================================
+#  This file (and its contents) are the intellectual property of Comcast.  It may
+#  not be used, copied, distributed or otherwise  disclosed in whole or in part
+#  without the express written permission of Comcast.
+#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_Configure_WrongRWS_Url_239</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -19,7 +28,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>30</execution_time>
+  <execution_time>60</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -185,12 +194,27 @@ if "SUCCESS" in recLoadStatus.upper():
             result = tdkTestObj2.getResult();
             details = tdkTestObj2.getResultDetails();
             loop=0
-            while (('SUCCESS' not in result) and (loop < 5)):
+            count=0
+            #Check 2 times for RDK-10028 error code since the first RDK-10028 will be due to the wrong rws server url in rmfconfig.ini
+            while ((count!=2) and (loop < 15)):
                 sleep(300);
                 tdkTestObj2.executeTestCase(expectedResult);
                 result = tdkTestObj2.getResult();
                 details = tdkTestObj2.getResultDetails();
                 loop = loop+1;
+                if 'SUCCESS' in result:
+                    count = count+1;
+                    if(count==1):
+                        tdkTestObj1 = recObj.createTestStep('Recorder_clearOcapri_log');
+                        tdkTestObj1.executeTestCase(expectedResult);
+                        result1= tdkTestObj1.getResult();
+                        if "SUCCESS" in result1:
+                            tdkTestObj1.setResultStatus("SUCCESS");
+                            print "Cleared the ocapri log ";
+                        else:
+                            tdkTestObj1.setResultStatus("FAILURE");
+                            print "Ocapri log is not cleared ";
+                        sleep(10);
             
             print result,",Details of log ",details
             if "SUCCESS" in result:
@@ -249,6 +273,7 @@ if "SUCCESS" in recLoadStatus.upper():
                 exit();
             print "Reverted the RWS Secure Url"
             rmfConfObj.setResultStatus("SUCCESS");
+
             recObj.initiateReboot();
             obj.resetConnectionAfterReboot();
             print "Sleeping to wait for the recoder to be up"
@@ -260,6 +285,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+        obj.unloadModule("mediaframework");
 else:
     print "Failed to load Recorder module";
     #Set the module loading status

@@ -91,7 +91,7 @@ if "SUCCESS" in recLoadStatus.upper():
         print "Wait for 1 min to get response from recorder"
         sleep(60);
         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-        print "Recordings in the box " , actResponse;
+        print "Recordings in the box before reboot" , actResponse;
         totalrec_before = recorderlib.getTotalNumberofRecordings(actResponse)
         print "Total number of recordings before reboot " ,totalrec_before
         
@@ -117,14 +117,15 @@ if "SUCCESS" in recLoadStatus.upper():
         sleep(300);
         tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
         tdkTestObj1.executeTestCase(expectedResult);
+        response = recorderlib.callServerHandler('clearStatus',ip);
         recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
         print "Wait for 1 min to get response from recorder"
         sleep(60);
         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-        print "Recordings in the box " , actResponse;
+        print "Recordings in the box after reboot " , actResponse;
         totalrec_after = recorderlib.getTotalNumberofRecordings(actResponse)
         print "Total number of recordings after reboot " ,totalrec_after
-        if totalrec_before < totalrec_after:
+        if totalrec_before <= totalrec_after:
             tdkTestObj1.setResultStatus("SUCCESS");
             print "No recordings got deleted"
         else:

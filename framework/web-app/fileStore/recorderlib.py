@@ -321,6 +321,58 @@ def callServerHandlerWithTypeAndNewUrl(methodName,type,gwIp,url):
 
 ########## End of Function  callServerHandlerWithTypeAndNewUrl ##########
 
+def callServerHandlerWithTypeAndError(methodName,type,gwIp,error):
+
+        # To clear the SAT included in the communication with LPServer and RWSServer
+
+        # Parameters   : methodName, serverName, gwIp,error no
+        # methodName   : REST API name. eg: enableError : to enable error code for server
+        # gwIp         : IP address of gateway box
+        # Return Value : Console output of the curl command
+
+        try:
+                serverIp = DVRSIMIPADDR
+        except:
+                print "#TDK_@error-ERROR : Unable to fetch recorder server IP"
+                outdata = "ERROR: Unable to fetch recorder server IP"
+                sys.stdout.flush()
+                return outdata
+
+        # Constructing Query Command
+        cmd = 'curl '+'-g '+'\''+'http://'+serverIp+':8080/DVRSimulator/'+methodName+'?boxIp='+gwIp+'&serverType='+type+'&errorType='+error+'\''
+
+        class Timout(Exception):
+                pass
+
+        def timeoutHandler(signum, frame):
+                raise Timout
+
+        signal.signal(signal.SIGALRM, timeoutHandler)
+        signal.alarm(20)
+
+        # Executing request command
+        try:
+                print "Executing \"",cmd," \""
+                sys.stdout.flush()
+                byteStr = subprocess.check_output(cmd, shell=True)
+                outdata = unicode(byteStr, errors='ignore')
+                signal.alarm(0)  # reset the alarm
+        except Timout:
+                print "#TDK_@error-ERROR : Timeout!! Taking too long"
+                outdata = "ERROR: Timeout!! Taking too long"
+                sys.stdout.flush()
+                return outdata
+        except:
+                print "#TDK_@error-ERROR : Unable to execute curl command"
+                outdata = "ERROR: Unable to execute query command"
+                sys.stdout.flush()
+                return outdata
+
+        print "Server response: ",outdata
+        return outdata
+
+########## End of Function callServerHandlerWithTypeAndError ##########
+
 def getGenerationId(jsonData):
         ret = "NOID"
         try:
