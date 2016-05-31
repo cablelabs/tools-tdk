@@ -249,7 +249,7 @@ class ScriptGroupController {
 		}
 			
 			scriptGroupInstance.groups = utilityService.getGroup()
-			if (!scriptGroupInstance.save(flush: true)) {ex
+			if (!scriptGroupInstance.save(flush: true)) {
 				errorList.add("Error in saving script group")
 				render errorList as JSON
 				render errorList as JSON
@@ -684,8 +684,10 @@ class ScriptGroupController {
 			String scriptContent = ""
 			if(line.get(indx).startsWith("'''"))	{
 					indx++
-					while(indx < line.size() &&  !line.get(indx).startsWith("'''")){
-					s = s + line.get(indx)+"\n"
+				while(indx < line.size() &&  !line.get(indx).startsWith("'''")){
+					if(!(line.get(indx)?.equals(""))){ 
+						s = s + line.get(indx)+"\n"
+					}
 					indx++
 				}
 				indx ++
@@ -693,8 +695,7 @@ class ScriptGroupController {
 					scriptContent = scriptContent + line.get(indx)+"\n"
 					indx++
 				}
-			}
-			
+			}			
 			
 			String xml = s
 			XmlParser parser = new XmlParser();
@@ -977,8 +978,7 @@ class ScriptGroupController {
 			
 			if( a instanceof String){
 				vers1 = Long.parseLong(a)
-			}
-			
+			}			
 			if( b instanceof String){
 				vers2 = Long.parseLong(b)
 			}
@@ -2119,37 +2119,27 @@ class ScriptGroupController {
 		int indx = 0
 		if(uploadedFile){
 			if( uploadedFile?.originalFilename?.endsWith(".xml")) {
-
 				String fileName = uploadedFile?.originalFilename?.replace(".xml","")
-
 				if(ScriptGroup.findByName(fileName?.trim())){
 					flash.message= "Test Suite with same name already exists ..... "
 				}else{
 					InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
 					def fileContent = reader?.readLines()
-					if(fileContent){
-						
+					if(fileContent){						
 						fileContent?.each{ xmlData->
 							xmlContent += xmlData +"\n"
 
 						}
 						List<String> names = new ArrayList<String>()
 						try{
-
 							XmlParser parser = new XmlParser();
-							node = parser.parseText(xmlContent)
-
+							node = parser.parseText(xmlContent)							
 							node.script_group.scripts.script_name.each{
-								names.add(it.text())
-							}
-						}
-						catch(Exception e){
-							log.error "ERROR"+e.getMessage()
-							e.printStackTrace()
-						}
-						try{
-
-
+								ScriptFile sctFile = ScriptFile.findByScriptName(it?.text().trim())
+								if(sctFile){
+									names.add(it.text())
+								}
+							}						
 							if(names?.size() == 0){
 								flash.message ="  Test suite xml doesnot contain valid script  list... "
 							}else{
@@ -2184,7 +2174,6 @@ class ScriptGroupController {
 		redirect(action:"list")
 		return
 	}
-		
 	/**
 	 * Function for saving the current script group script list while clicking the module wise/ random wise sort
 	 */
@@ -2265,4 +2254,232 @@ class ScriptGroupController {
 		}
 	}
 	
+	/**
+	 * Function for  upload the new script using TM  .
+	 * -> include the following scenarios
+	 * 		 file name end with .py file 
+	 * 		 file content empty or not
+	 * 		 script name, primitive test , execution , python script content  empty or not 
+	 * 		 primitive test , long duration , skip content valid or not   	
+	 */
+	def  uploadScript(){
+		try{
+			def uploadedFile = request.getFile('file')
+			if( uploadedFile?.originalFilename?.endsWith(".py")) {
+				InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
+				def fileContent = reader?.readLines()
+				if(fileContent){
+					boolean saveScript = false
+					String xmlContent = ""
+					def node
+					int startIndex=0
+					int indx = fileContent?.findIndexOf { it.startsWith("'''")}
+					String headerContent = ""
+					// Parsing Header content
+					while(startIndex < indx ){
+						headerContent = headerContent+fileContent.get(startIndex)+"\n"
+						startIndex++
+					}
+					int lastIndx = fileContent?.findLastIndexOf { it?.toString()?.equals("'''")}
+					// Parsing XML content
+					while(indx <= lastIndx ){
+						if(!(fileContent.get(indx)?.equals(""))){
+							xmlContent = xmlContent + fileContent.get(indx)+"\n"
+						}
+						indx++
+					}
+					lastIndx += 1
+					String pythonContent = " "
+					// Parsing  Python content
+					while (lastIndx < fileContent?.size()){
+						pythonContent = pythonContent+ fileContent.get(lastIndx)+"\n"
+						lastIndx++
+					}
+					try{
+						def scriptXmlText = xmlContent?.replaceAll("'''", "")
+						XmlParser parser = new XmlParser();
+						node = parser.parseText(scriptXmlText?.trim())
+					}catch(Exception e){
+						flash.message ="XML data is not in correct format "
+					}
+
+					def scriptName  = node?.name?.text()?.trim()
+					def primitiveTestName  = node?.primitive_test_name?.text()?.trim()
+					def synopsis = node?.synopsis?.text()?.trim()
+					def executionTime= node?.execution_time?.text()?.trim()
+					def remarks = node?.remarks?.text()?.trim()
+					def longDuration = node?.long_duration?.text()?.trim()
+					def skip = node?.skip?.text()?.trim()
+
+					Set boxTypeList = []
+					Set rdkVersions = []
+					Set scrptTags = []
+
+					node?.box_types?.box_type?.each{
+						def boxType = BoxType?.findByName(it?.text().trim())
+						if(boxType){
+							boxTypeList?.add(boxType)
+						}
+					}
+					node?.rdk_versions?.rdk_version?.each{
+						def rdkVers = RDKVersions.findByBuildVersion(it?.text()?.trim())
+						if(rdkVers){
+							rdkVersions?.add(rdkVers)
+						}
+					}
+					node?.script_tags?.script_tag?.each{
+						def sTag = ScriptTag.findByName(it?.text()?.trim())
+						if(sTag){
+							scrptTags?.add(sTag)
+						}
+					}
+
+					def scriptList = scriptService.getScriptsList(request.getRealPath("/"))
+					def moduleMap = primitiveService.getPrimitiveModuleMap(getRealPath())
+					def moduleName = moduleMap.get(primitiveTestName)
+					def scriptsDirName = primitiveService.getScriptDirName(moduleName)
+					def ptest = primitiveService.getPrimitiveTest(getRealPath()+"//fileStore//testscripts//"+scriptsDirName+"//"+moduleName+"//"+moduleName+".xml", primitiveTestName)
+					if(!scriptName){
+						flash.message =" Script name should not be empty "
+					}else if(!primitiveTestName){
+						flash.message =" Primitive test name should not be empty "
+					}else if(!executionTime){
+						flash.message =" Execution time  should not be empty "
+					}else if(!pythonContent ){
+						flash.message= " Python script content should not be empty"
+					}else if(!longDuration){
+						flash.message= " Long Duaration content should not be empty"
+					}else if(!skip){
+						flash.message= " Skip content should not be empty"
+					}else if(scriptList?.toString()?.contains(scriptName?.trim()?.toString())){
+						flash.message =  "Duplicate Script Name not allowed. Try Again."
+					}else if (!ptest?.name){
+						flash.message =" Primitive test name should be valid "
+					} else if(!(longDuration?.toString()?.equals("true") || longDuration?.toString()?.equals("false")) ){
+						flash.message =" Long Duration  should be valid "
+					}else if(!(skip?.toString()?.equals("true") || skip?.toString()?.equals("false"))){
+						flash.message =" Skip content  should be valid "
+					}else if(!(boxTypeList?.size() >= 0) ){
+						flash.message =" Box Types should be valid "
+					}else if(!(rdkVersions?.size() >= 0)){
+						flash.message =" RDK versions should be valid "
+					}else if(!(scrptTags?.size() >= 0)){
+						flash.message =" Script tags should be valid "
+					}
+					else{
+						try{
+							String dirname = ptest?.module?.name
+							dirname = dirname?.trim()
+							File dir = new File( "${request.getRealPath('/')}//fileStore//testscripts/"+scriptsDirName+"//"+dirname+"/")
+							if(!dir.exists()){
+								dir.mkdirs()
+							}
+							File file = new File( "${request.getRealPath('/')}//fileStore//testscripts/"+scriptsDirName+"//"+dirname+"/"+scriptName?.trim()+".py");
+							if(!file.exists()){
+								file.createNewFile()
+							}
+							String data = headerContent+xmlContent.toString() +pythonContent
+							file.write(data)
+							def script = ScriptFile.findByScriptNameAndModuleName(scriptName?.trim(),ptest?.module?.name)
+							if(script == null){
+								script = new ScriptFile()
+								script.setScriptName(scriptName)
+								script.setModuleName(ptest?.module?.name)
+								script.save(flush:true)
+							}
+							boolean longDurationTest= false
+							if(longDuration.equals("true")){
+								longDurationTest = true
+							}else{
+								longDurationTest = false
+							}
+							def sObject = new ScriptObject()
+							sObject.setBoxTypes(boxTypeList)
+							sObject.setRdkVersions(rdkVersions)
+							sObject.setScriptTags(scrptTags)
+							sObject.setName(scriptName)
+							sObject.setModule(ptest?.module?.name)
+							sObject.setScriptFile(script)
+							sObject.setLongDuration(longDurationTest)
+							scriptService.updateScript(script)
+							scriptgroupService.saveToScriptGroups(script,sObject)
+							scriptgroupService.saveToDefaultGroups(script,sObject, boxTypeList)
+							scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[])
+							flash.message =" Script uploaded successfully"
+						}catch(Exception e){
+							flash.message =" Script not uploaded, please try again "
+						}
+					}
+				}else{
+					flash.message ="File content is empty"
+				}
+			}else {
+				flash.message="Error, The file extension is not in .py format"
+			}
+		}catch(Exception e){
+			println " Error "+ e.getMessage()
+			e.printStackTrace()
+		}
+		redirect(action:"list")
+		return
+	}
+	/**
+	 * Function for suite clean up with not available scripts
+	 * @return
+	 */
+	def verifyScriptGroup(){
+		boolean value = true
+		try{
+			long time1 = System.currentTimeMillis();
+			ScriptGroup sg = ScriptGroup?.findByName(params?.name)
+			def rPath = getRealPath()
+			List removeList = []
+			sg?.scriptList.each { script ->
+				Map scriptInstance1 = scriptService.getScript(rPath,script?.moduleName, script?.scriptName)
+				if(scriptInstance1 == null || scriptInstance1?.keySet()?.size() ==  0){
+					removeList.add(script)
+				}
+			}
+			if(removeList?.size() > 0){
+				def sGroup = ScriptGroup.findByName(params?.name)
+				sGroup.scriptList.removeAll(removeList)
+				sGroup.save(flush:true)
+				value = true
+			}
+		}catch(Exception e){
+			println " ERRROR "+ e.getMessage()
+			value = false
+		}
+		render  new Gson().toJson(value) 
+	}
+	/**
+	 * Function for test suites clean up N/A scripts 
+	 * @return
+	 */
+	
+	def verifyAllScriptGroups(){
+		long time1 = System.currentTimeMillis();
+		def sgList = ScriptGroup.findAll()
+		def map = [:]
+		try{
+			sgList?.each { scriptGroup ->
+				List removeList = []
+				def rPath = getRealPath()
+				sgList?.scriptList.each { script ->
+					if(!scriptService?.scriptsList?.contains(script)){
+						removeList.add(script)
+					}
+				}
+				if(removeList?.size() > 0 ){
+					def sGroup = ScriptGroup.findByName(scriptGroup?.name)
+					sGroup.scriptList.removeAll(removeList)
+					sGroup.save(flush:true)
+				}
+				map.put(scriptGroup?.name, removeList)
+			}}
+		catch(Exception e){
+			println " ERROR "+e.getMessage()
+		}
+		redirect( action :"list")
+	}	
 }

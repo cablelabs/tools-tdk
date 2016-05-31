@@ -28,6 +28,9 @@ $(document).ready(function() {
 			},
 			'download_script' : function(node){
 				downloadScriptList();	
+			}, 	
+			'upload_script' : function(node){
+				uploadScript();	
 			}	
 		}
 	});
@@ -85,6 +88,19 @@ $(document).ready(function() {
 	$("#scriptid").addClass("changecolor");
 	
 });
+/**
+ * Function for display the upload script option through UI
+ */
+
+function uploadScript(){
+	$("#responseDiv123").hide();
+	$("#up_load").hide();
+	$("#up_load_script").show();	
+	$("#list-scriptDetails").hide();
+}
+/**
+ * Function used to download consolidated script details through UI.
+ */
 
 function downloadScriptList(){	
 	var value  = confirm("Do you want to download  consolidated scripts details ?");
@@ -100,6 +116,7 @@ function downloadScriptList(){
 function showUploadOption(){
 	$("#responseDiv123").hide();
 	$("#up_load").show();
+	$("#up_load_script").hide();	
 	$("#list-scriptDetails").hide();
 }
 /**
@@ -109,8 +126,10 @@ function showUploadOption(){
 function hideUploadOption(){
 	$("#responseDiv123").show();
 	$("#up_load").hide();
+	$("#up_load_script").hide();	
 	$("#list-scriptDetails").hide();
 }
+
 
 var displayedGroups = [];
 
@@ -616,8 +635,7 @@ function enableEdit(me,scriptName,session){
 
 function disableEdit(me,scriptName){
 	$.get('removeEditLock', {scriptName: scriptName}, function(data) {
-	});
-	
+	});	
 }
 
 function clearLock(scriptName){
@@ -625,8 +643,7 @@ function clearLock(scriptName){
 	});
 }
 
-function showSkipRemarksLabel(){
-	
+function showSkipRemarksLabel(){	
 	$("#skipRemarks123").hide();
 	$("#skipReason123").hide();
 }
@@ -651,5 +668,46 @@ function scriptRefreshSuccess(){
 function scriptRefreshFailure(){
 	alert(" Error while refreshig the script list.");
 	window.location.reload(); 
-	
 }
+function testSuitesCleanUp(){
+	alert(" Please wait, test suites clean up will take some time.");
+} 
+function testSuitesCleanUpSuccess(){
+	alert("The  test suites cleaned sucessfully.");
+	window.location.reload(); 
+}
+function testSuitesCleanUpFailure(){
+	alert(" Error while clean up the test suites.");
+	window.location.reload(); 
+}
+
+/**
+ * Function for  Suite clean up with N/A scripts 
+ * @param name
+ */
+function cleanUpTestSuite(name){	
+	$.get('verifyScriptGroup', {name: name}, function(data) { 
+		var val = JSON.parse(data);
+		if(val === true){
+			alert("Script Group cleaned succesfully ");
+			var value = "normal"
+				hideUploadOption();
+				hideAllSearchoptions();
+				checkAnyEditingScript();
+				$.get('edit',{name:name, value :value}, function(data){
+					$("#responseDiv").html(data); });
+				$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });	 
+		}else{
+			alert("Error while clean up  the test suite clean up. ");		
+		}		
+	});	 
+}
+/**
+ * function for  before suite clean up
+ */
+function cleanUp(){
+	alert("Please wait, Suite clean up will take some time. ")
+}
+
+
+

@@ -265,9 +265,28 @@
 							&emsp;&emsp;
 							<g:actionSubmit class="buttons" style="width : 100px; "
 								action="upload" value="Upload" />
+						</g:form>
+					</div>
+					
+					<!-- NEW CHANGE  -->	
+					<div class="contextMenu" id="up_load_script" align="center"
+						style="width: 950px; height: 900px;">
+						<br> <br> <br> <br>
+						<g:form method="POST" controller="scriptGroup" action="uploadScript"
+							enctype="multipart/form-data">
+							<label> <b><g:message code="scriptGroup.name.label"
+										default="Select the script file" /></b>
+							</label>
+							&emsp;
+							<input class="uploadFile" type="file" name="file" />
+							&emsp;&emsp;
+							<g:actionSubmit class="buttons" style="width : 100px; "
+								action="uploadScript" value="Upload" />
 
 						</g:form>
 					</div>
+					
+					
 					</td>					
 				</tr>
 			</table>
@@ -281,10 +300,10 @@
 						before="refreshListStart()" action="scriptListRefresh;"
 						value="ScriptList Refresh" onFailure="scriptRefreshFailure()"
 						onSuccess="scriptRefreshSuccess()" /></li>
-			<li id="download_script"> <img src="../images/script_download.png" height="15px" width="15px"/>Download Script Details </li> 
+			<li id="download_script"> <img src="../images/script_download.png" height="15px" width="15px"/>Download Script Details </li>
+			<li id= "upload_script"> <img src="../images/reorder_up.png" height="15px" width="15px" > Upload Script </li>   
 			</ul>
-		</div>
-	      	
+		</div>	      	
 			<div class="contextMenu" id="script_childs_menu">
 				<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 				<ul>
@@ -299,6 +318,11 @@
 	          		<li id="add_scriptgrp"><img src="../images/add_new.png" height="15px" width="15px"/>Add New Test Suite</li>
 	          		<li id="upload_scriptGroup"><img src="../images/reorder_up.png"
 					height="15px" width="15px" /> Upload script group XML</li>
+					<li id="refresh"><img src="../images/refresh.gif" height="15px"
+					width="15px" /> <g:submitToRemote class="test"
+						before="testSuitesCleanUp()" action="verifyAllScriptGroups;"
+						value="Test Suites Clean Up" onFailure="testSuitesCleanUpFailure()"
+						onSuccess="testSuitesCleanUpSuccess()" /></li>				
 	        	</ul>
 	        </div>
 			<div class="contextMenu" id="scriptgrp_childs_menu">
@@ -313,9 +337,7 @@
 	
 	<g:hiddenField name="currentScriptId" id="currentScriptId" value="${scriptId}"/>
 	<g:hiddenField name="currentScriptGroupId" id="currentScriptGroupId" value="${scriptGroupId}"/>
-	<g:hiddenField name="isDeviceExist" id="isScriptExist" value=""/>
-	
-	
+	<g:hiddenField name="isDeviceExist" id="isScriptExist" value=""/>	
 </body>
 </html>
 

@@ -272,6 +272,11 @@
 						style="min-width:150px;"
 						before="randomSort('${scriptGroupInstance}')"
 						title="Random wise script list sort" onclick="random();" /> <br> <br>
+					<g:submitToRemote class="buttons"
+						value="   Suite Clean Up   " controller="scriptGroup"
+						style="min-width:150px;"						
+						title="Test Suite Clean Up" before="cleanUp();" onLoading ="cleanUpTestSuite('${scriptGroupInstance}')" /> <br> <br>
+						
 			
 					
 					<input type="image" src= "../images/reorder_up.png" value="Move Up" onclick="moveUp();return false;"  title  = " Move Up "> <br><br>

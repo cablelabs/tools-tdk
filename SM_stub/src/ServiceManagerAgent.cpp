@@ -2249,6 +2249,8 @@ bool ServiceManagerAgent::SM_AppService_SetConnectionReset(IN const Json::Value&
                                                                         response["details"] = ip;
                                                                         printf("ip is: %s\n", ip);
                                                                         response["result"]="SUCCESS";
+								        IARM_Bus_Disconnect();
+								        IARM_Bus_Term();
                                                                         return TEST_SUCCESS;
                                                                 }
                                                         }

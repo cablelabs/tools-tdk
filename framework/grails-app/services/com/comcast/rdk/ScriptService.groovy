@@ -422,7 +422,9 @@ class ScriptService {
 				if(line.get(indx).startsWith("'''"))	{
 					indx++
 					while(indx < line.size() &&  !line.get(indx).startsWith("'''")){
-						s = s + line.get(indx)+"\n"
+						if(!(line.get(indx)?.equals(""))){ //Issue fix  for line gap between xml tags
+							s = s + line.get(indx)+"\n"
+						}
 						indx++
 					}
 					indx ++
