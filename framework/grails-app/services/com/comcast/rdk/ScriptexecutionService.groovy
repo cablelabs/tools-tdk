@@ -892,7 +892,7 @@ class ScriptexecutionService {
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 			}
-			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName, realPath)
+			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName, realPath,executionId,execDeviceId,executionResultId)
 			if(isLogReqd){
 				executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId, realPath)
 			}	

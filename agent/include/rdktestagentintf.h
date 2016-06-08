@@ -45,7 +45,7 @@ typedef enum _DEBUG_LEVEL_
 #endif
 
 #define DEBUG_PRINT(eDebugLevel,pui8Debugmsg...)\
-    do{\
+        do{\
             if(eDebugLevel <= DEBUG_ENABLE)\
             {\
                 char buffer[30];\
@@ -53,8 +53,8 @@ typedef enum _DEBUG_LEVEL_
                 time_t curtime;\
                 gettimeofday(&tv, NULL); \
                 curtime=tv.tv_sec;\
-                strftime(buffer,30,"%m-%d-%Y  %T",localtime(&curtime));\
-                fprintf(stdout,"\n\n%s: Function Name: %s; Line: %d :- \n",buffer,__FUNCTION__,__LINE__);\
+                strftime(buffer,30,"%m-%d-%Y %T.",localtime(&curtime));\
+                fprintf(stdout,"\n%s%ld [%s():%d] ",buffer,tv.tv_usec,__FUNCTION__,__LINE__);\
                 fprintf(stdout,pui8Debugmsg);\
                 fflush(stdout);\
             }\
