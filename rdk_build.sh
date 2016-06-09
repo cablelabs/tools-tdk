@@ -160,13 +160,31 @@ export LIBDIR=$TDK_LIB_PATH
 export TARGETDIR=$TDK_BIN_PATH
 
 if [ "$ENABLE_TDK" == 1 ]; then
-	ls ${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh
-	if (($? == 0)); then
+	if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh" ]; then
     		echo "Mediaplayer_stub present"
     		source ${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh
 	else
     		echo "pri file not present"
 	fi
+#for sm_stub
+        if [ -e "$COMBINED_ROOT/opensource/qt/stage" ];
+        then
+                export QT_SRC_ROOT=${RDK_PROJECT_ROOT_PATH}/opensource/qt
+        else
+	        export QT_SRC_ROOT=${RDK_PROJECT_ROOT_PATH}/opensource/src/qt
+        fi
+        source $QT_SRC_ROOT/apps_helpers.sh
+        source $QT_SRC_ROOT/setenv.sh
+        PROJECT_CONFIG_SM=()
+        if [ ! -d "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/servicemanager" ]; then
+                mkdir ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/servicemanager
+                cp -r ${RDK_PROJECT_ROOT_PATH}/servicemanager/include ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/servicemanager/
+                cp -r ${RDK_PROJECT_ROOT_PATH}/servicemanager/src ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/servicemanager/
+        fi
+
+        cd ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/
+        configureProject servicemanager_tdk.pro ${PROJECT_CONFIG_SM[@]}
+
 fi
 TDK_PATH=$TDK_PATH/platform/
 # functional modules
@@ -195,9 +213,11 @@ function build()
     fi
     touch $RDK_PROJECT_ROOT_PATH/tdk_image
 
-    ls ${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh
-    if (($? == 0)); then
+    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh" ]; then
         rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/cpc/Mediaplayer_stub/libmediaplayerstub.so* ${TDK_LIB_PATH}
+    fi
+    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so*" ];then
+    rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so* ${TDK_LIB_PATH}
     fi
 
 }

@@ -2007,7 +2007,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetCECAddresses(IN const Json::Value& req, 
 		addr += "\"physicalAddress\":\"";
 		addr +=  physAddr;
 		addr += "\",";
-		addr += "\"logicalAddress\":" + logicalAddr["logicalAddress"].toString() + ",";
+		addr += "\"logicalAddress\":\"" + logicalAddr["logicalAddress"].toString() + "\",";
 		addr += "\"deviceType\":\"" + logicalAddr["deviceType"].toString() + "\"";
 		addr += "}";
 		DEBUG_PRINT(DEBUG_TRACE,"CECAddress details: %s\n", addr.toUtf8().constData());

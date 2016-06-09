@@ -10,7 +10,12 @@
 
 QT += widgets network core gui
 DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION DEBUG_LEVEL_TRACE RDK2DOT0
-DEFINES += $(CEC_PERSIST_NAME)
+
+#non-yocto env variables
+exists(../platform/SM_stub/intel.pri) : include(../platform/SM_stub/intel.pri)
+
+DEFINES += $$CEC_PERSIST_NAME
+
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
 }
@@ -41,20 +46,24 @@ cross_compile:DEFINES+=CROSS_COMPILED_FOR_DEVICE
 TEMPLATE = lib
 TARGET = servicemanagerstub
 
-use-gstreamer-1.0{
+packagesExist("gstreamer-1.0"){
 LIBS += -lgstpbutils-1.0 -lgstvideo-1.0 -lgstbase-1.0
 }
 
-!use-gstreamer-1.0{
+else{
 LIBS += -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10
 }
 
 LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
-LIBS += -lservicemanager -lRCEC -lRCECOSHal -lRCECIARMBusHal -ludev -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata -ldshalcli -lds
+LIBS += -lservicemanager -ludev -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata -ldshalcli -lds
 
-HEADERS += $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/hdmicecservice.h \
-	   $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/applicationservice.h
+contains(DEFINES,HAS_API_HDMI_CEC) {
+HEADERS += servicemanager/include/services/hdmicecservice.h \
+SOURCES += servicemanager/src/services/hdmicecservice.cpp
+LIBS += -lRCEC -lRCECOSHal -lRCECIARMBusHal
+}
+
+HEADERS += servicemanager/include/services/applicationservice.h
 
 SOURCES += src/ServiceManagerAgent.cpp \
-           servicemanager/src/services/hdmicecservice.cpp       \
 	   servicemanager/src/services/applicationservice.cpp

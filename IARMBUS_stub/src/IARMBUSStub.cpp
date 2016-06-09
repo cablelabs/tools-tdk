@@ -68,27 +68,27 @@ bool prereqcheck(char *ownerName )
     	bool running = false;
 
 	char appName[20] = {'\0'};
-	if (strcmp(ownerName, "Daemon")  == 0)
+	if (strcmp(ownerName, IARM_BUS_DAEMON_NAME)  == 0)
         {
 		strcpy(appName,DAEMON_EXE);	
 	}
-	else if (strcmp(ownerName, "IRMgr")  == 0)
+	else if (strcmp(ownerName, IARM_BUS_IRMGR_NAME)  == 0)
         {
 		strcpy(appName,IRMGR_EXE);
 	}
-	else if (strcmp(ownerName, "PWRMgr")  == 0)
+	else if (strcmp(ownerName, IARM_BUS_PWRMGR_NAME)  == 0)
         {
 		strcpy(appName,PWRMGR_EXE);
 	}
-	else if (strcmp(ownerName, "MFRLib")  == 0)
+	else if (strcmp(ownerName, IARM_BUS_MFRLIB_NAME)  == 0)
         {
 		strcpy(appName,MFRMGR_EXE);
 	}
-	else if (strcmp(ownerName, "SYSMgr")  == 0)
+	else if (strcmp(ownerName, IARM_BUS_SYSMGR_NAME)  == 0)
         {
 		strcpy(appName,SYSMGR_EXE);
 	}
-	else if (strcmp(ownerName, "DISKMgr")  == 0)
+	else if (strcmp(ownerName, IARM_BUS_DISKMGR_NAME)  == 0)
         {
 		strcpy(appName,DISKMGR_EXE);
 	}
@@ -103,7 +103,7 @@ bool prereqcheck(char *ownerName )
 	}
 
     	sprintf(strCmd,"pidof %s",appName);
-        DEBUG_PRINT(DEBUG_ERROR,"Checking running status of %s using: %s \n", ownerName, strCmd);
+        DEBUG_PRINT(DEBUG_ERROR,"Checking running status of %s using %s \n", ownerName, strCmd);
     	fp = popen(strCmd, "r");
     	/* Read the output */
     	if (fp != NULL)
@@ -111,7 +111,7 @@ bool prereqcheck(char *ownerName )
             if (fgets(output, sizeof(output)-1, fp) != NULL) {
                 running = true;
             }
-            DEBUG_PRINT(DEBUG_TRACE, "%s process id: %s\n",appName, output);
+            DEBUG_PRINT(DEBUG_TRACE, "%s process id: %s",appName, output);
             pclose(fp);
     	}
     	else {
@@ -138,7 +138,7 @@ IARMBUSAgent::IARMBUSAgent()
 
 bool IARMBUSAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"IARM Initialize\n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent Initialize\n");
 	/*Register stub function for callback*/
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_Init, "TestMgr_IARMBUS_Init");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_Term, "TestMgr_IARMBUS_Term");
@@ -176,17 +176,19 @@ bool IARMBUSAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgent
  *****************************************************************************/
 std::string IARMBUSAgent::testmodulepre_requisites()
 {
-	char retval[512];
-	memset(retval, '\0', sizeof(512));
-	DEBUG_PRINT(DEBUG_LOG,"\nEntering %s function", __func__);
-	if ((prereqcheck((char*)"Daemon"))== TEST_SUCCESS)
-		sprintf(retval, "SUCCESS");
-	else
-		sprintf(retval, "FAILURE<DETAILS> Pre-requisite check failed for Daemon Mgr");
-	DEBUG_PRINT(DEBUG_LOG,"\nExiting %s function", __func__);
-	return retval;;
-}
+	DEBUG_PRINT(DEBUG_LOG,"Entering %s function\n", __func__);
 
+	if ((prereqcheck((char*)IARM_BUS_DAEMON_NAME))== TEST_SUCCESS)
+	{
+		DEBUG_PRINT(DEBUG_LOG,"[Success] Daemon Mgr running. Exiting %s function\n", __func__);
+		return "SUCCESS";
+	}
+	else
+	{
+		DEBUG_PRINT(DEBUG_LOG,"[Failed] Daemon Mgr not running. Exiting %s function\n", __func__);
+		return "FAILURE<DETAILS> Pre-requisite check failed for Daemon Mgr";
+	}
+}
 
 /***************************************************************************
  *Function name : testmodulepost_requisites
@@ -199,7 +201,6 @@ bool IARMBUSAgent::testmodulepost_requisites()
         return TEST_SUCCESS;
 }
 
-
 /**************************************************************************
  * Function Name : _ReleaseOwnership
  * Description	: _ReleaseOwnership function will be registered for 
@@ -211,7 +212,6 @@ static IARM_Result_t _ReleaseOwnership(void *arg)
 	IARM_Result_t retCode = IARM_RESULT_SUCCESS;
 	return retCode;
 }
-
 
 /**************************************************************************
  *
@@ -231,7 +231,6 @@ char* getResult(int retval,char *resultDetails)
 	}
 	else
 	{       
-
 		switch(retval)
 		{
 			case 1: strcpy(resultDetails,"INVALID_PARAM");
@@ -243,14 +242,12 @@ char* getResult(int retval,char *resultDetails)
 			case 4: strcpy(resultDetails,"OUT_OF_MEMORY");
 				break;
 			default :
-				strcpy(resultDetails,"Unidentified Error");
+				strcpy(resultDetails,"UNKNOWN_ERROR");
 				break; 
 		}
 		return (char*)"FAILURE";
 	}
-
 }
-
 
 /**************************************************************************
  *
@@ -264,7 +261,7 @@ char* getResult(int retval,char *resultDetails)
 
 bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_Init --->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_Init --->Entry\n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
@@ -273,7 +270,7 @@ bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value&
 	{
 		return TEST_FAILURE;
 	}
-	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_Init directly from IARMBUSAgent_Init\n");
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_Init directly from IARMBUSAgent_Init\n");
 	/*Calling IARMBUS API IARM_Bus_Init with json req as parameter*/
 	retval=IARM_Bus_Init((char *)req["Process_name"].asCString());
 
@@ -282,7 +279,7 @@ bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value&
 	response["details"]=resultDetails;
 
 	free(resultDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_Init --->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_Init --->Exit\n");
 	return TEST_SUCCESS;
 }
 
@@ -295,13 +292,12 @@ bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value&
  ***************************************************************************/
 bool IARMBUSAgent::IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value& response)
 {
-
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_Term --->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_Term --->Entry\n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
 	memset(resultDetails , '\0', (sizeof(char)*16));
-	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_Term()\n");
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_Term()\n");
 
 	/*Calling IARMBUS API IARM_Bus_Term  */
 	retval=IARM_Bus_Term();
@@ -311,9 +307,8 @@ bool IARMBUSAgent::IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value&
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
 	free(resultDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_Term --->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_Term --->Exit\n");
 	return TEST_SUCCESS;
-
 }
 
 /**************************************************************************
@@ -326,13 +321,12 @@ bool IARMBUSAgent::IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value&
 
 bool IARMBUSAgent::IARMBUSAgent_BusConnect(IN const Json::Value& req, OUT Json::Value& response)
 {
-
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_BusConnect --->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusConnect --->Entry\n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
 	memset(resultDetails , '\0', (sizeof(char)*16));
-	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_Connect\n");
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_Connect\n");
 	/*Calling IARMBUS API IARM_Bus_Connect  */
 	retval=IARM_Bus_Connect();
 	/*Checking the return value of API*/
@@ -340,9 +334,8 @@ bool IARMBUSAgent::IARMBUSAgent_BusConnect(IN const Json::Value& req, OUT Json::
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
 	free(resultDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_BusConnect --->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusConnect --->Exit\n");
 	return TEST_SUCCESS;
-
 }
 
 /**************************************************************************
@@ -355,13 +348,12 @@ bool IARMBUSAgent::IARMBUSAgent_BusConnect(IN const Json::Value& req, OUT Json::
  ***************************************************************************/
 bool IARMBUSAgent::IARMBUSAgent_BusDisconnect(IN const Json::Value& req, OUT Json::Value& response)
 {
-
-	DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_BusDisconnect --->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusDisconnect --->Entry\n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
 	memset(resultDetails , '\0', (sizeof(char)*16));
-	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_Disconnect\n");
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_Disconnect\n");
 	/*Calling IARMBUS API IARM_Bus_Disconnect  */
 	retval=IARM_Bus_Disconnect();
 	/*Checking the return value of API*/
@@ -369,9 +361,8 @@ bool IARMBUSAgent::IARMBUSAgent_BusDisconnect(IN const Json::Value& req, OUT Jso
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
 	free(resultDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_BusDisconnect --->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusDisconnect --->Exit\n");
 	return TEST_SUCCESS;
-
 }
 
 /**************************************************************************
@@ -385,13 +376,13 @@ bool IARMBUSAgent::IARMBUSAgent_BusDisconnect(IN const Json::Value& req, OUT Jso
 
 bool IARMBUSAgent::IARMBUSAgent_IsConnected(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\n IARMBus_IsConnected --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBus_IsConnected --->Entry \n");
 	int isregistered;
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
 	memset(resultDetails , '\0', (sizeof(char)*16));
-	DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_IsConnected from IARMBus_IsConnected \n");
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_IsConnected from IARMBus_IsConnected \n");
 	if(&req["member_name"]==NULL)
 	{
 		return TEST_FAILURE;
@@ -435,13 +426,16 @@ bool IARMBUSAgent::IARMBUSAgent_IsConnected(IN const Json::Value& req, OUT Json:
 				break;
 			case 4:	response["details"]="OUT_OF_MEMORY";
 				break;
+                        default:
+				response["details"]="UNKNOWN_ERROR";
 		}
 	}
 	free(resultDetails);	
 	/*Need to fill the response with isregistered variable*/
-	DEBUG_PRINT(DEBUG_TRACE,"\n IARM_Bus_IsConnected --->Exit \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARM_Bus_IsConnected --->Exit \n");
 	return TEST_SUCCESS;
 }
+
 /**************************************************************************
  * Function Name : IARMBUSAgent_RequestResource
  * Description 	: IARMBUSAgent_RequestResource wrapper function will be used to call 
@@ -453,7 +447,7 @@ bool IARMBUSAgent::IARMBUSAgent_IsConnected(IN const Json::Value& req, OUT Json:
 
 bool IARMBUSAgent::IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_RequestResource --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RequestResource --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
@@ -468,11 +462,11 @@ bool IARMBUSAgent::IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT J
 	if ( REGISTERCALLSTATUS == 0) 
 	{
 		/*Calling IARMBUS API IARM_BusDaemon_RequestOwnership  */
-		DEBUG_PRINT(DEBUG_LOG,"\n\n calling IARM_Bus_RegisterCall from IARMBUSAgent_RequestResource \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterCall from IARMBUSAgent_RequestResource \n");
 		retval=IARM_Bus_RegisterCall(IARM_BUS_COMMON_API_ReleaseOwnership, _ReleaseOwnership);
 		if (retval != IARM_RESULT_SUCCESS)
 		{
-			DEBUG_PRINT(DEBUG_LOG,"\n\n IARM_Bus_RegisterCall - FAILED \n");
+			DEBUG_PRINT(DEBUG_LOG,"\n\nIARM_Bus_RegisterCall - FAILED \n");
 			response["result"]=getResult(retval,resultDetails);
 			response["details"]=resultDetails;
 			return TEST_FAILURE;
@@ -480,16 +474,17 @@ bool IARMBUSAgent::IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT J
 	}
 
 	/*Calling IARMBUS API IARM_BusDaemon_RequestOwnership  */
-	DEBUG_PRINT(DEBUG_LOG,"\n\n calling IARM_BusDaemon_RequestOwnership from IARMBUSAgent_RequestResource \n");
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_BusDaemon_RequestOwnership from IARMBUSAgent_RequestResource \n");
 	retval =IARM_BusDaemon_RequestOwnership((IARM_Bus_ResrcType_t)ResrcType_int);
 	/*Checking the return value of API*/
 	/*Filling json response with SUCCESS status*/	
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
 	free(resultDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_RequestResource --->Exit \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RequestResource --->Exit \n");
 	return TEST_SUCCESS;
 }
+
 /**************************************************************************
  * Function Name	: IARMBUSAgent_ReleaseResource
  *
@@ -502,7 +497,7 @@ bool IARMBUSAgent::IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT J
 
 bool IARMBUSAgent::IARMBUSAgent_ReleaseResource(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_ReleaseResource --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_ReleaseResource --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
@@ -514,17 +509,16 @@ bool IARMBUSAgent::IARMBUSAgent_ReleaseResource(IN const Json::Value& req, OUT J
 	int ResrcType_int=req["resource_type"].asInt(); 
 
 	/*Calling IARMBUS API IARM_BusDaemon_ReleaseOwnership  */
-	DEBUG_PRINT(DEBUG_LOG,"\n\n calling IARM_BusDaemon_ReleaseOwnership from IARMBUSAgent_ReleaseResource \n");
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_BusDaemon_ReleaseOwnership from IARMBUSAgent_ReleaseResource \n");
 	retval =IARM_BusDaemon_ReleaseOwnership((IARM_Bus_ResrcType_t)ResrcType_int);
 	/*Checking the return value of API*/
 	/*Filling json response with SUCCESS status*/	
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
 	free(resultDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_ReleaseResource --->Exit \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_ReleaseResource --->Exit \n");
 	return TEST_SUCCESS;
 }
-
 
 /**************************************************************************
  * Function Name	: get_LastReceivedEventDetails
@@ -534,29 +528,47 @@ bool IARMBUSAgent::IARMBUSAgent_ReleaseResource(IN const Json::Value& req, OUT J
 
 bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\n get_LastReceivedEventDetails --->Entry \n");
-	char details[200]="Event Details:";
-	char *KeyCodedetails1 =(char*)malloc(sizeof(char)*200); 
-	memset(KeyCodedetails1 , '\0', (sizeof(char)*200));
+	DEBUG_PRINT(DEBUG_TRACE,"get_LastReceivedEventDetails --->Entry \n");
+
+	DEBUG_PRINT(DEBUG_TRACE,"Event Mgr: %s Event Name: %s\n", g_ManagerName, LastEvent);
+
 	if(strcmp(LastEvent,"IARM_BUS_IRMGR_EVENT_IRKEY")==0)
 	{
-		gEventdata << "Event Details:" << ":: KeyCode :" << LastKeyCode << " :: KeyType : " <<LastKeyType ;
+		gEventdata << "Event Details: " << "KeyCode: " << std::hex << LastKeyCode << ", KeyType: " << std::hex << LastKeyType;
 		response["details"]=gEventdata.str().c_str();
 		gEventdata.str("");
-		strcpy(LastEvent , " ");
 		response["result"]="SUCCESS";
-		return true;
 	}
-	else if((strcmp(LastEvent,"IARM_BUS_PWRMGR_EVENT_MODECHANGED")==0)||
-			(strcmp(LastEvent,"IARM_BUS_EVENT_RESOURCEAVAILABLE")==0)||
-			(strcmp(LastEvent,"IARM_BUS_EVENT_RESOLUTIONCHANGE")==0) ||
-			(strcmp(g_ManagerName,"DISKMgr")==0)|| 
-			(strcmp(g_ManagerName,"SYSMgr")==0) )
+	else if((strcmp(LastEvent,"IARM_BUS_PWRMGR_EVENT_MODECHANGED")==0))
 	{
-		DEBUG_PRINT(DEBUG_TRACE,"\n get_LastReceivedEventDetails ****************** \n");
-		strcpy(LastEvent , " ");
+                response["details"]="Event Details: Power mode change event";
 		response["result"]="SUCCESS";
 	}
+        else if(strcmp(LastEvent,"IARM_BUS_EVENT_RESOURCEAVAILABLE")==0)
+        {
+		response["details"]="Event Details: Resource available event";
+                response["result"]="SUCCESS";
+        }
+        else if(strcmp(LastEvent,"IARM_BUS_EVENT_RESOLUTIONCHANGE")==0)
+        {
+		response["details"]="Event Details: Resolution change event";
+                response["result"]="SUCCESS";
+        }
+        else if((strcmp(LastEvent,"IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE")==0))
+        {
+		response["details"]="Event Details: System state event";
+                response["result"]="SUCCESS";
+        }
+        else if(strcmp(g_ManagerName,IARM_BUS_DISKMGR_NAME)==0)
+        {
+		response["details"]="Event Details: Disk manager event";
+                response["result"]="SUCCESS";
+        }
+        else if(strcmp(g_ManagerName,IARM_BUS_SYSMGR_NAME)==0)
+        {
+		response["details"]="Event Details: Sys manager event";
+                response["result"]="SUCCESS";
+        }
 	else if (strcmp(g_ManagerName, IARM_BUS_DUMMYMGR_NAME)==0)
 	{                                                   
 		for(int i=0;i<EVTDATA_MAX_SIZE;i++)         
@@ -568,27 +580,19 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
 		response["details"]=gEventdata.str().c_str();
 		gEventdata.str("");
 		response["result"]="SUCCESS";               
-		return true;
 	}                                             
-	else if((strcmp(LastEvent,"IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE")==0))
-	{
-		strcpy(LastEvent , " ");
-		response["result"]="SUCCESS";               
-	}
 	else
 	{
-		DEBUG_PRINT(DEBUG_TRACE,"\n get_LastReceivedEventDetails FAIL****************** \n");
+		DEBUG_PRINT(DEBUG_TRACE,"get_LastReceivedEventDetails FAIL****************** \n");
+		response["details"]="Failed to get event details";
 		response["result"]="FAILURE";
 	}
-	strcpy(KeyCodedetails1,details);
-	response["details"]=KeyCodedetails1;
-	free(KeyCodedetails1);
+
 	memset(&(LastEvent) , '\0', (sizeof(char)*20));
 	memset(g_ManagerName , '\0', (sizeof(char)*20));
-	DEBUG_PRINT(DEBUG_TRACE,"\n get_LastReceivedEventDetails --->Exit \n");
-	return true;
+	DEBUG_PRINT(DEBUG_TRACE,"get_LastReceivedEventDetails --->Exit \n");
+	return TEST_SUCCESS;
 }
-
 
 /**************************************************************************
  * Function Name	: fill_LastReceivedKey
@@ -599,16 +603,15 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
  ***************************************************************************/
 void fill_LastReceivedKey(const char *EvtHandlerName, char *gLastEvent ,double keyTime, int keyCode = 0 ,int keyType = 0)
 {
-
-	DEBUG_PRINT(DEBUG_LOG,"\n fill_LastReceivedKey --->Entry \n");
+	DEBUG_PRINT(DEBUG_LOG,"fill_LastReceivedKey --->Entry \n");
 	LastKeyCode=keyCode;
 	LastKeyType=keyType;
 	LastKeyTime=keyTime;
 	gLastEvent = LastEvent;
-	DEBUG_PRINT(DEBUG_LOG, "LastEvent: %s LastKeyCode: 0x%x LastKeyType : 0x%x LastKeyTime: %lf seconds\r\n",gLastEvent, keyCode, keyType, keyTime);
+	DEBUG_PRINT(DEBUG_LOG, "LastEvent: %s LastKeyCode: 0x%x LastKeyType: 0x%x LastKeyTime: %lf seconds\r\n",gLastEvent, keyCode, keyType, keyTime);
 
 	if(gRegisteredEventCount > 1) {
-		DEBUG_PRINT(DEBUG_LOG, " \n Registered for more than one event : %d \n ", gRegisteredEventCount);
+		DEBUG_PRINT(DEBUG_LOG, "Registered for more than one event: %d \n ", gRegisteredEventCount);
 		char TempEventSummary[200] ;
 
 		if(strcmp(LastEvent , "IARM_BUS_IRMGR_EVENT_IRKEY") == 0)
@@ -620,12 +623,11 @@ void fill_LastReceivedKey(const char *EvtHandlerName, char *gLastEvent ,double k
 		gEventSummaryCount++;
 		DEBUG_PRINT(DEBUG_LOG, "gEventSummary: %s\n\n", gEventSummary);
 	}else {
-		DEBUG_PRINT(DEBUG_LOG, " \n Registered for only one event : %d \n ", gRegisteredEventCount);
+		DEBUG_PRINT(DEBUG_LOG, "Registered for only one event : %d \n ", gRegisteredEventCount);
 	}
 
-	DEBUG_PRINT(DEBUG_LOG,"\n fill_LastReceivedKey --->Exit \n");
+	DEBUG_PRINT(DEBUG_LOG,"fill_LastReceivedKey --->Exit \n");
 }
-
 
 /***************************************************************************
  * Function Name : _PWRMGRevtHandler
@@ -671,15 +673,15 @@ void _PWRMGRevtHandler(const char *owner, IARM_EventId_t eventId, void *data, si
 				break;
 			default:
 				{
-					DEBUG_PRINT(DEBUG_ERROR,"\nUnindentified event\n");
+					DEBUG_PRINT(DEBUG_ERROR,"Unindentified event\n");
 				}
 				break;
 		}
 	}
 	
-	DEBUG_PRINT(DEBUG_LOG,"\nExiting %s function", __func__);
-
+	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
 }
+
 /***************************************************************************
 
  * Function Name : _IRevtHandler
@@ -731,7 +733,6 @@ void _IRevtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t
 					/* Verify the reeived event */
 					if ( (strcmp(TempRecvKeyCode, TempExpectedKeyCode) == 0) && (strcmp(TempRecvKeyType,TempExpectedKeyType) == 0))
 					{
-
 						keyTime = ((double)(clock_at_recv_event.tv_sec - irEventData->data.irkey.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - irEventData->data.irkey.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 						DEBUG_PRINT(DEBUG_LOG, "Time taken for sending of IR key 0x%x type 0x%x was %lf seconds\r\n",keyCode, keyType, keyTime);
 
@@ -745,14 +746,14 @@ void _IRevtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t
 				break;
 			default:
 				{
-					DEBUG_PRINT(DEBUG_ERROR,"\nUnindentified event\n");
+					DEBUG_PRINT(DEBUG_ERROR,"Unindentified event\n");
 				}
 				break;
 		}
 
 	}
-	DEBUG_PRINT(DEBUG_LOG,"\nExiting %s function", __func__);
 
+	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
 }
 
 /***************************************************************************
@@ -785,10 +786,10 @@ void _IBUSevtHandler(const char *owner, IARM_EventId_t eventId, void *data, size
 		switch (eventId) {
 			case IARM_BUS_EVENT_RESOLUTIONCHANGE:
 				{
-					DEBUG_PRINT(DEBUG_LOG,"\nResolution Change event received\n");
+					DEBUG_PRINT(DEBUG_LOG,"Resolution Change event received\n");
 					IARM_Bus_ResolutionChange_EventData_tp *eventData_bus1 = (IARM_Bus_ResolutionChange_EventData_tp*)data ;
 					
-					DEBUG_PRINT(DEBUG_LOG,"\nReceived Width & Height : %d, %d \n\n", eventData_bus1->width, eventData_bus1->height);
+					DEBUG_PRINT(DEBUG_LOG,"Received Width & Height : %d, %d \n\n", eventData_bus1->width, eventData_bus1->height);
 
 					keyTime = ((double)(clock_at_recv_RC.tv_sec - eventData_bus1->clock_when_event_sent.tv_sec) + (double)(clock_at_recv_RC.tv_nsec - eventData_bus1->clock_when_event_sent.tv_nsec)) / (double)BILLION;
 					DEBUG_PRINT(DEBUG_LOG, "Time taken for Receviving ResourceAvailable event : %lf seconds\r\n", keyTime);
@@ -798,17 +799,16 @@ void _IBUSevtHandler(const char *owner, IARM_EventId_t eventId, void *data, size
 				break;
 			case IARM_BUS_EVENT_RESOURCEAVAILABLE:
 				{
-					DEBUG_PRINT(DEBUG_LOG,"\nResourceAvailable event received\n");
+					DEBUG_PRINT(DEBUG_LOG,"ResourceAvailable event received\n");
 					strcpy(LastEvent , "IARM_BUS_EVENT_RESOURCEAVAILABLE");
 					fill_LastReceivedKey(__func__,LastEvent, keyTime);
 				}
 			default:
 				break;
 		}
-
 	}
-	DEBUG_PRINT(DEBUG_LOG,"\nExiting %s function", __func__);
 
+	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
 }
 
 /***************************************************************************
@@ -869,7 +869,7 @@ void _DUMMYTestMgrevtHandler(const char *owner, IARM_EventId_t eventId, void *da
 		}
 	}
 
-	DEBUG_PRINT(DEBUG_LOG,"\nExiting %s function", __func__);
+	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
 }
 
 
@@ -883,13 +883,13 @@ void _DUMMYTestMgrevtHandler(const char *owner, IARM_EventId_t eventId, void *da
 
 void fillSystemStateDetails(int state ,int error, char *payload)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nfillSystemStateDetails --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"fillSystemStateDetails --->Entry \n");
 	gSysState=state;
 	gSysError=error;
 	strcpy(gSysPayload , payload);
 	gsysMgrdata << "State:" << state << "::Error:" << error << "::Payload:"	<< payload;
-	printf("\ngsysMgrdata=%s\n",gsysMgrdata.str().c_str());
-	DEBUG_PRINT(DEBUG_TRACE,"\nfillSystemStateDetails --->Exit \n");
+	DEBUG_PRINT(DEBUG_TRACE,"gsysMgrdata=%s\n",gsysMgrdata.str().c_str());
+	DEBUG_PRINT(DEBUG_TRACE,"fillSystemStateDetails --->Exit \n");
 }
 
 /***************************************************************************
@@ -939,7 +939,7 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 				break;
 			default:
 				{
-					DEBUG_PRINT(DEBUG_ERROR,"\nUnindentified event\n");
+					DEBUG_PRINT(DEBUG_ERROR,"Unindentified event\n");
 				}
 				break;
 		}
@@ -956,44 +956,42 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 					
 					double keyTime = 0.0;
 
-					printf("irEventData : %p", data);
+					DEBUG_PRINT(DEBUG_LOG,"irEventData: %p", data);
 
 					if ( ExpectedKeyCode == irEventData->data.irkey.keyCode && ExpectedKeyType == irEventData->data.irkey.keyType)
 					{
 
 						keyTime = ((double)(clock_at_recv_event.tv_sec - irEventData->data.irkey.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - irEventData->data.irkey.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 						DEBUG_PRINT(DEBUG_LOG, "Time taken for sending of IR key 0x%x type 0x%x was %lf seconds\r\n",keyCode, keyType, keyTime);
-						DEBUG_PRINT(DEBUG_LOG,"\nTest Bus Client Get IR Key (%x, %x) From IR Manager\r\n", keyCode, keyType);
+						DEBUG_PRINT(DEBUG_LOG,"Test Bus Client Get IR Key (%x, %x) From IR Manager\r\n", keyCode, keyType);
 						strcpy(LastEvent , "IARM_BUS_IRMGR_EVENT_IRKEY");
 						fill_LastReceivedKey(__func__,LastEvent,keyTime,keyCode,keyType);
 					} else {
-						DEBUG_PRINT(DEBUG_LOG,"\nRecevived Unexpected IR Key (%x, %x) From IR Manager\r\n", keyCode, keyType);
+						DEBUG_PRINT(DEBUG_LOG,"Recevived Unexpected IR Key (%x, %x) From IR Manager\r\n", keyCode, keyType);
 					}
-					
 				}
 				break;
 			default:
 				{
-					DEBUG_PRINT(DEBUG_ERROR,"\nUnindentified event\n");
+					DEBUG_PRINT(DEBUG_ERROR,"Unindentified event\n");
 				}
 				break;
 		}
-
 	}
 	else if (strcmp(owner, IARM_BUS_DAEMON_NAME) == 0) {
 		switch (eventId) {
 			case IARM_BUS_EVENT_RESOURCEAVAILABLE:
 				{
-					DEBUG_PRINT(DEBUG_LOG,"\nResourceAvailable event received\n");
+					DEBUG_PRINT(DEBUG_LOG,"ResourceAvailable event received\n");
 					strcpy(LastEvent , "IARM_BUS_EVENT_RESOURCEAVAILABLE");
 				}
 				break;
 			case IARM_BUS_EVENT_RESOLUTIONCHANGE:
 				{
 					double keyTime = 0.0;
-					DEBUG_PRINT(DEBUG_LOG,"\nResolution Change event received\n");
+					DEBUG_PRINT(DEBUG_LOG,"Resolution Change event received\n");
 					IARM_Bus_ResolutionChange_EventData_tp *eventData_bus1 = (IARM_Bus_ResolutionChange_EventData_tp*)data ;
-					DEBUG_PRINT(DEBUG_LOG,"\nReceived Width & Height : %d, %d \n\n", eventData_bus1->width, eventData_bus1->height);
+					DEBUG_PRINT(DEBUG_LOG,"Received Width & Height : %d, %d \n\n", eventData_bus1->width, eventData_bus1->height);
 					keyTime = ((double)(clock_at_recv_event.tv_sec - eventData_bus1->clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData_bus1->clock_when_event_sent.tv_nsec)) / (double)BILLION;
 					DEBUG_PRINT(DEBUG_LOG, "Time taken for Receviving ResourceAvailable event : %lf seconds\r\n", keyTime);
 					strcpy(LastEvent , "IARM_BUS_EVENT_RESOLUTIONCHANGE");
@@ -1002,7 +1000,6 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 			default:
 				break;
 		}
-
 	}
 	else if (strcmp(owner, IARM_BUS_DISKMGR_NAME) == 0) 
 	{
@@ -1011,13 +1008,13 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 		{
 			case IARM_BUS_DISKMGR_EVENT_HWDISK:
 			{
-				DEBUG_PRINT(DEBUG_LOG,"\nDisk Manager HW DISK event received\n");
+				DEBUG_PRINT(DEBUG_LOG,"Disk Manager HW DISK event received\n");
 				strcpy(LastEvent , "IARM_BUS_DISKMGR_EVENT_HWDISK");
 				break;
 			}
 			case IARM_BUS_DISKMGR_EVENT_EXTHDD:
 			{
-				DEBUG_PRINT(DEBUG_LOG,"\nDisk Manager  EXT HDD DISK event received\n");
+				DEBUG_PRINT(DEBUG_LOG,"Disk Manager EXT HDD DISK event received\n");
 				IARM_BUS_DISKMgr_EventData_t *param = (IARM_BUS_DISKMgr_EventData_t *)data;
 				if(param->eventType ==DISKMGR_EVENT_EXTHDD_ON)
 					strcpy(LastEvent , "IARM_BUS_DISKMGR_EVENT_EXTHDD - ON");
@@ -1038,37 +1035,36 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
                 {
                         case IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE:
                         {
-                                DEBUG_PRINT(DEBUG_LOG,"\nSys Manager System State event received\n");
+                                DEBUG_PRINT(DEBUG_LOG,"Sys Manager System State event received\n");
                                 strcpy(LastEvent , "IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE");
 				break;
                         }
                         case IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_REQUEST:
                         {
-                                DEBUG_PRINT(DEBUG_LOG,"\nSys Manager XUPNP Data Request event received\n");
+                                DEBUG_PRINT(DEBUG_LOG,"Sys Manager XUPNP Data Request event received\n");
                                 strcpy(LastEvent , "IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_REQUEST");
 				break;
                         }
                         case IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_UPDATE:
                         {
-                                DEBUG_PRINT(DEBUG_LOG,"\nSys Manager XUPNP Data Update event received\n");
+                                DEBUG_PRINT(DEBUG_LOG,"Sys Manager XUPNP Data Update event received\n");
                                 strcpy(LastEvent , "IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_UPDATE");
 				break;
                         }
                         case IARM_BUS_SYSMGR_EVENT_CARD_FWDNLD:
                         {
-                                DEBUG_PRINT(DEBUG_LOG,"\nSys Manager Card FW Dwld event received\n");
+                                DEBUG_PRINT(DEBUG_LOG,"Sys Manager Card FW Dwld event received\n");
                                 strcpy(LastEvent , "IARM_BUS_SYSMGR_EVENT_CARD_FWDNLD");
 				break;
                         }
                         case IARM_BUS_SYSMGR_EVENT_HDCP_PROFILE_UPDATE:
                         {
-                                DEBUG_PRINT(DEBUG_LOG,"\nSys Manager HDCP Profile update event received\n");
+                                DEBUG_PRINT(DEBUG_LOG,"Sys Manager HDCP Profile update event received\n");
                                 strcpy(LastEvent , "IARM_BUS_SYSMGR_EVENT_HDCP_PROFILE_UPDATE");
 				break;
                         }
                 }
         }
-
 	/*The below code block is for handling thr test app scenario*/
 	else if (strcmp(owner, IARM_BUS_DUMMYMGR_NAME) == 0) {
 		DEBUG_PRINT(DEBUG_TRACE,"Inside DummyMgr event handler\n");
@@ -1119,17 +1115,17 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 			evtname='Z';
 			DEBUG_PRINT(DEBUG_LOG,"Received Event - Z : IARM_BUS_DUMMYMGR_EVENT_DUMMYZ \r\n"); // TWC Change-2
 
+                	/* Removing lock when event is received by stub*/
+                	pthread_mutex_lock(&lock);
+                	pthread_cond_signal(&cond);
+                	pthread_mutex_unlock(&lock);
+
 			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy0.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy0.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 			strcpy(LastEvent , "IARM_BUS_DUMMYMGR_EVENT_DUMMYZ");
 			fill_LastReceivedKey(__func__,LastEvent, EvtTime);
 			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving EVENT_DUMMYZ was %lf seconds\r\n",EvtTime);
 			break;
 		}
-
-                /* Removing lock when event is received by stub*/
-                pthread_mutex_lock(&lock);
-                pthread_cond_signal(&cond);
-                pthread_mutex_unlock(&lock);
 
 		if (g_iter < EVTDATA_MAX_SIZE)
 		{
@@ -1154,7 +1150,7 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 
 bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_RegisterEventHandler --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterEventHandler --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
@@ -1171,7 +1167,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, 
         DEBUG_PRINT(DEBUG_LOG,"Register Owner: %s Event Id: %d\n", ownerName, eventId);
 	if(prereqcheck(ownerName))
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_RegisterEventHandler from IARMBUSAgent_RegisterEventHandler \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEventHandler from IARMBUSAgent_RegisterEventHandler \n");
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
         	if (strcmp(eventhandler,"NULL")==0)
         	{
@@ -1187,7 +1183,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, 
 		response["result"]=getResult(retval,resultDetails);
 		response["details"]=resultDetails;
 		free(resultDetails);
-		DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_RegisterEventHandler --->Exit \n");
+		DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterEventHandler --->Exit \n");
 		return TEST_SUCCESS;
 	}
 	else
@@ -1195,7 +1191,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, 
 		response["result"]="FAILURE";
 		response["details"]="Pre-Requisite check Failed for the given Owner";
 		free(resultDetails);
-		DEBUG_PRINT(DEBUG_ERROR,"\nIARMBUSAgent_RegisterEventHandler -- Pre-Requisite check Failed for the given Owner \n");
+		DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_RegisterEventHandler -- Pre-Requisite check Failed for the given Owner \n");
 		return TEST_FAILURE;
 	}
 }
@@ -1210,7 +1206,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, 
 
 bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_UnRegisterEventHandler --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_UnRegisterEventHandler --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
@@ -1225,7 +1221,7 @@ bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req
 	DEBUG_PRINT(DEBUG_LOG,"UnRegister Owner: %s Event Id: %d\n", ownerName, eventId);
 	if(prereqcheck(ownerName))
         {
-		DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_UnRegisterEventHandler from IARMBUSAgent_UnRegisterEventHandler \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_UnRegisterEventHandler from IARMBUSAgent_UnRegisterEventHandler \n");
 		/*Calling IARMBUS API IARM_Bus_UnRegisterEventHandler */
 		retval=IARM_Bus_UnRegisterEventHandler(ownerName,(IARM_EventId_t)eventId);
 		/*Checking the return value of API*/
@@ -1233,7 +1229,7 @@ bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req
 		response["result"]=getResult(retval,resultDetails);
 		response["details"]=resultDetails;
 		free(resultDetails);
-		DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_UnRegisterEventHandler --->Exit \n");
+		DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_UnRegisterEventHandler --->Exit \n");
 		return TEST_SUCCESS;
 	}
 	else
@@ -1241,7 +1237,7 @@ bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req
         	response["result"]="FAILURE";
         	response["details"]="Pre-Requisite check Failed for the given Owner";
         	free(resultDetails);
-        	DEBUG_PRINT(DEBUG_ERROR,"\nIARMBUSAgent_UnRegisterEventHandler -- Pre-Requisite check Failed for the given Owner \n");
+        	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_UnRegisterEventHandler -- Pre-Requisite check Failed for the given Owner \n");
         	return TEST_FAILURE;
         }
 }
@@ -1257,13 +1253,13 @@ bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req
 
 bool IARMBUSAgent::IARMBUSAgent_GetContext(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_GetContext --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_GetContext --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_INVALID_STATE;
 	char *resultDetails;
 	void **context=NULL;
 	resultDetails=(char *)malloc(sizeof(char)*16);
 	memset(resultDetails , '\0', (sizeof(char)*16));
-	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_GetContext from IARMBUSAgent_GetContext \n");
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_GetContext from IARMBUSAgent_GetContext \n");
 	/*Calling IARMBUS API IARM_Bus_GetContext */
 	retval=IARM_Bus_GetContext(context);
 	/*Checking the return value of API*/
@@ -1271,7 +1267,7 @@ bool IARMBUSAgent::IARMBUSAgent_GetContext(IN const Json::Value& req, OUT Json::
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
 	free(resultDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_GetContext --->Exit \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_GetContext --->Exit \n");
 	return TEST_SUCCESS;
 }
 
@@ -1287,12 +1283,12 @@ bool IARMBUSAgent::IARMBUSAgent_GetContext(IN const Json::Value& req, OUT Json::
 
 bool IARMBUSAgent::IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_RegisterCall --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterCall --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
 	memset(resultDetails , '\0', (sizeof(char)*16));
-	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_RegisterCall from IARMBUSAgent_RegisterCall \n");
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterCall from IARMBUSAgent_RegisterCall \n");
 	if(&req["owner_name"]==NULL)
 	{
 		return TEST_FAILURE;
@@ -1300,7 +1296,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json
 	char *ownerName=(char*)req["owner_name"].asCString();
 
 	/*Calling IARMBUS API IARM_Bus_RegisterCall  */
-        DEBUG_PRINT(DEBUG_LOG,"\nIARM_Bus_RegisterCall for %s\n", ownerName);
+        DEBUG_PRINT(DEBUG_LOG,"IARM_Bus_RegisterCall for %s\n", ownerName);
 	retval=IARM_Bus_RegisterCall(ownerName,_ReleaseOwnership);
 
 	/*Checking the return value of API*/
@@ -1312,7 +1308,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json
 	/* TWC-change : RegisterCall API called */
 	REGISTERCALLSTATUS = 1;
 
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_RegisterCall --->Exit \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterCall --->Exit \n");
 	return TEST_SUCCESS;
 }
 
@@ -1328,12 +1324,12 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json
 bool IARMBUSAgent::IARMBUSAgent_RegisterEvent(IN const Json::Value& req, OUT Json::Value& response)
 {
 
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_RegisterEvent --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterEvent --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
 	memset(resultDetails , '\0', (sizeof(char)*16));
-	DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_RegisterEvent from IARMBUSAgent_RegisterEvent \n");
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEvent from IARMBUSAgent_RegisterEvent \n");
 	if(&req["max_event"]==NULL)
 	{
 		return TEST_FAILURE;
@@ -1346,7 +1342,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEvent(IN const Json::Value& req, OUT Jso
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
 	free(resultDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_RegisterEvent --->Exit \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterEvent --->Exit \n");
 	return TEST_SUCCESS;
 }
 
@@ -1366,7 +1362,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEvent(IN const Json::Value& req, OUT Jso
 
 bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_BroadcastEvent --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BroadcastEvent --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
@@ -1385,44 +1381,44 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
         	response["result"]="FAILURE";
         	response["details"]="Pre-Requisite check Failed for the given Owner";
         	free(resultDetails);
-        	DEBUG_PRINT(DEBUG_ERROR,"\nIARMBUSAgent_BroadcastEvent -- Pre-Requisite check Failed for the given Owner \n");
+        	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_BroadcastEvent -- Pre-Requisite check Failed for the given Owner \n");
         	return TEST_FAILURE;
         }
 
-	if(strcmp(ownerName,"IRMgr")==0)
+	if(strcmp(ownerName,IARM_BUS_IRMGR_NAME)==0)
 	{	
 		IARM_Bus_IRMgr_EventData_t eventData;
 		eventData.data.irkey.keyType = req["keyType"].asInt();
 		eventData.data.irkey.keyCode = req["keyCode"].asInt();
-		DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
 		/*Calling IARMBUS API IARM_Bus_BroadcastEvent  */
 		retval=IARM_Bus_BroadcastEvent(ownerName,(IARM_EventId_t)eventId,(void*)&eventData,sizeof(eventData));
 	}
-	else if(strcmp(ownerName,"PWRMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_PWRMGR_NAME)==0)
 	{
 		IARM_Bus_PWRMgr_EventData_t eventData;
 		eventData.data.state.newState = (IARM_Bus_PWRMgr_PowerState_t)req["newState"].asInt();
-		DEBUG_PRINT(DEBUG_LOG,"\ncalling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
 		/*Calling IARMBUS API IARM_Bus_BroadcastEvent  */
 		retval=IARM_Bus_BroadcastEvent(ownerName,(IARM_EventId_t)eventId,(void*)&eventData,sizeof(eventData));
 	}
-	else if(strcmp(ownerName,"Daemon")==0)
+	else if(strcmp(ownerName,IARM_BUS_DAEMON_NAME)==0)
 	{
 		IARM_Bus_EventData_t  eventData;
 		eventData.resrcType = (IARM_Bus_ResrcType_t)req["resource_type"].asInt();
-		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
 		/*Calling IARMBUS API IARM_Bus_BroadcastEvent  */
 		retval=IARM_Bus_BroadcastEvent(ownerName,(IARM_EventId_t)eventId,(void*)&eventData,sizeof(eventData));
 	}
-	else if(strcmp(ownerName,"DISKMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_DISKMGR_NAME)==0)
 	{
 		IARM_BUS_DISKMgr_EventData_t eventData;
 		eventData.eventType = (DISKMgr_HDDEvents_t)req["newState"].asInt();
-		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
 		/*Calling IARMBUS API IARM_Bus_BroadcastEvent  */
 		retval=IARM_Bus_BroadcastEvent(ownerName,(IARM_Bus_DISKMgr_EventId_t)eventId,(void*)&eventData,sizeof(eventData));
 	}
-	else if(strcmp(ownerName,"SYSMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_SYSMGR_NAME)==0)
 	{
 		IARM_Bus_SYSMgr_EventData_t eventData;
 		if (eventId == IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE)
@@ -1433,7 +1429,7 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
 			eventData.data.systemStates.error = req["error"].asInt();
 			strcpy(eventData.data.systemStates.payload , req["payload"].asCString());
 		}
-		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_BroadcastEvent from IARMBUSAgent_BroadcastEvent \n");
 		/*Calling IARMBUS API IARM_Bus_BroadcastEvent  */
 		retval=IARM_Bus_BroadcastEvent(ownerName,(IARM_Bus_SYSMgr_EventId_t)eventId,(void*)&eventData,sizeof(eventData));
 	}
@@ -1442,7 +1438,7 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
 	free(resultDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_BroadcastEvent --->Exit \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BroadcastEvent --->Exit \n");
 	return TEST_SUCCESS;
 }
 
@@ -1464,7 +1460,7 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
 bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Value& response)
 {
 
-	DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_BusCall --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusCall --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
 	char *resultDetails;
 	resultDetails=(char *)malloc(sizeof(char)*16);
@@ -1477,24 +1473,23 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 	char *ownerName=(char*)req["owner_name"].asCString();
 	char *methodName=(char*)req["method_name"].asCString();
 
-
 	DEBUG_PRINT(DEBUG_ERROR,"BusCall method: %s owner: %s\n", methodName, ownerName);
 	if(!prereqcheck(ownerName))
         {
         	response["result"]="FAILURE";
         	response["details"]="Pre-Requisite check Failed for the given Owner";
         	free(resultDetails);
-        	DEBUG_PRINT(DEBUG_ERROR,"\n IARMBUSAgent_BusCall -- Pre-Requisite check Failed for the given Owner \n");
+        	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_BusCall -- Pre-Requisite check Failed for the given Owner \n");
         	return TEST_FAILURE;
         }
 
-	if(strcmp(ownerName,"IRMgr")==0)
+	if(strcmp(ownerName,IARM_BUS_IRMGR_NAME)==0)
 	{	
 		char *RepeatInterval=(char*)malloc(sizeof(char)*5);
 		IARM_Bus_IRMgr_SetRepeatInterval_Param_t param_Set;
 		param_Set.timeout=(unsigned int)req["set_timeout"].asInt();
 		IARM_Bus_IRMgr_GetRepeatInterval_Param_t param_Get;
-		DEBUG_PRINT(DEBUG_LOG,"\n IR-calling IARM_Bus_Call from IARM_Bus_Call \n");
+		DEBUG_PRINT(DEBUG_LOG,"IR-calling IARM_Bus_Call from IARM_Bus_Call \n");
 		/*Calling IARMBUS API IARM_Bus_Call  */
 		if(strcmp(methodName,"GetRepeatInterval")==0)
 		{		
@@ -1503,7 +1498,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 			{
 				sprintf(RepeatInterval,"%d",param_Get.timeout);
 				response["details"]= RepeatInterval;
-				DEBUG_PRINT(DEBUG_LOG,"\nIR-Current RepeatInterval is :%s\n",RepeatInterval);
+				DEBUG_PRINT(DEBUG_LOG,"IR-Current RepeatInterval is :%s\n",RepeatInterval);
 			}
 		}
 		else
@@ -1525,13 +1520,13 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 		}
                 free(RepeatInterval);
 	}
-	else if(strcmp(ownerName,"PWRMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_PWRMGR_NAME)==0)
 	{
 		IARM_Bus_PWRMgr_GetPowerState_Param_t param_Get;
 		IARM_Bus_PWRMgr_SetPowerState_Param_t param_Set;
 		param_Set.newState = (IARM_Bus_PWRMgr_PowerState_t)req["newState"].asInt();
-		DEBUG_PRINT(DEBUG_LOG,"\n PWR-calling IARM_Bus_Call from IARM_Bus_Call \n");
-		DEBUG_PRINT(DEBUG_LOG,"\n PWR-New power state is :%d\n",param_Set.newState);
+		DEBUG_PRINT(DEBUG_LOG,"PWR-calling IARM_Bus_Call from IARM_Bus_Call \n");
+		DEBUG_PRINT(DEBUG_LOG,"PWR-New power state is :%d\n",param_Set.newState);
 		if(strcmp(methodName,"GetPowerState")==0)
 		{		
 			retval=IARM_Bus_Call(ownerName,methodName,(void*)&param_Get,sizeof(param_Get));
@@ -1546,7 +1541,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 				default:
 					response["details"]="Unknown State";			 			
 			}
-			DEBUG_PRINT(DEBUG_LOG,"\n PWR-Current power state is:%d-%s\n",param_Get.curState,response["details"].asCString());
+			DEBUG_PRINT(DEBUG_LOG,"PWR-Current power state is:%d-%s\n",param_Get.curState,response["details"].asCString());
 		}
 		else
 		{
@@ -1571,11 +1566,11 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 			response["details"]=resultDetails;
 		}
 	}
-	else if(strcmp(ownerName,"Daemon")==0)
+	else if(strcmp(ownerName,IARM_BUS_DAEMON_NAME)==0)
 	{
 		IARM_Bus_EventData_t  eventData;
 		eventData.resrcType = (IARM_Bus_ResrcType_t)req["resource_type"].asInt();
-		DEBUG_PRINT(DEBUG_LOG,"\n BUS-calling IARM_Bus_Call from IARM_Bus_Call \n");
+		DEBUG_PRINT(DEBUG_LOG,"BUS-calling IARM_Bus_Call from IARM_Bus_Call \n");
 		/*Calling IARMBUS API IARM_Bus_Call  */
 		retval=IARM_Bus_Call(ownerName,methodName,(void*)&eventData,sizeof(eventData));
 		/*Checking the return value of API*/
@@ -1583,13 +1578,13 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 		response["result"]=getResult(retval,resultDetails);
 		response["details"]=resultDetails;
 	}
-	else if(strcmp(ownerName,"MFRLib")==0)
+	else if(strcmp(ownerName,IARM_BUS_MFRLIB_NAME)==0)
 	{
 		if(strcmp(methodName,"mfrGetManufacturerData")==0)
 		{
 			char* mfrdetails=(char*)malloc(sizeof(char)*30);
 			memset(mfrdetails , '\0', (sizeof(char)*30));
-			DEBUG_PRINT(DEBUG_LOG,"\n MFR-calling IARM_Bus_Call from IARM_Bus_Call \n");
+			DEBUG_PRINT(DEBUG_LOG,"MFR-calling IARM_Bus_Call from IARM_Bus_Call \n");
 			/*Calling IARMBUS API IARM_Bus_Call  */
 			char *pTmpStr;
 			int len;
@@ -1600,7 +1595,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 			pTmpStr = (char *)malloc(len);
 			memset(pTmpStr,0,len);
 			memcpy(pTmpStr,param.buffer,param.bufLen);
-			DEBUG_PRINT(DEBUG_LOG,"\nValue:%s\n",pTmpStr);
+			DEBUG_PRINT(DEBUG_LOG,"Value:%s\n",pTmpStr);
 			strcpy(mfrdetails,pTmpStr);
 			free(pTmpStr);
 			/*Checking the return value of API*/
@@ -1631,7 +1626,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
                         response["details"]=resultDetails;
 		}	
 	}
-	else if(strcmp(ownerName,"SYSMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_SYSMGR_NAME)==0)
 	{
 		if(strcmp(methodName,"GetSystemStates")==0)
 		{
@@ -1799,7 +1794,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 			strcpy(dummydatadetails,"DummyAPI0:");
 			strcat(dummydatadetails,dummydata);
 			DEBUG_PRINT(DEBUG_LOG,"dummydatadetails:%s",dummydatadetails);
-			DEBUG_PRINT(DEBUG_ERROR,"\nret value of API-0:%x\n",param.iRet0);
+			DEBUG_PRINT(DEBUG_ERROR,"ret value of API-0:%x\n",param.iRet0);
 			response["result"]="SUCCESS";
 			response["details"]=dummydatadetails;
 		}
@@ -1813,7 +1808,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 			strcat(dummydatadetails,"DummyAPI1:");
 			DEBUG_PRINT(DEBUG_LOG,"dummydatadetails:%s",dummydatadetails);
 			strcat(dummydatadetails,dummydata);
-			DEBUG_PRINT(DEBUG_ERROR,"\nret value of API-1:%x\n",param.iRet1);
+			DEBUG_PRINT(DEBUG_ERROR,"ret value of API-1:%x\n",param.iRet1);
 			response["result"]="SUCCESS";
 			response["details"]=dummydatadetails;
 		}
@@ -1822,7 +1817,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
         }
 
 	free(resultDetails);
-	DEBUG_PRINT(DEBUG_TRACE,"\nIARMBUSAgent_BusCall --->Exit \n");
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusCall --->Exit \n");
 	return TEST_SUCCESS;
 }
 
@@ -1834,7 +1829,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
  ***************************************************************************/
 bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nInvokeSecondApplication --->Entry \n");
+	DEBUG_PRINT(DEBUG_TRACE,"InvokeSecondApplication --->Entry \n");
         if (&req["appname"]==NULL)
         {
                 return TEST_FAILURE;
@@ -1848,7 +1843,7 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
         sprintf(argv2,"%d",iterationcount);
 
 	std::string cmdStr;
-	cmdStr = g_tdkPath + "/" + appname +" " + argv1 + argv2;
+	cmdStr = g_tdkPath + "/" + appname + " " + argv1 + + " " + argv2;
 
 	syncCount = 0;
         memset(dummydata_x,'\0',DATA_LEN);
@@ -1864,7 +1859,7 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
 	if (strcmp (apptype, "background") == 0)
 	{
 		cmdStr = cmdStr + " &";
-		DEBUG_PRINT(DEBUG_TRACE, "Execute Second Application : %s\n", cmdStr.c_str());
+		DEBUG_PRINT(DEBUG_TRACE, "Executing Second Application : %s\n", cmdStr.c_str());
 		try
 		{
 			system((char *)cmdStr.c_str());
@@ -1879,7 +1874,7 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
 	}
 	else
 	{
-                DEBUG_PRINT(DEBUG_TRACE, "Execute Second Application : %s\n", cmdStr.c_str());
+                DEBUG_PRINT(DEBUG_TRACE, "Executing Second Application : %s\n", cmdStr.c_str());
 		try
 		{
 			system((char *)cmdStr.c_str());
@@ -1892,11 +1887,10 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
 			return TEST_FAILURE;
 		}
 	}
-	DEBUG_PRINT(DEBUG_TRACE,"\nInvokeSecondApplication --->Exit \n");
+	DEBUG_PRINT(DEBUG_TRACE,"InvokeSecondApplication --->Exit \n");
 	response["result"]="SUCCESS";
 	return TEST_SUCCESS;
 }
-
 
 /**************************************************************************
  * Function Name : SyncSecondApplication
@@ -1904,7 +1898,7 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
 ***************************************************************************/
 bool IARMBUSAgent::SyncSecondApplication(IN const Json::Value& req, OUT Json::Value& response)
 {
-        DEBUG_PRINT(DEBUG_TRACE,"\nSyncSecondApplication --->Entry \n");
+        DEBUG_PRINT(DEBUG_TRACE,"SyncSecondApplication --->Entry \n");
 	syncCount = syncCount+1;
 
 	/* Invoking handler to release lock */
@@ -1913,7 +1907,7 @@ bool IARMBUSAgent::SyncSecondApplication(IN const Json::Value& req, OUT Json::Va
 
 	const char* lockenabled =(char*)req["lockenabled"].asCString();
 
-        DEBUG_PRINT(DEBUG_TRACE,"\nlock: %s\n", lockenabled);
+        DEBUG_PRINT(DEBUG_TRACE,"lock: %s\n", lockenabled);
         if (strcmp (lockenabled, "true") == 0)
 	{
 		if((syncCount % 2) == 1)
@@ -1924,11 +1918,10 @@ bool IARMBUSAgent::SyncSecondApplication(IN const Json::Value& req, OUT Json::Va
 		}
 	}
 
-        DEBUG_PRINT(DEBUG_TRACE,"\nSyncSecondApplication --->Exit \n");
+        DEBUG_PRINT(DEBUG_TRACE,"SyncSecondApplication --->Exit \n");
         response["result"]="SUCCESS";
 	return TEST_SUCCESS;
 }
-
 
 
 /**************************************************************************
@@ -1941,7 +1934,7 @@ bool IARMBUSAgent::SyncSecondApplication(IN const Json::Value& req, OUT Json::Va
 
 void fill_LastReceivedKey_Perf(const char *EvtHandlerName, char *gLastEvent ,double keyTime, int keyCode = 0 ,int keyType = 0)
 {
-	DEBUG_PRINT(DEBUG_LOG,"\n fill_LastReceivedKey_Perf --->Entry \n");
+	DEBUG_PRINT(DEBUG_LOG,"fill_LastReceivedKey_Perf --->Entry \n");
 	LastKeyCode_Perf=keyCode;
 	LastKeyType_Perf=keyType;
 	LastKeyTime=keyTime;
@@ -1949,7 +1942,7 @@ void fill_LastReceivedKey_Perf(const char *EvtHandlerName, char *gLastEvent ,dou
 	DEBUG_PRINT(DEBUG_LOG, "LastEvent: %s LastKeyCode: 0x%x LastKeyType : 0x%x LastKeyTime: %lf seconds\r\n",gLastEvent, keyCode, keyType, keyTime);
 
 	if(gRegisteredEventCount > 1) {
-		DEBUG_PRINT(DEBUG_LOG, " \n Registered for more than one event : %d \n ", gRegisteredEventCount);
+		DEBUG_PRINT(DEBUG_LOG, "Registered for more than one event : %d \n ", gRegisteredEventCount);
 		char TempEventSummary[200] ;
 
 		if(strcmp(LastEvent , "IARM_BUS_IRMGR_EVENT_IRKEY") == 0)
@@ -1961,10 +1954,10 @@ void fill_LastReceivedKey_Perf(const char *EvtHandlerName, char *gLastEvent ,dou
 		gEventSummaryCount++;
 		DEBUG_PRINT(DEBUG_LOG, "gEventSummary: %s\n\n", gEventSummary);
 	}else {
-		DEBUG_PRINT(DEBUG_LOG, " \n Registered for only one event : %d \n ", gRegisteredEventCount);
+		DEBUG_PRINT(DEBUG_LOG, "Registered for only one event : %d \n ", gRegisteredEventCount);
 	}
 
-	DEBUG_PRINT(DEBUG_LOG,"\n fill_LastReceivedKey_Perf --->Exit \n");
+	DEBUG_PRINT(DEBUG_LOG,"fill_LastReceivedKey_Perf --->Exit \n");
 }
 
 
@@ -2004,7 +1997,7 @@ void _evtHandler_Perf(const char *owner, IARM_EventId_t eventId, void *data, siz
 			case IARM_BUS_PWRMGR_EVENT_MODECHANGED:
 				{
 					IARM_Bus_PWRMgr_EventData_tp *param = (IARM_Bus_PWRMgr_EventData_tp *)data;
-					DEBUG_PRINT(DEBUG_LOG,"\nEvent IARM_BUS_PWRMGR_EVENT_MODECHANGED: State Changed %d -- > %d\r\n",param->data.state.curState, param->data.state.newState);
+					DEBUG_PRINT(DEBUG_LOG,"Event IARM_BUS_PWRMGR_EVENT_MODECHANGED: State Changed %d -- > %d\r\n",param->data.state.curState, param->data.state.newState);
 					double keyTime = 0.0;
 					keyTime = ((double)(clock_at_recv_event.tv_sec - param->data.state.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - param->data.state.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 					DEBUG_PRINT(DEBUG_LOG, "Time taken for sending of PWRMgr was %lf seconds\r\n", keyTime);
@@ -2015,7 +2008,7 @@ void _evtHandler_Perf(const char *owner, IARM_EventId_t eventId, void *data, siz
 				break;
 			default:
 				{
-					DEBUG_PRINT(DEBUG_ERROR,"\nUnindentified event\n");
+					DEBUG_PRINT(DEBUG_ERROR,"Unindentified event\n");
 				}
 				break;
 		}
@@ -2031,25 +2024,25 @@ void _evtHandler_Perf(const char *owner, IARM_EventId_t eventId, void *data, siz
 					int keyType = irEventData->data.irkey.keyType;
 					double keyTime = 0.0;
 
-					printf("irEventData : %p", data);
+					DEBUG_PRINT(DEBUG_LOG,"irEventData : %p", data);
 
 					if ( ExpectedKeyCode == irEventData->data.irkey.keyCode && ExpectedKeyType == irEventData->data.irkey.keyType)
 					{
 
 						keyTime = ((double)(clock_at_recv_event.tv_sec - irEventData->data.irkey.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - irEventData->data.irkey.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 						DEBUG_PRINT(DEBUG_LOG, "Time taken for sending of IR key 0x%x type 0x%x was %lf seconds\r\n",keyCode, keyType, keyTime);
-						DEBUG_PRINT(DEBUG_LOG,"\nTest Bus Client Get IR Key (%x, %x) From IR Manager\r\n", keyCode, keyType);
+						DEBUG_PRINT(DEBUG_LOG,"Test Bus Client Get IR Key (%x, %x) From IR Manager\r\n", keyCode, keyType);
 						strcpy(LastEvent , "IARM_BUS_IRMGR_EVENT_IRKEY");
 						fill_LastReceivedKey_Perf(__func__,LastEvent,keyTime,keyCode,keyType);
 					} else {
-						DEBUG_PRINT(DEBUG_LOG,"\nRecevived Unexpected IR Key (%x, %x) From IR Manager\r\n", keyCode, keyType);
+						DEBUG_PRINT(DEBUG_LOG,"Recevived Unexpected IR Key (%x, %x) From IR Manager\r\n", keyCode, keyType);
 					}
 					
 				}
 				break;
 			default:
 				{
-					DEBUG_PRINT(DEBUG_ERROR,"\nUnindentified event\n");
+					DEBUG_PRINT(DEBUG_ERROR,"Unindentified event\n");
 				}
 				break;
 		}
@@ -2059,16 +2052,16 @@ void _evtHandler_Perf(const char *owner, IARM_EventId_t eventId, void *data, siz
 		switch (eventId) {
 			case IARM_BUS_EVENT_RESOURCEAVAILABLE:
 				{
-					DEBUG_PRINT(DEBUG_LOG,"\nResourceAvailable event received\n");
+					DEBUG_PRINT(DEBUG_LOG,"ResourceAvailable event received\n");
 					strcpy(LastEvent , "IARM_BUS_EVENT_RESOURCEAVAILABLE");
 				}
 				break;
 			case IARM_BUS_EVENT_RESOLUTIONCHANGE:
 				{
 					double keyTime = 0.0;
-					DEBUG_PRINT(DEBUG_LOG,"\nResolution Change event received\n");
+					DEBUG_PRINT(DEBUG_LOG,"Resolution Change event received\n");
 					IARM_Bus_ResolutionChange_EventData_tp *eventData_bus1 = (IARM_Bus_ResolutionChange_EventData_tp*)data ;
-					DEBUG_PRINT(DEBUG_LOG,"\nReceived Width & Height : %d, %d \n\n", eventData_bus1->width, eventData_bus1->height);
+					DEBUG_PRINT(DEBUG_LOG,"Received Width & Height : %d, %d \n\n", eventData_bus1->width, eventData_bus1->height);
 					keyTime = ((double)(clock_at_recv_event.tv_sec - eventData_bus1->clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData_bus1->clock_when_event_sent.tv_nsec)) / (double)BILLION;
 					DEBUG_PRINT(DEBUG_LOG, "Time taken for Receviving ResourceAvailable event : %lf seconds\r\n", keyTime);
 					strcpy(LastEvent , "IARM_BUS_EVENT_RESOLUTIONCHANGE");
@@ -2080,7 +2073,7 @@ void _evtHandler_Perf(const char *owner, IARM_EventId_t eventId, void *data, siz
 
 	}
 	else if (strcmp(owner, IARM_BUS_DUMMYMGR_NAME) == 0) {
-		DEBUG_PRINT(DEBUG_LOG,"\nInside DummyMgr event handler\n");
+		DEBUG_PRINT(DEBUG_LOG,"Inside DummyMgr event handler\n");
 
 		/* Handle events here */
 		IARM_Bus_DUMMYMGR_EventData_tp *eventData = (IARM_Bus_DUMMYMGR_EventData_tp *)data;
@@ -2137,39 +2130,39 @@ void _evtHandlerRept1(const char *owner, IARM_EventId_t eventId, void *data, siz
 	/* Get the request details*/
 	char *ownerName=(char*) owner;
 
-	DEBUG_PRINT(DEBUG_LOG,"*_evtHandler --> \n owner : %s, eventId : %d ", owner, eventId);
+	DEBUG_PRINT(DEBUG_LOG,"owner : %s, eventId : %d ", owner, eventId);
 
 	/* Register Corresponding Event Hander for the Event*/
-	if(strcmp(ownerName,"IRMgr")==0)
+	if(strcmp(ownerName,IARM_BUS_IRMGR_NAME)==0)
 	{	
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for for IR Key Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for for IR Key Events ... \n");
 		_IRevtHandler(owner, eventId, data, len);
 	}
-	else if(strcmp(ownerName,"PWRMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_PWRMGR_NAME)==0)
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for PWRMGR Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for PWRMGR Events ... \n");
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_PWRMGRevtHandler(owner, eventId, data, len);
 	}
-	else if(strcmp(ownerName,"Daemon")==0)
+	else if(strcmp(ownerName,IARM_BUS_DAEMON_NAME)==0)
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for IARMBUS DAEMON Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for IARMBUS DAEMON Events ... \n");
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_IBUSevtHandler(owner, eventId, data, len);
 	}
 	else if(strcmp(ownerName,"DummyTestMgr")==0)
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for DUMMY TEST MANAGER Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for DUMMY TEST MANAGER Events ... \n");
 		_DUMMYTestMgrevtHandler(owner, eventId, data, len);
 	}
 	else
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registering for All Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registering for All Events ... \n");
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_evtHandler_Perf(owner, eventId, data, len);
 	}
 
-	DEBUG_PRINT(DEBUG_LOG,"\nExiting %s function", __func__);
+	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
 
 }
 void _evtHandlerRept2(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
@@ -2179,40 +2172,39 @@ void _evtHandlerRept2(const char *owner, IARM_EventId_t eventId, void *data, siz
 	/* Get the request details*/
 	char *ownerName=(char*) owner;
 
-	DEBUG_PRINT(DEBUG_LOG,"*_evtHandler --> \n owner : %s, eventId : %d ", owner, eventId);
+	DEBUG_PRINT(DEBUG_LOG,"owner : %s, eventId : %d ", owner, eventId);
 
 	/* Register Corresponding Event Hander for the Event*/
-	if(strcmp(ownerName,"IRMgr")==0)
+	if(strcmp(ownerName,IARM_BUS_IRMGR_NAME)==0)
 	{	
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for for IR Key Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for for IR Key Events ... \n");
 		_IRevtHandler(owner, eventId, data, len);
 	}
-	else if(strcmp(ownerName,"PWRMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_PWRMGR_NAME)==0)
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for PWRMGR Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for PWRMGR Events ... \n");
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_PWRMGRevtHandler(owner, eventId, data, len);
 	}
-	else if(strcmp(ownerName,"Daemon")==0)
+	else if(strcmp(ownerName,IARM_BUS_DAEMON_NAME)==0)
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for IARMBUS DAEMON Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for IARMBUS DAEMON Events ... \n");
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_IBUSevtHandler(owner, eventId, data, len);
 	}
 	else if(strcmp(ownerName,"DummyTestMgr")==0)
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for DUMMY TEST MANAGER Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for DUMMY TEST MANAGER Events ... \n");
 		_DUMMYTestMgrevtHandler(owner, eventId, data, len);
 	}
 	else
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registering for All Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registering for All Events ... \n");
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_evtHandler_Perf(owner, eventId, data, len);
 	}
 
-	DEBUG_PRINT(DEBUG_LOG,"\nExiting %s function", __func__);
-
+	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
 }
 
 void _evtHandlerRept3(const char *owner, IARM_EventId_t eventId, void *data, size_t len)
@@ -2222,40 +2214,39 @@ void _evtHandlerRept3(const char *owner, IARM_EventId_t eventId, void *data, siz
 	/* Get the request details*/
 	char *ownerName=(char*) owner;
 
-	DEBUG_PRINT(DEBUG_LOG,"*_evtHandler --> \n owner : %s, eventId : %d ", owner, eventId);
+	DEBUG_PRINT(DEBUG_LOG,"owner : %s, eventId : %d ", owner, eventId);
 
 	/* Register Corresponding Event Hander for the Event*/
-	if(strcmp(ownerName,"IRMgr")==0)
+	if(strcmp(ownerName,IARM_BUS_IRMGR_NAME)==0)
 	{	
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for for IR Key Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for for IR Key Events ... \n");
 		_IRevtHandler(owner, eventId, data, len);
 	}
-	else if(strcmp(ownerName,"PWRMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_PWRMGR_NAME)==0)
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for PWRMGR Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for PWRMGR Events ... \n");
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_PWRMGRevtHandler(owner, eventId, data, len);
 	}
-	else if(strcmp(ownerName,"Daemon")==0)
+	else if(strcmp(ownerName,IARM_BUS_DAEMON_NAME)==0)
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for IARMBUS DAEMON Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for IARMBUS DAEMON Events ... \n");
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_IBUSevtHandler(owner, eventId, data, len);
 	}
 	else if(strcmp(ownerName,"DummyTestMgr")==0)
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registred for DUMMY TEST MANAGER Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registered for DUMMY TEST MANAGER Events ... \n");
 		_DUMMYTestMgrevtHandler(owner, eventId, data, len);
 	}
 	else
 	{
-		DEBUG_PRINT(DEBUG_LOG,"\n Registering for All Events ... \n");
+		DEBUG_PRINT(DEBUG_LOG,"Registering for All Events ... \n");
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_evtHandler_Perf(owner, eventId, data, len);
 	}
 
-	DEBUG_PRINT(DEBUG_LOG,"\nExiting %s function", __func__);
-
+	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
 }
 
 /*******************************************************************************************************
@@ -2264,7 +2255,7 @@ void _evtHandlerRept3(const char *owner, IARM_EventId_t eventId, void *data, siz
  *******************************************************************************************************/ 
 bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_LOG,"\nEntering %s function", __func__);
+	DEBUG_PRINT(DEBUG_LOG,"Entering %s function", __func__);
 
 	int retval = 0;
 	char details[512];
@@ -2280,20 +2271,20 @@ bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT 
 	int eventId=req["event_id"].asInt();
 	char *ownerName=(char*)req["owner_name"].asCString();
 
-	DEBUG_PRINT(DEBUG_LOG,"\nRequesting Resource...\n");
+	DEBUG_PRINT(DEBUG_LOG,"Requesting Resource...\n");
 	retval=IARM_BusDaemon_RequestOwnership(IARM_BUS_RESOURCE_FOCUS);
 
-	DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_RegisterEventHandler from RegisterEventHandler ... \n");
-	DEBUG_PRINT(DEBUG_LOG,"\n ownerName : %s,  eventId : %d \n", ownerName,(IARM_EventId_t)eventId );
+	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEventHandler from RegisterEventHandler ... \n");
+	DEBUG_PRINT(DEBUG_LOG,"ownerName : %s,  eventId : %d \n", ownerName,(IARM_EventId_t)eventId );
 
-	DEBUG_PRINT(DEBUG_LOG,"\n Registering for IR Key Events ... \n");
+	DEBUG_PRINT(DEBUG_LOG,"Registering for IR Key Events ... \n");
 	/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 	retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept1);
 
 	if(retval == 0) {
-		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_RegisterEventHandler ... - SUCCESS\n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEventHandler ... - SUCCESS\n");
 	} else {
-		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_RegisterEventHandler ... -FAILURE \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEventHandler ... -FAILURE \n");
 		/*Filling json response with SUCCESS status*/
 		strcpy(details, "IARM_Bus_RegisterEventHandler() FAILED");
 		response["result"]="FAILURE";
@@ -2307,9 +2298,9 @@ bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT 
 	retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept2);
 
 	if(retval == 0) {
-		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_RegisterEventHandler ... - SUCCESS\n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEventHandler ... - SUCCESS\n");
 	} else {
-		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_RegisterEventHandler ... -FAILURE \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEventHandler ... -FAILURE \n");
 		/*Filling json response with SUCCESS status*/
 		strcpy(details, "IARM_Bus_RegisterEventHandler() FAILED");
 		response["result"]="FAILURE";
@@ -2323,9 +2314,9 @@ bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT 
 	retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept3);
 
 	if(retval == 0) {
-		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_RegisterEventHandler ... - SUCCESS\n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEventHandler ... - SUCCESS\n");
 	} else {
-		DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_RegisterEventHandler ... -FAILURE \n");
+		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEventHandler ... -FAILURE \n");
 		/*Filling json response with SUCCESS status*/
 		strcpy(details, "IARM_Bus_RegisterEventHandler() FAILED");
 		response["result"]="FAILURE";
@@ -2333,7 +2324,7 @@ bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT 
 		return "FAILURE";
 	}
 
-	DEBUG_PRINT(DEBUG_LOG,"\nReleasing Resource...\n");
+	DEBUG_PRINT(DEBUG_LOG,"Releasing Resource...\n");
 	retval = IARM_BusDaemon_ReleaseOwnership(IARM_BUS_RESOURCE_FOCUS);
 
 	gRegisteredEventCount ++;
@@ -2342,7 +2333,7 @@ bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT 
 	sprintf(details, "%s Successfully Executed", __func__);
 	response["result"]="SUCCESS";
 	response["details"]=details;
-	DEBUG_PRINT(DEBUG_LOG,"\nExiting %s function", __func__);
+	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
         return true;
 }
 
@@ -2351,7 +2342,7 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
 {
 	char details[512];
 	memset(details, '\0', sizeof(512));
-	DEBUG_PRINT(DEBUG_LOG,"\nEntering %s function", __func__);
+	DEBUG_PRINT(DEBUG_LOG,"Entering %s function", __func__);
 
 	if(&req["event_id"]==NULL ||&req["owner_name"]==NULL ||&req["evttxappname"]==NULL)
 	{
@@ -2373,11 +2364,11 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
 	std::string path = getenv("TDK_PATH");
 	path.append("/");
 	path.append(appname);
-	DEBUG_PRINT(DEBUG_ERROR,"\nAppPath:%s, appname:%s\n",path.c_str(), appname);
+	DEBUG_PRINT(DEBUG_ERROR,"AppPath:%s, appname:%s\n",path.c_str(), appname);
 
 	if(idChild == 0)
 	{
-		if(strcmp(ownerName,"IRMgr")==0)
+		if(strcmp(ownerName,IARM_BUS_IRMGR_NAME)==0)
 		{	
 			DEBUG_PRINT(DEBUG_LOG,"Condition matched... Owner name as IRMgr\n");
 			//std::cout<<"\n KeyCode :"<< req.get("keyCode","").asString() <<" KeyType: \n"<<req.get("keyType","").asString();
@@ -2395,7 +2386,7 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
 			//std::cout<<"\n KeyCode : "<< keyCode <<" KeyType: \n"<<keyType;
 			ExpectedKeyCode = keyCode;
 			ExpectedKeyType = keyType;
-			DEBUG_PRINT(DEBUG_LOG,"\n ExpectedKeyCode : %d, ExpectedKeyType: %d \n", keyCode, keyType);
+			DEBUG_PRINT(DEBUG_LOG,"ExpectedKeyCode : %d, ExpectedKeyType: %d \n", keyCode, keyType);
          		std::string skeyCode;          // string which will contain the result
          		std::string skeyType;          // string which will contain the result
          		std::string seventId;          // string which will contain the result
@@ -2412,13 +2403,13 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
          		skeyType = convert2.str(); // set 'Result' to the contents of the stream
          		seventId = convert3.str(); // set 'Result' to the contents of the stream
  
-			DEBUG_PRINT(DEBUG_LOG,"\n ExpectedKeyCode : %d, ExpectedKeyType: %d \n", keyCode, keyType);
-			DEBUG_PRINT(DEBUG_LOG,"\n appName : %s, ownerName : %s,  eventId : %s, keyType: %s, keyCode: %s \n", appname,ownerName,seventId.c_str(),skeyType.c_str(),skeyCode.c_str());
- 			DEBUG_PRINT(DEBUG_LOG,"\n KeyCode : %d, KeyType: %d \n", keyCode, keyType);
+			DEBUG_PRINT(DEBUG_LOG,"ExpectedKeyCode : %d, ExpectedKeyType: %d \n", keyCode, keyType);
+			DEBUG_PRINT(DEBUG_LOG,"appName : %s, ownerName : %s,  eventId : %s, keyType: %s, keyCode: %s \n", appname,ownerName,seventId.c_str(),skeyType.c_str(),skeyCode.c_str());
+ 			DEBUG_PRINT(DEBUG_LOG,"KeyCode : %d, KeyType: %d \n", keyCode, keyType);
  			// Parameters to execl must be strings
  			execl(path.c_str(), appname, "-o", ownerName, "-i", seventId.c_str(),"-t", skeyType.c_str(), "-c", skeyCode.c_str(), (char *)NULL);
 		}
-		else if(strcmp(ownerName,"PWRMgr")==0)
+		else if(strcmp(ownerName,IARM_BUS_PWRMGR_NAME)==0)
 		{
 			int newState = (unsigned int) req["newState"].asInt();
         		std::string snewState;          // string which will contain the result
@@ -2426,10 +2417,10 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
          		convert << newState;      // insert the textual representation of 'Number' in the characters in the stream
          		snewState = convert.str(); // set 'Result' to the contents of the stream
 
-			DEBUG_PRINT(DEBUG_LOG,"\n newState : %d \n", newState);
+			DEBUG_PRINT(DEBUG_LOG,"newState : %d \n", newState);
 			execl(path.c_str(),appname, "-n", snewState.c_str(), (char*)NULL);
 		}
-		else if(strcmp(ownerName,"Daemon")==0)
+		else if(strcmp(ownerName,IARM_BUS_DAEMON_NAME)==0)
 		{
 			int resrcType = (unsigned int) req["resource_type"].asInt();
         		std::string sresrcType;          // string which will contain the result
@@ -2437,12 +2428,12 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
          		convert << resrcType;      // insert the textual representation of 'Number' in the characters in the stream
          		sresrcType = convert.str(); // set 'Result' to the contents of the stream
 
-			DEBUG_PRINT(DEBUG_LOG,"\n resource_type : %d \n", resrcType);
+			DEBUG_PRINT(DEBUG_LOG,"resource_type : %d \n", resrcType);
 			execl(path.c_str(),appname, "-o", ownerName, "-r", sresrcType.c_str(), (char*)NULL);
 		}
 		else if(strcmp(ownerName,"DummyTestMgr")==0)
 		{
-			DEBUG_PRINT(DEBUG_LOG,"\n DummyTestMgr Triggering events.. \n");
+			DEBUG_PRINT(DEBUG_LOG,"DummyTestMgr Triggering events.. \n");
          		std::string seventId;          // string which will contain the result
          		std::ostringstream convert3;   // stream used for the conversion
          		convert3 << eventId;      // insert the textual representation of 'Number' in the characters in the stream
@@ -2462,7 +2453,7 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
 	sprintf(details, "%s Successfully Executed", __func__);
 	response["details"]=details;
 	response["result"]="SUCCESS";
-	DEBUG_PRINT(DEBUG_LOG,"\nExiting %s function", __func__);
+	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
 	return true;	
 
 }
@@ -2589,58 +2580,62 @@ bool IARMBUSAgent::GetLastReceivedEventPerformanceDetails(IN const Json::Value& 
 
 bool IARMBUSAgent::IARMBUSAgent_RemoveEventHandler(IN const Json::Value& req, OUT Json::Value& response)
 {
-        DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_RemoveEventHandler --->Entry \n");
+        DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RemoveEventHandler --->Entry \n");
         IARM_Result_t retval=IARM_RESULT_SUCCESS;
         char *resultDetails;
         resultDetails=(char *)malloc(sizeof(char)*16);
         memset(resultDetails , '\0', (sizeof(char)*16));
         if(&req["event_id"]==NULL || &req["owner_name"]==NULL || &req["evt_handler"]==NULL)
         {
-		DEBUG_PRINT(DEBUG_ERROR,"\n NULL param passed \n");
+		DEBUG_PRINT(DEBUG_ERROR,"NULL param passed \n");
                 return TEST_FAILURE;
         }
+
         int eventId=req["event_id"].asInt();
         char *ownerName=(char*)req["owner_name"].asCString();
         char *eventhandler=(char*)req["evt_handler"].asCString();
+
+	DEBUG_PRINT(DEBUG_LOG,"Owner: %s EventId: %d eventhandler: %s\n", ownerName, eventId, eventhandler);
+
         if(prereqcheck(ownerName))
         {
-        DEBUG_PRINT(DEBUG_LOG,"\n calling IARM_Bus_RemoveEventHandler from IARMBUSAgent_RemoveEventHandler \n");
-        /*Calling IARMBUS API IARM_Bus_RemoveEventHandler */
-	if (strcmp(eventhandler,"NULL")==0)
-	{
-        	retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, NULL);
-	}
-	else if (strcmp(eventhandler,"evtHandler")==0)
-	{
-	        retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandler);
-	}
-	else if (strcmp(eventhandler,"evtHandler1")==0)
-	{
-	        retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept1);
-	}
-	else if (strcmp(eventhandler,"evtHandler2")==0)
-	{
-	        retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept2);
-	}
-	else if (strcmp(eventhandler,"evtHandler3")==0)
-	{
-	        retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept3);
-	}
-        /*Checking the return value of API*/
-        /*Filling json response with SUCCESS status*/
-        response["result"]=getResult(retval,resultDetails);
-        response["details"]=resultDetails;
-        free(resultDetails);
-        DEBUG_PRINT(DEBUG_TRACE,"\n IARMBUSAgent_RemoveEventHandler --->Exit \n");
-        return TEST_SUCCESS;
+        	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RemoveEventHandler from IARMBUSAgent_RemoveEventHandler \n");
+        	/*Calling IARMBUS API IARM_Bus_RemoveEventHandler */
+		if (strcmp(eventhandler,"NULL")==0)
+		{
+        		retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, NULL);
+		}
+		else if (strcmp(eventhandler,"evtHandler")==0)
+		{
+	        	retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandler);
+		}
+		else if (strcmp(eventhandler,"evtHandler1")==0)
+		{
+	        	retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept1);
+		}
+		else if (strcmp(eventhandler,"evtHandler2")==0)
+		{
+	        	retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept2);
+		}
+		else if (strcmp(eventhandler,"evtHandler3")==0)
+		{
+	        	retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept3);
+		}
+        	/*Checking the return value of API*/
+        	/*Filling json response with SUCCESS status*/
+        	response["result"]=getResult(retval,resultDetails);
+        	response["details"]=resultDetails;
+        	free(resultDetails);
+        	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RemoveEventHandler --->Exit \n");
+        	return TEST_SUCCESS;
         }
         else
         {
-        response["result"]="FAILURE";
-        response["details"]="Pre-Requisite check Failed for the given Owner";
-        free(resultDetails);
-        DEBUG_PRINT(DEBUG_ERROR,"\n IARMBUSAgent_RemoveEventHandler -- Pre-Requisite check Failed for the given Owner \n");
-        return TEST_FAILURE;
+        	response["result"]="FAILURE";
+        	response["details"]="Pre-Requisite check Failed for the given Owner";
+        	free(resultDetails);
+        	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_RemoveEventHandler -- Pre-Requisite check Failed for the given Owner \n");
+        	return TEST_FAILURE;
         }
 }
 

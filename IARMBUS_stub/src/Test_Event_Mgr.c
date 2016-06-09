@@ -32,7 +32,7 @@ static bool stopped = false;
                 gettimeofday(&tv, NULL); \
                 curtime=tv.tv_sec;\
                 strftime(buffer,30,"%m-%d-%Y %T.",localtime(&curtime));\
-                fprintf(stdout,"\n%s%ld [Test_Event_Mgr %s():%d] ", buffer,tv.tv_usec, __FUNCTION__,__LINE__);\
+                fprintf(stdout,"\n%s%ld [%s %s():%d] ", buffer, tv.tv_usec, IARM_BUS_DUMMYMGR_NAME, __FUNCTION__, __LINE__);\
                 fprintf(stdout,pui8Debugmsg);\
                 fflush(stdout);\
       }while(0)
@@ -135,5 +135,5 @@ int main(int argc, char **argv)
 	IARM_Bus_Disconnect();
 	IARM_Bus_Term();
 
-	DEBUG_PRINT("\nExiting Dummy Manager\n");
+	DEBUG_PRINT("Exiting Dummy Manager\n");
 }
