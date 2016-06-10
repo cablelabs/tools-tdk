@@ -152,10 +152,10 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     if "INCOMPLETE" in statusValue.upper():
                         tdkTestObj.setResultStatus("SUCCESS");
-                        print "Recording with status INCOMPLETE";
+                        print "Recording status set to INCOMPLETE";
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "Recording status STARTEDINCOMPLETE not set successfully";
+                        print "Recording status NOT set to INCOMPLETE successfully";
                 else:
                      tdkTestObj.setResultStatus("FAILURE");
                      print "Failed to retrieve the recording list from recorder";
