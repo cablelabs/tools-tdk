@@ -58,7 +58,7 @@ LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
 LIBS += -lservicemanager -ludev -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata -ldshalcli -lds
 
 contains(DEFINES,HAS_API_HDMI_CEC) {
-HEADERS += servicemanager/include/services/hdmicecservice.h \
+HEADERS += servicemanager/include/services/hdmicecservice.h
 SOURCES += servicemanager/src/services/hdmicecservice.cpp
 LIBS += -lRCEC -lRCECOSHal -lRCECIARMBusHal
 }

@@ -24,7 +24,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>To add a log message when MPEOS debug support is disabled.
+  <synopsis>To check that no message is logged when MPEOS debug support is disabled.
 Test Case ID: CT_RDKLogger_37
 Test Type: Negative</synopsis>
   <!--  -->
@@ -36,7 +36,7 @@ Test Type: Negative</synopsis>
   <!-- execution_time is the time out time for test execution -->
   <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -102,10 +102,13 @@ if "SUCCESS" in result.upper():
     #Set the result status of execution
     if "SUCCESS" in result.upper():
         tdkTestObj.setResultStatus("SUCCESS");
-        print "Logging failed with MPEOS Disabled";
+        print "Logging failed with MPEOS Disabled as expected";
     else:
         tdkTestObj.setResultStatus("FAILURE");
         print "Logging successful with MPEOS Disabled: [%s]"%details;
+
+    #Reset the logging to default
+    obj.initiateReboot();
 
     #unloading rdklogger module
     obj.unloadModule("rdklogger");

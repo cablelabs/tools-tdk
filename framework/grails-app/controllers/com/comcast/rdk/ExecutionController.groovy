@@ -1887,29 +1887,31 @@ class ExecutionController {
 	 * @return
 	 */
 	def getDetailedTestResult(final String execResId){
-
 		JsonObject resultNode = new JsonObject()
 		if(execResId){
 			ExecutionResult executionResult = ExecutionResult.findById(execResId)
 			JsonArray jsonArray = new JsonArray()
 			JsonObject functionNode = new JsonObject()
-			
+
 			resultNode.addProperty("ExecutionName",executionResult?.execution?.name.toString())
 			resultNode.addProperty("Device",executionResult?.device.toString())
 			resultNode.addProperty("Script",executionResult?.script.toString())
 			resultNode.addProperty("Status",executionResult?.status.toString())
 			executionResult?.executemethodresults.each{ execMethdRslt ->
 				functionNode = new JsonObject()
-				functionNode.addProperty("FunctionName", execMethdRslt?.functionName.toString()) 
+				functionNode.addProperty("FunctionName", execMethdRslt?.functionName.toString())
 				functionNode.addProperty("ExpectedResult", execMethdRslt?.expectedResult.toString())
 				functionNode.addProperty("ActualResult", execMethdRslt?.actualResult.toString())
 				functionNode.addProperty("Status", execMethdRslt?.status.toString())
 				jsonArray.add(functionNode)
-			}	
+			}
 			resultNode.add("Functions",jsonArray)
-			resultNode.addProperty("LogData",executionResult?.executionOutput.toString())			
-		}	
+			resultNode.addProperty("LogData",executionResult?.executionOutput.toString())
+			//agent console link added
+			def executionInstance = Execution.findById(executionResult?.execution?.id)			resultNode.addProperty("agentConsoleLogURL",executionInstance?.applicationUrl+"/execution/getAgentConsoleLog?execResId="+executionResult?.id)
+		}
 		render resultNode
+	
 	}
 	
 	def getAgentConsoleLog(final String execResId){
@@ -2804,5 +2806,114 @@ class ExecutionController {
 		}
 		render value	
 	}
-
+	/**
+	 * REST API :- for fetching execution id with execution name , include the following  
+	 * - Execution Name 
+	 * - Execution Id 
+	 * - If Status  failed  display message  like "no executions found with name " 
+	 * 
+	 */
+	def getExecutionId(final String executionName){
+		JsonObject executionObj = new JsonObject()
+			if(executionName)	{
+				def executionInstance = Execution?.findByName(executionName)	
+				if(executionInstance){			
+					executionObj?.addProperty("ExecutionName ",executionInstance?.name)
+					executionObj.addProperty("ExecutionId",executionInstance?.id)
+				}else{ 				
+					executionObj?.addProperty("Status","FAILURE")
+					executionObj.addProperty("Remarks ", "no executions found with name "+ executionName)
+				}
+			}
+		render executionObj		
+	}
+	
+	/**
+	 * REST API :- fetching image name using execution name . It will include the following
+	 * - Execution Name
+	 * - Execution Device 
+	 * - Image Name  
+	 */
+	def getImageName(final String executionName){
+		JsonObject executionObj = new JsonObject()
+		if(executionName){
+			def executionInstance = Execution?.findByName(executionName)
+			if(executionInstance){
+				executionObj?.addProperty("ExecutionName ",executionInstance?.name)
+				executionObj.addProperty("DeviceName",executionInstance?.device)				
+				def device =  ExecutionDevice?.findByExecution(executionInstance)
+				def versionFilePath = "${realPath}//logs//version//${executionInstance?.id}//${device.id.toString()}"
+				String fileName  = versionFilePath+"//"+device?.id+"_version.txt"
+				def file = new File( fileName)				
+				if(file?.isFile()){
+					def  lines = file?.readLines()
+					def imageNameDetails 
+					if(lines?.size() > 0){
+						lines?.each{
+							if(it?.toString()?.contains("imagename")){
+								imageNameDetails = it?.toString()
+							}	
+						}					 
+					def imageName = imageNameDetails?.split(":")
+					if(imageName.size() > 1 && imageName[0]?.toString()?.equals("imagename")){
+						executionObj?.addProperty("ImageName",imageName[1])
+					}else{
+						executionObj?.addProperty("ImageName","Image name not available")
+					}
+					}
+				}else{
+					executionObj?.addProperty("ImageName","Image name not available")
+				}
+			}else{
+				executionObj?.addProperty("Status","FAILURE")
+				executionObj.addProperty("Remarks ", "no executions found with name "+ executionName)
+			}
+		}
+		render executionObj
+	}
+	
+	/**
+	 * REST API :- For fetching all execution names greater than the perticular date of execution
+	 * - Return execution name 
+	 * - date of execution
+	 * - Execution Status  
+	 * - Failure status 
+	 * - All  execution list  
+	 * @param dateOfExecution
+	 * @return
+	 */
+	def getExecutionList(final String dateOfExecution){
+		JsonArray totalExecutionList = new JsonArray()
+		if(dateOfExecution){
+		try{
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:SS.s");
+			Date dateObj = new Date().parse("yyyy-MM-dd hh:mm:SS.s", dateOfExecution)
+			def executionList = Execution.withCriteria{
+				ge("dateOfExecution", dateObj)
+			}			
+			executionList.each{execution->
+				JsonObject executionObj = new JsonObject()
+				executionObj.addProperty("ExecutionName",execution?.name?.toString())
+				executionObj.addProperty("DateOfExecution",execution?.dateOfExecution?.toString())
+				executionObj.addProperty("ExecutionStatus",execution?.executionStatus)
+				totalExecutionList.add(executionObj)
+			}
+		}catch(Exception e){
+			JsonObject errorObj =  new JsonObject()
+			errorObj.addProperty("Status","FAILURE")
+			errorObj.addProperty("Remarks "," Invalid date format ")
+			totalExecutionList.add(errorObj)
+		}
+		}else{
+			def executionList = Execution.findAll()
+			executionList.each{  execution ->
+				JsonObject executionObj = new JsonObject()
+				executionObj.addProperty("ExecutionName",execution?.name?.toString())
+				executionObj.addProperty("DateOfExecution",execution?.dateOfExecution?.toString())
+				executionObj.addProperty("ExecutionStatus",execution?.executionStatus)
+				totalExecutionList.add(executionObj)
+			}
+		}
+		render totalExecutionList
+	}	
 }

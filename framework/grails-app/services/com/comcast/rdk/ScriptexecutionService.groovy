@@ -1262,7 +1262,13 @@ class ScriptexecutionService {
 				else{
 					execStatus = "IN-PROGRESS"
 				}
-								
+				if(executionInstance?.scriptGroup){
+					executionNode.addProperty("ScriptGroup",executionInstance?.scriptGroup)
+				}else if(executionInstance?.script?.toString()?.equals(MULTIPLESCRIPT)){
+					executionNode.addProperty("ScriptName",MULTIPLESCRIPT)
+				}else{
+					executionNode.addProperty("ScriptName",executionInstance?.script)
+				}							
 				executionNode.addProperty("ExecutionStatus",execStatus.toString())
 				executionNode.add("DEVICES", jsonArray)
 		}
