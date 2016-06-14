@@ -1328,7 +1328,7 @@ class ExecutionService {
 	 * @return
 	 */
 	public boolean saveExecutionDetailsOnMultipleScripts(final String execName, String scriptName, String deviceName,
-		String scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,String isLogReqd, final int scriptCount){
+		String scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,String isLogReqd, final int scriptCount, String rerunOnFailure){
 		   def executionSaveStatus = true
 		   try {
 			   Execution execution = new Execution()
@@ -1345,6 +1345,7 @@ class ExecutionService {
 			   execution.isBenchMarkEnabled = isBenchMark?.equals("true")
 			   execution.isStbLogRequired = isLogReqd?.equals("true")
 			   execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
+			   execution?.rerunOnFailure = rerunOnFailure?.equals("true") 
 			   execution.scriptCount = scriptCount
 			   if(! execution.save(flush:true)) {
 				   log.error "Error saving Execution instance : ${execution.errors}"
@@ -1373,7 +1374,7 @@ class ExecutionService {
 	 * @return
 	 */
 	public boolean saveExecutionDetails(final String execName, String scriptName, String deviceName,
-	 ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,String isLogReqd){
+	 ScriptGroup scriptGroupInstance , String appUrl,String isBenchMark , String isSystemDiagnostics,String rerun,String isLogReqd,String rerunOnFailure){
 		def executionSaveStatus = true
 		int scriptCnt = 0
 		try {
@@ -1382,9 +1383,7 @@ class ExecutionService {
 				if(scriptGroupInstance1?.scriptList?.size() > 0){
 					scriptCnt = scriptGroupInstance1?.scriptList?.size()
 				}
-			}
-		
-		
+			}		
 			Execution execution = new Execution()
 			execution.name = execName
 			execution.script = scriptName
@@ -1399,6 +1398,7 @@ class ExecutionService {
 			execution.isBenchMarkEnabled = isBenchMark?.equals("true")
 			execution.isStbLogRequired = isLogReqd?.equals("true")
 			execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
+			execution?.rerunOnFailure = rerunOnFailure?.equals("true")			
 			execution.scriptCount = scriptCnt
 			if(! execution.save(flush:true)) {				
 				log.error "Error saving Execution instance : ${execution.errors}"
@@ -1862,72 +1862,109 @@ class ExecutionService {
 	}
 	
 	def handleInprogressExecutionOnStartup(){
-		try {
-			String device
-			String exName
-			int scriptGrpSize = 0
-			def scriptGroupInstance
-			def scriptGrp
-			def execInstance
-			def deviceInstanceObj
-			def executionStatus = Execution.findAllByExecutionStatus(INPROGRESS_STATUS)
-			Date now = new Date()
-			executionStatus.each { execution ->
-				List validScriptsList = new ArrayList()
-				if (isOlderExecutionValid(now, execution?.dateOfExecution)){
-					exName = execution?.name
-					device =execution?.device?.toString()
-					def deviceInstance = Device?.findByStbName(device)
-					scriptGrp =execution?.scriptGroup
-					if( scriptGrp != null){
-						def scriptGrpName= ScriptGroup.findByName(scriptGrp)
-						def scriptGrpScriptList = scriptGrpName?.scriptList
+		try {	
+		String device
+		String exName
+		int scriptGrpSize = 0
+		def scriptGroupInstance
+		def scriptGrp
+		def execInstance
+		def deviceInstanceObj
+		def executionStatus = Execution.findAllByExecutionStatus(INPROGRESS_STATUS)
+		Date now = new Date()
+		executionStatus.each { execution ->
+			List validScriptsList = new ArrayList()
+			if (isOlderExecutionValid(now, execution?.dateOfExecution)){
+				exName = execution?.name
+				device =execution?.device?.toString()
+				def deviceInstance = Device?.findByStbName(device)
+				scriptGrp =execution?.scriptGroup
+				if( scriptGrp != null){
+					def scriptGrpName= ScriptGroup.findByName(scriptGrp)
+					def scriptGrpScriptList = scriptGrpName?.scriptList
+					execInstance = Execution.findByName(exName)
+					deviceInstanceObj = Device.findById(deviceInstance?.id)
+					def excutionDev=ExecutionDevice.findByExecution(execution)
+					def execResult =ExecutionResult.findAllByExecution(execution)
+					def executionResultList
+					def notExecutedScripts = []
+					def actualExecutedScript = []
+					if(execInstance?.rerunOnFailure?.toString()?.equals("true")){
+						ExecutionResult.withTransaction {
+							executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(execInstance,excutionDev,SUCCESS_STATUS)
+						}
+						executionResultList.each{ executionResultInstance ->
+							if(executionResultInstance?.status.equals("FAILURE")){
+								notExecutedScripts.add(executionResultInstance?.script)
+							}
+						}
+						int execCount
+						def exNameSplitList =  exName?.tokenize("_RERUN_")
+						def previousExecName
+						execCount = Integer?.parseInt(exNameSplitList[1])
+						if(execCount?.toString()?.equals("1")){
+							previousExecName = exNameSplitList[0]?.toString()	
+						} else {
+							execCount= execCount - 1
+							previousExecName  = exNameSplitList[0]+"_RERUN_"+execCount?.toString()
+						}
+						def  executionInstance =  Execution?.findByName(previousExecName?.toString())
+						def exResultList = ExecutionResult?.findAllByExecutionAndStatusNotEqual(executionInstance,SUCCESS_STATUS)								
+						exResultList?.each{obj->
+							if(obj?.status.equals("FAILURE")){
+								if(!(notExecutedScripts?.toString()?.contains(obj?.script))){
+									validScriptsList.add(obj?.script)
+								}
+							}
+						}
+						println " Valid script list "+  	validScriptsList
+					}else {
 						scriptGrpScriptList?.scriptName.each{scriptName-> validScriptsList << scriptName }
-						execInstance = Execution.findByName(exName)
-						deviceInstanceObj = Device.findById(deviceInstance?.id)
-						def excutionDev=ExecutionDevice.findByExecution(execution)
-						def execResult =ExecutionResult.findAllByExecution(execution)
 						execResult?.script?.each{ result ->
 							if(validScriptsList?.contains(result)){
 								validScriptsList.remove(result)
 							}
 						}
-						validScriptsList?.each{ script ->
-							ExecutionResult?.withTransaction { resultstatus ->
-								try {
-									def executionResult = new ExecutionResult()
-									executionResult.execution = execInstance
-									executionResult.executionDevice = excutionDev
-									executionResult.script = script
-									executionResult.device = deviceInstance
-									executionResult.execDevice = null
-									executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
-									executionResult.status = "PENDING"
-									executionResult.dateOfExecution = new Date()
-									if(!executionResult.save(flush:true)) {
-										println "error"+executionResult?.errors
-									}
-									resultstatus.flush()
+					}
+					validScriptsList?.each{ script ->
+						ExecutionResult?.withTransaction { resultstatus ->
+							try {
+								def executionResult = new ExecutionResult()
+								executionResult.execution = execInstance
+								executionResult.executionDevice = excutionDev
+								executionResult.script = script
+								executionResult.device = deviceInstance
+								executionResult.execDevice = null
+								executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
+								executionResult.status = "PENDING"
+								executionResult.dateOfExecution = new Date()
+								if(!executionResult.save(flush:true)) {
+									println "error"+executionResult?.errors
 								}
-								catch(Throwable th) {
-									resultstatus.setRollbackOnly()
-								}
-								catch(Exception e){
-									println e.getMessage()
-								}
+								resultstatus.flush()
+							}
+							catch(Throwable th) {
+								resultstatus.setRollbackOnly()
+							}
+							catch(Exception e){
+								println e.getMessage()
 							}
 						}
-						if(scriptGrp ){
-							savePausedExecutionStatus(execution?.id)
-							saveExecutionDeviceStatusData("PAUSED", excutionDev?.id)
-						}
-					}else{
-						saveExecutionStatus(true, execution?.id)
+					}
+					if(scriptGrp ){
+						savePausedExecutionStatus(execution?.id)
+						saveExecutionDeviceStatusData("PAUSED", excutionDev?.id)
 					}
 				}else{
 					saveExecutionStatus(true, execution?.id)
 				}
+			}else{
+				saveExecutionStatus(true, execution?.id)
 			}
+		}
+	
+			
+		
 		} catch (Exception e) {
 			e.printStackTrace()
 		}

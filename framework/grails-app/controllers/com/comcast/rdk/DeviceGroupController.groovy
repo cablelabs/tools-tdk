@@ -1440,7 +1440,7 @@ class DeviceGroupController {
 				params.extension = "xml"
 				response.setHeader("Content-Type", "application/octet-stream;")
 				response.setHeader("Content-Disposition", "attachment; filename=\""+ deviceInstance?.toString()+".xml\"")
-				response.setHeader("Content-Length", ""+deviceData.length())
+				response.setHeader("Content-Length", ""+String.valueOf(deviceData.length())) // issue fix - for partial device details download 
 				response.outputStream << deviceData.getBytes()
 			}else{
 				flash.message = "Download failed due to device information not available."
@@ -1450,7 +1450,8 @@ class DeviceGroupController {
 			flash.message ="Device does not exist"
 			redirect(action:"list")
 		}
-	}	
+	}
+		
 	/**
 	 * Function is used to upload xml file, extract the content and create new device
 	 * @return
@@ -1472,109 +1473,113 @@ class DeviceGroupController {
 						xmlContent += xmlData +"\n"
 					}
 					if(fileContent && fileContent.size() > 0){
-						XmlParser parser = new XmlParser();
-						node = parser.parseText(xmlContent)
-						List<String> streams= new ArrayList<String>()
-						List<String> ocapId= new ArrayList<String>()
-						def deviceName =  node?.device?.stb_name?.text()?.trim()
-						def  deviceIp =node?.device?.stb_ip?.text()?.trim()
-						String boxType = node?.device?.box_type?.text()?.trim()
-						def recorderId = node?.device?.recorder_id?.text()?.trim()
-						def socVendor = node?.device?.soc_vendour?.text()?.trim()
-						def boxManufacture = node?.device.box_manufacture?.text()?.trim()
-						def gateway = node?.device?.gateway_name?.text()?.trim()
-						def boxTypeObj = BoxType.findByName(boxType)
-						def boxManufactureObj = BoxManufacturer.findByName(boxManufacture)
-						def socVendorObj = SoCVendor.findByName(socVendor)						
-						node?.device?.streams?.stream?.each{
-							streams.add(it?.@id)
-							ocapId.add(it?.text()?.trim())
-						}
-						if(!boxType){
-							flash.message ="BoxType should not be empty "
-						}else if(!boxTypeObj){
-							flash.message= " No valid boxtype available with name"
-						}else if(Device.findByStbName(deviceName)){
-							flash.message= " Device name is already exists "
-						}else if(!deviceName){
-							flash.message= "Device should not be empty "
-						}else if(!deviceIp){
-							flash.message="Device IP should not be empty"
-						}else if(deviceIp && Device.findByStbIp(deviceIp)){
-							flash.message="Device IP already exist"
-						}else if(!socVendor){
-							flash.message="SOC Vendour should not be empty "
-						}else if(socVendor && !SoCVendor.findByName(socVendor)){
-							flash.message= " No valid soc vendour available with name"
-						}else if(!boxManufacture){
-							flash.message= "Box manufacture should not be empty "
-						}else if(boxManufacture && !BoxManufacturer.findByName(boxManufacture)){
-							flash.message=" No valid box manufacture available with name"
-						}else{
-							BoxType boxTypeInastnce = BoxType.findByName(boxType)
-							boolean valid = true
-							if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
-							|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
-
-								if(recorderId?.trim()?.length() ==  0){
-									valid = false
-									flash.message ="Recorder id should not blank "
-								}else if(streams){
-									if(validateOcapIds(streams,ocapId)){
-										if(checkDuplicateOcapId(ocapId)){
-											valid = false
-											flash.message=" Duplicate Ocap id"
-										}
-									}else{
-										valid = false
-										flash.message= " Stream information is not is not correct "
-									}
-								}
+						try{
+							XmlParser parser = new XmlParser();
+							node = parser.parseText(xmlContent)
+							List<String> streams= new ArrayList<String>()
+							List<String> ocapId= new ArrayList<String>()
+							def deviceName =  node?.device?.stb_name?.text()?.trim()
+							def  deviceIp =node?.device?.stb_ip?.text()?.trim()
+							String boxType = node?.device?.box_type?.text()?.trim()
+							def recorderId = node?.device?.recorder_id?.text()?.trim()
+							def socVendor = node?.device?.soc_vendour?.text()?.trim()
+							def boxManufacture = node?.device?.box_manufacture?.text()?.trim()
+							def gateway = node?.device?.gateway_name?.text()?.trim()
+							def boxTypeObj = BoxType.findByName(boxType)
+							def boxManufactureObj = BoxManufacturer.findByName(boxManufacture)
+							def socVendorObj = SoCVendor.findByName(socVendor)
+							node?.device?.streams?.stream?.each{
+								streams.add(it?.@id)
+								ocapId.add(it?.text()?.trim())
+							}
+							if(!boxType){
+								flash.message ="BoxType should not be empty "
+							}else if(!boxTypeObj){
+								flash.message= " No valid boxtype available with name"
+							}else if(Device.findByStbName(deviceName)){
+								flash.message= " Device name is already exists "
+							}else if(!deviceName){
+								flash.message= "Device should not be empty "
+							}else if(!deviceIp){
+								flash.message="Device IP should not be empty"
+							}else if(deviceIp && Device.findByStbIp(deviceIp)){
+								flash.message="Device IP already exist"
+							}else if(!socVendor){
+								flash.message="SOC Vendour should not be empty "
+							}else if(socVendor && !SoCVendor.findByName(socVendor)){
+								flash.message= " No valid soc vendour available with name"
+							}else if(!boxManufacture){
+								flash.message= "Box manufacture should not be empty "
+							}else if(boxManufacture && !BoxManufacturer.findByName(boxManufacture)){
+								flash.message=" No valid box manufacture available with name"
 							}else{
-								if(gateway){
-									if(!Device.findByStbName(gateway)){
+								BoxType boxTypeInastnce = BoxType.findByName(boxType)
+								boolean valid = true
+								if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
+								|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+
+									if(recorderId?.trim()?.length() ==  0){
 										valid = false
-										flash.message=" No valid device available with name "
-									}
-								}
-							}
-							if(valid){
-								try{
-									int status = 0
-									Device deviceInstance = new Device()
-									deviceInstance.stbName = deviceName
-									deviceInstance.stbIp = deviceIp
-									deviceInstance.soCVendor = socVendorObj
-									deviceInstance.boxType=boxTypeObj
-									deviceInstance.boxManufacturer =boxManufactureObj
-
-									if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_CLIENT)){
-										status = 1
-										deviceInstance.gatewayIp =gateway
-
-									}else if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
-									|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
-										status = 2
-										deviceInstance.recorderId = recorderId
-										deviceInstance.macId =""
-									}
-
-									if(status > 0 && deviceInstance.save(flush:true)){
-										if(status == 2){								
-											devicegroupService.saveToDeviceGroup(deviceInstance)
-											saveDeviceStream(streams, ocapId, deviceInstance)
+										flash.message ="Recorder id should not blank "
+									}else if(streams){
+										if(validateOcapIds(streams,ocapId)){
+											if(checkDuplicateOcapId(ocapId)){
+												valid = false
+												flash.message=" Duplicate Ocap id"
+											}
+										}else{
+											valid = false
+											flash.message= " Stream information is not is not correct "
 										}
-										flash.message=" Device saved successfully"
-									}else{
-										flash.message=" Device not saved"
 									}
+								}else{
+									if(gateway){
+										if(!Device.findByStbName(gateway)){
+											valid = false
+											flash.message=" No valid device available with name "
+										}
+									}
+								}
+								if(valid){
+									try{
+										int status = 0
+										Device deviceInstance = new Device()
+										deviceInstance.stbName = deviceName
+										deviceInstance.stbIp = deviceIp
+										deviceInstance.soCVendor = socVendorObj
+										deviceInstance.boxType=boxTypeObj
+										deviceInstance.boxManufacturer =boxManufactureObj
 
-								}catch (Exception e){
-									println "ERROR"+e.getMessage()
-									e.printStackTrace()
-									flash.message("Device not saved ")
+										if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_CLIENT)){
+											status = 1
+											deviceInstance.gatewayIp =gateway
+
+										}else if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
+										|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+											status = 2
+											deviceInstance.recorderId = recorderId
+											deviceInstance.macId =""
+										}
+
+										if(status > 0 && deviceInstance.save(flush:true)){
+											if(status == 2){
+												devicegroupService.saveToDeviceGroup(deviceInstance)
+												saveDeviceStream(streams, ocapId, deviceInstance)
+											}
+											flash.message=" Device saved successfully"
+										}else{
+											flash.message=" Device not saved"
+										}
+
+									}catch (Exception e){
+										println "ERROR"+e.getMessage()
+										e.printStackTrace()
+										flash.message("Device not saved ")
+									}
 								}
 							}
+						}catch(Exception e){
+							flash.message =" XML tags not in correct format "
 						}
 					}else{
 						flash.message ="File content is empty"

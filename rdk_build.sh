@@ -216,7 +216,7 @@ function build()
     if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh" ]; then
         rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/cpc/Mediaplayer_stub/libmediaplayerstub.so* ${TDK_LIB_PATH}
     fi
-    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so*" ];then
+    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so" ];then
     rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so* ${TDK_LIB_PATH}
     fi
 

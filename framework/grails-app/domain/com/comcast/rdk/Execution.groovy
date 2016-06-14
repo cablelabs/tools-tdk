@@ -123,6 +123,11 @@ class Execution {
 	int scriptCount = 0
 	
 	/**
+	 *  Flag to mark as re-run failure  enabled for execution
+	 */
+	boolean rerunOnFailure = false
+	
+	/**
 	 * Execution can have many execution results.
 	 */
 	static hasMany = [ executionresults : ExecutionResult ]
@@ -147,6 +152,7 @@ class Execution {
 		isRerunRequired(nullable:true, blank:true)
 		isStbLogRequired(nullable:true, blank:true)
 		applicationUrl(nullable:true, blank:true)
+		rerunOnFailure(nullable:true, blank:true) 
 		scriptCount(nullable:true, blank:true)
 		realExecutionTime(nullable:true, blank:true)
     }

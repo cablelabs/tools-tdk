@@ -155,8 +155,7 @@ class ExecutionController {
      * Method to create a cron tab based on the selection of
      * schedule type in the gsp page by the user
      */    
-    def createCronScheduleTab(def params) {
-		
+    def createCronScheduleTab(def params) {		
         String status = SUCCESS_STATUS
         String cronschedule = ""
         String queryString = ""
@@ -248,14 +247,11 @@ class ExecutionController {
         } 
         return [status,cronschedule,queryString]
     }
-    
     /**
      * Schedule a quartz job
      * @return
      */
     def scheduleOneOff() {
-	
-		
          String cronschedule
          String startDateString = (params?.startdate).toString()
          String endDateString = (params?.enddate).toString()
@@ -351,6 +347,7 @@ class ExecutionController {
 			 jobDetails.isStbLogRequired=params?.isStbLogRequired
 			 jobDetails.rerun = params?.rerun
 			 jobDetails.repeatCount = repeatCount
+			 jobDetails.rerunOnFailure= "false" 
 			 jobDetails.groups = utilityService.getGroup()
              jobDetails.save(flush:true)
 			 def jobDetailList = JobDetails.findAllByGroupsOrGroupsIsNull(utilityService.getGroup())
@@ -653,8 +650,10 @@ class ExecutionController {
 											}
 
 											try {
+												def rerunOnFailure1  = "false"
 												// for saving the execution details includes the performance information 
-												executionSaveStatus = executionService.saveExecutionDetails(execName, scriptname, deviceName, scriptGroup,url,isBenchMark1,isSystemDiagnostics1,rerun1,isLogReqd1)
+												
+												executionSaveStatus = executionService.saveExecutionDetails(execName, scriptname, deviceName, scriptGroup,url,isBenchMark1,isSystemDiagnostics1,rerun1,isLogReqd1, rerunOnFailure1?.toString())
 												//executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptname, deviceName, scriptGroup,url)
 											} catch (Exception e) {
 												executionSaveStatus = false
@@ -844,6 +843,7 @@ class ExecutionController {
 		def deviceName
 		boolean allocated = false
 		boolean singleScript = false
+		String rerunOnFailure ="false"
 		
 		ExecutionDevice executionDevice = new ExecutionDevice()
 		if(params?.devices instanceof String){
@@ -1091,9 +1091,9 @@ class ExecutionController {
 							// Test case count include in the multiple scripts executions
 							if(scriptName.equals(MULTIPLESCRIPT)){
 								def  scriptCount = params?.scripts?.size()
-								executionSaveStatus = executionService.saveExecutionDetailsOnMultipleScripts(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,isLogReqd,scriptCount)
+								executionSaveStatus = executionService.saveExecutionDetailsOnMultipleScripts(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,isLogReqd,scriptCount,rerunOnFailure)
 							}else{							
-								executionSaveStatus = executionService.saveExecutionDetails(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,isLogReqd)
+								executionSaveStatus = executionService.saveExecutionDetails(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,isLogReqd,rerunOnFailure)
 							}
 			
 							if(deviceList.size() > 0 ){
@@ -1217,6 +1217,7 @@ class ExecutionController {
 										execution.isBenchMarkEnabled = isBenchMark?.equals("true")
 										execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
 										execution.isStbLogRequired = isLogReqd?.equals("true")
+										execution.rerunOnFailure = rerunOnFailure?.equals("true")
 										execution.outputData = "Execution failed due to the unavailability of box"
 										if(! execution.save(flush:true)) {
 											log.error "Error saving Execution instance : ${execution.errors}"
@@ -1908,10 +1909,10 @@ class ExecutionController {
 			resultNode.add("Functions",jsonArray)
 			resultNode.addProperty("LogData",executionResult?.executionOutput.toString())
 			//agent console link added
-			def executionInstance = Execution.findById(executionResult?.execution?.id)			resultNode.addProperty("agentConsoleLogURL",executionInstance?.applicationUrl+"/execution/getAgentConsoleLog?execResId="+executionResult?.id)
+			def executionInstance = Execution.findById(executionResult?.execution?.id)
+			resultNode.addProperty("agentConsoleLogURL",executionInstance?.applicationUrl+"/execution/getAgentConsoleLog?execResId="+executionResult?.id)
 		}
 		render resultNode
-	
 	}
 	
 	def getAgentConsoleLog(final String execResId){
@@ -2329,7 +2330,7 @@ class ExecutionController {
 
 								try {					
 //									executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptName, deviceName, null,url)
-									executionSaveStatus =  executionService.saveExecutionDetails(execName, scriptName, deviceName, null,url,timeInfo,performance,reRunOnFailure,FALSE)
+									executionSaveStatus =  executionService.saveExecutionDetails(execName, scriptName, deviceName, null,url,timeInfo,performance,reRunOnFailure,FALSE,FALSE)
 								} catch (Exception e) {
 									executionSaveStatus = false
 								}
@@ -2692,10 +2693,10 @@ class ExecutionController {
 						execResult = ExecutionResult?.findAllByExecution(executionInstance)
 						int scriptCount  = execResult?.size()
 						//For multiple script execution
-						saveExecutionDetails = executionService.saveExecutionDetailsOnMultipleScripts(execName?.toString(), MULTIPLESCRIPT, deviceInstance?.toString(), scriptGroupInstance,url?.toString(),isBenchMark?.toString(),isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString(),scriptCount)
+						saveExecutionDetails = executionService.saveExecutionDetailsOnMultipleScripts(execName?.toString(), MULTIPLESCRIPT, deviceInstance?.toString(), scriptGroupInstance,url?.toString(),isBenchMark?.toString(),isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString(),scriptCount, FALSE)
 					}else{
 						//For test suite execution
-						saveExecutionDetails = executionService.saveExecutionDetails(execName?.toString(), scripts, deviceInstance?.toString(), scriptGroupInstance ,url?.toString(),isBenchMark?.toString(),isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString())
+						saveExecutionDetails = executionService.saveExecutionDetails(execName?.toString(), scripts, deviceInstance?.toString(), scriptGroupInstance ,url?.toString(),isBenchMark?.toString(),isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString(),FALSE)
 					}
 						if(saveExecutionDetails){
 							try {
@@ -2915,5 +2916,5 @@ class ExecutionController {
 			}
 		}
 		render totalExecutionList
-	}	
+	}
 }

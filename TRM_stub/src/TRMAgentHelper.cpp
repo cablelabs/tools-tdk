@@ -889,16 +889,16 @@ string TRMClient::addToReservationDb(TRM::TunerReservation resv)
         }
 
         RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Listing current TunerReservationDB:\n");
-        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\n==================================================================================================\n");
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "================================================================================\n");
 	for(it = tunerReservationDb.begin(); it != tunerReservationDb.end(); it++)
 	{
-	    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\nACTIVITY:[%s] DEVICE:[%s] LOCATOR:[%s] TOKEN:[%s]\n",
-				(const char *)(*it).second.getActivity().getActivity(),
+	    RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "[%s] %s locator: %s token:[%s]\n",
 				(*it).second.getDevice().c_str(),
+				(const char *)(*it).second.getActivity().getActivity(),
 				(*it).second.getServiceLocator().c_str(),
 				(*it).second.getReservationToken().c_str());
 	}
-        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\n==================================================================================================\n");
+        RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "================================================================================\n");
 	return resv.getReservationToken();
 }
 
@@ -928,16 +928,16 @@ bool TRMClient::removeFromReservationDb(const string reservationToken)
         else
         {
             RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "Listing current TunerReservationDB:\n");
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\n==================================================================================================\n");
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "================================================================================\n");
             for(it = tunerReservationDb.begin(); it != tunerReservationDb.end(); it++)
             {
-		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\nACTIVITY:[%s] DEVICE:[%s] LOCATOR:[%s] TOKEN:[%s]\n",
-				(const char *)(*it).second.getActivity().getActivity(),
+		RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "[%s] %s locator: %s token:[%s]\n",
 				(*it).second.getDevice().c_str(),
+				(const char *)(*it).second.getActivity().getActivity(),
 				(*it).second.getServiceLocator().c_str(),
 				(*it).second.getReservationToken().c_str());
             }
-            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "\n==================================================================================================\n");
+            RDK_LOG(RDK_LOG_INFO, "LOG.RDK.TEST", "================================================================================\n");
         }
         return bRetValue;
 }

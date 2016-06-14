@@ -88,6 +88,7 @@ class JobSchedulerService implements Job{
 	 * @return
 	 */
 	def startExecutions(final String executionName, final def jobId){
+		
 
 		def filePath
 		def scripts = null
@@ -215,7 +216,7 @@ class JobSchedulerService implements Job{
 								else if(scriptName.equals("Multiple Scripts")){
 									scriptCnt  = scripts?.size()
 								}
-
+									println jobDetails.rerunOnFailure?.equals("true")
 								Execution.withTransaction { status ->
 									try {
 										execution = new Execution()
@@ -231,6 +232,7 @@ class JobSchedulerService implements Job{
 										execution.isBenchMarkEnabled = jobDetails?.isBenchMark?.equals("true")
 										execution.isSystemDiagnosticsEnabled = jobDetails?.isSystemDiagnostics?.equals("true")
 										execution.isStbLogRequired= jobDetails.isStbLogRequired?.equals("true")
+										execution.rerunOnFailure = jobDetails.rerunOnFailure?.equals("true")
 										execution.scriptCount = scriptCnt
 										if(! execution.save(flush:true)) {
 											log.error "Error saving Execution instance : ${execution.errors}"
@@ -493,7 +495,7 @@ class JobSchedulerService implements Job{
 										scriptInstance = getScript(realpath,moduleName, scripts)
 
 										isMultiple = "false"
-										htmlData = executeScript(execName, executionDevice, scriptInstance , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple)
+										htmlData = executeScript(execName, executionDevice, scriptInstance , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple, 	 jobDetails.groups.toString())
 										output.append(htmlData)
 									}
 									else{
@@ -575,7 +577,7 @@ class JobSchedulerService implements Job{
 												}
 											}
 											if(!aborted && !(deviceStatus.equals(Status.NOT_FOUND.toString()) || deviceStatus.equals(Status.HANG.toString()))){
-												htmlData = executeScript(execName, executionDevice, script , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired, executionName,isMultiple)
+												htmlData = executeScript(execName, executionDevice, script , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired, executionName,isMultiple, )
 											}else {
 												if(!aborted && deviceStatus.equals(Status.NOT_FOUND.toString())){
 													pause = true
@@ -679,6 +681,7 @@ class JobSchedulerService implements Job{
 								execution1.isBenchMarkEnabled = jobDetails?.isBenchMark?.equals("true")
 								execution1.isSystemDiagnosticsEnabled = jobDetails?.isSystemDiagnostics?.equals("true")
 								execution1.isStbLogRequired= jobDetails.isStbLogRequired?.equals("true")
+								execution1.rerunOnFailure = jobDetails.rerunOnFailure?.equals("true") 
 								execution1.outputData = "Execution failed due to the unavailability of box"
 								if(! execution1.save(flush:true)) {
 									log.error "Error saving Execution instance : ${execution1.errors}"
@@ -699,9 +702,14 @@ class JobSchedulerService implements Job{
 				 */
 				def executionObj = Execution.findByName(execName)
 				def executionDeviceObj = ExecutionDevice.findAllByExecutionAndStatusNotEqual(executionObj, SUCCESS_STATUS)
-
-				if(!abortedExecution && !pause && (executionDeviceObj.size() > 0 ) && (jobDetails?.rerun)){
-					htmlData = reRunOnFailure(realpath,filePath,url,execName,executionName,jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.groups)
+				
+				if(!abortedExecution && !pause && (executionDeviceObj.size() > 0 ) && (jobDetails?.rerun?.toString()?.equals("true"))){
+					try{
+						htmlData = reRunOnFailure(realpath?.toString(),filePath?.toString(),url?.toString(),execName?.toString(),executionName?.toString(),jobDetails?.isBenchMark?.toString(), jobDetails?.isSystemDiagnostics?.toString(),jobDetails?.isStbLogRequired?.toString(),jobDetails?.rerunOnFailure?.toString(),jobDetails.rerun?.toString() )
+					}catch(Exception e){
+					println e.getMessage()
+					e.printStackTrace()
+					}
 					output.append(htmlData)
 				}
 
@@ -719,8 +727,6 @@ class JobSchedulerService implements Job{
 			}
 		}
 	}
-
-
 	public void saveNotApplicableStatus(def executionInstance , def executionDevice , def scriptInstance , def deviceInstance, String reason){
 		ExecutionResult.withTransaction { resultstatus ->
 			try {
@@ -742,12 +748,11 @@ class JobSchedulerService implements Job{
 			}
 		}
 	}
-
-
+	//public static volatile Object  lock = new Object()
 	def reRunOnFailure(final String realPath, final String filePath, String url, final String execName,final String uniqueExecutionName,
-			final String isBenchMark, final String isSystemDiagnostics,final String islogReqd, final def groups){
-		Thread.sleep(10000)
-
+			final String isBenchMark, final String isSystemDiagnostics,final String islogReqd,  final String rerunOnFailure, final String rerun){
+		boolean pause= false
+		List pendingScripts =[]
 		Execution executionInstance = Execution.findByName(execName)
 		def resultArray = Execution.executeQuery("select a.result from Execution a where a.name = :exName",[exName: execName])
 		def result = resultArray[0]
@@ -757,18 +762,37 @@ class JobSchedulerService implements Job{
 		def executionSaveStatus = true
 		if(result != SUCCESS_STATUS){
 			def scriptName
-			def scriptGroupInstance = ScriptGroup.findByName(executionInstance?.scriptGroup)
-			/**
+			def scriptGroupInstance = ScriptGroup.findByName(executionInstance?.scriptGroup)			/**
 			 * Get all devices for execution
 			 */
 			def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
 			int cnt = 0
 			boolean aborted = false
 			executionDeviceList.each{ execDeviceInstance ->
-
-
+				Device deviceInstance = Device.findByStbName(execDeviceInstance?.device)
+				boolean allocated = false
 				if(execDeviceInstance.status != SUCCESS_STATUS){
-					Device deviceInstance = Device.findByStbName(execDeviceInstance?.device)
+					String status1 = ""
+					try {
+						status1 = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+						if(ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
+							status1 = "BUSY"
+						}else{
+							if((status1.equals( Status.FREE.toString() ))){
+								if(!ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
+									allocated = true
+									ExecutionService.deviceAllocatedList.add(deviceInstance?.id)
+									Thread.start{
+										DeviceStatusService?.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
+									}
+								}
+							}
+						}
+
+					}
+					catch(Exception eX){
+						println  " ERROR "+ eX.printStackTrace()
+					}
 					if(cnt == 0){
 						newExecName = execName + RERUN
 						scriptName = executionInstance?.script
@@ -777,6 +801,13 @@ class JobSchedulerService implements Job{
 							deviceName = MULTIPLE
 						}
 
+						int scriptCnt = 0
+						ScriptGroup.withTransaction {
+							def scriptGroupInstance1 = ScriptGroup.get(scriptGroupInstance?.id)
+							if(scriptGroupInstance1?.scriptList?.size() > 0){
+								scriptCnt = scriptGroupInstance1?.scriptList?.size()
+							}
+						}
 						Execution.withTransaction { status ->
 							try {
 								execution = new Execution()
@@ -787,7 +818,14 @@ class JobSchedulerService implements Job{
 								execution.result = UNDEFINED_STATUS
 								execution.executionStatus = INPROGRESS_STATUS
 								execution.dateOfExecution = new Date()//dateFormat.format(cal.getTime())
-								execution.groups = groups
+								//execution.groups = groups
+								execution.applicationUrl = url
+								execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
+								execution.isBenchMarkEnabled = isBenchMark?.equals("true")
+								execution.isStbLogRequired = islogReqd?.equals("true")
+								execution?.rerunOnFailure = rerunOnFailure?.equals("true")
+								execution.isRerunRequired = rerun?.equals("true")
+								execution.scriptCount = scriptCnt
 								if(! execution.save(flush:true)) {
 									log.error "Error saving Execution instance : ${execution.errors}"
 									executionSaveStatus = false
@@ -798,7 +836,6 @@ class JobSchedulerService implements Job{
 								status.setRollbackOnly()
 							}
 						}
-
 						cnt++
 						rerunExecutionInstance = Execution.findByName(newExecName)
 					}
@@ -817,13 +854,9 @@ class JobSchedulerService implements Job{
 						def executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
 						def scriptInstance
 						def htmlData
-
 						def resultSize = executionResultList.size()
 						int counter = 0
 						def isMultiple = "true"
-
-						// adding log transfer to server for reruns
-
 						Properties props = new Properties()
 						try {
 							props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
@@ -848,21 +881,74 @@ class JobSchedulerService implements Job{
 							e.printStackTrace()
 						}
 						executionResultList.each{ executionResult ->
-							scriptInstance = Script.findByName(executionResult?.script,[lock: true])
+							def scriptFile = ScriptFile.findByScriptName(executionResult?.script)
+							scriptInstance = getScript(realPath,scriptFile?.moduleName,scriptFile?.scriptName)
 							counter++
 							if(counter == resultSize){
 								isMultiple = "false"
 							}
-
+							def deviceStatus = " "
+							try{
+								deviceStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+							}catch (Exception e){
+								e.getMessage()
+							}
 							if(validateScriptBoxTypes(scriptInstance,deviceInstance)){
 								Execution exec = Execution.findByName(newExecName)
-								aborted = ExecutionService.abortList.contains(exec?.id?.toString())
-								if(!aborted){
+								aborted = ExecutionService.abortList?.toString().contains(exec?.id?.toString())
+								if(!aborted && !(deviceStatus?.toString().equals(Status.NOT_FOUND.toString()) || deviceStatus?.toString().equals(Status.HANG.toString())) && !pause){
 									htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, url, filePath, realPath,isBenchMark,isSystemDiagnostics,islogReqd,uniqueExecutionName,isMultiple)
-									Thread.sleep(6000)
+
+								}else{
+									if(!aborted && (deviceStatus?.equals(Status.NOT_FOUND.toString()) ||  deviceStatus?.equals(Status.HANG.toString()))){
+										pause = true
+									}
+									if(!aborted && pause) {
+										try {
+											pendingScripts.add(scriptInstance)
+											def execInstance
+											Execution.withTransaction {
+												def execInstance1 = Execution.findByName(newExecName)
+												execInstance = execInstance1
+											}
+											def scriptInstanceObj
+											scriptInstanceObj = scriptInstance
+											Device deviceInstanceObj
+											def devId = deviceInstance?.id
+											Device.withTransaction {
+												Device deviceInstance1 = Device.findById(devId)
+												deviceInstanceObj = deviceInstance1
+											}
+											ExecutionDevice executionDevice1
+											ExecutionDevice.withTransaction {
+												def exDev = ExecutionDevice.findById(executionDevice?.id)
+												executionDevice1 = exDev
+											}
+
+											ExecutionResult.withTransaction { resultstatus ->
+												try {
+													def executionResult1 = new ExecutionResult()
+													executionResult1.execution = execInstance
+													executionResult1.executionDevice = executionDevice1
+													executionResult1.script = scriptInstanceObj?.name
+													executionResult1.device = deviceInstanceObj?.stbName
+													executionResult1.execDevice = null
+													executionResult1.deviceIdString = deviceInstanceObj?.id?.toString()
+													executionResult1.status = PENDING
+													executionResult1.dateOfExecution = new Date()
+													if(! executionResult1.save(flush:true)) {
+													}
+													resultstatus.flush()
+												}
+												catch(Throwable th) {
+													resultstatus.setRollbackOnly()
+												}
+											}
+										} catch (Exception e) {
+										}
+									}
 								}
 							}
-
 						}
 						// stopping log transfer
 						try {
@@ -885,22 +971,24 @@ class JobSchedulerService implements Job{
 						} catch (Exception e) {
 							e.printStackTrace()
 						}
-
-						if(aborted){
-							resetAgent(deviceInstance)
+						Execution exec = Execution.findByName(newExecName)
+						if(aborted && ExecutionService.abortList.contains(exec?.id?.toString())){
+							saveExecutionStatus(aborted, exec?.id)
+							ExecutionService.abortList.remove(exec?.id?.toString())
 						}
+						if(!aborted && pause && pendingScripts.size() > 0 ){
+							savePausedExecutionStatus(exec?.id)
+							saveExecutionDeviceStatusData(PAUSED, executionDevice?.id)
+						}
+						if(!aborted && !pause ){
+							saveExecutionStatus(aborted, exec?.id)
+						}			
 					}
-
+				}
+				if(allocated && ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
+					ExecutionService.deviceAllocatedList.remove(deviceInstance?.id)
 				}
 			}
-			Execution exec = Execution.findByName(newExecName)
-			if(aborted && ExecutionService.abortList.contains(exec?.id?.toString())){
-				ExecutionService.abortList.remove(exec?.id?.toString())
-			}
-
-			saveExecutionStatus(aborted, exec?.id)
-
-
 		}
 	}
 

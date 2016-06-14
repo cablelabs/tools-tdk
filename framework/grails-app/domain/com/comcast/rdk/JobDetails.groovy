@@ -51,7 +51,13 @@ class JobDetails {
      * Device Group in which the script
      * is executed
      */
-    String deviceGroup
+    String deviceGroup	
+	
+	/**
+	 * Rerun on failure 
+	 */
+	String rerunOnFailure
+	
     
     String appUrl
     
@@ -105,6 +111,7 @@ class JobDetails {
 		rerun(nullable:true, blank:true)
 		repeatCount(nullable:true, blank:true)
 		groups(nullable:true, blank:true)
+		rerunOnFailure(nullable:true, blank:true)
 		
     }
     

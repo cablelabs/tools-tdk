@@ -64,7 +64,19 @@ obj.configureTestCase(ip,port,'TRM_CT_18');
 
 #Get the result of connection with test component and STB
 result =obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %result;
+print "[TRM LIB LOAD STATUS]  :  %s" %result;
+
+if "FAILURE" in result.upper():
+    #Reboot and reload trm component
+    print "Reboot and reload TRM"
+    obj.initiateReboot();
+    obj = tdklib.TDKScriptingLibrary("trm","2.0");
+    obj.configureTestCase(ip,port,'TRM_CT_18');
+    #Get the result of connection with test component and STB
+    result = obj.getLoadModuleResult();
+    print "[TRM LIB RELOAD STATUS]  :  %s" %result;
+    #Set the module loading status
+    obj.setLoadModuleStatus(result.upper());
 
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in result.upper():

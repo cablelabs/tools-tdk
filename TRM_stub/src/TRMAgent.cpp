@@ -97,6 +97,12 @@ string TRMAgent::testmodulepre_requisites()
         return "FAILURE";
     }
 
+    if (!pTrmClient->getAllTunerIds())
+    {
+        DEBUG_PRINT(DEBUG_ERROR,"TRM client not registered with recorder client id\n");
+        return "FAILURE";
+    }
+
     DEBUG_PRINT(DEBUG_TRACE, "TRM testmodule pre_requisites --> Exit\n");
     return "SUCCESS";
 }

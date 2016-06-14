@@ -29,7 +29,7 @@ Test Case ID: CT_RMF_QAMSrc_MPSink_14.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>17/execution_time>
+  <execution_time>17</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->

@@ -647,8 +647,6 @@ class ExecutescriptService {
 			e.printStackTrace()
 		}
 	}
-
-
 	/**
 	 * Re run the tests if the status of script execution is not failure
 	 * @param realPath
@@ -659,7 +657,10 @@ class ExecutescriptService {
 	def reRunOnFailure(final String realPath, final String filePath, final String execName, final String uniqueExecutionName, final String appUrl){
 		try {
 			def newExecName
-			def aborted=false
+			def aborted = false
+			def rerunOnFailure = true
+			boolean pause = false
+			List pendingScripts = []
 			Execution executionInstance = Execution.findByName(execName)
 			int executionCount=0
 			int execCnt = 0
@@ -683,7 +684,6 @@ class ExecutescriptService {
 					}
 				}else{
 					newExecName  = execName
-					//	if(Execution?.findByName(execName?.toString())){
 					if(executionList?.toString().contains(execName?.toString())){
 						def lastExecname  = executionList.find{ it  ->
 							it?.toString().contains(execName?.toString())
@@ -708,12 +708,9 @@ class ExecutescriptService {
 					newExecName= newExecName
 				}
 			}
-
-
 			def exeId = executionInstance?.id
 			def resultArray = Execution.executeQuery("select a.result from Execution a where a.name = :exName",[exName: execName])
 			def result = resultArray[0]
-
 			Execution rerunExecutionInstance
 			def executionSaveStatus = true
 			if(result != SUCCESS_STATUS){
@@ -752,14 +749,10 @@ class ExecutescriptService {
 						catch(Exception eX){
 							println  " ERROR "+ eX.printStackTrace()
 						}
-						//if(status1.equals( Status.FREE.toString())){
-
 						def executionResultList
 						ExecutionResult.withTransaction {
 							executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
 						}
-
-
 						def resultSize = executionResultList.size()
 						if(cnt == 0){
 							scriptName = executionInstance?.script
@@ -767,8 +760,7 @@ class ExecutescriptService {
 							if(executionDeviceList.size() > 1){
 								deviceName = MULTIPLE
 							}
-							executionSaveStatus = executionService.saveExecutionDetails(newExecName, scriptName, deviceName, scriptGroupInstance,appUrl,"false","false","false","false")
-
+							executionSaveStatus = executionService.saveExecutionDetails(newExecName, scriptName, deviceName, scriptGroupInstance,appUrl,"false","false","false","false", rerunOnFailure?.toString() )
 							cnt++
 							Execution.withTransaction{
 								rerunExecutionInstance = Execution.findByName(newExecName)
@@ -815,20 +807,79 @@ class ExecutescriptService {
 							} catch (Exception e) {
 								e.printStackTrace()
 							}
+							def executionName = Execution?.findByName(newExecName)
 							executionResultList.each{ executionResult ->
 								if(!executionResult.status.equals(SKIPPED)){
-									//	scriptInstance = Script.findByName(executionResult?.script)
 									def scriptFile = ScriptFile.findByScriptName(executionResult?.script)
 									scriptInstance = scriptService.getScript(realPath,scriptFile?.moduleName,scriptFile?.scriptName)
 									counter ++
 									if(counter == resultSize){
 										isMultiple = FALSE
 									}
+									def deviceStatus = " "
+									try{
+										deviceStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+									}catch (Exception e){
+										e.getMessage()
+									}
 									if(scriptInstance){
 										if(executionService.validateScriptBoxTypes(scriptInstance,deviceInstance)){
-											aborted = executionService.abortList.contains(exeId?.toString())
-											if(!aborted){
+											aborted = executionService.abortList?.toString().contains(executionName?.id?.toString())
+											if(!aborted   && !(deviceStatus?.toString().equals(Status.NOT_FOUND.toString()) || deviceStatus?.toString().equals(Status.HANG.toString())) && !pause){
 												htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null,"false")
+											}else{
+												if(!aborted && (deviceStatus.equals(Status.NOT_FOUND.toString()) ||  deviceStatus.equals(Status.HANG.toString()))){
+													pause = true
+												}
+												
+												if(!aborted && pause) {
+													try {
+														pendingScripts.add(scriptInstance)
+														def execInstance
+														Execution.withTransaction {
+															def execInstance1 = Execution.findByName(newExecName)
+															execInstance = execInstance1
+														}
+														def scriptInstanceObj
+														//							Script.withTransaction {
+														//							Script scriptInstance1 = Script.findById(scriptObj.id)
+														scriptInstanceObj = scriptInstance
+														//							}
+														Device deviceInstanceObj
+														def devId = deviceInstance?.id
+														Device.withTransaction {
+															Device deviceInstance1 = Device.findById(devId)
+															deviceInstanceObj = deviceInstance1
+														}
+														ExecutionDevice executionDevice1
+														ExecutionDevice.withTransaction {
+															def exDev = ExecutionDevice.findById(executionDevice?.id)
+															executionDevice1 = exDev
+														}
+
+														ExecutionResult.withTransaction { resultstatus ->
+															try {
+																def executionResult1 = new ExecutionResult()
+																executionResult1.execution = execInstance
+																executionResult1.executionDevice = executionDevice1
+																executionResult1.script = scriptInstanceObj?.name
+																executionResult1.device = deviceInstanceObj?.stbName
+																executionResult1.execDevice = null
+																executionResult1.deviceIdString = deviceInstanceObj?.id?.toString()
+																executionResult1.status = PENDING
+																executionResult1.dateOfExecution = new Date()
+																if(! executionResult1.save(flush:true)) {
+																}
+																resultstatus.flush()
+															}
+															catch(Throwable th) {
+																resultstatus.setRollbackOnly()
+															}
+														}
+													} catch (Exception e) {
+													}
+												}
+
 											}
 										}
 									}
@@ -855,38 +906,25 @@ class ExecutescriptService {
 							} catch (Exception e) {
 								e.printStackTrace()
 							}
-						}
-						//}
+							if(aborted && executionService.abortList.contains(executionName?.id?.toString())){
+								executionService.abortList.remove(executionName?.id?.toString())
+							}
+							if(!aborted && pause && pendingScripts.size() > 0 ){
+								Execution executionInstance1 = Execution.findByName(newExecName)
+								executionService.savePausedExecutionStatus(executionInstance1?.id)
+								executionService.saveExecutionDeviceStatusData(PAUSED, executionDevice?.id)
+							}
 
+						}
 						if(allocated && executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 							executionService.deviceAllocatedList.remove(deviceInstance?.id)
 						}
-
 					}
 				}
-
-				Execution execution = Execution.findByName(newExecName)
-				if(aborted && executionService.abortList.contains(exeId?.toString())){
-					executionService.abortList.remove(exeId?.toString())
-				}
-
-				Execution.withTransaction {
-					Execution executionInstance1 = Execution.findByName(newExecName)
-					executionService.saveExecutionStatus(aborted, executionInstance1?.id)
-				}
 			}
-
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
-
-
-
-
-
-
-
-
 	}
 
 	/**

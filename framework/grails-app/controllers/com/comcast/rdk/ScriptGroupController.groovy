@@ -1468,7 +1468,8 @@ class ScriptGroupController {
 			String data = new String(sFile.getBytes())
 			response.setHeader("Content-Type", "application/octet-stream;")
 			response.setHeader("Content-Disposition", "attachment; filename=\""+ params?.id+".py\"")
-			response.setHeader("Content-Length", ""+data.length())
+			//response.setHeader("Content-Length", ""+data.length())
+			response.setHeader("Content-Length", ""+String.valueOf(data.length()))
 			response.outputStream << data.getBytes()
 			return true
 		}
