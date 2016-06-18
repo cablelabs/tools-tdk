@@ -5,14 +5,14 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARM_BUS_SysMgr_Event_SysState_SetHDCPProfileTo0_Reboot_118</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -38,6 +38,8 @@ Test case Id - CT_IARMBUS_118</synopsis>
   <skip>false</skip>
   <!--  -->
   <box_types>
+    <box_type>IPClient-3</box_type>
+    <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
@@ -51,6 +53,7 @@ Test case Id - CT_IARMBUS_118</synopsis>
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
