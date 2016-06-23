@@ -5,14 +5,14 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_Rec_Erased_Orphaned_Legacy_201</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -44,6 +44,7 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
@@ -138,9 +139,7 @@ if "SUCCESS" in recLoadStatus.upper():
         print "Wait for 60 seconds to get response from recorder"
         sleep(60)
         actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-        #print "Recording List: %s" %actResponse;
 	msg = recorderlib.getStatusMessage(actResponse);
-	#print "Get Status Message Details: %s"%msg;
         if "" == msg:
                	value = "FALSE";
 	        print "No status message retrieved"
@@ -180,30 +179,8 @@ if "SUCCESS" in recLoadStatus.upper():
 		exit();
 	print "Recording marked as COMPLETE ";
 
-	# code for deleting the metadata
-	#tdkTestObj1=recObj.createTestStep('Recorder_DeleteRecordingMetaData');
-        #expectedResult="SUCCESS";
-        #Delete properties file
-        #tdkTestObj1.addParameter("Recording_Id",recordingID);
-        #Execute the test case in STB
-        #tdkTestObj1.executeTestCase(expectedResult);
-        #Get the actual result and details of execution
-        #result = tdkTestObj1.getResult();
-        #details = tdkTestObj1.getResultDetails();
-        #print result,",",recordingID," ",details
-        #if "FAILURE" in result:
-        	#print "Failed to delete metadata file"
-                #tdkTestObj1.setResultStatus("FAILURE");
-        	#recObj.unloadModule("Recorder");
-		#exit();
-        #print "Deleted metadata file"
-        #sleep(5);
-	# end of code for deleting the metadata
-	# Perform 2nd  recording
-
         tdkTestObj1 = recObj.createTestStep('Recorder_ExecuteCmd');
         expectedResult="SUCCESS";
-        #commandf = "find -type f | xargs grep -rls " +recordingID+ "| xargs rm -rf"
         tdkTestObj1.addParameter("command","find /tmp/mnt/diska3/persistent/dvr/recdbser/ -type f | xargs grep -rls " +recordingID+ "| xargs rm -rf");
         #Execute the test case in STB
         tdkTestObj1.executeTestCase("SUCCESS");
@@ -214,7 +191,18 @@ if "SUCCESS" in recLoadStatus.upper():
         else:
             tdkTestObj1.setResultStatus("FAILURE");
 
-        sleep(40);
+        tdkTestObj1 = recObj.createTestStep('Recorder_ExecuteCmd');
+        expectedResult="SUCCESS";
+        tdkTestObj1.addParameter("command","find /opt/data/OCAP_MSV/0/0/DEFAULT_RECORDING_VOLUME/dvr -type f -name \"*.xml*\" -mmin -3 | xargs rm -rf");
+        #Execute the test case in STB
+        tdkTestObj1.executeTestCase("SUCCESS");
+        result = tdkTestObj1.getResult();
+        print "[TEST EXECUTION RESULT] : %s" %result;
+        if "SUCCESS" in result:
+            tdkTestObj1.setResultStatus("SUCCESS");
+        else:
+            tdkTestObj1.setResultStatus("FAILURE");
+        sleep(10);
 
         requestID2 = str(randint(10,500));
         recordingID2 = str(randint(10000, 500000));
@@ -260,7 +248,8 @@ if "SUCCESS" in recLoadStatus.upper():
 		exit();
         print "Successfully retrieved acknowledgement from recorder";
 	print "Wait for the recording to complete "
-	sleep(180);
+	sleep(150);
+        recorderlib.callServerHandler('clearStatus',ip)
 	# end of Perform 2nd  recording
         #Reboot the STB before starting the recording
         print "Rebooting the STB to get the recording list from full sync"
@@ -271,11 +260,6 @@ if "SUCCESS" in recLoadStatus.upper():
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
-        #print "Sending getRecordings to get the recording list"
-        #recorderlib.callServerHandler('clearStatus',ip)
-        #recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
-        #print "Wait for 60 seconds to get response from recorder"
-        #sleep(60)
         #Frame json message
         jsonMsgNoUpdate = "{\"noUpdate\":{}}";
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip)

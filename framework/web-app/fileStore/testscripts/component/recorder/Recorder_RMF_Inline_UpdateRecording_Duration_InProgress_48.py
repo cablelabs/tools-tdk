@@ -5,14 +5,14 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_Inline_UpdateRecording_Duration_InProgress_48</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -44,11 +44,13 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk test case script
 import tdklib;
 import recorderlib
+import time
 from random import randint
 from time import sleep
 
@@ -101,6 +103,10 @@ if "SUCCESS" in recLoadStatus.upper():
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
         actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
+
+        epoch_time = str(int(time.time()* 1000))
+        print "EPOCH",epoch_time
+
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
@@ -120,7 +126,7 @@ if "SUCCESS" in recLoadStatus.upper():
                     print "Successfully retrieved acknowledgement from recorder";
 
                     #Frame json message for update recording
-                    jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"0\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P3\",\"duration\":"+newDuration+"}]}}";
+                    jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+epoch_time+",\"start\":"+startTime+",\"duration\":"+newDuration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
                     expResponse = "updateRecordings";
                     tdkTestObj.executeTestCase(expectedResult);
@@ -185,3 +191,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE");

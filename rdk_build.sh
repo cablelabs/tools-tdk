@@ -219,7 +219,9 @@ function build()
     if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so" ];then
     rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so* ${TDK_LIB_PATH}
     fi
-
+    if [ -d "${RDK_PROJECT_ROOT_PATH}/tdk/platform/SM_stub/scripts" ];then
+        cp ${RDK_PROJECT_ROOT_PATH}/tdk/platform/SM_stub/scripts/* ${TDK_BIN_PATH}/scripts/
+    fi
 }
 
 function rebuild()

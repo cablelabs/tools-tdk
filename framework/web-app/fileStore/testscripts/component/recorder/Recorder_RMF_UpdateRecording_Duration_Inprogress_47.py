@@ -5,14 +5,14 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_UpdateRecording_Duration_Inprogress_47</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -44,14 +44,15 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk test case script
 import tdklib;
 import recorderlib
+import time
 from random import randint
 from time import sleep
-
 
 #IP and Port of box, No need to change,
 #This will be replaced with corresponding Box IP and port while executing script
@@ -90,8 +91,8 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        duration = "120000";
-        newDuration = "180000";
+        duration = "60000";
+        newDuration = "120000";
         startTime = "0";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime"
@@ -101,6 +102,10 @@ if "SUCCESS" in recLoadStatus.upper():
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
+
+        epoch_time = str(int(time.time()* 1000))
+        print "EPOCH",epoch_time
+
         if expResponse in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "updateSchedule message post success";
@@ -118,17 +123,15 @@ if "SUCCESS" in recLoadStatus.upper():
                 if 'acknowledgement' in actResponse:
                     tdkTestObj.setResultStatus("SUCCESS");
                     print "Successfully retrieved acknowledgement from recorder";
-                    sleep(30)
 
                     #Frame json message for update recording
-                    #jsonMsg = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"dvrProtocolVersion\":\"7\",\"recordings\":[{\"recordingId\":\""+recordingID+"\",\"deletePriority\":\"P3\",\"duration\":"+newDuration+"}]}}";
-                    jsonMsg = "{\"updateSchedule\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+now+",\"start\":"+startTime+",\"duration\":"+newDuration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
+                    jsonMsgUpdateRecording = "{\"updateRecordings\":{\"requestId\":\""+requestID+"\",\"generationId\":\"TDK123\",\"fullSchedule\":false,\"dvrProtocolVersion\":\"7\",\"schedule\":[{\"recordingId\":\""+recordingID+"\",\"locator\":[\"ocap://"+ocapId+"\"],\"epoch\":"+epoch_time+",\"start\":"+startTime+",\"duration\":"+newDuration+",\"properties\":{\"requestedStart\":0,\"title\":\"Recording_"+recordingID+"\"},\"bitRate\":\"HIGH_BIT_RATE\",\"deletePriority\":\"P3\"}]}}";
 
                     expResponse = "updateRecordings";
                     tdkTestObj.executeTestCase(expectedResult);
-                    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
+                    actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgUpdateRecording,ip);
                     print "updateRecordings Details: %s"%actResponse;
-                    if expResponse not in actResponse:
+                    if expResponse in actResponse:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "updateRecordings message post success";
                         sleep(10);
@@ -146,11 +149,11 @@ if "SUCCESS" in recLoadStatus.upper():
                             tdkTestObj.setResultStatus("SUCCESS");
                             print "Successfully retrieved acknowledgement from recorder";
 			    print "Wait 60s for recording to complete"
-			    sleep(300)
+			    sleep(60)
 			    tdkTestObj.executeTestCase(expectedResult);
 			    print "Sending getRecordings to get the recording list"
 			    recorderlib.callServerHandler('clearStatus',ip)
-			    recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+			    recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
 			    print "Wait for 60 seconds to get response from recorder"
 			    sleep(60);
 			    actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
@@ -187,3 +190,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         #unloading Recorder module
         recObj.unloadModule("Recorder");
+else:
+    print "Failed to load Recorder module";
+    #Set the module loading status
+    recObj.setLoadModuleStatus("FAILURE");

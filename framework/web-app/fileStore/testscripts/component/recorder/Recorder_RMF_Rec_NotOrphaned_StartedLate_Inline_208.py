@@ -5,14 +5,14 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_Rec_NotOrphaned_StartedLate_Inline_208</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -44,6 +44,7 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
@@ -77,14 +78,13 @@ if "SUCCESS" in recLoadStatus.upper():
 
 
 	jsonMsgNoUpdate = "{\"noUpdate\":{}}";
-        actResponse =recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsgNoUpdate,ip);
+        actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
  	print "No Update Schedule Details: %s"%actResponse;
-	sleep(30);
+	sleep(10);
 
         #Pre-requisite
         response = recorderlib.callServerHandler('clearStatus',ip);
         print "Clear Status Details: %s"%response;
-
         response = recorderlib.callServerHandler('retrieveStatus',ip);
         print "Retrieve Status Details: %s"%response;
 
@@ -95,7 +95,7 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule
         requestID = str(randint(10,500));
         recordingID = str(randint(10000,500000));
-	duration = "1200000";
+	duration = "600000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime";
         startTime = "0";
@@ -124,7 +124,7 @@ if "SUCCESS" in recLoadStatus.upper():
 		sleep(5);
 		actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 		retry += 1
-	print "Retrieve Status Details: %s"%actResponse;
+	#print "Retrieve Status Details: %s"%actResponse;
         if (('[]' in actResponse) or ('ERROR' in actResponse)):
 		tdkTestObj.setResultStatus("FAILURE");
         	print "Received Empty/Error status";
@@ -138,46 +138,49 @@ if "SUCCESS" in recLoadStatus.upper():
 		exit();
         print "Successfully retrieved acknowledgement from recorder";
 	print "Wait for the recording to complete partially"
-	sleep(180);
-	# code for deleting the metadata
-	tdkTestObj1=recObj.createTestStep('Recorder_DeleteRecordingMetaData');
+	sleep(60);
+
+        tdkTestObj1 = recObj.createTestStep('Recorder_ExecuteCmd');
         expectedResult="SUCCESS";
-        #Delete properties file
-        tdkTestObj1.addParameter("Recording_Id",recordingID);
+        tdkTestObj1.addParameter("command","find /tmp/mnt/diska3/persistent/dvr/recdbser/ -type f  ! -name  \"*.*\" | xargs grep -rls " +recordingID+ "| xargs rm -rf");
         #Execute the test case in STB
-        tdkTestObj1.executeTestCase(expectedResult);
-        #Get the actual result and details of execution
+        tdkTestObj1.executeTestCase("SUCCESS");
         result = tdkTestObj1.getResult();
-        details = tdkTestObj1.getResultDetails();
-        print result,",",recordingID," ",details
-        if "FAILURE" in result:
-        	print "Failed to delete metadata file"
-                tdkTestObj1.setResultStatus("FAILURE");
-        	recObj.unloadModule("Recorder");
-		exit();
-        print "Deleted metadata file"
-        sleep(5);
-	# end of code for deleting the metadata
-	# reboot and resume the recording
-	print "Rebooting the STB"
+        print "[TEST EXECUTION RESULT] : %s" %result;
+        if "SUCCESS" in result:
+            tdkTestObj1.setResultStatus("SUCCESS");
+        else:
+            tdkTestObj1.setResultStatus("FAILURE");
+        
+        tdkTestObj1 = recObj.createTestStep('Recorder_ExecuteCmd');
+        expectedResult="SUCCESS";
+        tdkTestObj1.addParameter("command","find /opt/data/OCAP_MSV/0/0/DEFAULT_RECORDING_VOLUME/dvr -type f ! -maxdepth 1 -name \"*xml.bak*\" -mmin -3 | xargs rm -rf");
+        #Execute the test case in STB
+        tdkTestObj1.executeTestCase("SUCCESS");
+        result = tdkTestObj1.getResult();
+        print "[TEST EXECUTION RESULT] : %s" %result;
+        if "SUCCESS" in result:
+            tdkTestObj1.setResultStatus("SUCCESS");
+        else:
+            tdkTestObj1.setResultStatus("FAILURE");
+       
+        sleep(10); 
+	#print "Rebooting the STB"
 	recObj.initiateReboot();
 	print "STB is up after reboot"
 	print "Sleeping to wait for the recoder to be up"
 	sleep(300);
 	print "Wait for the recording to complete"
-	sleep(720);
-	print "Sending getRecordings to get the recording list"
-	recorderlib.callServerHandler('clearStatus',ip);
-        recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+	sleep(200);
         tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
         expectedResult="SUCCESS";
         tdkTestObj.executeTestCase(expectedResult);
-        print "Wait 60 seconds to get resonse from the recorder"
-	sleep(60);
-        #check for acknowledgement from recorder
-        tdkTestObj.executeTestCase(expectedResult);
-        actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
-	print actResponse;
+	print "Sending getRecordings to get the recording list"
+	recorderlib.callServerHandler('clearStatus',ip);
+	recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+	print "Wait for 60 seconds to get response from recorder"
+	sleep(60)
+	actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
 	msg = recorderlib.getStatusMessage(actResponse);
 	print "Get Status Message Details: %s"%msg;
         if "" == msg:
@@ -236,7 +239,10 @@ if "SUCCESS" in recLoadStatus.upper():
 		exit();
 	print "error marked as STARTED_LATE";
 	# end of check for status and error of 1st recording ... erased and orphaned 
+        #unloading Recorder module
+        recObj.unloadModule("Recorder");
 else:
 	print "Failed to load Recorder module";
     	#Set the module loading status
     	recObj.setLoadModuleStatus("FAILURE");
+

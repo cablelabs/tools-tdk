@@ -143,6 +143,8 @@ if "SUCCESS" in recLoadStatus.upper():
 			print "Retrieve Status Details: %s"%actResponse;
                         if 'acknowledgement' in actResponse:
                             print "Successfully retrieved acknowledgement from recorder";
+                            sleep(30);
+                            actResponse = recorderlib.callServerHandler('retrieveStatus',ip);
 			    recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID)
 	                    print recordingData
                             if 'NOTFOUND' not in recordingData:

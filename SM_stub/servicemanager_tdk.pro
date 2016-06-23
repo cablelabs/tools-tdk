@@ -11,9 +11,6 @@
 QT += widgets network core gui
 DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION DEBUG_LEVEL_TRACE RDK2DOT0
 
-#non-yocto env variables
-exists(../platform/SM_stub/intel.pri) : include(../platform/SM_stub/intel.pri)
-
 DEFINES += $$CEC_PERSIST_NAME
 
 greaterThan(QT_MAJOR_VERSION, 4) {
@@ -56,6 +53,10 @@ LIBS += -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10
 
 LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
 LIBS += -lservicemanager -ludev -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata -ldshalcli -lds
+
+#non-yocto env variables
+exists(../platform/SM_stub/intel.pri) : include(../platform/SM_stub/intel.pri)
+exists(../platform/SM_stub/broadcom.pri) : include(../platform/SM_stub/broadcom.pri)
 
 contains(DEFINES,HAS_API_HDMI_CEC) {
 HEADERS += servicemanager/include/services/hdmicecservice.h
