@@ -169,7 +169,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                         if Expected_Result in result.upper():
                                                                                 initialmediatime=Mediatime[1]
 										initialmediatime=float(initialmediatime)
-                                                                                #Rewind with 4x
+                                                                                #Rewind with -16x
                                                                                 #result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
 												
                                                                 		play_parameter_value=["HNSrc",1,initialmediatime,-16.0] 
@@ -183,10 +183,10 @@ if Expected_Result in loadModuleStatus.upper():
 
                                                                                                        Mediaspeed[1]=float(Mediaspeed[1]);
 
-                                                                                                       Mediatime[1]=float(Mediatime[1]);
+                                                                                                       #Mediatime[1]=float(Mediatime[1]);
 
 
-                                                                                                       if (Mediatime[1]< initialmediatime) and (Mediaspeed[1] == speed_parameter_value[0]):
+                                                                                                       if (Mediaspeed[1] == speed_parameter_value[0]):
 
                                                                                                                print "success"
 

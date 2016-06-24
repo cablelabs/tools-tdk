@@ -179,12 +179,6 @@ if expected_Result in loadModuleStatus.upper():
 
                                                                 if Expected_Result in result.upper():
                                                                         time.sleep(60)
-                                                                        #Commenting Audio Check as audio will not be available during the trickplay.
-                                                                        #checkStatusParameter=["audioVideoStatus"]
-                                                                        #checkStatusFor=["CheckAudioStatus.sh"]
-                                                                        #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
-                                                                        #print "Audio check Done. Status: ",result;
-
                                                                         checkStatusParameter=["audioVideoStatus"]
                                                                         checkStatusFor=["CheckVideoStatus.sh"]
                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
@@ -197,17 +191,11 @@ if expected_Result in loadModuleStatus.upper():
 
                                                                         if Expected_Result in result.upper():
                                                                                 time.sleep(5)
-                                                                                #checkStatusParameter=["audioVideoStatus"]
-                                                                                #checkStatusFor=["CheckAudioStatus.sh"]
-                                                                                #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
-                                                                                #print "Audio check Done. Status: ",result;
-
                                                                                 checkStatusParameter=["audioVideoStatus"]
                                                                                 checkStatusFor=["CheckVideoStatus.sh"]
                                                                                 result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
                                                                                 print "Video check Done. Status: ",result;
 
-                                                                                #Rewind in -4.0x speed
     										result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                                                                                 Curr_Time=Mediatime[1]
                                                                                 Curr_Time=float(Curr_Time);
@@ -218,11 +206,6 @@ if expected_Result in loadModuleStatus.upper():
 
                                                                                 if Expected_Result in result.upper():
                                                                                         time.sleep(5)
-                                                                                        #checkStatusParameter=["audioVideoStatus"]
-                                                                                        #checkStatusFor=["CheckAudioStatus.sh"]
-                                                                                        #result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);
-                                                                                        #print "Audio check Done. Status: ",result;
-
                                                                                         checkStatusParameter=["audioVideoStatus"]
                                                                                         checkStatusFor=["CheckVideoStatus.sh"]
                                                                                         result=Create_and_ExecuteTestStep('CheckAudioVideoStatus',obj,Expected_Result,checkStatusParameter,checkStatusFor);

@@ -169,17 +169,17 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                 if Expected_Result in result.upper():
                                                                                         initialmediatime=Mediatime[1]
                                                                                         #FF with 32x
-                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
-                                                                                        if Expected_Result in result.upper():
+                                                                                        play_parameter_value=["HNSrc",1,0.0,32.0]
+												
+                                                                			result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+											if Expected_Result in result.upper():
                                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
                                                                                                 if Expected_Result in result.upper():
-                                                                                                        time.sleep(5);
+                                                                                                        time.sleep(30);
                                                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
 													if "SUCCESS" in result.upper():
 	                                                                                                        Mediaspeed[1]=float(Mediaspeed[1]);
-        	                                                                                                Mediatime[1]=float(Mediatime[1]);
-                	                                                                                        initialmediatime=float(initialmediatime);
-                        	                                                                                if (Mediatime[1] > initialmediatime) and (Mediaspeed[1] == speed_parameter_value[0]):
+                        	                                                                                if (Mediaspeed[1] == speed_parameter_value[0]):
                                 	                                                                                print "success"
                                         	                                                                        tdkTestObj.setResultStatus("SUCCESS");
                                                 	                                                        else:

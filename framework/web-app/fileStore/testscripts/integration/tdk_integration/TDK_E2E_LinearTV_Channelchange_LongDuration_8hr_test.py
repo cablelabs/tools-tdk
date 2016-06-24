@@ -73,7 +73,7 @@ ip = <ipaddress>
 port = <port>
 
 testTimeInHours = 8
-configFile = "TDK_E2E_LinearTV_Channelchange_LongDuration_8hr_test.config"
+configFile = 'testscripts/integration/tdk_integration/TDK_E2E_LinearTV_Channelchange_LongDuration_8hr_test.config'
 
 def getURL_PlayURL(obj,streamId):
     
@@ -169,6 +169,9 @@ if "SUCCESS" in result.upper():
         # Parsing through list and executing each step
         for step in range(0,len(itemList)):
 
+            if itemList[step][0] == '#':
+                continue
+
             if "START" in itemList[step]:
                 print "Starting Execution"
 
@@ -176,7 +179,7 @@ if "SUCCESS" in result.upper():
                 print "End of Execution"
 
             elif "CHANNEL_ID" in itemList[step]:
-                channelID = itemList[step].split(":")[-1]
+                channelID = ''.join(itemList[step].splitlines()).split(":")[-1]
                 print "Tuning to channel with stream ID : " , channelID
 
                 #Calling the getURL_PlayURL function for the requested StreamID

@@ -69,9 +69,7 @@ videorec_parameter_value=[0,0,1280,0,720]
 setsource_parameter_name=["rmfSourceElement","rmfSinkElement"]
 setsource_parameter_value=["HNSrc","MPSink"]
 speed_parameter_name=["playSpeed","rmfElement"]
-
 speed_parameter_value=[-64.0,"HNSrc"]
-
 ip = <ipaddress>
 port = <port>
 obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
@@ -166,8 +164,11 @@ if Expected_Result in loadModuleStatus.upper():
                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                                                                         if Expected_Result in result.upper():
                                                                                 initialmediatime=Mediatime[1]
+										initialmediatime=float(initialmediatime);
                                                                                 #Rewind with 64x
-                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
+										play_parameter_value=["HNSrc",1,initialmediatime,-64.0]
+									
+                                                                		result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
                                                                                 if Expected_Result in result.upper():
                                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
                                                                                         if Expected_Result in result.upper():
@@ -175,9 +176,7 @@ if Expected_Result in loadModuleStatus.upper():
                                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
 												if Expected_Result in result.upper():
 													Mediaspeed[1]=float(Mediaspeed[1]);
-                                                                                                	Mediatime[1]=float(Mediatime[1]);
-                                                                                                	initialmediatime=float(initialmediatime);
-                                                                                                	if (Mediatime[1]< initialmediatime) and (Mediaspeed[1] == speed_parameter_value[0]):
+                                                                                                	if (Mediaspeed[1] == speed_parameter_value[0]):
                                                                                                         	print "success"
                                                                                                         	#tdkTestObj.setResultStatus("SUCCESS");
                                                                                                 	else:

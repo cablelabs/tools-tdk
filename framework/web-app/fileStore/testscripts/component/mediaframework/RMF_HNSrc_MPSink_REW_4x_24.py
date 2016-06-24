@@ -5,24 +5,24 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id>895</id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_REW_4x_24</name>
-  <!-- If you are adding a new script you can specify the script name. -->
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>495</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Init</primitive_test_name>
   <!--  -->
   <primitive_test_version>1</primitive_test_version>
   <!--  -->
-  <status>ALLOCATED</status>
+  <status>FREE</status>
   <!--  -->
   <synopsis>These Script tests the RDK Mediaframework to REW the live video with 4x in HNSrc MPSink pipeline. Test Case ID: CT_RMF_HNSrc_MPSink_24.</synopsis>
   <!--  -->
@@ -48,6 +48,7 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 import tdklib;
@@ -69,12 +70,12 @@ videorec_parameter_value=[0,0,720,0,1280]
 setsource_parameter_name=["rmfSourceElement","rmfSinkElement"]
 setsource_parameter_value=["HNSrc","MPSink"]
 speed_parameter_name=["playSpeed","rmfElement"]
-speed_parameter_value=[4.0,"HNSrc"]
+speed_parameter_value=[-4.0,"HNSrc"]
 
 ip = <ipaddress>
 port = <port>
 obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
-obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_FF_4x_24');
+obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_REW_4x_24');
 
 def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parametername, parametervalue):
     #Primitive test case which associated to this Script
@@ -161,15 +162,19 @@ if Expected_Result in loadModuleStatus.upper():
                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
                                                                 if Expected_Result in result.upper():
 									#Pause the HNSRC-->MPSINK pipeline
-									result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
+									time.sleep(60);
+									result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
+									
 									if Expected_Result in result.upper():
+                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
 										#Get the Mediatime value
-										time.sleep(60);
-										result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
+										time.sleep(10);
 										if Expected_Result in result.upper():
-											initialmediatime=Mediatime[1]
-											#FF with 4x
-											result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
+                                                                                        Curr_Time=Mediatime[1]
+                                                                                        Curr_Time=float(Curr_Time);
+											#REW with -4x
+											play_parameter_value=["HNSrc",1,Curr_Time,-4.0]
+											result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
 											if Expected_Result in result.upper():
 												result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
 												if Expected_Result in result.upper():
@@ -177,9 +182,7 @@ if Expected_Result in loadModuleStatus.upper():
 													result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
 													if Expected_Result in result.upper():			
 														Mediaspeed[1]=float(Mediaspeed[1]);
-														Mediatime[1]=float(Mediatime[1]);
-														initialmediatime=float(initialmediatime);
-														if (Mediatime[1] > initialmediatime) and (Mediaspeed[1] == speed_parameter_value[0]):
+														if (Mediaspeed[1] == speed_parameter_value[0]):
 															print "success"
 															tdkTestObj.setResultStatus("SUCCESS");
 														else:

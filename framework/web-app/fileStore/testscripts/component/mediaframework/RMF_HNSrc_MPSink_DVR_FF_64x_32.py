@@ -186,7 +186,9 @@ if expected_Result in loadModuleStatus.upper():
                                                                         if Expected_Result in result.upper():
                                                                                 initialmediatime=Mediatime[1]
                                                                                 #FF with 64x
-                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
+										play_parameter_value=["HNSrc",1,0.0,64.0]
+										
+                                                                		result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
                                                                                 if Expected_Result in result.upper():
                                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
                                                                                         if Expected_Result in result.upper():

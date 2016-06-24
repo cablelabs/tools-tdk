@@ -161,23 +161,24 @@ if Expected_Result in loadModuleStatus.upper():
                                                         if Expected_Result in result.upper():
                                                                 #Play the HNSRC-->MPSINK pipeline
                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
-                                                                time.sleep(10);
+                                                                time.sleep(60);
                                                                 if Expected_Result in result.upper():
-									#Pause the HNSRC-->MPSINK pipeline
-									result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
+									#Get the Mediatime value
+									result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
 									if Expected_Result in result.upper():
-										#Get the Mediatime value
-										time.sleep(240);
-										result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
 										time.sleep(10);
-										result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
+										#Pause the HNSRC-->MPSINK pipeline
+									  	result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
+
+										time.sleep(60);
 										if Expected_Result in result.upper():
 											initialmediatime=Mediatime[1]
 											print initialmediatime
-											#result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
-											#time.sleep(10);
-											#FF with 32x
-											result=Create_and_ExecuteTestStep('RMF_Element_Setspeed',obj,Expected_Result,speed_parameter_name,speed_parameter_value);
+											
+											#FF with 64x
+											play_parameter_value=["HNSrc",1,0.0,64.0]
+											result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
+											time.sleep(10);
 											if Expected_Result in result.upper():
 												result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
 												if Expected_Result in result.upper():
@@ -188,7 +189,7 @@ if Expected_Result in loadModuleStatus.upper():
 														Mediatime[1]=float(Mediatime[1]);
 														print Mediatime[1];
 														initialmediatime=float(initialmediatime);
-														if (Mediatime[1] > initialmediatime) and (Mediaspeed[1] == speed_parameter_value[0]):
+														if (Mediaspeed[1] == speed_parameter_value[0]):
 															print "success"
 															tdkTestObj.setResultStatus("SUCCESS");
 														else:
