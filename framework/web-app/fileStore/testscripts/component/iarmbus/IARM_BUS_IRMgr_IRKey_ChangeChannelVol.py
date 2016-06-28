@@ -152,7 +152,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                 print "FAILURE: Broadcasting Key failed";
 
 					#sleep for 1 sec to receive IR key event that is broadcasted from second app
-					time.sleep(1);
+					time.sleep(2);
 
                                         #Getting last received event details
                                         tdkTestObj = obj.createTestStep('IARMBUS_GetLastReceivedEventDetails');

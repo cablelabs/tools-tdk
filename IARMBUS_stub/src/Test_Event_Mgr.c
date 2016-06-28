@@ -32,7 +32,7 @@ static bool stopped = false;
                 gettimeofday(&tv, NULL); \
                 curtime=tv.tv_sec;\
                 strftime(buffer,30,"%m-%d-%Y %T.",localtime(&curtime));\
-                fprintf(stdout,"\n%s%ld [%s %s():%d] ", buffer, tv.tv_usec, IARM_BUS_DUMMYMGR_NAME, __FUNCTION__, __LINE__);\
+                fprintf(stdout,"\n%s%ld [%s %s():%d pid=%d] ", buffer, tv.tv_usec, IARM_BUS_DUMMYMGR_NAME, __FUNCTION__, __LINE__, getpid());\
                 fprintf(stdout,pui8Debugmsg);\
                 fflush(stdout);\
       }while(0)

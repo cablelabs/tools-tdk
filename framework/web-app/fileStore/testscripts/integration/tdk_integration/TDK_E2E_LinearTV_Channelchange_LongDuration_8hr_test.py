@@ -73,7 +73,7 @@ ip = <ipaddress>
 port = <port>
 
 testTimeInHours = 8
-configFile = 'testscripts/integration/tdk_integration/TDK_E2E_LinearTV_Channelchange_LongDuration_8hr_test.config'
+configFile = 'testscriptsRDKV/integration/tdk_integration/TDK_E2E_LinearTV_Channelchange_LongDuration_8hr_test.config'
 
 def getURL_PlayURL(obj,streamId):
     

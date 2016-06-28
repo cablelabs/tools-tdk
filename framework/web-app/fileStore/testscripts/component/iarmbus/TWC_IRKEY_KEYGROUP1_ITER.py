@@ -104,7 +104,7 @@ print ("[LIB LOAD STATUS]  :  %s" %loadmodulestatus );
 if "SUCCESS" in loadmodulestatus.upper():
 	obj.setLoadModuleStatus('SUCCESS');
 	timeval = 0.0;
-	with open(obj.realpath + '/fileStore/testscripts/component/iarmbus/IRkey_keygroup1_Iter.txt', 'r') as f:
+	with open(obj.realpath + '/fileStore/testscriptsRDKV/component/iarmbus/IRkey_keygroup1_Iter.txt', 'r') as f:
 		#print obj.realpath;
 		data = f.readlines();
 		#expectedresult="SUCCESS/FAILURE"

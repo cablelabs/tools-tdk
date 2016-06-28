@@ -31,7 +31,7 @@
                 gettimeofday(&tv, NULL); \
                 curtime=tv.tv_sec;\
                 strftime(buffer,30,"%m-%d-%Y %T.",localtime(&curtime));\
-                fprintf(stdout,"\n%s%ld [%s %s():%d] ", buffer, tv.tv_usec, "tst_iarmbus", __FUNCTION__, __LINE__);\
+                fprintf(stdout,"\n%s%ld [%s %s():%d pid=%d] ", buffer, tv.tv_usec, "tst_iarmbus", __FUNCTION__, __LINE__, getpid());\
                 fprintf(stdout,pui8Debugmsg);\
                 fflush(stdout);\
       }while(0)
@@ -99,16 +99,26 @@ int main(int argc, char *argv[] )
 
 	/*Broadcasting DISKMGR event*/
 	IARM_BUS_DISKMgr_EventData_t eventData_disk;
+	char *eventType = NULL; 
 	DEBUG_PRINT("Broadcasting DISKMgr HWDISK Event (id: %d)\n", IARM_BUS_DISKMGR_EVENT_HWDISK);
 	IARM_Bus_BroadcastEvent(IARM_BUS_DISKMGR_NAME, IARM_BUS_DISKMGR_EVENT_HWDISK,(void*)&eventData_disk,sizeof(eventData_disk));
 
-	if(strcmp(argv[1],"ON")==0)
+	if (argc < 2)
+	{
+		eventType = (char *)"ON";
+	}
+	else
+	{
+		eventType = argv[1];
+	}
+
+	if(strcmp(eventType,"ON")==0)
 		eventData_disk.eventType = DISKMGR_EVENT_EXTHDD_ON;
-	else if(strcmp(argv[1],"OFF")==0)
+	else if(strcmp(eventType,"OFF")==0)
 		eventData_disk.eventType =DISKMGR_EVENT_EXTHDD_OFF;
-	else if(strcmp(argv[1],"PAIR")==0)
+	else if(strcmp(eventType,"PAIR")==0)
 		eventData_disk.eventType =DISKMGR_EVENT_EXTHDD_PAIR;
-	DEBUG_PRINT("Broadcasting DISKMgr %s EXTHDD Event (id: %d)\n", argv[1], IARM_BUS_DISKMGR_EVENT_EXTHDD);
+	DEBUG_PRINT("Broadcasting DISKMgr %s EXTHDD Event (id: %d)\n", eventType, IARM_BUS_DISKMGR_EVENT_EXTHDD);
 	IARM_Bus_BroadcastEvent(IARM_BUS_DISKMGR_NAME, IARM_BUS_DISKMGR_EVENT_EXTHDD,(void*)&eventData_disk,sizeof(eventData_disk));
 
 	/*Broadcasting SYSMGR event*/
@@ -125,8 +135,7 @@ int main(int argc, char *argv[] )
 	DEBUG_PRINT("Broadcasting SYSMgr System State Event (id: %d)\n", IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE);
 	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE,(void*)&eventData_sys,sizeof(eventData_sys));
 
-	DEBUG_PRINT("Application sleep for 5 seconds\n");
-	sleep(5);
+	sleep(1);
 
 	DEBUG_PRINT("Releasing Resource\n");
 	retCode = IARM_BusDaemon_ReleaseOwnership(IARM_BUS_RESOURCE_FOCUS);
