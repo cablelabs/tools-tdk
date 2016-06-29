@@ -109,7 +109,7 @@ Copyright (c) 2016 Comcast. All rights reserved.
           <parameter name="text" value=""/>
         </parameters>
       </primitiveTest>
-      <primitiveTest id="77" name="DS_setColor" version="6">
+      <primitiveTest id="77" name="DS_SetColor" version="6">
         <function>TestMgr_DS_FP_setColor</function>
         <parameters>
           <parameter name="indicator_name" value="Power"/>
