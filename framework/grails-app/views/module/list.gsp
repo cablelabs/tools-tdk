@@ -14,7 +14,7 @@
 <html>
 	<head>
 		<meta name="layout" content="main">
-		<g:set var="entityName" value="${message(code: 'module.label', default: 'Module')}" />
+		<g:set var="entityName" value="${category}  ${message(code: 'module.label', default: 'Module')}" />
 		<title><g:message code="default.list.label" args="[entityName]" /></title>
 	</head>
 	<body>
@@ -22,10 +22,11 @@
 		<div class="nav" role="navigation">
 			<ul>
 				<%-- For Function ,module and parameter creates--%>
-				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
-				<li><g:link class="create" action="create"><g:message code="default.create.label" args="[entityName]" /></g:link></li>
-				<li> <g:link class="create" action="createFunction" > Create Function </g:link></li>
-				<li><g:link class ="create" action="createParameter"> Create Parameters </g:link></li>			
+				<li><a class="home" href="<g:createLink params="[category:category]" action="configuration" controller="module"/>"><g:message code="default.home.label"/></a></li>
+				<li><g:link class="create" action="create" params="[category:category]"><g:message code="default.create.label" args="[entityName]" /></g:link></li>
+
+				<li> <g:link class="create" action="createFunction"  params="[category:category]"> Create Function </g:link></li>
+				<li><g:link class ="create" action="createParameter" params="[category:category]"> Create Parameters </g:link></li>			
 				
 			</ul>
 		</div>
@@ -37,13 +38,13 @@
 			<table style="width:30%;">
 				<thead>
 					<tr>					
-						<g:sortableColumn property="name" title="${message(code: 'module.name.label', default: 'Name')}" />
+						<g:sortableColumn property="name" title="${message(code: 'module.name.label', default: 'Name')}" params="[category:category]" />
 						
-						<g:sortableColumn property="testGroup" title="${message(code: 'module.testGroup.label', default: 'Test Group')}" />
+						<g:sortableColumn property="testGroup" title="${message(code: 'module.testGroup.label', default: 'Test Group')}" params="[category:category]"/>
 							
 						<%--<g:sortableColumn property="rdkVersion" title="${message(code: 'module.rdkVersion.label', default: 'RDK Version')}" />
 						
-						--%><g:sortableColumn property="executionTime" title="${message(code: 'module.executionTime.label', default: 'Execution TimeOut')}" />			
+						--%><g:sortableColumn property="executionTime" title="${message(code: 'module.executionTime.label', default: 'Execution TimeOut')}" params="[category:category]"/>			
 					</tr>
 				</thead>
 				<tbody>
@@ -62,7 +63,7 @@
 				</tbody>
 			</table>
 			<div class="pagination">
-				<g:paginate total="${moduleInstanceTotal}" />
+				<g:paginate total="${moduleInstanceTotal}" params="[category:category]" />
 			</div>
 		</div>
 	</body>

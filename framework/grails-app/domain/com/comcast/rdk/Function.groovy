@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 /**
  * Indicates a function inside a Module.
  * @author ajith
@@ -26,10 +27,13 @@ class Function {
      * Parent Module.
      */
     Module module
+	
+	Category category = Category.RDKV
 
     static constraints =  {
-        name(nullable:false, blank:false)
         module(nullable:false)
+		category(nullable:false, blank:false)
+		name(nullable:false, blank:false, unique:'category')
     }
     /**
      * Generated HashCode and Equals
@@ -62,6 +66,12 @@ class Function {
         }
         else if ( !name.equals( other.name ) )
             return false;
+		if ( category == null ) {
+			if ( other.category != null )
+				return false;
+		}
+		else if (category != other.category)
+			return false;
         return true;
     }
 
@@ -71,6 +81,7 @@ class Function {
     }
 	
 	static mapping = {
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
 	}
 }

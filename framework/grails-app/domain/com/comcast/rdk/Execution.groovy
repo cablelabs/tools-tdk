@@ -11,6 +11,7 @@
  */
 package com.comcast.rdk
 
+import com.comcast.rdk.Category
 
 /**
  * Domain class for saving the script execution details
@@ -66,7 +67,6 @@ class Execution {
      * time taken for execution
      */
     String executionTime
-	
 	String realExecutionTime
 
     /**
@@ -113,6 +113,13 @@ class Execution {
 	boolean isSystemDiagnosticsEnabled = false
 	
 	/**
+	 *  Flag to mark as re-run failure  enabled for execution
+	 */
+	boolean rerunOnFailure = false
+	
+	
+	
+	/**
 	 * Object to save the third party execution details for the execution(optional)
 	 */
 	ThirdPartyExecutionDetails thirdPartyExecutionDetails = null
@@ -122,10 +129,7 @@ class Execution {
 	 */
 	int scriptCount = 0
 	
-	/**
-	 *  Flag to mark as re-run failure  enabled for execution
-	 */
-	boolean rerunOnFailure = false
+	Category category = Category.RDKV
 	
 	/**
 	 * Execution can have many execution results.
@@ -152,9 +156,10 @@ class Execution {
 		isRerunRequired(nullable:true, blank:true)
 		isStbLogRequired(nullable:true, blank:true)
 		applicationUrl(nullable:true, blank:true)
-		rerunOnFailure(nullable:true, blank:true) 
+		rerunOnFailure(nullable:true, blank:true)
 		scriptCount(nullable:true, blank:true)
 		realExecutionTime(nullable:true, blank:true)
+		category(nullable:false, blank:false)
     }
     
     static mapping = {
@@ -162,6 +167,7 @@ class Execution {
         outputData type: 'text'
         sort id : "desc"
 		executionresults sort:'id' , order: 'asc'
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
     }
     

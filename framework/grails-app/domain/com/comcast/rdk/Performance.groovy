@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 
 class Performance {
 
@@ -23,6 +24,8 @@ class Performance {
 	
 	String processValue1
 	
+	Category category = Category.RDKV
+	
 	//static belongsTo = [ executionResult:ExecutionResult ]
 	
     static constraints = {
@@ -31,9 +34,11 @@ class Performance {
 		processName(nullable:true, blank:true)
 		processValue(nullable:true, blank:true)
 		processValue1(nullable:true, blank:true)
+		category(nullable:false, blank:false)
     }
 	
 	static mapping = {
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
 	}
 }

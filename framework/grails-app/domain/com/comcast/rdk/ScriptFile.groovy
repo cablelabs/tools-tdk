@@ -10,7 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
-
+import com.comcast.rdk.Category
 /**
  * Domain object to hold the meta data regarding script
  *
@@ -21,15 +21,20 @@ class ScriptFile {
 	
 	String moduleName;
 	
+	
+	Category category = Category.RDKV
+	
 	static constraints = {
 		scriptName(nullable:false, blank:false)
 		moduleName(nullable:true, blank:true)
+		category(nullable:false,blank:false)
 	}
 	
 	static mapping = {
 		scriptName type: 'text'
 		moduleName type: 'text'
 		sort scriptName : "asc"
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
 	}
 
@@ -40,8 +45,8 @@ class ScriptFile {
 	
 	public boolean equals( object) {
 		if(object instanceof ScriptFile){
-			ScriptFile script = object
-			return (script.moduleName.equals(moduleName) && script?.scriptName.equals(scriptName));
+			ScriptFile script = (ScriptFile)object
+			return (script.moduleName.equals(moduleName) && script?.scriptName.equals(scriptName) && category == script?.category);
 		}
 		
 		return false

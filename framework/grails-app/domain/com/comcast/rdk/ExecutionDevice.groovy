@@ -13,6 +13,7 @@ package com.comcast.rdk
 
 import java.util.Date;
 import java.util.Set;
+import com.comcast.rdk.Category
 
 /**
  * Domain class for saving the device in script Execution
@@ -52,6 +53,8 @@ class ExecutionDevice {
 	 * Set of ExecutionResults to the execution
 	 */
 	Set executionresults
+	
+	Category category = Category.RDKV
 	 
     /**
 	 * Execution can have many execution results.
@@ -65,12 +68,14 @@ class ExecutionDevice {
 		executionTime(nullable:true, blank:true)
 		status(nullable:false, blank:false)
 		deviceIp(nullable:false, blank:false)
+		category(nullable:false, blank:false)
     }
     
     static mapping = {
         cache true
         sort id : "desc"
 		executionresults sort: 'id', order: 'asc'
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
     }
     

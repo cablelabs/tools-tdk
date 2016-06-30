@@ -27,8 +27,9 @@
 	</label>
 	<%--<g:select id="devices" style="width: 210px;height: 410px;" name="devices" multiple="true" from="${com.comcast.rdk.Device.list().stbName}" value="" />
 	--%>
+	<g:hiddenField name="category" value="${category}"/>
 	<select id="devices" name="devices" class="selectCombo" multiple="true" style="width: 210px;height: 410px;" >
-			<g:each in="${com.comcast.rdk.Device.list()}"
+			<g:each in="${devices}"
 				var="device">
 				<option value="${device.id}">
 					${device.stbName}

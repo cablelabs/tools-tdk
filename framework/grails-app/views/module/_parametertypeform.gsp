@@ -55,6 +55,15 @@
 	</label>
 	<g:textField name="rangeVal" required="" value="${parameterTypeInstance?.rangeVal}"/>
 </div>
+<g:if test="${category == "RDKB"  }">
+<div class="fieldcontain required">
+	<label for="defaultVal">
+		<g:message code="parameterType.defaultVal.label" default="Default Val" />
+		<span class="required-indicator">*</span>
+	</label>
+	<g:textField name="defaultVal" required="" />
+</div>
+</g:if>
 <%
 	def user = User.findByUsername(SecurityUtils.subject.principal)
 	def group = Groups.findById(user.groupName?.id)
@@ -64,7 +73,7 @@
 		<g:message code="parameterType.module.label" default="Module" />
 		<span class="required-indicator">*</span>
 	</label>
-	<g:select noSelection="['' : 'Please Select']"  onChange="onModuleChange();" id="moduleId" name="module" from="${Module.findAllByGroupsOrGroupsIsNull(group, [order: 'asc', sort: 'name'])}" optionKey="id" required="" value="${module?.id}" class="many-to-one"/>
+	<g:select noSelection="['' : 'Please Select']"  onChange="onModuleChange();" id="moduleId" name="module" from="${modules}" optionKey="id" required="" value="${module?.id}" class="many-to-one"/>
 </div>
 
 <div class="fieldcontain ${hasErrors(bean: parameterTypeInstance, field: 'function', 'error')} required">
@@ -85,4 +94,4 @@
 		<g:submitButton name="create" class="save" value="${message(code: 'default.button.create.label', default: 'Create')}" />
 	</span>
 </div>
-
+<g:hiddenField name="category" id="category" value="${category}"/>

@@ -31,7 +31,7 @@
 		<g:message code="function.module.label" default="Module" />
 		<span class="required-indicator">*</span>
 	</label>
-	<g:select id="module" name="module.id" from="${Module.findAllByGroupsOrGroupsIsNull(group, [order: 'asc', sort: 'name'])}" noSelection="['' : 'Please Select']" 
+	<g:select id="module" name="module.id" from="${modules}" noSelection="['' : 'Please Select']" 
 			optionKey="id" required="" value="${functionInstance?.module?.id}" class="many-to-one"/>
 </div>
 
@@ -42,3 +42,4 @@
 	<g:submitButton name="create" class="save" value="${message(code: 'default.button.create.label', default: 'Create')}" />
 	</span>
 </div>
+<g:hiddenField name="category" id="category" value="${category }"/>

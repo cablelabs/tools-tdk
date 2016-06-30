@@ -23,6 +23,8 @@ import org.codehaus.groovy.grails.validation.routines.InetAddressValidator
 public class DeviceStatusUpdater {
 
 	static final int THREAD_COUNT = 20;
+	
+	public static transient boolean flag = false;
 
 	/**
 	 * Executer service for handling the device status update process.
@@ -42,6 +44,16 @@ public class DeviceStatusUpdater {
 		def deviceId
 		String filePath = absolutePath//"${RequestContextHolder.currentRequestAttributes().currentRequest.getRealPath("/")}//fileStore//calldevicestatus_cmndline.py"
 		def deviceList 
+		
+		try {
+			if(!flag){
+				Device.executeUpdate("update Device m set m.category=:rdkvcat where m.category !=:rdkbcat",[rdkvcat:Category.RDKV,rdkbcat:Category.RDKB]);
+				flag = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		
 		Device.withTransaction {
 			try{
 			deviceList = Device.getAll()
@@ -123,8 +135,7 @@ public class DeviceStatusUpdater {
 		}
 	}
 
-	public static String fetchDeviceStatus(def grailsApplication,Device device){
-		
+	public static String fetchDeviceStatus(def grailsApplication,Device device){		
 		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//calldevicestatus_cmndline.py").file
 
 		def absolutePath = layoutFolder.absolutePath
@@ -157,8 +168,7 @@ public class DeviceStatusUpdater {
 			}
 		}
 		
-		if(ipAddress == null ){
-			
+		if(ipAddress == null ){		
 			
 			Enumeration ne = NetworkInterface.getNetworkInterfaces();
 	
@@ -188,9 +198,8 @@ public class DeviceStatusUpdater {
 		}
 
 		int port = Integer.parseInt(device?.statusPort)
-
 		String[] cmd = [
-			"python",
+			PYTHON_COMMAND,
 			filePath,
 			device?.stbIp,
 			port,
@@ -202,11 +211,8 @@ public class DeviceStatusUpdater {
 		
 		try {
 			outData =  new ScriptExecutor().executeScript(cmd,1)
-
 			if(outData != null){
-
 				outData = outData.trim()
-
 			}
 		} catch (Exception e) {
 			e.printStackTrace()
@@ -226,7 +232,6 @@ public class DeviceStatusUpdater {
 			if(value){
 				return value
 			}
-
 		}
 		} catch (Exception e) {
 			e.printStackTrace()

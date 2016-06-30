@@ -30,25 +30,27 @@ class TrendsController {
 	 * Redirects to chart.gsp with the last 200 executions of script group
 	 * @return
 	 */
-	def chart() {		
-		def c = Execution.createCriteria()
-		def executionName =  Execution?.findAllByIsBenchMarkEnabledAndIsSystemDiagnosticsEnabled('1','1')
-		def execName = []
-		executionName?.each { name->
-			if(name.scriptGroup != null ){
-				execName.add(name)
-			}
-		}
-		/*List executionName = [] 			
-		List<Execution> executionList = c.list {
-			isNotNull("scriptGroup")
-			maxResults(200)
-			order("id", "desc")			
-		}	
-		[executionList : executionList]*/	
-		[executionList : execName,startIndex:0,endIndex:8]
-	}
+	def chart() {
 
+		def category = params?.category
+		List<String> executionList = null
+		if(!category)
+			category = RDKV
+		//def c = Execution.createCriteria()
+		if(RDKV.equals(category.trim())){
+			executionList = Execution.executeQuery("select exe.name from Execution exe where exe.category=? and exe.isBenchMarkEnabled=? and exe.isSystemDiagnosticsEnabled=? and exe.scriptGroup is not null",
+					[Category.RDKV, true, true])
+		}
+		else{
+			executionList = Execution.executeQuery("select exe.name from Execution exe where exe.category!=? and exe.isBenchMarkEnabled=? and exe.isSystemDiagnosticsEnabled=? and exe.scriptGroup is not null",
+					[Category.RDKV, true, true])
+		}
+		
+	
+		[executionList : executionList, category:category, startIndex:0,endIndex:8]
+	}
+	
+	
 	/**
 	 * Shows the chart to draw the chart based on the execution status
 	 * @return
@@ -70,7 +72,7 @@ class TrendsController {
 		if(executionList){
 			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
 			
-			scriptGrpSize = scriptGroupInstance.scriptList.size()
+			scriptGrpSize = scriptGroupInstance?.scriptList?.size()
 			def executionSuccessList = []
 			def executionFailureList = []
 			def executionUndefinedList = []
@@ -884,12 +886,12 @@ class TrendsController {
 		def  executionArray = executionIds.split(",")
 		List<Execution> executionList = []
 		Execution execution
-		Execution executionInstance = Execution.findById(executionArray[0])
+		//Execution executionInstance = Execution.findById(executionArray[0])
 		//def scriptGroup = executionInstance?.scriptGroup
 		def counter = 0
 		executionArray.each{ executionId ->			
 			if(counter < 10){
-					execution = Execution.findById(executionId)	
+					execution = Execution.findByName(executionId)	
 					if(execution?.scriptGroup){	
 					//if(scriptGroup.equals(execution?.scriptGroup)){
 						executionList << execution

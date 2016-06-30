@@ -13,11 +13,15 @@ package com.comcast.rdk;
 
 import static com.comcast.rdk.Constants.*
 import org.hibernate.StaleObjectStateException
+import org.junit.internal.runners.statements.FailOnTimeout;
 
 import groovy.sql.Sql
 import java.util.Map;
 
 public class DeviceStatusService {
+	
+	private static final Object LOCK = new Object()
+	
 	static datasource = 'DEFAULT'
 	def executionService
 	def dataSource
@@ -52,7 +56,8 @@ public class DeviceStatusService {
 					deviceStatus = Status.BUSY
 				}
 				else{
-					if(outData.equals( Status.BUSY.toString() )){
+					deviceStatus = getDeviceStatus(outData)
+					/*if(outData.equals( Status.BUSY.toString() )){
 						deviceStatus = Status.BUSY
 					}
 					else if(outData.equals( Status.FREE.toString() )){
@@ -69,17 +74,59 @@ public class DeviceStatusService {
 					}
 					else{
 						deviceStatus = Status.NOT_FOUND
-					}			
+					}*/			
 				}				
 				try {		
-					def sql = new Sql(dataSource)					
-					def status = sql.executeUpdate("update device set device_status = ? where stb_name = ? ",[deviceStatus.toString(),deviceName])
+					def sql = new Sql(dataSource)	
+					synchronized (LOCK) {
+						def status = sql.executeUpdate("update device set device_status = ? where stb_name = ? ",[deviceStatus.toString(),deviceName])
+					}				
 
 				} catch (Exception e) {			
 				}				
 				mocaDeviceService?.updateMocaDevices(deviceInstance,boxtype)
 			}
 	}
+	
+	/*public void updateOnlyDeviceStatus(final Device device, final String outData ){
+		String deviceStatus
+		def deviceInstance
+		def deviceId
+		def deviceName
+		//synchronized (LOCK) {
+			Device.withTransaction {
+				deviceInstance = Device.findByStbName(device?.stbName)
+				deviceId = deviceInstance?.id
+				deviceName = deviceInstance.stbName
+
+				if(deviceInstance){
+					if(executionService.deviceAllocatedList.contains(deviceId)){
+						deviceStatus = Status.BUSY
+					}
+					else{
+						deviceStatus = getDeviceStatus(outData)
+					}
+					try{
+						//deviceInstance = Device.findByStbName(device?.stbName)
+						deviceInstance.deviceStatus = deviceStatus
+						if(!deviceInstance?.save(flush:true,failOnError:true)){
+							println "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+							println deviceInstance?.errors?.allErrors
+						}
+						def sql = new Sql(dataSource)
+						synchronized (LOCK) {
+							status = sql.executeUpdate("update device set device_status = ? where stb_name = ? ",[deviceStatus.toString(),deviceName])
+						}
+					}catch(Exception e){
+						println " !!!!!!!!!!!!!!!!!! error heree : "+e.message
+					}
+		//		}
+			}
+			//println "status : "+Device.findByStbName(device?.stbName)?.deviceStatus
+		}
+			println "status :   "+Device.findAll().get(0)?.deviceStatus
+		
+	}*/
 	
 	public void updateOnlyDeviceStatus(final Device device, final String outData ){
 		String deviceStatus
@@ -97,37 +144,47 @@ public class DeviceStatusService {
 				deviceStatus = Status.BUSY
 			}
 			else{
-				if(outData.equals( Status.BUSY.toString() )){
-					deviceStatus = Status.BUSY
-				}
-				else if(outData.equals( Status.FREE.toString() )){
-					deviceStatus = Status.FREE
-				}
-				else if(outData.equals( Status.NOT_FOUND.toString() )){
-					deviceStatus = Status.NOT_FOUND
-				}
-				else if(outData.equals( Status.HANG.toString() )){
-					deviceStatus = Status.HANG
-				}
-				else if(outData.equals(Status.TDK_DISABLED.toString())){
-					deviceStatus = Status.TDK_DISABLED
-				}
-				else{
-					deviceStatus = Status.NOT_FOUND
-				}
+				deviceStatus = getDeviceStatus(outData)
 			}
 
-			try{	
+			try{
 				Device.withTransaction{
 					Device dev = Device.findById(deviceId)
 					dev?.deviceStatus = deviceStatus
 					dev?.save(flush:true)
-				}			
+				}
+				
 //				def sql = new Sql(dataSource)
 //				def status = sql.executeUpdate("update device set device_status = ? where stb_name = ? ",[deviceStatus.toString(),deviceName])
 			}catch(Exception e){
 			}
 		}
+	}
+	
+	
+	/**
+	 * Identifies the device status based on input 
+	 * @param data
+	 * @return
+	 */
+	def getDeviceStatus(String data){
+		def deviceStatus
+		data = data.trim()
+		switch(data){
+			case  Status.BUSY.toString():   deviceStatus = Status.BUSY
+				break
+			case Status.FREE.toString(): 	deviceStatus = Status.FREE
+				break
+			case  Status.NOT_FOUND.toString() : deviceStatus = Status.NOT_FOUND
+				break
+			case  Status.HANG.toString() : deviceStatus = Status.HANG
+				break
+			case  Status.TDK_DISABLED.toString() : deviceStatus = Status.TDK_DISABLED
+				break
+			default : deviceStatus = Status.NOT_FOUND
+				break
+		}
+		deviceStatus
 	}
 
 	

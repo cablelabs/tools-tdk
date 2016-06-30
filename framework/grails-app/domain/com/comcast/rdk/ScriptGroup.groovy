@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 /**
  * Domain class for grouping the scripts
  * @author sreejasuma
@@ -43,6 +44,8 @@ class ScriptGroup {
 	 */
 	Groups groups
 	
+	Category category = Category.RDKV
+	
     /**
      * ScriptGroup can have many scripts.
      */
@@ -53,11 +56,13 @@ class ScriptGroup {
         status(nullable:true, blank:true)
 		groups(nullable:true, blank:true)
 		scriptList(nullable:true,blank:true)
+		category(nullable:false,blank:false)
     }
     
     static mapping = {
         cache true
         sort name : "asc"            
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
     }
     

@@ -13,11 +13,15 @@ package com.comcast.rdk
 
 import static com.comcast.rdk.Constants.KEY_ON
 
+import java.util.List;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject
 import grails.converters.JSON
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.util.StringUtils;
 import org.apache.shiro.SecurityUtils
+import com.comcast.rdk.Category
 
 /**
  * Class to create Modules, Functions and Parameters
@@ -30,6 +34,7 @@ class ModuleController {
 	def utilityService
     def moduleService
 	
+	def rootPath = null
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
     def index() {
@@ -44,14 +49,16 @@ class ModuleController {
     def list(Integer max) {
         params.max = Math.min(max ?: 10, 100)
 		def groupsInstance = utilityService.getGroup()
-		def moduleInstanceList = Module.findAllByGroupsOrGroupsIsNull(groupsInstance, params)
-		def moduleInstanceListCnt = Module.findAllByGroupsOrGroupsIsNull(groupsInstance)
-        [moduleInstanceList: moduleInstanceList, moduleInstanceTotal: moduleInstanceListCnt.size()]
+		def category = getCategory(params?.category)
+		def moduleInstanceList = getModuleList(groupsInstance, params)
+		def moduleInstanceListCnt = getModuleCount(groupsInstance, category)
+        [moduleInstanceList: moduleInstanceList, moduleInstanceTotal: moduleInstanceListCnt, category:params?.category]
     }
 
 	def crashlog(){
-		def moduleInstanceList = Module.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])
-		[moduleInstanceList: moduleInstanceList]
+		//def moduleInstanceList = Module.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])
+		def moduleInstanceList = getModuleList(utilityService.getGroup(), params)
+		[moduleInstanceList: moduleInstanceList, category : params?.category]
 	}
 	
 	/**
@@ -72,7 +79,7 @@ class ModuleController {
 			}
 			else{
 				(params?.logFileNames).each{ logfilename ->
-					if(!(logfilename.isEmpty())){
+					if(StringUtils.hasText(logfilename)){
 						lst.add(logfilename)
 					}
 				}				
@@ -86,15 +93,15 @@ class ModuleController {
 				flash.message = "Error in saving. Please retry "
 			}			
 		}				
-		redirect(action: "crashlog")		
+		redirect(action: "crashlog", params:[category:params?.category])		
 	}
 	/**
 	 * Function transfer the moduleList to the view page
 	 *   
 	 */
 	def logFileNames(){
-		def moduleInstanceList = Module.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])
-		[moduleInstanceList: moduleInstanceList]
+		def moduleInstanceList = getModuleList(utilityService.getGroup(), params)
+		[moduleInstanceList: moduleInstanceList, category: params?.category]
 	}
 
 	/**
@@ -119,7 +126,7 @@ class ModuleController {
 			}
 			else{
 				params?.stbLogFiles.each{ stblogfilename ->
-					if(!(stblogfilename.isEmpty())){
+					if(StringUtils.hasText(stblogfilename)){
 						lst.add(stblogfilename)
 					}
 				}
@@ -133,7 +140,7 @@ class ModuleController {
 				flash.message = "Error in saving. Please retry "
 			}
 		}
-		redirect(action: "logFileNames")
+		redirect(action: "logFileNames", params:[category: params?.category])
 	}
 	
 	
@@ -166,20 +173,16 @@ class ModuleController {
      * @return
      */
     def create() {  
-		int max ;
-		params.max = Math.min(max ?: 10, 100)	
-		def groupsInstance = utilityService.getGroup()
-		def moduleInstanceList = Module.findAllByGroupsOrGroupsIsNull(groupsInstance, params)
-		def moduleInstanceListCnt = Module.findAllByGroupsOrGroupsIsNull(groupsInstance)
-        [moduleInstance: new Module(params), functionInstance : new Function(params), parameterTypeInstance : new ParameterType(params),moduleInstanceList: moduleInstanceList, moduleInstanceTotal: moduleInstanceListCnt.size()]
-
+		def modules = getModuleList(utilityService.getGroup(), params) 
+        [moduleInstance: new Module(params), functionInstance : new Function(params), parameterTypeInstance : new ParameterType(params),category:params?.category, modules:modules]
     }
 	
 	/**
 	 * create  function 
 	 */
 	def createFunction(){
-		[functionInstance :  new Function(params)]
+		def modules = getModuleList(utilityService.getGroup(), params)
+		[  moduleInstance: new Module(params),functionInstance : new Function(params), category:params?.category , modules:modules]
 		
 		
 	}
@@ -187,49 +190,130 @@ class ModuleController {
 	 * Create parameters 
 	 */
 	def createParameter(){
-		[parameterTypeInstance  : new ParameterType(params)]
+		def modules = getModuleList(utilityService.getGroup(), params)
+		[parameterTypeInstance  : new ParameterType(params),  category:params?.category , modules:modules]
 		
 	}
     def save() {
         def moduleInstance = new Module(params)
 		moduleInstance.groups = utilityService.getGroup()
-        if (!moduleInstance.save(flush: true)) {
-            render(view: "create", model: [moduleInstance: moduleInstance])
-            return
-        }
+		Category category = getCategory(params?.category)
+		def savedEntity = true
+		def createdFile = true
+		Module.withTransaction { status ->
+			if (!moduleInstance.save(flush: true)) {
+				savedEntity = false
+			}
+			if(savedEntity){
+				def created = moduleService.createModule(moduleInstance, getRootPath(), category, params?.testGroup)
+				if(!created){
+					status.setRollbackOnly()
+					createdFile = false
+				}
+			}
+		}
 		setExecutionWaitTime(moduleInstance.executionTime, moduleInstance.name)
+		if(!savedEntity){
+			def map = create()
+			map.put('moduleInstance', moduleInstance)
+			render(view: "create", model: map)
+			return
+		}
+		if(!createdFile){
+			flash.message =  "Failed to save ${moduleInstance}. Error occured while creating primitivetest for ${moduleInstance} in fileStore."
+			render(view: "create", model: [category: params?.category])
+			return
+		}
         flash.message = message(code: 'default.created.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
-        redirect(action: "create")
+        redirect(action: "create",  params:[category:params?.category])
     }
-
     /**
      * Save function corresponding to the selected modules
      * @return
      */
-    def saveFunction() {
-        def functionInstance = new Function(params)
-        if (!functionInstance.save(flush: true)) {
-            render(view: "createFunction", model: [functionInstance: functionInstance])
-            return
-        }
-        flash.message = message(code: 'default.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
-        redirect(action: "createFunction")
-    }
+    def saveFunction() {/*
+		Function.withTransaction { status ->
+			def functionInstance = new Function(params)
+			if (!functionInstance.save(flush: true)) {
+				def map = create()
+				map.put('functionInstance', functionInstance)
+				render(view: "create", model: map)
+				return
+			}
+			try{
+				moduleService.addFunction(params, getRootPath(), getCategory(params?.category))
+				flash.message = message(code: 'default.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
+			}
+			catch(Exception e){
+				status.setRollbackOnly()
+				e.printStackTrace()
+				flash.message = message(code: 'default.not.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
+			}
+		}
+        redirect(action: "create", params:[category:params?.category])
+    */
+		
+	Function.withTransaction { status ->
+		try{
+			def functionInstance = new Function(params)
+			if (!functionInstance.save(flush: true)) {
+				def map = create()
+				map.put('functionInstance', functionInstance)
+				flash.message = message(code: 'default.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
+				render(view: "create", model: map)
+				return
+			}
+		}		
+		catch(Exception e){
+			status.setRollbackOnly()
+			e.printStackTrace()
+			flash.message = message(code: 'default.not.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
+		}
+	}
+	redirect(action: "create", params:[category:params?.category])
+	}
     
     /**
      * Save parameter corresponding to the selected modules
      * and functions
      * @return
      */
-    def saveParameter() {
-        def parameterTypeInstance = new ParameterType(params)
-        if (!parameterTypeInstance.save(flush: true)) {
-            render(view: "createParameter", model: [parameterTypeInstance: parameterTypeInstance])
-            return
-        }
-        flash.message = message(code: 'default.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])
-        redirect(action: "createParameter")
-    }
+    def saveParameter() {/*
+		ParameterType.withTransaction{ status ->
+	        def parameterTypeInstance = new ParameterType(params)
+	        if (!parameterTypeInstance.save(flush: true)) {
+				def map = create()
+				map.put('parameterTypeInstance', parameterTypeInstance)
+	            render(view: "create", model:map)
+	            return
+	        }
+			def result = moduleService.addParameter(params, getRootPath(), getCategory(params?.category))
+			if(result.success){
+				flash.message = message(code: 'default.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])
+			}
+			else{
+				flash.error = result.message
+				status.setRollbackOnly()
+			}
+		}
+		redirect(action: "create", params:[category:params?.category])
+    */
+			try{
+				def parameterTypeInstance = new ParameterType(params)
+				if (!parameterTypeInstance.save(flush: true)) {				
+					flash.message = message(code: 'default.not.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])
+					render(view: "create", model:['parameterTypeInstance': parameterTypeInstance])
+					
+					return
+				}else{				
+				flash.message = message(code: 'default.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])				
+				}		
+			}catch(Exception e){
+				e.printStackTrace()
+				println "ERROR "+e.getMessage()
+			}	
+		redirect(action: "create", params:[category:params?.category])
+		}
 	
 	def updateTimeOut(){
 		try{			
@@ -273,7 +357,7 @@ class ModuleController {
                 }                
             }                 
         }
-        [params : params , moduleInstance : moduleInstance, functionInstanceList : functionInstance, functionInstanceCount : functionInstance.size(), parameteInstanceList : parameteInstanceList, parameteInstanceListTotal : parameteInstanceList.size()]
+        [params : params , moduleInstance : moduleInstance, functionInstanceList : functionInstance, functionInstanceCount : functionInstance.size(), parameteInstanceList : parameteInstanceList, parameteInstanceListTotal : parameteInstanceList.size(), category:moduleInstance?.category]
     }
 
 
@@ -342,14 +426,16 @@ class ModuleController {
         }
         try { 
             def path=request.getSession().getServletContext().getRealPath("")
-            moduleService.deleteFunctionandParameters(moduleInstance,path)           
+            moduleService.deleteFunctionandParameters(moduleInstance, getCategory(params?.category), path)
+			
+			           
             moduleInstance.delete(flush: true)
             flash.message = message(code: 'default.deleted.message', args: [message(code: 'module.label', default: 'Module'),  moduleInstance.name])
-            redirect(action: "list")
+            redirect(action: "list", params:[category:params?.category])
         }
         catch (DataIntegrityViolationException e) {
             flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'module.label', default: 'Module'),  moduleInstance.name])
-            redirect(action: "show", id: id)
+            redirect(action: "show", id: id, params:[category:params?.category])
         }
     }
     
@@ -361,6 +447,7 @@ class ModuleController {
     def deleteFunction = {
         Function functionInstance
 		def unDeletedList = []
+		def fnList = []
 		def selectedFunctions = params.findAll { it.value == KEY_ON }
         try{
 			selectedFunctions.each{
@@ -368,6 +455,7 @@ class ModuleController {
 				try {
 					Function.withTransaction { resultstatus ->
 						functionInstance = Function.findById(key)
+						fnList.add(functionInstance?.name)
 						try{
 							if(!functionInstance.delete(flush:true)){
 								if(functionInstance?.errors?.allErrors?.size() > 0){
@@ -394,7 +482,11 @@ class ModuleController {
 		if(unDeletedList.size() > 0){
 			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), unDeletedList.toString() ])}"
 		}
-        redirect(action: "show", id : params?.moduleid)    
+		fnList.removeAll(unDeletedList)
+		if(!fnList.isEmpty()){
+			moduleService.removeFunction(params, getRootPath(), getCategory(params?.category), fnList)
+		}
+        redirect(action: "show", id : params?.moduleid, params:[category:params?.category])    
     }
     
     /**
@@ -403,6 +495,7 @@ class ModuleController {
 	def deleteParameterType = {
 		def parameterTypeInstance
 		def unDeletedList = []
+		def paramsList = []
 		def selectedParameters = params.findAll { it.value == KEY_ON }
 		try{
 			selectedParameters.each{
@@ -410,6 +503,7 @@ class ModuleController {
 				try {					
 					ParameterType.withTransaction { resultstatus ->
 						parameterTypeInstance = ParameterType.findById(key)
+						paramsList.add(parameterTypeInstance?.name)
 						try{
 							if(!parameterTypeInstance.delete(flush:true)){
 								if(parameterTypeInstance?.errors?.allErrors?.size() > 0){
@@ -420,7 +514,6 @@ class ModuleController {
 						catch (org.springframework.dao.DataIntegrityViolationException e) {
 							unDeletedList.add(parameterTypeInstance?.name)
 						}
-						
 						resultstatus.flush()
 					}
 				} catch (Exception e) {
@@ -433,12 +526,14 @@ class ModuleController {
 		catch (Exception e) {
 			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), parameterTypeInstance?.name])}"
 		}
-
+		paramsList.removeAll(unDeletedList)
 		if(unDeletedList.size() > 0){
 			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), unDeletedList.toString() ])}"
 		}
-
-		redirect(action: "show", id : params?.moduleid)
+		if(!paramsList.isEmpty()){
+			moduleService.removeParameters(params, getRootPath(),getCategory(params?.category), paramsList)
+		}
+		redirect(action: "show", id : params?.moduleid, params:[category:params?.category])
 	}
     
     /**
@@ -497,5 +592,43 @@ class ModuleController {
 		}
 
 		render moduleObj
+	}
+	
+	private List getModuleList(def groups, def params){
+		return  Module.createCriteria().list(max:params.max, offset:params.offset ){
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+			and{
+				eq("category", Utility.getCategory(params?.category))
+				
+			}
+			order params.sort?params.sort:'name', params.order?params.order:'asc'
+		}
+	}
+	
+	private int getModuleCount(def groups, def category){
+		return  Module.createCriteria().count{
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+			and{
+				eq("category", category)
+			}
+		}
+	}
+	
+	private Category getCategory(def category){
+		return Category.valueOf(category)
+	}
+	
+	private String getRootPath(){
+		return request.getSession().getServletContext().getRealPath(Constants.FILE_SEPARATOR)
 	}
 }

@@ -264,26 +264,23 @@
 				<td style="width: 8%">
 				
 			<%-- The new change module wise or random wise --%>
-				<br> <br> <g:submitToRemote class="buttons" value="Module Wise Sort"
-						before="moduleWiseSort('${scriptGroupInstance}')"
-						style=" min-width:150px;" title="Module wise script list sort" />
-					<br> <br> <g:submitToRemote class="buttons"
+								<br> <br> <g:submitToRemote class="buttons"
+						value="Module Wise Sort" id="module"
+						before="moduleOrRandomSort('module')" style=" min-width:150px;" title="Module wise script list sort"   />
+					<br> <br> <g:submitToRemote class="buttons" id="random"
 						value="     Random Sort     " controller="scriptGroup"
 						style="min-width:150px;"
-						before="randomSort('${scriptGroupInstance}')"
-						title="Random wise script list sort" onclick="random();" /> <br> <br>
+						before="moduleOrRandomSort('random')" title="Random wise script list sort" /> <br> <br>							
 					<g:submitToRemote class="buttons"
 						value="   Suite Clean Up   " controller="scriptGroup"
 						style="min-width:150px;"						
-						title="Test Suite Clean Up" before="cleanUp();" onLoading ="cleanUpTestSuite('${scriptGroupInstance}')" /> <br> <br>
-						
-			
-					
+						title="Test Suite Clean Up" before="cleanUp();" onLoading ="cleanUpTestSuite('${scriptGroupInstance}', '${scriptGroupInstance.category}')" /><br><br>				
 					<input type="image" src= "../images/reorder_up.png" value="Move Up" onclick="moveUp();return false;"  title  = " Move Up "> <br><br>
 					<input type="image" src="../images/reorder_down.png" value="Move Down" onclick="moveDown();return false;"  title  = " Move Down ">
 				</td>
 			</tr>
 		</table>
+		
 	<%--<fieldset class="buttons">--%>
 	<div style="width : 90%; text-align: center;">
 	<span class="buttons"><input type="button" class="save" value="${message(code: 'default.button.update.label', default: 'Update')}" onclick="updateSG()"></span>

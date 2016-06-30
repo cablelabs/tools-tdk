@@ -14,6 +14,7 @@
 
 <g:form action="save" controller="primitiveTest" method="post">
 	<input type="hidden" name="parameterTypeIds" id="parameterTypeIds">
+	<g:hiddenField name="category" value="${category}" id="category" />
 	<table>
 		<tr>
 			<th colspan="2" align="center">Create New Primitive Test</th>

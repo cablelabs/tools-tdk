@@ -14,7 +14,7 @@
 <html>
 	<head>
 		<meta name="layout" content="main">
-		<g:set var="entityName" value="${message(code: 'boxType.label', default: 'BoxType')}" />
+		<g:set var="entityName" value="${category} ${message(code: 'boxType.label', default: 'BoxType')}" />
 		<title><g:message code="default.create.label" args="[entityName]" /></title>
 		<g:javascript library="validations"/>
 	</head>
@@ -23,7 +23,7 @@
 		<a href="#create-boxType" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		<div class="nav" role="navigation">
 			<ul>
-				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
+				<li><a class="home" href="<g:createLink params="[category:category]" action="configuration" controller="module"/>"><g:message code="default.home.label"/></a></li>
 			</ul>
 		</div>
 		<div id="create-boxType" class="content scaffold-create" role="main">
@@ -40,7 +40,7 @@
 			</g:hasErrors>
 			
 				<fieldset class="form">
-					<g:render template="form"/>
+					<g:render template="form" model="[category:category]"/>
 				</fieldset>
 				<g:hiddenField id="boxTypeId" name="id" value=""  />
 				<div style="width:80%;text-align: center;">
@@ -58,7 +58,7 @@
 				<thead>
 					<tr>
 						<g:sortableColumn property="name" title="Select" />										
-						<g:sortableColumn property="name" title="${message(code: 'boxType.name.label', default: 'Name')}" />					
+						<g:sortableColumn property="name" title="${message(code: 'boxType.name.label', default: 'Name')}" params="[category:category]" />					
 					</tr>
 				</thead>
 				<tbody>
@@ -78,7 +78,7 @@
 				</tbody>
 			</table>
 			<div class="pagination"  style="width:70%; align: left;">
-				<g:paginate total="${boxTypeInstanceTotal}" />
+				<g:paginate total="${boxTypeInstanceTotal}" params="[category:category]" />
 			</div>
 			&nbsp;<span class="buttons"><g:actionSubmit disabled="true" class="delete" id="delete"  action="deleteBoxType" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
 		</div>

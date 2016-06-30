@@ -45,7 +45,6 @@ class ExcelExporter extends AbstractExporter {
 
 
 			def sheetsList = dataMap.keySet()
-			
 			builder {
 				workbook(outputStream: outputStream){
 					sheetsList.each { sheetName ->
@@ -163,6 +162,7 @@ class ExcelExporter extends AbstractExporter {
 			throw new ExportingException("Error during export", e)
 		}
 	}
+	
 	@Override
 	protected void exportScriptData(OutputStream outputStream)
 	throws ExportingException {
@@ -190,7 +190,7 @@ class ExcelExporter extends AbstractExporter {
 						//Summary page information 
 						if(sheetName.equals("coverPage")){
 							Map coverPageMap = dataMap.get(sheetName)
-							List columnWidthList=[0.05,0.05,0.05,0.05,0.05,0.4,0.4]
+							List columnWidthList=[0.05,0.05,0.05,0.05,0.05,0.4,0.3,0.3]
 							sheet(name: "Summary" ?: "Export", widths: columnWidthList){
 								int rowIndex = 0
 								//Default format
@@ -208,28 +208,54 @@ class ExcelExporter extends AbstractExporter {
 								Set kSet = resultMap.keySet()
 								// Headings
 								cell(row: rowIndex, column: 5, value: "Module Name", format: "header")
-								cell(row: rowIndex, column: 5+1, value: "Script Count", format: "header")
+								cell(row: rowIndex, column: 5+1, value: "Category", format: "header")
+								cell(row: rowIndex, column: 5+2, value: "Script Count", format: "header")
 								rowIndex = 1
 								int totalScriptCount = 0 ;
+								int totalRDKVScriptCount  = 0 
+								int totalRDKBScriptCount  = 0
+								int totalTCLScriptCount = 0
+								
 								// Content 								
 								kSet.eachWithIndex { field, index ->
 									String label = getLabel(field)
 									cell(row: rowIndex, column: 5, value: label, format: "cell")
+									def moduleInstance = Module?.findByName(label)								
+									String category
 									String value = resultMap.get(field)
+									
+									if(moduleInstance){
+										 category = moduleInstance?.category
+										 if(category?.toString()?.equals("RDKV")){
+											 totalRDKVScriptCount +=  Integer.parseInt(value)																					 
+										 }else if (category?.toString()?.equals("RDKB")){
+										 	totalRDKBScriptCount += Integer.parseInt(value)	 
+										 }
+									}else{									
+										 category = "RDKB_TCL"
+										 totalTCLScriptCount += Integer.parseInt(value)										
+									}
+									cell(row: rowIndex, column: 5+1, value: category, format: "cell")									
 									totalScriptCount += Integer.parseInt(value)
-									cell(row: rowIndex, column: 5+1, value: value, format: "cell")
+									cell(row: rowIndex, column: 5+2, value: value, format: "cell")
 									rowIndex ++
-								}	
+								}								
 								// shows the total number of scripts count 							
 								rowIndex++
-								cell(row: rowIndex, column: 5, value: "Total Script Count", format: "header")
-								cell(row: rowIndex, column: 5+1, value: totalScriptCount?.toString() , format: "header")
+								cell(row: rowIndex, column: 5+1, value: "Total RDKV  Script Count", format: "header")
+								cell(row: rowIndex, column: 5+2, value: totalRDKVScriptCount?.toString() , format: "header")
+								cell(row: rowIndex+1, column: 5+1, value: "Total RDKB Script Count", format: "header")
+								cell(row: rowIndex+1, column: 5+2, value: totalRDKBScriptCount?.toString() , format: "header")
+								cell(row: rowIndex+2, column: 5+1, value: "Total TCL Script Count", format: "header")
+								cell(row: rowIndex+2, column: 5+2, value: totalTCLScriptCount?.toString() , format: "header")								
+								cell(row: rowIndex+4, column: 5+1, value: "TOTAL SCRIPT COUNT", format: "header")
+								cell(row: rowIndex+4, column: 5+2, value: totalScriptCount?.toString() , format: "header")
 																
 							}
 						}else{  // Diffrent sheets
 							int rowIndex = 0
 							if(!sheetName.equals("CoverPage")){
-								List columnWidthList=[0.2,0.6]
+								List columnWidthList=[0.6]
 								//module wise script list iteration 
 								sheet(name: sheetName ?: "Export", widths:columnWidthList ){
 									format(name: "header"){
@@ -239,15 +265,15 @@ class ExcelExporter extends AbstractExporter {
 										font(name: "arial", bold: false)
 									}
 									List data = dataMap?.get(sheetName)
-									// shows script list including sl no and scipt name
-									cell(row: rowIndex, column: 0, value: "Sl No", format: "header")
-									cell(row: rowIndex, column: 0+1, value: "Script Name", format: "header")
+									// shows script list including  scipt name
+								//	cell(row: rowIndex, column: 0, value: "Sl No", format: "header")
+									cell(row: rowIndex, column: 0, value: "Script Name", format: "header")
 									rowIndex = 1	
-									int scriptCount = 1							
+								//	int scriptCount = 1							
 									data?.each { script ->
-										cell(row: rowIndex, column: 0,  value:scriptCount?.toString(), format: "cell")
-										cell(row: rowIndex, column: 0+1, value: script, format: "cell")
-										scriptCount++
+										//cell(row: rowIndex, column: 0,  value:scriptCount?.toString(), format: "cell")
+										cell(row: rowIndex, column: 0, value: script, format: "cell")
+										//scriptCount++
 										rowIndex++
 									}
 								}
@@ -263,4 +289,3 @@ class ExcelExporter extends AbstractExporter {
 		}
 	}
 }
-

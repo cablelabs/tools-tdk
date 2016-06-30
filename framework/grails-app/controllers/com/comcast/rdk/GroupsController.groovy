@@ -19,23 +19,23 @@ class GroupsController {
     static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
     def index() {
-        redirect(action: "create")
+        redirect(action: "create",params:params)
     }
 
 	def create(Integer max) {
 		params.max = Math.min(max ?: 10, 100)
-		[groupsInstance: new Groups(params), groupsInstanceList: Groups.list(params), groupsInstanceTotal: Groups.count()]
+		[groupsInstance: new Groups(params), groupsInstanceList: Groups.list(), groupsInstanceTotal: Groups.count(), category:params?.category]
 	}
    
     def save(Integer max) {
         def groupsInstance = new Groups(params)
 		params.max = Math.min(max ?: 10, 100)
         if (!groupsInstance.save(flush: true)) {
-            render(view: "create", model: [groupsInstance: groupsInstance,groupsInstanceList: Groups.list(params), groupsInstanceTotal: Groups.count()])
+            render(view: "create", model: [groupsInstance: groupsInstance,groupsInstanceList: Groups.list(), groupsInstanceTotal: Groups.count(), category:params?.category])
             return
         }
         flash.message = message(code: 'default.created.message', args: [message(code: 'groups.label', default: 'Groups'), groupsInstance?.name])
-        redirect(action: "create")
+        redirect(action: "create", params:[category:params?.category])
     }
 
    
@@ -44,7 +44,7 @@ class GroupsController {
 		params.max = Math.min(max ?: 10, 100)
         if (!groupsInstance) {
             flash.message = message(code: 'default.not.found.message', args: [message(code: 'groups.label', default: 'Groups'), groupsInstance?.name])
-            redirect(action: "create")
+            redirect(action: "create", params:[category:params?.category])
             return
         }
 
@@ -52,7 +52,7 @@ class GroupsController {
 		
 		if(groupBasedOnName && (groupBasedOnName?.id !=  groupsInstance?.id)){
 			flash.message = message(code: 'default.not.unique.message', args: [message(code: 'groups.label', default: 'Group Name')])
-			render(view: "create", model: [groupsInstance: groupsInstance,groupsInstanceList: Groups.list(params), groupsInstanceTotal: Groups.count()])
+			render(view: "create", model: [groupsInstance: groupsInstance,groupsInstanceList: Groups.list(), groupsInstanceTotal: Groups.count(),category:params?.category])
             return
 		}
 		
@@ -61,7 +61,7 @@ class GroupsController {
                 groupsInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
                           [message(code: 'groups.label', default: 'Groups')] as Object[],
                           "Another user has updated this Groups while you were editing")
-                render(view: "create", model: [groupsInstance: groupsInstance,groupsInstanceList: Groups.list(params), groupsInstanceTotal: Groups.count()])
+                render(view: "create", model: [groupsInstance: groupsInstance,groupsInstanceList:Groups.list(), groupsInstanceTotal: Groups.count(), category:params?.category])
                 return
             }
         }
@@ -69,12 +69,12 @@ class GroupsController {
         groupsInstance.properties = params
 
         if (!groupsInstance.save(flush: true)) {
-            render(view: "create", model: [groupsInstance: groupsInstance,groupsInstanceList: Groups.list(params), groupsInstanceTotal: Groups.count()])
+            render(view: "create", model: [groupsInstance: groupsInstance,groupsInstanceList: Groups.list(), groupsInstanceTotal: Groups.count(),category:params?.category])
             return
         }
 
         flash.message = message(code: 'default.updated.message', args: [message(code: 'groups.label', default: 'Groups'), groupsInstance?.name])
-        redirect(action: "create")
+        redirect(action: "create", params:[category:params?.category])
     }
 
     def deleteGroup(){
@@ -108,7 +108,7 @@ class GroupsController {
 		{
 			flash.message = "Multiple groups deleted"
 		}
-		redirect(action: "create")
+		redirect(action: "create",params:[category:params?.category])
 	}
 
 	def getGroup() {

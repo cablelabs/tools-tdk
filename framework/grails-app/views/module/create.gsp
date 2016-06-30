@@ -21,12 +21,17 @@
 		<a href="#create-module" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		<div class="nav" role="navigation">
 			<ul>
-				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
-				<li><g:link class="list" action="list"><g:message code="default.list.label" args="[entityName]" /></g:link></li>
-				<li><g:link class="create" action="createFunction"> <g:message code="Create Function" /></g:link></li>
-				<li><g:link class=" create" action= " createParameter"> <g:message code= "Create Parameter"/></g:link></li>			
+			
+				<li><a class="home" href="<g:createLink params="[category:category]" action="configuration" controller="module"/>"><g:message code="default.home.label"/></a></li>
+				<li><g:link class="list" action="list" params="[category:category]"><g:message code="default.list.label" args="[entityName]" /></g:link></li>
+				<li><g:link class="create" action="createFunction" params="[category:category]"> <g:message code="Create Function" /></g:link></li>
+				<li><g:link class=" create" action= " createParameter" params="[category:category]"> <g:message code= "Create Parameter"/></g:link></li>			
 			</ul>
 		</div>
+		
+		<g:if test="${flash.error}">
+			<div class="errors" role="statuserror">${flash.error}</div>
+		</g:if>
 	
 		<g:if test="${flash.message}">
 			<div class="message" role="status">${flash.message}</div>
@@ -47,7 +52,7 @@
 			</g:hasErrors>
 			<g:form action="save" >
 				<fieldset class="form">
-					<g:render template="form"/>				
+					<g:render template="form" model="[category:category]"/>				
 				</fieldset>
 				<%--<fieldset class="buttons">
 					<g:submitButton name="create" class="save" value="${message(code: 'default.button.create.label', default: 'Create')}" />

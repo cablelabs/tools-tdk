@@ -13,6 +13,8 @@ package com.comcast.rdk
 
 import org.springframework.dao.DataIntegrityViolationException
 import static com.comcast.rdk.Constants.KEY_ON
+import com.comcast.rdk.RDKVersions
+import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException
 import grails.converters.JSON
 
@@ -23,16 +25,18 @@ class RDKVersionsController {
 	static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
 	def index() {
-		redirect(action: "create")
+		redirect(action: "create", params:params)
 	}
 
 	def create(Integer max) {
 		params.max = Math.min(max ?: 10, 100)
 		def groupsInstance = utilityService.getGroup()
-		def rdkVersionsList = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
-		def rdkVersionsListCnt = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		//def rdkVersionsList = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
+		//def rdkVersionsListCnt = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		def rdkVersionsList = getRDKVersionList(groupsInstance,params)
+		def rdkVersionsListCnt = getRDKVersionCount(groupsInstance, params)
 		def rdkVersion = new com.comcast.rdk.RDKVersions(params)
-		[ rdkVersionsInstance: rdkVersion,  rdkVersionsInstanceList: rdkVersionsList,  rdkVersionsInstanceTotal:  rdkVersionsListCnt.size()]
+		[ rdkVersionsInstance: rdkVersion,  rdkVersionsInstanceList: rdkVersionsList,  rdkVersionsInstanceTotal:  rdkVersionsListCnt, category:params?.category]
 	}
 
 	def save() {
@@ -44,18 +48,20 @@ class RDKVersionsController {
 				params?.buildVersion  = build
 			}
 		}
-		def rdkVersionsList = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
-		def rdkVersionsListCnt = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		//def rdkVersionsList = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
+		//def rdkVersionsListCnt = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		def rdkVersionsList = getRDKVersionList(groupsInstance,params)
+		def rdkVersionsListCnt = getRDKVersionCount(groupsInstance, params)
 		def rdkVersionsInstance = new com.comcast.rdk.RDKVersions(params)
 		rdkVersionsInstance.groups = groupsInstance
 		
 		if (!rdkVersionsInstance.save(flush: true)) {
-			render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt.size()])
+			render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt, category:params?.category])
 			return
 		}
 
 		flash.message = message(code: 'default.created.message', args: [message(code: 'rdkVersions.label', default: 'RDKVersions'), rdkVersionsInstance.buildVersion])
-		redirect(action: "create")
+		redirect(action: "create", params:[category:params?.category])
 	}
 
 	def deleteRDKVersions(){
@@ -90,7 +96,7 @@ class RDKVersionsController {
 		{
 			flash.message = message(code: 'default.deleted.message', args: [message(code: 'rdkVersions.label', default: 'RDKVersions'),  rdkVersionsInstance.buildVersion])
 		}
-		redirect(action: "create")
+		redirect(action: "create", params:[category:params?.category])
 	}
 
 	def getRDKVersions() {
@@ -105,12 +111,14 @@ class RDKVersionsController {
 	def update(Long id, Long version, Integer max) {
 		def groupsInstance = utilityService.getGroup()
 		def rdkVersionsInstance = com.comcast.rdk.RDKVersions.get(id)
-		def rdkVersionsList = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
-		def rdkVersionsListCnt = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		//def rdkVersionsList = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
+		//def rdkVersionsListCnt = com.comcast.rdk.RDKVersions.findAllByGroupsOrGroupsIsNull(groupsInstance)
 		params.max = Math.min(max ?: 10, 100)
+		def rdkVersionsList = getRDKVersionList(groupsInstance,params)
+		def rdkVersionsListCnt = getRDKVersionCount(groupsInstance, params)
 		if (!rdkVersionsInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [message(code: 'rdkVersions.label', default: 'RDKVersions'), id])
-			render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt.size()])
+			render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt, category:params?.category])
 			return
 		}
 		
@@ -118,7 +126,7 @@ class RDKVersionsController {
 		
 		if(buildVersionOnName && (buildVersionOnName?.id !=  rdkVersionsInstance?.id)){
 			flash.message = message(code: 'default.not.unique.message', args: [message(code: 'rdkVersions.label', default: 'BuildVersion')])
-			render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt.size()])
+			render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt, category:params?.category])
 			return
 		}
 		
@@ -127,7 +135,7 @@ class RDKVersionsController {
 				rdkVersionsInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
 						  [message(code: 'rdkVersions.label', default: 'RDKVersions')] as Object[],
 						  "Another user has updated this RDKVersions while you were editing")
-				render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt.size()])
+				render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt, category:params?.category])
 				return
 			}
 		}
@@ -143,11 +151,44 @@ class RDKVersionsController {
 		rdkVersionsInstance.properties = params
 
 		if (!rdkVersionsInstance.save(flush: true)) {
-			render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt.size()])
+			render(view: "create", model: [rdkVersionsInstance: rdkVersionsInstance, rdkVersionsInstanceList: rdkVersionsList, rdkVersionsInstanceTotal: rdkVersionsListCnt, category:params?.category])
 			return
 		}
 
 		flash.message = message(code: 'default.updated.message', args: [message(code: 'rdkVersions.label', default: 'RDKVersions'), rdkVersionsInstance.buildVersion])
-		redirect(action: "create")
+		redirect(action: "create", params:[category:params?.category])
+	}
+	
+	private List getRDKVersionList(def groups, def params){
+		return  com.comcast.rdk.RDKVersions.createCriteria().list(max:params?.max, offset:params?.offset ){
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+
+			and{
+				eq("category", Utility.getCategory(params?.category))
+				
+			}
+			order 'buildVersion', params.order?params.order:'asc'
+		}
+	}
+	
+	private int getRDKVersionCount(def groups, def params){
+		return  com.comcast.rdk.RDKVersions.createCriteria().count(){
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+
+			and{
+				eq("category", Utility.getCategory(params?.category))
+				
+			}
+		}
 	}
 }

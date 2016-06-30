@@ -14,7 +14,7 @@
 <html>
 	<head>
 		<meta name="layout" content="main">
-		<g:set var="entityName" value="${message(code: 'soCVendor.label', default: 'SoCVendor')}" />
+		<g:set var="entityName" value="${category} ${message(code: 'soCVendor.label', default: 'SoCVendor')}" />
 		<title><g:message code="default.create.label" args="[entityName]" /></title>
 		<g:javascript library="validations"/>
 	</head>
@@ -23,7 +23,7 @@
 		<a href="#create-soCVendor" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		<div class="nav" role="navigation">
 			<ul>
-				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
+				<li><a class="home" href="<g:createLink params="[category:category]" action="configuration" controller="module"/>"><g:message code="default.home.label"/></a></li>
 			</ul>
 		</div>
 		<div id="create-soCVendor" class="content scaffold-create" role="main">
@@ -43,6 +43,7 @@
 					<g:render template="form"/>
 				</fieldset>
 				<g:hiddenField id="soCVendorId" name="id" value=""  />
+				<g:hiddenField name="category" id="category" value="${category}"/>
 				<div style="width:80%;text-align: center;">
 					<span id="createBtn" class="buttons"><g:actionSubmit class="save" id="create" action="save" value="${message(code: 'default.button.create.label', default: 'Create')}" /></span>
 					<span id="updateBtn" style="display:none;" class="buttons"><g:actionSubmit class="save" id="update" action="update" value="${message(code: 'default.button.update.label', default: 'Update')}" /></span>					
@@ -58,7 +59,7 @@
 				<thead>
 					<tr>
 						<g:sortableColumn property="name" title="Select" />			
-						<g:sortableColumn property="name" title="${message(code: 'soCVendor.name.label', default: 'Name')}" />
+						<g:sortableColumn property="name" title="${message(code: 'soCVendor.name.label', default: 'Name')}" params="[category:category]"/>
 					
 					</tr>
 				</thead>
@@ -79,7 +80,7 @@
 				</tbody>
 			</table>
 			<div class="pagination" style="width:70%; align: left;">
-				<g:paginate total="${soCVendorInstanceTotal}" />
+				<g:paginate total="${soCVendorInstanceTotal}" params="[category:category]"/>
 			</div>
 			&nbsp;<span class="buttons"><g:actionSubmit disabled="true" class="delete" id="delete"  action="deleteSoCVendor" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>			
 		</div>

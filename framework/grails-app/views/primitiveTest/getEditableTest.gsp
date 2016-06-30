@@ -20,7 +20,7 @@
 	<input type="hidden" name="id" id="id" value="${primitiveTest?.name}">
 	<input type="hidden" name="ptVersion" id="ptVersion" value="${primitiveTest?.version}">
 	<input type="hidden" name="functionValue" id="functionValue" value="${primitiveTest?.function?.id}">
-	
+	<g:hiddenField name="category" value="${category}" id="category"/>
 	<table>
 		<tr>
 			<th colspan="2" align="center">Edit Primitive Test</th>
@@ -92,7 +92,7 @@
 		<tr id="buttons">
 			<td colspan="2" align="center">
 				<input type="submit" value="Update" id="save">&emsp;
-				<input type="reset" value="Cancel" id="cancel" onclick="makeTestEditable('${primitiveTest?.name}')">
+				<input type="reset" value="Cancel" id="cancel" onclick="makeTestEditable('${primitiveTest?.name},${category}')">
 			</td>
 		</tr>
 	</table>

@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 /**
  * Class represents a RDK module.
  * @author ajith
@@ -40,20 +41,28 @@ class Module{
 	 * Indicates the group name which the device belongs
 	 */
 	Groups groups
+	
+	/**
+	 * Indicates the category to which the device belongs - RDK-V or RDK-B
+	 */
+	Category category = Category.RDKV
 
 	static hasMany = [logFileNames: String , stbLogFiles :String]
 	
     static constraints = {
-        name(unique:true, blank:false, nullable:false)
+//        name(unique:true, blank:false, nullable:false)
         testGroup(nullable:false, blank:false)
         rdkVersion(nullable:false, blank:false)
 		groups(nullable:true, blank:true)	
 		executionTime(nullable:true, blank:true)
+		category(nullable:false, blank:false)
+		name(blank:false, nullable:false,unique:'category' )
     }
 
 	static mapping = {
 		cache true
 		sort name : "asc"
+		category enumType: "string" , defaultValue:'"RDKV"'  
 		datasource 'ALL'
 	}
 	

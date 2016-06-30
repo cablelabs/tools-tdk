@@ -43,12 +43,13 @@ function clearLocks(scriptName){
 </script>
 
 
-<g:if test="${script}" >
+<g:if test="${script && category != 'RDKB_TCL' }" >
 <g:form name="editScriptForm" action="updateScript" controller="scriptGroup" method="post">
 	<input type="hidden" name="id" id="id" value="${script?.primitiveTest?.module?.name?.trim()}@${script.name}">
 	<input type="hidden" name="scriptVersion" id="scriptVersion" value="${script.version}">
 	<input type="hidden" name="prevScriptName" id ="prevScriptName" value="${script.name}">
 	<input type="hidden" name="scriptName" id ="scriptName" value="">
+	<g:hiddenField name="category" value="${script?.category}"/>
 	<table>
 		<tr>
 			<th colspan="4" align="center">Edit Script</th>
@@ -58,7 +59,9 @@ function clearLocks(scriptName){
 			<td>
 				<input type="text" name="name" id="name" size="37" maxlength="150" value="${script.name}">			
 				&emsp;&emsp;&emsp;&emsp;
-				<a href="" onclick="showStreamDetails();return false;">Show Stream Details</a>
+				<g:if test="${script?.category != 'RDKB'}">
+					<a href="" onclick="showStreamDetails();return false;">Show Stream Details</a>
+				</g:if>
 			</td>
 		</tr>
 		<tr>
@@ -83,7 +86,7 @@ function clearLocks(scriptName){
 		<tr>
 			<td>Box Type</td>
 			<td>
-				<g:select id="boxTypes" name="boxTypes"  from="${com.comcast.rdk.BoxType.list()}" optionKey="id" required="" value="${script.boxTypes}" class="many-to-one selectCombo" multiple="true"/>
+				<g:select id="boxTypes" name="boxTypes"  from="${com.comcast.rdk.BoxType.findAllByCategory(script.category)}" optionKey="id" required="" value="${script.boxTypes}" class="many-to-one selectCombo" multiple="true"/>
 				 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Execution TimeOut &emsp;
 				<input type="text" id="execTime" name="executionTime" size="5" value="${script.executionTime}" />(min)
 			</td>
@@ -92,7 +95,7 @@ function clearLocks(scriptName){
 		<tr>
 			<td>RDK Version</td>
 			<td>
-				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.list()}" optionKey="id" required="" value="${script?.rdkVersions}" class="many-to-one selectCombo" multiple="true"/>
+				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.findAllByCategory(script.category)}" optionKey="id" required="" value="${script.rdkVersions}" class="many-to-one selectCombo" multiple="true"/>
 				 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Tags&emsp;&emsp; 
 				<g:select id="scriptTags" name="scriptTags"  from="${com.comcast.rdk.ScriptTag.list()}" optionKey="id" value="${script?.scriptTags}" class="many-to-one selectCombo" multiple="true"/>
 			
@@ -177,6 +180,7 @@ function clearLocks(scriptName){
 </g:form>
 <g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 <g:form name="downloadScriptForm" action="exportScriptContent" controller="scriptGroup" method="post">
+		<g:hiddenField name="category" value="${script?.category}"/>
 		<input type="hidden" name="id" id="id" value="${script?.name}">
 		<table>
 		<tr></tr>
@@ -189,4 +193,92 @@ function clearLocks(scriptName){
 		</table>
 	</g:form>
 </g:if>
+</g:if>
+<!-- Only display for tcl scripts, is not editable -->
+<g:if test="${script && category == 'RDKB_TCL' }">
+	<!--<g:if test="${category == 'RDKB_TCL' }"> -->
+		<%--<table>
+			<tr>
+				<th colspan="4" align="center">Edit Script</th>
+			</tr>
+			<tr>
+				<td>Script Name</td>
+				<td>
+					${scriptName }
+				</td>
+			</tr>
+			<tr>
+				<td>Content</td>
+				<td>
+				<g:textArea id="tclText" name="tcl" value="${script}" style="height:250px;width:700px;" disabled="true"></g:textArea></td>
+			</tr>
+			<tr>
+				<td colspan="2" align="center" style="padding: 20px;"><g:if
+						test="${SecurityUtils.getSubject().hasRole('ADMIN')}">
+						<div id = "editDivTcl">
+							<input id ="editButtonTcl" class= "editscriptbutton" type="button" onclick="needToConfirm= true;enableEditTcl('${scriptName}')" value="Edit Script">
+						</div>
+						<div id ="updateDivTcl">			
+							<input type="button" id="saveTcl" class= "updatebutton"   style="display: none"  onclick="updateTclContents('${scriptName}')" value="Update" > 
+							 <input type="reset" id="cancelTcl" class="deletebutton" style="display: none" value="Cancel"  onclick="cancelTclEdit('${scriptName}')">		
+						</div>
+						<div style="padding-top:30px;">	
+						<g:form action="exportTCL" controller="scriptGroup">
+							<g:hiddenField name="scriptName" value="${ scriptName}" />
+							<span class="buttons"> <input class="download"
+								type="submit" value="Download Script" id="">
+							</span>
+						</g:form>
+						</div>
+					</g:if></td>
+			</tr>
+		</table>
+--%><!-- </g:if>  -->	
+
+
+<g:form action="saveTcl" method="post">
+<g:hiddenField name="scriptName" value="${scriptName}"/> 
+<table> 
+			<tr>
+				<th colspan="4" align="center">Edit Script</th>
+			</tr>
+			<tr>
+				<td>Script Name</td>
+				<td>
+					${scriptName }
+				</td>
+			</tr>
+			<tr>
+				<td>Content</td>
+				<td>
+				<g:textArea id="tclText" name="tclText" value="${script}" style="height:250px;width:700px;" disabled="true"></g:textArea></td>
+			</tr>
+			<tr>
+				<td colspan="2" align="center" style="padding: 20px;"><g:if
+						test="${SecurityUtils.getSubject().hasRole('ADMIN')}">
+						<div id = "editDivTcl">
+							<input id ="editButtonTcl" class= "editscriptbutton" type="button" onclick="needToConfirm= true;enableEditTcl('${scriptName}')" value="Edit Script">
+						</div>
+						<div id ="updateDivTcl">			
+							<input type="submit" id="saveTcl" class= "updatebutton"   style="display: none"  value="Update"  onclick="needToConfirm= true;confirmExit();"> 
+							 <input type="reset" id="cancelTcl" class="deletebutton" style="display: none" value="Cancel"  onclick="cancelTclEdit('${scriptName}')">		
+						</div>
+					</g:if></td>
+			</tr>
+		</table>
+
+
+</g:form>
+
+<div style="padding-top:20px;padding-left: 15%;">	
+
+<g:form action="exportTCL" controller="scriptGroup">
+							<g:hiddenField name="scriptName" value="${ scriptName}" />
+							<span class="buttons"> <input class="download"
+								type="submit" value="Download Script" id="">
+							</span>
+						</g:form>
+						
+</div>
+
 </g:if>

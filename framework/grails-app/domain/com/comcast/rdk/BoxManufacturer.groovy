@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 /**
  * Class represents BoxManufacturers.
  * @author sreejasuma
@@ -26,9 +27,13 @@ class BoxManufacturer {
 	 */
 	Groups groups
 	
+	Category category = Category.RDKV
+	
     static constraints = {
-        name(unique:true, blank:false, nullable:false)
+      //  name(unique:true, blank:false, nullable:false)
 		groups(nullable:true, blank:true)
+		category(nullable:false, blank:false) 
+		name(blank:false, nullable:false,unique:'category' )
     }
 	
 	@Override
@@ -37,6 +42,7 @@ class BoxManufacturer {
 	}
 	
 	static mapping = {
+		category column: "category", defaultValue:'"RDKV"'
 		datasource 'ALL'
 	}
 }

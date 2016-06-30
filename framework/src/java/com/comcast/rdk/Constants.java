@@ -200,5 +200,35 @@ public final class Constants
     public static final String OS_WINDOWS = "Windows";
     public static final String OS_NAME = "os.name";
     
+    public static final String FILE_SEPARATOR = System.getProperty("file.separator"); 
+    
+    public static final Object LOCK = new Object();
+    
+    public static final String SOCKET_CLIENT = "com.comcast.rdk.TclSocketExecutor";
+    
+    public static final String WEBPA_CLIENT = "com.comcast.rdk.WebPAClient";
+    
+    // classpaths to help TCL script find the necessary classes from jar files
+    public static final String JAR_PATH = "WEB-INF/lib/*";
+    
+    public static final String CLASS_PATH = "WEB-INF/classes/";
+    
+    public static final String TCL_FAILED = "FAILED";
+    
+    public static final String TCL_FAILED_RESPONSE = "FailureReason";
+    
+    public static final String REQUEST_FAILED = "HTTP request failed";
+    
+    public static final String SERVICE_UNKNOWN = "Name or service not known";
+    
+    public static final String UNREACHABLE_NETWORK = "Network is unreachable";
+    
+    private static final int TCL_TIMEOUT = 12;
+    private static final String RDKV="RDKV";
+    private static final String RDKB="RDKB";
+    private static final String RDKB_TCL = "RDKB_TCL";
+    
+    private static final String  TESTSCRIPTS_RDKV="testscriptsRDKV";
+    private static final String  TESTSCRIPTS_RDKB="testscriptsRDKB";    
     
 }

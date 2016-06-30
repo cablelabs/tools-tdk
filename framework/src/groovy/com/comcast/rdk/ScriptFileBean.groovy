@@ -22,4 +22,6 @@ public class ScriptFileBean {
 	def scriptName
 	
 	def moduleName
+	
+	def category
 }

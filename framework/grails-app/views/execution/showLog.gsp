@@ -117,25 +117,24 @@ function hideParameters(k){
 
 <g:if test="${executionDeviceInstanceList?.size() > 0}">
 
-	<g:each in="${executionDeviceInstanceList}" status="k"
-		var="executionDeviceInstance">
-		<table id="logtable">
-			<tr>
-				<th colspan="2">Execution Details</th>
-			</tr>
-			<tr class="trborder even">
-				<td colspan="2" align="right"><g:link action="writexmldata"
-						params="[execName:"${executionInstance?.name}"]" >Download Result(xml)</g:link>
-					<br> <g:link action="exportToExcel" params="[id:"${executionInstance?.id}"]" >Download Raw Report(Excel)</g:link>
-					<br> <g:link action="exportConsolidatedToExcel" params="[id:"${executionInstance?.id}"]" >Download Consolidated Report(Excel)</g:link>
-
-				</td>
-			</tr>
-			<tr class="trborder even">
-				<td class="tdhead">Device Name</td>
-				<td>
-					${executionDeviceInstance?.device}
-				</td>				
+<g:each in="${executionDeviceInstanceList}" status="k"  var="executionDeviceInstance">
+<table id="logtable" >
+	<tr>
+		<th colspan="2">Execution Details</th>	
+	</tr>
+	<tr class="trborder even">
+		<td colspan="2" align="right">
+		<g:link action="writexmldata" params="[execName:"${executionInstance?.name}"]" >Download Result(xml)</g:link>
+		<br>
+		<g:link action="exportToExcel" params="[id:"${executionInstance?.id}"]" >Download Raw Report(Excel)</g:link>		
+		<br>
+		<g:link action="exportConsolidatedToExcel" params="[id:"${executionInstance?.id}"]" >Download Consolidated Report(Excel)</g:link>
+		
+		</td>		
+	</tr>		
+	<tr class="trborder even">
+		<td class="tdhead">Device Name</td>
+		<td >${executionDeviceInstance?.device}</td>				
 	</tr>
 	<tr class="odd">
 		<td class="tdhead">IP</td>
@@ -497,6 +496,9 @@ function hideParameters(k){
 							<tr class="fnhead">
 								<td class="tdhead" colspan="4">Memory Utilization</td>														
 							</tr>
+
+
+
 												<tr class="fnhead1">
 													<td class="tdhead" style="max-width: 20px"></td>
 													<td class="tdhead">Free Memory (KB)</td>

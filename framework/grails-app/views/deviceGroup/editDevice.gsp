@@ -32,12 +32,28 @@
 			<g:if test="${flag != 'STATIC'}" >								
 					<span class="buttons"><g:actionSubmit class="save" action="updateDevice" value="${message(code: 'default.button.update.label', default: 'Update')}" /></span>
 					<span class="buttons"><g:actionSubmit class="delete" action="deviceDelete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
-					<span class="buttons"><g:actionSubmit class="download" action="downloadDeviceXml" value= "Download"/> </span> 
-					
-			</g:if>
-			
+					<g:if test="${deviceInstance?.category?.toString()?.equals('RDKV')}">
+						<span class="buttons"><g:actionSubmit class="download" action="downloadDeviceXml" value= "Download"/> </span> 
+					</g:if>
+			</g:if>			
 			</div>
 		</g:form>
+		<!--  New feature for upload configuration file -->	
+		<div id="uploadTclConfig">
+				<g:if test="${category?.toString()?.equals('RDKB')}">
+					<div style="padding-left: 17%; padding-top: 2%;" id="uploadForm">
+
+						<g:form enctype="multipart/form-data" name="tclForm">
+			Update Configuration file (<span style="color: #C00;">TCL Execution *</span>) <input
+								type="file" name="tclConfigFile" id="file" />
+							<input type="button" value="UPLOAD" onclick="upload()" />
+						</g:form>
+					</div>
+				</g:if>
+			</div>
+			<div style="padding-left:17%;padding-top:2%;" id="uploadStatus"></div>	
 	</div>
+	
+	
 	</g:if>
 	

@@ -11,6 +11,7 @@
  */
 package com.comcast.rdk
 
+import com.comcast.rdk.Category
 /**
  * Class represents RDK Versions.
  */
@@ -25,10 +26,13 @@ class RDKVersions {
 	 * Indicates the group name which the box belongs
 	 */
 	Groups groups
+	
+	Category category = Category.RDKV
     
     static constraints = {
 		buildVersion(unique:true, blank:false, nullable:false)
 		groups(nullable:true, blank:true)
+		category(nullable:false,blank:false)
     }
 
 	@Override
@@ -38,6 +42,7 @@ class RDKVersions {
 	
 	static mapping = {
 		sort buildVersion : "asc"
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
 	}
 }

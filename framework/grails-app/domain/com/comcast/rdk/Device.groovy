@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 
 /**
  * Domain class for holding the details of devices 
@@ -23,6 +24,11 @@ class Device
      * IP of the STB.
      */
     String stbIp
+	/**
+	 * serialNo of the STB.
+	 */
+	String serialNo
+   
    
     /**
      * Name of the STB.     
@@ -110,6 +116,11 @@ class Device
 	 * Indicates the group name which the device belongs 
 	 */
 	Groups groups
+	
+	/**
+	 * Category of device
+	 */
+	Category category = Category.RDKV
     
     static constraints = {
         stbIp(nullable:false, blank:false)
@@ -121,6 +132,8 @@ class Device
         gatewayIp(nullable:true, blank:true)
 		macId(nullable:true, blank:true)
 		groups(nullable:true, blank:true)
+		category(nullable:false, blank:false)
+		serialNo(nullable:true, blank:true)
     }
 	
 	static hasMany = [childDevices:Device]
@@ -128,6 +141,7 @@ class Device
     static mapping = {
         cache true
         sort id : "asc"       
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL' 
     }
 

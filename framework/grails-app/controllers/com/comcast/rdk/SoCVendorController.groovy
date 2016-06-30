@@ -12,8 +12,12 @@
 package com.comcast.rdk
 
 import static com.comcast.rdk.Constants.KEY_ON
+
+import org.grails.datastore.gorm.finders.MethodExpression.IsNull;
 import org.springframework.dao.DataIntegrityViolationException
 import grails.converters.JSON
+
+import com.comcast.rdk.Category 
 
 
 class SoCVendorController {
@@ -29,36 +33,39 @@ class SoCVendorController {
     def create(Integer max) {
 		params.max = Math.min(max ?: 10, 100)
 		def groupsInstance = utilityService.getGroup()
-		def soCVendorList = SoCVendor.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
-		def soCVendorListCnt = SoCVendor.findAllByGroupsOrGroupsIsNull(groupsInstance)
-        [soCVendorInstance: new SoCVendor(params) ,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt.size()]
+		def category = Utility.getCategory(params?.category)
+		def soCVendorList = getVendorList(groupsInstance, params) 
+		def soCVendorListCnt = getVendorListCount(groupsInstance, category)
+		[soCVendorInstance: new SoCVendor(params) ,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt, category:params?.category]
     }
 
     def save(Integer max) {
         def soCVendorInstance = new SoCVendor(params)
 		params.max = Math.min(max ?: 10, 100)		
 		def groupsInstance = utilityService.getGroup()
-		def soCVendorList = SoCVendor.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
-		def soCVendorListCnt = SoCVendor.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		def category = Utility.getCategory(params?.category)
+		def soCVendorList = getVendorList(groupsInstance, [name:'name',order:'asc']) 
+		def soCVendorListCnt =  getVendorListCount(groupsInstance, category)
 		soCVendorInstance.groups = groupsInstance
         if (!soCVendorInstance.save(flush: true)) {
-            render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt.size()])
+            render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt], category:params?.category)
             return
         }
 
         flash.message = message(code: 'default.created.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'), soCVendorInstance.name])
-        redirect(action: "create")
+        redirect(action: "create", params:[category:params?.category])
     }
 
     def update(Long id, Long version,Integer max) {
         def soCVendorInstance = SoCVendor.get(id)		
 		def groupsInstance = utilityService.getGroup()
-		def soCVendorList = SoCVendor.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
-		def soCVendorListCnt = SoCVendor.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		def category = Utility.getCategory(params?.category)
+		def soCVendorList = getVendorList(groupsInstance, params) 
+		def soCVendorListCnt =  getVendorListCount(groupsInstance, category)
 		params.max = Math.min(max ?: 10, 100)
         if (!soCVendorInstance) {
             flash.message = message(code: 'default.not.found.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'), id])
-            render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt.size()])
+            render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt, category:params?.category])
             return
         }
 		
@@ -66,7 +73,7 @@ class SoCVendorController {
 		
 		if(socVendorBasedOnName && (socVendorBasedOnName?.id !=  soCVendorInstance?.id)){
 			flash.message = message(code: 'default.not.unique.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor Name')])
-			render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt.size()])
+			render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt, category:params?.category])
 			return
 		}
 		
@@ -75,7 +82,7 @@ class SoCVendorController {
                 soCVendorInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
                           [message(code: 'soCVendor.label', default: 'SoCVendor')] as Object[],
                           "Another user has updated this SoCVendor while you were editing")
-                render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt.size()])
+                render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt, category:params?.category])
                 return
             }
         }
@@ -83,12 +90,12 @@ class SoCVendorController {
         soCVendorInstance.properties = params
 
         if (!soCVendorInstance.save(flush: true)) {
-			render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt.size()])
+			render(view: "create", model: [soCVendorInstance: soCVendorInstance,soCVendorInstanceList: soCVendorList, soCVendorInstanceTotal: soCVendorListCnt, category:params?.category])
             return
         }
 
         flash.message = message(code: 'default.updated.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'), soCVendorInstance.name])
-        redirect(action: "create")
+        redirect(action: "create",params:[category:params?.category])
     }
 	
 	def deleteSoCVendor(){
@@ -122,7 +129,7 @@ class SoCVendorController {
 		{
 			flash.message = message(code: 'default.deleted.message', args: [message(code: 'soCVendor.label', default: 'SoCVendor'),  soCVendorInstance.name])
 		}
-		redirect(action: "create")
+		redirect(action: "create", params:[category:params?.category])
 	}
 
 	def getSoCVendor() {
@@ -133,5 +140,36 @@ class SoCVendorController {
 		}
 		render soCVendorInstanceList as JSON
 	}
+	
+	private List getVendorList(def groups, def params){
+		return  SoCVendor?.createCriteria().list(max:params?.max, offset:params?.offset ){
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
 
+			and{
+				eq("category", Utility.getCategory(params?.category))
+				
+			}
+			order params.sort?params.sort:'name', params.order?params.order:'asc'
+		}
+	} 
+	
+	private int getVendorListCount(def groups, def category){
+		return  SoCVendor.createCriteria().count{
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+
+			and{
+				eq("category", category)
+			}
+		}
+	}
 }

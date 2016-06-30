@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 /**
  * Class to hold the job details 
  * @author Sreeja
@@ -51,13 +52,7 @@ class JobDetails {
      * Device Group in which the script
      * is executed
      */
-    String deviceGroup	
-	
-	/**
-	 * Rerun on failure 
-	 */
-	String rerunOnFailure
-	
+    String deviceGroup
     
     String appUrl
     
@@ -78,6 +73,12 @@ class JobDetails {
 	String isBenchMark
 	
 	String isStbLogRequired
+	
+	Category category = Category.RDKV
+	/**
+	 * Rerun on failure
+	 */
+	String rerunOnFailure
 	
 	
 	String rerun
@@ -111,6 +112,7 @@ class JobDetails {
 		rerun(nullable:true, blank:true)
 		repeatCount(nullable:true, blank:true)
 		groups(nullable:true, blank:true)
+		category(nullable:false, blank:false) 
 		rerunOnFailure(nullable:true, blank:true)
 		
     }
@@ -122,6 +124,7 @@ class JobDetails {
 	
 	static mapping = {
 		sort id : "desc"
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
 	}
    

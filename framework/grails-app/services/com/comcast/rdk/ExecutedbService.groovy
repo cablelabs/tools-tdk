@@ -530,7 +530,6 @@ class ExecutedbService {
 			int counter1=1
 			Date date = new Date()
 			executionResultInstanceList.each{ executionResultInstance ->
-				println ""
 				counter1= counter1+1
 			
 				String scriptName = executionResultInstance?.script
@@ -545,9 +544,13 @@ class ExecutedbService {
 				
 //				}
 				
-				
-				def sMap = scriptService.getScriptNameModuleNameMapping(realPath)
-				moduleName = sMap.get(scriptName)
+				if(executionResultInstance?.category != Category.RDKB_TCL){
+					def sMap = scriptService.getScriptNameModuleNameMapping(realPath)
+					moduleName = sMap.get(scriptName)
+				}
+				else{
+					moduleName = 'tcl'
+				}
 				
 				int i = 0
 				
@@ -846,22 +849,44 @@ class ExecutedbService {
 			executionResultInstanceList.each{ executionResultInstance ->
 				String scriptName = executionResultInstance?.script
 				String status = executionResultInstance?.status
-				def moduleName = sMap.get(scriptName)
-				
-				if(moduleName && !moduleName.equals("null") && !moduleName.equals("")){
+				Category category = executionResultInstance?.category 
+				if(category != Category.RDKB_TCL){
+					def moduleName = sMap.get(scriptName)
 					
-					def moduleMap = detailDataMap.get(moduleName)
-					if(!moduleMap){
-						moduleMap = [:]
-						detailDataMap.put(moduleName,moduleMap)
+					if(moduleName && !moduleName.equals("null") && !moduleName.equals("")){
+						
+						def moduleMap = detailDataMap.get(moduleName)
+						if(!moduleMap){
+							moduleMap = [:]
+							detailDataMap.put(moduleName,moduleMap)
+						}
+						def statusCounter = moduleMap.get(status)
+						if(!statusCounter){
+							statusCounter = 0
+						}
+						statusCounter ++
+						moduleMap.put(status, statusCounter)
 					}
-					def statusCounter = moduleMap.get(status)
-					if(!statusCounter){
-						statusCounter = 0
-					}
-					statusCounter ++
-					moduleMap.put(status, statusCounter)
 				}
+				else{
+					def moduleName = 'tcl'
+					
+					if(moduleName && !moduleName.equals("null") && !moduleName.equals("")){
+						
+						def moduleMap = detailDataMap.get(moduleName)
+						if(!moduleMap){
+							moduleMap = [:]
+							detailDataMap.put(moduleName,moduleMap)
+						}
+						def statusCounter = moduleMap.get(status)
+						if(!statusCounter){
+							statusCounter = 0
+						}
+						statusCounter ++
+						moduleMap.put(status, statusCounter)
+					}
+				}
+				
 			}
 		}
 		

@@ -14,7 +14,7 @@
 <html>
 	<head>
 		<meta name="layout" content="main">
-		<g:set var="entityName" value="${message(code: 'module.label', default: 'Add Crash LogFile Path')}" />
+		<g:set var="entityName" value="${category} ${message(code: 'module.label', default: 'Add Crash LogFile Path')}" />
 		<title><g:message code="default.create.label" args="[entityName]" /></title>
 		<g:javascript library="jquery.table.addrow" />
 		<script type="text/javascript">
@@ -29,9 +29,10 @@
 	<body>
 	<g:form controller="module" action="saveCrashLogs" >
 		<a href="#show-module" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
+		<g:hiddenField name="category" value="${category}"/>
 		<div class="nav" role="navigation">
 			<ul>
-				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
+				<li><a class="home" href="<g:createLink params="[category:category]" action="configuration" controller="module"/>"><g:message code="default.home.label"/></a></li>
 			</ul>
 		</div>
 		<div id="show-module" class="content scaffold-show" role="main">

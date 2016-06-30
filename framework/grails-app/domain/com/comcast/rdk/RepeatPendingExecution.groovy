@@ -10,7 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
-
+import com.comcast.rdk.Category
 /**
  * Domain class to save the pending execution repeat details
  *
@@ -41,6 +41,8 @@ class RepeatPendingExecution {
 	 * index of the current execution
 	 */
 	int currentExecutionCount = -1
+	
+	Category category = Category.RDKV
 
     static constraints = {
 		deviceName(nullable:false, blank:false)
@@ -48,10 +50,15 @@ class RepeatPendingExecution {
 		completeExecutionPending(nullable:true, blank:true)
 		currentExecutionCount(nullable:true, blank:true)
 		executionName(nullable:false, blank:false)
+		category(nullable:false, blank:false)
     }
 	
 	@Override
 	String toString() {
 		return (deviceName + " - " + executionName) ?: 'NULL'
+	}
+	static mapping = {
+		category enumType: "string" , defaultValue:'"RDKV"' 
+		datasource 'ALL'
 	}
 }

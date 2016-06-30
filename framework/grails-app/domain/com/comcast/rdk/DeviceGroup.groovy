@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 /**
  * Domain class for grouping the devices 
  * @author sreejasuma
@@ -40,6 +41,12 @@ class DeviceGroup
 	 */
 	Groups groups
 	
+	
+	/**
+	 * Category RDK-V or RDK-B
+	 */
+	Category category = Category.RDKV
+	
     /**
      * DeviceGroup can have many devices.
      */
@@ -49,11 +56,13 @@ class DeviceGroup
         name(nullable:false, blank:false, unique:true)      
         status(nullable:true, blank:true)      
 		groups(nullable:true, blank:true)
+		category(nullable:false, blank:false)
     }
    
     static mapping = {
         cache true
         sort id : "asc"        
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
     }
 

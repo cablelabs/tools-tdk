@@ -11,6 +11,7 @@
 -->
 <%@ page import="com.comcast.rdk.Device"%>
 <%@ page import="com.comcast.rdk.DeviceGroup"%>
+<%@ page import="com.comcast.rdk.Utility"%>
 
 <script type="text/javascript">
 $(document).ready(function() {
@@ -20,11 +21,12 @@ $(document).ready(function() {
 
 </script>
 
-
+<div id="display">
 <g:form  method="post">
 	<input type="hidden" name="id" id="id" value="${device?.id}">
 	<g:hiddenField name="stbname" id="stbname" value="${device?.stbName}" />
 	<g:hiddenField name="exId" id="exId" value="${device?.id}" />	
+	<g:hiddenField name="category" id="category" value="${category}"/>
 	<table>
 		<tr>
 			<th colspan="2" align="center">Execute script on ${device?.stbName}</th>
@@ -47,7 +49,7 @@ $(document).ready(function() {
 			<td style="vertical-align: middle;">Device</td>
 			<td style="vertical-align: middle;">
 				<select id="devices" name="devices" multiple="true" id="functionValue" onchange="showDateTime();" style="height:200px;width:400px" class="many-to-one selectCombo">
-					<g:each in="${Device?.list()}" var="deviceInstance">
+					<g:each in="${devices}" var="deviceInstance">
 						<g:if test="${deviceInstance.id == device.id}">
 							<option value="${deviceInstance.id}" selected="selected">${deviceInstance.stbName}</option>
 						</g:if>
@@ -65,6 +67,20 @@ $(document).ready(function() {
 				&emsp;<input onclick="showSingle();" id="singleTestRadio" type="radio" name="myGroup" checked="checked" value="SingleScript" />SingleScript	
 			</td>		
 		</tr>	
+		<g:if test="${category != 'RDKV'}">
+		<tr>
+			<td>Select Script Type</td>
+			<%--<td>${deviceInstance.id}
+				<input onclick="${remoteFunction(action: 'showDevices',params: [category:'RDKB', id:device?.id])}" id="pythonRadio" type="radio" name="" checked="checked" value="TestSuite" />Python 
+				&emsp;<input onclick="${remoteFunction(action: 'showDevices',params: [category:'RDKB_TCL', id:device?.id])}" id="tclRadio" type="radio" name="" value="SingleScript" />TCL	
+			</td>		
+		--%>
+			<td>
+				<input onclick="pageLoadOnScriptType('RDKB','${device?.id}')" id="pythonRadio" type="radio" name="" checked="checked" value="TestSuite" />Python 
+				&emsp;<input onclick="pageLoadOnScriptType('RDKB_TCL','${device?.id}')" id="tclRadio" type="radio" name="" value="SingleScript" />TCL	
+			</td>	
+		</tr>
+		</g:if>
 		<tr>
 			<td>Select Script</td>
 			<td>				
@@ -101,7 +117,7 @@ $(document).ready(function() {
 				</g:submitToRemote>&emsp;	
 				</span>
 				<span id="scheduleBtn" class="buttons">
-					<input type=button class="save"  onclick="showScheduler(${device?.id});return false;"
+					<input type=button class="save"  onclick="showScheduler(${device?.id}, '${category}');return false;"
 					value="Schedule" />	
 				</span>
 				<div id="popup" style="display: none;">
@@ -127,6 +143,6 @@ $(document).ready(function() {
 <div id="scheduleJobPopup" style="display: none; overflow: auto; width : 98%; height : 98%;">	
 </div>
 
-
+</div>
 
 

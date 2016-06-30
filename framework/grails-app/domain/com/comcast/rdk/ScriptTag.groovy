@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 
 class ScriptTag {
 	
@@ -22,9 +23,11 @@ class ScriptTag {
 	 * Indicates the group name which the device belongs
 	 */
 	Groups groups
+	Category category = Category.RDKV
 	
     static constraints = {
         name(unique:true, blank:false, nullable:false)
+		category(nullable:false, blank:false)
 		groups(nullable:true, blank:true)
     }
 	
@@ -35,6 +38,7 @@ class ScriptTag {
 	
 	static mapping = {
 		sort id : "asc"
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
 	}
 }

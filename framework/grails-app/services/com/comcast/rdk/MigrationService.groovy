@@ -31,10 +31,9 @@ class MigrationService {
 	 * FUnction to start migration
 	 * @return
 	 */
-	def doMigration() {
+	def doMigration() {		
 		println " migration "
-		//		backup()
-		
+		//		backup()	
 		
 		long time = System.currentTimeMillis()
 		Role.withSession{ Role.findAll() }
@@ -53,6 +52,7 @@ class MigrationService {
 				cleanData()
 			}
 		} catch (Throwable e) {
+		println " ERRORRSS "+e.getMessage();
 			e.printStackTrace()
 		}
 		println "MIGRATION COMPLETED" + (System.currentTimeMillis() - time )
@@ -76,6 +76,18 @@ class MigrationService {
 		moduleNameChanges.put("tr69","tr069module")
 		moduleNameChanges.put("trm","TRM")
 		moduleNameChanges.put("xupnp","xupnp")
+		
+	/*	moduleNameChanges.put("AdvancedConfig","AdvancedConfig")
+		moduleNameChanges.put("ccspcommon_mbus","ccspcommon_mbus")
+		moduleNameChanges.put("CosaCM","CosaCM")
+		moduleNameChanges.put("MBus","MBus")
+		moduleNameChanges.put("SNMP_PA","SNMP_PA")
+		moduleNameChanges.put("WebPA","WebPA")
+		moduleNameChanges.put("WECB","WECB")
+		moduleNameChanges.put("CMAgent","CMAgent")
+		moduleNameChanges.put("MtaAgent","MtaAgent")
+		moduleNameChanges.put("TR069","TR069")
+		moduleNameChanges.put("WIFIAgent","WIFIAgent")*/
 	}
 
 
@@ -175,7 +187,7 @@ class MigrationService {
 		List migrationList = []
 		tempList.each {entry ->
 			SoCVendor.withSession {
-				def soCVendor = SoCVendor.findByName(entry?.name)
+				def soCVendor = SoCVendor.findByNameAndCategory(entry?.name,entry?.category)
 				if(!soCVendor){
 					migrationList.add(entry)
 				}
@@ -195,8 +207,16 @@ class MigrationService {
 					if(groups){
 						socVendor.groups = groups
 					}
-					socVendor.save(flush:true)
+					
+					if(!mObject?.category){
+						socVendor.category = Category.RDKV
+					}
+					
+					if(!socVendor.save(flush:true)){
+						println " save error "+socVendor?.errors
+					}
 				}catch(Exception e ){
+				println " Err : "+e.getMessage()
 				}
 			}
 		}
@@ -254,7 +274,7 @@ class MigrationService {
 		List migrationList = []
 		boxManufacturerTempList.each {tempEntry ->
 			BoxManufacturer.withSession {
-				def boxManufacturer = BoxManufacturer.findByName(tempEntry?.name)
+				def boxManufacturer = BoxManufacturer.findByNameAndCategory(tempEntry?.name,tempEntry?.category)
 				if(!boxManufacturer){
 					migrationList.add(tempEntry)
 				}
@@ -273,6 +293,11 @@ class MigrationService {
 					if(groups){
 						boxManufacturer.groups = groups
 					}
+					
+					if(!mObject?.category){
+						boxManufacturer.category = Category.RDKV
+					}
+					
 					boxManufacturer.save(flush:true)
 				}catch(Exception e ){
 				}
@@ -332,7 +357,7 @@ class MigrationService {
 		List migrationList = []
 		tempList.each {tempEntry ->
 			BoxType.withSession {
-				def newDbObject = BoxType.findByName(tempEntry?.name)
+				def newDbObject = BoxType.findByNameAndCategory(tempEntry?.name,tempEntry?.category)
 				if(!newDbObject){
 					migrationList.add(tempEntry)
 				}
@@ -342,6 +367,10 @@ class MigrationService {
 			BoxType.withSession {
 				try{
 					BoxType newObject  = new BoxType(migrateObj.getProperties())
+					
+					if(!migrateObj?.category){
+						newObject.category = Category.RDKV
+					}
 					newObject.save(flush:true)
 				}catch(Exception e ){
 				}
@@ -363,7 +392,7 @@ class MigrationService {
 		List migrationList = []
 		rdkVersionTempList.each {tempEntry ->
 			RDKVersions.withSession {
-				def rdkVersion = RDKVersions.findByBuildVersion(tempEntry?.buildVersion)
+				def rdkVersion = RDKVersions.findByBuildVersionAndCategory(tempEntry?.buildVersion,tempEntry?.category)
 				if(!rdkVersion){
 					migrationList.add(tempEntry)
 				}
@@ -381,6 +410,9 @@ class MigrationService {
 
 					if(groups){
 						rdkVersion.groups = groups
+					}
+					if(!mObject?.category){
+						rdkVersion.category = Category.RDKV
 					}
 					if(!rdkVersion.save(flush:true)){
 					//	println "Error saving rdkVersion instance : ${rdkVersion.errors}"
@@ -406,7 +438,7 @@ class MigrationService {
 		List migrationList = []
 		scriptTagTempList.each {tempEntry ->
 			RDKVersions.withSession {
-				def scriptTag = ScriptTag.findByName(tempEntry?.name)
+				def scriptTag = ScriptTag.findByNameAndCategory(tempEntry?.name,tempEntry?.category)
 				if(!scriptTag){
 					migrationList.add(tempEntry)
 				}
@@ -424,6 +456,9 @@ class MigrationService {
 
 					if(groups){
 						scriptTag.groups = groups
+					}
+					if(!mObject?.category){
+						scriptTag.category = Category.RDKV
 					}
 					if(!scriptTag.save(flush:true)){
 					//	println "Error saving rdkVersion instance : ${rdkVersion.errors}"
@@ -447,7 +482,7 @@ class MigrationService {
 			List migrationList = []
 					tempList.each {tempEntry ->
 					ScriptFile.withSession {
-						def newDbObject = ScriptFile.findByScriptNameAndModuleName(tempEntry?.scriptName,tempEntry?.moduleName)
+						def newDbObject = ScriptFile.findByScriptNameAndModuleNameAndCategory(tempEntry?.scriptName,tempEntry?.moduleName,tempEntry?.category)
 								if(!newDbObject){
 									migrationList.add(tempEntry)
 								}
@@ -461,6 +496,9 @@ class MigrationService {
 					def sObject  = new ScriptFile()
 					sObject.setScriptName(migrateObj?.scriptName)
 					sObject.setModuleName(migrateObj?.moduleName)
+					if(!migrateObj?.category){
+						sObject.category = Category.RDKV
+					}
 					sObject.save(flush:true)
 				}catch(Exception e ){
 				println "EEE "+e.getMessage()
@@ -498,21 +536,27 @@ class MigrationService {
 					if(migrateObj?.scriptList?.size() > 0){
 						def sproperties = migrateObj.getProperties()
 						def oldModuleName = migrateObj?.name
-						if(moduleNameChanges.containsKey(oldModuleName)){
-							oldModuleName = moduleNameChanges.get(oldModuleName)
-						}
+//						if(moduleNameChanges.containsKey(oldModuleName)){
+//							oldModuleName = moduleNameChanges.get(oldModuleName)
+//						}
 
-						sgObject = ScriptGroup.findByName(oldModuleName)
+						sgObject = ScriptGroup.findByNameAndCategory(oldModuleName,migrateObj?.category)
 						if(!sgObject){
 							sgObject  = new ScriptGroup()
 						}
 						sgObject.properties = sproperties
+						if(!migrateObj?.category){
+							sgObject.category = Category.RDKV
+						}
 						sgObject.scripts =  []
 						sgObject.scriptsList =  []
 						sgObject.scriptList =  []
-						sgObject.save(flush:true)
+						if(!sgObject.save(flush:true)){
+							println " Error in save "+sgObject?.errors
+						}
 					}
 				}catch(Exception e ){
+				println " Errors "+e.getMessage()
 				}
 
 			}
@@ -525,7 +569,7 @@ class MigrationService {
 				ScriptGroup.withSession {
 					if(scrpt){
 						if(!sgObject?.scriptList?.contains(script)){
-							sgObject.addToScriptList(scrpt)
+							sgObject?.addToScriptList(scrpt)
 						}else{
 						}
 					}
@@ -547,7 +591,6 @@ class MigrationService {
 //				}
 //			}
 		}
-
 	}
 
 	/**
@@ -1364,11 +1407,11 @@ class MigrationService {
 			Module.withSession {
 				try{
 					def oldModuleName = mModule?.name
-					if(moduleNameChanges.containsKey(oldModuleName)){
-						oldModuleName = moduleNameChanges.get(oldModuleName)
-					}
+//					if(moduleNameChanges.containsKey(oldModuleName)){
+//						oldModuleName = moduleNameChanges.get(oldModuleName)
+//					}
 					
-					module = Module.findByName(oldModuleName)
+					module = Module.findByNameAndCategory(oldModuleName,mModule?.category)
 					if(module == null){
 						module  = new Module()
 					}
@@ -1379,7 +1422,13 @@ class MigrationService {
 					if(groups){
 						module.groups = groups
 					}
-					module.save(flush:true)
+					if(!mModule?.category){
+						module.category = Category.RDKV
+					}
+					
+					if(!module.save(flush:true)){
+						println " Error "+module?.errors
+					}
 				}catch(Exception e ){
 				}
 			}
@@ -1415,7 +1464,7 @@ class MigrationService {
 			Function.withSession {
 				try{
 
-					Function ff = Function.findByNameAndModule(mObject.name,mod)
+					Function ff = Function.findByNameAndModuleAndCategory(mObject.name,mod,mObject?.category)
 
 					if(ff == null){
 						ff  = new Function()
@@ -1427,6 +1476,10 @@ class MigrationService {
 					if(mod1){
 						ff.module = mod1
 					}
+					if(!mObject?.category){
+						ff.category = Category.RDKV
+					}
+					
 					if(!ff.save(flush:true)){
 					//	println "Error saving function instance : ${ff.errors}"
 					}

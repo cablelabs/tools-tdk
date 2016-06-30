@@ -22,15 +22,15 @@
 					<tr>
 						<g:sortableColumn style="width:2%;" property="markAll" title="${message(code: 'execution.result.label', default: '        ')}" />
 						
-						<g:sortableColumn style="width:20%;" property="name" title="${message(code: 'execution.name.label', default: 'Execution Name')}" />
+						<g:sortableColumn style="width:20%;" property="name" title="${message(code: 'execution.name.label', default: 'Execution Name')}" params="[category:category]"/>
 						
 						<th width="30%" style="max-width: 330px;text-align: center;">Script/ScriptGroup</th>
 						
-						<g:sortableColumn style="width:14%;" property="device" title="${message(code: 'execution.device.label', default: 'Device')}" />
+						<g:sortableColumn style="width:14%;" property="device" title="${message(code: 'execution.device.label', default: 'Device')}" params="[category:category]"/>
 					
-						<g:sortableColumn style="width:14%;" property="dateOfExecution" title="${message(code: 'execution.dateOfExecution.label', default: 'Date Of Execution')}" />
+						<g:sortableColumn style="width:14%;" property="dateOfExecution" title="${message(code: 'execution.dateOfExecution.label', default: 'Date Of Execution')}" params="[category:category]"/>
 					
-						<g:sortableColumn style="width:12%;" property="result" title="${message(code: 'execution.result.label', default: 'Result')}" />
+						<g:sortableColumn style="width:12%;" property="result" title="${message(code: 'execution.result.label', default: 'Result')}" params="[category:category]"/>
 						
 						<g:sortableColumn style="width:8%;" property="export" title="${message(code: 'execution.result.label', default: '        ')}" />
 					    
@@ -130,7 +130,7 @@
 					<input type="checkbox" name="markAll" id="markAll2" class="markAll" onclick="clickCheckbox(this)">
 					<label> <b>Mark All </b></label>	
 					<img src="../images/trash.png" onclick="deleteResults();return false;" style="cursor: pointer;" alt="Delete" />
-					<g:paginate total="${executorInstanceTotal}" />
+					<g:paginate total="${executorInstanceTotal}" params="[category:category]"/>
 			</div>
 			
 			</div>

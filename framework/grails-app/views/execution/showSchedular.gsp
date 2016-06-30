@@ -20,7 +20,7 @@
 	<g:hiddenField name="repeatCount" id="repeatCount" value="${repeatCount}" />
 	<g:hiddenField name="devices" id="repeatCount" value="${devices}" />
 	<g:hiddenField name="isStbLogRequired" id="transferLogs" value="${isStbLogRequired}" />
-	
+	<g:hiddenField name="category" id="category" value="${category}"/>
 	
 	<table id="scheduletable">
 	<tr>

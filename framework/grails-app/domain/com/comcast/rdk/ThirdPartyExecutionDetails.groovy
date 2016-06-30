@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 
 /**
  * domain object to save the third party execution details
@@ -32,6 +33,8 @@ class ThirdPartyExecutionDetails {
 	String imageName
 	
 	String boxType
+	
+	Category category = Category.RDKV
 
     static constraints = {
 		execName(nullable:true, blank:true)
@@ -41,9 +44,11 @@ class ThirdPartyExecutionDetails {
 		imageName(nullable:true, blank:true)
 		boxType(nullable:true, blank:true)
 		executionStartTime(nullable:true, blank:true)
+		category(nullable:false, blank:false)
     }
 	
 	static mapping = {
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
 	}
 }

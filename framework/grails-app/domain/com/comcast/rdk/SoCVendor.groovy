@@ -10,7 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
-
+import com.comcast.rdk.Category
 /**
  * Class for storing SocVendors.
  * @author sreejasuma
@@ -28,9 +28,16 @@ class SoCVendor {
 	 */
 	Groups groups
 	
+	/**
+	 * Indicates the group name which the device belongs
+	 */
+	Category category = Category.RDKV
+	
     static constraints = {
-        name(unique:true, blank:false, nullable:false)
+       // name(unique:true, blank:false, nullable:false)
 		groups(nullable:true, blank:true)
+		category(nullable:false, blank:false)
+		name(blank:false, nullable:false,unique:['category'])
     }
 
 
@@ -62,10 +69,19 @@ class SoCVendor {
         }
         else if ( !name.equals( other.name ) )
             return false;
+		else if(category == null){
+			if(other.category != null){
+				return false
+			}
+		}
+		else if(category != other.category){
+			return false
+		} 
         return true;
     }
 	
 	static mapping = {
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
 	}
 }

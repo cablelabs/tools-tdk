@@ -12,6 +12,7 @@
 package com.comcast.rdk
 
 import java.util.Date;
+import com.comcast.rdk.Category
 
 /**
  * Domain class for saving the script execution details
@@ -65,6 +66,8 @@ class ExecutionResult {
 	
 	String totalExecutionTime 
 	
+	Category category = Category.RDKV
+	
     /**
      * Execution can have many execution results.
      */
@@ -82,6 +85,8 @@ class ExecutionResult {
 		executionTime(nullable:true, blank:true)
 		moduleName(nullable:true, blank:true)
 		totalExecutionTime(nullable:true, blank:true)
+		category(nullable:false, blank:false)
+		
     }
     
     static mapping = {
@@ -89,6 +94,7 @@ class ExecutionResult {
 		executionOutput type: 'text'
         sort id : "asc"
 		executemethodresults sort: 'id', order: 'asc'
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
     }
     

@@ -9,6 +9,7 @@
   Copyright (c) 2013 Comcast. All rights reserved.
   ============================================================================
 -->
+<%@page import="com.comcast.rdk.TestGroup"%>
 <%@ page import="com.comcast.rdk.Module" %>
 	
 <div class="fieldcontain ${hasErrors(bean: moduleInstance, field: 'name', 'error')} required">
@@ -18,7 +19,7 @@
 	</label>
 	<g:textField name="name" required="" value="${moduleInstance?.name}"/> 	
 </div>
-
+<g:hiddenField name="category" id="category" value="${category }"/>
 <div class="fieldcontain ${hasErrors(bean: moduleInstance, field: 'testGroup', 'error')} required">
 	<label for="testGroup">
 		<g:message code="module.testGroup.label" default="Test Group" />

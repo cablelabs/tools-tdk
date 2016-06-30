@@ -10,6 +10,7 @@
  * ============================================================================
  */
 package com.comcast.rdk
+import com.comcast.rdk.Category
 /**
  * Class represents BoxTypes.
  * @author sreejasuma
@@ -31,11 +32,15 @@ class BoxType {
 	 * Indicates the group name which the box belongs
 	 */
 	Groups groups
+	
+	Category category = Category.RDKV
     
     static constraints = {
-        name(unique:true, blank:false, nullable:false)
+        //name(unique:true, blank:false, nullable:false)
         type(blank:false, nullable:false)
 		groups(nullable:true, blank:true)
+		category(nullable:false, blank:false)
+		name(nullable:false, blank:false, unique:['category'])
     }
 
 	@Override
@@ -44,6 +49,7 @@ class BoxType {
 	}
 	
 	static mapping = {
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
 	}
 }

@@ -21,10 +21,11 @@
 		<a href="#create-module" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		<div class="nav" role="navigation">
 			<ul>
-				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
-				<li><g:link class="list" action="list"><g:message code="default.list.label" args="[entityName]" /></g:link></li>
+		
+				<li><a class="home" params="[category:category]" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
+				<li><g:link class="list" action="list" params="[category:category]"><g:message code="default.list.label" args="[entityName]" /></g:link></li>
 				<%--<li><g:link class="create" action="create"> <g:message code="Create Module" /></g:link></li>
-				--%><li><g:link class=" create" action= " createParameter"> <g:message code= "Create Parameter"/></g:link></li>			
+				--%><li><g:link class=" create" action= " createParameter" params="[category:category]"> <g:message code= "Create Parameter"/></g:link></li>			
 			</ul>
 		</div>
 	
@@ -45,7 +46,7 @@
 			</g:hasErrors>
 			<g:form action="saveFunction" >
 				<fieldset class="form">
-					<g:render template="functionform"/>
+					<g:render template="functionform" model="[category:category]"/>
 				</fieldset>
 				<%-- <fieldset class="buttons">					
 				</fieldset> --%>

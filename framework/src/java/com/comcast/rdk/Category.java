@@ -11,8 +11,7 @@
  */
 package com.comcast.rdk;
 
-public enum StreamType {
+public enum Category {
 
-	video,
-	radio
+	RDKV, RDKB, RDKB_TCL
 }

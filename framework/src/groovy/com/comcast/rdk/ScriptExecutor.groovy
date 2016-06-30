@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.FutureTask
 
+import org.springframework.util.StringUtils;
 
 class ScriptExecutor {
 	
@@ -104,6 +105,98 @@ class ScriptExecutor {
 		}
 
 
+		return outputData
+	}
+	
+	/**
+	 * Method added to execute tcl scripts from the tcl scripts containing directory
+	 * 
+	 * @param executionScript
+	 * @param waittime
+	 * @param execName
+	 * @param executionProcessMap
+	 * @return
+	 */
+	public String execute(final String executionScript, final int waittime,final String execName,final Map executionProcessMap, final String executionDir) {
+		Process process = Runtime.getRuntime().exec( executionScript, null, new File(executionDir) )
+		String outputData = null
+		try {
+			StringBuilder dataRead = new StringBuilder( "" )
+			executionProcessMap?.put(execName, process)
+
+			StreamReaderJob dataReader = new StreamReaderJob(process.getInputStream(),outputFileName,dataRead);
+			StreamReaderJob errorReader = new StreamReaderJob(process.getErrorStream(),outputFileName,dataRead);
+
+			FutureTask< String > dataReaderTask = new FutureTask< String > (dataReader);
+			FutureTask< String > errorReaderTask = new FutureTask< String > (errorReader);
+			executorService.execute(dataReaderTask);
+			executorService.execute(errorReaderTask);
+			String successData = null
+			String errorData = null
+			if(waittime == 0){
+				int exitCode = process.waitFor()
+			}
+			else{
+				process.waitForOrKill(waittime*60000)
+			}
+			successData = dataReaderTask.get()
+			outputData =  successData
+			
+			errorData = errorReaderTask.get()
+			process.destroy()
+			if(StringUtils.hasText(errorData) && !outputData?.trim().contains(errorData?.trim())){
+				outputData += "\n" + errorData
+			}
+		}catch(Exception e){
+		} finally{
+			if(executionProcessMap?.containsKey(execName)){
+				executionProcessMap?.remove(execName)
+			}
+		}
+		return outputData
+	}
+	
+	public String executeTCL(final String executionScript, final int waittime,final String execName,final Map executionProcessMap, final String executionDir) {
+		Process process = Runtime.getRuntime().exec( executionScript, null, new File(executionDir) )
+		String outputData = null
+		try {
+			StringBuilder dataRead = new StringBuilder( "" )
+			executionProcessMap?.put(execName, process)
+
+			StreamReaderJob dataReader = new StreamReaderJob(process.getInputStream(),outputFileName,dataRead);
+			StreamReaderJob errorReader = new StreamReaderJob(process.getErrorStream(),outputFileName,dataRead);
+
+			FutureTask< String > dataReaderTask = new FutureTask< String > (dataReader);
+			FutureTask< String > errorReaderTask = new FutureTask< String > (errorReader);
+			executorService.execute(dataReaderTask);
+			executorService.execute(errorReaderTask);
+			String successData = null
+			String errorData = null
+			if(waittime == 0){
+				int exitCode = process.waitFor()
+			}
+			else{
+				process.waitForOrKill(waittime*60000)
+			}
+			successData = dataReaderTask.get()
+			outputData =  successData
+			
+			errorData = errorReaderTask.get()
+			process.destroy()
+			if(StringUtils.hasText(errorData)){
+				if(errorData?.trim().contains(outputData?.trim())){
+					outputData = "\n" + errorData
+				}else if(outputData?.trim().contains(errorData?.trim())){
+				}else{
+					outputData += "\n" + errorData
+				}
+			}
+		}catch(Exception e){
+		} finally{
+			if(executionProcessMap?.containsKey(execName)){
+				executionProcessMap?.remove(execName)
+			}
+		}
 		return outputData
 	}
 	

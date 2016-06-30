@@ -52,6 +52,7 @@
 
 <div id="scriptMessageDiv" class="message" style="display: none;"></div>
 <g:form action="saveScript" method="post">
+	<g:hiddenField name="category" value="${category}"/>
 	<table>
 
 		<tr>
@@ -59,10 +60,12 @@
 		</tr>
 
 		<tr>
-			<td>Script Name</td>
+			<td>Script Name</td>		 
 			<td><input type="text" name="name" id="name" size="37"
-				maxlength="150"> &emsp;&emsp;&emsp;&emsp; <a href=""
-				onclick="showStreamDetails();return false;">Show Stream Details</a></td>
+				maxlength="150"> &emsp;&emsp;&emsp;&emsp;  <g:if test="${category == "RDKV"}">
+				<a href=""
+				onclick="showStreamDetails();return false;">Show Stream Details</a>
+				</g:if></td>
 		</tr>
 
 		<tr>
@@ -80,7 +83,7 @@
 		<tr>
 			<td>Box Type</td>
 			<td>
-			<g:select id="boxTypes" name="boxTypes"  from="${com.comcast.rdk.BoxType.list()}" optionKey="id" required="" value="${deviceInstance?.boxType?.id}" class="many-to-one selectCombo" multiple="true"/>
+			<g:select id="boxTypes" name="boxTypes"  from="${com.comcast.rdk.BoxType.findAllByCategory(category)}" optionKey="id" required="" value="${deviceInstance?.boxType?.id}" class="many-to-one selectCombo" multiple="true"/>
 			&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Execution TimeOut &emsp;
 			<input type="text" id="execTime" name="executionTime" size="5"/>(min)
 			</td>
@@ -89,9 +92,9 @@
 		<tr>
 			<td>RDK Version</td>
 			<td>
-				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.list()}" optionKey="id" required="" value="" class="many-to-one selectCombo" multiple="true"/>
+				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.findAllByCategory(category)}" optionKey="id" required="" value="" class="many-to-one selectCombo" multiple="true"/>
 			 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Tags&emsp;&emsp; 
-				<g:select id="scriptTags" name="scriptTags"  from="${com.comcast.rdk.ScriptTag.list()}" optionKey="id" value="" class="many-to-one selectCombo" multiple="true"/>
+				<g:select id="scriptTags" name="scriptTags"  from="${com.comcast.rdk.ScriptTag.findAllByCategory(category)}" optionKey="id" value="" class="many-to-one selectCombo" multiple="true"/>
 			
 			</td>
 		</tr>

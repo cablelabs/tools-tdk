@@ -12,7 +12,7 @@
 <%@ page import="com.comcast.rdk.Device" %>
 <g:javascript library="devicegrp_resolver" />
 <div id="create-device" class="content scaffold-create" role="main">
-	<g:set var="entityName" value="${message(code: 'device.label', default: 'Device')}" />
+	<g:set var="entityName" value="${category} ${message(code: 'device.label', default: 'Device')}" />
 	<h1><g:message code="default.create.label" args="[entityName]" /></h1>
 	<g:if test="${flash.message}">
 	<div class="message" role="status">${flash.message}</div>
@@ -26,10 +26,10 @@
 	</g:hasErrors>	
 	<div id="messageDiv" class="message" style="display: none;"></div>
 	
-	<g:form action="saveDevice" controller="deviceGroup">
+	<g:form action="saveDevice" controller="deviceGroup" enctype="multipart/form-data">
 		<input type="hidden" name="url" id="url" value="${url}">
 		<fieldset class="form">
-			<g:render template="formDevice"/>					
+			<g:render template="formDevice" model="[category:category]"/>					
 		</fieldset>
 		<div id="streamdiv"></div><br>
 		<div style="width:100%;text-align: center;">
@@ -39,5 +39,16 @@
 			</span>
 		</div>		
 	</g:form>	
+	<div id="uploadTclConfig">
+	<g:if test="${category == 'RDKB' }">
+		<div style="padding-left:17%;padding-top:2%;" id="uploadForm">
+		<g:form enctype="multipart/form-data" name="tclForm">
+			Configuration file (<span style="color: #C00;">TCL Execution *</span>) <input type="file" name="tclConfigFile" id="file"/>
+		<input type="button" value="UPLOAD" onclick="upload()"/>
+		</g:form>
+		</div>
+	</g:if>
+	</div>
+	<div style="padding-left:17%;padding-top:2%;" id="uploadStatus"></div>
 </div>
 	

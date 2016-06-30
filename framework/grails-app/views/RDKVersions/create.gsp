@@ -14,16 +14,17 @@
 <html>
 	<head>
 		<meta name="layout" content="main">
-		<g:set var="entityName" value="${message(code: 'rdkVersions.label', default: 'RDKVersions')}" />
+		<g:set var="entityName" value="${category} ${message(code: 'rdkVersions.label', default: 'RDKVersions')}" />
 		<title><g:message code="default.create.label" args="[entityName]" /></title>
 		<g:javascript library="validations"/>
 	</head>
 	<body>
 		<g:form controller="RDKVersions" >
+		<g:hiddenField name="category" value="${category }"/>
 		<a href="#create-rdkVersions" class="skip" tabindex="-1"><g:message code="default.link.skip.label" default="Skip to content&hellip;"/></a>
 		<div class="nav" role="navigation">
 			<ul>
-				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
+				<li><a class="home" href="<g:createLink params="[category:category]" action="configuration" controller="module"/>"><g:message code="default.home.label"/></a></li>
 			</ul>
 		</div>
 		<div id="create-rdkVersions" class="content scaffold-create" role="main">
@@ -58,7 +59,7 @@
 				<thead>
 					<tr>
 						<g:sortableColumn property="name" title="Select" />										
-						<g:sortableColumn property="name" title="${message(code: 'rdkVersions.name.label', default: 'Build Version')}" />					
+						<g:sortableColumn property="name" title="${message(code: 'rdkVersions.name.label', default: 'Build Version')}" params="[category:category]" />					
 					</tr>
 				</thead>
 				<tbody>
@@ -78,7 +79,7 @@
 				</tbody>
 			</table>
 			<div class="pagination"  style="width:70%; align: left;">
-				<g:paginate total="${rdkVersionsInstanceTotal}" />
+				<g:paginate total="${rdkVersionsInstanceTotal}" params="[category:category]"/>
 			</div>
 			&nbsp;<span class="buttons"><g:actionSubmit disabled="true" class="delete" id="delete"  action="deleteRDKVersions" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
 		</div>

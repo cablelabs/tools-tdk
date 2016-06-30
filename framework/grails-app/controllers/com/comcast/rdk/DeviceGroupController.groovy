@@ -15,6 +15,7 @@ package com.comcast.rdk
  * @author sreejasuma
  */
 import static com.comcast.rdk.Constants.*
+import com.comcast.rdk.Category
 import grails.converters.JSON
 import java.sql.Timestamp
 import java.util.concurrent.ExecutorService
@@ -25,6 +26,7 @@ import groovy.xml.MarkupBuilder
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.util.StringUtils;
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject;
@@ -68,16 +70,31 @@ class DeviceGroupController {
             return
         }		
 		def groupsInstance = utilityService.getGroup()
-		def deviceInstanceList = Device.findAllByGroupsOrGroupsIsNull(groupsInstance,[order: 'asc', sort: 'stbName'])
-		def deviceGrpInstanceList = DeviceGroup.findAllByGroupsOrGroupsIsNull(groupsInstance)
-        [url: getApplicationUrl(), deviceGroupsInstance : params?.deviceGroupsInstance, deviceInstanceList : deviceInstanceList, deviceInstanceTotal : deviceInstanceList.size(), deviceGroupsInstanceList : deviceGrpInstanceList, deviceGroupsInstanceTotal : deviceGrpInstanceList.size(), deviceId: params.deviceId, deviceGroupId: params.deviceGroupId]
+		def deviceInstanceListSTB = getDevicesList(groupsInstance, [category:RDKV])
+		
+		def deviceInstanceListModem = getDevicesList(groupsInstance, [category:RDKB])
+		
+		def deviceGrpInstanceListSTB = getDeviceGroupList(groupsInstance, [category:RDKV])
+		
+		def deviceGrpInstanceListModem = getDeviceGroupList(groupsInstance, [category:RDKB])
+		
+		[url: getApplicationUrl(), deviceGroupsInstance : params?.deviceGroupsInstance, 
+			 deviceInstanceListSTB : deviceInstanceListSTB, deviceInstanceListModem : deviceInstanceListModem,
+			 deviceInstanceSTBTotal : deviceInstanceListSTB.size(), deviceInstanceModemTotal : deviceInstanceListModem.size(),  
+			 deviceGrpInstanceListSTB : deviceGrpInstanceListSTB, deviceGrpInstanceListModem : deviceGrpInstanceListModem, 
+			 deviceGrpInstanceSTBTotal : deviceGrpInstanceListSTB.size(), deviceGrpInstanceModemTotal : deviceGrpInstanceListModem.size(),
+			 deviceId: params.deviceId, deviceGroupId: params.deviceGroupId]
+		
     }
 
     /**
      * Method to create a device group.
      */
     def create() {
-        [deviceGroupsInstance: new DeviceGroup(params)]
+		def devices = [] 
+		def deviceCategory = Utility.getCategory(params?.category)
+		devices = Device.findAllByCategory(deviceCategory)
+        [deviceGroupsInstance: new DeviceGroup(params), category:params?.category, devices:devices]
     }
 
     /**
@@ -271,8 +288,8 @@ class DeviceGroupController {
      * @return
      */
     def createDevice() {
-        def devices = Device.where { boxType { type == GATEWAY } }
-        [url : getApplicationUrl() ,deviceInstance: new Device(params), gateways : devices, editPage : false]
+        def devices = Device.where { boxType { type == GATEWAY } && category==Utility.getCategory(params?.category) }
+        [url : getApplicationUrl() ,deviceInstance: new Device(params), gateways : devices, editPage : false, category:params?.category]
     }
 
     /**
@@ -294,18 +311,18 @@ class DeviceGroupController {
 			return
 		}
 		
-
-		/*if(Device.findByMacId(params?.macId)){
+		if(params?.macId){
+		if(Device.findByMacId(params?.macId)){
 			flash.message = "Mac Id already in use. Please use a different Name."
 			render("Mac Id already in use. Please use a different Name.")
 			return
-		}*/
+		}
+		}
 		
-		BoxType boxType = BoxType.findById(params?.boxType?.id)
-		
+		BoxType boxType = BoxType.findById(params?.boxType?.id)	
 		String newBoxType = boxType?.type?.toLowerCase()
 		
-		if (newBoxType.equals( BOXTYPE_GATEWAY ) || newBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
+		if ((newBoxType.equals( BOXTYPE_GATEWAY ) || newBoxType.equals( BOXTYPE_STANDALONE_CLIENT )) && params.category == RDKV){
 			String recId =  params?.recorderId
 			if(recId?.trim()?.length() ==  0 ){
 				flash.message = "Recorder id should not be blank"
@@ -318,7 +335,7 @@ class DeviceGroupController {
          * Check whether streams are present
          * and there is no duplicate OcapIds
          */
-		if(newBoxType.equals( BOXTYPE_GATEWAY ) || newBoxType.equals(BOXTYPE_STANDALONE_CLIENT))
+		if((newBoxType.equals( BOXTYPE_GATEWAY ) || newBoxType.equals(BOXTYPE_STANDALONE_CLIENT)) && params.category == RDKV)
 		{
         if((params?.streamid)){
 			
@@ -331,9 +348,12 @@ class DeviceGroupController {
 		}
 		def deviceInstance = new Device(params)
 		deviceInstance.groups = utilityService.getGroup()
+		deviceInstance.category = Utility.getCategory(params?.category)
         if (deviceInstance.save(flush: true)) {
             devicegroupService.saveToDeviceGroup(deviceInstance)
-            saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)
+			if(deviceInstance.category == Category.RDKV){
+				saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)
+			}
         }
         else{
             flash.message = message(code: 'default.not.created.message', args: [
@@ -358,12 +378,12 @@ class DeviceGroupController {
      * @return
      */
     def editDevice(Long id, final String flag) {
-        def devices = Device.where { boxType { type == GATEWAY } }
+		def deviceInstance = Device.get(id)
+		if (!deviceInstance) {
+			return
+		}
+        def devices = Device.where { boxType { type == GATEWAY } && category == deviceInstance?.category }
 
-        def deviceInstance = Device.get(id)
-        if (!deviceInstance) {           
-            return
-        }
 		def blankList = []
         def deviceStream = DeviceStream.findAllByDevice(deviceInstance)
 		def radiodeviceStream = DeviceRadioStream.findAllByDevice(deviceInstance)
@@ -374,7 +394,7 @@ class DeviceGroupController {
 				blankList.add(it)
 			}
 		}
-        [url : getApplicationUrl(),deviceInstance: deviceInstance, flag : flag, showBlankRadio:showBlankRadio,blankList:blankList,gateways : devices, deviceStreams : deviceStream,radiodeviceStreams:radiodeviceStream, editPage : true, uploadBinaryStatus: deviceInstance.uploadBinaryStatus, id: id]
+        [url : getApplicationUrl(),deviceInstance: deviceInstance, flag : flag, showBlankRadio:showBlankRadio,blankList:blankList,gateways : devices, deviceStreams : deviceStream,radiodeviceStreams:radiodeviceStream, editPage : true, uploadBinaryStatus: deviceInstance.uploadBinaryStatus, id: id, category:deviceInstance?.category]
     }
 
     /**
@@ -422,7 +442,7 @@ class DeviceGroupController {
 			
 			String newBoxType = boxType?.type?.toLowerCase()
 		   String recId=""
-			if (newBoxType.equals( BOXTYPE_GATEWAY ) || newBoxType.equals(BOXTYPE_STANDALONE_CLIENT)){
+			if ((newBoxType.equals( BOXTYPE_GATEWAY ) || newBoxType.equals(BOXTYPE_STANDALONE_CLIENT)) && deviceInstance.category==Category.RDKV)  {
 				if(currentBoxType.equals( BOXTYPE_GATEWAY) || currentBoxType.equals( BOXTYPE_STANDALONE_CLIENT)){
 					recId =  params?.recorderIdedit
 				}else if(currentBoxType.equals(BOXTYPE_CLIENT) && newBoxType.equals( BOXTYPE_GATEWAY ) ){
@@ -440,37 +460,37 @@ class DeviceGroupController {
 
             deviceInstance.properties = params
 
-            if(currentBoxType.equals( BOXTYPE_CLIENT )){
-                if(newBoxType.equals( BOXTYPE_CLIENT )){
-                    deviceInstance.gatewayIp = params?.gatewayIp
-                    deviceInstance.recorderId = ""
-                    DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
-					DeviceRadioStream.executeUpdate("delete DeviceRadioStream d where d.device = :instance1",[instance1:deviceInstance])
-					
-                }
-                else{
-                    deviceInstance.gatewayIp = ""
-                    deviceInstance.recorderId = params?.recorderIdedit
-                }
-            }
-            else{
-                if(currentBoxType.equals( BOXTYPE_GATEWAY ) || currentBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
-                    if(newBoxType.equals( BOXTYPE_CLIENT )){
-                        deviceInstance.gatewayIp = params?.gatewayIpedit
-                        deviceInstance.recorderId = ""
-                        DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+			if(deviceInstance?.category == Category.RDKV){
+				if(currentBoxType.equals( BOXTYPE_CLIENT )){
+					if(newBoxType.equals( BOXTYPE_CLIENT )){
+						deviceInstance.gatewayIp = params?.gatewayIp
+						deviceInstance.recorderId = ""
+						DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
 						DeviceRadioStream.executeUpdate("delete DeviceRadioStream d where d.device = :instance1",[instance1:deviceInstance])
-                    }else  if(currentBoxType.equals( BOXTYPE_STANDALONE_CLIENT ) && newBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
-                        deviceInstance.gatewayIp = params?.gatewayIp
+					}
+					else{
+						deviceInstance.gatewayIp = ""
 						deviceInstance.recorderId = params?.recorderIdedit
-                    }
-                    else{
-                        deviceInstance.gatewayIp = ""
-                        deviceInstance.recorderId = params?.recorderIdedit
-                    }
-                }
-            }
-			
+					}
+				}
+				else{
+					if(currentBoxType.equals( BOXTYPE_GATEWAY ) || currentBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
+						if(newBoxType.equals( BOXTYPE_CLIENT )){
+							deviceInstance.gatewayIp = params?.gatewayIpedit
+							deviceInstance.recorderId = ""
+							DeviceStream.executeUpdate(DEVICESTREAM_QUERY,[instance1:deviceInstance])
+							DeviceRadioStream.executeUpdate("delete DeviceRadioStream d where d.device = :instance1",[instance1:deviceInstance])
+						}else  if(currentBoxType.equals( BOXTYPE_STANDALONE_CLIENT ) && newBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
+							deviceInstance.gatewayIp = params?.gatewayIp
+							deviceInstance.recorderId = params?.recorderIdedit
+						}
+						else{
+							deviceInstance.gatewayIp = ""
+							deviceInstance.recorderId = params?.recorderIdedit
+						}
+					}
+				}
+			}
 			
             if (!deviceInstance.save(flush: true)) {
                 devicegroupService.saveToDeviceGroup(deviceInstance)
@@ -480,41 +500,43 @@ class DeviceGroupController {
            
            DeviceStream deviceStream
 
-            if(currentBoxType.equals( BOXTYPE_CLIENT )){
-                if(newBoxType.equals( BOXTYPE_GATEWAY) || newBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
-					/**
-					 * Check whether streams are present
-					 * and there is no duplicate OcapIds
-					 */
-					if((params?.streamid)){
-						
-						if(checkDuplicateOcapId(params?.ocapId)){
-							flash.message = message(code: 'duplicate.ocap.id')
-							redirect(action:"list")
-							return
-						}
-					}
-					
-                    saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)        
-                }
-            }
-            else{    
-                if(deviceInstance.boxType.type.toLowerCase().equals( BOXTYPE_GATEWAY ) || deviceInstance.boxType.type.toLowerCase().equals( BOXTYPE_STANDALONE_CLIENT )  ){
+			if(deviceInstance?.category == Category.RDKV){
+				if(currentBoxType.equals( BOXTYPE_CLIENT )){
+					if(newBoxType.equals( BOXTYPE_GATEWAY) || newBoxType.equals( BOXTYPE_STANDALONE_CLIENT )){
 						/**
-					 * Check whether streams are present
-					 * and there is no duplicate OcapIds
-					 */
-					if((params?.streamid)){
-						
-						if(checkDuplicateOcapId(params?.ocapId)){
-							flash.message = message(code: 'duplicate.ocap.id')
-							redirect(action:"list")
-							return
+						 * Check whether streams are present
+						 * and there is no duplicate OcapIds
+						 */
+						if((params?.streamid)){
+
+							if(checkDuplicateOcapId(params?.ocapId)){
+								flash.message = message(code: 'duplicate.ocap.id')
+								redirect(action:"list")
+								return
+							}
 						}
+
+						saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)
 					}
-					saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)
-                }
-            }
+				}
+				else{
+					if(deviceInstance.boxType.type.toLowerCase().equals( BOXTYPE_GATEWAY ) || deviceInstance.boxType.type.toLowerCase().equals( BOXTYPE_STANDALONE_CLIENT )  ){
+						/**
+						 * Check whether streams are present
+						 * and there is no duplicate OcapIds
+						 */
+						if((params?.streamid)){
+
+							if(checkDuplicateOcapId(params?.ocapId)){
+								flash.message = message(code: 'duplicate.ocap.id')
+								redirect(action:"list")
+								return
+							}
+						}
+						saveDeviceStream(params?.streamid, params?.ocapId, deviceInstance)
+					}
+				}
+			}
 
             devicegroupService.saveToDeviceGroup(deviceInstance)
             flash.message = message(code: 'default.updated.message', args: [
@@ -656,10 +678,17 @@ class DeviceGroupController {
 					} catch (Exception e) {
 						e.printStackTrace()
 					}
-
 				}
 
 				try {
+					if(deviceInstance?.category?.toString().equals(RDKB)){
+						def path = request.getSession().getServletContext().getRealPath(FILE_SEPARATOR)
+						def isConfigFileExeists = Utility.isConfigFileExists(path,deviceInstance.stbName)
+						if(isConfigFileExeists){
+							File toDelete = new File(Utility.getConfigFilePath(path,deviceInstance.stbName))
+							toDelete.delete()
+						}
+					}
 					if(!deviceInstance.delete(flush: true)){
 							Device.withTransaction {
 								Device dev = Device.findById(deviceInstance?.id)
@@ -677,10 +706,8 @@ class DeviceGroupController {
 					}
 				}
 				devicesTobeDeleted.each { childDeviceId ->
-
 					Device childDevice = Device.findById(childDeviceId)
 					devicegroupService.updateExecDeviceReference(childDevice)
-
 					try {
 						def status
 						Device.withTransaction {
@@ -801,6 +828,14 @@ class DeviceGroupController {
 					
 				}
 				try {
+					if(deviceInstance?.category?.toString().equals(RDKB)){
+						def path = request.getSession().getServletContext().getRealPath(FILE_SEPARATOR)
+						def isConfigFileExeists = Utility.isConfigFileExists(path,deviceInstance.stbName)
+						if(isConfigFileExeists){
+							File toDelete = new File(Utility.getConfigFilePath(path,deviceInstance.stbName))
+							toDelete.delete()
+						}
+					}
 					if(!deviceInstance.delete(flush: true)){
 							Device.withTransaction {
 								Device dev = Device.findById(deviceInstance?.id)
@@ -886,7 +921,8 @@ class DeviceGroupController {
     def getBoxType(){
         List boxTypes = []
         BoxType boxType = BoxType.findById(params?.id)
-        boxTypes.add( boxType?.type?.toLowerCase()?.trim() )
+        //boxTypes.add( boxType?.type?.toLowerCase()?.trim() )
+		boxTypes.add( [type:boxType?.type?.toLowerCase()?.trim(), category:boxType?.category?.name()] )
         render boxTypes as JSON
     }
 
@@ -1012,6 +1048,10 @@ class DeviceGroupController {
 						JsonObject device = new JsonObject()
 						device.addProperty("name", dev?.stbName)
 						device.addProperty("boxtype", dev?.boxType?.name)
+						
+						//adding category of device - broadband or video
+						device.addProperty("category", dev?.category?.toString())
+						
 						if(dev?.boxType?.type?.equals("Client")){
 							if(dev?.isChild == 1){
 								device.addProperty("macid", dev?.macId)
@@ -1038,7 +1078,7 @@ class DeviceGroupController {
 				deviceJson.add("devices",devArray)
 			}
 		} catch (Exception e) {
-			println " Error getDeviceList "+e.getMessage()
+			log.info "ERROR "+e.getMessage()
 			e.printStackTrace()
 		}
 		render deviceJson
@@ -1176,6 +1216,66 @@ class DeviceGroupController {
 		return true
 	}
 	
+	private List getDevicesList(def groups, def params){
+		return Device.createCriteria().list(max:params?.max, offset:params?.offset){
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+
+			and{
+				eq("category", Utility.getCategory(params?.category))
+			}
+			order 'stbName', 'asc'
+		}
+	}
+	
+	private List getDevicesCount(def groups, def params){
+		return Device.createCriteria().count(max:params?.max, offset:params?.offset){
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+			and{
+				eq("category", Utility.getCategory(params?.category))
+			}
+		}
+	}
+	
+	private List getDeviceGroupList(def groups, def params){
+		return DeviceGroup.createCriteria().list(max:params?.max, offset:params?.offset){
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+
+			and{
+				eq("category", Utility.getCategory(params?.category))
+			}
+			order 'name', 'asc'
+		}
+	}
+	
+	private List getDeviceGroupCount(def groups, def params){
+		return DeviceGroup.createCriteria().count(max:params?.max, offset:params?.offset){
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+			and{
+				eq("category", Utility.getCategory(params?.category))
+			}
+		}
+	}
+	
 	/**
 	 * REST API for add new device
 	 */
@@ -1191,7 +1291,8 @@ class DeviceGroupController {
 
 					InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
 					def fileContent = reader?.readLines()
-					int indx = 0
+					//int indx = 0
+					int indx = fileContent?.findIndexOf { it.startsWith("<?xml")}				
 					String s = ""
 					String xml
 					if(fileContent && fileContent.size() > 0){
@@ -1214,15 +1315,16 @@ class DeviceGroupController {
 							def socVendor = node?.device?.soc_vendour?.text()?.trim()
 							def boxManufacture = node?.device.box_manufacture?.text()?.trim()
 							def gateway = node?.device?.gateway_name?.text()?.trim()
+							def category = node?.device?.category?.text()?.trim()
 							
 							node?.device?.streams?.stream?.each{
 								streams.add(it?.@id)
 								ocapId.add(it?.text()?.trim())
 							}
 							
-							def boxTypeObj = BoxType.findByName(boxType)
-							def boxManufactureObj = BoxManufacturer.findByName(boxManufacture)
-							def socVendorObj = SoCVendor.findByName(socVendor)
+							def boxTypeObj = BoxType.findByNameAndCategory(boxType,Utility.getCategory(category))
+							def boxManufactureObj = BoxManufacturer.findByNameAndCategory(boxManufacture,Utility.getCategory(category))
+							def socVendorObj = SoCVendor.findByNameAndCategory(socVendor,Utility.getCategory(category))
 							if(!boxType){
 								deviceObj.addProperty("STATUS","FAILURE")
 								deviceObj.addProperty("Remarks","Boxtype shouldnot be empty ")
@@ -1253,11 +1355,18 @@ class DeviceGroupController {
 							}else if(boxManufacture && !BoxManufacturer.findByName(boxManufacture)){
 								deviceObj.addProperty("STATUS","FAILURE")
 								deviceObj.addProperty("Remarks","No valid box manufacture available with name "+boxManufacture)
+							}else if(!category){ // RDK-B changes
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","Category shouldnot be empty")
+							} else if( category && !Utility.getCategory(category)){
+								deviceObj.addProperty("STATUS","FAILURE")
+								deviceObj.addProperty("Remarks","No valid category available with name "+category)
+														
 							}else{
-								BoxType boxTypeInastnce = BoxType.findByName(boxType)
+								BoxType boxTypeInastnce = BoxType.findByNameAndCategory(boxType,Utility.getCategory(category))
 								boolean valid = true
 								if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
-								|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+								|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT) && category?.equals(RDKV )){
 
 									if(recorderId?.trim()?.length() ==  0){
 										valid = false
@@ -1296,13 +1405,15 @@ class DeviceGroupController {
 									deviceInstance.soCVendor = socVendorObj
 									deviceInstance.boxType=boxTypeObj
 									deviceInstance.boxManufacturer =boxManufactureObj
+									deviceInstance.category= Utility.getCategory(category) // RDK -B code changes
+									//deviceInstance.groups=utilityService.getGroup()
 
 									if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_CLIENT)){
 										status = 1
 										deviceInstance.gatewayIp =gateway
 
 									}else if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
-									|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+									|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT) && category?.equals(RDKV )){
 									
 										status = 2
 										deviceInstance.recorderId = recorderId
@@ -1350,11 +1461,10 @@ class DeviceGroupController {
 				deviceObj.addProperty("Remarks","File does not exists  ")
 			}
 		} catch (Exception e) {
-		println " EE "+e.getMessage()
+		println "ERROR "+e.getMessage()
 			deviceObj.addProperty("STATUS","FAILURE")
 			deviceObj.addProperty("Remarks","Device not saved "+e.getMessage())
 		}
-		println " device obj "+deviceObj
 		render deviceObj
 	}
 	/**
@@ -1397,6 +1507,12 @@ class DeviceGroupController {
 						mkp.yield "\r\n  "
 						mkp.comment "SoC vendour for the STB"
 						xml.soc_vendour(deviceInstance?.soCVendor)
+						// Issue fix - category 
+						mkp.yield "\r\n  "
+						mkp.comment "Category for the STB"
+						xml.category(deviceInstance?.category)						
+						
+						
 						BoxType boxTypeInastnce = BoxType.findByName(deviceInstance?.boxType?.toString())
 						if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
 						|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
@@ -1432,7 +1548,7 @@ class DeviceGroupController {
 				}
 				deviceData= writer.toString()
 			} catch(Exception e){
-				println "Error "+e.getMessage()
+				println  "ERROR "+e.getMessage()
 				e.printStackTrace()
 			}
 			if(deviceData){
@@ -1440,7 +1556,7 @@ class DeviceGroupController {
 				params.extension = "xml"
 				response.setHeader("Content-Type", "application/octet-stream;")
 				response.setHeader("Content-Disposition", "attachment; filename=\""+ deviceInstance?.toString()+".xml\"")
-				response.setHeader("Content-Length", ""+String.valueOf(deviceData.length())) // issue fix - for partial device details download 
+				//response.setHeader("Content-Length", ""+deviceData.length())
 				response.outputStream << deviceData.getBytes()
 			}else{
 				flash.message = "Download failed due to device information not available."
@@ -1450,8 +1566,7 @@ class DeviceGroupController {
 			flash.message ="Device does not exist"
 			redirect(action:"list")
 		}
-	}
-		
+	}	
 	/**
 	 * Function is used to upload xml file, extract the content and create new device
 	 * @return
@@ -1483,11 +1598,12 @@ class DeviceGroupController {
 							String boxType = node?.device?.box_type?.text()?.trim()
 							def recorderId = node?.device?.recorder_id?.text()?.trim()
 							def socVendor = node?.device?.soc_vendour?.text()?.trim()
-							def boxManufacture = node?.device?.box_manufacture?.text()?.trim()
+							def boxManufacture = node?.device.box_manufacture?.text()?.trim()
 							def gateway = node?.device?.gateway_name?.text()?.trim()
-							def boxTypeObj = BoxType.findByName(boxType)
-							def boxManufactureObj = BoxManufacturer.findByName(boxManufacture)
-							def socVendorObj = SoCVendor.findByName(socVendor)
+							def category = node?.device?.category?.text()?.trim()
+							def boxTypeObj = BoxType.findByNameAndCategory(boxType,Utility.getCategory(category))
+							def boxManufactureObj = BoxManufacturer.findByNameAndCategory(boxManufacture,Utility.getCategory(category))
+							def socVendorObj = SoCVendor.findByNameAndCategory(socVendor,Utility.getCategory(category))
 							node?.device?.streams?.stream?.each{
 								streams.add(it?.@id)
 								ocapId.add(it?.text()?.trim())
@@ -1512,12 +1628,15 @@ class DeviceGroupController {
 								flash.message= "Box manufacture should not be empty "
 							}else if(boxManufacture && !BoxManufacturer.findByName(boxManufacture)){
 								flash.message=" No valid box manufacture available with name"
-							}else{
-								BoxType boxTypeInastnce = BoxType.findByName(boxType)
+							}else if(category && !Utility.getCategory(category)){
+								flash.message=" No valid  category name available with name"
+							}
+							else{
+								BoxType boxTypeInastnce = BoxType.findByNameAndCategory(boxType,Utility.getCategory(category))
+
 								boolean valid = true
 								if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
-								|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
-
+								|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT) && category.equals(RDKV)){
 									if(recorderId?.trim()?.length() ==  0){
 										valid = false
 										flash.message ="Recorder id should not blank "
@@ -1549,22 +1668,24 @@ class DeviceGroupController {
 										deviceInstance.soCVendor = socVendorObj
 										deviceInstance.boxType=boxTypeObj
 										deviceInstance.boxManufacturer =boxManufactureObj
-
-										if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_CLIENT)){
+										deviceInstance.category= Utility.getCategory(category)
+										//deviceInstance.groups=utilityService.getGroup()
+										if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_CLIENT) && category?.equals(RDKV )){
 											status = 1
 											deviceInstance.gatewayIp =gateway
 
 										}else if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
-										|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+										|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT) && category?.equals(RDKV)){
 											status = 2
 											deviceInstance.recorderId = recorderId
 											deviceInstance.macId =""
 										}
-
 										if(status > 0 && deviceInstance.save(flush:true)){
 											if(status == 2){
 												devicegroupService.saveToDeviceGroup(deviceInstance)
-												saveDeviceStream(streams, ocapId, deviceInstance)
+												if(deviceInstance.category == Category.RDKV){
+													saveDeviceStream(streams, ocapId, deviceInstance)
+												}
 											}
 											flash.message=" Device saved successfully"
 										}else{
@@ -1574,7 +1695,6 @@ class DeviceGroupController {
 									}catch (Exception e){
 										println "ERROR"+e.getMessage()
 										e.printStackTrace()
-										flash.message("Device not saved ")
 									}
 								}
 							}
@@ -1589,9 +1709,94 @@ class DeviceGroupController {
 		}else{
 			flash.message="Error, The file extension is not in .xml format"
 		}
+
 		redirect(action:"list")
 		return
-	}	
+	}
+	
+	/**
+	 * Function  used to upload RDKB device configuration for tcl script execution . 
+	 * @return
+	 */
+	
+	def uploadTclConfiguration(){
+		def message = 'Upload failed'
+		def realPath = request.getSession().getServletContext().getRealPath(FILE_SEPARATOR)
+		def filePath =  realPath+"fileStore"+FILE_SEPARATOR+FileStorePath.RDKTCL.value()+FILE_SEPARATOR
+		def gatewayName = params.gatewayName?.trim()
+		def deviceIp = params.ip?.trim()
+		if(gatewayName){
+			filePath = filePath + 'Config_'+gatewayName+".txt"
+			try{
+				def f =  request.getFile('tclConfigFile')
+				
+				if(!f.empty){
+					def content = readFromStream(f, realPath)
+					content = content + "\ndeviceIp  "+deviceIp
+					Utility.writeContentToFile(content, filePath)
+					message = 'File uploaded successfully'
+				}
+			}
+			catch(Exception e){
+				println e.getMessage()
+			}
+		}
+		else{
+			message = 'Gateway name missing'
+		}
+		render message
+	}
+	/**
+	 * Function for selecting  TclSocketExecutor/  WebPAClient as per the user requirement. 
+	 * - If the execution is done directly at the box from Test Manager, TclSocketExecutor is used 
+	 * - If the user needs WebPA, WebPAClient can be added
+	 * @param request
+	 * @param path
+	 * @return
+	 */
+	
+	def readFromStream(def request, def path){
+		BufferedReader reader = new BufferedReader(new InputStreamReader(request.getInputStream()))
+		StringBuilder builder = new StringBuilder()
+		String t = null
+		while((t = reader.readLine()) != null){
+			builder.append(t).append('\n')
+		}
+		reader.close()
+		def jarPath = path + JAR_PATH
+		def classPath = path + CLASS_PATH
+		builder.append('class1  ').append(SOCKET_CLIENT).append('\n')
+		def separator = getSeparator()
+		builder.append('classPath ').append(jarPath).append(separator).append(classPath).append('\n')
+		builder.toString()
+	}
+	/**
+	 * Function for returning separator according to the OS
+	 * @return
+	 */
+	def getSeparator(){
+		def os = System.getProperty(OS_NAME)
+		if(os.contains(OS_WINDOWS)){
+			return ';'
+		}
+		return ':'
+	}
+	/**
+	 * Function for return stb  IP  using serial no
+	 * @param serialNo
+	 * @return
+	 */
+	
+	public static String getDeviceIp(String serialNo){
+    	String stbIp = ""
+		Device.withTransaction {
+			Device device = Device.findBySerialNo(serialNo)
+			if(device){
+				stbIp = device?.stbIp;
+			}
+		}
+		return stbIp;
+	}
 }
 
 

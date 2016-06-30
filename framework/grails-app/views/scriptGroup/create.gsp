@@ -214,6 +214,7 @@
 				</td>
 			</tr>
 		</table>
+		<g:hiddenField name="createCategory"  id="createCategory" value="${category}"/>
 			<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 				<div style="width : 100%;text-align: center;">
 					<span class="buttons">

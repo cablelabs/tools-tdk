@@ -12,6 +12,9 @@
 package com.comcast.rdk
 
 import static com.comcast.rdk.Constants.KEY_ON
+
+import java.util.List;
+
 import org.springframework.dao.DataIntegrityViolationException
 import grails.converters.JSON
 
@@ -29,32 +32,40 @@ class ScriptTagController {
     def create(Integer max) {
 		params.max = Math.min(max ?: 10, 100)
 		def groupsInstance = utilityService.getGroup()
-		def scriptTagList = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
-		def scriptTagListCnt = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance)
-        [scriptTagInstance: new ScriptTag(params) ,scriptTagInstanceList: scriptTagList, scriptTagInstanceTotal: scriptTagListCnt.size()]
+		//def scriptTagList = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance,params)		
+		//def scriptTagListCnt = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		def scriptTagList = getScriptTagList(groupsInstance,params)
+        [scriptTagInstance: new ScriptTag(params) ,scriptTagInstanceList: scriptTagList, scriptTagInstanceTotal: getScriptTagCount(groupsInstance, params), category:params?.category]
     }
 
     def save(Integer max) {
+	
         def scriptTagInstance = new ScriptTag(params)
 		params.max = Math.min(max ?: 10, 100)		
 		def groupsInstance = utilityService.getGroup()
-		def scriptTagList = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
-		def scriptTagListCnt = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		//def scriptTagList = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
+		//def scriptTagListCnt = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		def scriptTagList = getScriptTagList(groupsInstance,[name:'name',order:'asc'])
+		
 		scriptTagInstance.groups = groupsInstance
         if (!scriptTagInstance.save(flush: true)) {
-            render(view: "create", model: [scriptTagInstance: scriptTagInstance,scriptTagInstanceList: scriptTagList, scriptTagInstanceTotal: scriptTagListCnt.size()])
+            render(view: "create", model: [scriptTagInstance: scriptTagInstance,scriptTagInstanceList: scriptTagList, scriptTagInstanceTotal: getScriptTagCount(groupsInstance, params), category:params?.category])
             return
         }
 
         flash.message = message(code: 'default.created.message', args: [message(code: 'scriptTag.label', default: 'ScriptTag'), scriptTagInstance.name])
-        redirect(action: "create")
+        redirect(action: "create",  params:[category:params?.category])
     }
 
     def update(Long id, Long version,Integer max) {
         def scriptTagInstance = ScriptTag.get(id)		
 		def groupsInstance = utilityService.getGroup()
-		def scriptTagList = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
-		def scriptTagListCnt = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		//def scriptTagList = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance,params)
+		//def scriptTagListCnt = ScriptTag.findAllByGroupsOrGroupsIsNull(groupsInstance)
+		def scriptTagList = getScriptTagList(groupsInstance,params)
+		
+		
+		
 		params.max = Math.min(max ?: 10, 100)
         if (!scriptTagInstance) {
             flash.message = message(code: 'default.not.found.message', args: [message(code: 'scriptTag.label', default: 'ScriptTag'), id])
@@ -88,7 +99,7 @@ class ScriptTagController {
         }
 
         flash.message = message(code: 'default.updated.message', args: [message(code: 'scriptTag.label', default: 'ScriptTag'), scriptTagInstance.name])
-        redirect(action: "create")
+        redirect(action: "create",  params:[category:params?.category])
     }
 	
 	def deleteScriptTag(){
@@ -122,7 +133,7 @@ class ScriptTagController {
 		{
 			flash.message = message(code: 'default.deleted.message', args: [message(code: 'scriptTag.label', default: 'ScriptTag'),  scriptTagInstance.name])
 		}
-		redirect(action: "create")
+		redirect(action: "create" ,  params:[category:params?.category])
 	}
 
 	def getScriptTag() {
@@ -133,5 +144,38 @@ class ScriptTagController {
 		}
 		render scriptTagInstanceList as JSON
 	}
+	
+	private List getScriptTagList(def groups, def params){
+		return  ScriptTag.createCriteria().list(max:params?.max, offset:params?.offset ){
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+
+			and{
+				eq("category", Utility.getCategory(params?.category))
+				
+			}
+			order params.sort?params.sort:'name', params.order?params.order:'asc'
+		}
+	}
+	
+	private int getScriptTagCount(def groups, def params){
+		return  ScriptTag.createCriteria().count(){
+			or{
+				isNull("groups")
+				if(groups != null){
+					eq("groups",groups)
+				}
+			}
+
+			and{
+				eq("category", Utility.getCategory(params?.category))
+				
+			}
+		}
+	}	
 
 }

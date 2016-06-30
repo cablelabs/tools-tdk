@@ -30,7 +30,7 @@
 	
 			var primitiveTestId = $("#currentPrimitiveTestId").val();
 			if(primitiveTestId){
-				makeTestEditable(primitiveTestId);
+				makeTestEditable(primitiveTestId, null);
 				$("#currentPrimitiveTestId").val("");
 			}
 		});
@@ -60,21 +60,46 @@
 							<ul id="primitveTestbrowser" class="filetree">
 								<li  class="" id="root"><span class="folder">Primitive Tests</span>
 									<ul>
+										<li><span class="closed">RDK-V</span>
+										<ul>
+										
 										<% int primitiveTestIndex = 0; %>
-										<g:each in="${primitiveTestMap}" var="mapEntry">
+										<g:each in="${primitiveTestMapA}" var="mapEntry">
 										<li class="closed"><span class="folder" id="addTestId">${mapEntry.key}</span>
 											<ul id ="module_">
 												<g:each in="${mapEntry.value}" var="test">
 												<%  primitiveTestIndex++; %>
 											<li id="primitiveTestList_${primitiveTestIndex}">
-												<span class="file" id="${test}">
-													<a href="#" onclick="makeTestEditable('${test}'); highlightTreeElement('primitiveTestList_', '${primitiveTestIndex}', '${primitiveTestCount}'); return false;">${test}</a>
+												<span class="file" id="${test}@RDKV">
+													<a href="#" onclick="makeTestEditable('${test}','RDKV'); highlightTreeElement('primitiveTestList_', '${primitiveTestIndex}', '${primitiveTestCount}'); return false;">${test}</a>
 												</span>
 												</li>
 												</g:each>
 												</ul>
 											</li>
 											</g:each>
+										</ul>
+										</li>
+										<li><span class="closed">RDK-B</span>
+										<ul>
+										<% int primitiveTestIndex2 = 0; %>
+										<g:each in="${primitiveTestMapB}" var="mapEntry">
+										<li class="closed"><span class="folder" id="addTestId">${mapEntry.key}</span>
+											<ul id ="module_">
+												<g:each in="${mapEntry.value}" var="test">
+												<%  primitiveTestIndex++; %>
+											<li id="primitiveTestList_${primitiveTestIndex}">
+												<span class="file" id="${test}@RDKB">
+													<a href="#" onclick="makeTestEditable('${test}','RDKB'); highlightTreeElement('primitiveTestList_', '${primitiveTestIndex}', '${primitiveTestCount}'); return false;">${test}</a>
+												</span>
+												</li>
+												</g:each>
+												</ul>
+											</li>
+											</g:each>
+										
+										</ul>
+										</li>
 									</ul>
 								</li>
 							</ul>
@@ -88,7 +113,8 @@
 			</table>
 			<div class="contextMenu" id="root_menu">
 				<ul>
-	          		<li id="add_property"><img src="../images/add_new.png" height="15px" width="15px"/>Add New Primitive Test</li>
+	          		<li id="add_propertyV"><img src="../images/add_new.png" height="15px" width="15px"/>Add New RDK-V Primitive Test </li>
+	          		<li id="add_propertyB"><img src="../images/add_new.png" height="15px" width="15px"/>Add New RDK-B Primitive Test</li>
 	        	</ul>
 	      </div>
 			<div class="contextMenu" id="childs_menu">

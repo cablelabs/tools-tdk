@@ -12,7 +12,7 @@
 <%@ page import="com.comcast.rdk.DeviceGroup" %>
 		
 <div id="create-deviceGroups" class="content scaffold-create" role="main">
-	<g:set var="entityName" value="${message(code: 'deviceGroups.label', default: 'DeviceGroups')}" />
+	<g:set var="entityName" value="${category} ${message(code: 'deviceGroups.label', default: 'DeviceGroups')}" />
 	<h1><g:message code="default.create.label" args="[entityName]" /></h1>
 	<g:if test="${flash.message}">
 	<div class="message" role="status">${flash.message}</div>
@@ -26,7 +26,7 @@
 	</g:hasErrors>
 	<g:form action="save" >
 		<fieldset class="form">
-			<g:render template="form"/>
+			<g:render template="form" model="[devices:devices, category:category]"/>
 		</fieldset>
 		<div style="width:100%;text-align: center;">
 			<span class="buttons"><g:submitButton name="create" class="save" value="${message(code: 'default.button.create.label', default: 'Create')}" /></span>

@@ -16,6 +16,7 @@ package com.comcast.rdk
  *
  */
 
+import com.comcast.rdk.Category
 
 class ExecuteMethodResult {
     
@@ -43,6 +44,7 @@ class ExecuteMethodResult {
      * Status of the string
      */
     String status
+	Category category = Category.RDKV
    
        
     static constraints = {  
@@ -51,11 +53,13 @@ class ExecuteMethodResult {
         actualResult(nullable:true, blank:true)    
         status(nullable:true, blank:true)
         functionName(nullable:true, blank:true)
+		category(nullable:false, blank:false)
     }
     
     static mapping = {
         cache true
         sort id : "desc"
+		category enumType: "string" , defaultValue:'"RDKV"' 
 		datasource 'ALL'
     }
     

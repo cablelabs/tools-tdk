@@ -26,10 +26,15 @@
 				code="default.link.skip.label" default="Skip to content&hellip;" /></a>
 		<div class="nav" role="navigation">
 			<ul>
-				<li><a class="home"
-					href="${createLink(uri: '/module/configuration')}"><g:message
+				<%--<li><a class="home"
+					href="${createLink( params:'[category:"category"]',controller:'module', action:'configuration')}"><g:message
+							code="default.home.label" /></a></li>
+			--%>
+			<li><a class="home"
+					href='<g:createLink params="[category:category]" action="configuration" controller="module"/>'><g:message
 							code="default.home.label" /></a></li>
 			</ul>
+			
 		</div>
 		<div id="create-groups" class="content scaffold-create" role="main">
 			<h1>
@@ -49,7 +54,7 @@
 					</g:eachError>
 				</ul>
 			</g:hasErrors>
-
+			<g:hiddenField name="category" value="${category}"/>
 			<fieldset class="form">
 				<g:render template="form" />
 			</fieldset>
@@ -76,7 +81,7 @@
 					<tr>
 						<g:sortableColumn property="name" title="Select" />
 						<g:sortableColumn property="name"
-							title="${message(code: 'groups.name.label', default: 'Name')}" />
+							title="${message(code: 'groups.name.label', default: 'Name')}" params="[category:category]" />
 					</tr>
 				</thead>
 				<tbody>

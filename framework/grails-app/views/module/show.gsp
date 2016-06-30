@@ -42,10 +42,10 @@
 		<div class="nav" role="navigation">
 			<ul>
 				<li><a class="home" href="${createLink(uri: '/module/configuration')}"><g:message code="default.home.label"/></a></li>
-				<li><g:link class="list" action="list"><g:message code="default.list.label" args="[entityName]" /></g:link></li>
-				<li><g:link class="create" action="create"><g:message code="default.create.label" args="[entityName]" /></g:link></li>
-				<li><g:link class="create" action="createFunction"> <g:message code="Create Function" /></g:link></li>
-				<li><g:link class=" create" action= " createParameter"> <g:message code= "Create Parameter"/></g:link></li>			
+				<li><g:link class="list" action="list" params="[category:category]"><g:message code="default.list.label" args="[entityName]" /></g:link></li>
+				<li><g:link class="create" action="create" params="[category:category]"><g:message code="default.create.label" args="[entityName]" /></g:link></li>
+				<li><g:link class="create" action="createFunction" params="[category:category]"> <g:message code="Create Function" /></g:link></li>
+				<li><g:link class=" create" action= " createParameter" params="[category:category]"> <g:message code= "Create Parameter"/></g:link></li>			
 				
 			</ul>
 		</div>
@@ -109,6 +109,7 @@
 					</g:each>					
 				</tbody>
 			</table><br>
+			<g:hiddenField name="category" id="category" value="${category }"/>
 			<span class="buttons"><g:actionSubmit class="delete" action="deleteFunction" value="Delete Function/s" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span> 			
 			</g:form>
 			</g:if>
@@ -138,6 +139,7 @@
 					</g:each>					
 				</tbody>
 			</table>
+			<g:hiddenField name="category" id="category" value="${category }"/>
 			<span class="buttons"><g:actionSubmit class="delete" action="deleteParameterType" value="Delete Selected Parameter/s" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span> 				
 			</g:form>
 			</g:if>
@@ -149,6 +151,7 @@
 					<g:hiddenField name="id" value="${moduleInstance?.id}" />
 					<%--<g:link class="edit" action="edit" id="${moduleInstance?.id}"><g:message code="default.button.edit.label" default="Edit" /></g:link>
 					--%>
+					<g:hiddenField name="category" id="category" value="${category }"/>
 					<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete Module')}" onclick="return confirm('It will delete all tests and scripts within this module. Do you want to continue?');" />
 					<%--<g:actionSubmit class="delete" action="deleteParameterType" value="Delete Selected Parameter/s" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />
 					--%>
