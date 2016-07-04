@@ -23,8 +23,11 @@ $(document).ready(function() {
 
 	$('.folder').contextMenu('root_menu', {
 		bindings : {
-			'add_property' : function(node) {
-				createTestForm();
+			'add_propertyV' : function(node) {
+				createTestForm('RDKV');
+			},
+			'add_propertyB' : function(node) {
+				createTestForm('RDKB');
 			}
 		}
 	});
@@ -33,11 +36,13 @@ $(document).ready(function() {
 	$('.file').contextMenu('childs_menu', {
 		bindings : {
 			'edit_test' : function(node) {
-				makeTestEditable(node.id);
+				var values = node.id.split("@");
+				makeTestEditable(values[0],values[1]);
 			},
 			'delete_test' : function(node) {
 				if (confirm('Are you sure you want to delete this primitive test?')) {
-					removeProperty(node.id);
+					var values = node.id.split("@")
+					removeProperty(values[0], values[1]);
 				}
 			}
 		}
@@ -58,8 +63,8 @@ $(document).ready(function() {
 	var decider_id = $("#decider").val();
 });
 
-function createTestForm() {
-	$.get('template', function(data) { $("#responseDiv").html(data); });
+function createTestForm(category) {
+	$.get('template',{category:category}, function(data) { $("#responseDiv").html(data); });
 }
 
 function createConfigForm() {
@@ -117,8 +122,8 @@ function getAssociatedParameters() {
 	}
 }
 
-function makeTestEditable(id) {
-	$.get('getEditableTest', {id: id}, function(data) { $("#responseDiv").html(data); });
+function makeTestEditable(id, category) {
+	$.get('getEditableTest', {id: id, category:category}, function(data) { $("#responseDiv").html(data); });
 }
 
 function makeConfEditable(id) {	
@@ -126,18 +131,19 @@ function makeConfEditable(id) {
 		$("#responseDiv").html(data); });
 }
 
-function removeProperty(id){
-	$.get('deleteTest', {id: id}, function(data) {document.location.reload(); });
+function removeProperty(id, category){
+	$.get('deleteTest', {id: id, category:category}, function(data) {document.location.reload(); });
 }
 
 
 
 /**
- * Function to check whether primitive test is saved or not.
+ * Function to check whether primitive test  is saved or not.
  */
 function updateTestList(testName){
+	var category = document.getElementById('category').value;
 	
-	$.get('fetchPrimitiveTest', {testName: testName}, function(data) {
+	$.get('fetchPrimitiveTest', {testName: testName, category:category}, function(data) {
 		if(data!=""){
 			if($("#isTestExist").val()==""){
 				$("#currentPrimitiveTestId").val(data);
@@ -155,8 +161,9 @@ function updateTestList(testName){
  * @param testName
  */
 function isTestExist(testName){
+	var category = document.getElementById('category').value;
 	
-	$.get('fetchPrimitiveTest', {testName: testName}, function(data) {
+	$.get('fetchPrimitiveTest', {testName: testName, category:category}, function(data) {
 		if(data!=""){
 			$("#isTestExist").val(data);
 		}

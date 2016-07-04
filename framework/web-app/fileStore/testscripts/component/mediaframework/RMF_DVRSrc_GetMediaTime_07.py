@@ -89,7 +89,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     result = tdkTestObj.getResult();
     details = tdkTestObj.getResultDetails();
 
-    if teststep == 'RMF_Element_GetMediaTime':
+    if teststep == 'RMF_Element_GetmediaTime':
         pos = details.find('MediaTime:');
         value = details[pos:];
         mediaTime = value[10:];
@@ -134,7 +134,7 @@ if expected_Result in loadModuleStatus.upper():
                 if expected_Result in result.upper():
                         src_parameter=["rmfElement"];
                         src_element=["DVRSrc"];
-                        result=Create_and_ExecuteTestStep('RMF_Element_GetMediaTime',obj,expected_Result,src_parameter,src_element);
+                        result=Create_and_ExecuteTestStep('RMF_Element_GetmediaTime',obj,expected_Result,src_parameter,src_element);
                         src_parameter=["rmfElement"]
                         src_element=["DVRSrc"]
                         result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);

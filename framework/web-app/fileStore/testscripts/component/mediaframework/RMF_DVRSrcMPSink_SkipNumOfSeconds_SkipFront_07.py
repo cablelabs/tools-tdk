@@ -97,10 +97,10 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     #Get the result of execution
     result = tdkTestObj.getResult();
     details = tdkTestObj.getResultDetails();
-    if teststep != 'RMF_Element_GetState' and teststep != 'RMF_Element_GetMediaTime':
+    if teststep != 'RMF_Element_GetState' and teststep != 'RMF_Element_GetmediaTime':
         tdkTestObj.setResultStatus(result);
 
-    if teststep == 'RMF_Element_GetMediaTime':
+    if teststep == 'RMF_Element_GetmediaTime':
         pos = details.find('MediaTime:');
         value = details[pos:];
         mediaTime = value[10:];
@@ -187,7 +187,7 @@ if expected_Result in loadModuleStatus.upper():
                                                                                 tdkTestObj.setResultStatus(result);
                                                                                 src_parameter=["rmfElement"];
                                                                                 src_element=["DVRSrc"];
-                                                                                result=Create_and_ExecuteTestStep('RMF_Element_GetMediaTime',obj,expected_Result,src_parameter,src_element);
+                                                                                result=Create_and_ExecuteTestStep('RMF_Element_GetmediaTime',obj,expected_Result,src_parameter,src_element);
                                                                                 if expected_Result in result.upper():
                                                                                         tdkTestObj.setResultStatus(result);
                                                                                         currentTime = playTime;
@@ -204,7 +204,7 @@ if expected_Result in loadModuleStatus.upper():
                                                                                                 if expected_Result in result.upper():
                                                                                                         src_parameter=["rmfElement"];
                                                                                                         src_element=["DVRSrc"];
-                                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_GetMediaTime',obj,expected_Result,src_parameter,src_element);
+                                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_GetmediaTime',obj,expected_Result,src_parameter,src_element);
 
                                                                                                         pTime = playTime;
                                                                                                         print "Present Time:",pTime

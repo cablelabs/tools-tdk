@@ -76,6 +76,17 @@ print "[TRM LIB LOAD STATUS]  :  %s" %result;
 #Set the module loading status
 trmObj.setLoadModuleStatus(result.upper());
 
+if "FAILURE" in result.upper():
+    #Reboot and reload trm component
+    print "Reboot and reload TRM"
+    trmObj.initiateReboot();
+    trmObj = tdklib.TDKScriptingLibrary("trm","2.0");
+    trmObj.configureTestCase(ip,port,'Recorder_RMF_Inline_Trm_Cancel_MaxTuners_Same_OcapId_193');
+    #Get the result of connection with test component and STB
+    result = trmObj.getLoadModuleResult();
+    print "[TRM LIB RELOAD STATUS]  :  %s" %result;
+    trmObj.setLoadModuleStatus(result);
+
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
 

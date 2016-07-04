@@ -20,11 +20,14 @@ $(document).ready(function() {
 		e.preventDefault();
 	});
 
-	$('#addDeviceGrpId').contextMenu('root_menu', {
+	$('#addDeviceGrpRDK').contextMenu('root_menu', {
 		bindings : {
 			'add_devicegrp' : function(node) {
-				createDeviceGroup();
-			}
+				createDeviceGroup('RDKV');
+			},
+			'add_devicegrpB' : function(node) {
+				createDeviceGroup('RDKB');
+	}
 		}
 	});
 	
@@ -34,7 +37,7 @@ $(document).ready(function() {
 				showDeviceGroup(node.id);
 			},
 			'delete_devicegrp' : function(node) {
-				if (confirm('Are you want to delete this Device?')) {
+				if (confirm('Do want to delete this Device?')) {
 					deleteDevice(node.id);
 				}
 			}
@@ -48,10 +51,12 @@ function hideUpload(){
 	$("#responseDiv").show();
 	$("#up_load").hide();
 }
-function createDeviceGroup() {	
+
+function createDeviceGroup(group) {	
 	hideUpload();
-	$.get('create', function(data) { $("#responseDiv").html(data); });
+	$.get('create',{category:group}, function(data) { $("#responseDiv").html(data); });
 }
+
 function showDeviceGroup(id) {
 	hideUpload();
 	$.get('edit', {id: id}, function(data) { $("#responseDiv").html(data); });
@@ -66,7 +71,7 @@ function showFields(){
 	var boxId = $("#boxType").find('option:selected').val();
 	var url = $("#url").val();
 	$.get('getBoxType', {id: boxId }, function(data) {
-		if(data[0] == 'gateway' || data[0] == 'stand-alone-client' ){
+		if((data[0].type == 'gateway' || data[0].type == 'stand-alone-client') && data[0].category==='RDKV'){
 			var xmlhttp;	
 			if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
 				xmlhttp = new XMLHttpRequest();
@@ -81,10 +86,10 @@ function showFields(){
 			xmlhttp.open("GET", url+"/deviceGroup/list?t="+Math.random()+"&max=10&offset=0&streamtable=true", true);
 			xmlhttp.send();
 			$("#recorderId").show();
-			if(data[0] == 'gateway'){
+			if(data[0].type == 'gateway'){
 				$("#gatewayId").hide()
 				$("#gatewayIdedit").hide();
-			}else if(data[0] == 'stand-alone-client'){
+			}else if(data[0].type == 'stand-alone-client'){
 				if($("#editFlag").val() == "true"){
 					$("#gatewayId").hide();
 					$("#gatewayIdedit").show();	

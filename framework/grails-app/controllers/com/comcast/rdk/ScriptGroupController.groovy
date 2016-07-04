@@ -201,7 +201,7 @@ class ScriptGroupController {
 
 
 	/**
-	 * Method to create the filtered script list based on module
+	 * Method to create the filtered script list based on module data
 	 * @param scriptInstanceList
 	 * @return
 	 */
@@ -1649,6 +1649,9 @@ class ScriptGroupController {
 		def category = params?.category
 		def moduleName = sMap.get(params?.id)
 		def scriptDir = primitiveService.getScriptDirName(moduleName)
+		if(category == null){
+			category = primitiveService.getCategory(moduleName)
+		}
 		def path = getTestScriptPath(category) + FILE_SEPARATOR + scriptDir+ FILE_SEPARATOR +moduleName + FILE_SEPARATOR + params?.id+".py"
 		File sFile = new File(path)
 		if(sFile.exists()){

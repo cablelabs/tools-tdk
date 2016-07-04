@@ -61,6 +61,13 @@ function hideOptions(){
 	$("#home1").hide();	
 }
 
+
+
+
+
+
+
+
 /**
  * Plotting the bar chart  on the bases of the script group.
  */
@@ -584,6 +591,13 @@ function showDeviceBased(){
 	$("#executionbased").hide();	
 	$("#devicebased").show();		
 }
+function updateValueOnCategoryChange(val){
+	$.get('getCategorySpecificList',{category:val}, function(data) { 
+		$("#categoricalDisplay").html(data);
+	});
+}
+
+
 /**
  * This function plot the line graph for Memory_Utilization 
  */

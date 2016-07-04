@@ -70,6 +70,17 @@ trmObj.setLoadModuleStatus(trmLoadStatus);
 
 NUMOFTUNERS = 5
 
+if "FAILURE" in trmLoadStatus.upper():
+    #Reboot and reload trm component
+    print "Reboot and reload TRM"
+    trmObj.initiateReboot();
+    trmObj = tdklib.TDKScriptingLibrary("trm","2.0");
+    trmObj.configureTestCase(ip,port,'Recorder_RMF_Cancel2HrsHotP4Rec_OnDiskFull_CheckDeletedDur_216');
+    #Get the result of connection with test component and STB
+    trmLoadStatus = trmObj.getLoadModuleResult();
+    print "[TRM LIB RELOAD STATUS]  :  %s" %trmLoadStatus;
+    trmObj.setLoadModuleStatus(trmLoadStatus);
+
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in trmLoadStatus.upper():
         #Fetch max tuner supported

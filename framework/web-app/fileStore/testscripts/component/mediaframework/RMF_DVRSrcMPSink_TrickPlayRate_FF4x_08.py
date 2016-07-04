@@ -98,10 +98,10 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     result = tdkTestObj.getResult();
     details = tdkTestObj.getResultDetails();
 
-    if teststep != 'RMF_Element_GetState' and teststep != 'RMF_Element_GetSpeed':
+    if teststep != 'RMF_Element_GetState' and teststep != 'RMF_Element_Getspeed':
         tdkTestObj.setResultStatus(result);
 
-    if teststep == 'RMF_Element_GetSpeed':
+    if teststep == 'RMF_Element_Getspeed':
         global playSpeed
         pos = details.find('Speed:');
         value = details[pos:];
@@ -109,7 +109,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         print speed;
         playSpeed = float(speed);
 
-    if teststep == 'RMF_Element_GetMediaTime':
+    if teststep == 'RMF_Element_GetmediaTime':
         global playTime
         pos = details.find('MediaTime:');
         value = details[pos:];
@@ -198,13 +198,13 @@ if expected_Result in loadModuleStatus.upper():
 
                                                                                 src_parameter=["rmfElement"];
                                                                                 src_element=["DVRSrc"];
-                                                                                result=Create_and_ExecuteTestStep('RMF_Element_GetMediaTime',obj,expected_Result,src_parameter,src_element);
+                                                                                result=Create_and_ExecuteTestStep('RMF_Element_GetmediaTime',obj,expected_Result,src_parameter,src_element);
                                                                                 currentTime = playTime;
                                                                                 print "CurrentTime:",currentTime
                                                                                 if expected_Result in result.upper():
                                                                                         src_parameter=["rmfElement"];
                                                                                         src_element=["DVRSrc"];
-                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_GetSpeed',obj,expected_Result,src_parameter,src_element);
+                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,expected_Result,src_parameter,src_element);
                                                                                         currentSpeed = playSpeed;
                                                                                         print "CurrentSpeed:",currentSpeed
                                                                                         if expected_Result in result.upper():
@@ -218,7 +218,7 @@ if expected_Result in loadModuleStatus.upper():
                                                                                                 if expected_Result in result.upper():
                                                                                                         src_parameter=["rmfElement"];
                                                                                                         src_element=["DVRSrc"];
-                                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_GetSpeed',obj,expected_Result,src_parameter,src_element);
+                                                                                                        result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,expected_Result,src_parameter,src_element);
                                                                                                         currentSpeed = playSpeed;
                                                                                                         print "CurrentSpeed:",currentSpeed
                                                                                                         if expected_Result in result.upper():

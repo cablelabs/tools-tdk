@@ -22,8 +22,12 @@ $(document).ready(function() {
 	$('#addconfId').contextMenu('root_menu_device', {
 		bindings : {
 			'add_device' : function(node) {
-				createDevice();
-			},'upload_device':function(node){
+				createDevice("RDKV");
+			},
+			'add_deviceB' : function(node) {
+				createDevice("RDKB");
+			},
+			'upload_device':function(node){
 				uploadDevice();
 			}
 		}
@@ -52,6 +56,46 @@ function uploadDevice(){
 	$("#responseDiv").hide();
 	$("#up_load").show();
 }
+
+function upload(){
+	var gateway = document.getElementById('stbName').value;
+	var ip = document.getElementById('stbIp').value;
+	if((gateway != null) && (ip != null)){
+		gateway = gateway.trim();
+		ip = ip.trim();
+		if((gateway !== '') && (ip !== '')){
+			var elem = new FormData(document.forms.namedItem('tclForm'));
+			elem.append('gatewayName', gateway);
+			elem.append('ip', ip);
+			 var url="uploadTclConfiguration";
+		     $.ajax({
+		         url:url,
+		         type:'POST',
+		         data:elem,
+		         processData: false,  // tell jQuery not to process the data
+		         contentType: false ,
+		         success:function (response) {
+		        	 if(response !== 'Upload failed'){
+		        		 $('#uploadForm').hide();
+		        		 $('#uploadStatus').text(response).css({'color':'green'});
+		        	 }
+		        	 else{
+		        		 $('#uploadStatus').text(response).css({'color':'red'});
+		        	 }
+		            }
+		         });
+		}
+		else{
+			alert('Gateway Name and ip are mandatory');
+		}
+	}
+	else{
+		alert('Gateway Name and ip are mandatory');
+	}
+	
+}
+
+
 /**
  * function for hide upload device option 
  */
@@ -60,9 +104,9 @@ function hideUploadOption(){
 	$("#up_load").hide();
 }
 
-function createDevice() {	
+function createDevice(category) {
 	hideUploadOption();
-	$.get('createDevice', function(data) { $("#responseDiv").html(data); });
+	$.get('createDevice',{category:category}, function(data) { $("#responseDiv").html(data); });
 }
 
 function showDevice(id,flag) {

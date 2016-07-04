@@ -24,7 +24,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>If all recordings are P4, notification should include Error=SPACE_FULL for scheduling a new 3 sec P3 recording with status as Failed</synopsis>
+  <synopsis>If all recordings are P4, notification  should include Error=SPACE_FULL for scheduling a new 3 sec P3 recording with status as Failed</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -69,6 +69,17 @@ print "TRM module loading status  :  %s" %trmLoadStatus;
 trmObj.setLoadModuleStatus(trmLoadStatus);
 
 NUMOFTUNERS = 5
+
+if "FAILURE" in trmLoadStatus.upper():
+    #Reboot and reload trm component
+    print "Reboot and reload TRM"
+    trmObj.initiateReboot();
+    trmObj = tdklib.TDKScriptingLibrary("trm","2.0");
+    trmObj.configureTestCase(ip,port,'Recorder_RMF_3secP3Rec_OnDiskFullWithP4_GetErrorStatus_206');
+    #Get the result of connection with test component and STB
+    trmLoadStatus = trmObj.getLoadModuleResult();
+    print "[TRM LIB RELOAD STATUS]  :  %s" %trmLoadStatus;
+    trmObj.setLoadModuleStatus(trmLoadStatus);
 
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in trmLoadStatus.upper():

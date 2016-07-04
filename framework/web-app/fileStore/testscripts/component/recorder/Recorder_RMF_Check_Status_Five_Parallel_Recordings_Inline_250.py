@@ -76,6 +76,17 @@ print "[TRM LIB LOAD STATUS]  :  %s" %trmLoadStatus;
 #Set the module loading status
 trmObj.setLoadModuleStatus(trmLoadStatus);
 
+if "FAILURE" in trmLoadStatus.upper():
+    #Reboot and reload trm component
+    print "Reboot and reload TRM"
+    trmObj.initiateReboot();
+    trmObj = tdklib.TDKScriptingLibrary("trm","2.0");
+    trmObj.configureTestCase(ip,port,'Recorder_RMF_Check_Status_Five_Parallel_Recordings_Inline_250');
+    #Get the result of connection with test component and STB
+    trmLoadStatus = trmObj.getLoadModuleResult();
+    print "[TRM LIB RELOAD STATUS]  :  %s" %trmLoadStatus;
+    trmObj.setLoadModuleStatus(trmLoadStatus);
+
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper() and "SUCCESS" in trmLoadStatus.upper() :
 

@@ -22,26 +22,40 @@ $(document).ready(function() {
 	
 	$("#addScriptId").contextMenu('script_root_menu', {
 		bindings : {
-			'add_script' : function(node) {
+			'add_scriptV' : function(node) {
 				hideSearchoptions();
-				createScriptForm();
+				createScriptForm('RDKV');
 			},
+			'add_scriptB' : function(node) {
+				hideSearchoptions();
+				createScriptForm('RDKB');
+			}, 
+			/*'add_scriptTCL' : function(node) {
+				hideSearchoptions();
+				createTCLScriptForm('RDKB_TCL');
+			}, */			
 			'download_script' : function(node){
 				downloadScriptList();	
-			}, 	
-			'upload_script' : function(node){
-				uploadScript();	
-			}	
+			},
+			'upload_rdkv_script' : function(node){
+				uploadRDKVScript();	
+			},
+			'upload_rdkb_script' : function(node){
+				uploadRDKBScript();	
+			},
 		}
 	});
 	$('.file').contextMenu('script_childs_menu', {
 		bindings : {
-			'edit_script' : function(node) {					
-				editScript(node.id);
+			'edit_script' : function(node) {
+				var vals = node.id.split('-')
+				//editScript(node.id);
+				editScript(vals[0], vals[1]);
 			},
 			'delete_script' : function(node) {
 				if (confirm('Are you sure you want to delete this script?')) {
-					removeScript(node.id);
+					var vals = node.id.split('-')
+					removeScript(vals[0],vals[1]);
 				}
 			}
 		}
@@ -61,13 +75,22 @@ $(document).ready(function() {
 	
 	$('#addscriptGrpId').contextMenu('scriptgrp_root_menu', {
 		bindings : {
-			'add_scriptgrp' : function(node) {
+			'add_scriptgrpV' : function(node) {
 				hideAllSearchoptions();
-				createScriptGrpForm();
-			},	
+				createScriptGrpForm('RDKV');
+			},
+			'add_scriptgrpB' : function(node) {
+				hideAllSearchoptions();
+				createScriptGrpForm('RDKB');
+			},
+			'add_scriptgrpTCL' : function(node) {
+				hideAllSearchoptions();
+				createScriptGrpForm('RDKB_TCL');
+			},
 			'upload_scriptGroup' : function(node) {	
 				showUploadOption();
-				}
+			},
+			
 		}
 	});
 		
@@ -78,7 +101,7 @@ $(document).ready(function() {
 				editScriptGroup(node.id);
 			},
 			'delete_scriptgrp' : function(node) {
-				if (confirm('Are you want to delete property?')) {
+				if (confirm('Do you want to delete property?')) {
 					removeScriptGroup(node.id);
 				}
 			}
@@ -88,19 +111,29 @@ $(document).ready(function() {
 	$("#scriptid").addClass("changecolor");
 	
 });
+
 /**
  * Function for display the upload script option through UI
  */
 
-function uploadScript(){
+function uploadRDKVScript(){
 	$("#responseDiv123").hide();
 	$("#up_load").hide();
-	$("#up_load_script").show();	
+	$("#up_load_rdkv_script").show();	
+	$("#up_load_rdkb_script").hide();
 	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
 }
-/**
- * Function used to download consolidated script details through UI.
- */
+function uploadRDKBScript(){
+	$("#responseDiv123").hide();
+	$("#up_load").hide();
+	$("#up_load_rdkv_script").hide();
+	$("#up_load_rdkb_script").show();
+	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
+	
+}
+
 
 function downloadScriptList(){	
 	var value  = confirm("Do you want to download  consolidated scripts details ?");
@@ -116,8 +149,10 @@ function downloadScriptList(){
 function showUploadOption(){
 	$("#responseDiv123").hide();
 	$("#up_load").show();
-	$("#up_load_script").hide();	
+	$("#up_load_rdkv_script").hide();
+	$("#up_load_rdkb_script").hide();
 	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
 }
 /**
  * Function will hide the upload option.
@@ -126,10 +161,11 @@ function showUploadOption(){
 function hideUploadOption(){
 	$("#responseDiv123").show();
 	$("#up_load").hide();
-	$("#up_load_script").hide();	
+	$("#up_load_rdkv_script").hide();	
+	$("#up_load_rdkb_script").hide();
 	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
 }
-
 
 var displayedGroups = [];
 
@@ -152,7 +188,7 @@ function getScriptsList(val, scriptGroup, scriptInstanceTotal, totalScripts){
 					var elem = val[key];
 					displayHtml= displayHtml+				
 						'<li><span  id="' + elem["moduleName"] + '@' + elem["scriptName"] + '"><a href="#" onclick="editScript(' + "'" + elem["moduleName"] + '@' + 
-						elem["scriptName"]+ "'); " +
+						elem["scriptName"]+ "','"+elem["category"]+ "'); " +
 							"highlightTreeElement(" + "'scriptList_', '0', '" + scriptInstanceTotal + "');" +
 							"highlightTreeElement('scriptGroupList_', '" + scriptGroupCount + "', '" + totalScripts + "' );"+
 							'return false;">'+elem["scriptName"]+'</a></span></li>';
@@ -353,6 +389,7 @@ function updateSG() {
  *  function for for create script group 
  */
 function createSG() {
+	var category = document.getElementById("createCategory").value;
 	var sortable = document.getElementById("sortable");
 
 	var dataList = ""
@@ -370,21 +407,48 @@ function createSG() {
 	}else if(dataList == "" && dataList.length == 0){
 		alert("Please add scripts to the script group");
 	}else{ 
-		$.get('createScriptGrp', {idList: dataList, name: name},function(data) {   document.location.reload();  $("#responseDiv123").html(data); });
+		$.get('createScriptGrp', {idList: dataList, name: name, category:category.trim()},function(data) {   document.location.reload();  $("#responseDiv123").html(data); });
 	}
 }
-function createScriptForm() {
+function createScriptForm(category) {
 	checkAnyEditingScript();
 	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
 	$("#responseDiv123").show();
-	$.get('createScript', function(data) { $("#responseDiv").html(data); });
+	$.get('createScript', {category:category}, function(data) { $("#responseDiv").html(data); });
 }
 
-function editScript(id , flag ) {
-	hideUploadOption();	
+/** 
+ * function for add new tcl script through UI 
+ * @param id
+ * @param category
+ */
+function createTCLScriptForm(category) {
+	checkAnyEditingScript();
+	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
+	$("#responseDiv123").show();
+	$.get('createTclScript', {category:category}, function(data) { $("#responseDiv").html(data); });
+}
+function editScript(id , category ) {
+	if(category.trim() !== 'RDKB_TCL'){
+		hideUploadOption();
+		hideSearchoptions();
+		checkAnyEditingScript();
+		$.get('editScript', {id: id , category : category}, function(data) { $("#responseDiv").html(data); });
+	}else{
+		editTclScript(id);
+	}
+}
+
+function editTclScript(scriptName) {
+	// Issue fix
+	$('#list-scriptDetails').hide();
+	$('#list-scriptDetails1').hide();
 	hideSearchoptions();
 	checkAnyEditingScript();
-	$.get('editScript', {id: id , flag : flag}, function(data) { $("#responseDiv").html(data); });
+	$.get('tclScriptDisplay', {scriptName: scriptName}, function(data) { 
+		$("#responseDiv").html(data); });
 
 }
 
@@ -394,89 +458,87 @@ function checkAnyEditingScript(){
 		clearLock(scriptName);
 	}
 }
-function showScript(idVal, flag) {
+function showScript(idVal, category) {
 	checkAnyEditingScript();
-	$.get('editScript', {id: idVal , flag : flag}, function(data) { $("#responseDiv").html(data); });
+	$.get('editScript', {id: idVal , category : category}, function(data) { $("#responseDiv").html(data); });
 }
 
+/*
 function removeScript(id){	
 	checkAnyEditingScript();
 	$("#currentScriptId").val("");
 	$.get('deleteScript', {id: id}, function(data) { document.location.reload();  });
 }
+*/
 
-function createScriptGrpForm() {	
+function removeScript(id){
+	if(id.contains('@')){
+		checkAnyEditingScript();
+		$("#currentScriptId").val("");
+		$.get('deleteScript', {id: id}, function(data) { document.location.reload();  });
+	}
+	else{
+		alert('Script cannot be deleted');
+	}
+}
+
+function removeScript(id, category){
+	if(id.contains('@')){
+		checkAnyEditingScript();
+		$("#currentScriptId").val("");
+		$.get('deleteScript', {id: id, category:category}, function(data) { document.location.reload();  });
+	}
+	else{
+		alert('Script cannot be deleted');
+	}
+}
+
+
+function createScriptGrpForm(category) {	
 	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
 	$("#responseDiv123").show()
 	checkAnyEditingScript();
-	$.get('create', function(data) { $("#responseDiv").html(data); });
+	$.get('create', {category:category},function(data) { $("#responseDiv").html(data); });
 }
+
 /**
- * function for the module wise script list refreshment 
- * @param name
+ * Function for module or random wise script group script list sort
+ * - Saving the current script group  script list  
+ * - value : module / random based on the button selection. 
+ * - Shows 'edit' page   
  */
-function moduleWiseSort(name){	
-	var value1
-	var value 
-	if( confirm("please save the script group changes before applying sort !")){
-		value1 = true 
-	}else{
-		value1  = false 
-	}
-	if(value1 == false ){
-	$.get('moduleWiseScriptList', {name: name}, function(data) { $(name).html(data);});
-	value ="modulescriptlist"
-	moduleWiseScriptList(name,value);
-	}else {	
-		value = "normal"
-		hideUploadOption();
-		hideAllSearchoptions();
-		checkAnyEditingScript();
-		$.get('edit',{name:name, value :value}, function(data){
-			$("#responseDiv").html(data); });
-		$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });
-		
-	}
+function moduleOrRandomSort(value){
+	var dataList = ""
+		$( "li[id*='sgscript-']" ).each(function(index) {			
+			var elmnt = $(this).attr('id');
+			elmnt = elmnt.replace("sgscript-","");			
+			elmnt = elmnt.replace("end","");
+			if(!dataList.contains(","+elmnt+",")){
+				dataList = dataList +","+ elmnt;
+			}
+		});	
+		var name = document.getElementById("scriptName").value;
+		var id = document.getElementById("sgId").value;
+		var version = document.getElementById("sgVersion").value;
+		$.get('scriptGroupListSave', {
+			id:id, name:name , idList: dataList ,
+		}, function(data) {
+			if(data == 'true'){
+				var sortValue = ""
+				if(value == "module" ){
+					sortValue = "modulescriptlist"
+				}else{
+					sortValue = "randomlist"
+				}	
+				$.get('edit',{name:name, value :sortValue}, function(data){
+					$("#responseDiv").html(data); });
+				$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });
+			}else{
+			}
+		});
 }
-/**
- * Fuction for loading the edit Module wise selection based on the script.   
- * @param name
- */
-function moduleWiseScriptList(name,value){
-	hideUploadOption();
-	hideAllSearchoptions();
-	checkAnyEditingScript();
-	$.get('edit',{name:name, value :value}, function(data){
-		$("#responseDiv").html(data); });
-	$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });
-}
-/**
- * Random script list creation based on the script group selection.
- * @param name
- */
-function randomSort(name){	
-	var value1
-	var value
-	if( confirm("Please update current script group changes if you want")){
-		value1 = true 
-	}else{
-		value1  = false 
-	}	
-	 if( value1  == false ){
-		 value = "randomlist"
-		$.get('randomScriptList', {name: name}, function(data) { $(name).html(data);});
-		moduleWiseScriptList(name,value);
-		 
-	 }else{	
-		 value = "normal"
-			hideUploadOption();
-			hideAllSearchoptions();
-			checkAnyEditingScript();
-			$.get('edit',{name:name, value :value}, function(data){
-				$("#responseDiv").html(data); });
-			$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });	 
-	 }	
-}
+
 /**
  *  When clicking the script group diplay details 
  * @param id
@@ -534,6 +596,7 @@ function hideAllSearchoptions(){
 
 function displayAdvancedSearch(){	
 	$("#list-scriptDetails").show();
+	$("#list-scriptDetails1").show();
 	$("#advancedSearch").show();
 	$("#minSearch").hide();
 	$('.veruthe').empty();
@@ -544,6 +607,7 @@ function displayAdvancedSearch(){
 function showMinSearch(){	
 	$("#advancedSearch").hide();
 	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
 	$("#minSearch").show();
 	$('.veruthe').empty();
 }
@@ -577,7 +641,8 @@ function updateScriptList(scriptName){
 
 
 function updateScriptListWithScriptName(scriptName){
-	$.get('fetchScriptWithScriptName', {scriptName: scriptName}, function(data) {
+	var category = document.getElementById('category').value.trim()
+	$.get('fetchScriptWithScriptName', {scriptName: scriptName,category:category}, function(data) {
 		if(data!=""){
 			if($("#isScriptExist").val()==""){
 				$("#currentScriptId").val(data);
@@ -593,7 +658,8 @@ function updateScriptListWithScriptName(scriptName){
  * @param scriptName
  */
 function isScriptExist(scriptName){
-	$.get('fetchScript', {scriptName: scriptName}, function(data) {
+	var category = document.getElementById("category").value;
+	$.get('fetchScript', {scriptName: scriptName, category:category}, function(data) {
 		if(data!=""){
 			$("#isScriptExist").val(data);
 		}
@@ -602,15 +668,20 @@ function isScriptExist(scriptName){
 }
 
 function showSkipRemarks(me){
+	//issue fix
 	if (me.checked) {
+		$("#skipRemarks").show();
+		$("#skipReason").show();
 		$("#skipRemarks123").show();
 		$("#skipReason123").show();
 		$("#remarks").show();
 	} else {
 		$("#remarks").val('');
 		$("#remarks").hide();
+		$("#skipReason").hide();
+		$("#skipRemarks").hide();
 		$("#skipRemarks123").hide();
-		$("#skipReason123").hide();
+		$("#skipReason123").hide();	
 	}
 	$("#skipReason").val("");
 }
@@ -622,8 +693,8 @@ function enableEdit(me,scriptName,session){
 	$.get('addEditLock', {scriptName: scriptName,session:session}, function(data) {
 		if(data){
 			if(data == "false"){
-				alert("Script is already modifying by another user !!!");
-				$("#warningMsg").html("Script is already modifying by another user !!!");
+				alert("Script is being modified by another user !!!");
+				$("#warningMsg").html("Script is being modified by another user !!!");
 			}
 		}
 	});
@@ -633,9 +704,54 @@ function enableEdit(me,scriptName,session){
 	$("#editButton").hide();
 }
 
+function enableEditTcl(scriptName){
+	
+	$.get('addEditLock', {scriptName: scriptName}, function(data) {
+		if(data){
+			if(data == "false"){
+				alert("Script is being modified by another user !!!");
+				$("#warningMsg").html("Script is being modified by another user !!!");
+			}
+		}
+	});
+	
+	$("#saveTcl").show();
+	$("#cancelTcl").show();
+	$("#editButtonTcl").hide();
+	$("#tclText").prop("disabled",false);
+}
 function disableEdit(me,scriptName){
 	$.get('removeEditLock', {scriptName: scriptName}, function(data) {
-	});	
+	});
+	
+}
+function cancelTclEdit(scriptName){
+	$("#editButtonTcl").show();
+	$("#tclText").prop("disabled",true);
+	$("#saveTcl").hide();
+	$("#cancelTcl").hide();
+	$.get('removeEditLock', {scriptName: scriptName}, function(data) {
+	});
+}
+function updateTclContents(scriptName){
+	var content = document.getElementById('tclText').value;
+	if(content){
+		if(content.trim() !== ''){
+			$.post('saveTcl', {content:content, scriptName:scriptName},function(data){
+				$("#tclText").prop("disabled",true);
+				$("#editButtonTcl").show();
+				$("#saveTcl").hide();
+				$("#cancelTcl").hide();
+				$("#scriptMessageDiv").html(data);
+			});
+		}
+		else{
+			alert('Content cannot be empty');
+		}
+	}
+	else{
+		alert('Content cannot be empty');
+	}
 }
 
 function clearLock(scriptName){
@@ -643,7 +759,8 @@ function clearLock(scriptName){
 	});
 }
 
-function showSkipRemarksLabel(){	
+function showSkipRemarksLabel(){
+	
 	$("#skipRemarks123").hide();
 	$("#skipReason123").hide();
 }
@@ -668,6 +785,7 @@ function scriptRefreshSuccess(){
 function scriptRefreshFailure(){
 	alert(" Error while refreshig the script list.");
 	window.location.reload(); 
+	
 }
 function testSuitesCleanUp(){
 	alert(" Please wait, test suites clean up will take some time.");
@@ -685,8 +803,8 @@ function testSuitesCleanUpFailure(){
  * Function for  Suite clean up with N/A scripts 
  * @param name
  */
-function cleanUpTestSuite(name){	
-	$.get('verifyScriptGroup', {name: name}, function(data) { 
+function cleanUpTestSuite(name ,  category){	
+	$.get('verifyScriptGroup', {name: name, category : category}, function(data) { 
 		var val = JSON.parse(data);
 		if(val === true){
 			alert("Script Group cleaned succesfully ");
@@ -708,6 +826,41 @@ function cleanUpTestSuite(name){
 function cleanUp(){
 	alert("Please wait, Suite clean up will take some time. ")
 }
+
+
+/*
+function isTclScriptExist(scriptName){
+	alert("here and only here ");
+	var category = document.getElementById("category").value;
+	alert(category);
+	$.get('fetchTclScript', {scriptName: scriptName, category:category}, function(data) {
+		if(data!=""){
+			$("#isTclScriptExist").val(data);
+		}
+		$("#scriptMessageDiv").show();
+	});
+}
+
+
+function updateTclScriptListWithScriptName(scriptName){
+	var category = document.getElementById('category').value.trim()
+	$.get('fetchTclScriptWithScriptName', {scriptName: scriptName,category:category}, function(data) {
+		if(data!=""){
+			alert(data);
+			if($("#isScriptExist").val()==""){
+				$("#currentScriptId").val(data);
+				setTimeout(function(){location.reload();},1000);
+			}
+			$("#isScriptExist").val("");
+		}
+		$("#scriptMessageDiv").show();
+	});
+}
+*/
+
+
+
+
 
 
 

@@ -82,6 +82,17 @@ trmObj.setLoadModuleStatus(trmLoadStatus);
 
 maxTuner = 0
 
+if "FAILURE" in trmLoadStatus.upper():
+    #Reboot and reload trm component
+    print "Reboot and reload TRM"
+    trmObj.initiateReboot();
+    trmObj = tdklib.TDKScriptingLibrary("trm","2.0");
+    trmObj.configureTestCase(ip,port,'Recorder_RMF_SixTuner_DVR_Future_11');
+    #Get the result of connection with test component and STB
+    trmLoadStatus = trmObj.getLoadModuleResult();
+    print "[TRM LIB RELOAD STATUS]  :  %s" %trmLoadStatus;
+    trmObj.setLoadModuleStatus(trmLoadStatus);
+
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in trmLoadStatus.upper():
         #Fetch max tuner supported

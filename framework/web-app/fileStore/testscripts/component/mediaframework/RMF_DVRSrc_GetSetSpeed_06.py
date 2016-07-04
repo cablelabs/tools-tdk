@@ -91,7 +91,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     result = tdkTestObj.getResult();
     details = tdkTestObj.getResultDetails();
 
-    if teststep == 'RMF_Element_GetSpeed':
+    if teststep == 'RMF_Element_Getspeed':
         pos = details.find('Speed:');
         value = details[pos:];
         speed = value[6:];
@@ -142,7 +142,7 @@ if expected_Result in loadModuleStatus.upper():
                         if expected_Result in result.upper():
                                 src_parameter=["rmfElement"];
                                 src_element=["DVRSrc"];
-                                result=Create_and_ExecuteTestStep('RMF_Element_GetSpeed',obj,expected_Result,src_parameter,src_element);
+                                result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,expected_Result,src_parameter,src_element);
                         src_parameter=["rmfElement"]
                         src_element=["DVRSrc"]
                         result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,expected_Result,src_parameter,src_element);

@@ -29,7 +29,7 @@ $(document).ready(function() {
 	$('.filedevicebusy').contextMenu('childs_menu', {
 		bindings : {			
 			'reset_device' : function(node) {
-				if (confirm('Make sure no scripts is currently executed in the device. Are you want to reset the device?')) {
+				if (confirm('Make sure no scripts is currently executed in the device. Do you want to reset the device?')) {
 					resetDevice(node.id);
 				}
 			}
@@ -103,6 +103,41 @@ function showSingle(){
 	$('#testSuite').hide();
 }
 
+function pageLoadOnScriptType(category, id){
+	var isTestSuiteRadio = document.getElementById('testSuiteRadio').checked;
+	var isSingleTestRadio = document.getElementById('singleTestRadio').checked;
+	$.get('showDevices', {id: id, category: category}, function(data) {
+		$("#responseDiv").html(data);
+		//alert(data);
+		if(category === 'RDKB_TCL'){
+			document.getElementById('pythonRadio').checked = false;
+			document.getElementById('tclRadio').checked = true;
+		}
+		else{
+			document.getElementById('pythonRadio').checked = true;
+			document.getElementById('tclRadio').checked = false;
+		}
+		if(isTestSuiteRadio){
+			document.getElementById('testSuiteRadio').checked = true;
+			document.getElementById('singleTestRadio').checked = false;
+			showSuite();
+		}
+		if(isSingleTestRadio){
+			document.getElementById('testSuiteRadio').checked = false;
+			document.getElementById('singleTestRadio').checked = true;
+			showSingle();
+		}
+	});
+	
+	
+//	alert(' isTestSuiteRadio : '+isTestSuiteRadio);
+//	alert('isSingleTestRadio : '+isSingleTestRadio);
+	//alert(' isPythonRadio : '+isPythonRadio);
+	//alert('isTclRadio : '+isTclRadio);
+	//$.get('showDevices', {id: id, category: category}, function(data) { $("#responseDiv").html(data); });
+	
+}
+
 function showOnetimeSchedule(){
 	$('#onetimeScheduleDiv').show();
 	$('#reccuranceScheduleDiv').hide();
@@ -131,19 +166,37 @@ function showMonthly(){
 	$('#reccurMonthly').show();
 }
 
-function showScript(id){
-	$.get('showDevices', {id: id}, function(data) { $("#responseDiv").html(data); });
-	$.get('updateDeviceStatus', {id: id}, function(data) {refreshDevices(data);});
+function showScript(id, category){
+	$.get('showDevices', {id: id, category: category}, function(data) { $("#responseDiv").html(data); });
+	$.get('updateDeviceStatus', {id: id,category: 'RDKV'}, function(data) {refreshDevices(data,'RDKV');});
+	$.get('updateDeviceStatus', {id: id,category: 'RDKB'}, function(data) {refreshDevices(data,  'RDKB');});
+	//$.get('updateDeviceStatus', {id: id,category: 'RDKB'}, function(data) {refreshDevices(data,  'RDKB');});
 }
 
-function refreshDevices(data){
-	var container = document.getElementById("device_status");
+function refreshDevices(data, category){
+	var conatiner = null
+	if("RDKV" === category){
+		container = document.getElementById("device_statusV");
+	}
+	else if("RDKB" === category){
+		container = document.getElementById("device_statusB");
+	}
+	//container = document.getElementById("device_statusTotal");
 	container.innerHTML= data;
 	
 	var selectedId = $("#selectedDevice").val();
 	var deviceInstanceTotal = $("#deviceInstanceTotal").val();
 	highlightTreeElement('deviceExecutionList_', selectedId, deviceInstanceTotal);
 }
+
+/*function refreshDevices(data){
+	var container = document.getElementById("device_status");
+	container.innerHTML= data;
+	
+	var selectedId = $("#selectedDevice").val();
+	var deviceInstanceTotal = $("#deviceInstanceTotal").val();
+	highlightTreeElement('deviceExecutionList_', selectedId, deviceInstanceTotal);
+}*/
 
 function resetDevice(id){
 	$.get('resetDevice', {id: id}, function(data) { document.location.reload(); });
@@ -180,8 +233,9 @@ function executionStatus(id){
 	        } }, { onClose : function(dialog) {
 		  $.modal.close(); } });
 }
+	
 
-function showScheduler(id){	
+function showScheduler(id, category){	
 	
 	var scriptGroup = $("#scriptGrp").val();
 	var scripts = $("#scripts").val();
@@ -233,9 +287,9 @@ function showScheduler(id){
 	}
 	if(scripts){
 		var scriptVals = scripts.toString()
-	}
+	} 
 
-	$.get('showSchedular', {deviceId : id, devices : deviceList.toString(), scriptGroup : scriptGroup, scripts:scriptVals, repeatId:repeatid, rerun:reRun, systemDiagnostics : systemDiag , benchMarking : benchmark  ,isLogReqd :isLogReqd }, function(data) { $("#scheduleJobPopup").html(data); });		
+	$.get('showSchedular', {deviceId : id, devices : deviceList.toString(), scriptGroup : scriptGroup, scripts:scriptVals, repeatId:repeatid, rerun:reRun, systemDiagnostics : systemDiag , benchMarking : benchmark  ,isLogReqd :isLogReqd, category:category }, function(data) { $("#scheduleJobPopup").html(data); });		
 	$("#scheduleJobPopup").modal({ opacity : 40, overlayCss : {
 		  backgroundColor : "#c4c4c4" }, containerCss: {
 	            width: 800,
@@ -415,9 +469,13 @@ function timedRefresh() {
 	setTimeout("loadXMLDoc();", 5 * 1000);	
 }
 
+
 /**
  * Ajax call to refresh only the list table when dynamic refresh is enabled
  */
+
+var prevCategory = null;
+
 function loadXMLDoc() {
 	var xmlhttp;	
 	var url = $("#url").val();
@@ -437,7 +495,42 @@ function loadXMLDoc() {
 		if(flagMark == true){
 			$('.markAll').prop('checked', true);
 		}
-		xmlhttp.open("GET", url+"/execution/create?t=" + Math.random()+"&max=10&offset="+paginateOffset+"&devicetable=true&flagMark="+flagMark, true);
+		var category = document.getElementById("filter").value;
+		xmlhttp.open("GET", url+"/execution/create?t=" + Math.random()+"&max=10&offset="+paginateOffset+"&devicetable=true&flagMark="+flagMark+"&category="+category, true);
+		if(flagMark == true){
+			$('.markAll').prop('checked', true);
+		}
+	}
+	xmlhttp.send();
+}
+
+function categoryChange() {
+	
+	var xmlhttp;	
+	var url = $("#url").val();
+	var paginateOffset = $("#pageOffset").val();
+	if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+		xmlhttp = new XMLHttpRequest();
+	} else {// code for IE6, IE5
+		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	xmlhttp.onreadystatechange = function() {
+		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+			document.getElementById("list-executor").innerHTML = xmlhttp.responseText;
+			timedRefresh();			
+		}
+	} 
+	if(paginateOffset != undefined){
+		if(flagMark == true){
+			$('.markAll').prop('checked', true);
+		}
+		
+		var category = document.getElementById("filter").value;
+		var prevCategory = document.getElementById("selectedFilter").value;
+		if(prevCategory == null || prevCategory != category){
+			paginateOffset = 0;
+		}
+		xmlhttp.open("GET", url+"/execution/create?t=" + Math.random()+"&max=10&offset="+paginateOffset+"&devicetable=true&flagMark="+flagMark+"&category="+category, true);
 		if(flagMark == true){
 			$('.markAll').prop('checked', true);
 		}
@@ -502,25 +595,21 @@ function deviceEnabledStatus(id,option,select){
  * Ajax call to refresh only the list table when dynamic refresh is enabled
  */
 function loadXMLDoc1() {
+	$.get('create',{t:Math.random(),max:10,offset:0,devicestatustable:true,category:'RDKV'},function(data,status){
+		document.getElementById("device_statusV").innerHTML = "";
+		document.getElementById("device_statusV").innerHTML = data;
+	});
+	$.get('create',{t:Math.random(),max:10,offset:0,devicestatustable:true,category:'RDKB'},function(data,status){
+		document.getElementById("device_statusB").innerHTML = "";
+		document.getElementById("device_statusB").innerHTML = data;
+	});
+	/*$.get('create',{t:Math.random(),max:10,offset:0,devicestatustable:true},function(data,status){
+		//alert(data);
+		document.getElementById("device_status").innerHTML = "";
+		document.getElementById("device_status").innerHTML = data;
+	});*/
 	
-	var xmlhttp;	
-	var url = $("#url").val();
-	if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
-		xmlhttp = new XMLHttpRequest();
-	} else {// code for IE6, IE5
-		xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-	}
-	xmlhttp.onreadystatechange = function() {
-		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-			document.getElementById("device_status").innerHTML = "";
-			document.getElementById("device_status").innerHTML = xmlhttp.responseText;			
-			deviceStatusRefresh();			
-		}
-	}
-	var urltemp =  url+"/execution/create?t=" + Math.random()+"&max=10&offset=0&devicestatustable=true";
-	xmlhttp.open("GET", url+"/execution/create?t=" + Math.random()+"&max=10&offset=0&devicestatustable=true", true);
-	xmlhttp.send();
-	
+	deviceStatusRefresh();	
 }
 
 function hideSearchoptions(){
@@ -541,8 +630,7 @@ function displayAdvancedSearch(){
 	$('.veruthe').empty();
 	$('.responseclass').empty();
 	$("#listscript").hide();
-	$("#scriptValue").val('');
-	
+	$("#scriptValue").val('');	
 }
 
 function showMinSearch(){	
@@ -634,7 +722,6 @@ function deleteResults() {
 	}	
 }
 
-
 /**
  * Function to perform mark all operation in execution page.
  * 
@@ -662,6 +749,33 @@ function clickCheckbox(me) {
 		flagMark = false
 	}
 }
+
+
+/**
+ * Function to mark individual execution results in execution page.
+ * 
+ * @param me
+ */
+function mark(me) {
+
+	if (me.id != 'undefined' && me.id != 'markAll1' && me.id != 'markAll2'
+			&& me.id != "" && me.id != null) {
+		if (me.checked) {
+			$.get('updateMarkStatus', {
+				markStatus : 1,
+				id : me.id
+			}, function(data) {
+			});
+		} else {
+			$.get('updateMarkStatus', {
+				markStatus : 0,
+				id : me.id
+			}, function(data) {
+			});
+		}
+	}	
+}
+
 /**
  * Function used to check the current device status is FREE  and available or not
  * @param deviceStatus
@@ -702,28 +816,4 @@ function  executionTriggeredPopUp(){
 }
 
 
-/**
- * Function to mark individual execution results in execution page.
- * 
- * @param me
- */
-function mark(me) {
 
-	if (me.id != 'undefined' && me.id != 'markAll1' && me.id != 'markAll2'
-			&& me.id != "" && me.id != null) {
-		if (me.checked) {
-			$.get('updateMarkStatus', {
-				markStatus : 1,
-				id : me.id
-			}, function(data) {
-			});
-		} else {
-			$.get('updateMarkStatus', {
-				markStatus : 0,
-				id : me.id
-			}, function(data) {
-			});
-		}
-	}
-
-}
