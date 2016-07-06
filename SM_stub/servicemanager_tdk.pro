@@ -52,7 +52,7 @@ LIBS += -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10
 }
 
 LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
-LIBS += -lservicemanager -ludev -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata -ldshalcli -lds
+LIBS += -lservicemanager -lds
 
 #non-yocto env variables
 exists(../platform/SM_stub/intel.pri) : include(../platform/SM_stub/intel.pri)

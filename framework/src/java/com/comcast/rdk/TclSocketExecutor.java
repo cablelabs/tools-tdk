@@ -134,11 +134,7 @@ public class TclSocketExecutor {
 	}
 	
 	public static String getModuleName(String param) {
-		String moduleName = "";
-		if (param.contains("Device.WiFi.") || param.contains("Device.X_CISCO_COM_Security") || param.contains("Device.DHCPv4")) {
-			moduleName = "wifiagent";
-		}
-		return moduleName;
+		return "wifiagent";
 	}
 	
 	public static String getMethodName(String module , String methodType){
@@ -437,7 +433,7 @@ public class TclSocketExecutor {
 			throwError();
 		}
 	}
-
+	
 	private static String getResultStatus(String response) {
 		String status = null;
 		try {
