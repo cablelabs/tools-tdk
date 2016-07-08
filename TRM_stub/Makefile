@@ -4,7 +4,7 @@ include ../def.inc
 default: build
 
 CC      = g++
-CFLAGS  = -Wall -g -DGCC4_XXX -Wno-format -Wunused -DUSE_CC_GETTIMEOFDAY -DDEBUG_CONF_FILE="\"/etc/debug.ini\""
+CFLAGS  = -Wall -g -DGCC4_XXX -Wno-format -Wunused
 
 #
 # Source files
@@ -57,7 +57,6 @@ INCLUDES+= -I./include \
 	-I$(CURL_PATH)/../ \
 	-I$(RDK_BUILD_DIR)/opensource/include \
 	-I$(RDK_BUILD_DIR)/opensource/include/uuid \
-	-I$(RDK_BUILD_DIR)/rdklogger/include \
 	-I$(RDK_BUILD_DIR)/trm/common/include
 
 CFLAGS  += $(INCLUDES)

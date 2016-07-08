@@ -13,6 +13,7 @@
 #ifndef TRM_HELPER_H_
 #define TRM_HELPER_H_
 
+#include "rdktestagentintf.h"
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -23,8 +24,6 @@
 #include <vector>
 #include <map>
 #include <string>
-
-#include "rdk_debug.h"
 
 #include "trm/Messages.h"
 #include "trm/MessageProcessor.h"

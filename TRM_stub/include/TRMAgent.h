@@ -16,7 +16,6 @@
 #include <json/json.h>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
-#include "rdk_utils.h"
 #include <sstream>
 #include "TRMAgentHelper.h"
 
