@@ -44,6 +44,7 @@ std::string GetSubString (std::string strLine, std::string strDelimiter);
 #define COMMAND_SIZE  500      // Maximum size of command
 #define ERROR_SIZE    50       // Maximum size of error string
 #define BUFFER_SIZE   64       // Maximum size of buffer
+#define LINE_LEN      128
 
 #define TDK_ENABLE_FILE "/opt/.tdkenable"                            // File to check if TDK is enabled
 #define DEVICE_LIST_FILE     "devicesFile.ini"                 	// File to populate connected devices
@@ -66,6 +67,7 @@ std::string GetSubString (std::string strLine, std::string strDelimiter);
 #define SYSSTAT_SCRIPT       "sh $TDK_PATH/runSysStat.sh"	  // Script to get system diagnostic info from sar command
 #define PERF_DATA_EXTRACTOR_SCRIPT       "sh $TDK_PATH/PerformanceDataExtractor.sh"	  // Script to extract usage details for cpu amd memory
 #define NULL_LOG_FILE        "cat /dev/null > "
+#define GET_IMAGENAME_CMD    "cat /version.txt | grep imagename | cut -d: -f 2"
 
 #ifndef RDKVERSION
 #define RDKVERSION "NOT_DEFINED"       
@@ -1726,7 +1728,7 @@ bool RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::V
 bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
-    char szBuffer[128];
+    char szBuffer[LINE_LEN];
     std::string strLogPath;
 
     /* Constructing JSON response */
@@ -1756,7 +1758,7 @@ bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Js
     {
         while(!feof(pipe)) 
         {
-            if(fgets(szBuffer, 128, pipe) != NULL)
+            if(fgets(szBuffer, LINE_LEN, pipe) != NULL)
             {
                 DEBUG_PRINT (DEBUG_TRACE, "%s \n",szBuffer);
             }
@@ -1947,6 +1949,62 @@ bool RpcMethods::RPCPushLog (const Json::Value& request, Json::Value& response)
 
 } /* End of RPCPushLog */
 
+/********************************************************************************************************************
+ Purpose:               RPC call to enable TDK in STB
+ Parameters:
+                        request [IN]    - Json request
+                        response [OUT]  - Json response with result "SUCCESS"
+
+ Return:                bool  -      Always returning true from this function, with details in response[result]
+
+*********************************************************************************************************************/
+bool RpcMethods::RPCGetImageName(const Json::Value& request, Json::Value& response)
+{
+    bool bRet = true;
+    char szBuffer [LINE_LEN] = {'\0'};
+    std::string strImageName = "";
+
+    DEBUG_PRINT (DEBUG_TRACE, "RPC Get Image name --> Entry\n");
+    cout << "Received query: \n" << request << endl;
+
+    /* Creating pipe to fetch image name */
+    FILE* pipe = popen(GET_IMAGENAME_CMD, "r");
+    if (!pipe)
+    {
+        strImageName = "NOTAVAILABLE";
+        DEBUG_PRINT (DEBUG_TRACE, "Error in creating pipe to fetch image name\n");
+    }
+    else
+    {
+        while(!feof(pipe))
+        {
+            if(fgets(szBuffer, LINE_LEN-1, pipe) != NULL)
+            {
+                //Removing trailing newline character from fgets() input
+                char *pos;
+                if ((pos=strchr(szBuffer, '\n')) != NULL) {
+                    *pos = '\0';
+                }
+                strImageName += szBuffer;
+            }
+        }
+        pclose(pipe);
+
+        DEBUG_PRINT (DEBUG_TRACE, "Image running on Box is %s", strImageName.c_str());
+    }
+
+    /* Sending image name with json response message */
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+    response["result"] = strImageName.c_str();
+
+    sleep (2);
+
+    DEBUG_PRINT (DEBUG_TRACE, "RPC Get Image name --> Exit");
+
+    return bRet;
+
+}/* End of RPCGetImageName */
 
 /* To enable port forwarding. In gateway boxes only  */
 #ifdef PORT_FORWARD
@@ -2151,7 +2209,7 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
 bool RpcMethods::RPCGetClientMocaIpAddress (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
-    char szBuffer[128];
+    char szBuffer[LINE_LEN];
     std::string strIPaddr = "";
     const char* pszClientMAC = NULL;
     char szCommand[COMMAND_SIZE];
@@ -2185,7 +2243,7 @@ bool RpcMethods::RPCGetClientMocaIpAddress (const Json::Value& request, Json::Va
     {
         while(!feof(pipe)) 
         {
-            if(fgets(szBuffer, 128, pipe) != NULL)
+            if(fgets(szBuffer, LINE_LEN, pipe) != NULL)
             {
                 strIPaddr += szBuffer;
             }

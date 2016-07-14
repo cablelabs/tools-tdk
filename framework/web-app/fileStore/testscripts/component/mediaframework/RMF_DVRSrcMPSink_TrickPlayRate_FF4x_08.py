@@ -109,7 +109,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
         print speed;
         playSpeed = float(speed);
 
-    if teststep == 'RMF_Element_GetmediaTime':
+    if teststep == 'RMF_Element_Getmediatime':
         global playTime
         pos = details.find('MediaTime:');
         value = details[pos:];
@@ -198,7 +198,7 @@ if expected_Result in loadModuleStatus.upper():
 
                                                                                 src_parameter=["rmfElement"];
                                                                                 src_element=["DVRSrc"];
-                                                                                result=Create_and_ExecuteTestStep('RMF_Element_GetmediaTime',obj,expected_Result,src_parameter,src_element);
+                                                                                result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,expected_Result,src_parameter,src_element);
                                                                                 currentTime = playTime;
                                                                                 print "CurrentTime:",currentTime
                                                                                 if expected_Result in result.upper():

@@ -32,6 +32,7 @@ from time import gmtime, strftime
 from devicestatus import getStatus
 #from recorderlib import startRecorderApp
 from getRDKVersion import getRDKVersion
+from getImageName import getImageName
 import MySQLdb
 import shutil
 import logging
@@ -1508,6 +1509,20 @@ class TDKScriptingLibrary:
 
                 version = getRDKVersion (self.IP, self.portValue)
                 return version
+
+        ########## End of Function ##########
+
+        def getImageName(self):
+
+        # To fetch RDK version from STB
+
+        # Syntax       : OBJ.getImageName()
+        # Description  : Send query to TDKagent to get image name on the box
+        # Parameters   : None
+        # Return Value : RDK image name
+
+                imagename = getImageName (self.IP, self.portValue)
+                return imagename
 
         ########## End of Function ##########
 

@@ -103,7 +103,7 @@ if Expected_Result in loadModuleStatus.upper():
         if Expected_Result in result.upper():
                 result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,Expected_Result,src_parameter,src_element);
                 if Expected_Result in result.upper():
-                        result=Create_and_ExecuteTestStep('RMF_Element_GetmediaTime',obj,Expected_Result,src_parameter,src_element);
+                        result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                 result=Create_and_ExecuteTestStep('RMF_Element_Term',obj,Expected_Result,src_parameter,src_element);
                 result=Create_and_ExecuteTestStep('RMF_Element_Remove_Instance',obj,Expected_Result,src_parameter,src_element);
         else:
