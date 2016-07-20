@@ -1439,6 +1439,8 @@ bool playPause(OUT Json::Value& response)
         float speed=0.0;
         double mtime=0;
         retHNSrcValue = pSource->play(speed,mtime);
+        sleep(5);
+
 	if(RMF_RESULT_SUCCESS != retHNSrcValue)
 	{
 		response["result"] = "FAILURE";
