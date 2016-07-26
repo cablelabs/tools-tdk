@@ -35,6 +35,7 @@ void soc_init(int , char *, int );
 #endif
 
 #define PRE_REQUISITE_FILE "scripts/tdkintegration_test_module_pre-script.sh"
+#define PRE_REQUISITE_LOG_PATH "logs/tdkintegration_testmodule_prereq_details.log" 
 /********************************************************************************************************************
 Purpose:               To get the current status of the AV running
 
@@ -199,28 +200,15 @@ bool TDKIntegrationStub::initialize(IN const char* szVersion,IN RDKTestAgent *pt
 std::string TDKIntegrationStub::testmodulepre_requisites()
 {
 	DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Entry\n");
-	int sysRetValScript;
-/* 	#ifdef USE_SOC_INIT
-		//Initialize SOC
-		soc_init(1, "tdk_agent", 1);
-        #endif
-*/
-
-#if 1
-        string TDK_testmodule_PR_cmd;
+        ifstream logfile;
+        string TDK_testmodule_PR_cmd, TDK_testmodule_PR_log,line;
         TDK_testmodule_PR_cmd= g_tdkPath + "/" + PRE_REQUISITE_FILE;
+        TDK_testmodule_PR_log= g_tdkPath + "/" + PRE_REQUISITE_LOG_PATH;
         string pre_req_chk= "source "+TDK_testmodule_PR_cmd;
 
         try
         {
-
-                 sysRetValScript = system((char *)pre_req_chk.c_str());
-        	if(sysRetValScript!=0)
-        	{
-                	DEBUG_PRINT(DEBUG_ERROR,"\nsystem command is failed on executing mplayerscript \n");
-                	return "SUCCESS";
-        	}
-
+                system((char *)pre_req_chk.c_str());
         }
         catch(...)
         {
@@ -228,9 +216,29 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
                 DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
                 return "FAILURE<DETAILS>Exception occured execution of pre-requisite script";
         }
-#endif
-        return "SUCCESS";
+        logfile.open(TDK_testmodule_PR_log.c_str());
+        if(logfile.is_open())
+        {
+                if(getline(logfile,line)>0);
+                {
+                        logfile.close();
+                        DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites set\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Exit\n");
+                        return line;
+                }
+                logfile.close();
+                DEBUG_PRINT(DEBUG_ERROR,"\nPre-Requisites not set\n");
+                return "FAILURE<DETAILS>Proper result is not found in the log file";
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the log file.\n");
+                return "FAILURE<DETAILS>Unable to open the log file";
+        }
+
+        return "SUCCESS<DETAILS>SUCCESS";
 }
+
 /***************************************************************************
  *Function name : testmodulepost_requisites
  *Descrption    : testmodulepost_requisites will be used for resetting the
