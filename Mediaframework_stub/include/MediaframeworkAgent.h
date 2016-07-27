@@ -36,12 +36,13 @@
 
 #include "mediaplayersink.h"
 #include "hnsource.h"
+#include "hnsink.h"
+#ifndef SINGLE_TUNER_IP_CLIENT
 #include "DVRSource.h" 
 #include "DVRSink.h" 
-#include "hnsink.h"
 #include "dvrmanager.h"
+#endif
 #include "rmf_osal_init.h"
-
 #include "rmfqamsrc.h"
 #include "rmf_platform.h"
 
