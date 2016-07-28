@@ -69,7 +69,6 @@ obj.configureTestCase(ip,port,'E2E_RMF_Resolution720p_Trickplay');
 loadmodulestatus =obj.getLoadModuleResult();
 print "[devicesettings LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
 obj.setLoadModuleStatus(loadmodulestatus);
-
 if "SUCCESS" in loadmodulestatus.upper():
 
         #calling Device Settings - initialize API
@@ -95,7 +94,21 @@ if "SUCCESS" in loadmodulestatus.upper():
                         loadmodulestatus = tdkIntObj.getLoadModuleResult();
                         print "TDKIntegration module loading status :  %s" %loadmodulestatus;
                         tdkIntObj.setLoadModuleStatus(loadmodulestatus);
+			loadmoduledetails = tdkIntObj.getLoadModuleDetails();
+                        #Reboot if rmfstreamer is not running
+                        if "FAILURE" in loadmodulestatus.upper():
+                            if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
 
+                                print "rmfStreamer is not running. Rebooting STB"
+                                tdkIntObj.initiateReboot();
+                                obj.resetConnectionAfterReboot();
+                                #Reload Test component to be tested
+                                tdkIntObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+                                tdkIntObj.configureTestCase(ip,port,'E2E_RMF_Resolution720p_Trickplay');
+                                #Get the result of connection with test component and STB
+                                loadmodulestatus =tdkIntObj.getLoadModuleResult();
+                                #print "Re-Load Module Details : %s" %loadmoduledetails1;
+                                print "Tdkintegration module loading status :  %s" %loadmodulestatus;
                         if "SUCCESS" in loadmodulestatus.upper():
                                streamId = '01'
                                result = dvrPlayUrl(tdkIntObj, kwargs={'play':'trickplay',"STREAMID":streamId})

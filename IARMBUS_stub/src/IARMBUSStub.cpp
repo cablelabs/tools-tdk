@@ -1189,7 +1189,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, 
 	else
 	{
 		response["result"]="FAILURE";
-		response["details"]="Pre-Requisite check Failed for the given Owner";
+		response["details"]="Prerequisite check failed. Given IARM Mgr is not running";
 		free(resultDetails);
 		DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_RegisterEventHandler -- Pre-Requisite check Failed for the given Owner \n");
 		return TEST_FAILURE;
@@ -1235,7 +1235,7 @@ bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req
 	else
         {
         	response["result"]="FAILURE";
-        	response["details"]="Pre-Requisite check Failed for the given Owner";
+        	response["details"]="Prerequisite check failed. Given IARM Mgr is not running";
         	free(resultDetails);
         	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_UnRegisterEventHandler -- Pre-Requisite check Failed for the given Owner \n");
         	return TEST_FAILURE;
@@ -1379,7 +1379,7 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
 	if(!prereqcheck(ownerName))
         {
         	response["result"]="FAILURE";
-        	response["details"]="Pre-Requisite check Failed for the given Owner";
+        	response["details"]="Prerequisite check failed. Given IARM Mgr is not running";
         	free(resultDetails);
         	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_BroadcastEvent -- Pre-Requisite check Failed for the given Owner \n");
         	return TEST_FAILURE;
@@ -1477,7 +1477,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 	if(!prereqcheck(ownerName))
         {
         	response["result"]="FAILURE";
-        	response["details"]="Pre-Requisite check Failed for the given Owner";
+        	response["details"]="Prerequisite check failed. Given IARM Mgr is not running";
         	free(resultDetails);
         	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_BusCall -- Pre-Requisite check Failed for the given Owner \n");
         	return TEST_FAILURE;
@@ -1580,30 +1580,27 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 	}
 	else if(strcmp(ownerName,IARM_BUS_MFRLIB_NAME)==0)
 	{
-		if(strcmp(methodName,"mfrGetManufacturerData")==0)
+		if(strcmp(methodName,IARM_BUS_MFRLIB_API_GetSerializedData)==0)
 		{
-			char* mfrdetails=(char*)malloc(sizeof(char)*30);
-			memset(mfrdetails , '\0', (sizeof(char)*30));
-			DEBUG_PRINT(DEBUG_LOG,"MFR-calling IARM_Bus_Call from IARM_Bus_Call \n");
+			char* mfrdetails=(char*)malloc(sizeof(char)*MAX_SERIALIZED_BUF);
+			memset(mfrdetails , '\0', (sizeof(char)*MAX_SERIALIZED_BUF));
 			/*Calling IARMBUS API IARM_Bus_Call  */
-			char *pTmpStr;
-			int len;
-			IARM_Bus_MFRLib_GetSerializedData_Param_t param;	
+			IARM_Bus_MFRLib_GetSerializedData_Param_t param;
+			param.bufLen = MAX_SERIALIZED_BUF;
+			DEBUG_PRINT(DEBUG_LOG, "Valid type values: MANUFACTURER=0,MANUFACTUREROUI=1,MODELNAME=2,DESCRIPTION=3,\nPRODUCTCLASS=4,SERIALNUMBER=5,HARDWAREVERSION=6,SOFTWAREVERSION=7,\nPROVISIONINGCODE=8,FIRSTUSEDATE=9,DEVICEMAC=10,MOCAMAC=11,HDMIHDCP=12\n");
 			param.type = (mfrSerializedType_t)req["mfr_param_type"].asInt();
+			DEBUG_PRINT(DEBUG_LOG,"MFR-calling IARM_Bus_Call of type: %d\n", param.type);
 			retval=IARM_Bus_Call(ownerName,IARM_BUS_MFRLIB_API_GetSerializedData,(void*)&param, sizeof(param));
-			len = param.bufLen + 1;
-			pTmpStr = (char *)malloc(len);
-			memset(pTmpStr,0,len);
-			memcpy(pTmpStr,param.buffer,param.bufLen);
-			DEBUG_PRINT(DEBUG_LOG,"Value:%s\n",pTmpStr);
-			strcpy(mfrdetails,pTmpStr);
-			free(pTmpStr);
+                  	DEBUG_PRINT(DEBUG_TRACE,"IARM_Bus_Call return code:%d\n",retval);
+			memcpy(mfrdetails,param.buffer,param.bufLen);
+			DEBUG_PRINT(DEBUG_LOG,"Value: %s\n",mfrdetails);
 			/*Checking the return value of API*/
 			/*Filling json response with SUCCESS status*/
 			response["result"]=getResult(retval,resultDetails);
 			response["details"]=mfrdetails;
+			free(mfrdetails);
 		}
-		else if(strcmp(methodName,"mfrWriteImage")==0)
+		else if(strcmp(methodName,IARM_BUS_MFRLIB_API_WriteImage)==0)
                 {
                         IARM_Bus_MFRLib_WriteImage_Param_t param;
                         const char* imgname=(char*)req["imagename"].asCString();
@@ -1614,15 +1611,18 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
                         param.interval = 2;
                         param.type = mfrIMAGE_TYPE_CDL;
                         strcpy(param.cbData,"Test Success");
+			DEBUG_PRINT(DEBUG_TRACE,"imagename=%s imagepath=%s\n",imgname,imgpath);
                         retval=IARM_Bus_Call(ownerName,methodName,(void*)&param, sizeof(param));
+                  	DEBUG_PRINT(DEBUG_TRACE,"IARM_Bus_Call return code:%d\n",retval);
                         response["result"]=getResult(retval,resultDetails);
                         response["details"]=resultDetails;
                 }
-		else
+		else if ((strcmp(methodName,IARM_BUS_MFRLIB_API_ScrubAllBanks)==0) || (strcmp(methodName,IARM_BUS_MFRLIB_API_DeletePDRI)==0))
 		{
 			char param;
 			retval=IARM_Bus_Call(ownerName,methodName,(void*)&param, sizeof(param));
-			response["result"]=getResult(retval,resultDetails);
+                  	DEBUG_PRINT(DEBUG_TRACE,"IARM_Bus_Call return code:%d\n",retval);
+                        response["result"]=getResult(retval,resultDetails);
                         response["details"]=resultDetails;
 		}	
 	}
@@ -2632,7 +2632,7 @@ bool IARMBUSAgent::IARMBUSAgent_RemoveEventHandler(IN const Json::Value& req, OU
         else
         {
         	response["result"]="FAILURE";
-        	response["details"]="Pre-Requisite check Failed for the given Owner";
+        	response["details"]="Prerequisite check failed. Given IARM Mgr is not running";
         	free(resultDetails);
         	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_RemoveEventHandler -- Pre-Requisite check Failed for the given Owner \n");
         	return TEST_FAILURE;

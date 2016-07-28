@@ -69,7 +69,22 @@ dsLoadStatus = dsObj.getLoadModuleResult();
 tdkIntLoadStatus = tdkObj.getLoadModuleResult();
 print "[devicesettings LIB LOAD STATUS]  :  %s" %dsLoadStatus ;
 print "[tdkintegration LIB LOAD STATUS]  :  %s" %tdkIntLoadStatus
+loadmoduledetails = tdkObj.getLoadModuleDetails();
+#Reboot if rmfstreamer is not running
+if "FAILURE" in tdkIntLoadStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
 
+                print "rmfStreamer is not running. Rebooting STB"
+                tdkObj.initiateReboot();
+                dsObj.resetConnectionAfterReboot();
+                #Reload Test component to be tested
+                tdkObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+                tdkObj.configureTestCase(ip,port,'E2E_RMF_LivePlayback_Change_Zoom');
+                #Get the result of connection with test component and STB
+                tdkIntLoadStatus =tdkObj.getLoadModuleResult();
+                dsLoadStatus = dsObj.getLoadModuleResult();
+                #print "Re-Load Module Details : %s" %loadmoduledetails1;
+                print "Tdkintegration module loading status :  %s" %tdkIntLoadStatus;
 if ("SUCCESS" in dsLoadStatus.upper()) and ("SUCCESS" in tdkIntLoadStatus.upper()):
 
         #Set the module loading status

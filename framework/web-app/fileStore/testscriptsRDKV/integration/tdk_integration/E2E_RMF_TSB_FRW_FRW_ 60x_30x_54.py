@@ -63,6 +63,14 @@ obj.configureTestCase(ip,port,'E2E_Rmf_TSB_54');
 loadmodulestatus = obj.getLoadModuleResult();
 print "tdkintegration module loading status :  %s" %loadmodulestatus;
 #Check for SUCCESS/FAILURE of LinearTV module
+if "FAILURE" in loadmodulestatus.upper():
+    #Reboot and reload  TDKIntegration component
+    print "Rebooting the box  and will reload TDKIntegration module"
+    obj.initiateReboot();
+    obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+    obj.configureTestCase(ip,port,'E2E_Rmf_TSB_54');
+#Get the result of connection with test component and STB
+loadmodulestatus = obj.getLoadModuleResult();
 if "SUCCESS" in loadmodulestatus.upper():
         obj.setLoadModuleStatus("SUCCESS");
         print "tdkintegration module loaded successfully";

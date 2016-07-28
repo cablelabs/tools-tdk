@@ -28,7 +28,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>12</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -67,7 +67,21 @@ obj.configureTestCase(ip,port,'E2E_RMF_simultaneous_recording');
 #Get the result of connection with test component and STB
 result = obj.getLoadModuleResult();
 print "Recorder module loading status :%s" %result ;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Recorder module loading details : %s" %loadmoduledetails;
+#Reboot if rmfstreamer is not running
+if "FAILURE" in result.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
 
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("rmfapp","2.0");
+                obj.configureTestCase(ip,port,'E2E_RMF_simultaneous_recording');
+                #Get the result of connection with test component and STB
+                result =obj.getLoadModuleResult();
+                #print "Re-Load Module Details : %s" %loadmoduledetails1;
+                print "Recorder module loading status :  %s" %result;
 if "SUCCESS" in result.upper():
     
     obj.setLoadModuleStatus("SUCCESS");

@@ -71,6 +71,21 @@ obj.configureTestCase(ip,port,'E2E_Rmf_LinearTV_MPEG2_MP3_21');
 #Get the result of connection with test component and STB
 loadmodulestatus = obj.getLoadModuleResult();
 print "tdkintegration module loading status :  %s" %loadmodulestatus;
+loadmoduledetails = globalObj.getLoadModuleDetails();
+
+#Reboot if rmfstreamer is not running
+if "FAILURE" in loadmodulestatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+
+                print "rmfStreamer is not running. Rebooting STB"
+                globalObj.initiateReboot();
+                #Reload Test component to be tested
+                globalObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+                globalObj.configureTestCase(ip,port,'E2E_Rmf_LinearTV_MPEG2_MP3_21');
+                #Get the result of connection with test component and STB
+                loadmodulestatus =globalObj.getLoadModuleResult();
+                #print "Re-Load Module Details : %s" %loadmoduledetails;
+                print "Tdkintegration module loading status :  %s" %loadmodulestatus;
 #Check for SUCCESS/FAILURE of LinearTV module
 if "SUCCESS" in loadmodulestatus.upper():
         obj.setLoadModuleStatus("SUCCESS");

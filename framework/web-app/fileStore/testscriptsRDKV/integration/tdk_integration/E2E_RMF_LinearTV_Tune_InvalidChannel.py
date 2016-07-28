@@ -144,7 +144,20 @@ obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_Tune_InvalidChannel');
 #Get the result of connection with test component and STB
 result = obj.getLoadModuleResult();
 print "TDKIntegration module loading status : %s" %result;
+loadmoduledetails = obj.getLoadModuleDetails();
+#Reboot if rmfstreamer is not running
+if "FAILURE" in result.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
 
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+                obj.configureTestCase(ip,port,'E2E_RMF_LinearTV_Tune_InvalidChannel');
+                #Get the result of connection with test component and STB
+                result =obj.getLoadModuleResult();
+                #print "Re-Load Module Details : %s" %loadmoduledetails1;
+                print "Tdkintegration module loading status :  %s" %result;
 if "SUCCESS" in result.upper():
     
     obj.setLoadModuleStatus("SUCCESS");

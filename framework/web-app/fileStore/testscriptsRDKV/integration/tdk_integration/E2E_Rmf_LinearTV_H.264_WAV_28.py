@@ -28,7 +28,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>7</execution_time>
+  <execution_time>12</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -75,6 +75,20 @@ obj.configureTestCase(ip,port,'E2E_Rmf_LinearTV_H.264_WAV_28');
 #Get the result of connection with test component and STB
 loadmodulestatus = obj.getLoadModuleResult();
 print "TDKIntegration module loading status :  %s" %loadmodulestatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+#Reboot if rmfstreamer is not running
+if "FAILURE" in loadmodulestatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+                obj.configureTestCase(ip,port,'E2E_Rmf_LinearTV_H.264_WAV_28');
+                #Get the result of connection with test component and STB
+                loadmodulestatus =obj.getLoadModuleResult();
+                #print "Re-Load Module Details : %s" %loadmoduledetails1;
+                print "Tdkintegration module loading status :  %s" %loadmodulestatus;
 #Check for SUCCESS/FAILURE of LinearTV module
 if "SUCCESS" in loadmodulestatus.upper():
         obj.setLoadModuleStatus("SUCCESS");

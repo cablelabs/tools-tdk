@@ -184,7 +184,21 @@ globalObj.configureTestCase(ip,port,'E2E_RMF_MDVR_SchedLiveRec1_Play2');
 #Get the result of connection with test component and STB
 result =globalObj.getLoadModuleResult();
 print "[LIB LOAD STATUS in Gateway]  :  %s" %result;
+loadmoduledetails = globalObj.getLoadModuleDetails();
 
+#Reboot if rmfstreamer is not running
+if "FAILURE" in result.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+
+                print "rmfStreamer is not running. Rebooting STB"
+                globalObj.initiateReboot();
+                #Reload Test component to be tested
+                globalObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+                globalObj.configureTestCase(ip,port,'E2E_RMF_MDVR_SchedLiveRec1_Play2');
+                #Get the result of connection with test component and STB
+                result =globalObj.getLoadModuleResult();
+                #print "Re-Load Module Details : %s" %loadmoduledetails;
+                print "Tdkintegration module loading status :  %s" %result;
 #Check for SUCCESS/FAILURE of module load
 if "SUCCESS" in result.upper():
     globalObj.setLoadModuleStatus("SUCCESS");

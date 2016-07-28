@@ -67,7 +67,20 @@ tdkIntObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
 tdkIntObj.configureTestCase(ip,port,'E2E_RMF_DVRPlayback_Change_Zoom');
 tdkIntLoadStatus = tdkIntObj.getLoadModuleResult();
 print "[TDKINTEGRATION LIB LOAD STATUS]  :  %s" %tdkIntLoadStatus ;
+loadmoduledetails = tdkIntObj.getLoadModuleDetails();
+#Reboot if rmfstreamer is not running
+if "FAILURE" in tdkIntLoadStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
 
+                print "rmfStreamer is not running. Rebooting STB"
+                tdkIntObj.initiateReboot();
+                #Reload Test component to be tested
+                tdkIntObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+                tdkIntObj.configureTestCase(ip,port,'E2E_RMF_DVRPlayback_Change_Zoom');
+                #Get the result of connection with test component and STB
+                tdkIntLoadStatus =tdkIntObj.getLoadModuleResult();
+                #print "Re-Load Module Details : %s" %loadmoduledetails1;
+                print "Tdkintegration module loading status :  %s" %tdkIntLoadStatus;
 if "SUCCESS" in tdkIntLoadStatus.upper():
     #Set the module loading status
     tdkIntObj.setLoadModuleStatus("SUCCESS");

@@ -71,6 +71,22 @@ loadmodulestatus1 = iarm_obj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus ;
 print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus1 ;
 
+loadmoduledetails = rec_obj.getLoadModuleDetails();
+#Reboot if rmfstreamer is not running
+if "FAILURE" in loadmodulestatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+
+                print "rmfStreamer is not running. Rebooting STB"
+                rec_obj.initiateReboot();
+                iarm_obj.resetConnectionAfterReboot();
+                #Reload Test component to be tested
+                rec_obj = tdklib.TDKScriptingLibrary("rmfapp","2.0");
+                rec_obj.configureTestCase(ip,port,'E2E_RMF_Recording_standbymode');
+                #Get the result of connection with test component and STB
+                loadmodulestatus =rec_obj.getLoadModuleResult();
+                loadmodulestatus1 = iarm_obj.getLoadModuleResult();
+                #print "Re-Load Module Details : %s" %loadmoduledetails1;
+                print "Tdkintegration module loading status :  %s" %loadmodulestatus;
 if ("SUCCESS" in loadmodulestatus.upper()) and ("SUCCESS" in loadmodulestatus1.upper()):
     #Set the module loading status
     iarm_obj.setLoadModuleStatus("SUCCESS");

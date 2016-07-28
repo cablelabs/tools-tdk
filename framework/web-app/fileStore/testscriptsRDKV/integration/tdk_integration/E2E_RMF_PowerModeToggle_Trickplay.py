@@ -82,7 +82,22 @@ print "TDKIntegration LIB LOAD STATUS :  %s" %tdkIntLoadStatus;
 tdkIntObj.setLoadModuleStatus(tdkIntLoadStatus);
 
 expectedresult="SUCCESS"
+tdkIntLoaddetails = tdkIntObj.getLoadModuleDetails();
+#Reboot if rmfstreamer is not running
+if "FAILURE" in tdkIntLoadStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in tdkIntLoaddetails:
 
+                print "rmfStreamer is not running. Rebooting STB"
+                tdkIntObj.initiateReboot();
+                iarmObj.resetConnectionAfterReboot();
+                #Reload Test component to be tested
+                tdkIntObj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+                tdkIntObj.configureTestCase(ip,port,'E2E_RMF_simultaneous_recording_liveplayback');
+                #Get the result of connection with test component and STB
+                tdkIntLoadStatus =tdkIntObj.getLoadModuleResult();
+                iarmLoadStatus = iarmObj.getLoadModuleResult();
+                #print "Re-Load Module Details : %s" %loadmoduledetails1;
+                print "Tdkintegration module loading status :  %s" %tdkIntLoadStatus;
 if (expectedresult in iarmLoadStatus.upper()) and (expectedresult not in tdkIntLoadStatus.upper()):
         iarmObj.unloadModule("iarmbus");
 elif (expectedresult in tdkIntLoadStatus.upper()) and (expectedresult not in iarmLoadStatus.upper()):
