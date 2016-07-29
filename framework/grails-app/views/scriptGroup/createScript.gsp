@@ -51,6 +51,9 @@
 
 
 <div id="scriptMessageDiv" class="message" style="display: none;"></div>
+<div id="scriptTclMessageDiv" class="message" style="display: none;"></div>
+
+<g:if test="${ category == 'RDKV' || category == 'RDKB'   }">
 <g:form action="saveScript" method="post">
 	<g:hiddenField name="category" value="${category}"/>
 	<table>
@@ -142,6 +145,49 @@
 		</tr>
 
 	</table>
-
 </g:form>
+</g:if>
+<g:if test="${ category == 'RDKB_TCL' }">
+	<g:form action="saveTclScript" method="post">
+		<g:hiddenField name="category" value="${category}" />
+		<table>
+			<tr>
+				<th colspan="4" align="center">Add New TCL Script</th>
+			</tr>
+			<tr>
+				<td>Script Name</td>
+				<td><input type="text" name="name" id="name" size="37"
+					maxlength="150"></td>
+			</tr>
+			<tr>
+				<td>Content</td>
+				<td><g:textArea id="scriptArea" name="scriptArea"
+						class="scriptArea" style="color:RGB(130,15,15);font-size:12px">
+					</g:textArea></td>
+			</tr>
+			<tr>
+			<tr id="buttons">
+				<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}">
+					<td colspan="2" align="center">
+					<div id="saveTclScript">	
+						<input type="submit" id="saveTclScript" class= "updatebutton"   style="display: true"  value="save" onclick="needToConfirm= false;" > 
+					<%--	<span id="saveTclScript"><g:submitToRemote  controller="scriptGroup"
+								action="saveTclScript" controller="scriptGroup"
+								update="scriptTclMessageDiv" value="Save">
+							</g:submitToRemote>
+					
+					<g:submitToRemote  controller="scriptGroup"
+								 controller="scriptGroup"
+								update="scriptMessageDiv" value="Save"	before=	"isTclScriptExist(document.getElementById('name').value);" 						
+								onSuccess="updateTclScriptListWithScriptName(document.getElementById('name').value);">
+							</g:submitToRemote>
+								</span> --%>					
+					<input type="reset" value="Reset" id="cancel" class="deletebutton" 
+						onclick="clearScriptArea();" />&emsp;</td>
+						</div>
+				</g:if>
+			</tr>
+		</table>
+	</g:form>
+</g:if>
 

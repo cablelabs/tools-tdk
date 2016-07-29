@@ -203,6 +203,11 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	// DisplaySettings Service callMethod APIs
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings,"TestMgr_SM_DisplaySetting_SetZoomSettings");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution,"TestMgr_SM_DisplaySetting_SetCurrentResolution");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_GetConnectedAudioPorts, "TestMgr_SM_GetConnectedAudioPorts");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioPorts, "TestMgr_SM_GetSupportedAudioPorts");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_GetSoundMode, "TestMgr_SM_GetSoundMode");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_SetSoundMode, "TestMgr_SM_SetSoundMode");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioModes, "TestMgr_SM_GetSupportedAudioModes");
 	// DeviceSettingService callMethod APIs
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo,"TestMgr_SM_DeviceSetting_GetDeviceInfo");
 	// ScreenCaptureService callMethod APIs
@@ -982,6 +987,279 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution(IN const Json::
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetCurrentResolution ---->Exit\n");
 	return TEST_SUCCESS;	
+}
+
+
+/***************************************************************************
+ *Function name : SM_DisplaySetting_GetConnectedAudioPorts
+ *Descrption    : This function returns the available Audio Output Ports
+ *parameter     : none
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioPorts(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetSupportedAudioPorts--->Entry\n");
+
+#ifdef USE_DISPLAY_SETTINGS
+        QVariantList portList;
+        Service* ptr_service=NULL;
+        ServiceParams inParams, resultParams;
+        QString details;
+
+        /*Calling getGlobalService API to get the service instance*/
+        ptr_service = ServiceManager::getInstance()->getGlobalService(DISPLAY_SETTINGS_SERVICE_NAME);
+        if(ptr_service != NULL)
+        {
+                resultParams = ptr_service->callMethod(METHOD_DISPLAY_SETTINGS_GET_SUPPORTED_AUDIO_PORTS, inParams);
+                portList = resultParams["supportedAudioPorts"].toList();
+                if( !portList.isEmpty() )
+                {
+                        for(int i=0; i<portList.size(); i++)
+                        {
+                                details += portList[i].toString();
+                                details += " ";
+                        }
+                        DEBUG_PRINT(DEBUG_TRACE,"Supported Ports are: %s \nlist size is: %d",details.toUtf8().constData(), portList.size());
+                        response["details"] = details.toUtf8().constData();
+                        response["result"]="SUCCESS";
+                        return TEST_SUCCESS;
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"No Supported Ports\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Empty connected port list";
+                }
+        }
+        else
+        {
+                response["result"]="FAILURE";
+                response["details"]="SM getGlobalService failed";
+                DEBUG_PRINT(DEBUG_ERROR,"\nSM getGlobalService failed\n");
+        }
+#endif
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetSupportedAudioPorts--->Exit\n");
+        return TEST_FAILURE;
+}
+
+
+/***************************************************************************
+ *Function name : SM_DisplaySetting_GetConnectedAudioPorts
+ *Descrption    : This function will returns the Audio Output Ports that is connected at the moment
+                  METHOD_DISPLAY_SETTINGS_GET_CONNECTED_AUDIO_PORTSd 
+                  parameters.
+ *parameter [in]: req-  videoDisplay - name of the videoDisplay
+                        resolution - video resolution 
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_DisplaySetting_GetConnectedAudioPorts(IN const Json::Value& req, OUT Json::Value& response)
+{
+
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetConnectedAudioPorts--->Entry\n");
+
+#ifdef USE_DISPLAY_SETTINGS
+        QVariantList portList;
+        Service* ptr_service=NULL;
+        ServiceParams inParams, resultParams;
+        QString details, audMode;
+
+        /*Calling getGlobalService API to get the service instance*/
+        ptr_service = ServiceManager::getInstance()->getGlobalService(DISPLAY_SETTINGS_SERVICE_NAME);
+        if(ptr_service != NULL)
+        {
+                resultParams = ptr_service->callMethod(METHOD_DISPLAY_SETTINGS_GET_CONNECTED_AUDIO_PORTS, inParams);
+                portList = resultParams["connectedAudioPorts"].toList();
+
+                if( !portList.isEmpty() )
+                {
+                        for(int i=0; i<portList.size(); i++)
+                        {
+                                details += portList[i].toString();
+                                details += " ";
+                        }
+                        DEBUG_PRINT(DEBUG_TRACE,"Connected Ports are: %s \nlist size is: %d",details.toUtf8().constData(), portList.size());
+                        response["details"] = details.toUtf8().constData();
+                        response["result"]="SUCCESS";
+                        return TEST_SUCCESS;
+                }
+                else
+                        DEBUG_PRINT(DEBUG_TRACE,"No Connected Ports\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Empty connected port list";
+        }
+        else
+        {
+                response["result"]="FAILURE";
+                response["details"]="SM getGlobalService failed";
+                DEBUG_PRINT(DEBUG_ERROR,"\nSM getGlobalService failed\n");
+        }
+
+#endif
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetConnectedAudioPorts--->Exit\n");
+        return TEST_FAILURE;
+}
+
+
+/***************************************************************************
+ *Function name : SM_DisplaySetting_GeSoundMode
+ *Descrption    : This function will return the audio output mode of the given port.
+                  METHOD_DISPLAY_SETTINGS_GET_SOUND_MODE 
+ *parameter [in]: req-  audioport - name of the audioport
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_DisplaySetting_GetSoundMode(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetSoundMode--->Entry\n");
+
+#ifdef USE_DISPLAY_SETTINGS
+        QVariantList inList;
+        Service* ptr_service=NULL;
+        ServiceParams inParams, resultParams;
+        QString details, audMode;
+
+        std::string portName = req["portName"].asCString();
+        /*Calling getGlobalService API to get the service instance*/
+        ptr_service = ServiceManager::getInstance()->getGlobalService(DISPLAY_SETTINGS_SERVICE_NAME);
+        if(ptr_service != NULL)
+        {
+                ptr_service->setApiVersionNumber(5);
+
+                inList.append(QString::fromStdString(portName));
+                inParams["params"] = inList;
+                resultParams = ptr_service->callMethod(METHOD_DISPLAY_SETTINGS_GET_SOUND_MODE, inParams);
+                audMode = resultParams["soundMode"].toString();
+
+                DEBUG_PRINT(DEBUG_TRACE,"for audio port %s audio mode is %s",portName.c_str(), audMode.toUtf8().constData());
+                if(!audMode.isEmpty())
+                {
+                        response["details"] = audMode.toUtf8().constData();
+                        response["result"]="SUCCESS";
+                        return TEST_SUCCESS;
+                }
+                else
+                {
+                        response["details"] = "Audio mode returned as empty";
+                        response["result"]="FAILURE";
+                }
+        }
+        else
+        {
+                response["result"]="FAILURE";
+                response["details"]="SM getGlobalService failed";
+                DEBUG_PRINT(DEBUG_ERROR,"\nSM getGlobalService failed\n");
+        }
+
+#endif
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetSoundMode ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+/*******************************************************************************************
+ *Function name : SM_DisplaySetting_SetSoundMode
+ *Descrption    : This function will set the given audio mode on the given port.
+                  METHOD_DISPLAY_SETTINGS_SET_SOUND_MODE 
+ *parameter [in]: req-  audioport - name of the audioport audiomode - the mode to be set
+ *******************************************************************************************/
+bool ServiceManagerAgent::SM_DisplaySetting_SetSoundMode(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetSoundMode--->Entry\n");
+
+#ifdef USE_DISPLAY_SETTINGS
+        QVariantList inList;
+        Service* ptr_service=NULL;
+        ServiceParams inParams, resultParams;
+        QString details, audMode;
+        bool result;
+
+        std::string portName = req["portName"].asCString();
+        std::string setMode = req["audioMode"].asCString();
+        /*Calling getGlobalService API to get the service instance*/
+        ptr_service = ServiceManager::getInstance()->getGlobalService(DISPLAY_SETTINGS_SERVICE_NAME);
+        if(ptr_service != NULL)
+        {
+                ptr_service->setApiVersionNumber(5);
+
+                inList.append(QString::fromStdString(portName));
+                inList.append(QString::fromStdString(setMode));
+                inParams["params"] = inList;
+                resultParams = ptr_service->callMethod(METHOD_DISPLAY_SETTINGS_SET_SOUND_MODE, inParams);
+                result = resultParams["success"].toBool();
+
+                if(result)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"AudioMode set successfully");
+                        response["details"] = "Audio mode set suuccessfully";
+                        response["result"]="SUCCESS";
+                        return TEST_SUCCESS;
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"setAudioMode failed");
+                        response["details"] = "setAudioMode failed";
+                        response["result"]="FAILURE";
+                }
+
+        }
+        else
+        {
+                response["result"]="FAILURE";
+                response["details"]="SM getGlobalService failed";
+                DEBUG_PRINT(DEBUG_ERROR,"\nSM getGlobalService failed\n");
+        }
+
+#endif
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetSoundMode ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+bool ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioModes(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GGetSupportedAudioModes-->Entry\n");
+
+#ifdef USE_DISPLAY_SETTINGS
+        QVariantList inList, supportedAudMode;
+        Service* ptr_service=NULL;
+        ServiceParams inParams, resultParams;
+        QString details ;
+
+        std::string portName = req["portName"].asCString();
+        /*Calling getGlobalService API to get the service instance*/
+        ptr_service = ServiceManager::getInstance()->getGlobalService(DISPLAY_SETTINGS_SERVICE_NAME);
+        if(ptr_service != NULL)
+        {
+                inList.append(QString::fromStdString(portName));
+                inParams["params"] = inList;
+                ptr_service->setApiVersionNumber(5);
+                resultParams = ptr_service->callMethod(METHOD_DISPLAY_SETTINGS_GET_SUPPORTED_AUDIO_MODES, inParams);
+                supportedAudMode = resultParams["supportedAudioModes"].toList();
+                if( !supportedAudMode.isEmpty())
+                {
+                        for(int i=0; i<supportedAudMode.size(); i++)
+                        {
+                                details += supportedAudMode[i].toString();
+                                details += " ";
+                        }
+
+                        DEBUG_PRINT(DEBUG_TRACE,"for audio port %s audio mode is %s",portName.c_str(), details.toUtf8().constData());
+                        response["details"] = details.toUtf8().constData();
+                        response["result"]="SUCCESS";
+                        return TEST_SUCCESS;
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"RETURNED EMPTY LIST\n");
+                        response["details"] = "supportedAudioModes list empty";
+                }
+        }
+        else
+        {
+                response["details"]="SM getGlobalService failed";
+                DEBUG_PRINT(DEBUG_ERROR,"\nSM getGlobalService failed\n");
+        }
+        response["result"]="FAILURE";
+
+#endif
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetSoundMode ---->Exit\n");
+        return TEST_FAILURE;
 }
 
 
@@ -2353,6 +2631,11 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	// DisplaySettings Service callMethod APIs
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_DisplaySetting_SetZoomSettings");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_DisplaySetting_SetCurrentResolution");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_GetConnectedAudioPorts");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_GetSupportedAudioPorts");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_GetSoundMode");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_SetSoundMode");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_GetSupportedAudioModes");
         // DeviceSettingService callMethod APIs
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_DeviceSetting_GetDeviceInfo");
 	// ScreenCaptureService callMethod APIs

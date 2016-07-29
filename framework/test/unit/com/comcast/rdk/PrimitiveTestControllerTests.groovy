@@ -11,156 +11,189 @@
  */
 package com.comcast.rdk
 
-
-
 import org.junit.*
 import grails.test.mixin.*
 
+/**
+ * Test class for primitive test controller.
+ *
+ */
 @TestFor(PrimitiveTestController)
 @Mock(PrimitiveTest)
 class PrimitiveTestControllerTests {
 
-    def populateValidParams(params) {
-        assert params != null
-        // TODO: Populate valid properties like...
-        //params["name"] = 'someValidName'
-    }
+	/**
+	 * To populate valid params
+	 * @param params
+	 * @return
+	 */
+	def populateValidParams(params) {
+		assert params != null
+	}
 
-    void testIndex() {
-        controller.index()
-        assert "/primitiveTest/list" == response.redirectedUrl
-    }
 
-    void testList() {
+	/**
+	 * to test the save method
+	 */
+	void testSave() {
+		controller.save()
 
-        def model = controller.list()
+		assert model.primitiveTestInstance != null
+		assert view == '/primitiveTest/create'
 
-        assert model.primitiveTestInstanceList.size() == 0
-        assert model.primitiveTestInstanceTotal == 0
-    }
+		response.reset()
 
-    void testCreate() {
-        def model = controller.create()
+		populateValidParams(params)
+		controller.save()
 
-        assert model.primitiveTestInstance != null
-    }
+		assert response.redirectedUrl == '/primitiveTest/show/1'
+		assert controller.flash.message != null
+		assert PrimitiveTest.count() == 1
+	}
 
-    void testSave() {
-        controller.save()
 
-        assert model.primitiveTestInstance != null
-        assert view == '/primitiveTest/create'
+	/**
+	 * to test the index.
+	 */
+	void testIndex() {
+		controller.index()
+		assert "/primitiveTest/list" == response.redirectedUrl
+	}
 
-        response.reset()
 
-        populateValidParams(params)
-        controller.save()
+	/**
+	 * to test the list method
+	 */
+	void testList() {
 
-        assert response.redirectedUrl == '/primitiveTest/show/1'
-        assert controller.flash.message != null
-        assert PrimitiveTest.count() == 1
-    }
+		def modelObj = controller.list()
 
-    void testShow() {
-        controller.show()
+		assert modelObj.primitiveTestInstanceList.size() == 0
+		assert modelObj.primitiveTestInstanceTotal == 0
+	}
 
-        assert flash.message != null
-        assert response.redirectedUrl == '/primitiveTest/list'
 
-        populateValidParams(params)
-        def primitiveTest = new PrimitiveTest(params)
 
-        assert primitiveTest.save() != null
+	/**
+	 * to test the show method
+	 */
+	void testShow() {
+		controller.show()
 
-        params.id = primitiveTest.id
+		assert flash.message != null
+		assert response.redirectedUrl == '/primitiveTest/list'
+		//check the params
+		populateValidParams(params)
+		def primitiveTestObj = new PrimitiveTest(params)
+		//check the save
+		assert primitiveTestObj.save() != null
 
-        def model = controller.show()
+		params.id = primitiveTestObj.id
+		//invoking show
+		def model = controller.show()
 
-        assert model.primitiveTestInstance == primitiveTest
-    }
+		assert model.primitiveTestInstance == primitiveTestObj
+	}
 
-    void testEdit() {
-        controller.edit()
 
-        assert flash.message != null
-        assert response.redirectedUrl == '/primitiveTest/list'
+	/**
+	 * to test the delete method
+	 */
+	void testDelete() {
+		controller.delete()
+		assert flash.message != null
+		assert response.redirectedUrl == '/primitiveTest/list'
 
-        populateValidParams(params)
-        def primitiveTest = new PrimitiveTest(params)
+		response.reset()
+		//check the params
+		populateValidParams(params)
+		def primitiveTestObj = new PrimitiveTest(params)
+		//check the save
+		assert primitiveTestObj.save() != null
+		assert PrimitiveTest.count() == 1
 
-        assert primitiveTest.save() != null
+		params.id = primitiveTestObj.id
+		//invoking delete
+		controller.delete()
 
-        params.id = primitiveTest.id
+		assert PrimitiveTest.count() == 0
+		assert PrimitiveTest.get(primitiveTestObj.id) == null
+		assert response.redirectedUrl == '/primitiveTest/list'
+	}
 
-        def model = controller.edit()
+	/**
+	 * to test the create method
+	 */
+	void testCreate() {
+		def modelObj = controller.create()
+		//check the create return
+		assert modelObj.primitiveTestInstance != null
+	}
 
-        assert model.primitiveTestInstance == primitiveTest
-    }
+	/**
+	 * to test the update method
+	 */
+	void testUpdate() {
+		controller.update()
 
-    void testUpdate() {
-        controller.update()
+		assert flash.message != null
+		assert response.redirectedUrl == '/primitiveTest/list'
 
-        assert flash.message != null
-        assert response.redirectedUrl == '/primitiveTest/list'
+		response.reset()
+		//check the params
+		populateValidParams(params)
+		def primitiveTestObj = new PrimitiveTest(params)
+		//check the save
+		assert primitiveTestObj.save() != null
 
-        response.reset()
+		params.id = primitiveTestObj.id
 
-        populateValidParams(params)
-        def primitiveTest = new PrimitiveTest(params)
+		controller.update()
 
-        assert primitiveTest.save() != null
+		assert view == "/primitiveTest/edit"
+		assert model.primitiveTestInstance != null
 
-        // test invalid parameters in update
-        params.id = primitiveTest.id
-        //TODO: add invalid values to params object
+		primitiveTestObj.clearErrors()
+		//check the params
+		populateValidParams(params)
+		controller.update()
 
-        controller.update()
+		assert response.redirectedUrl == "/primitiveTest/show/$primitiveTestObj.id"
+		assert flash.message != null
 
-        assert view == "/primitiveTest/edit"
-        assert model.primitiveTestInstance != null
+		//test outdated version number
+		response.reset()
+		primitiveTestObj.clearErrors()
+		//check the params
+		populateValidParams(params)
+		params.id = primitiveTestObj.id
+		params.version = -1
+		controller.update()
 
-        primitiveTest.clearErrors()
+		assert view == "/primitiveTest/edit"
+		assert model.primitiveTestInstance != null
+		assert model.primitiveTestInstance.errors.getFieldError('version')
+		assert flash.message != null
+	}
 
-        populateValidParams(params)
-        controller.update()
+	/**
+	 * to test the edit method
+	 */
+	void testEdit() {
 
-        assert response.redirectedUrl == "/primitiveTest/show/$primitiveTest.id"
-        assert flash.message != null
+		controller.edit()
 
-        //test outdated version number
-        response.reset()
-        primitiveTest.clearErrors()
+		assert flash.message != null
+		assert response.redirectedUrl == '/primitiveTest/list'
+		//check the params
+		populateValidParams(params)
+		def primitiveTest = new PrimitiveTest(params)
+		// to test the save return
+		assert primitiveTest.save() != null
 
-        populateValidParams(params)
-        params.id = primitiveTest.id
-        params.version = -1
-        controller.update()
+		params.id = primitiveTest.id
+		def model = controller.edit()
 
-        assert view == "/primitiveTest/edit"
-        assert model.primitiveTestInstance != null
-        assert model.primitiveTestInstance.errors.getFieldError('version')
-        assert flash.message != null
-    }
-
-    void testDelete() {
-        controller.delete()
-        assert flash.message != null
-        assert response.redirectedUrl == '/primitiveTest/list'
-
-        response.reset()
-
-        populateValidParams(params)
-        def primitiveTest = new PrimitiveTest(params)
-
-        assert primitiveTest.save() != null
-        assert PrimitiveTest.count() == 1
-
-        params.id = primitiveTest.id
-
-        controller.delete()
-
-        assert PrimitiveTest.count() == 0
-        assert PrimitiveTest.get(primitiveTest.id) == null
-        assert response.redirectedUrl == '/primitiveTest/list'
-    }
+		assert model.primitiveTestInstance == primitiveTest
+	}
 }

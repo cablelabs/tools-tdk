@@ -240,7 +240,7 @@ function clearLocks(scriptName){
 <g:hiddenField name="scriptName" value="${scriptName}"/> 
 <table> 
 			<tr>
-				<th colspan="4" align="center">Edit Script</th>
+				<th colspan="4" align="center">Edit TCL Script</th>
 			</tr>
 			<tr>
 				<td>Script Name</td>
@@ -251,7 +251,7 @@ function clearLocks(scriptName){
 			<tr>
 				<td>Content</td>
 				<td>
-				<g:textArea id="tclText" name="tclText" value="${script}" style="height:250px;width:700px;" disabled="true"></g:textArea></td>
+			<g:textArea id="tclText" name="tclText" value="${script}"  disabled="true" style="color:RGB(130,15,15);font-size:12px;height:350px;width:700px;"></g:textArea></td>
 			</tr>
 			<tr>
 				<td colspan="2" align="center" style="padding: 20px;"><g:if
@@ -260,7 +260,9 @@ function clearLocks(scriptName){
 							<input id ="editButtonTcl" class= "editscriptbutton" type="button" onclick="needToConfirm= true;enableEditTcl('${scriptName}')" value="Edit Script">
 						</div>
 						<div id ="updateDivTcl">			
-							<input type="submit" id="saveTcl" class= "updatebutton"   style="display: none"  value="Update"  onclick="needToConfirm= true;confirmExit();"> 
+							<%--<input type="submit" id="saveTcl" class= "updatebutton"   style="display: none"  value="Update"  onclick="needToConfirm= true;confirmExit();"> 
+							 --%>
+							 <input type="submit" id="saveTcl" class= "updatebutton"   style="display: none"  value="Update" onclick="needToConfirm= false;" > 
 							 <input type="reset" id="cancelTcl" class="deletebutton" style="display: none" value="Cancel"  onclick="cancelTclEdit('${scriptName}')">		
 						</div>
 					</g:if></td>

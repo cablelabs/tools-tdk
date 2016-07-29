@@ -9,7 +9,7 @@
 #  ============================================================================
 
 QT += widgets network core gui
-DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION DEBUG_LEVEL_TRACE RDK2DOT0
+DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS DEBUG_LEVEL_TRACE RDK2DOT0
 
 DEFINES += $$CEC_PERSIST_NAME
 
@@ -64,7 +64,9 @@ SOURCES += servicemanager/src/services/hdmicecservice.cpp
 LIBS += -lRCEC -lRCECOSHal -lRCECIARMBusHal
 }
 
-HEADERS += servicemanager/include/services/applicationservice.h
+HEADERS += servicemanager/include/services/applicationservice.h \
+	   servicemanager/include/services/displaysettingsservice.h
 
 SOURCES += src/ServiceManagerAgent.cpp \
-	   servicemanager/src/services/applicationservice.cpp
+	   servicemanager/src/services/applicationservice.cpp \
+	   servicemanager/src/services/displaysettingsservice.cpp

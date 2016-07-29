@@ -77,7 +77,7 @@
 		</g:if>
 		<br>
 		<div style="width: 40%; overflow: auto; margin-bottom: 20px;">
-			<div style="float: left;">Choose the category of device :</div>
+			<div style="float: left;">&emsp;&emsp;&emsp;&emsp;Choose the category of device :</div>
 			<div style="float: left; margin-left: 20px;">
 				<g:form controller="trends" action="chart">
 					<g:select name="category" from="['RDKV','RDKB']"

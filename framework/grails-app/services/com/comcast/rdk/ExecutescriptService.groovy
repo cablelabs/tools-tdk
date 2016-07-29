@@ -1281,7 +1281,7 @@ class ExecutescriptService {
 							if(executionService.validateScriptRDKVersions(scriptInstance,rdkVersion)){
 								if(scriptInstance?.skip?.toString().equals("true")){
 									skipStatus = true
-									executionService.saveSkipStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance)
+									executionService.saveSkipStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance,category)
 								}else{
 									validScripts << scriptInstance
 								}
@@ -1291,7 +1291,7 @@ class ExecutescriptService {
 								rdkVersionData = scriptInstance?.rdkVersions
 
 								String reason = "RDK Version mismatch.<br>Device RDK Version : "+rdkVersion+", Script supported RDK Versions :"+rdkVersionData
-								executionService.saveNotApplicableStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance,reason)
+								executionService.saveNotApplicableStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance,reason,category)
 							}
 						}else{
 							notApplicable = true
@@ -1434,7 +1434,7 @@ class ExecutescriptService {
 				executionDeviceObj1 = executionDeviceObj
 			}
 
-			if((executionDeviceObj1) && (rerun.equals("on"))){
+			if((executionDeviceObj1) && (rerun?.toString().equals(TRUE))){
 				htmlData = reRunOnFailure(realPath,filePath,execName,executionName,url, category)
 				output.append(htmlData)
 			}

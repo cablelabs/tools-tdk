@@ -441,8 +441,8 @@
 			<ul>
 	          		<li id="add_scriptV"><img src="../images/add_new.png" height="15px" width="15px"/>Add New RDK-V Script</li>
 	          		<li id="add_scriptB"><img src="../images/add_new.png" height="15px" width="15px"/>Add New RDK-B Script</li>
-	          		<%--<li id="add_scriptTCL"><img src="../images/add_new.png" height="15px" width="15px"/>Add New TCL Script</li>
-				--%>
+	          		<li id="add_scriptTCL"><img src="../images/add_new.png" height="15px" width="15px"/>Add New TCL Script</li>
+				
 					<li id="refresh"><img src="../images/refresh.gif" height="15px"
 					width="15px" /> <g:submitToRemote class="test"
 						before="refreshListStart()" action="scriptListRefresh;"

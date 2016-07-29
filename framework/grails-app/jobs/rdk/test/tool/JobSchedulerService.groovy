@@ -88,8 +88,6 @@ class JobSchedulerService implements Job{
 	 * @return
 	 */
 	def startExecutions(final String executionName, final def jobId){
-		
-
 		def filePath
 		def scripts = null
 		def scriptGrpId = null
@@ -116,11 +114,9 @@ class JobSchedulerService implements Job{
 				devices = jobDetails?.device
 			}
 			//			ScriptService.getScriptNameFileList(realpath)
-
 			def scriptInstance
 			def scriptGroupInstance
 			def deviceName
-
 			String htmlData = ""
 			boolean abortedExecution = false
 			boolean pause = false
@@ -139,6 +135,9 @@ class JobSchedulerService implements Job{
 				(devices).each{ deviceid -> deviceList << deviceid }
 				deviceName = MULTIPLE
 			}
+
+			// to get the category of script or scriptGroup
+			def category = null
 
 			def repeatCount = jobDetails?.repeatCount
 			def deviceId
@@ -172,6 +171,7 @@ class JobSchedulerService implements Job{
 								}
 							}
 						}
+
 					}
 					catch(Exception eX){
 						eX.printStackTrace()
@@ -179,24 +179,40 @@ class JobSchedulerService implements Job{
 					if(scripts){
 						if(scripts.size() > 1){
 							scriptName = MULTIPLESCRIPT
+							def script = ScriptFile.findByScriptName(scripts.get(0))
+							category = script?.category
 						}
 						else{
 
-							def moduleName= ScriptService.scriptMapping.get(scripts[0])
+							def script = scripts[0]
+							def scriptFile = ScriptFile.findByScriptName(script)
+							if(scriptFile){
+								category = scriptFile?.category
+							}
+							if(category == Category.RDKB_TCL){
+								scriptVersionStatus = true
+								scriptStatus = Utility.isTclScriptExists(realpath, scriptFile?.scriptName) && Utility.isConfigFileExists(realpath, deviceInstance?.stbName)
+								if(scriptStatus)
+									scriptName = scriptFile?.scriptName
+							}
+							else{
+								def moduleName= ScriptService.scriptMapping.get(scripts[0])
 
-							scriptInstance = getScript(realpath,moduleName, scripts[0])
+								scriptInstance = getScript(realpath,moduleName, scripts[0], category)
 
-							scriptStatus = validateScriptBoxTypes(scriptInstance,deviceInstance)
-							String rdkVersion = getRDKBuildVersion(deviceInstance);
-							scriptVersionStatus = validateScriptRDKVersions(scriptInstance,rdkVersion)
-							scriptName = scriptInstance?.name
+								scriptStatus = validateScriptBoxTypes(scriptInstance,deviceInstance)
+								String rdkVersion = getRDKBuildVersion(deviceInstance);
+								scriptVersionStatus = validateScriptRDKVersions(scriptInstance,rdkVersion)
+								scriptName = scriptInstance?.name
+							}
 						}
 					}else if(scriptGrpId){
 						scriptGroupInstance = ScriptGroup.findById(scriptGrpId,[lock: true])
+						if(category == null){
+							category = scriptGroupInstance.category
+						}
 					}
 					if( devStatus.equals( Status.FREE.toString() )){
-
-
 						if(!ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
 							allocated = true
 							ExecutionService.deviceAllocatedList.add(deviceInstance?.id)
@@ -216,7 +232,6 @@ class JobSchedulerService implements Job{
 								else if(scriptName.equals("Multiple Scripts")){
 									scriptCnt  = scripts?.size()
 								}
-									println jobDetails.rerunOnFailure?.equals("true")
 								Execution.withTransaction { status ->
 									try {
 										execution = new Execution()
@@ -233,6 +248,7 @@ class JobSchedulerService implements Job{
 										execution.isSystemDiagnosticsEnabled = jobDetails?.isSystemDiagnostics?.equals("true")
 										execution.isStbLogRequired= jobDetails.isStbLogRequired?.equals("true")
 										execution.rerunOnFailure = jobDetails.rerunOnFailure?.equals("true")
+										execution.category = category
 										execution.scriptCount = scriptCnt
 										if(! execution.save(flush:true)) {
 											log.error "Error saving Execution instance : ${execution.errors}"
@@ -263,6 +279,7 @@ class JobSchedulerService implements Job{
 										executionDevice.device = deviceInstance?.stbName
 										executionDevice.deviceIp = deviceInstance?.stbIp
 										executionDevice.status = UNDEFINED_STATUS
+										executionDevice.category = category
 										executionDevice.save(flush:true)
 										if(! executionDevice.save(flush:true)) {
 											log.error "Error saving Execution instance : ${execution.errors}"
@@ -277,7 +294,7 @@ class JobSchedulerService implements Job{
 								executeVersionTransferScript(realpath, filePath, executionName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
 								int scriptGrpSize = 0
 								int scriptCounter = 0
-								def isMultiple = "true"
+								def isMultiple = TRUE
 								if(jobDetails?.scriptGroup){
 									scriptGroupInstance = ScriptGroup.findById(jobDetails?.scriptGroup,[lock: true])
 									scriptCounter = 0
@@ -288,51 +305,71 @@ class JobSchedulerService implements Job{
 
 									String rdkVersion = getRDKBuildVersion(deviceInstance);
 									scriptGroupInstance.scriptList.each { scrpt ->
+										if(scrpt.category != Category.RDKB_TCL){
+											def script = getScript(realpath,scrpt?.moduleName, scrpt?.scriptName, category)
 
-										def script = getScript(realpath,scrpt?.moduleName, scrpt?.scriptName)
-
-										if(script){
-											if(validateScriptBoxTypes(script,deviceInstance)){
-												if(validateScriptRDKVersions(script,rdkVersion)){
-													if(script.skip.toString().equals("true")){
-														skipStatus = true
-														saveSkipStatus(Execution.findByName(execName), executionDevice, script, deviceInstance)
+											if(script){
+												if(validateScriptBoxTypes(script,deviceInstance)){
+													if(validateScriptRDKVersions(script,rdkVersion)){
+														if(script.skip.toString().equals(TRUE)){
+															skipStatus = true
+															saveSkipStatus(Execution.findByName(execName), executionDevice, script, deviceInstance)
+														}else{
+															validScriptList << script
+														}
 													}else{
-														validScriptList << script
+														notApplicable =true
+														String rdkVersionData = ""
+														rdkVersionData = script?.rdkVersions
+
+														String reason = "RDK Version mismatch.<br>Device RDK Version : "+rdkVersion+", Script supported RDK Versions :"+rdkVersionData
+
+														saveNotApplicableStatus(Execution.findByName(execName), executionDevice, script, deviceInstance,reason,scrpt.category)
+
 													}
+
 												}else{
 													notApplicable =true
-													String rdkVersionData = ""
-													rdkVersionData = script?.rdkVersions
+													String boxTypeData = ""
 
-													String reason = "RDK Version mismatch.<br>Device RDK Version : "+rdkVersion+", Script supported RDK Versions :"+rdkVersionData
+													String deviceBoxType = ""
 
-													saveNotApplicableStatus(Execution.findByName(execName), executionDevice, script, deviceInstance,reason)
+													Device.withTransaction { deviceBoxType = deviceInstance?.boxType }
 
+													//										Script.withTransaction {
+													//											def scriptInstance1 = Script.findById(script?.id)
+													boxTypeData = script?.boxTypes
+													//										}
+
+													String reason = "Box Type mismatch.<br>Device Box Type : "+deviceBoxType+", Script supported Box Types :"+boxTypeData
+													saveNotApplicableStatus(Execution.findByName(execName), executionDevice, script, deviceInstance, reason, scrpt.category)
 												}
-
 											}else{
+												String reason = "No script is available with name :"+scrpt?.scriptName+" in module :"+scrpt?.moduleName
+												saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, scrpt?.scriptName, deviceInstance,reason, scrpt.category)
 												notApplicable =true
-												String boxTypeData = ""
-
-												String deviceBoxType = ""
-
-												Device.withTransaction { deviceBoxType = deviceInstance?.boxType }
-
-												//										Script.withTransaction {
-												//											def scriptInstance1 = Script.findById(script?.id)
-												boxTypeData = script?.boxTypes
-												//										}
-
-												String reason = "Box Type mismatch.<br>Device Box Type : "+deviceBoxType+", Script supported Box Types :"+boxTypeData
-												saveNotApplicableStatus(Execution.findByName(execName), executionDevice, script, deviceInstance, reason)
 											}
-										}else{
-											String reason = "No script is available with name :"+scrpt?.scriptName+" in module :"+scrpt?.moduleName
-											saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, scrpt?.scriptName, deviceInstance,reason)
-
 										}
-
+										else{
+											if(isTclScriptExists(realpath, scrpt?.scriptName)){
+												if( isConfigFileExists(realpath, deviceInstance?.stbName)){
+													def script = [:]
+													script.put('scriptName', scrpt.scriptName)
+													script.put('executionTime', TCL_TIMEOUT)
+													validScriptList << script
+												}
+												else{
+													notApplicable =true
+													String reason = "No config file is available with name : Config_"+deviceInstance?.stbName+".txt"
+													saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, scrpt?.scriptName, deviceInstance,reason, scrpt.category)
+												}
+											}
+											else{
+												notApplicable =true
+												String reason = "No script is available with name : "+scrpt?.scriptName+".tcl"
+												saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, scrpt?.scriptName, deviceInstance,reason, scrpt.category)
+											}
+										}
 
 									}
 									scriptGrpSize = validScriptList?.size()
@@ -349,22 +386,8 @@ class JobSchedulerService implements Job{
 									Properties props = new Properties()
 									try {
 										// rest call for log transfer starts
-										props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
 										if(validScriptList.size() > 0){
-											if(props.get("logServerUrl")){
-												Runnable runnable = new Runnable(){
-															public void run(){
-																def startStatus = initiateLogTransfer(execName, props.get("logServerUrl"), props.get("logServerAppName"), deviceInstance)
-																if(startStatus){
-																	println "Log transfer job created for $execName"
-																}
-																else{
-																	println "Cannot create Log transfer job for $execName"
-																}
-															}
-														}
-												executorService.execute(runnable);
-											}
+											LogTransferService.transferLog(execName, deviceInstance)
 										}
 									} catch (Exception e) {
 										e.printStackTrace()
@@ -373,7 +396,7 @@ class JobSchedulerService implements Job{
 									validScriptList.each{ scriptObj ->
 										scriptCounter++
 										if(scriptCounter == scriptGrpSize){
-											isMultiple = "false"
+											isMultiple = FALSE
 										}
 										aborted = ExecutionService.abortList.contains(ex?.id?.toString())
 
@@ -396,7 +419,12 @@ class JobSchedulerService implements Job{
 
 
 										if(!aborted && !(deviceStatus.equals(Status.NOT_FOUND.toString()) || deviceStatus.equals(Status.HANG.toString())) && !pause){
-											htmlData = executeScript(execName, executionDevice, scriptObj , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark,jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple)
+											if(category != Category.RDKB_TCL) {
+												htmlData = executeScript(execName, executionDevice, scriptObj , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark,jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple, category)
+											}
+											else{
+												htmlData = executeTclScript(execName, executionDevice, scriptObj , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark,jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple, category)
+											}
 											output.append(htmlData)
 											Thread.sleep(6000)
 										}else{
@@ -441,6 +469,7 @@ class JobSchedulerService implements Job{
 															executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
 															executionResult.status = PENDING
 															executionResult.dateOfExecution = new Date()
+															executionResult.category = category
 															if(! executionResult.save(flush:true)) {
 															}
 															resultstatus.flush()
@@ -458,20 +487,7 @@ class JobSchedulerService implements Job{
 
 									try {
 										if(validScriptList.size() > 0){
-											if(props.get("logServerUrl")){
-												Runnable runnable = new Runnable(){
-															void run() {
-																def status = stopLogTransfer(execName, props.get("logServerUrl"), props.get("logServerAppName"))
-																if(status){
-																	println "Stopped Log transfer job for $execName"
-																}
-																else{
-																	println "Log transfer job scheduled for $execName failed to stop"
-																}
-															};
-														}
-												executorService.execute(runnable);
-											}
+											LogTransferService.closeLogTransfer(execName)
 										}
 									} catch (Exception e) {
 										e.printStackTrace()
@@ -491,11 +507,20 @@ class JobSchedulerService implements Job{
 									if(scripts instanceof String){
 										//									scriptInstance = Script.findById(scripts,[lock: true])
 										//									scriptId = scriptInstance?.id
-										def moduleName= ScriptService.scriptMapping.get(scripts)
-										scriptInstance = getScript(realpath,moduleName, scripts)
+										def scpt = ScriptFile.findByScriptName(scripts)
+										def catgory = scpt?.category
+										isMultiple = FALSE
+										if(category != Category.RDKB_TCL){
+											def moduleName= ScriptService.scriptMapping.get(scripts)
+											scriptInstance = getScript(realpath,moduleName, scripts, category)
+											htmlData = executeScript(execName, executionDevice, scriptInstance , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple, catgory)
 
-										isMultiple = "false"
-										htmlData = executeScript(execName, executionDevice, scriptInstance , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple, 	 jobDetails.groups.toString())
+										}
+										else{
+											scriptInstance = [:]
+											scriptInstance.put('scriptName',scripts)
+											htmlData = executeTclScript(execName, executionDevice, scriptInstance , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple, catgory)
+										}
 										output.append(htmlData)
 									}
 									else{
@@ -506,48 +531,73 @@ class JobSchedulerService implements Job{
 										boolean notApplicable =false
 										scripts.each { script ->
 
-											def moduleName= ScriptService.scriptMapping.get(script)
-											scriptInstance = getScript(realpath,moduleName, script)
+											def scrpInst = ScriptFile.findByScriptName(script)
+											def catgry = scrpInst?.category
+											if(catgry != Category.RDKB_TCL) {
+												def moduleName= ScriptService.scriptMapping.get(script)
+												scriptInstance = getScript(realpath,moduleName, script, category)
 
-											//										scriptInstance = Script.findById(script,[lock: true])
-											if(validateScriptBoxTypes(scriptInstance,deviceInstance)){
-												if(validateScriptRDKVersions(scriptInstance,rdkVersion)){
-													if(scriptInstance.skip.toString().equals("true")){
-														skipStatus = true
-														saveSkipStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance)
+												//										scriptInstance = Script.findById(script,[lock: true])
+												if(validateScriptBoxTypes(scriptInstance,deviceInstance)){
+													if(validateScriptRDKVersions(scriptInstance,rdkVersion)){
+														if(scriptInstance.skip.toString().equals(TRUE)){
+															skipStatus = true
+															saveSkipStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance)
+														}else{
+															validScripts << scriptInstance
+														}
 													}else{
-														validScripts << scriptInstance
+														notApplicable =true
+														String rdkVersionData = ""
+														//												Script.withTransaction {
+														//													def scriptInstance1 = Script.findById(scriptInstance?.id)
+														rdkVersionData = scriptInstance?.rdkVersions
+														//												}
+
+														String reason = "RDK Version mismatch.<br>Device RDK Version : "+rdkVersion+", Script supported RDK Versions :"+rdkVersionData
+
+														saveNotApplicableStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance,reason, catgry)
+
 													}
+
 												}else{
 													notApplicable =true
-													String rdkVersionData = ""
-													//												Script.withTransaction {
-													//													def scriptInstance1 = Script.findById(scriptInstance?.id)
-													rdkVersionData = scriptInstance?.rdkVersions
-													//												}
+													String boxTypeData = ""
 
-													String reason = "RDK Version mismatch.<br>Device RDK Version : "+rdkVersion+", Script supported RDK Versions :"+rdkVersionData
+													String deviceBoxType = ""
 
-													saveNotApplicableStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance,reason)
+													Device.withTransaction { deviceBoxType = deviceInstance?.boxType }
 
+													//											Script.withTransaction {
+													//												def scriptInstance1 = Script.findById(scriptInstance?.id)
+													boxTypeData = scriptInstance?.boxTypes
+													//											}
+
+													String reason = "Box Type mismatch.<br>Device Box Type : "+deviceBoxType+", Script supported Box Types :"+boxTypeData
+													saveNotApplicableStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance, reason, catgry)
 												}
-
-											}else{
-												notApplicable =true
-												String boxTypeData = ""
-
-												String deviceBoxType = ""
-
-												Device.withTransaction { deviceBoxType = deviceInstance?.boxType }
-
-												//											Script.withTransaction {
-												//												def scriptInstance1 = Script.findById(scriptInstance?.id)
-												boxTypeData = scriptInstance?.boxTypes
-												//											}
-
-												String reason = "Box Type mismatch.<br>Device Box Type : "+deviceBoxType+", Script supported Box Types :"+boxTypeData
-												saveNotApplicableStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance, reason)
 											}
+											else{
+												if(isTclScriptExists(realpath, script)){
+													if( isConfigFileExists(realpath, deviceInstance?.stbName)){
+														def scpt = [:]
+														scpt.put('scriptName', script)
+														scpt.put('executionTime', TCL_TIMEOUT)
+														validScripts << scpt
+													}
+													else{
+														notApplicable =true
+														String reason = "No config file is available with name : Config_"+deviceInstance?.stbName+".txt"
+														saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, script, deviceInstance,reason, catgry)
+													}
+												}
+												else{
+													notApplicable =true
+													String reason = "No script is available with name : "+script+".tcl"
+													saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, script, deviceInstance,reason, catgry)
+												}
+											}
+
 										}
 
 										scriptGrpSize = validScripts?.size()
@@ -565,7 +615,7 @@ class JobSchedulerService implements Job{
 										validScripts.each{ script ->
 											scriptCounter++
 											if(scriptCounter == scriptGrpSize){
-												isMultiple = "false"
+												isMultiple = FALSE
 											}
 											aborted = ExecutionService.abortList.contains(exeId?.toString())
 											if(!aborted && !pause)
@@ -577,7 +627,14 @@ class JobSchedulerService implements Job{
 												}
 											}
 											if(!aborted && !(deviceStatus.equals(Status.NOT_FOUND.toString()) || deviceStatus.equals(Status.HANG.toString()))){
-												htmlData = executeScript(execName, executionDevice, script , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired, executionName,isMultiple, )
+												def scpt = ScriptFile.findByScriptName(script.name?script.name:script.scriptName)
+												if(scpt?.category != Category.RDKB_TCL){
+													htmlData = executeScript(execName, executionDevice, script , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired, executionName,isMultiple, scpt?.category)
+												}
+												else{
+													htmlData = executeTclScript(execName, executionDevice, script , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired, executionName,isMultiple, scpt?.category)
+												}
+
 											}else {
 												if(!aborted && deviceStatus.equals(Status.NOT_FOUND.toString())){
 													pause = true
@@ -614,6 +671,8 @@ class JobSchedulerService implements Job{
 																executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
 																executionResult.status = PENDING
 																executionResult.dateOfExecution = new Date()
+																executionResult.category = category
+
 																if(! executionResult.save(flush:true)) {
 																}
 																resultstatus.flush()
@@ -677,12 +736,13 @@ class JobSchedulerService implements Job{
 								execution1.executionStatus = FAILURE_STATUS
 								execution1.dateOfExecution = new Date()
 								execution1.applicationUrl = url
-								execution1.isRerunRequired = jobDetails?.rerun?.equals("true")
-								execution1.isBenchMarkEnabled = jobDetails?.isBenchMark?.equals("true")
-								execution1.isSystemDiagnosticsEnabled = jobDetails?.isSystemDiagnostics?.equals("true")
-								execution1.isStbLogRequired= jobDetails.isStbLogRequired?.equals("true")
-								execution1.rerunOnFailure = jobDetails.rerunOnFailure?.equals("true") 
+								execution1.isRerunRequired = jobDetails?.rerun?.equals(TRUE)
+								execution1.isBenchMarkEnabled = jobDetails?.isBenchMark?.equals(TRUE)
+								execution1.isSystemDiagnosticsEnabled = jobDetails?.isSystemDiagnostics?.equals(TRUE)
+								execution1.isStbLogRequired= jobDetails.isStbLogRequired?.equals(TRUE)
+								execution1.rerunOnFailure = jobDetails.rerunOnFailure?.equals(TRUE)
 								execution1.outputData = "Execution failed due to the unavailability of box"
+								execution1.category = category
 								if(! execution1.save(flush:true)) {
 									log.error "Error saving Execution instance : ${execution1.errors}"
 								}
@@ -690,6 +750,7 @@ class JobSchedulerService implements Job{
 						}
 						catch(Exception th) {
 							th.printStackTrace()
+							println th.getMessage()
 						}
 
 					}
@@ -702,13 +763,12 @@ class JobSchedulerService implements Job{
 				 */
 				def executionObj = Execution.findByName(execName)
 				def executionDeviceObj = ExecutionDevice.findAllByExecutionAndStatusNotEqual(executionObj, SUCCESS_STATUS)
-				
 				if(!abortedExecution && !pause && (executionDeviceObj.size() > 0 ) && (jobDetails?.rerun?.toString()?.equals("true"))){
 					try{
-						htmlData = reRunOnFailure(realpath?.toString(),filePath?.toString(),url?.toString(),execName?.toString(),executionName?.toString(),jobDetails?.isBenchMark?.toString(), jobDetails?.isSystemDiagnostics?.toString(),jobDetails?.isStbLogRequired?.toString(),jobDetails?.rerunOnFailure?.toString(),jobDetails.rerun?.toString() )
+						htmlData = reRunOnFailure(realpath?.toString(),filePath?.toString(),url?.toString(),execName?.toString(),executionName?.toString(),jobDetails?.isBenchMark?.toString(), jobDetails?.isSystemDiagnostics?.toString(),jobDetails?.isStbLogRequired?.toString(), jobDetails?.rerunOnFailure?.toString(),jobDetails.rerun?.toString(), jobDetails?.groups)
 					}catch(Exception e){
-					println e.getMessage()
-					e.printStackTrace()
+						println e.getMessage()
+						e.printStackTrace()
 					}
 					output.append(htmlData)
 				}
@@ -727,7 +787,9 @@ class JobSchedulerService implements Job{
 			}
 		}
 	}
-	public void saveNotApplicableStatus(def executionInstance , def executionDevice , def scriptInstance , def deviceInstance, String reason){
+
+
+	public void saveNotApplicableStatus(def executionInstance , def executionDevice , def scriptInstance , def deviceInstance, String reason, def category){
 		ExecutionResult.withTransaction { resultstatus ->
 			try {
 				ExecutionResult executionResult = new ExecutionResult()
@@ -738,6 +800,7 @@ class JobSchedulerService implements Job{
 				executionResult.status = Constants.NOT_APPLICABLE_STATUS
 				executionResult.executionOutput = "Test not executed . Reason : "+reason
 				executionResult.dateOfExecution = new Date()
+				executionResult.category = category
 				if(! executionResult.save(flush:true)) {
 					log.error "Error saving executionResult instance : ${executionResult.errors}"
 				}
@@ -748,250 +811,254 @@ class JobSchedulerService implements Job{
 			}
 		}
 	}
-	//public static volatile Object  lock = new Object()
+
+
 	def reRunOnFailure(final String realPath, final String filePath, String url, final String execName,final String uniqueExecutionName,
-			final String isBenchMark, final String isSystemDiagnostics,final String islogReqd,  final String rerunOnFailure, final String rerun){
-		boolean pause= false
-		List pendingScripts =[]
-		Execution executionInstance = Execution.findByName(execName)
-		def resultArray = Execution.executeQuery("select a.result from Execution a where a.name = :exName",[exName: execName])
-		def result = resultArray[0]
-		def newExecName
-		def execution
-		Execution rerunExecutionInstance
-		def executionSaveStatus = true
-		if(result != SUCCESS_STATUS){
-			def scriptName
-			def scriptGroupInstance = ScriptGroup.findByName(executionInstance?.scriptGroup)			/**
-			 * Get all devices for execution
-			 */
-			def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
-			int cnt = 0
-			boolean aborted = false
-			executionDeviceList.each{ execDeviceInstance ->
-				Device deviceInstance = Device.findByStbName(execDeviceInstance?.device)
-				boolean allocated = false
-				if(execDeviceInstance.status != SUCCESS_STATUS){
-					String status1 = ""
-					try {
-						status1 = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
-						if(ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
-							status1 = "BUSY"
-						}else{
-							if((status1.equals( Status.FREE.toString() ))){
-								if(!ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
-									allocated = true
-									ExecutionService.deviceAllocatedList.add(deviceInstance?.id)
-									Thread.start{
-										DeviceStatusService?.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
-									}
-								}
-							}
-						}
+			final String isBenchMark, final String isSystemDiagnostics,final String islogReqd, final String rerunOnFailure, final String rerun, final def groups){
+		try{
+			boolean pause= false
+			List pendingScripts =[]
 
-					}
-					catch(Exception eX){
-						println  " ERROR "+ eX.printStackTrace()
-					}
-					if(cnt == 0){
-						newExecName = execName + RERUN
-						scriptName = executionInstance?.script
-						def deviceName = deviceInstance?.stbName
-						if(executionDeviceList.size() > 1){
-							deviceName = MULTIPLE
-						}
-
-						int scriptCnt = 0
-						ScriptGroup.withTransaction {
-							def scriptGroupInstance1 = ScriptGroup.get(scriptGroupInstance?.id)
-							if(scriptGroupInstance1?.scriptList?.size() > 0){
-								scriptCnt = scriptGroupInstance1?.scriptList?.size()
-							}
-						}
-						Execution.withTransaction { status ->
-							try {
-								execution = new Execution()
-								execution.name = newExecName
-								execution.script = scriptName
-								execution.device = deviceName
-								execution.scriptGroup = scriptGroupInstance?.name
-								execution.result = UNDEFINED_STATUS
-								execution.executionStatus = INPROGRESS_STATUS
-								execution.dateOfExecution = new Date()//dateFormat.format(cal.getTime())
-								//execution.groups = groups
-								execution.applicationUrl = url
-								execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals("true")
-								execution.isBenchMarkEnabled = isBenchMark?.equals("true")
-								execution.isStbLogRequired = islogReqd?.equals("true")
-								execution?.rerunOnFailure = rerunOnFailure?.equals("true")
-								execution.isRerunRequired = rerun?.equals("true")
-								execution.scriptCount = scriptCnt
-								if(! execution.save(flush:true)) {
-									log.error "Error saving Execution instance : ${execution.errors}"
-									executionSaveStatus = false
-								}
-								status.flush()
-							}
-							catch(Throwable th) {
-								status.setRollbackOnly()
-							}
-						}
-						cnt++
-						rerunExecutionInstance = Execution.findByName(newExecName)
-					}
-					if(executionSaveStatus){
-						ExecutionDevice executionDevice
-						Execution.withTransaction {
-							executionDevice = new ExecutionDevice()
-							executionDevice.execution = rerunExecutionInstance
-							executionDevice.device = deviceInstance?.stbName
-							executionDevice.deviceIp = deviceInstance?.stbIp
-							executionDevice.dateOfExecution = new Date()
-							executionDevice.status = UNDEFINED_STATUS
-							executionDevice.save(flush:true)
-						}
-						executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
-						def executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
-						def scriptInstance
-						def htmlData
-						def resultSize = executionResultList.size()
-						int counter = 0
-						def isMultiple = "true"
-						Properties props = new Properties()
+			Execution executionInstance = Execution.findByName(execName)
+			def resultArray = Execution.executeQuery("select a.result from Execution a where a.name = :exName",[exName: execName])
+			def result = resultArray[0]
+			def newExecName
+			def execution
+			Execution rerunExecutionInstance
+			def executionSaveStatus = true
+			if(result != SUCCESS_STATUS){
+				def scriptName
+				def scriptGroupInstance = ScriptGroup.findByName(executionInstance?.scriptGroup)
+				/**
+				 * Get all devices for execution
+				 */
+				def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
+				int cnt = 0
+				boolean aborted = false
+				executionDeviceList.each{ execDeviceInstance ->
+					Device deviceInstance = Device.findByStbName(execDeviceInstance?.device)
+					boolean allocated = false
+					if(execDeviceInstance.status != SUCCESS_STATUS){
+						String status1 = ""
+						String deviceStatus = " "
 						try {
-							props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
-							// initiating log transfer
-							if(executionResultList.size() > 0){
-								if(props.get("logServerUrl")){
-									Runnable runnable = new Runnable(){
-												public void run(){
-													def startStatus = initiateLogTransfer(newExecName, props.get("logServerUrl"), props.get("logServerAppName"), deviceInstance)
-													if(startStatus){
-														println "Log transfer job created for $execName"
-													}
-													else{
-														println "Cannot create Log transfer job for $execName"
-													}
-												}
-											}
-									executorService.execute(runnable);
-								}
-							}
-						} catch (Exception e) {
-							e.printStackTrace()
-						}
-						executionResultList.each{ executionResult ->
-							def scriptFile = ScriptFile.findByScriptName(executionResult?.script)
-							scriptInstance = getScript(realPath,scriptFile?.moduleName,scriptFile?.scriptName)
-							counter++
-							if(counter == resultSize){
-								isMultiple = "false"
-							}
-							def deviceStatus = " "
-							try{
-								deviceStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
-							}catch (Exception e){
-								e.getMessage()
-							}
-							if(validateScriptBoxTypes(scriptInstance,deviceInstance)){
-								Execution exec = Execution.findByName(newExecName)
-								aborted = ExecutionService.abortList?.toString().contains(exec?.id?.toString())
-								if(!aborted && !(deviceStatus?.toString().equals(Status.NOT_FOUND.toString()) || deviceStatus?.toString().equals(Status.HANG.toString())) && !pause){
-									htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, url, filePath, realPath,isBenchMark,isSystemDiagnostics,islogReqd,uniqueExecutionName,isMultiple)
-
+							deviceStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+							synchronized (ExecutionController.lock) {
+								if(ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
+									status1 = "BUSY"
 								}else{
-									if(!aborted && (deviceStatus?.equals(Status.NOT_FOUND.toString()) ||  deviceStatus?.equals(Status.HANG.toString()))){
-										pause = true
-									}
-									if(!aborted && pause) {
-										try {
-											pendingScripts.add(scriptInstance)
-											def execInstance
-											Execution.withTransaction {
-												def execInstance1 = Execution.findByName(newExecName)
-												execInstance = execInstance1
+									if((deviceStatus.equals( Status.FREE.toString() ))){
+										if(!ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
+											allocated = true
+											ExecutionService.deviceAllocatedList.add(deviceInstance?.id)
+											Thread.start{
+												DeviceStatusService?.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
 											}
-											def scriptInstanceObj
-											scriptInstanceObj = scriptInstance
-											Device deviceInstanceObj
-											def devId = deviceInstance?.id
-											Device.withTransaction {
-												Device deviceInstance1 = Device.findById(devId)
-												deviceInstanceObj = deviceInstance1
-											}
-											ExecutionDevice executionDevice1
-											ExecutionDevice.withTransaction {
-												def exDev = ExecutionDevice.findById(executionDevice?.id)
-												executionDevice1 = exDev
-											}
-
-											ExecutionResult.withTransaction { resultstatus ->
-												try {
-													def executionResult1 = new ExecutionResult()
-													executionResult1.execution = execInstance
-													executionResult1.executionDevice = executionDevice1
-													executionResult1.script = scriptInstanceObj?.name
-													executionResult1.device = deviceInstanceObj?.stbName
-													executionResult1.execDevice = null
-													executionResult1.deviceIdString = deviceInstanceObj?.id?.toString()
-													executionResult1.status = PENDING
-													executionResult1.dateOfExecution = new Date()
-													if(! executionResult1.save(flush:true)) {
-													}
-													resultstatus.flush()
-												}
-												catch(Throwable th) {
-													resultstatus.setRollbackOnly()
-												}
-											}
-										} catch (Exception e) {
 										}
 									}
 								}
 							}
 						}
-						// stopping log transfer
-						try {
-							if(executionResultList.size() > 0){
-								if(props.get("logServerUrl")){
-									Runnable runnable = new Runnable(){
-												void run() {
-													def status = stopLogTransfer(newExecName, props.get("logServerUrl"), props.get("logServerAppName"))
-													if(status){
-														println "Stopped Log transfer job for $execName"
-													}
-													else {
-														println "Log transfer job scheduled for $execName failed to stop"
-													}
-												};
-											}
-									executorService.execute(runnable);
+						catch(Exception eX){
+							println  " ERROR "+ eX.printStackTrace()
+						}
+						if(cnt == 0){
+							newExecName = execName + RERUN
+							scriptName = executionInstance?.script
+							def deviceName = deviceInstance?.stbName
+							if(executionDeviceList.size() > 1){
+								deviceName = MULTIPLE
+							}
+							int scriptCnt = 0
+							ScriptGroup.withTransaction {
+								def scriptGroupInstance1 = ScriptGroup.get(scriptGroupInstance?.id)
+								if(scriptGroupInstance1?.scriptList?.size() > 0){
+									scriptCnt = scriptGroupInstance1?.scriptList?.size()
 								}
 							}
-						} catch (Exception e) {
-							e.printStackTrace()
+							Execution.withTransaction { status ->
+								try {
+									execution = new Execution()
+									execution.name = newExecName
+									execution.script = scriptName
+									execution.device = deviceName
+									execution.scriptGroup = scriptGroupInstance?.name
+									execution.result = UNDEFINED_STATUS
+									execution.executionStatus = INPROGRESS_STATUS
+									execution.dateOfExecution = new Date()//dateFormat.format(cal.getTime())
+									execution.groups = groups
+									execution.applicationUrl = url
+									execution.isSystemDiagnosticsEnabled = isSystemDiagnostics?.equals(TRUE)
+									execution.isBenchMarkEnabled = isBenchMark?.equals(TRUE)
+									execution.isStbLogRequired = islogReqd?.equals(TRUE)
+									execution?.rerunOnFailure = rerunOnFailure?.equals(TRUE)
+									execution.isRerunRequired = "false"
+									execution.scriptCount = scriptCnt
+									execution.category = execDeviceInstance.category?.toString()
+									if(! execution.save(flush:true)) {
+										log.error "Error saving Execution instance : ${execution.errors}"
+										executionSaveStatus = false
+									}
+									status.flush()
+								}catch(Exception e){
+									println  e.getMessage()
+									e.printStackTrace()
+								}
+
+							}
+
+							cnt++
+							rerunExecutionInstance = Execution.findByName(newExecName)
 						}
-						Execution exec = Execution.findByName(newExecName)
-						if(aborted && ExecutionService.abortList.contains(exec?.id?.toString())){
-							saveExecutionStatus(aborted, exec?.id)
-							ExecutionService.abortList.remove(exec?.id?.toString())
+						if(executionSaveStatus){
+							ExecutionDevice executionDevice
+							Execution.withTransaction {
+								executionDevice = new ExecutionDevice()
+								executionDevice.execution = rerunExecutionInstance
+								executionDevice.device = deviceInstance?.stbName
+								executionDevice.deviceIp = deviceInstance?.stbIp
+								executionDevice.dateOfExecution = new Date()
+								executionDevice.status = UNDEFINED_STATUS
+								executionDevice.category = execution.category
+								executionDevice.save(flush:true)
+							}
+							executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
+							def executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
+							def scriptInstance
+							def htmlData
+							def resultSize = executionResultList.size()
+							int counter = 0
+							def isMultiple = "true"
+
+							// adding log transfer to server for reruns
+
+							Properties props = new Properties()
+							try {
+								props.load(grailsApplication.parentContext.getResource("/appConfig/logServer.properties").inputStream)
+								// initiating log transfer
+								if(executionResultList.size() > 0){
+									LogTransferService.transferLog(newExecName, deviceInstance)
+								}
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+							executionResultList.each{ executionResult ->
+								def scriptFile = ScriptFile.findByScriptName(executionResult?.script)
+								scriptInstance = getScript(realPath?.toString(),scriptFile?.moduleName,scriptFile?.scriptName, executionResult?.category)
+								counter++
+								if(counter == resultSize){
+									isMultiple = "false"
+								}
+								if(executionResult.category != Category.RDKB_TCL){
+									if(validateScriptBoxTypes(scriptInstance,deviceInstance)){
+										Execution exec = Execution.findByName(newExecName)
+										aborted = ExecutionService.abortList?.toString().contains(exec?.id?.toString())
+										try{
+											deviceStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+										}catch (Exception e){
+											e.getMessage()
+										}
+										print deviceStatus
+										if(!aborted && !(deviceStatus?.toString().equals(Status.NOT_FOUND.toString()) || deviceStatus?.toString().equals(Status.HANG.toString())) && !pause){
+
+											htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, url, filePath, realPath,isBenchMark,isSystemDiagnostics,islogReqd,uniqueExecutionName,isMultiple,executionResult.category?.toString() )
+										}else{
+											if(!aborted && (deviceStatus?.equals(Status.NOT_FOUND.toString()) ||  deviceStatus?.equals(Status.HANG.toString()))){
+												pause = true
+											}
+											if(!aborted && pause) {
+												try {
+													pendingScripts.add(scriptInstance)
+													def execInstance
+													Execution.withTransaction {
+														def execInstance1 = Execution.findByName(newExecName)
+														execInstance = execInstance1
+													}
+													def scriptInstanceObj
+													scriptInstanceObj = scriptInstance
+													Device deviceInstanceObj
+													def devId = deviceInstance?.id
+													Device.withTransaction {
+														Device deviceInstance1 = Device.findById(devId)
+														deviceInstanceObj = deviceInstance1
+													}
+													ExecutionDevice executionDevice1
+													ExecutionDevice.withTransaction {
+														def exDev = ExecutionDevice.findById(executionDevice?.id)
+														executionDevice1 = exDev
+													}
+													ExecutionResult.withTransaction { resultstatus ->
+														try {
+															def executionResult1 = new ExecutionResult()
+															executionResult1.execution = execInstance
+															executionResult1.executionDevice = executionDevice1
+															executionResult1.script = scriptInstanceObj?.name
+															executionResult1.device = deviceInstanceObj?.stbName
+															executionResult1.execDevice = null
+															executionResult1.deviceIdString = deviceInstanceObj?.id?.toString()
+															executionResult1.status = PENDING
+															executionResult1.dateOfExecution = new Date()
+															//executionResult.category = executionDevice1?.category?.toString()
+															executionResult1.category = Utility.getCategory(executionDevice1?.category?.toString())
+															if(!executionResult1.save(flush:true)) {
+															}
+															resultstatus.flush()
+														}
+														catch(Exception e){
+															e.printStackTrace()
+														}
+														catch(Throwable th) {
+															resultstatus.setRollbackOnly()
+														}
+													}
+												} catch (Exception e) {
+												}
+											}
+										}
+									}
+								}
+								else{
+									if(!aborted && !(deviceStatus?.toString().equals(Status.NOT_FOUND.toString()) || deviceStatus?.toString().equals(Status.HANG.toString())) && !pause){
+										def scrip = [:]
+										scrip.put('scriptName',scriptInstance?.scriptName)
+										htmlData = executeTclScript(newExecName, executionDevice, scrip, deviceInstance, url, filePath, realPath,isBenchMark,isSystemDiagnostics,islogReqd,uniqueExecutionName,isMultiple,executionResult.category )
+									}
+								}
+							}
+							//}
+							// stopping log transfer
+							try {
+								if(executionResultList.size() > 0){
+									LogTransferService.closeLogTransfer(newExecName)
+								}
+							} catch (Exception e) {
+								e.printStackTrace()
+							}
+
+							Execution exec = Execution.findByName(newExecName)
+							if(aborted && ExecutionService.abortList.contains(exec?.id?.toString())){
+								saveExecutionStatus(aborted, exec?.id)
+								ExecutionService.abortList.remove(exec?.id?.toString())
+							}
+							if(!aborted && pause && pendingScripts.size() > 0 ){
+								savePausedExecutionStatus(exec?.id)
+								saveExecutionDeviceStatusData(PAUSED, executionDevice?.id)
+							}
+							if(!aborted && !pause ){
+								saveExecutionStatus(aborted, exec?.id)
+							}
 						}
-						if(!aborted && pause && pendingScripts.size() > 0 ){
-							savePausedExecutionStatus(exec?.id)
-							saveExecutionDeviceStatusData(PAUSED, executionDevice?.id)
-						}
-						if(!aborted && !pause ){
-							saveExecutionStatus(aborted, exec?.id)
-						}			
+					}
+
+					if(allocated && ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
+						ExecutionService.deviceAllocatedList.remove(deviceInstance?.id)
 					}
 				}
-				if(allocated && ExecutionService.deviceAllocatedList.contains(deviceInstance?.id)){
-					ExecutionService.deviceAllocatedList.remove(deviceInstance?.id)
-				}
 			}
+		}catch(Exception e){
+			println " ERROR "+e.getMessage()
 		}
 	}
-
 	/**
 	 * Method to execute the script to get the device's version details
 	 * @param realPath
@@ -1005,29 +1072,7 @@ class JobSchedulerService implements Job{
 	def executeVersionTransferScript(final String realPath, final String filePath, final String executionName, def exectionDeviceId, final String stbName, final String logTransferPort){
 		try{
 			def executionInstance = Execution.findByName(executionName)
-			/*String fileContents = new File(filePath+DOUBLE_FWD_SLASH+VERSIONTRANSFER_FILE).text
-
-			fileContents = fileContents.replace(IP_ADDRESS, STRING_QUOTES+stbIp+STRING_QUOTES)
-
-			fileContents = fileContents.replace(PORT, logTransferPort)
-
-			String versionFilePath = "${realPath}//logs//version//${executionInstance?.id}//${exectionDeviceId?.toString()}//${exectionDeviceId?.toString()}_version.txt"
-			fileContents = fileContents.replace(LOCALFILE, STRING_QUOTES+versionFilePath+STRING_QUOTES)
-
-			String versionFile = TEMP_VERSIONFILE_NAME
-			new File("${realPath}//logs//version//${executionInstance?.id}//${exectionDeviceId?.toString()}").mkdirs()
-			File versnFile = new File(filePath, versionFile)
-			boolean isVersionFileCreated = versnFile.createNewFile()
-			if(isVersionFileCreated) {
-				versnFile.setExecutable(true, false )
-			}
-			PrintWriter versnNewPrintWriter = versnFile.newPrintWriter()
-			versnNewPrintWriter.print( fileContents )
-			versnNewPrintWriter.flush()
-			versnNewPrintWriter.close()
-			executeScriptFile( versnFile.getPath() )
-			versnFile.delete()*/
-
+			
 			Device device
 			Device.withTransaction{
 				device = Device.findByStbName(stbName)
@@ -1047,10 +1092,11 @@ class JobSchedulerService implements Job{
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def outputData = scriptExecutor.executeScript(cmd,1)
 			copyVersionLogsIntoDir(realPath, versionFilePath, executionInstance?.id, exectionDeviceId?.toString())
+
 			
-		
+
 			if(device?.boxType?.type?.equalsIgnoreCase(BOXTYPE_CLIENT)){
-				getDeviceDetails(device,device.agentMonitorPort,realPath)
+				getDeviceDetails(device,device?.agentMonitorPort,realPath)
 			}
 		}
 		catch(Exception ex){
@@ -1076,7 +1122,7 @@ class JobSchedulerService implements Job{
 	 */
 
 	def String executeScript(final String executionName, final ExecutionDevice executionDevice, final def scriptInstance,
-			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String isLogReqd,final String uniqueExecutionName,final String isMultiple) {
+			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String isLogReqd,final String uniqueExecutionName,final String isMultiple, def category) {
 		String htmlData = ""
 
 		String scriptData = convertScriptFromHTMLToPython(scriptInstance.scriptContent)
@@ -1092,14 +1138,10 @@ class JobSchedulerService implements Job{
 		def executionInstance = Execution.findByName(executionName,[lock: true])
 		def executionId = executionInstance?.id
 		Date executionDate = executionInstance?.dateOfExecution
-
-		//def execStartTime = executionDate?.getTime()
+		
 		Date executionStartDt = new Date()
 		def execStartTime =  executionStartDt.getTime()
-
-
 		def executionResult
-
 		ExecutionResult.withTransaction { resultstatus ->
 			try {
 				executionResult = new ExecutionResult()
@@ -1108,6 +1150,7 @@ class JobSchedulerService implements Job{
 				executionResult.script = scriptInstance.name
 				executionResult.device = deviceInstance1.stbName
 				executionResult.dateOfExecution = new Date()
+				executionResult.category = category
 				if(! executionResult.save(flush:true)) {
 					log.error "Error saving executionResult instance : ${executionResult.errors}"
 				}
@@ -1118,10 +1161,7 @@ class JobSchedulerService implements Job{
 			}
 		}
 		def executionResultId = executionResult?.id
-
 		def mocaDeviceList = Device.findAllByStbIpAndMacIdIsNotNull(deviceInstance1?.stbIp)
-
-
 		int execTime = 0
 		try {
 			if(scriptInstance?.executionTime instanceof String){
@@ -1134,13 +1174,10 @@ class JobSchedulerService implements Job{
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
-
 		int counter = 1
 		def mocaString = CURLY_BRACKET_OPEN
-
 		int mocaListSize = mocaDeviceList?.size()
 		mocaDeviceList.each{ mocaDevice ->
-
 			mocaString = mocaString + counter.toString() + COLON + SQUARE_BRACKET_OPEN + STRING_QUOTES + mocaDevice?.macId + STRING_QUOTES +
 					COMMA_SEPERATOR + mocaDevice?.stbPort + SQUARE_BRACKET_CLOSE
 
@@ -1156,19 +1193,17 @@ class JobSchedulerService implements Job{
 		scriptData = scriptData.replace( CLIENTLIST , mocaString )
 
 		String gatewayIp = deviceInstance1?.gatewayIp
-		String logFilePath = realPath?.toString()+"/logs/logs/" 
+		String logFilePath = realPath?.toString()+"/logs/logs/"
+
+
 		def sFile = ScriptFile.findByScriptNameAndModuleName(scriptInstance?.name,scriptInstance?.primitiveTest?.module?.name)
-		scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES +logFilePath+SINGLE_QUOTES + COMMA_SEPERATOR +
+				scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES +logFilePath+SINGLE_QUOTES + COMMA_SEPERATOR +
 				executionId  + COMMA_SEPERATOR + executionDevice?.id + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.agentMonitorPort + COMMA_SEPERATOR + deviceInstance1?.statusPort + COMMA_SEPERATOR +
 				sFile?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR + SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +
 				SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR)// + gatewayIp + COMMA_SEPERATOR)
 
-		
-		/*scriptData = scriptData.replace( REPLACE_TOKEN, METHOD_TOKEN + LEFT_PARANTHESIS + SINGLE_QUOTES + url + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + realPath + SINGLE_QUOTES  + COMMA_SEPERATOR +
-			executionId  + COMMA_SEPERATOR + executionDevice?.id + COMMA_SEPERATOR + executionResultId  + REPLACE_BY_TOKEN + deviceInstance?.logTransferPort + COMMA_SEPERATOR + deviceInstance1?.statusPort + COMMA_SEPERATOR +
-			sFile?.id + COMMA_SEPERATOR + deviceInstance?.id + COMMA_SEPERATOR + SINGLE_QUOTES + isBenchMark + SINGLE_QUOTES + COMMA_SEPERATOR + SINGLE_QUOTES + isSystemDiagnostics + SINGLE_QUOTES + COMMA_SEPERATOR +
-			SINGLE_QUOTES + isMultiple + SINGLE_QUOTES + COMMA_SEPERATOR)// + gatewayIp + COMMA_SEPERATOR)
-*/		scriptData	 = scriptData + "\nprint \"SCRIPTEND#!@~\";"
+
+		scriptData	 = scriptData + "\nprint \"SCRIPTEND#!@~\";"
 
 		Date date = new Date()
 		String newFile = FILE_STARTS_WITH+date.getTime().toString()+PYTHON_EXTENSION
@@ -1187,14 +1222,14 @@ class JobSchedulerService implements Job{
 		//def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
 		def logTransferFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
+
 		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
 		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName, realPath, executionId,executionDevice?.id,executionResultId  )
 
-		file.delete()		
+		file.delete()
 		// TFTP transfer --->>>
 		def logPath = "${realPath}/logs//${executionId}//${executionDevice?.id}//${executionResultId}//"
 		copyLogsIntoDir(realPath,logPath ,executionId,executionDevice?.id, executionResultId)
-		
 		outData?.eachLine { line ->
 			htmlData += (line + HTML_BR )
 		}
@@ -1289,14 +1324,11 @@ class JobSchedulerService implements Job{
 				}
 			}
 		}
-
 		String performanceFilePath
-		String performanceFileName 
-		
+		String performanceFileName
 		if(isBenchMark.equals("true") || isSystemDiagnostics.equals("true")){
-			//performanceFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_performanceFile.txt"
-			performanceFileName =performanceFileName = "${executionId}_${executionDevice?.id}_${executionResultId}"
 			//new File("${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+			performanceFileName =performanceFileName = "${executionId}_${executionDevice?.id}_${executionResultId}"
 			performanceFilePath = "${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}//"
 		}
 
@@ -1309,14 +1341,14 @@ class JobSchedulerService implements Job{
 				absolutePath,
 				deviceInstance?.stbIp,
 				deviceInstance?.stbPort,
+				//deviceInstance?.logTransferPort,
 				deviceInstance?.agentMonitorPort,
 				"PerformanceBenchMarking",
-				performanceFileName // fileName				
+				performanceFileName
 			]
-			
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 			htmlData += scriptExecutor.executeScript(cmd,1)
-			copyPerformanceLogIntoDir(realPath, performanceFilePath,executionId,executionDevice?.id, executionResultId)	
+			copyPerformanceLogIntoDir(realPath, performanceFilePath,executionId,executionDevice?.id, executionResultId)
 		}
 		if(isSystemDiagnostics.equals("true")){
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
@@ -1326,51 +1358,63 @@ class JobSchedulerService implements Job{
 				absolutePath,
 				deviceInstance?.stbIp,
 				deviceInstance?.stbPort,
+				//deviceInstance?.logTransferPort,
 				deviceInstance?.agentMonitorPort,
 				"PerformanceSystemDiagnostics",
-				performanceFileName				
+				performanceFileName
 			]
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 			htmlData += scriptExecutor.executeScript(cmd,1)
-			copyPerformanceLogIntoDir(realPath, performanceFilePath,executionId,executionDevice?.id, executionResultId)			
+			copyPerformanceLogIntoDir(realPath, performanceFilePath,executionId,executionDevice?.id, executionResultId)
 		}
 		//def logTransferFileName1 = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
 		def logTransferFileName1 = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
 		def logTransferFilePath1 = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 
-		new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1,realPath,executionId,executionDevice?.id, executionResultId)
+		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1 ,realPath, executionId,executionDevice?.id, executionResultId)
 		if(isLogReqd?.toString()?.equals("true")){
-			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId, realPath)
+			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
 		}
 		return htmlData
 	}
+
+
 	/**
-	 * Refreshes the status in agent as it is called with flag false
-	 * @param deviceInstance
+	 * Function For Tranfer the performance related file using tftp
+	 * @param realPath
+	 * @param logTransferFilePath
 	 * @return
 	 */
-	def logTransfer1(def deviceInstance, def logTransferFilePath, def logTransferFileName, def realPath , def executionId, def executionDeviceId , def executionResultId){
-		Thread.sleep(4000)
-		try{
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callConsoleLogTransfer.py").file
-			def absolutePath = layoutFolder.absolutePath
-			String[] cmd = [
-				PYTHON_COMMAND,
-				absolutePath,
-				deviceInstance?.stbIp,
-				deviceInstance?.agentMonitorPort,
-				"AgentConsole.log",
-				logTransferFileName // File Name 				
-			]
-			ScriptExecutor scriptExecutor = new ScriptExecutor()
-			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
-		copyAgentconsoleLogIntoDir(realPath,logTransferFilePath,executionId,executionDeviceId,executionResultId  )
-			Thread.sleep(4000)
-		}
-		catch(Exception e){
+
+	def copyPerformanceLogIntoDir(def realPath, def logTransferFilePath  , def executionId, def executionDeviceId , def executionResultId){
+		try {
+			String logsPath = realPath.toString()+"/logs/logs/"
+
+			File logDir  = new File(logsPath)
+			if(logDir.isDirectory()){
+				logDir.eachFile{ file->
+					if(file.toString()?.contains("benchmark.log") || file.toString()?.contains("memused.log") || file.toString()?.contains("cpu.log")){
+						def logFileName =  file.getName().split("_")
+						if(logFileName?.length >= 3){
+							if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
+
+								new File(logTransferFilePath?.toString()).mkdirs()
+								File logTransferPath  = new File(logTransferFilePath)
+								if(file.exists()){
+									boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
+								}
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error  " Error"+e.getMessage()
+			e.printStackTrace()
 		}
 	}
+
 	/**
 	 * Function for transfer the open sourse logs from "tftp server
 	 * @param realPath
@@ -1386,7 +1430,7 @@ class JobSchedulerService implements Job{
 					if(!(file?.toString()?.contains("version.txt") || file.toString()?.contains("benchmark.log") || file.toString()?.contains("memused.log") || file.toString()?.contains("cpu.log") || file?.toString()?.contains("AgentConsoleLog.log"))){
 						def logFileName =  file?.getName()?.split("_")
 						if (file?.isFile() && logFileName.length >= 3 ) {
-						if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
+							if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
 								String fileName = file.getName()
 								if(fileName.toString().contains("\$:")){
 									fileName = fileName.replaceAll('\\$:',"Undefined")
@@ -1410,168 +1454,10 @@ class JobSchedulerService implements Job{
 			e.printStackTrace()
 		}
 	}
-	
-	
-	
-	
+
 
 	/**
-	 * Function for transfer stb logs from TM 
-	 * @param moduleName
-	 * @param dev
-	 * @param execId
-	 * @param execDeviceId
-	 * @param execResultId
-	 * @param realPath
-	 * @return
-	 */
-	def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId, def realPath){
-		try {
-			def module
-			Module.withTransaction {
-				module = Module.findByName(moduleName)
-			}
-			def destFolder = grailsApplication.parentContext.getResource("//logs//stblogs//execId_logdata.txt").file
-			def destPath = destFolder.absolutePath
-			def filePath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
-			def directoryPath =  "${execId}_${execDeviceId}_${execResultId}"
-			def stbFilePath = "${realPath}//logs//stblogs//${execId}//${execDeviceId}//${execResultId}//"
-			module?.stbLogFiles?.each{ name ->
-				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
-
-				File fileStore = grailsApplication.parentContext.getResource("//fileStore//").file
-				def fileStorePath = fileStore.absolutePath
-
-				def absolutePath = layoutFolder.absolutePath
-				String fName = name?.replaceAll("//", "_")
-				fName = fName?.replaceAll("/", "_")
-				
-				if((absolutePath) && !(absolutePath.isEmpty())){
-					String[] cmd = [
-						"python",
-						absolutePath,
-						dev?.stbIp,
-						dev?.agentMonitorPort,  // TFTP change
-						name,
-						directoryPath+"_"+fName // fileName
-					]
-					try {
-						
-						ScriptExecutor scriptExecutor = new ScriptExecutor()
-						def outputData = scriptExecutor.executeScript(cmd,1)
-						copyStbLogsIntoDir(realPath,stbFilePath,execId, execDeviceId,execResultId )
-					}catch (Exception e) {
-						e.printStackTrace()
-					}
-				}
-
-			}
-		} catch (Exception e) {
-		}
-	}
-	/**
-	 *  Function for move the performance realted like bench mark , cpu usage, meminfo and agent console log transfer
-	 * @param realPath
-	 * @param logTransferFilePath
-	 * @return
-	 */
-	
-	def copyAgentconsoleLogIntoDir(def realPath, def logTransferFilePath , def executionId, def executionDeviceId , def executionResultId){
-		try {
-			String logsPath = realPath.toString()+"/logs/logs/"
-			File logDir  = new File(logsPath)
-			if(logDir.isDirectory()){
-				logDir.eachFile{ file->
-					if(file.toString()?.contains("AgentConsoleLog.txt")){
-						def logFileName =  file.getName().split("_")
-						if(logFileName?.length >= 3){
-						if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
-								new File(logTransferFilePath?.toString()).mkdirs()
-								File logTransferPath  = new File(logTransferFilePath)
-								if(file.exists()){
-									boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
-								}
-							}
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			log.error  " Error"+e.getMessage()
-			e.printStackTrace()
-		}
-	}
-	/**
-	 * Function For Tranfer the performance related file using tftp
-	 * @param realPath
-	 * @param logTransferFilePath
-	 * @return
-	 */
-	
-	def copyPerformanceLogIntoDir(def realPath, def logTransferFilePath  , def executionId, def executionDeviceId , def executionResultId){
-		try {
-			String logsPath = realPath.toString()+"/logs/logs/"
-
-			File logDir  = new File(logsPath)
-			if(logDir.isDirectory()){
-				logDir.eachFile{ file->
-					if(file.toString()?.contains("benchmark.log") || file.toString()?.contains("memused.log") || file.toString()?.contains("cpu.log")){
-						def logFileName =  file.getName().split("_")
-						if(logFileName?.length >= 3){
-						if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
-								
-							new File(logTransferFilePath?.toString()).mkdirs()
-							File logTransferPath  = new File(logTransferFilePath)
-							if(file.exists()){
-								boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
-							}
-							}
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			log.error  " Error"+e.getMessage()
-			e.printStackTrace()
-		}
-	}
-	
-	/**
-	 * Function for version.txt file transfer 
-	 * @param realPath
-	 * @param logTransferFilePath
-	 * @return
-	 */
-	
-	def copyVersionLogsIntoDir(def realPath, def logTransferFilePath , def executionId, def executionDeviceId ){
-		try {
-			String logsPath = realPath.toString()+"/logs/logs/"
-			File logDir  = new File(logsPath)
-			if(logDir.isDirectory()){
-				logDir.eachFile{ file->
-					if(file?.toString().contains("version.txt")){
-						def logFileName =  file.getName().split("_")
-						if(logFileName?.length > 0){
-							if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString())){
-							def  versionFileName = logFileName[1]+"_"+logFileName.last()
-							new File(logTransferFilePath?.toString()).mkdirs()
-							File logTransferPath  = new File(logTransferFilePath)
-							if(file.exists()){
-								boolean fileMoved = file.renameTo(new File(logTransferPath, versionFileName));
-							}
-						}
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			log.error  " Error"+e.getMessage()
-			e.printStackTrace()
-		}
-	}
-	
-	/**
-	 * To copy   the stb files in to perticular dir using tftp 
+	 * To copy   the stb files in to perticular dir using tftp
 	 * @param realPath
 	 * @param logTransferFilePath
 	 * @return
@@ -1583,18 +1469,18 @@ class JobSchedulerService implements Job{
 			if(logDir.isDirectory()){
 				logDir.eachFile{ file->
 					if(!(file?.toString()?.contains("version.txt") || file.toString()?.contains("benchmark.log") || file.toString()?.contains("memused.log") || file.toString()?.contains("cpu.log") || file?.toString()?.contains("AgentConsoleLog.log"))){
-					def logFileName =  file.getName().split("_")
-					if(logFileName?.length >= 3){
-						if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
-							def fName = file.getName()
-							fName = fName?.replaceFirst(logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
-							new File(logTransferFilePath?.toString()).mkdirs()
-							File logTransferPath  = new File(logTransferFilePath)
-							if(file.exists()){
-								boolean fileMoved = file.renameTo(new File(logTransferPath,fName.trim()));
+						def logFileName =  file.getName().split("_")
+						if(logFileName?.length >= 3){
+							if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
+								def fName = file.getName()
+								fName = fName?.replaceFirst(logFileName[0]+UNDERSCORE+logFileName[1]+UNDERSCORE+logFileName[2]+UNDERSCORE, "" )
+								new File(logTransferFilePath?.toString()).mkdirs()
+								File logTransferPath  = new File(logTransferFilePath)
+								if(file.exists()){
+									boolean fileMoved = file.renameTo(new File(logTransferPath,fName.trim()));
+								}
 							}
 						}
-					}
 					}
 				}
 			}
@@ -1607,8 +1493,384 @@ class JobSchedulerService implements Job{
 
 
 	/**
+	 * Function for version.txt file transfer
+	 * @param realPath
+	 * @param logTransferFilePath
+	 * @return
+	 */
+
+	def copyVersionLogsIntoDir(def realPath, def logTransferFilePath){
+		try {
+			String logsPath = realPath.toString()+"/logs/logs/"
+			File logDir  = new File(logsPath)
+			if(logDir.isDirectory()){
+				logDir.eachFile{ file->
+					if(file?.toString().contains("version.txt")){
+						def logFileName =  file.getName().split("_")
+						def  versionFileName = logFileName[1]+"_"+logFileName.last()
+						new File(logTransferFilePath?.toString()).mkdirs()
+						File logTransferPath  = new File(logTransferFilePath)
+						if(file.exists()){
+							boolean fileMoved = file.renameTo(new File(logTransferPath, versionFileName));
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+
+
+	/**
+	 * Method to execute tcl script in job
+	 * @param executionName
+	 * @param executionDevice
+	 * @param scriptInstance
+	 * @param deviceInstance
+	 * @param url
+	 * @param filePath
+	 * @param realPath
+	 * @param isBenchMark
+	 * @param isSystemDiagnostics
+	 * @param isLogReqd
+	 * @param uniqueExecutionName
+	 * @param isMultiple
+	 * @return
+	 */
+
+	def executeTclScript(final String executionName, final ExecutionDevice executionDevice, final def scriptInstance,
+			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String isLogReqd,final String uniqueExecutionName,final String isMultiple, def category) {
+		String htmlData = ""
+
+		Device deviceInstance1 = Device.findById(deviceInstance.id,[lock: true])
+
+		def executionInstance = Execution.findByName(executionName,[lock: true])
+		def executionId = executionInstance?.id
+		Date executionDate = executionInstance?.dateOfExecution
+
+		//def execStartTime = executionDate?.getTime()
+
+		// Add to fix
+		Date executionStartDt = new Date()
+		def execStartTime =  executionStartDt.getTime()
+
+
+		def executionResult
+
+		ExecutionResult.withTransaction { resultstatus ->
+			try {
+				executionResult = new ExecutionResult()
+				executionResult.execution = executionInstance
+				executionResult.executionDevice = executionDevice
+				executionResult.script = scriptInstance.scriptName
+				executionResult.device = deviceInstance1.stbName
+				executionResult.dateOfExecution = new Date()
+				executionResult.category = category
+				if(! executionResult.save(flush:true)) {
+					log.error "Error saving executionResult instance : ${executionResult.errors}"
+				}
+				resultstatus.flush()
+			}
+			catch(Throwable th) {
+				resultstatus.setRollbackOnly()
+			}
+		}
+		def executionResultId = executionResult?.id
+
+		int execTime = 0
+		try {
+			if(scriptInstance?.executionTime instanceof String){
+				execTime = Integer.parseInt(scriptInstance?.executionTime)
+			}else if(scriptInstance?.executionTime instanceof Integer){
+				execTime = scriptInstance?.executionTime?.intValue()
+			}else {
+				execTime = scriptInstance?.executionTime
+			}
+		} catch (Exception e) {
+		}
+
+		int counter = 1
+
+		def sFile = ScriptFile.findByScriptNameAndModuleName(scriptInstance?.scriptName,'tcl')
+
+		Date date = new Date()
+
+		def tclFile = getTclFilePath(realPath, scriptInstance.scriptName)
+		def configFile = getConfigFilePath(realPath, deviceInstance1.stbName)
+
+		String outData = executeTclScriptCommand(tclFile, configFile, execTime, executionName, getTclDirectory(realPath))
+
+		//New changes ------>>>>
+		String logFilePath = realPath?.toString()+"/logs/logs/"
+		//def logTransferFileName = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
+		//def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
+
+		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+		def logTransferFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
+		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
+		def logPath = "${realPath}/logs//${executionId}//${executionDevice?.id}//${executionResultId}//"
+		copyLogsIntoDir(realPath,logPath, executionId,executionDevice?.id, executionResultId)
+		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,executionId,executionDevice?.id, executionResultId )
+
+		outData?.eachLine { line ->
+			htmlData += (line + HTML_BR )
+		}
+		Date execEndDate = new Date()
+		def execEndTime =  execEndDate.getTime()
+		def timeDifference = ( execEndTime - execStartTime  ) / 60000;
+		String timeDiff =  String.valueOf(timeDifference)
+		def resultArray = Execution.executeQuery("select a.executionTime from Execution a where a.name = :exName",[exName: executionName])
+		BigDecimal myVal1
+		if(resultArray[0]){
+			myVal1= new BigDecimal (resultArray[0]) + new BigDecimal (timeDiff)
+		}
+		else{
+			myVal1 =  new BigDecimal (timeDiff)
+		}
+
+		timeDiff =  String.valueOf(myVal1)
+		String singleScriptExecTime = String.valueOf(timeDifference)
+
+		if(ExecutionService.abortList.contains(executionInstance?.id?.toString())){
+			resetAgent(deviceInstance,TRUE)
+		}else if(Utility.isFail(htmlData)){
+			updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
+			Thread.sleep(4000)
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.agentMonitorPort,
+				"true"
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor()
+			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
+			Thread.sleep(4000)
+		}
+		else if((timeDifference >= execTime) && (execTime != 0))	{
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.agentMonitorPort,
+				"true"
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
+			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
+			htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
+			updateExecutionResultsTimeOut(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
+			Thread.sleep(4000)
+		}
+		else{
+			/*updateTclExecutionResults( [execId: executionInstance?.id,  resultData: htmlData,  execResult:executionResultId,
+			 expectedResult:null,  resultStatus :'SUCCESS', testCaseName : scriptInstance?.scriptName,  execDevice:executionDevice?.id, statusData:'SUCCESS'])
+			 */	
+			updateTclExecutionResults( [execId: executionId,  resultData: 'SUCCESS',  execResult:executionResultId,
+				expectedResult:null,  resultStatus :'SUCCESS', testCaseName : scriptInstance?.scriptName,  execDevice:executionDevice?.id, statusData:'SUCCESS',
+				outputData:htmlData, timeDiff:timeDiff, singleScriptExecTime:singleScriptExecTime ])
+
+			/*if(htmlData.contains("SCRIPTEND#!@~")){
+			 htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
+			 String outputData = htmlData
+			 updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
+			 }
+			 else{
+			 if((timeDifference >= execTime) && (execTime != 0))	{
+			 File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
+			 def absolutePath = layoutFolder.absolutePath
+			 String[] cmd = [
+			 PYTHON_COMMAND,
+			 absolutePath,
+			 deviceInstance?.stbIp,
+			 deviceInstance?.agentMonitorPort,
+			 "true"
+			 ]
+			 ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
+			 def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			 callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
+			 htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
+			 updateExecutionResultsTimeOut(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
+			 Thread.sleep(4000)
+			 }else{
+			 try {
+			 updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
+			 Thread.sleep(4000)
+			 File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
+			 def absolutePath = layoutFolder.absolutePath
+			 String[] cmd = [
+			 PYTHON_COMMAND,
+			 absolutePath,
+			 deviceInstance?.stbIp,
+			 deviceInstance?.agentMonitorPort,
+			 "false"
+			 ]
+			 ScriptExecutor scriptExecutor = new ScriptExecutor()
+			 def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			 callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
+			 Thread.sleep(4000)
+			 } catch (Exception e) {
+			 e.printStackTrace()
+			 }
+			 }
+			 }*/
+		}
+
+		String performanceFilePath
+		String performanceFileName
+
+		if(isBenchMark.equals("true") || isSystemDiagnostics.equals("true")){
+			//new File("${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+			//performanceFilePath = "${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}//"
+			performanceFileName = "${executionId}_${executionDevice?.id}_${executionResultId}"
+			performanceFilePath = "${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}//"
+		}
+
+		if(isBenchMark.equals("true")){
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.stbPort,
+				deviceInstance?.agentMonitorPort,
+				//deviceInstance?.logTransferPort,
+				KEY_PERFORMANCE_BM,
+				performanceFileName
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
+			htmlData += scriptExecutor.executeScript(cmd,1)
+			copyPerformanceLogIntoDir(realPath, performanceFilePath, executionId,executionDevice?.id, executionResultId)
+		}
+		if(isSystemDiagnostics.equals("true")){
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.stbPort,
+				//deviceInstance?.logTransferPort,
+				deviceInstance?.agentMonitorPort,
+				KEY_PERFORMANCE_SD,
+				performanceFileName
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
+			htmlData += scriptExecutor.executeScript(cmd,1)
+			copyPerformanceLogIntoDir(realPath, performanceFilePath, executionId,executionDevice?.id, executionResultId)
+		}
+		def logTransferFilePath1 = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
+		def logTransferFileName1 = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
+
+		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1 ,realPath, executionId,executionDevice?.id, executionResultId)
+		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
+			transferSTBLog('tcl', deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
+		}
+		return htmlData
+	}
+
+
+
+	/**
+	 * Refreshes the status in agent as it is called with flag false
+	 * @param deviceInstance
+	 * @return
+	 */
+	def logTransfer1(def deviceInstance, def logTransferFilePath, def logTransferFileName, def realPath , def executionId, def executionDeviceId , def executionResultId){
+		Thread.sleep(4000)
+		try{
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callConsoleLogTransfer.py").file
+			def absolutePath = layoutFolder.absolutePath
+			String[] cmd = [
+				PYTHON_COMMAND,
+				absolutePath,
+				deviceInstance?.stbIp,
+				deviceInstance?.agentMonitorPort,
+				"AgentConsole.log",
+				logTransferFileName // File Name
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor()
+			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
+			copyAgentconsoleLogIntoDir(realPath,logTransferFilePath,executionId,executionDeviceId,executionResultId  )
+			Thread.sleep(4000)
+		}
+		catch(Exception e){
+		}
+	}
+
+
+	def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId){
+		try {
+			def module
+			Module.withTransaction {
+				module = Module.findByName(moduleName)
+			}
+
+			def destFolder = grailsApplication.parentContext.getResource("//logs//stblogs//execId_logdata.txt").file
+			def destPath = destFolder.absolutePath
+
+
+			def filePath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
+			def directoryPath =  "${execId}_${execDeviceId}_${execResultId}"
+			def stbFilePath = "${realPath}/logs//stblogs//${execId}//${execDeviceId}//${execResultId}//"
+			//def directoryPath = destPath.replace("execId_logdata.txt", "${execId}//${execDeviceId}//${execResultId}")
+			//new File(directoryPath).mkdirs()
+
+			module?.logFileNames?.each{ name ->
+
+				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+
+				File fileStore = grailsApplication.parentContext.getResource("//fileStore//").file
+				def fileStorePath = fileStore.absolutePath
+
+				def absolutePath = layoutFolder.absolutePath
+				String fName = name?.replaceAll("//", "_")
+				fName = fName?.replaceAll("/", "_")
+				if((absolutePath) && !(absolutePath.isEmpty())){
+
+					String[] cmd = [
+						"python",
+						absolutePath,
+						dev?.stbIp,
+						dev?.agentMonitorPort,
+						//dev?.logTransferPort,
+						name,
+						//directoryPath+"//"+fName
+						directoryPath+"_"+fName
+					]
+					try {
+						ScriptExecutor scriptExecutor = new ScriptExecutor()
+						def outputData = scriptExecutor.executeScript(cmd,1)
+						copyStbLogsIntoDir(realPath,stbFilePath, execId,execDeviceId,execResultId)
+
+					}catch (Exception e) {
+						e.printStackTrace()
+					}
+				}
+
+			}
+		} catch (Exception e) {
+		}
+	}
+
+
+
+
+
+
+
+	/**
 	 * Method to call the script executor to execute the script
-	 aram executionData
+	 * @param executionData
 	 * @return
 	 */
 	public String executeScripts(final String executionData, int execTime,String executionName) {
@@ -1617,6 +1879,14 @@ class JobSchedulerService implements Job{
 		def output =  new ScriptExecutor().execute( getCommand( executionData ), execTime,executionName,ExecutionService?.executionProcessMap)
 		return output
 	}
+
+
+	public String executeTclScriptCommand(final String tclExecutableFile, final String configFile, int execTime, final String executionName, final String tclDirPath) {
+		def command = "tclsh $tclExecutableFile $configFile"
+		def output = new ScriptExecutor().execute( command, execTime, executionName,ExecutionService?.executionProcessMap,tclDirPath)
+		return output
+	}
+
 
 	/**
 	 * Method to check whether the agent reset failed. If the agent reset failed it will request to reboot the box.
@@ -1629,6 +1899,7 @@ class JobSchedulerService implements Job{
 			rebootBox(device)
 		}
 	}
+
 	/**
 	 * Method to reboot the box by invoking the python script.
 	 * @param deviceInstance
@@ -1674,6 +1945,69 @@ class JobSchedulerService implements Job{
 		copyAgentconsoleLogIntoDir(realPath,logTransferFilePath,executionId,executionDeviceId,executionResultId  )
 		Thread.sleep(4000)
 	}
+
+	/**
+	 * Copy the device logs file into devicelog directory using TFTP server.
+	 * @param realPath
+	 * @param logTransferFilePath
+	 * @return
+	 */
+	def copyDeviceLogIntoDir(def realPath, def logTransferFilePath){
+		try {
+			String logsPath = realPath.toString()+"/logs/logs/"
+			File logDir  = new File(logsPath)
+			if(logDir.isDirectory()){
+				logDir.eachFile{ file->
+
+					def logFileName =  file.getName().split("_")
+					if(logFileName?.length > 0){
+						new File(logTransferFilePath?.toString()).mkdirs()
+						File logTransferPath  = new File(logTransferFilePath)
+						if(file.exists()){
+							boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+
+	/**
+	 *  Function for move the performance realted like bench mark , cpu usage, meminfo and agent console log transfer
+	 * @param realPath
+	 * @param logTransferFilePath
+	 * @return
+	 */
+
+	def copyAgentconsoleLogIntoDir(def realPath, def logTransferFilePath , def executionId, def executionDeviceId , def executionResultId){
+		try {
+			String logsPath = realPath.toString()+"/logs/logs/"
+			File logDir  = new File(logsPath)
+			if(logDir.isDirectory()){
+				logDir.eachFile{ file->
+					if(file.toString()?.contains("AgentConsoleLog.txt")){
+						def logFileName =  file.getName().split("_")
+						if(logFileName?.length >= 3){
+							if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
+								new File(logTransferFilePath?.toString()).mkdirs()
+								File logTransferPath  = new File(logTransferFilePath)
+								if(file.exists()){
+									boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
+								}
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			log.error  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+
 
 	/**
 	 * Execute the script
@@ -1726,7 +2060,9 @@ class JobSchedulerService implements Job{
 
 	public boolean validateScriptBoxType(final Script scriptInstance, final Device deviceInstance){
 		boolean scriptStatus = true
-		if(!(scriptInstance.boxTypes.find { it.id == deviceInstance.boxType.id })){
+		//if(!(scriptInstance.boxTypes.find { it.id == deviceInstance.boxType.id })){
+		//Issue fixed
+		if(!(script?.boxTypes?.find { it?.toString()?.equals(deviceInstance1?.boxType?.toString()) })){
 			scriptStatus = false
 		}
 		return scriptStatus
@@ -1973,57 +2309,28 @@ class JobSchedulerService implements Job{
 	 * @param realPath
 	 * @return
 	 */
-	def getDeviceDetails(Device device, def logTransferPort, def realPath){		
+	def getDeviceDetails(Device device, def logTransferPort, def realPath){
 		try {
-		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
-		def absolutePath = layoutFolder.absolutePath
-		def filePath = "${realPath}//logs//devicelogs//${device?.stbName}//"
-		String[] cmd = [
-			"python",
-			absolutePath,
-			device?.stbIp,
-			device?.agentMonitorPort,
-			"/version.txt",
-			"${device?.stbName}"+"_"+"${device?.stbName}.txt"
-		]
-		ScriptExecutor scriptExecutor = new ScriptExecutor()
-		def outputData = scriptExecutor.executeScript(cmd,1)
-		copyDeviceLogIntoDir(realPath,filePath)
-		parseAndSaveDeviceDetails(device, filePath)
-		} catch (Exception e) {
+			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+			def absolutePath = layoutFolder.absolutePath
+			def filePath = "${realPath}//logs//devicelogs//${device?.stbName}//"
+			String[] cmd = [
+				"python",
+				absolutePath,
+				device?.stbIp,
+				device?.agentMonitorPort,
+				"/version.txt",
+				"${device?.stbName}"+"_"+"${device?.stbName}.txt"
+			]
+			ScriptExecutor scriptExecutor = new ScriptExecutor()
+			def outputData = scriptExecutor.executeScript(cmd,1)
+			copyDeviceLogIntoDir(realPath,filePath)
+			parseAndSaveDeviceDetails(device, filePath)
+		}catch(Exception e){
 			e.printStackTrace()
-		}
-	
-	}
-	/**
-	 * Copy the device logs file into devicelog directory using TFTP server.
-	 * @param realPath
-	 * @param logTransferFilePath
-	 * @return
-	 */
-	def copyDeviceLogIntoDir(def realPath, def logTransferFilePath){
-		try {
-			String logsPath = realPath.toString()+"/logs/logs/"
-			File logDir  = new File(logsPath)
-			if(logDir.isDirectory()){
-				logDir.eachFile{ file->
-					
-					def logFileName =  file.getName().split("_")
-					if(logFileName?.length > 0){
-					new File(logTransferFilePath?.toString()).mkdirs()
-					File logTransferPath  = new File(logTransferFilePath)
-					if(file.exists()){
-						boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			log.error  " Error"+e.getMessage()
-			e.printStackTrace()
+
 		}
 	}
-	
 
 	/**
 	 * Parse the file which contains box parameters
@@ -2191,7 +2498,8 @@ class JobSchedulerService implements Job{
 		boolean scriptStatus = true
 		Script.withTransaction { trns ->
 			def deviceInstance1 = Device.findById(deviceInstance?.id)
-			if(!(script?.boxTypes?.find { it?.id == deviceInstance1?.boxType?.id })){
+			if(!(script?.boxTypes?.find { it?.toString()?.equals(deviceInstance1?.boxType?.toString()) })){
+				//if(!(script?.boxTypes?.find { it?.id == deviceInstance1?.boxType?.id })){
 				scriptStatus = false
 			}
 		}
@@ -2200,31 +2508,35 @@ class JobSchedulerService implements Job{
 
 
 
-	def getScript(realPath,dirName,fileName){
+	def getScript(realPath,dirName,fileName, category){
 		dirName = dirName?.trim()
 		fileName = fileName?.trim()
 
-		def moduleObj = Module.findByName(dirName)
+		def moduleObj = Module.findByNameAndCategory(dirName,category)
 		def scriptDirName = Constants.COMPONENT
 		if(moduleObj){
 			if(moduleObj?.testGroup?.groupValue.equals(TestGroup.E2E.groupValue)){
 				scriptDirName = Constants.INTEGRATION
 			}
 		}
-
-		File file = new File( "${realPath}//fileStore//testscripts//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
+		//File file = new File( "${realPath}//fileStore//testscripts//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
+		File file = null
+		def fileStorePath = Utility.getFileStorePath(realPath, category)
+		file = new File(fileStorePath+FILE_SEPARATOR+scriptDirName+FILE_SEPARATOR+dirName+FILE_SEPARATOR+fileName+".py")
+	
 		Map script = [:]
 		if(file.exists()){
-			String s = ""
+			//String s = ""
+			StringBuilder s = new StringBuilder()
 			List line = file.readLines()
-			int indx = line?.findIndexOf {  it.startsWith("'''")} 
+			//int indx = 0
+			int indx = line?.findIndexOf {  it.startsWith("'''")}
 			String scriptContent = ""
 			if(line.get(indx).startsWith("'''"))	{
 				indx++
 				while(indx < line.size() &&  !line.get(indx).startsWith("'''")){
-					if(!(line.get(indx)?.equals(""))){ //Issue fix  for line gap between xml tags
-						s = s + line.get(indx)+"\n"
-					}
+					//	s = s + line.get(indx)+"\n"
+					s.append(line.get(indx)).append('\n')
 					indx++
 				}
 				indx ++
@@ -2235,7 +2547,7 @@ class JobSchedulerService implements Job{
 			}
 
 
-			String xml = s
+			String xml = s.toString()
 			XmlParser parser = new XmlParser();
 			def node = parser.parseText(xml)
 			script.put("id", node.id.text())
@@ -2253,8 +2565,8 @@ class JobSchedulerService implements Job{
 					scriptDirName1 = Constants.INTEGRATION
 				}
 			}
-
-			def primitiveTest = getPrimitiveTest(realPath+"//fileStore//testscripts//"+scriptDirName1+"//"+moduleName1+"//"+moduleName1+".xml",nodePrimitiveTestName)
+			def primitiveTest = getPrimitiveTest(fileStorePath+FILE_SEPARATOR+scriptDirName1+FILE_SEPARATOR+moduleName1+FILE_SEPARATOR+moduleName1+".xml",nodePrimitiveTestName)
+			//def primitiveTest = getPrimitiveTest(realPath+"//fileStore//testscripts//"+scriptDirName1+"//"+moduleName1+"//"+moduleName1+".xml",nodePrimitiveTestName)
 
 			script.put("primitiveTest",primitiveTest)
 			def versList = []
@@ -2273,57 +2585,101 @@ class JobSchedulerService implements Job{
 			script.put("synopsis", node?.synopsis?.text())
 			script.put("scriptContent", scriptContent)
 			script.put("executionTime", node.execution_time.text())
+			if(node?.test_profile?.text() ){
+				script.put("testProfile",node?.test_profile?.text() )
+			}else{
+				script.put("testProfile", "" )
+			}
 		}
 		return script
 	}
 
+
+
 	def getPrimitiveTest(def filePath,def primitiveTestName){
-		File primitiveXml = new File(filePath)
-		//def node = new XmlParser().parse(primitiveXml)
-		def lines = primitiveXml?.readLines()
-		int indx = lines?.findIndexOf { it.startsWith("<?xml")}
-		String xmlContent =""
-		while(indx < lines.size()){
-					xmlContent = xmlContent + lines.get(indx)+"\n"
-					indx++
+		def newFilePath = null
+		def testScriptsPath = null
+		def categoryFound = false
+
+		if(!(filePath.contains(FileStorePath.RDKV.value()) || filePath.contains(FileStorePath.RDKB.value()))) {
+			categoryFound = PrimitiveService.primitiveListMap.get('RDKV')?.contains(primitiveTestName?.trim())
+			if(!categoryFound) {
+				categoryFound = PrimitiveService.primitiveListMap.get('RDKB')?.contains(primitiveTestName?.trim())
+				if(!categoryFound){
+					categoryFound = PrimitiveService.primitiveListMap.get('RDKB')?.contains(primitiveTestName)
+				}
+				if(categoryFound){
+					testScriptsPath = FileStorePath.RDKB.value()
+				}
+			}else{
+				testScriptsPath = FileStorePath.RDKV.value()
+			}
+
+			if(testScriptsPath != null) {
+				def paths = filePath.split('fileStore')
+				def file = null
+				def fileName = paths[1].split('testscripts')
+				file = fileName[1]?fileName[1]:fileName[0]
+				newFilePath = paths[0] + 'fileStore' + FILE_SEPARATOR + testScriptsPath + file
+			}
+		}else{
+			newFilePath = filePath
 		}
-		def parser = new XmlParser();
-		def node = parser.parseText(xmlContent?.toString())
 
 		Map primitiveMap = [:]
-		node.each{
-			it.primitiveTests.each{
-				it.primitiveTest.each {
-					if("${it.attribute('name')}" == primitiveTestName){
-						primitiveMap.put("name", "${it.attribute('name')}")
-						primitiveMap.put("version",  "${it.attribute('version')}")
-						primitiveMap.put("id","${it.attribute('id')}")
-						Set paramList = []
-						def moduleName = PrimitiveService.primitiveModuleMap.get(primitiveTestName)
-						primitiveMap.put("module",Module.findByName(moduleName))
-						def fun = Function.findByModuleAndName(Module.findByName(moduleName),it.function.text())
-						primitiveMap.put("function",fun)
-						it.parameters.each {
-							it.parameter.each{
-								def pType = ParameterType.findByNameAndFunction("${it.attribute('name')}",fun)
-								Map param = [:]
-								param.put("parameterType",pType)
-								param.put("value", "${it.attribute('value')}")
-								paramList.add(param)
+		try {
+			//File primitiveXml = new File(filePath)
+			File primitiveXml = new File(newFilePath)
+			//	def local = new XmlParser()
+			//	def node = local.parse(primitiveXml)
+			def lines = primitiveXml?.readLines()
+			int indx = lines?.findIndexOf { it.startsWith("<?xml")}
+			String xmlContent =""
+			while(indx < lines.size()){
+				xmlContent = xmlContent + lines.get(indx)+"\n"
+				indx++
+			}
+			def parser = new XmlParser();
+			def node = parser.parseText(xmlContent?.toString())
+
+			node.each{
+				it.primitiveTests.each{
+					it.primitiveTest.each {
+						if("${it.attribute('name')}".equalsIgnoreCase(primitiveTestName)){
+							primitiveMap.put("name", "${it.attribute('name')}")
+							primitiveMap.put("version",  "${it.attribute('version')}")
+							primitiveMap.put("id","${it.attribute('id')}")
+							Set paramList = []
+							def moduleName = PrimitiveService.primitiveModuleMap.get(primitiveTestName)
+							primitiveMap.put("module",Module.findByName(moduleName))
+							def fun = Function.findByModuleAndName(Module.findByName(moduleName),it.function.text())
+							primitiveMap.put("function",fun)
+							it.parameters.each {
+								it.parameter.each{
+									def pType = ParameterType.findByNameAndFunction("${it.attribute('name')}",fun)
+									Map param = [:]
+									param.put("parameterType",pType)
+									param.put("value", "${it.attribute('value')}")
+									paramList.add(param)
+								}
+								primitiveMap.put("parameters",paramList)
 							}
-							primitiveMap.put("parameters",paramList)
-						}
-						//				 return primitiveMap
-					}else{
-						def ss = "${it.attribute('name')}"
-						if(ss == primitiveTestName){
+							//				 return primitiveMap
+						}else{
+							def ss = "${it.attribute('name')}"
+							if(ss == primitiveTestName){
+							}
 						}
 					}
 				}
 			}
+		} catch (Exception e) {
+			primitiveMap = null
+			e.printStackTrace()
 		}
 		return primitiveMap
 	}
+
 
 	public void savePausedExecutionStatus(def exId){
 		try {
@@ -2350,7 +2706,7 @@ class JobSchedulerService implements Job{
 
 	}
 
-	public void saveNoScriptAvailableStatus(def executionInstance , def executionDevice , def scriptName , def deviceInstance, String reason){
+	public void saveNoScriptAvailableStatus(def executionInstance , def executionDevice , def scriptName , def deviceInstance, String reason, def category){
 		try{
 			ExecutionResult.withTransaction { resultstatus ->
 				try {
@@ -2361,6 +2717,7 @@ class JobSchedulerService implements Job{
 					executionResult.device = deviceInstance?.stbName
 					executionResult.status = Constants.SKIPPED_STATUS
 					executionResult.dateOfExecution = new Date()
+					executionResult.category = category
 					executionResult.executionOutput = "Test not executed. Reason : "+reason
 					if(! executionResult.save(flush:true)) {
 						log.error "Error saving executionResult instance : ${executionResult.errors}"
@@ -2459,4 +2816,115 @@ class JobSchedulerService implements Job{
 		String finalresp = build.toString()
 		finalresp
 	}
+
+	def isTclScriptExists(String realPath, String fileName){
+		def isExists = false
+		def tcl = getTclFilePath(realPath, fileName)
+		if(tcl){
+			isExists = true
+		}
+		isExists
+	}
+
+	def getTclFilePath(String realPath, String fileName){
+		def filePath = realPath + FILE_SEPARATOR +  "fileStore" + FILE_SEPARATOR + FileStorePath.RDKTCL.value()
+		File[] tcl = new File(filePath).listFiles(new FileFilter(){
+					boolean accept(File file) {
+						file.name.endsWith(fileName+".tcl")
+					};
+				})
+		if(tcl.length == 1){
+			return tcl[0]?.absolutePath
+		}
+		return null
+	}
+
+	def getTclDirectory(String realPath) {
+		realPath + FILE_SEPARATOR +  "fileStore" + FILE_SEPARATOR + FileStorePath.RDKTCL.value()
+	}
+
+	def isConfigFileExists(def realPath, def deviceName){
+		def isExists = false
+		def filePath = realPath + FILE_SEPARATOR +  "fileStore" + FILE_SEPARATOR + FileStorePath.RDKTCL.value()
+		File[] tcl = new File(filePath).listFiles(new FileFilter(){
+					boolean accept(File file) {
+						file.name.endsWith(deviceName+".txt")
+					};
+				})
+		if(tcl.length == 1){
+			isExists = true
+		}
+		isExists
+	}
+
+	def getConfigFilePath(String realPath, String deviceName){
+		def filePath = realPath + FILE_SEPARATOR +  "fileStore" + FILE_SEPARATOR + FileStorePath.RDKTCL.value()
+		File[] tcl = new File(filePath).listFiles(new FileFilter(){
+					boolean accept(File file) {
+						file.name.endsWith(deviceName+".txt")
+					};
+				})
+		if(tcl.length == 1){
+			return tcl[0]?.absolutePath
+		}
+		return null
+	}
+
+
+	/**
+	 * Updating the execution results  
+	 * 
+	 */
+	public void updateTclExecutionResults(def params){
+		try {
+			String actualResult = params.resultData
+			if(actualResult){
+				ExecutionResult.withTransaction {
+					ExecutionResult executionResult = ExecutionResult.findById(params.execResult)
+					if(executionResult){
+						ExecuteMethodResult executionMethodResult = new ExecuteMethodResult()
+						if(params.resultStatus?.equals( STATUS_NONE ) || params.resultStatus == null ){
+							executionMethodResult.status = actualResult
+						}
+						else{
+							executionMethodResult.executionResult = executionResult
+							executionMethodResult.expectedResult = params.expectedResult
+							executionMethodResult.actualResult = actualResult
+							executionMethodResult.status = params.resultStatus
+						}
+						executionMethodResult.functionName = params.testCaseName
+						executionMethodResult.category = executionResult?.category
+						executionMethodResult.save(flush:true)
+
+						executionResult?.addToExecutemethodresults(executionMethodResult)
+						executionResult.executionOutput = params.outputData
+						executionResult.executionTime = params.singleScriptExecTime
+						executionResult?.save(flush:true)
+
+						Execution execution = Execution.findById(params.execId)
+						ExecutionDevice execDeviceInstance = ExecutionDevice.findById(params.execDevice)
+						if(!executionResult?.status.equals( FAILURE_STATUS )){
+							executionResult?.status = params.resultStatus
+							executionResult?.save(flush:true)
+							if(!execution.result.equals( FAILURE_STATUS )){
+								execution.result = params.resultStatus
+								execution.outputData = params.outputData
+								execution.executionTime = params.singleScriptExecTime
+								execution.save(flush:true)
+							}
+							if(!execDeviceInstance.status.equals( FAILURE_STATUS )){
+								execDeviceInstance?.addToExecutionresults(executionResult)
+								execDeviceInstance?.status = params.resultStatus
+								execDeviceInstance.executionTime = params.singleScriptExecTime
+								execDeviceInstance?.save(flush:true)
+							}
+						}
+					}
+				}
+			}
+		}catch(Exception ex){
+			ex.printStackTrace()
+		}
+	}
+
 }

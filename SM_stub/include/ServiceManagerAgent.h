@@ -146,6 +146,11 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		// DisplaySettings Service callMethod APIs
 		bool SM_DisplaySetting_SetZoomSettings(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_DisplaySetting_SetCurrentResolution(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_DisplaySetting_GetConnectedAudioPorts(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_DisplaySetting_GetSupportedAudioPorts(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_DisplaySetting_GetSupportedAudioModes(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_DisplaySetting_GetSoundMode(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_DisplaySetting_SetSoundMode(IN const Json::Value& req, OUT Json::Value& response);
         	// DeviceSettingService callMethod APIs
 		bool SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& req, OUT Json::Value& response);
 		// ScreenCaptureService callMethod APIs

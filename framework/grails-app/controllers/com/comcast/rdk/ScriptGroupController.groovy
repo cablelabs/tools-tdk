@@ -605,10 +605,17 @@ class ScriptGroupController {
 	 * @return
 	 */
 	def createScript() {
-		//		def primitiveTestList = PrimitiveTest.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])//PrimitiveTest.list([order: 'asc', sort: 'name'])
-		def primitiveTestList = primitiveService.getPrimitiveList(getRealPath(), params?.category)
-		def lis = primitiveTestList.toList()
-		Collections.sort(lis)
+		def primitiveTestList
+		def lis
+		if(params?.category?.toString().equals(RDKV) || params?.category?.toString().equals(RDKV)){
+			//		def primitiveTestList = PrimitiveTest.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])//PrimitiveTest.list([order: 'asc', sort: 'name'])
+			primitiveTestList = primitiveService.getPrimitiveList(getRealPath(), params?.category)
+			lis = primitiveTestList.toList()
+			Collections.sort(lis)
+		}else{
+			primitiveTestList = []
+			lis = []
+		}
 		[ primitiveTestList : lis, category: params?.category]
 	}
 
@@ -664,21 +671,22 @@ class ScriptGroupController {
 		if(content && script){
 			def file = Utility.getTclFilePath(getRealPath(), script)
 			try{
+				
 				if(file){
 					Utility.writeContentToFile(content, file)
-					removeLock(script)
+					//removeLock(script)
 					flash.message = message(code: 'default.updated.message', args: [
 						message(code: 'script.label', default: 'Script'),
 						params.scriptName])
 				}
 				else{
-					removeLock(script)
+					//removeLock(script)
 					flash.error = 'File ${script} not found.'
 				}
 			}
 			catch(Exception e){
 				e.printStackTrace()
-				removeLock(script)
+				//removeLock(script)
 				flash.error = "Error occured while updating. Please try again."
 			}
 		}
@@ -2731,6 +2739,7 @@ class ScriptGroupController {
 	 * Function for suite clean up with not available scripts
 	 * @return
 	 */
+	
 	def verifyScriptGroup(){
 		boolean value = true
 		try{
@@ -2738,11 +2747,20 @@ class ScriptGroupController {
 			ScriptGroup sg = ScriptGroup?.findByName(params?.name)
 			def rPath = getRealPath()
 			List removeList = []
+			if(sg?.category?.toString()?.equals(RDKB) || sg?.category?.toString()?.equals(RDKV)){
 			sg?.scriptList.each { script ->
 				Map scriptInstance1 = scriptService.getScript(rPath,script?.moduleName, script?.scriptName, params?.category)
 				if(scriptInstance1 == null || scriptInstance1?.keySet()?.size() ==  0){
 					removeList.add(script)
 				}
+			}
+			}else if(sg?.category?.toString()?.equals(RDKB_TCL)){	
+				sg?.scriptList?.each{ tclScript ->
+					def content = scriptService?.getTclScript(rPath,tclScript?.toString())
+					if(!content){
+						removeList.add(tclScript)
+					}
+				}			 
 			}
 			if(removeList?.size() > 0){
 				def sGroup = ScriptGroup.findByName(params?.name)
@@ -2756,7 +2774,6 @@ class ScriptGroupController {
 		}
 		render  new Gson().toJson(value)
 	}
-	
 	def verifyAllScriptGroups(){		
 		long time1 = System.currentTimeMillis();
 		def sgList = ScriptGroup.findAll()
@@ -2768,7 +2785,8 @@ class ScriptGroupController {
 			def scriptListRDKV = scriptService.getScriptNameList(request.getRealPath("/"),RDKV)
 			scriptListRDKV = scriptListRDKV?scriptListRDKV:[]			
 			def scriptListRDKB=  scriptService.getScriptNameList(request.getRealPath("/"),RDKB)
-			scriptListRDKB = scriptListRDKB?scriptListRDKB:[]			
+			scriptListRDKB = scriptListRDKB?scriptListRDKB:[]
+			def tclScriptList = scriptService.getTCLNameList(request.getRealPath("/"))		
 			sgList?.each { scriptGroup ->
 				def rPath = getRealPath()
 				scriptGroup?.scriptList?.each{ script->
@@ -2781,14 +2799,18 @@ class ScriptGroupController {
 							removeList.add(script)
 
 						}
-					}
+					}else if(scriptGroup?.category?.toString().equals(RDKB_TCL)){
+						if(!(tclScriptList?.toString()?.contains(script?.toString()))){
+							removeList.add(script)
+						}
+					}					
 				}
 				if(removeList?.size() > 0 ){
 					def sGroup = ScriptGroup.findByName(scriptGroup?.name)
-					removeList.each{					
-						sGroup.scriptList.remove(it)
-					}
-				//	sGroup.scriptList.removeAll(removeList)
+					//removeList.each{					
+					//	sGroup.scriptList.remove(it)
+					//}
+					sGroup.scriptList.removeAll(removeList)
 					sGroup.category = Utility.getCategory(scriptGroup?.category?.toString())
 					sGroup.save(flush:true)
 				}
@@ -2803,35 +2825,20 @@ class ScriptGroupController {
 		redirect( action :"list")	
 	}	
 	
-	//-----------------------------------------------------------------------------------------------------
 	/**
-	 * function for shows the create tcl script UI 
-	 * @return
-	 *//*
-	
-	def createTclScript(){
-		[  category: params?.category]		
-	}
-	*//**
 	 * function for saving the tcl script
-	 *//*
+	 */
 	def saveTclScript(){
 		def filePath = getRealPath() + FILE_SEPARATOR +  "fileStore" + FILE_SEPARATOR + FileStorePath.RDKTCL.value()
 		String content =  params.scriptArea
 		def scriptName = params.name
 		def saveScript = ""
 		def requestGetRealPath = request.getRealPath("/")
-		//def  tclScriptList= scriptService?.getTCLNameList(requestGetRealPath) // issue is there 
-		
-		if(!scriptName){
-			flash.message = "Please enter the script name"
-		}else if(!content){
-			flash.message = "Script content  empty"
+		def  tclScriptList= scriptService?.getTCLNameList(requestGetRealPath)
+		if(tclScriptList?.toString()?.contains(scriptName?.trim()?.toString()) &&  scriptName && content){
+			flash.message = "Duplicate Script Name not allowed. Try Again"
 		}
-		//else if(tclScriptList?.toString()?.contains(scriptName?.trim())){ 
-		//	flash.message = "Duplicate Script Name not allowed. Try Again"
-		//}
-		else{			
+		else if (scriptName && !content?.trim()?.isEmpty() ){
 			File dir = new File( filePath)
 			if(!dir.exists()){
 				dir.mkdirs()
@@ -2844,49 +2851,196 @@ class ScriptGroupController {
 				file.write(content)
 				saveScript = TRUE
 			}
-		}
-		def sName = params?.name
-		if(saveScript?.equals(TRUE)){
-			//flash.message = scriptName+" saved successfully"		
-			render(message(code: 'default.created.message', args: [
+			def sName = params?.name
+			if(saveScript?.equals(TRUE)){
+				def script = ScriptFile.findByScriptNameAndModuleName(params?.name?.trim(),'tcl')
+				if(script == null){
+					script = new ScriptFile()
+					script.setScriptName(params?.name)
+					script.setModuleName("tcl")
+					script.category = Utility.getCategory(params?.category)
+					script?.save(flush:true)
+				}
+				scriptService.updateScript(script, params?.category)
+				updateTclScriptGroup(script, params?.category)
+				flash.message = message(code: 'default.created.message', args: [
 				message(code: 'script.label', default: 'Script'),
-				sName
-			]))
-			//redirect(action: "list")
-		}else {
-			flash.message = scriptName+"  not saved "
-			redirect(action: "list")
+				scriptName])
+			}else {
+				flash.message = message(code: 'default.not.created.message', args: [
+				message(code: 'script.label', default: 'Script'),
+				scriptName])
+			}
+		}else if (!scriptName && content){
+			flash.message = "Please enter the script name"
+		}else if (content?.trim()?.isEmpty()){
+			flash.message = "Script content  empty"
 		}
-		//redirect(action: "list")
+		redirect(action: "list")
 	}
-	*//**
-	 * Before fetching the tcl script 
-	 * @return
-	 *//*
 	
-	def fetchTclScript(){		
-		def scriptInstanceList = []
-		 scriptInstanceList = scriptService?.getTCLNameList(getRealPath())	
-		 def scriptInstanceList1 = scriptInstanceList		
-		scriptInstanceList1.add(params.scriptName)
-		render scriptInstanceList1 as JSON
-		
+	
+	/**
+	 * Function for deleting TCL script to UI
+	 * @return
+	 */
+	def deleteTCLScript(){
+		boolean isTcl = false
+		File file = null
+		if(params?.category?.toString()?.equals(RDKB_TCL)){
+			isTcl = true
+		}
+		def dirName = 'tcl'
+		def fileName = params.id
+		def scriptObj = ScriptFile?.findByScriptNameAndCategory(fileName,Category?.RDKB_TCL)
+		if(!scriptObj){
+			flash.message = "Script not found"
+			render("Not found")
+		}else{
+			boolean scriptInUse = false
+			if(isTcl){
+				file = new File(getTestScriptPath(scriptObj?.category.toString())+FILE_SEPARATOR +fileName+".tcl")
+				scriptInUse = false
+				scriptService.deleteScript(scriptObj, scriptObj?.category?.toString())
+				deleteTclScriptFromScriptGroup(scriptObj, params?.category)
+				
+			}
+			if(scriptInUse){
+				flash.message = "Can't Delete. Scripts may be used in Script Group"
+				render("Exception")
+			}			
+		}
+		if(file != null && file.exists()){
+			try {
+				def fileDelete = file?.delete()
+				if(fileDelete){
+					flash.message = "Deleted the script '${fileName}'"
+					render("success")
+				}else{
+					flash.message = "Failed to delete the script '${fileName}'"
+					render("failure")
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+		}else{
+			flash.message = "Failed to delete the script '${fileName}'"
+			render("failure")
+		}
 	}
-	*//**
-	 * after fetching the tcl script
+	
+	/**
+	 * Update TCL script from script group 
+	 */
+	def updateTclScriptGroup( final def script  , final def category){
+		if(category?.toString()?.equals(RDKB_TCL)){
+			try{
+				def moduleName = "TCL_SCRIPTS"
+				def scriptGrpInstance = ScriptGroup.findByName(moduleName)
+				if(scriptGrpInstance == null){
+					scriptGrpInstance = new ScriptGroup()
+					scriptGrpInstance.name = moduleName
+					scriptGrpInstance.scriptList = []
+					scriptGrpInstance.category = Utility.getCategory(category)
+					scriptGrpInstance?.save()
+				}	
+				if(!scriptGrpInstance?.scriptList?.toString().contains(script?.toString())){
+					scriptGrpInstance?.addToScriptList(script)
+				}
+			}
+			catch(Exception e){
+				println " ERROR "+e.getMessage()
+			}
+		}
+	}
+	/**
+	 * delete script from tcl Script group 
+	 */
+	def deleteTclScriptFromScriptGroup(final def script, final def category){		
+		if(category?.toString()?.equals(RDKB_TCL)){
+			try{
+				def suiteName = "TCL_SCRIPTS"
+				def scriptGrpInstance = ScriptGroup?.findByNameAndCategory(suiteName,category)				
+				if(scriptGrpInstance){
+					scriptGrpInstance?.scriptList?.each { scriptInstance ->
+						if(scriptInstance?.toString()?.equals(script?.toString())){
+							//scriptGrpInstance?.removeFromScriptList(scriptInstance)
+							scriptGrpInstance.scriptList?.remove(scriptInstance)
+						}
+					}
+				}
+			}catch(Exception e){				
+				e.printStackTrace()
+			}
+		}		
+	}
+	/**
+	 * REST API : for retrives execution time out for given script
+	 *    - The following sceanrios validating
+	 *    1) script name available or not 
+	 *    2)  valid script name or not 
+	 *    3) If valid script name returns jsons output like 
+	 *     {"ScriptName":"Recorder_RMF_Rec_NotOrphaned_StartedLate_Legacy_2071","ExecutionTimeOut":100}    
+	 * @param scriptName
 	 * @return
-	 *//*
-	def fetchTclScriptWithScriptName(){
-		def scriptInstanceList = []
-		 scriptInstanceList = scriptService?.getTCLNameList(getRealPath())			
-		def scriptName = params?.scriptName	
-		scriptInstanceList.add(scriptName)
-		render scriptInstanceList as JSON		
-		
-	}	
-	*/
-	
-//------------------------------------------------------------------------------------------
-	
+	 */
+	def getScriptTimeout(String scriptName){		
+		JsonObject jsonOutData = new JsonObject()
+		try{
+			if(scriptName){
+				def scriptListRDKV = scriptService.getScriptNameList(request.getRealPath("/"), RDKV)
+				def scriptListRDKB = scriptService.getScriptNameList(request.getRealPath("/"), RDKB)
+				def scriptNameListTCL = scriptService.getTCLNameList(request.getRealPath("/"))
+				def category
+				def moduleDirName
+				if(scriptListRDKV?.toString()?.contains(scriptName)){
+					category = RDKV
+				}else if(scriptListRDKB?.toString()?.contains(scriptName)){
+					category = RDKB
+				}else if(scriptNameListTCL?.toString()?.contains(scriptName)){
+					category = RDKB_TCL
+				}
+				if(category?.toString()?.equals(RDKV) || category?.toString()?.equals(RDKB)){
+					def scriptsMaps = scriptService?.getScriptsMap(request.getRealPath("/"),category)
+					scriptsMaps?.each{
+						if(it?.value?.toString()?.contains(scriptName)){
+							moduleDirName = it.key
+						}
+					}
+					if(moduleDirName){
+						def script =  scriptService?.getScript(request.getRealPath("/"),moduleDirName ,scriptName , category)
+						if(script){
+							jsonOutData.addProperty("ScriptName", script.name)
+							jsonOutData.addProperty("ExecutionTimeOut",script.executionTime)
+						}else{
+							jsonOutData.addProperty("Status", "FAILED")
+							jsonOutData.addProperty("Remarks", "No script found with name  "+ scriptName)
+						}
+					}
+				}else if(category?.toString()?.equals(RDKB_TCL)){
+					def tclScript = scriptService?.getTclScript(request.getRealPath("/"), scriptName)
+					if(tclScript){
+						jsonOutData.addProperty("Status", "FAILED")
+						jsonOutData.addProperty("Remarks", "No  execution time out available in TCL scripts")
+					}else{
+						jsonOutData.addProperty("Status", "FAILED")
+						jsonOutData.addProperty("Remarks", "No script found with name  "+ scriptName)
+					}
+				}else{
+					jsonOutData.addProperty("Status", "FAILED")
+					jsonOutData.addProperty("Remarks", "No script found with name  "+ scriptName)
+				}
+			}else{
+			jsonOutData.addProperty("Status", "FAILED")
+			jsonOutData.addProperty("Remarks", "No Script Name available" )
+			
+				
+			}
+		}catch(Exception e){
+			println "ERROR "+e.getMessage()
+			e.printStackTrace()
+		}
+		render jsonOutData
+	}
 }
 

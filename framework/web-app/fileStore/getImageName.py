@@ -46,7 +46,7 @@ def getImageName(deviceIP,devicePort):
 
 	try:
 		tcpClient = getSocketInstance(deviceIP)
-        	tcpClient.connect(deviceIP, devicePort)
+		tcpClient.connect((deviceIP, devicePort))
 
        		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'getImageName'}
      		query = json.dumps(jsonMsg)

@@ -50,6 +50,7 @@ class ModuleController {
         params.max = Math.min(max ?: 10, 100)
 		def groupsInstance = utilityService.getGroup()
 		def category = getCategory(params?.category)
+	
 		def moduleInstanceList = getModuleList(groupsInstance, params)
 		def moduleInstanceListCnt = getModuleCount(groupsInstance, category)
         [moduleInstanceList: moduleInstanceList, moduleInstanceTotal: moduleInstanceListCnt, category:params?.category]
@@ -252,16 +253,14 @@ class ModuleController {
 		}
         redirect(action: "create", params:[category:params?.category])
     */
-		
+	def functionInstance = new Function(params)
 	Function.withTransaction { status ->
-		try{
-			def functionInstance = new Function(params)
+		try{			
 			if (!functionInstance.save(flush: true)) {
-				def map = create()
-				map.put('functionInstance', functionInstance)
-				flash.message = message(code: 'default.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
-				render(view: "create", model: map)
+				flash.message = message(code: 'default.not.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
 				return
+			}else{
+			flash.message = message(code: 'default.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
 			}
 		}		
 		catch(Exception e){
@@ -270,7 +269,7 @@ class ModuleController {
 			flash.message = message(code: 'default.not.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
 		}
 	}
-	redirect(action: "create", params:[category:params?.category])
+	redirect(action: "createFunction", params:[category:params?.category])
 	}
     
     /**
@@ -302,8 +301,7 @@ class ModuleController {
 				def parameterTypeInstance = new ParameterType(params)
 				if (!parameterTypeInstance.save(flush: true)) {				
 					flash.message = message(code: 'default.not.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])
-					render(view: "create", model:['parameterTypeInstance': parameterTypeInstance])
-					
+					render(view: "create", model:['parameterTypeInstance': parameterTypeInstance])					
 					return
 				}else{				
 				flash.message = message(code: 'default.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])				
@@ -312,9 +310,8 @@ class ModuleController {
 				e.printStackTrace()
 				println "ERROR "+e.getMessage()
 			}	
-		redirect(action: "create", params:[category:params?.category])
+		redirect(action: "createParameter", params:[category:params?.category])
 		}
-	
 	def updateTimeOut(){
 		try{			
 			Module moduleInstance = Module.findById(params?.moduleId)
@@ -623,7 +620,6 @@ class ModuleController {
 			}
 		}
 	}
-	
 	private Category getCategory(def category){
 		return Category.valueOf(category)
 	}

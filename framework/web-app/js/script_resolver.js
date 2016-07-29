@@ -30,10 +30,10 @@ $(document).ready(function() {
 				hideSearchoptions();
 				createScriptForm('RDKB');
 			}, 
-			/*'add_scriptTCL' : function(node) {
+			'add_scriptTCL' : function(node) {
 				hideSearchoptions();
 				createTCLScriptForm('RDKB_TCL');
-			}, */			
+			},			
 			'download_script' : function(node){
 				downloadScriptList();	
 			},
@@ -179,12 +179,9 @@ function getScriptsList(val, scriptGroup, scriptInstanceTotal, totalScripts){
 			displayedGroups.push(group);
 			$.get('getScriptsList', {group: scriptGroup},function(data) {
 				var val = JSON.parse(data);
-				var displayHtml = "";
-				
-				var scriptGroupCount = 0;
-				
-				for(key in val){
-					
+				var displayHtml = "";				
+				var scriptGroupCount = 0;				
+				for(key in val){					
 					var elem = val[key];
 					displayHtml= displayHtml+				
 						'<li><span  id="' + elem["moduleName"] + '@' + elem["scriptName"] + '"><a href="#" onclick="editScript(' + "'" + elem["moduleName"] + '@' + 
@@ -412,8 +409,12 @@ function createSG() {
 }
 function createScriptForm(category) {
 	checkAnyEditingScript();
+	$("#up_load").hide();
+	$("#up_load_rdkv_script").hide();	
+	$("#up_load_rdkb_script").hide();
 	$("#list-scriptDetails").hide();
 	$("#list-scriptDetails1").hide();
+
 	$("#responseDiv123").show();
 	$.get('createScript', {category:category}, function(data) { $("#responseDiv").html(data); });
 }
@@ -425,11 +426,15 @@ function createScriptForm(category) {
  */
 function createTCLScriptForm(category) {
 	checkAnyEditingScript();
+	$("#up_load_rdkv_script").hide();	
+	$("#up_load_rdkb_script").hide();
 	$("#list-scriptDetails").hide();
 	$("#list-scriptDetails1").hide();
-	$("#responseDiv123").show();
-	$.get('createTclScript', {category:category}, function(data) { $("#responseDiv").html(data); });
+	$.get('createScript', {category:category}, function(data) { 
+		$("#responseDiv").html(data);		
+	});
 }
+
 function editScript(id , category ) {
 	if(category.trim() !== 'RDKB_TCL'){
 		hideUploadOption();
@@ -471,7 +476,7 @@ function removeScript(id){
 }
 */
 
-function removeScript(id){
+/*function removeScript(id){
 	if(id.contains('@')){
 		checkAnyEditingScript();
 		$("#currentScriptId").val("");
@@ -480,16 +485,21 @@ function removeScript(id){
 	else{
 		alert('Script cannot be deleted');
 	}
-}
+}*/
 
 function removeScript(id, category){
+	
 	if(id.contains('@')){
 		checkAnyEditingScript();
 		$("#currentScriptId").val("");
 		$.get('deleteScript', {id: id, category:category}, function(data) { document.location.reload();  });
+	}else if(category === 'RDKB_TCL'){
+		$.get('deleteTCLScript', {id: id, category:category}, function(data) { document.location.reload();  });
 	}
 	else{
 		alert('Script cannot be deleted');
+		//$.get('deleteScript', {id: id, category:category}, function(data) { document.location.reload();  });
+		
 	}
 }
 
@@ -646,7 +656,7 @@ function updateScriptListWithScriptName(scriptName){
 		if(data!=""){
 			if($("#isScriptExist").val()==""){
 				$("#currentScriptId").val(data);
-				setTimeout(function(){location.reload();editScript()},1000);
+				setTimeout(function(){location.reload();tclScriptDisplay()},1000);
 			}
 			$("#isScriptExist").val("");
 		}
@@ -667,8 +677,8 @@ function isScriptExist(scriptName){
 	});
 }
 
+
 function showSkipRemarks(me){
-	//issue fix
 	if (me.checked) {
 		$("#skipRemarks").show();
 		$("#skipReason").show();
@@ -733,7 +743,9 @@ function cancelTclEdit(scriptName){
 	$.get('removeEditLock', {scriptName: scriptName}, function(data) {
 	});
 }
+
 function updateTclContents(scriptName){
+
 	var content = document.getElementById('tclText').value;
 	if(content){
 		if(content.trim() !== ''){
@@ -759,8 +771,7 @@ function clearLock(scriptName){
 	});
 }
 
-function showSkipRemarksLabel(){
-	
+function showSkipRemarksLabel(){	
 	$("#skipRemarks123").hide();
 	$("#skipReason123").hide();
 }
@@ -826,41 +837,3 @@ function cleanUpTestSuite(name ,  category){
 function cleanUp(){
 	alert("Please wait, Suite clean up will take some time. ")
 }
-
-
-/*
-function isTclScriptExist(scriptName){
-	alert("here and only here ");
-	var category = document.getElementById("category").value;
-	alert(category);
-	$.get('fetchTclScript', {scriptName: scriptName, category:category}, function(data) {
-		if(data!=""){
-			$("#isTclScriptExist").val(data);
-		}
-		$("#scriptMessageDiv").show();
-	});
-}
-
-
-function updateTclScriptListWithScriptName(scriptName){
-	var category = document.getElementById('category').value.trim()
-	$.get('fetchTclScriptWithScriptName', {scriptName: scriptName,category:category}, function(data) {
-		if(data!=""){
-			alert(data);
-			if($("#isScriptExist").val()==""){
-				$("#currentScriptId").val(data);
-				setTimeout(function(){location.reload();},1000);
-			}
-			$("#isScriptExist").val("");
-		}
-		$("#scriptMessageDiv").show();
-	});
-}
-*/
-
-
-
-
-
-
-

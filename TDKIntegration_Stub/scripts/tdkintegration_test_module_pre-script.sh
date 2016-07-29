@@ -12,7 +12,7 @@
 TARGET_PATH=/opt
 SCRIPT_PATH=$TDK_PATH
 LOG_PATH=$TDK_PATH/logs
-#LOGFILE=tdkintegration_testmodule_prereq_details.log
+LOGFILE=tdkintegration_testmodule_prereq_details.log
 
 mkdir -p $LOG_PATH
 #removing old configuring status from the opt
@@ -68,4 +68,22 @@ echo "Found : $jsonlocationvalue"
 #else
 #	echo "xre not stopped"
 #fi
-                                                                                                                                
+#Check if rmfstreamer is running andad to Log file if Failure
+#removing old configuring status from the opt
+rm $LOG_PATH/$LOGFILE
+echo "Going to check rmfStreamer"
+VALUE=0
+ps -ef | grep rmfStreamer | grep -v grep
+if [[ "$?" = "$VALUE" ]]; then
+    echo "rmfStreamer  running"        
+else
+    ps | grep rmfStreamer | grep -v grep
+    if [[ "$?" = "$VALUE" ]]; then
+        echo "rmfStreamer  running"
+    else
+        echo "rmfStreamer not running"
+        touch $LOG_PATH/$LOGFILE
+        echo "FAILURE<details>RMF_STREAMER_NOT_RUNNING" > $LOG_PATH/$LOGFILE
+        exit 1
+    fi
+fi                                                                                                                                

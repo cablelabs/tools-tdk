@@ -54,6 +54,8 @@ class ScriptService {
 	
 	def scriptgroupService
 	
+	def grailsApplication
+	
 	def updateScript(def script){
 		scriptsList.add(script)
 		scriptNameList.add(script?.scriptName)
@@ -77,7 +79,18 @@ class ScriptService {
 			scriptGroupMap.put(script?.moduleName,list)
 		}
 		list.add(script?.scriptName)
-		
+		if(category?.toString().equals("RDKB_TCL")){	
+			def scriptFile
+			ScriptFile.withTransaction {
+				scriptFile  = ScriptFile.findByScriptNameAndCategory(script?.scriptName, Category.RDKB_TCL)
+				  if(scriptFile == null) {
+					  scriptFile = new ScriptFile(scriptName:script?.scriptName, category:Category.RDKB_TCL,moduleName:"tcl" )
+					  scriptFile.save()
+				  }
+			  }
+			tclNameList.add(script?.scriptName)
+			tclScriptsList.add(scriptFile)
+		} 	
 		scriptMapping.put(script?.scriptName,script?.moduleName)
 	}
 	
@@ -107,10 +120,7 @@ class ScriptService {
 		scriptMapping.remove(oldName)
 		scriptMapping.put(newScript?.scriptName,newScript?.moduleName)
 	}
-	
-	def updateScriptNameChange(def oldName , def newScript, def category){
-		//scriptNameList.add(oldName)
-		//scriptNameList.add(newScript?.scriptName)
+	def updateScriptNameChange(def oldName , def newScript, def category){		
 		def scriptnamelist =  scriptNameListMap.get(category)
 		scriptnamelist.add(newScript?.scriptName)
 		scriptnamelist.remove(oldName)
@@ -161,6 +171,11 @@ class ScriptService {
 		if(!CollectionUtils.isEmpty(list)){
 			list.remove(script?.scriptName)
 		}
+		if(category?.toString()?.equals("RDKB_TCL")){			
+			def scriptFile  = ScriptFile.findByScriptNameAndCategory(script?.scriptName, Category.RDKB_TCL)
+			tclNameList.remove(script?.scriptName)
+			tclScriptsList.remove(scriptFile)			
+		}
 		scriptMapping.remove(script?.scriptName?.toString().trim())
 	}
 
@@ -179,25 +194,27 @@ class ScriptService {
 			]
 			def start = System.currentTimeMillis()
 			['testscriptsRDKV', 'testscriptsRDKB'].each{ fileStorePath ->
-				dirList.each{ directory ->
-					File scriptsDir = new File( "${realPath}//fileStore//$fileStorePath//"+directory+"//")
-					if(scriptsDir.exists()){
-						def modules = scriptsDir.listFiles()
-
-						//Arrays.sort(modules);
-
-						modules.each { module ->
-							def category = null
-							if("testscriptsRDKV".equals(fileStorePath)){
-								category = "RDKV"
+		
+					dirList.each{ directory ->
+						File scriptsDir = new File( "${realPath}//fileStore//$fileStorePath//"+directory+"//")
+						if(scriptsDir.exists()){
+							def modules = scriptsDir.listFiles()
+							//Arrays.sort(modules);
+							
+							modules.each { module ->
+								def category = null
+								if("testscriptsRDKV".equals(fileStorePath)){
+									category = "RDKV"
+								}
+								else if("testscriptsRDKB".equals(fileStorePath)){
+									category = "RDKB"
+								}
+								initialize( module, updateReqd, realPath, category)
 							}
-							else if("testscriptsRDKB".equals(fileStorePath)){
-								category = "RDKB"
-							}
-							initialize( module, updateReqd, realPath, category)
 						}
-					}
-				}
+					
+			
+			}
 			}
 			//removeOrphanScriptFile(realPath,scriptFileList, scriptsList)
 			initializeTCLScripts("${realPath}//fileStore//"+FileStorePath.RDKTCL.value())
@@ -205,6 +222,7 @@ class ScriptService {
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
+		
 		return scriptsList
 	}	
 	
@@ -260,11 +278,11 @@ class ScriptService {
 				/*if(!scriptNameList.contains(name)){
 					scriptNameList.add(name)
 				}*/
+			
 				if(updateReqd == true){
 					updateDefaultScriptGroups(realPath,name,module?.getName(), category)
 				}
 			}
-
 			sLst?.sort()
 			scriptGroupMap.put(module?.getName(), sLst)
 		} catch (Exception e) {
@@ -378,7 +396,6 @@ class ScriptService {
 				def sgId = []
 				boolean flag = false
 				scriptGroups?.each{ scriptGrp ->
-					println 'scriptGrp : '+scriptGrp?.name
 					flag = true
 					def sList = sgMap.get(scriptGrp?.name)
 					if(sList == null){
@@ -534,11 +551,14 @@ class ScriptService {
 	}
 	
 	private void initializeTCLScripts(final String path) {
+		tclScriptsList = [] 
+		tclNameList = []
 		def tclPath = path?.trim()
 		def tclFiles = new File(tclPath).listFiles(new FileFilter(){
 					boolean accept(File file) {
 						def fileName = file.name
-						return fileName.startsWith("TC") && fileName.endsWith(".tcl")
+						//return fileName.startsWith("TC") && fileName.endsWith(".tcl")
+						return fileName.endsWith(".tcl")
 					}
 				})
 		tclFiles.each { tclFile ->
@@ -547,8 +567,11 @@ class ScriptService {
 			ScriptFile.withTransaction {
 			  scriptFile  = ScriptFile.findByScriptNameAndCategory(fileName, Category.RDKB_TCL)
 				if(scriptFile == null) {
-					scriptFile = new ScriptFile(scriptName:fileName, category:Category.RDKB_TCL,moduleName:"tcl" )
-					scriptFile.save()
+					//scriptFile = new ScriptFile(scriptName:fileName, category:Category.RDKB_TCL,moduleName:"tcl" )
+					scriptFile?.scriptName =fileName?.toString()
+					scriptFile?.category = Category.RDKB_TCL
+					scriptFile?.moduleName = "tcl" 
+					scriptFile?.save()
 				}
 			}
 			tclScriptsList.add(scriptFile)
@@ -767,10 +790,10 @@ class ScriptService {
 				script.put("skip", getBooleanValue(node.skip.text()))
 				script.put("remarks",node?.remarks?.text())
 				script.put("longDuration", getBooleanValue(node.long_duration.text()))
+				
 				def nodePrimitiveTestName = node.primitive_test_name.text()
 				def primitiveMap = primitiveService.getPrimitiveModuleMap(realPath)
-				def moduleName1 = primitiveMap.get(nodePrimitiveTestName)
-				
+				def moduleName1 = primitiveMap.get(nodePrimitiveTestName)				
 				def moduleObj1 = Module.findByName(dirName)
 				def primitiveDirName = Constants.COMPONENT
 				if(moduleObj){
@@ -795,6 +818,8 @@ class ScriptService {
 				Set btSet = node?.box_types?.box_type?.collect{ it.text() }
 				Set versionSet = node?.rdk_versions?.rdk_version?.collect{ it.text() }
 				Set scriptTagSet = node?.script_tags?.script_tag?.collect{ it.text() }
+				
+				
 				btSet.each { bt ->
 					btList.add(BoxType.findByNameAndCategory(bt, category))
 				}
@@ -889,9 +914,7 @@ class ScriptService {
 					scriptContent = scriptContent + line.get(indx)+"\n"
 					indx++
 				}
-			}
-			
-			
+			}		
 			String xml = s
 			XmlParser parser = new XmlParser();
 			def node = parser.parseText(xml)
@@ -915,7 +938,7 @@ class ScriptService {
 		}
 		return script
 	}
-	 
+	
 	def getStatus(def statusText){
 		Status status = Status.NOT_FOUND
 		if(statusText){
@@ -994,7 +1017,7 @@ class ScriptService {
 			List scriptList = []
 			boolean updateReqd = isDefaultSGUpdateRequired(realPath)
 			[FileStorePath.RDKB.value(), FileStorePath.RDKV.value()].each{  path ->
-
+				
 				def category
 				if(path.equals(FileStorePath.RDKB.value())){
 					category = Category.RDKB.toString()
@@ -1012,8 +1035,6 @@ class ScriptService {
 						def modules = scriptsDir.listFiles()
 						Arrays.sort(modules);
 						modules.each { module ->
-
-
 							def start1 =System.currentTimeMillis()
 							try {
 								File [] files = module.listFiles(new FilenameFilter() {
@@ -1090,13 +1111,15 @@ class ScriptService {
 					}
 				}
 			}
+			
+			initializeTCLScripts(realPath)
+		
 		} catch (Exception e) {
 			log.error  "Error"+e.getMessage()
 			e.printStackTrace()
 		}
 		return value1
-	}
-	
+	}	
 	
 	/***
 	 * Returns the fileName
@@ -1121,13 +1144,11 @@ class ScriptService {
 				path = path + FILE_SEPARATOR + FileStorePath.RDKTCL.value() + FILE_SEPARATOR + dirName + FILE_SEPARATOR + moduleName + FILE_SEPARATOR + fileName+".tcl"
 				break;
 			default: break;
-		}
-		
-	}
-	
+		}	
+	}	
 	
 	/***
-	 * Retieves tcl scripts list
+	 * Retrieve tcl scripts list
 	 * @param realPath
 	 * @return
 	 */
@@ -1138,4 +1159,5 @@ class ScriptService {
 		}
 		tclScriptsList
 	}
+	
 }
