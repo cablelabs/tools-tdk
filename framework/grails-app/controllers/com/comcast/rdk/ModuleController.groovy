@@ -301,7 +301,7 @@ class ModuleController {
 				def parameterTypeInstance = new ParameterType(params)
 				if (!parameterTypeInstance.save(flush: true)) {				
 					flash.message = message(code: 'default.not.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])
-					render(view: "create", model:['parameterTypeInstance': parameterTypeInstance])					
+				render(view: "create", model:['parameterTypeInstance': parameterTypeInstance, category: params?.category])				
 					return
 				}else{				
 				flash.message = message(code: 'default.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])				

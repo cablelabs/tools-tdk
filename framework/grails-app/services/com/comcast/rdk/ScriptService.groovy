@@ -551,32 +551,74 @@ class ScriptService {
 	}
 	
 	private void initializeTCLScripts(final String path) {
-		tclScriptsList = [] 
-		tclNameList = []
 		def tclPath = path?.trim()
 		def tclFiles = new File(tclPath).listFiles(new FileFilter(){
 					boolean accept(File file) {
 						def fileName = file.name
 						//return fileName.startsWith("TC") && fileName.endsWith(".tcl")
-						return fileName.endsWith(".tcl")
+						if(!(fileName?.toString()?.equals("lib.tcl") || fileName?.toString()?.equals("proc.tcl"))){
+							return fileName.endsWith(".tcl")
+						}
 					}
 				})
+		tclScriptsList = []
+		tclNameList = []
+		try{
 		tclFiles.each { tclFile ->
 			def fileName = tclFile.name.split(".tcl")[0]
 			def scriptFile = null
 			ScriptFile.withTransaction {
 			  scriptFile  = ScriptFile.findByScriptNameAndCategory(fileName, Category.RDKB_TCL)
-				if(scriptFile == null) {
-					//scriptFile = new ScriptFile(scriptName:fileName, category:Category.RDKB_TCL,moduleName:"tcl" )
-					scriptFile?.scriptName =fileName?.toString()
-					scriptFile?.category = Category.RDKB_TCL
-					scriptFile?.moduleName = "tcl" 
-					scriptFile?.save()
+				if(scriptFile == null) {					
+					def scriptFile1 = new ScriptFile()
+					scriptFile1?.scriptName =fileName?.toString()
+					scriptFile1?.category = Category.RDKB_TCL
+					scriptFile1?.moduleName = "tcl" 
+					if(!(scriptFile1.save(flush:true))){
+						println "Error "	
+					}
 				}
 			}
-			tclScriptsList.add(scriptFile)
+			def scriptName =ScriptFile.findByScriptNameAndCategory(fileName, Category.RDKB_TCL) 
+			if(scriptName){
+				tclScriptsList.add(scriptName)
+				def realPath = path?.replace(FileStorePath.RDKTCL.value(),"")
+				if(realPath){
+					boolean updateReqd = isDefaultSGUpdateRequired(realPath)				
+					if(updateReqd ){
+						updateTclScriptSuite(scriptName ,"RDKB_TCL")
+					}					
+				}
+			}
 			tclNameList.add(fileName)
 		}
+		}catch(Exception e){
+			println e?.getMessage()
+		}
+	}
+	/**
+	 * Updating TCL script suite, when script.config value set as true
+	 * @param scriptFileInstance
+	 * @param category
+	 * @return
+	 */
+	def updateTclScriptSuite(def ScriptFile scriptFileInstance , def String category){
+		try{
+			def moduleName =  "TCL_SCRIPTS"
+			def scriptGrpInstance = ScriptGroup.findByName(moduleName)
+			if(!scriptGrpInstance){
+				scriptGrpInstance = new ScriptGroup()
+				scriptGrpInstance.name = moduleName
+				scriptGrpInstance.scriptList = []
+				scriptGrpInstance.category = Utility.getCategory(category)
+				scriptGrpInstance.save()
+			}
+			if(!scriptGrpInstance?.scriptList?.contains(scriptFileInstance)){
+				scriptGrpInstance.addToScriptList(scriptFileInstance)
+			}
+		}catch(Exception e){
+			println " Error "+ e.printStackTrace()
+		}		
 	}
 	
 	def getTCLNameList(def path){

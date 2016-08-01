@@ -230,16 +230,20 @@ class ScriptGroupController {
 	 */
 	def create() {
 		def category = params?.category?.trim()
-		def scriptNameList = null
+		def scriptNameList = []  
 		def sList = null
 		if(!Category.RDKB_TCL.toString().equals(category)){
 			scriptNameList = scriptService.getScriptNameFileList(getRealPath(), category)
 		}else{
-			scriptNameList = scriptService.tclScriptsList
+			//issue fix 
+			 scriptService.tclScriptsList.each{
+				 if(it){
+					 scriptNameList?.add(it)
+				 }
+			 }
 		}
-		sList = scriptNameList.clone()
-		sList?.sort{a,b -> a?.scriptName <=> b?.scriptName}
-
+		sList = scriptNameList.clone()		
+			sList?.sort{a,b -> a?.scriptName <=> b?.scriptName}
 		[scriptGroupInstance: new ScriptGroup(params),scriptInstanceList:sList,category:params?.category]
 	}
 
@@ -849,8 +853,9 @@ class ScriptGroupController {
 		
 		def error = ''
 		def scriptList = scriptService.getScriptNameList(params?.category)
-		
-		if(scriptList?.toString()?.contains(params?.name?.toString()?.trim())){
+			def scriptListRDKV  = scriptService.getScriptNameList(request.getRealPath("/"),RDKV)
+		def scriptListRDKB  = scriptService.getScriptNameList(request.getRealPath("/"),RDKB)	
+		if(scriptListRDKV?.toString()?.contains(params?.name?.toString()) || scriptListRDKB?.toString()?.contains(params?.name?.toString())){
 			render("Duplicate Script Name not allowed. Try Again.")
 		}else if((!params?.ptest) || params?.ptest == "default" ){
 			render("Please select a valid primitive test !!!")

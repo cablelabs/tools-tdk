@@ -98,3 +98,27 @@ def doesServiceExists(obj,service_name):
         retValue = "FAILURE"
 
     return retValue
+
+
+def DS_getSoundMode(obj,portName):
+
+        tdkTestObj = obj.createTestStep('SM_DisplaySetting_GetSoundMode');
+        expectedresult="SUCCESS"
+
+        tdkTestObj.addParameter("portName", portName);
+        tdkTestObj.executeTestCase(expectedresult);
+
+        actualresult = tdkTestObj.getResult();
+        serviceDetail = tdkTestObj.getResultDetails();
+        ret_list = [actualresult, serviceDetail];
+
+        print "[TEST EXECUTION DETAILS] sound mode is: %s"%serviceDetail;
+
+        #Check for SUCCESS/FAILURE
+        if expectedresult in actualresult:
+                tdkTestObj.setResultStatus("SUCCESS");
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+
+        return ret_list
+

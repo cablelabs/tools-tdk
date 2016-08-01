@@ -1434,7 +1434,7 @@ class ExecutescriptService {
 				executionDeviceObj1 = executionDeviceObj
 			}
 
-			if((executionDeviceObj1) && (rerun?.toString().equals(TRUE))){
+				if((executionDeviceObj1) && ((rerun?.toString().equals("true")) || (rerun?.toString().equals("on")))){
 				htmlData = reRunOnFailure(realPath,filePath,execName,executionName,url, category)
 				output.append(htmlData)
 			}
