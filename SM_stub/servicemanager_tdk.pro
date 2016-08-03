@@ -9,7 +9,7 @@
 #  ============================================================================
 
 QT += widgets network core gui
-DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS DEBUG_LEVEL_TRACE RDK2DOT0
+DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS DEBUG_LEVEL_TRACE RDK2DOT0 HAS_API_AVINPUT USE_AVINPUT
 
 DEFINES += $$CEC_PERSIST_NAME
 
@@ -35,7 +35,8 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/qt5/QtCore \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtGui \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKit \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKitWidgets \
-               ${STAGING_DIR_TARGET}/usr/include/qt5/include
+               ${STAGING_DIR_TARGET}/usr/include/qt5/include \
+	       ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmmgrs/sysmgr
 
 cross_compile:DEFINES+=CROSS_COMPILED_FOR_DEVICE
@@ -70,3 +71,16 @@ HEADERS += servicemanager/include/services/applicationservice.h \
 SOURCES += src/ServiceManagerAgent.cpp \
 	   servicemanager/src/services/applicationservice.cpp \
 	   servicemanager/src/services/displaysettingsservice.cpp
+
+contains(DEFINES,HAS_API_AVINPUT) {
+HEADERS += servicemanager/include/abstractservice.h \
+           $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/avinputservice.h
+
+if: exists($$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri): HEADERS += \
+                        ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinputhelper.h \
+                        ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinput.h
+
+SOURCES += servicemanager/src/abstractservice.cpp \
+           servicemanager/src/services/avinputservice.cpp
+if: exists($$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri): SOURCES += $$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/src/helpers/avinputhelper.cpp
+}

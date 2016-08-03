@@ -177,6 +177,10 @@ class ServiceManagerAgent : public RDKTestStubInterface
                 bool SM_AppService_GetAppInfo(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_AppService_SetConnectionReset(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_AppService_Restore_rmfconfig(IN const Json::Value& req, OUT Json::Value& response);
+                /*AVInputService APIs*/
+                bool SM_AVInputService_GetNumberOfInputs(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_AVInputService_GetCurrentVideoMode(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_AVInputService_IsContentProtected(IN const Json::Value& req, OUT Json::Value& response);
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
 		

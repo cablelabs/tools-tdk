@@ -234,6 +234,10 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AppService_GetAppInfo,"TestMgr_SM_AppService_GetAppInfo");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AppService_SetConnectionReset,"TestMgr_SM_AppService_setConnectionReset");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AppService_Restore_rmfconfig,"TestMgr_SM_AppService_Restore_rmfconfig");
+	/*AVInputService APIs*/
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_GetNumberOfInputs,"TestMgr_SM_AVInputService_GetNumberOfInputs");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode,"TestMgr_SM_AVInputService_GetCurrentVideoMode");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_IsContentProtected,"TestMgr_SM_AVInputService_IsContentProtected");
 
 	return TEST_SUCCESS;
 }
@@ -2582,6 +2586,119 @@ bool ServiceManagerAgent::SM_AppService_Restore_rmfconfig(IN const Json::Value& 
         return TEST_SUCCESS;
 }
 
+bool ServiceManagerAgent::SM_AVInputService_GetNumberOfInputs(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_GetNumberOfInputs---->Entry\n");
+
+#ifdef HAS_API_AVINPUT
+        DEBUG_PRINT(DEBUG_TRACE,"After HAS_API_AVINPUT\n");
+        Service* ptrService = NULL;
+        if (ServiceManager::getInstance()->doesServiceExist(AVInputService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(AVInputService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        ServiceParams params;
+                        QString inputCount;
+
+                        ServiceParams result  = ptrService->callMethod("numberOfInputs", params);
+                        inputCount = result["numberOfInputs"].toString();
+                        DEBUG_PRINT(DEBUG_TRACE,"AVInputs: \n %s \n",inputCount.toUtf8().constData());
+
+                        response["details"] = inputCount.toUtf8().constData();
+                        response["result"]="SUCCESS";
+                        return TEST_SUCCESS;
+                }
+
+        }
+        else
+                response["details"] = "AVInput Service does not exist";
+        response["result"] = "FAILURE";
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"AVInput Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="AVInput Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_GetNumberOfInputs---->Exit\n");
+        return TEST_FAILURE;
+}
+
+bool ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_GetCurrentVideoMode---->Entry\n");
+
+#ifdef HAS_API_AVINPUT
+        Service* ptrService = NULL;
+        if (ServiceManager::getInstance()->doesServiceExist(AVInputService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(AVInputService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        ServiceParams params;
+                        QString videoMode;
+
+                        ServiceParams result  = ptrService->callMethod("currentVideoMode", params);
+                        videoMode = result["currentVideoMode"].toString();
+                        DEBUG_PRINT(DEBUG_TRACE,"AVInputs: \n %s \n",videoMode.toUtf8().constData());
+
+                        response["details"] = videoMode.toUtf8().constData();
+                        response["result"]="SUCCESS";
+                        return TEST_SUCCESS;
+                }
+
+        }
+        else
+                response["details"] = "AVInput Service does not exist";
+        response["result"] = "FAILURE";
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"AVInput Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="AVInput Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_GetCurrentVideoMode---->Exit\n");
+        return TEST_FAILURE;
+}
+
+
+bool ServiceManagerAgent::SM_AVInputService_IsContentProtected(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_IsContentProtected---->Entry\n");
+
+#ifdef HAS_API_AVINPUT
+        Service* ptrService = NULL;
+        if (ServiceManager::getInstance()->doesServiceExist(AVInputService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(AVInputService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        ServiceParams params;
+                        QString contentProtected;
+
+                        ServiceParams result  = ptrService->callMethod("contentProtected", params);
+                        contentProtected = result["isContentProtected"].toString();
+                        DEBUG_PRINT(DEBUG_TRACE,"Content protected: \n %s \n",contentProtected.toUtf8().constData());
+
+                        response["details"] = contentProtected.toUtf8().constData();
+                        response["result"]="SUCCESS";
+                        return TEST_SUCCESS;
+                }
+
+        }
+        else
+                response["details"] = "AVInput Service does not exist";
+        response["result"] = "FAILURE";
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"AVInput Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="AVInput Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_IsContentProtected---->Exit\n");
+        return TEST_FAILURE;
+}
+
 /**************************************************************************
  * Function Name: CreateObject
  * Description	: This function will be used to create a new object for the
@@ -2662,7 +2779,10 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AppService_GetAppInfo");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AppService_SetConnectionReset");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AppService_Restore_rmfconfig");
-
+	/*AVInputService APIs*/
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_GetNumberOfInputs");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_GetCurrentVideoMode");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_IsContentProtected");
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;
 }
