@@ -2404,15 +2404,15 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT
                 pclose(pipe);
 
                 DEBUG_PRINT(DEBUG_TRACE, "CheckCecData output: %s\n",output);
-                if(strstr(output, "FOUND") != NULL)
-                {
-                        response["result"]="SUCCESS";
-                        response["details"]="CEC Persistent Data Found";
-                }
-                else
+                if(strstr(output, "NOFILE") != NULL)
                 {
                         response["result"]="FAILURE";
                         response["details"]="CEC Persistent Data Not Found";
+                }
+                else
+                {
+                        response["result"]="SUCCESS";
+                        response["details"]=output;
                 }
         }
 #else
