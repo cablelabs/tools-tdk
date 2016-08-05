@@ -1614,7 +1614,7 @@ bool ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& r
                         }
 
                         sprintf(stringDetails,"%s: %s ", methodType.toUtf8().constData(), data.toUtf8().constData());
-                        details.append(stringDetails);
+                        details+=QString::fromUtf8(stringDetails);
                         printf("method and o/p is %s\n", stringDetails);
                         paramList.clear();
                         inParams.clear();
