@@ -35,9 +35,9 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/qt5/QtCore \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtGui \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKit \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKitWidgets \
-               ${STAGING_DIR_TARGET}/usr/include/qt5/include \
-	       ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/
+               ${STAGING_DIR_TARGET}/usr/include/qt5/include
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmmgrs/sysmgr
+exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri): INCLUDEPATH += ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/
 
 cross_compile:DEFINES+=CROSS_COMPILED_FOR_DEVICE
 
@@ -76,11 +76,11 @@ contains(DEFINES,HAS_API_AVINPUT) {
 HEADERS += servicemanager/include/abstractservice.h \
            $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/avinputservice.h
 
-if: exists($$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri): HEADERS += \
+exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri): HEADERS += \
                         ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinputhelper.h \
                         ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinput.h
 
 SOURCES += servicemanager/src/abstractservice.cpp \
            servicemanager/src/services/avinputservice.cpp
-if: exists($$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri): SOURCES += $$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/src/helpers/avinputhelper.cpp
+exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri): SOURCES += $$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/src/helpers/avinputhelper.cpp
 }
