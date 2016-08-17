@@ -90,8 +90,6 @@ if "SUCCESS" in result.upper():
     # Get all Tuner states
     initStates = getAllTunerStates(obj,'SUCCESS')
 
-    tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
-
     # Step1: Device 1: Start as many recordings as the number of tuners
     for deviceNo in range(0,maxTuners):
         # Frame different request URL for each client box
@@ -101,10 +99,11 @@ if "SUCCESS" in result.upper():
 
     # Step2: Device 2 to Device 5 tune L2 to L5
     # One tuner is reserved for either recording or live local streaming for the gateway device itself and hence cannot be used for Live streaming of Remote/Xi device
+    tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
     for deviceNo in range(1,maxTuners):
         # Frame different request URL for each client box
         streamId = '0'+str(deviceNo+1)
-        locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+        locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
         if locator not in initStates:
             reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':20000,'startTime':0})
 

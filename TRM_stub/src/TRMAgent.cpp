@@ -15,17 +15,17 @@
 static TRMClient *pTrmClient = NULL;
 
 const char *deviceNames[TOTAL_DEVICE_NUMBER+1] = {
-    "Xi3 Room1",
-    "Xi3 Room2",
-    "Xi3 Room3",
-    "Xi3 Room4",
-    "Xi3 Room5",
-    "Xi3 Room6",
-    "Xi3 Room7",
-    "Xi3 Room8",
-    "Xi3 Room9",
-    "Xi3 Room10",
-    "Xi3 Room11"
+    "XiRoom1",
+    "XiRoom2",
+    "XiRoom3",
+    "XiRoom4",
+    "XiRoom5",
+    "XiRoom6",
+    "XiRoom7",
+    "XiRoom8",
+    "XiRoom9",
+    "XiRoom10",
+    "XiRoom11"
 };
 
 /*************************************************************************
@@ -90,16 +90,62 @@ string TRMAgent::testmodulepre_requisites()
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRM testmodule pre_requisites --> Entry\n");
 
+    char output[OUTPUT_LEN] = {'\0'};
     pTrmClient = new TRMClient();
     if (NULL == pTrmClient)
     {
         DEBUG_PRINT(DEBUG_ERROR, "Failed to create TRMClient instance\n");
+        DEBUG_PRINT(DEBUG_TRACE, "TRM testmodule pre_requisites --> Exit\n");
         return "FAILURE";
     }
 
-    if (!pTrmClient->getAllTunerIds())
+    try
     {
-        DEBUG_PRINT(DEBUG_ERROR,"TRM client not registered with recorder client id\n");
+        if (!pTrmClient->getAllTunerStates(output))
+        {
+            DEBUG_PRINT(DEBUG_ERROR,"TRM client not registered with recorder client id\n");
+            DEBUG_PRINT(DEBUG_TRACE, "TRM testmodule pre_requisites --> Exit\n");
+            return "FAILURE";
+        }
+        else
+        {
+            DEBUG_PRINT(DEBUG_TRACE, "Tuner states = %s\n", output);
+
+            struct timeval tv;
+            gettimeofday( &tv, 0 );
+            unsigned long long startTime = ((unsigned long long)tv.tv_sec) * 1000 + ((unsigned long long)tv.tv_usec) / 1000;
+
+            try
+            {
+                std::string outToken = pTrmClient->reserveTunerForRecord("TestDevice", "TestRecordId", "ocap://0xCNN", startTime, 3000, 0, "", 0);
+                if ("" == outToken)
+                {
+                    DEBUG_PRINT(DEBUG_ERROR,"TRM failed to reserve tuner for record");
+                    return "FAILURE";
+                }
+                else if ( (std::string::npos != outToken.find("-")) )
+                {
+                    //Valid token is of format aa-bb-cc-dd-ee
+                    DEBUG_PRINT(DEBUG_TRACE, "output token = %s \n", outToken.c_str());
+                    sleep(3);
+                }
+                else
+                {
+                    DEBUG_PRINT(DEBUG_ERROR,"TRM failed to reserve tuner for record with error code = %s\n", outToken.c_str());
+                    return "FAILURE";
+                }
+            }
+            catch(...)
+            {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured while reserving tuner for recording\n");
+                return "FAILURE";
+            }
+        }
+    }
+    catch(...)
+    {
+        DEBUG_PRINT(DEBUG_TRACE, "Error executing GetAllTunerStates\n");
+        DEBUG_PRINT(DEBUG_TRACE, "TRM testmodule pre_requisites --> Exit\n");
         return "FAILURE";
     }
 

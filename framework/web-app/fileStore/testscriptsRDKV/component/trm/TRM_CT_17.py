@@ -76,13 +76,12 @@ if "FAILURE" in result.upper():
     #Get the result of connection with test component and STB
     result = obj.getLoadModuleResult();
     print "[TRM LIB RELOAD STATUS]  :  %s" %result;
-    #Set the module loading status
-    obj.setLoadModuleStatus(result.upper());
+
+#Set the module loading status
+obj.setLoadModuleStatus(result.upper());
 
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in result.upper():
-    #Set the module loading status
-    obj.setLoadModuleStatus("SUCCESS");
 
     startTime = 0
     streamId = '01'
@@ -94,7 +93,3 @@ if "SUCCESS" in result.upper():
 
     #unloading trm module
     obj.unloadModule("trm");
-else:
-    print "Failed to load trm module";
-    #Set the module loading status
-    obj.setLoadModuleStatus("FAILURE");

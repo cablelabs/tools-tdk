@@ -52,6 +52,7 @@ Test Type: Positive</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+from trm import reserveForRecord
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("trm","2.0");
@@ -75,57 +76,23 @@ if "FAILURE" in result.upper():
     #Get the result of connection with test component and STB
     result = obj.getLoadModuleResult();
     print "[TRM LIB RELOAD STATUS]  :  %s" %result;
-    #Set the module loading status
-    obj.setLoadModuleStatus(result.upper());
+
+#Set the module loading status
+obj.setLoadModuleStatus(result.upper());
 
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in result.upper():
-    #Set the module loading status
-    obj.setLoadModuleStatus("SUCCESS");
 
-    #Primitive test case which associated to this Script
-    tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
-
+    print "Start recording multiple stations from same terminal"
     duration = 10000
     startTime = 0
     hot = 0
-
     for deviceNo in range(0,2):
         # Frame different request URL for each client box
         streamId = '0'+str(deviceNo+1)
         recordingId = 'RecordIdCh'+streamId
-        locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
-
-        print "Record DeviceNo:%d Locator:%s hot=%d recordingId:%s duration:%d startTime:%d"%(deviceNo,locator,hot,recordingId,duration,startTime)
-
-        tdkTestObj.addParameter("deviceNo",0);
-        tdkTestObj.addParameter("duration",duration);
-        tdkTestObj.addParameter("locator",locator);
-        tdkTestObj.addParameter("startTime",startTime);
-        tdkTestObj.addParameter("recordingId",recordingId);
-        tdkTestObj.addParameter("hot",hot);
-
-        expectedRes = "SUCCESS"
-
-        #Execute the test case in STB
-        tdkTestObj.executeTestCase(expectedRes);
-
-        #Get the result of execution
-        result = tdkTestObj.getResult();
-        print "[TEST EXECUTION RESULT] : %s" %result;
-        details = tdkTestObj.getResultDetails();
-        print "[TEST EXECUTION DETAILS] : %s" %details;
-
-        if "SUCCESS" in result.upper():
-            #Set the result status of execution
-            tdkTestObj.setResultStatus("SUCCESS");
-        else:
-            tdkTestObj.setResultStatus("FAILURE");
+        reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':streamId,'duration':duration,'startTime':startTime,'recordingId':recordingId,'hot':hot})
     # End of for loop
 
     #unloading trm module
     obj.unloadModule("trm");
-else:
-    print "Failed to load trm module";
-    #Set the module loading status
-    obj.setLoadModuleStatus("FAILURE");

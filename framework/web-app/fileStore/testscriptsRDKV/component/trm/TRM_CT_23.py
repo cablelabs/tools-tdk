@@ -52,6 +52,7 @@ Test Type: Negative</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+from trm import cancelRecording;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("trm","2.0");
@@ -75,42 +76,16 @@ if "FAILURE" in result.upper():
     #Get the result of connection with test component and STB
     result = obj.getLoadModuleResult();
     print "[TRM LIB RELOAD STATUS]  :  %s" %result;
-    #Set the module loading status
-    obj.setLoadModuleStatus(result.upper());
+
+#Set the module loading status
+obj.setLoadModuleStatus(result.upper());
 
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in result.upper():
-    #Set the module loading status
-    obj.setLoadModuleStatus("SUCCESS");
 
     #Cancel recording
-    tdkTestObj = obj.createTestStep('TRM_CancelRecording');
-
-    locator = tdkTestObj.getStreamDetails('01').getOCAPID()
-    print "Cancel recording for locator:%s"%(locator)
-
-    tdkTestObj.addParameter("locator",locator);
-
-    expectedRes = "FAILURE"
-
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedRes);
-
-    #Get the result of execution
-    result = tdkTestObj.getResult();
-    print "[TEST EXECUTION RESULT] : %s" %result;
-    details = tdkTestObj.getResultDetails();
-    print "[TEST EXECUTION DETAILS] : %s" %details;
-
-    if expectedRes in result.upper():
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
+    print "Cancel recording reservation request without any reservation"
+    cancelRecording(obj,'FAILURE',kwargs={'streamId':'01'})
 
     #unloading trm module
     obj.unloadModule("trm");
-else:
-    print "Failed to load trm module";
-    #Set the module loading status
-    obj.setLoadModuleStatus("FAILURE");

@@ -63,7 +63,7 @@
 #define HEIGHT 720
 
 /*DVR sink*/
-#define REC_DURATION    30*60*1000
+#define REC_DURATION    60
 #define PRIORITY        "P3"
 #define TITLE_LEN	40
 

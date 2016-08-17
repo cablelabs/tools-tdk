@@ -88,7 +88,7 @@ if "SUCCESS" in result.upper():
     token = reserveForLive(obj,"SUCCESS",kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':1200000,'startTime':startTime})
 
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
-    locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+    locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
 
     for loop in range(1,101):
 

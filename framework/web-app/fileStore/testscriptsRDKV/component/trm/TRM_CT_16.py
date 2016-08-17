@@ -52,6 +52,7 @@ Test Type: Positive</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+from trm import reserveForLive
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("trm","2.0");
@@ -75,50 +76,21 @@ if "FAILURE" in result.upper():
     #Get the result of connection with test component and STB
     result = obj.getLoadModuleResult();
     print "[TRM LIB RELOAD STATUS]  :  %s" %result;
-    #Set the module loading status
-    obj.setLoadModuleStatus(result.upper());
+
+#Set the module loading status
+obj.setLoadModuleStatus(result.upper());
 
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in result.upper():
-    #Set the module loading status
-    obj.setLoadModuleStatus("SUCCESS");
-
-    #Primitive test case which associated to this Script
-    tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
 
     duration = 10000
     startTime = 0
-    locator = tdkTestObj.getStreamDetails('01').getOCAPID()
+    streamId = '01'
 
+    print "Tune from multiple terminals to same station"
     for deviceNo in range(0,2):
-        print "DeviceNo:%d Locator:%s duration:%d startTime:%d"%(deviceNo,locator,duration,startTime)
-
-        tdkTestObj.addParameter("deviceNo",deviceNo);
-        tdkTestObj.addParameter("duration",duration);
-        tdkTestObj.addParameter("locator",locator);
-        tdkTestObj.addParameter("startTime", startTime);
-
-        expectedRes = "SUCCESS"
-
-        #Execute the test case in STB
-        tdkTestObj.executeTestCase(expectedRes);
-
-        #Get the result of execution
-        result = tdkTestObj.getResult();
-        print "[TEST EXECUTION RESULT] : %s" %result;
-        details = tdkTestObj.getResultDetails();
-        print "[TEST EXECUTION DETAILS] : %s" %details;
-
-        if "SUCCESS" in result.upper():
-            #Set the result status of execution
-            tdkTestObj.setResultStatus("SUCCESS");
-        else:
-            tdkTestObj.setResultStatus("FAILURE");
+        reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':duration,'startTime':startTime})
     # End of for loop
 
     #unloading trm module
     obj.unloadModule("trm");
-else:
-    print "Failed to load trm module";
-    #Set the module loading status
-    obj.setLoadModuleStatus("FAILURE");				

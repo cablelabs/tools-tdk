@@ -87,7 +87,7 @@ if "SUCCESS" in result.upper():
     token = reserveForLive(obj,"SUCCESS",kwargs={'deviceNo':0,'streamId':streamId,'duration':duration,'startTime':startTime})
 
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
-    locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+    locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
     #Use same token to reserve tuner multiple times and expect all reservations to fail with InvalidState or InvalidToken Error OR all should be success
     for deviceNo in range(1,10):
 

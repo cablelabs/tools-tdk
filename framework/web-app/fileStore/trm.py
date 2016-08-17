@@ -67,7 +67,7 @@ def reserveForLive(obj,expectedresult,kwargs={}):
     duration = int(kwargs["duration"])
     streamId = str(kwargs["streamId"])
     startTime = int(kwargs["startTime"])
-    locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+    locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
 
     tdkTestObj.addParameter("deviceNo",deviceNo);
     tdkTestObj.addParameter("duration",duration);
@@ -126,7 +126,7 @@ def reserveForRecord(obj,expectedresult,kwargs={}):
     startTime = int(kwargs["startTime"])
     recordingId = str(kwargs["recordingId"])
     hot = int(kwargs["hot"])
-    locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+    locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
 
     tdkTestObj.addParameter("deviceNo",deviceNo);
     tdkTestObj.addParameter("duration",duration);
@@ -175,7 +175,7 @@ def cancelRecording(obj,expectedresult,kwargs={}):
     tdkTestObj = obj.createTestStep('TRM_CancelRecording');
 
     streamId = str(kwargs["streamId"])
-    locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+    locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
 
     tdkTestObj.addParameter("locator",locator);
 
@@ -185,7 +185,7 @@ def cancelRecording(obj,expectedresult,kwargs={}):
     #Get the result/details of execution
     result = tdkTestObj.getResult();
     details = tdkTestObj.getResultDetails();
-    print "locator: %s"%(locator)
+    print "Locator: %s"%(locator)
     print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
     print "Details: [%s]"%details
 
@@ -207,10 +207,48 @@ def releaseReservation(obj,expectedresult,kwargs={}):
     deviceNo = int(kwargs["deviceNo"])
     activity = int(kwargs["activity"])
     streamId = str(kwargs["streamId"])
-    locator = tdkTestObj.getStreamDetails(streamId).getOCAPID()
+    locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
 
     tdkTestObj.addParameter("deviceNo",deviceNo);
-    tdkTestObj.addParameter("activity",1);
+    tdkTestObj.addParameter("activity",activity);
+    tdkTestObj.addParameter("locator",locator);
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedresult);
+
+    if (1 == activity):
+        Activity = 'Live'
+    else:
+        Activity = 'Record'
+
+    #Get the result/details of execution
+    result = tdkTestObj.getResult();
+    details = tdkTestObj.getResultDetails();
+    print "activity:%s deviceNo:%d locator:%s"%(Activity,deviceNo,locator)
+    print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
+    print "Details: [%s]"%details
+
+    #Set the result status of execution
+    if expectedresult in result.upper():
+        tdkTestObj.setResultStatus("SUCCESS");
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+
+    print "\n"
+
+#######################################################
+def validateReservation(obj,expectedresult,kwargs={}):
+
+    #Primitive test case associated to the function
+    tdkTestObj = obj.createTestStep('TRM_ValidateTunerReservation');
+
+    deviceNo = int(kwargs["deviceNo"])
+    activity = int(kwargs["activity"])
+    streamId = str(kwargs["streamId"])
+    locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
+
+    tdkTestObj.addParameter("deviceNo",deviceNo);
+    tdkTestObj.addParameter("activity",activity);
     tdkTestObj.addParameter("locator",locator);
 
     #Execute the test case in STB
@@ -291,5 +329,54 @@ def getAllReservations(obj,expectedresult,kwargs={}):
         tdkTestObj.setResultStatus("FAILURE");
 
     print "\n"
+
+#######################################################
+
+def getAllTunerIds(obj,expectedresult):
+
+    #Primitive test case which associated to this Script
+    tdkTestObj = obj.createTestStep('TRM_GetAllTunerIds');
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedresult);
+
+    #Get the result of execution
+    result = tdkTestObj.getResult();
+    details = tdkTestObj.getResultDetails();
+    print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
+    print "Details: [%s]"%details
+
+    #Set the result status of execution
+    if expectedresult in result.upper():
+        tdkTestObj.setResultStatus("SUCCESS");
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+
+    print "\n"
+
+#######################################################
+
+def getVersion(obj,expectedresult):
+
+    #Primitive test case associated to the function
+    tdkTestObj = obj.createTestStep('TRM_GetVersion');
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedresult);
+
+    #Get the result of execution
+    result = tdkTestObj.getResult();
+    details = tdkTestObj.getResultDetails();
+    print "Expected Result: [%s] Actual Result: [%s]"%(expectedresult,result)
+    print "Details: [%s]"%details
+
+    #Set the result status of execution
+    if expectedresult in result.upper():
+        tdkTestObj.setResultStatus("SUCCESS");
+    else:
+        tdkTestObj.setResultStatus("FAILURE");
+
+    print "\n"
+    return details
 
 #######################################################

@@ -55,6 +55,7 @@ Test Type: Positive</synopsis>
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
 import time;
+from trm import reserveForLive,releaseReservation,getAllTunerStates
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("trm","2.0");
@@ -78,97 +79,24 @@ if "FAILURE" in result.upper():
     #Get the result of connection with test component and STB
     result = obj.getLoadModuleResult();
     print "[TRM LIB RELOAD STATUS]  :  %s" %result;
-    #Set the module loading status
-    obj.setLoadModuleStatus(result.upper());
+
+#Set the module loading status
+obj.setLoadModuleStatus(result.upper());
 
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in result.upper():
-    #Set the module loading status
-    obj.setLoadModuleStatus("SUCCESS");
 
-    # Start live tuning channel1
-    tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
-
-    deviceNo = 0
-    locator = tdkTestObj.getStreamDetails('01').getOCAPID()
-    duration = 10000
-    startTime = 0
-
-    print "Live tune DeviceNo:%d Locator:%s duration:%d startTime:%d"%(deviceNo,locator,duration,startTime)
-
-    tdkTestObj.addParameter("deviceNo",deviceNo);
-    tdkTestObj.addParameter("duration",duration);
-    tdkTestObj.addParameter("locator",locator);
-    tdkTestObj.addParameter("startTime", startTime);
-
-    expectedRes = "SUCCESS"
-
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedRes);
-
-    #Get the result of execution
-    result = tdkTestObj.getResult();
-    print "[LIVE TUNE RESULT] : %s" %result;
-    details = tdkTestObj.getResultDetails();
-    print "[LIVE TUNE DETAILS] : %s" %details;
-
-    if "SUCCESS" in result.upper():
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
+    print "Start live tuning channel 1"
+    reserveForLive(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':'01','duration':10000,'startTime':0})
 
     time.sleep(2)
 
-    #Release live reservation
-    tdkTestObj = obj.createTestStep('TRM_ReleaseTunerReservation');
-
-    print "Release live reservation on deviceNo:%d Locator:%s"%(deviceNo,locator)
-
-    tdkTestObj.addParameter("deviceNo",deviceNo);
-    tdkTestObj.addParameter("activity",1);
-    tdkTestObj.addParameter("locator",locator);
-
-    expectedRes = "SUCCESS"
-
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedRes);
-
-    #Get the result of execution
-    result = tdkTestObj.getResult();
-    print "[TEST EXECUTION RESULT] : %s" %result;
-    details = tdkTestObj.getResultDetails();
-    print "[TEST EXECUTION DETAILS] : %s" %details;
-
-    if "SUCCESS" in result.upper():
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
+    print "Release live reservation"
+    releaseReservation(obj,"SUCCESS",kwargs={'deviceNo':0,'activity':1,'streamId':'01'})
 
     # Get all Tuner states
     print "Get all Tuner states"
-    tdkTestObj = obj.createTestStep('TRM_GetAllTunerStates');
-
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedRes);
-
-    #Get the result of execution
-    result = tdkTestObj.getResult();
-    print "[TEST EXECUTION RESULT] : %s" %result;
-    details = tdkTestObj.getResultDetails();
-    print "[TEST EXECUTION DETAILS] : %s" %details;
-
-    #Set the result status of execution
-    if expectedRes in result.upper():
-        tdkTestObj.setResultStatus("SUCCESS");
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
-    # Get all Tuner states End
+    getAllTunerStates(obj,'SUCCESS')
 
     #unloading trm module
     obj.unloadModule("trm");
-else:
-    print "Failed to load trm module";
-    #Set the module loading status
-    obj.setLoadModuleStatus("FAILURE");

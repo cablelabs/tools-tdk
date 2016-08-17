@@ -99,6 +99,8 @@ void createTestRecordingSpec (string recordingId, string playUrl, RecordingSpec 
 	char work[TITLE_LEN] = {'\0'};
 	sprintf( work, "{\"title\":\"Test Recording for %s\"}", recordingId.c_str());
 
+	DEBUG_PRINT(DEBUG_TRACE, "Recording spec properties:\nID: %s Url: %s Duration: %d Title: %s\n",recordingId.c_str(),playUrl.c_str(),REC_DURATION,work);
+
         spec.setRecordingId(recordingId);
 	spec.addLocator( playUrl );
 	spec.setProperties( work );
@@ -108,26 +110,13 @@ void createTestRecordingSpec (string recordingId, string playUrl, RecordingSpec 
         spec.setBitRate( RecordingBitRate_high );
 }
 #endif
+
 std::string fetchStreamingInterface()
 {
 	DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
 	ifstream interfacefile;
 	string Fetch_Streaming_interface_cmd, Streaming_Interface_name,line;
 	Streaming_Interface_name = g_tdkPath + "/" + FETCH_STREAMING_INT_NAME;
-/*	//Fetch_Streaming_interface_cmd = g_tdkPath + "/" + FETCH_STREAMING_INT_SCRIPT;
-	//string fetch_streaming_int_chk= "source "+Fetch_Streaming_interface_cmd;
-	//try
-	{
-		system((char*)fetch_streaming_int_chk());
-	}
-	catch(...)
-	{
-		DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of streaming ip fetch script\n");
-                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
-                return "FAILURE<DETAILS>Exception occured execution of streaming ip fetch script";
-	
-	}
-*/
 
 	interfacefile.open(Streaming_Interface_name.c_str());
 	if(interfacefile.is_open())
@@ -152,10 +141,10 @@ std::string fetchStreamingInterface()
 
 }
 
-IRMFMediaSource* createHNSrc(const std::string& url)
+HNSource* createHNSrc(std::string& url)
 {
 	RMFResult result= RMF_RESULT_SUCCESS;
-	RMFMediaSourceBase *pSrc= 0;
+	HNSource *pSrc= 0;
 
 	pSrc= new HNSource();
 	if ( pSrc == 0 )
@@ -185,7 +174,7 @@ IRMFMediaSource* createHNSrc(const std::string& url)
 		                	token = streaming_interface.substr(0, pos);
                 	        	std::cout << token << std::endl;
 	                        	streaming_interface.erase(0, pos + delimiter.length());
-                 	}
+                 		}
 				pSrc=0;
 			}
 			else
@@ -195,7 +184,6 @@ IRMFMediaSource* createHNSrc(const std::string& url)
         			string urlIn = url;
         			string http = "http://";
         			http.append(streamingip);
-		        	cout<<"IP: "<<streamingip<<endl;
 		       		size_t pos = 0;
         			pos = urlIn.find(":8080");
        	 			if (pos!=std::string::npos)
@@ -204,10 +192,12 @@ IRMFMediaSource* createHNSrc(const std::string& url)
         			}	
 
         			cout<<"Final URL passed to Open(): "<<urlIn<<endl;
+                                url = urlIn;
 				result= pSrc->open( urlIn.c_str(), 0 );
 				if ( result != RMF_RESULT_SUCCESS )
 				{
 					DEBUG_PRINT(DEBUG_ERROR, "HNSrc open(%s) failed with rc=0x%X", url.c_str(), (unsigned int) result );
+					pSrc->term();
 				}
 			}	
 		}
@@ -4244,7 +4234,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 	string playUrl = req["playUrl"].asString();
 	DEBUG_PRINT(DEBUG_LOG, "Play URL input: %s\n", playUrl.c_str());
 
-	IRMFMediaSource *src = 0;
+	HNSource *src = 0;
 	DVRSink *dvrSink = 0;
 
 	if ( playUrl.compare( 0, 7, "http://" ) == 0 )
@@ -4280,6 +4270,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 	// Create recording
 	RecordingSpec spec;
 	createTestRecordingSpec (recordingId, playUrl, spec);
+	cout << "Create Recording with given recording spec" << endl;
 	res_DVR = DVRManager::getInstance()->createRecording( spec );
 	if (( DVRResult_ok != res_DVR) && (DVRResult_alreadyExists != res_DVR))
 	{
@@ -4326,7 +4317,28 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 		{
 			char stringDetails[75] = {'\0'};
 			dvrSink->setSource(src);
+#if 0
+            		/*Start playing*/
+            		DEBUG_PRINT(DEBUG_ERROR,"Start HnSource Play");
+            		RMFResult retResult = RMF_RESULT_FAILURE;
+            		retResult = src->play();
+            		if(RMF_RESULT_SUCCESS != retResult)
+            		{
+                		DEBUG_PRINT(DEBUG_ERROR,"Error: HnSource play() FAILURE");
+            		}
+            		DEBUG_PRINT(DEBUG_ERROR,"HNSrc play() success");
+            		DEBUG_PRINT(DEBUG_ERROR,"Sleeping for recording of %d sec", REC_DURATION);
+            		sleep(REC_DURATION);
 
+                        if ( src )
+                        {
+                                retResult = src->pause();
+                                cout << "hn src pause status = " <<retResult << endl;
+                                retResult = src->close();
+                                cout << "hn src close status = " <<retResult << endl;
+                                DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm --->source termination success\n");
+                        }
+#endif
 			string rec_id = dvrSink->getRecordingId();
 			DEBUG_PRINT(DEBUG_ERROR, "Result of DVRSink GetRecordingId: %s\n", rec_id.c_str());
 
@@ -4342,7 +4354,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 					response["result"] = "SUCCESS";
 
 					DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm ---> GetRecordingId success\n");
-
+#if 0
 					if ( src )
 					{
 						src->term();
@@ -4370,14 +4382,8 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 						#endif
                                         	return TEST_FAILURE;
                                 	}
-
+#endif
 					DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_Init&term --->Exit\n");
-					#ifdef USE_SOC_INIT
-        				// Uninitialize SOC
-        				DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
-        				soc_uninit();
-					#endif
-					return TEST_SUCCESS;	
 				}
 				else
 				{
@@ -4396,6 +4402,12 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 		{
 			response["result"] = "FAILURE";
 			response["details"] = "Initialization of DVRSink is failed";
+		}
+
+		if(dvrSink)
+		{
+			delete dvrSink;
+			dvrSink = 0;
 		}
 	}
 

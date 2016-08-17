@@ -52,6 +52,7 @@ Test Type: Negative</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+from trm import validateReservation
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("trm","2.0");
@@ -75,46 +76,21 @@ if "FAILURE" in result.upper():
     #Get the result of connection with test component and STB
     result = obj.getLoadModuleResult();
     print "[TRM LIB RELOAD STATUS]  :  %s" %result;
-    #Set the module loading status
-    obj.setLoadModuleStatus(result.upper());
+
+#Set the module loading status
+obj.setLoadModuleStatus(result.upper());
 
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in result.upper():
-    #Set the module loading status
-    obj.setLoadModuleStatus("SUCCESS");
-
-    #Validate live reservation
-    tdkTestObj = obj.createTestStep('TRM_ValidateTunerReservation');
 
     deviceNo = 0
-    locator = tdkTestObj.getStreamDetails('01').getOCAPID()
+    #Validate live reservation
+    print "Validate live reservation without reserving"
+    validateReservation(obj,"FAILURE",kwargs={'deviceNo':deviceNo,'activity':1,'streamId':'01'})
 
-    print "Validate live reservation on deviceNo:%d Locator:%s"%(deviceNo,locator)
-
-    tdkTestObj.addParameter("deviceNo",deviceNo);
-    tdkTestObj.addParameter("activity",1);
-    tdkTestObj.addParameter("locator",locator);
-
-    expectedRes = "FAILURE"
-
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedRes);
-
-    #Get the result of execution
-    result = tdkTestObj.getResult();
-    print "[TEST EXECUTION RESULT] : %s" %result;
-    details = tdkTestObj.getResultDetails();
-    print "[TEST EXECUTION DETAILS] : %s" %details;
-
-    if expectedRes in result.upper():
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
+    #Validate record reservation
+    print "Validate record reservation without reserving"
+    validateReservation(obj,"FAILURE",kwargs={'deviceNo':deviceNo,'activity':2,'streamId':'01'})
 
     #unloading trm module
     obj.unloadModule("trm");
-else:
-    print "Failed to load trm module";
-    #Set the module loading status
-    obj.setLoadModuleStatus("FAILURE");

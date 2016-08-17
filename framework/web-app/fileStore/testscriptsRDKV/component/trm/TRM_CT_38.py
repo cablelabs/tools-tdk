@@ -76,111 +76,23 @@ if "FAILURE" in result.upper():
     #Get the result of connection with test component and STB
     result = obj.getLoadModuleResult();
     print "[TRM LIB RELOAD STATUS]  :  %s" %result;
-    #Set the module loading status
-    obj.setLoadModuleStatus(result.upper());
+
+#Set the module loading status
+obj.setLoadModuleStatus(result.upper());
 
 #Check for SUCCESS/FAILURE of trm module
 if "SUCCESS" in result.upper():
-    #Set the module loading status
-    obj.setLoadModuleStatus("SUCCESS");
 
     # Schedule future recordings on same channel
-
     # Hot recording channel 1 with start time 2s from now for 10s
     print "Schedule recording on channel 1 with start time 2s from now for 10s"
-    tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
-
-    deviceNo = 0
-    startTime = 2
-    duration = 10000
-    locator = tdkTestObj.getStreamDetails('01').getOCAPID()
-    hot = 1
-    recordingId = 'RecordIdDevice1'
-    print "DeviceNo:%d Locator:%s hot=%d recordingId:%s duration:%d startTime:%d"%(deviceNo,locator,hot,recordingId,duration,startTime)
-
-    tdkTestObj.addParameter("deviceNo",deviceNo);
-    tdkTestObj.addParameter("duration",duration);
-    tdkTestObj.addParameter("locator",locator);
-    tdkTestObj.addParameter("startTime",startTime);
-    tdkTestObj.addParameter("hot",hot);
-    tdkTestObj.addParameter("recordingId",recordingId);
-
-    expectedRes = "SUCCESS"
-
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedRes);
-
-    #Get the result of execution
-    result = tdkTestObj.getResult();
-    print "[TEST EXECUTION RESULT] : %s" %result;
-    details = tdkTestObj.getResultDetails();
-    print "[TEST EXECUTION DETAILS] : %s" %details;
-
-    #Set the result status of execution
-    if expectedRes in result.upper():
-        tdkTestObj.setResultStatus("SUCCESS");
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
-    # End Hot recording channel 1 with start time 2s from now for 10s
-
+    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':0,'streamId':'01','duration':10000,'startTime':2,'recordingId':'RecordIdDevice1','hot':1})
     # Hot recording channel 1 with start time 4s from now for 5s
     print "Schedule recording on channel 1 with start time 4s from now for 5s"
-    tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
-
-    deviceNo = 1
-    startTime = 4
-    duration = 5000
-    locator = tdkTestObj.getStreamDetails('01').getOCAPID()
-    hot = 1
-    recordingId = 'RecordIdDevice2'
-    print "DeviceNo:%d Locator:%s hot=%d recordingId:%s duration:%d startTime:%d"%(deviceNo,locator,hot,recordingId,duration,startTime)
-
-    tdkTestObj.addParameter("deviceNo",deviceNo);
-    tdkTestObj.addParameter("duration",duration);
-    tdkTestObj.addParameter("locator",locator);
-    tdkTestObj.addParameter("startTime", startTime);
-    tdkTestObj.addParameter("hot",hot);
-    tdkTestObj.addParameter("recordingId",recordingId);
-
-    expectedRes = "SUCCESS"
-
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedRes);
-
-    #Get the result of execution
-    result = tdkTestObj.getResult();
-    print "[TEST EXECUTION RESULT] : %s" %result;
-    details = tdkTestObj.getResultDetails();
-    print "[TEST EXECUTION DETAILS] : %s" %details;
-
-    #Set the result status of execution
-    if expectedRes in result.upper():
-        tdkTestObj.setResultStatus("SUCCESS");
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
-    # End Hot recording channel 1 with start time 4s from now for 5s
-
+    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':1,'streamId':'01','duration':5000,'startTime':4,'recordingId':'RecordIdDevice2','hot':1})
     # Get all Tuner states
     print "Get all Tuner states"
-    tdkTestObj = obj.createTestStep('TRM_GetAllTunerStates');
-
-    expectedRes = "SUCCESS"
-
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedRes);
-
-    #Get the result of execution
-    result = tdkTestObj.getResult();
-    print "[TEST EXECUTION RESULT] : %s" %result;
-    details = tdkTestObj.getResultDetails();
-    print "[TEST EXECUTION DETAILS] : %s" %details;
-
-    #Set the result status of execution
-    if expectedRes in result.upper():
-        tdkTestObj.setResultStatus("SUCCESS");
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
-    # Get all Tuner states End
+    getAllTunerStates(obj,'SUCCESS')
 
     # Schedule hot recordings on same channel
     # Send first recording request from device 3 starting now for 10s
@@ -190,12 +102,9 @@ if "SUCCESS" in result.upper():
     # Send second recording request from device 4 starting 5s from now for 10s
     print "Schedule recording on channel 1 starting 5s from now for 10s"
     reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':3,'streamId':streamId,'duration':10000,'startTime':5,'recordingId':'RecordId04','hot':0})
-
+    # Get all Tuner states
+    print "Get all Tuner states"
     getAllTunerStates(obj,'SUCCESS')
 
     #unloading trm module
     obj.unloadModule("trm");
-else:
-    print "Failed to load trm module";
-    #Set the module loading status
-    obj.setLoadModuleStatus("FAILURE");
