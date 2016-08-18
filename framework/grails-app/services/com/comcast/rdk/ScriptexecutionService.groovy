@@ -1166,7 +1166,7 @@ class ScriptexecutionService {
 						def scriptMap = scriptService.getScriptNameModuleNameMapping(realPath)
 						def moduleName =scriptMap.get(execResObj?.script)
 						Module module= Module.findByName(moduleName)
-						def script = scriptService.getScript(realPath,moduleName, execResObj?.script,module?.category)
+						def script = scriptService.getScript(realPath,moduleName, execResObj?.script,module?.category?.toString())
 							if(module?.testGroup?.groupValue?.toString()?.equals("E2E") ){
 								List val1 = systemMap.get(module.toString());
 								if(!val1){
