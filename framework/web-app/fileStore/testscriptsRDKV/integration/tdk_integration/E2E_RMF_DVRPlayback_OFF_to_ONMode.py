@@ -78,19 +78,19 @@ iarm_obj.configureTestCase(ip,port,'E2E_RMF_LivePlayback_StandbyMode');
 loadmodulestatus = obj.getLoadModuleResult();
 loadmodulestatus1 = iarm_obj.getLoadModuleResult();
 print "Tdkintegration module loading status :  %s" %loadmodulestatus;
-loadmoduledetails = tdk_obj.getLoadModuleDetails();
+loadmoduledetails = obj.getLoadModuleDetails();
 #Reboot if rmfstreamer is not running
 if "FAILURE" in loadmodulestatus.upper():
         if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
 
                 print "rmfStreamer is not running. Rebooting STB"
-                tdk_obj.initiateReboot();
+                obj.initiateReboot();
                 iarm_obj.resetConnectionAfterReboot();
                 #Reload Test component to be tested
-                tdk_obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
-                tdk_obj.configureTestCase(ip,port,'E2E_RMF_LivePlayback_StandbyMode');
+                obj = tdklib.TDKScriptingLibrary("tdkintegration","2.0");
+                obj.configureTestCase(ip,port,'E2E_RMF_LivePlayback_StandbyMode');
                 #Get the result of connection with test component and STB
-                loadmodulestatus =tdk_obj.getLoadModuleResult();
+                loadmodulestatus =obj.getLoadModuleResult();
                 loadmodulestatus1 = iarm_obj.getLoadModuleResult();
                 #print "Re-Load Module Details : %s" %loadmoduledetails1;
                 print "Tdkintegration module loading status :  %s" %loadmodulestatus;

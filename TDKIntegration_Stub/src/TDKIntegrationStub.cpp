@@ -201,10 +201,10 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
 {
 	DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Entry\n");
         string TDK_testmodule_PR_cmd, TDK_testmodule_PR_log,line;
+	ifstream logfile;
         TDK_testmodule_PR_cmd= g_tdkPath + "/" + PRE_REQUISITE_FILE;
         TDK_testmodule_PR_log= g_tdkPath + "/" + PRE_REQUISITE_LOG_PATH;
         string pre_req_chk= "source "+TDK_testmodule_PR_cmd;
-	ifstream logfile(TDK_testmodule_PR_log.c_str());
 
         try
         {
@@ -216,12 +216,11 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
                 DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
                 return "FAILURE<DETAILS>Exception occured execution of pre-requisite script";
         }
-	if(logfile)
+#ifdef HYBRID
+        logfile.open(TDK_testmodule_PR_log.c_str());
+        if(logfile.is_open())
         {
-            logfile.open(TDK_testmodule_PR_log.c_str());
-            if(logfile.is_open())
-            {
-                if(getline(logfile,line)>0);
+            	if(getline(logfile,line)>0);
                 {
                         logfile.close();
                         DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites set\n");
@@ -231,15 +230,16 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
                 logfile.close();
                 DEBUG_PRINT(DEBUG_ERROR,"\nPre-Requisites not set\n");
                 return "FAILURE<DETAILS>Proper result is not found in the log file";
-            }
-            else
-            {
-                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the log file.\n");
-                return "FAILURE<DETAILS>Unable to open the log file";
-            }
         }
-
+        else
+        {
+        	DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the log file.\n");
+                return "FAILURE<DETAILS>Unable to open the log file";
+        }
+        
         return "SUCCESS<DETAILS>SUCCESS";
+#endif
+	return "SUCCESS";
 }
 
 /***************************************************************************
