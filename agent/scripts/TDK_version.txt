@@ -10,4 +10,4 @@
 
 RDK Test Development Kit
 
-Version : M-38
+Version : M-39
