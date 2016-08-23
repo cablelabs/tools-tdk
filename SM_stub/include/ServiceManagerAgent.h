@@ -85,9 +85,9 @@ using namespace std;
 #define FLUSH_CECDATA   "scripts/servicemanager_hdmicec_flush_cecdata.sh"
 #define CHECK_CECDATA   "scripts/servicemanager_hdmicec_check_cecdata.sh"
 
-#if defined(HAS_HDD_ENABLED_DEVICE)
+#if defined(HAS_PERSISTENT_IN_HDD)
 #define CEC_SETTING_ENABLED_FILE "/tmp/mnt/diska3/persistent/ds/cecData"
-#elif defined(HAS_FLASH_ENABLED_DEVICE)
+#elif defined(HAS_PERSISTENT_IN_FLASH)
 #define CEC_SETTING_ENABLED_FILE "/opt/persistent/ds/cecData"
 #else
 #define CEC_SETTING_ENABLED_FILE "/opt/ds/cecData"
@@ -99,6 +99,8 @@ using namespace std;
 #include "libIBus.h"
 #define CONFIG_FILE "/opt/rmfconfig.ini"
 #define IARM_BUS_TDK_NAME "TDK_Agent"
+#define OCAP_LOG "/opt/logs/ocapri_log.txt"
+#define IP_FILE "/opt/ip.txt"
 #endif
 
 #define IN

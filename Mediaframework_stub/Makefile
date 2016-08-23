@@ -69,11 +69,11 @@ LDOPTS    +=  -L $(IMAGE_PATH)/usr/local/lib \
 		-L $(IMAGE_PATH)/usr/lib \
               -L $(IMAGE_PATH)/mnt/nfs/bin/target-snmp/lib \
               -L $(RDK_BUILD_DIR)/opensource/openssl \
-	      -ltinyxml -lIARMBus -lpodmgr -ljansson -lcanh -lrdkloggers -lrmfbase -lglib-2.0 -llog4c -lqamsrc -linbsimanager -lsectionfilter -linbsectionfilter -lhnsource -lgobject-2.0
+	      -lrmfbase -lqamsrc -lhnsource
 
 ifneq ($(SINGLE_TUNER_IP_CLIENT),y)
 #LDOPTS    += -ldvrmgr -lTasseograph -ltrm -ldvrsink -ldvrmgrsoc -ltrh -lsdvsectionfilter -lrmfsdvconfiguration -lrmfsdvdiscovery -lcurl
-LDOPTS    += -ldvrmgr -lTasseograph -ltrm -ldvrsink -ldvrmgrsoc -ltrh
+LDOPTS    += -ldvrmgr -ldvrsink -ldvrmgrsoc
 endif
 BOPTS   := -shared
 

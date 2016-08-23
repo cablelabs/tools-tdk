@@ -223,7 +223,13 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
         			details = tdkTestObj.getResultDetails();
         			print "[TEST EXECUTION DETAILS] : ",details;
         			if expectedresult in actualresult:
-                			tdkTestObj.setResultStatus("SUCCESS");
+                                        #Compare the set value with get value
+                                        if 'true' in details:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                print "CecSupport value set to true"
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "CecSupport value not set to true"
         			else:
                 			tdkTestObj.setResultStatus("FAILURE");
 

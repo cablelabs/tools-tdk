@@ -50,7 +50,7 @@ INCLUDES  += 	-I./include \
 		-I$(CURL_PATH) 
 
 
-LDOPTS	  += -lIARMBus -l:libz.so.1 -lglib-2.0
+LDOPTS	  += -lIARMBus -lglib-2.0
 LIBOPTS   += -shared
 
 CC	  := g++

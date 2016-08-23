@@ -128,40 +128,6 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 			service_name = "com.comcast.hdmiCec_1"
 			register = servicemanager.registerService(smObj,service_name)
 			if "SUCCESS" in register:	
-                                #Enable the cec support setting it true.
-                                print "Set CEC Enabled"
-                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetEnabled');
-                                expectedresult = "SUCCESS"
-                                valueToSetEnabled = 1
-				print "setEnabled to ",valueToSetEnabled
-                                tdkTestObj.addParameter("valueToSetEnabled",valueToSetEnabled);
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                setEnabledDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",setEnabledDetails;
-                                if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-				else:
-					tdkTestObj.setResultStatus("FAILURE");
-
-                                #Get the cec enabled value
-                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetEnabled');
-                                expectedresult = "SUCCESS"
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                getEnabledDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",getEnabledDetails;
-                                if expectedresult in actualresult:
-                                        #Compare the set value with get value
-                                        if valueToSetEnabled == int(getEnabledDetails):
-                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                print "Get CecSupport matches with CecSupport value set"
-                                        else:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "Get CecSupport does not match with CecSupport value set"
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-
                                 #Disable the cec support setting it false.
                                 print "Set CEC Disabled"
                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetEnabled');
@@ -205,7 +171,13 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 details = tdkTestObj.getResultDetails();
                                 print "[TEST EXECUTION DETAILS] : ",details;
                                 if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
+                                        #Compare the set value with get value
+                                        if 'false' in details:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                print "CecSupport value set to false"
+                                        else:
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                                print "CecSupport value not set to false"
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
 

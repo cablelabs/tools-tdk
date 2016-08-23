@@ -9,9 +9,9 @@
 #  ============================================================================
 
 QT += widgets network core gui
-DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS DEBUG_LEVEL_TRACE RDK2DOT0 HAS_API_AVINPUT USE_AVINPUT
-
-DEFINES += $$CEC_PERSIST_NAME
+DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
+DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
+DEFINES += HAS_API_AVINPUT USE_AVINPUT
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -47,7 +47,6 @@ TARGET = servicemanagerstub
 packagesExist("gstreamer-1.0"){
 LIBS += -lgstpbutils-1.0 -lgstvideo-1.0 -lgstbase-1.0
 }
-
 else{
 LIBS += -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10
 }
@@ -59,18 +58,23 @@ LIBS += -lservicemanager -lds
 exists(../platform/SM_stub/intel.pri) : include(../platform/SM_stub/intel.pri)
 exists(../platform/SM_stub/broadcom.pri) : include(../platform/SM_stub/broadcom.pri)
 
+SOURCES += src/ServiceManagerAgent.cpp
+
 contains(DEFINES,HAS_API_HDMI_CEC) {
 HEADERS += servicemanager/include/services/hdmicecservice.h
 SOURCES += servicemanager/src/services/hdmicecservice.cpp
 LIBS += -lRCEC -lRCECOSHal -lRCECIARMBusHal
 }
 
-HEADERS += servicemanager/include/services/applicationservice.h \
-	   servicemanager/include/services/displaysettingsservice.h
+contains(DEFINES,HAS_API_APPLICATION) {
+HEADERS += servicemanager/include/services/applicationservice.h
+SOURCES += servicemanager/src/services/applicationservice.cpp \
+}
 
-SOURCES += src/ServiceManagerAgent.cpp \
-	   servicemanager/src/services/applicationservice.cpp \
-	   servicemanager/src/services/displaysettingsservice.cpp
+contains(DEFINES,USE_DISPLAY_SETTINGS) {
+HEADERS += servicemanager/include/services/displaysettingsservice.h
+SOURCES += servicemanager/src/services/displaysettingsservice.cpp
+}
 
 contains(DEFINES,HAS_API_AVINPUT) {
 HEADERS += servicemanager/include/abstractservice.h \

@@ -13,9 +13,6 @@
 #include "ServiceManagerAgent.h"
 
 #ifdef HAS_API_APPLICATION
-#define OCAP_LOG "/opt/logs/ocapri_log.txt"
-#define IP_FILE "/opt/ip.txt"
-
 QString listToString(QVariantList conInfo);
 
 /*parses and returns contents of QVariantMap as QStrings*/
@@ -1585,7 +1582,7 @@ bool ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& r
             if (ptrService != NULL)
             {
                QList<QString> method_list;
-                method_list << "downloadIP" << "ecm_ip" << "boxIP" << "estb_ip" << "macAddress" << "estb_mac" << "ecm_mac" << "ethernet_mac" << "MODEL_NUM" << "imageVersion" << "BUILD_TYPE" << "DAC_INIT_TIMESTAMP" ;
+                method_list << "ecm_ip" << "boxIP" << "estb_ip" << "macAddress" << "estb_mac" << "ecm_mac" << "ethernet_mac" << "MODEL_NUM" << "imageVersion" << "BUILD_TYPE" << "DAC_INIT_TIMESTAMP" << "downloadIP" ;
                 QVariantList paramList;
                 ServiceParams inParams;
                 ServiceParams outResult;
