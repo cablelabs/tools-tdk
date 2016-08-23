@@ -4,6 +4,7 @@ ACLOCAL_AMFLAGS = -Im4 --install
 
 AM_CPPFLAGS = -g -Wall -std=c++0x -DGCC4_XXX \
 	      -DDEBUG_CONF_FILE="\"$(CONFIG_PREFIX)debug.ini\"" \
+	      -DSYSTEMD_JOURNAL \
 	      -fPIC ${COPTS}
 
 AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \

@@ -100,6 +100,15 @@ bool CheckLog(const char* search)
     tdkLogFile.append("/logs/");
     tdkLogFile.append(TDKAGENT_LOG);
 
+#ifdef SYSTEMD_JOURNAL
+    //Redirect rdklogger journal logging to tdk log file
+    if (-1 == system("journalctl -a -u tdk"))
+    {
+        DEBUG_PRINT(DEBUG_ERROR,"Redirecting journal failed");
+        return false;
+    }
+#endif
+
     logFile.open(tdkLogFile, ios::in);
     if(logFile.is_open())
     {
