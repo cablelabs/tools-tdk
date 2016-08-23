@@ -999,8 +999,12 @@ class ExecutedbService {
 //				}
 				
 				
-				def sMap = scriptService.getScriptNameModuleNameMapping(realPath)
-				moduleName = sMap.get(scriptName)
+				if(executionResultInstance?.category != Category.RDKB_TCL){
+					def sMap = scriptService.getScriptNameModuleNameMapping(realPath)
+					moduleName = sMap.get(scriptName)
+				}else{
+					moduleName = "tcl"
+				}
 				
 				int i = 0
 				

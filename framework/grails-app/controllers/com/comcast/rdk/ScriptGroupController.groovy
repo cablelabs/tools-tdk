@@ -611,7 +611,7 @@ class ScriptGroupController {
 	def createScript() {
 		def primitiveTestList
 		def lis
-		if(params?.category?.toString().equals(RDKV) || params?.category?.toString().equals(RDKV)){
+		if(params?.category?.toString().equals(RDKV) || params?.category?.toString().equals(RDKB)){
 			//		def primitiveTestList = PrimitiveTest.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])//PrimitiveTest.list([order: 'asc', sort: 'name'])
 			primitiveTestList = primitiveService.getPrimitiveList(getRealPath(), params?.category)
 			lis = primitiveTestList.toList()
