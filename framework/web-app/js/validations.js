@@ -120,4 +120,14 @@ function populateFieldVals(id){
 		$("#createBtn").hide(); 
 	});		
 }
+function populateTestProfileField(that){
+	$.get('getTestProfile', {id:that.id}, function(data) {		
+		document.getElementById("testProfileId").value = that.id;
+		document.getElementById("name").value = data[0];
+		$("#updateBtn").show(); 
+		$("#resetBtn").show(); 
+		$("#createBtn").hide(); 
+	});
+}
+	
 	

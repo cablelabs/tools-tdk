@@ -474,7 +474,7 @@ class ExecutionController {
 		def scripts = []
 		def newScripts = []
 		if(category?.toString()?.equals('RDKB_TCL') ){
-			newScripts = scriptService.getTclFileList(getRealPath())
+			newScripts = scriptService.getTotalTCLScriptList(getRealPath())
 			newScripts?.each { it ->
 				if(it){
 					scripts?.add(it)

@@ -39,6 +39,7 @@ class TclExecutionService {
 	def logTransferService
 	def grailsApplication = Holders.grailsApplication
 	def scriptExecutionService
+	def scriptService
 
 
 	def executeTclScripts(def params, def realPath, def applicationUrl){
@@ -115,6 +116,7 @@ class TclExecutionService {
 			String filePath = realPath + FILE_SEPARATOR + "fileStore"
 			def execName
 			def executionNameForCheck
+			def combinedScript  = [:]
 
 			Map deviceDetails = [:]
 			for(int i = 0; i < repeatCount; i++ ){
@@ -128,25 +130,27 @@ class TclExecutionService {
 						if(scripts instanceof String){
 							singleScript = true
 							//def scriptInstance1 = getTclBoxDetails(realPath, deviceInstance?.stbName)
-							def scriptInstance1 = [:]
-							def scriptValid = Utility.isTclScriptExists(realPath,  scripts)
+							def scriptInstance1 = [:]					
+							
+							boolean compoundTCL = false
+							def combainedTclScript =  scriptService?.combinedTclScriptMap
+							combainedTclScript?.each{
+								if(it?.value?.toString().contains(scripts?.toString())){
+									compoundTCL = true
+								}
+							}							
+							if((scriptService?.totalTclScriptList?.toString()?.contains(scripts?.toString())) && compoundTCL ){
+								combainedTclScript?.each{									
+									if(it?.value?.toString()?.contains(scripts?.toString())){
+										scripts = it.key?.toString()
+									}
+								}
+							}
+							def scriptValid = Utility.isTclScriptExists(realPath,  scripts?.toString())
 							if(scriptValid) {
-								if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){
-									scriptInstance1.put('scriptName',scripts )
-									validScript = true
-
-									//  implement validation of boxtypes and rdk version
-
-									/*if(executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
-									 String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-									 if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
-									 validScript = true
-									 }else{
-									 htmlData = "<br>"+deviceName +"  : RDK Version supported by the script is not matching with the RDK Version of selected Device "+deviceInstance?.stbName+"<br>"
-									 }
-									 }else{
-									 htmlData = "<br>"+deviceName +" : BoxType of the script is not matching with the selected Device"
-									 */
+								if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){									
+										scriptInstance1.put('scriptName',scripts )									
+									validScript = true									
 								}
 								else{
 									htmlData = "<br>"+deviceName +"  : No Config file is available with name Config_${deviceInstance?.stbName}.txt"
@@ -155,17 +159,32 @@ class TclExecutionService {
 							}else{
 								htmlData = "<br>"+deviceName +"  : No TCL Script is available with name ${params?.scripts}"
 							}
+							
 						}
-						else{
+						else{						
 							scripts.each { script ->
 								def scriptInstance1 = [:]
+								boolean compoundTCL = false
+								def combainedTclScript =  scriptService?.combinedTclScriptMap
+								combainedTclScript?.each{
+									if(it?.value?.toString().contains(script?.toString())){
+										compoundTCL = true
+									}
+								}
+								if((scriptService?.totalTclScriptList?.toString()?.contains(script?.toString())) && compoundTCL ){
+									combainedTclScript?.each{
+										if(it?.value?.toString()?.contains(script?.toString())){
+											script = it.key?.toString()
+										}
+									}
+								}								
 								def scriptValid = Utility.isTclScriptExists(realPath, script)
 								if(scriptValid) {
 									if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){
 										scriptInstance1.put('scriptName',script )
 										validScript = true
 									}
-									/*scriptInstance1.put('scriptName',script )
+								/*scriptInstance1.put('scriptName',script )
 									 if(scriptInstance1){
 									 validScript = true
 									 // deepesh to implement validation of boxtypes and rdk version 
@@ -175,46 +194,42 @@ class TclExecutionService {
 									 validScript = true
 									 }
 									 }
-									 }*/
+									 }*/	
 								}
 							}
 						}
 					}else{
 						def scriptGroup = ScriptGroup.findById(params?.scriptGrp,[lock: true])
-
 						//String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-
 						try{
+							
 							scriptGroup?.scriptList?.each{ script ->
 								//def scriptInstance1 = getTclBoxDetails(realPath, deviceInstance?.stbName)
-								def scriptValid = Utility.isTclScriptExists(realPath, script?.scriptName)
+								if((scriptService?.totalTclScriptList?.toString()?.contains(script?.scriptName?.toString())) || !(scriptService?.tclScriptsList?.toString()?.contains(script?.scriptName?.toString())) ){
+									def combainedTclScript =  scriptService?.combinedTclScriptMap
+									combainedTclScript?.each{										
+										if(it?.value?.toString()?.contains(script?.scriptName?.toString())){
+											//def scriptFile = ScriptFile?.findByScriptName(it.key?.toString())
+											script = ["scriptName" : it?.key?.toString()]	
+										}
+									}
+								}
+								def scriptValid = Utility.isTclScriptExists(realPath, script?.scriptName?.toString())
 								if(scriptValid) {
 									if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){
 										//scriptInstance1.put('scriptName',script )
 										validScript = true
 									}
-								}
-								/**
-								 * Checks whether atleast one script matches with the box type of device.
-								 * If so execution will proceed with that one script
-								 */
-
-								// implement validation of boxtypes and rdk version
-								/*if(scriptvalidScript = trueInstance1 && executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
-								 if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
-								 validScript = true
-								 throw new Exception("return from closure")
-								 }
-								 }*/
+								}								
 							}
 						}catch(Exception e ){
+						println " ERROR "+e.getMessage()
 							if(e.getMessage() == "return from closure" ){
 
 							}else{
 								validScript = false
 							}
 						}
-
 					}
 					if(validScript){
 						if(deviceList.size() > 1){
@@ -249,8 +264,6 @@ class TclExecutionService {
 									}
 								}
 							}
-
-
 						}
 						catch(Exception eX){
 							println eX.message
@@ -260,7 +273,6 @@ class TclExecutionService {
 								allocated = true
 								executionService.deviceAllocatedList.add(deviceInstance?.id)
 							}
-
 							deviceInstance = Device.findById(device)
 							def executionSaveStatus = true
 							def execution = null
@@ -270,7 +282,6 @@ class TclExecutionService {
 								scripts = params?.scripts
 								if(scripts instanceof String){
 									//def scriptInstance1 = getTclBoxDetails(realPath, deviceInstance?.stbName)
-
 									// to implement validation of boxtypes and rdk version
 									scriptStatus = scriptVersionStatus = true
 									/*scriptStatus = executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)
@@ -301,8 +312,7 @@ class TclExecutionService {
 									if(scriptName.equals(MULTIPLESCRIPT)){
 										def  scriptCount = params?.scripts?.size()
 										executionSaveStatus = executionService.saveExecutionDetailsOnMultipleScripts(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,isLogReqd,scriptCount, "RDKB_TCL", FALSE)
-									}else{
-										//executionSaveStatus = executionService.saveExecutionDetails(execName, scriptName, deviceName, scriptGroupInstance,url,isBenchMark,isSystemDiagnostics,rerun,isLogReqd)
+									}else{																											
 										executionSaveStatus = executionService.saveExecutionDetails(execName, [scriptName:scriptName, deviceName:deviceName, scriptGroupInstance:scriptGroupInstance, appUrl : url, isBenchMark : isBenchMark, isSystemDiagnostics: isSystemDiagnostics, rerun : rerun, isLogReqd:isLogReqd, category: "RDKB_TCL", rerunOnFailure : FALSE])
 									}
 
@@ -344,6 +354,7 @@ class TclExecutionService {
 
 
 									}else{
+
 										htmlData = executescriptsOnDevice(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
 												filePath, realPath, params?.myGroup, url, isBenchMark, isSystemDiagnostics, params?.rerun,isLogReqd, params?.category)
 										output.append(htmlData)
@@ -470,10 +481,8 @@ class TclExecutionService {
 		return htmlData
 	}
 
-
 	def executescriptsOnDevice(String execName, String device, ExecutionDevice executionDevice, def scripts, def scriptGrp,
 			def executionName, def filePath, def realPath, def groupType, def url, def isBenchMark, def isSystemDiagnostics, def rerun,def isLogReqd, def category) {
-
 		boolean aborted = false
 		boolean pause = false
 		def scriptInstance
@@ -481,6 +490,7 @@ class TclExecutionService {
 		Device.withTransaction {
 			deviceInstance= Device.findById(device)
 		}
+		
 		ScriptGroup scriptGroupInstance
 		StringBuilder output = new StringBuilder();
 		def htmlData = ""
@@ -489,31 +499,48 @@ class TclExecutionService {
 		def isMultiple = TRUE
 		List pendingScripts = []
 		try{
-
 			if(groupType == TEST_SUITE){
+				
 				scriptCounter = 0
 				boolean skipStatus = false
 				boolean notApplicable = false
 				List validScriptList = new ArrayList()
 				String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-
+				def tclCombainedScriptMap = [:]				
 				ScriptGroup.withTransaction { trans ->
 					scriptGroupInstance = ScriptGroup.findById(scriptGrp)
 					scriptGroupInstance?.scriptList?.each { script ->
 						//def scriptInstance1 = scriptService.getScript(realPath,script?.moduleName, script?.scriptName, category)
 						def scriptInstance1 = [:]
-						if(Utility.isTclScriptExists(realPath, script?.scriptName)){
-							if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){
-								scriptInstance1.put('scriptName', script?.scriptName)
+						def combainedTclScript =  scriptService?.combinedTclScriptMap
+						def newScriptName  = ""
+						boolean tclCombained =  false
+						combainedTclScript?.each{
+							if(it?.value?.toString()?.contains(script?.scriptName.toString())){
+								tclCombainedScriptMap.put(script?.scriptName,it.key?.toString())								
+								newScriptName = it.key?.toString()
+								tclCombained = true
+							}
+						}
+						if(tclCombained ){
+							newScriptName= newScriptName
+						}else{
+							newScriptName = script?.scriptName?.toString()
+						}
+						if(Utility.isTclScriptExists(realPath, newScriptName)){
+							if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){		
+								if(tclCombained){
+									scriptInstance1.put('scriptName',newScriptName)	
+								}else{
+									scriptInstance1.put('scriptName', script?.scriptName)									
+								}
 								validScriptList << scriptInstance1
 							}
 							else{
 								String reason = "No config file is available with name : Config_"+deviceInstance?.stbName+".txt"
 								executionService.saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, script?.scriptName, deviceInstance,reason, category)
 							}
-
-
-							//// implement validation of boxtypes and rdk version
+    //// implement validation of boxtypes and rdk version
 
 							/*if(executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
 							 if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
@@ -543,11 +570,9 @@ class TclExecutionService {
 							 executionService.saveNotApplicableStatus(Execution.findByName(execName), executionDevice, scriptInstance1, deviceInstance,reason, category)
 							 }*/
 						}else{
-
 							String reason = "No script is available with name :"+script?.scriptName+" in module :"+script?.moduleName
 							executionService.saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, script?.scriptName, deviceInstance,reason, category)
-
-						}
+						}		
 					}
 				}
 				scriptGrpSize = validScriptList?.size()
@@ -558,16 +583,12 @@ class TclExecutionService {
 					executionService.updateExecutionSkipStatusWithTransaction(FAILURE_STATUS, exeId)
 					executionService.updateExecutionDeviceSkipStatusWithTransaction(FAILURE_STATUS, executionDevice?.id)
 				}
-
-
 				boolean executionStarted = false
-
 				if(validScriptList.size() > 0){
 					logTransferService.transferLog(execName, deviceInstance)
-				}
-
+				}	
+				int index = 0				
 				validScriptList.each{ scriptObj ->
-
 					executionStarted = true
 					scriptCounter++
 					if(scriptCounter == scriptGrpSize){
@@ -589,32 +610,48 @@ class TclExecutionService {
 						}
 					}
 					if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString())) && !pause){
-						executionStarted = true
+						executionStarted = true						
 						try {
-							htmlData = executeScript(execName, executionDevice, scriptObj, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics, executionName, isMultiple,null,isLogReqd, category)
+							def combainedTcl = [:]
+							//combainedTcl?.put("scriptName","")
+							 if(scriptGroupInstance?.scriptList?.size() ==  validScriptList?.size()){
+								 if( !(scriptService?.totalTclScriptList?.toString()?.contains(scriptObj?.scriptName?.toString())) && scriptService?.tclScriptsList?.toString()?.contains(scriptObj?.scriptName?.toString())){
+									 combainedTcl?.put("scriptName", scriptGroupInstance?.scriptList[index]?.toString())
+								 }else{
+								 	combainedTcl?.put("scriptName","")									
+								 }
+							 }
+							 index = index + 1
+							
+							htmlData = executeScript(execName, executionDevice, scriptObj, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics, executionName, isMultiple,null,isLogReqd, category, combainedTcl)
 
 						} catch (Exception e) {
-
 							e.printStackTrace()
 						}
 						output.append(htmlData)
 						Thread.sleep(6000)
 					}else{
-
 						if(!aborted && (devStatus.equals(Status.NOT_FOUND.toString()) ||  devStatus.equals(Status.HANG.toString()))){
 							pause = true
-						}
-
+						}						
 						if(!aborted && pause) {
+							def newScriptName 
+							if(scriptGroupInstance?.scriptList?.size() ==  validScriptList?.size()){
+								if( !(scriptService?.totalTclScriptList?.toString()?.contains(scriptObj?.scriptName?.toString())) && scriptService?.tclScriptsList?.toString()?.contains(scriptObj?.scriptName?.toString())){
+									newScriptName=  scriptGroupInstance?.scriptList[index]?.toString()
+								}else{
+								newScriptName = scriptObj?.scriptName
+								}
+							}							
 							try {
-								pendingScripts.add(scriptObj)
+								pendingScripts.add(newScriptName)
 								def execInstance
 								Execution.withTransaction {
 									def execInstance1 = Execution.findByName(execName)
 									execInstance = execInstance1
 								}
 								def scriptInstanceObj
-								scriptInstanceObj = scriptObj
+								scriptInstanceObj = newScriptName
 								Device deviceInstanceObj
 								def devId = deviceInstance?.id
 								Device.withTransaction {
@@ -625,14 +662,13 @@ class TclExecutionService {
 								ExecutionDevice.withTransaction {
 									def exDev = ExecutionDevice.findById(executionDevice?.id)
 									executionDevice1 = exDev
-								}
-
+								}								
 								ExecutionResult.withTransaction { resultstatus ->
 									try {
 										def executionResult = new ExecutionResult()
 										executionResult.execution = execInstance
 										executionResult.executionDevice = executionDevice1
-										executionResult.script = scriptInstanceObj?.name
+										executionResult.script = scriptInstanceObj
 										executionResult.device = deviceInstanceObj?.stbName
 										executionResult.execDevice = null
 										executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
@@ -648,7 +684,8 @@ class TclExecutionService {
 									}
 								}
 							} catch (Exception e) {
-							}
+							}							
+							index = index + 1
 
 						}
 					}
@@ -669,19 +706,44 @@ class TclExecutionService {
 				}
 			}
 			else if(groupType == SINGLE_SCRIPT){
+				
 				if(scripts instanceof String){
+					
 					def script1 = [:]
-
+					def combinedScript = [:]
+					def scriptNameTcl
+					boolean tclCombained =  false
+					boolean compoundTCL = false
+					def combainedTclScript =  scriptService?.combinedTclScriptMap
+					combainedTclScript?.each{ 
+						if(it?.value?.toString().contains(scripts?.toString())){
+							compoundTCL = true 							
+						}						
+					}
+					if((scriptService?.totalTclScriptList?.toString()?.contains(scripts?.toString())) && compoundTCL ){
+						scriptNameTcl = scripts						
+						combainedTclScript?.each{
+							if(it?.value?.toString()?.contains(scripts?.toString())){
+								scripts = it.key?.toString()								
+								tclCombained =true
+							}
+						}
+					}				
 					if(Utility.isTclScriptExists(realPath, scripts)){
 						if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){
 							script1.put('scriptName', scripts)
+							if(tclCombained){
+								combinedScript.put("scriptName",scriptNameTcl)
+							}else{
+								combinedScript?.put("scriptName","")
+							}
 						}
-					}
-
+					}	
+									
 					isMultiple = FALSE
-					try {
+					try { 						
 						htmlData = executeScript(execName, executionDevice, script1, deviceInstance, url, filePath, realPath, isBenchMark,
-								isSystemDiagnostics,executionName,isMultiple,null,isLogReqd, category)
+								isSystemDiagnostics,executionName,isMultiple,null,isLogReqd, category, combinedScript )
 						def exeInstance = Execution.findByName(execName)
 						if(executionService.abortList.contains(exeInstance?.id?.toString())){
 							aborted = true
@@ -693,31 +755,34 @@ class TclExecutionService {
 					output.append(htmlData)
 				}
 				else{
+					
 					scriptCounter = 0
-					List validScripts = new ArrayList()
+					List validScripts = new ArrayList()				
 					String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
 					boolean notApplicable = false
 					boolean skipStatus = false
-					scripts.each { script ->
+					def tclCombained = false
+					boolean compoundTCL = false
+					def scriptNameTcl
+					def combinedScript = [:]				
+					scripts.each { script ->						
 						scriptInstance = [:]
-						//scriptInstance = Script.findById(script,[lock: true])
-						//
-						/*def moduleName= scriptService.scriptMapping.get(script)
-						 if(moduleName){*/
-						//scriptInstance = getTclSc   realPath,moduleName,script, category)
+						def combainedTclScript =  scriptService?.combinedTclScriptMap						
+						combainedTclScript?.each{
+							if(it?.value?.toString()?.contains(script?.toString())){								
+								script = it.key?.toString()
+							}
+						}						
 						if(Utility.isTclScriptExists(realPath, script)){
 							if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){
-								scriptInstance.put('scriptName',script)
-								validScripts << scriptInstance
+								scriptInstance.put('scriptName',script)								
+								validScripts << scriptInstance								
 							}
 							else{
 								String reason = "No config file is available with name : Config_"+deviceInstance?.stbName+".txt"
 								executionService.saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, script, deviceInstance,reason, category)
 							}
-
-
-
-							//  to implement validation of boxtypes and rdk version
+	//  to implement validation of boxtypes and rdk version
 
 							/*if(executionService.validateScriptBoxTypes(scriptInstance,deviceInstance)){
 							 if(executionService.validateScriptRDKVersions(scriptInstance,rdkVersion)){
@@ -747,10 +812,8 @@ class TclExecutionService {
 							 executionService.saveNotApplicableStatus(Execution.findByName(execName), executionDevice, scriptInstance, deviceInstance,reason, category)
 							 }*/
 						}else{
-
 							String reason = "No tcl script is available with name :"+script+".tcl"
 							executionService.saveNoScriptAvailableStatus(Execution.findByName(execName), executionDevice, script, deviceInstance,reason, category)
-
 						}
 					}
 					scriptGrpSize = validScripts?.size()
@@ -766,40 +829,55 @@ class TclExecutionService {
 						println e.message
 					}
 					String devStatus = ""
-					validScripts.each{ script ->
+					int index = 0
+					
+					validScripts.each{ script ->					
 						scriptCounter++
 						if(scriptCounter == scriptGrpSize){
 							isMultiple = FALSE
 						}
-						try {
-							// This code for issue fix . while  selecting multiple script the  box is not up then the pending script not executed
+						try {							
 							aborted = executionService.abortList.contains(exeId?.toString())
 							devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
-
 							if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()))){
-
-								try{
-									htmlData = executeScript(execName, executionDevice, script, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics,executionName,isMultiple,null,isLogReqd, Category.RDKB_TCL.toString())
+								try{	
+									def combainedTcl  = [:]							
+									if(scripts?.size() ==  validScripts?.size()){										
+										if( scripts?.toString()?.contains(script?.scriptName?.toString())){										
+											combainedTcl?.put("scriptName","")
+										}else{										
+											combainedTcl?.put("scriptName", scripts[index])
+										}								
+									}
+									
+									index = index + 1									
+									htmlData = executeScript(execName, executionDevice, script, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics,executionName,isMultiple,null,isLogReqd, Category.RDKB_TCL.toString(), combainedTcl)		
 								}catch(Exception e){
 									e.printStackTrace()
 								}
-
-
-							}else 	{
+							}else {
 								if(!aborted && devStatus.equals(Status.NOT_FOUND.toString())){
 									pause = true
 								}
-
 								if(!aborted && pause) {
+									def newScriptName
 									try {
-										pendingScripts.add(script)
+										if(scripts?.size() ==  validScripts?.size()){
+											if( scripts?.toString()?.contains(script?.scriptName?.toString())){
+												newScriptName = script?.scriptName?.toString()
+											}else{
+												newScriptName = scripts[index].toString()
+											}
+										}
+										
+										pendingScripts.add(newScriptName)
 										def execInstance
 										Execution.withTransaction {
 											def execInstance1 = Execution.findByName(execName)
 											execInstance = execInstance1
 										}
-										Script scriptInstanceObj
-										scriptInstanceObj = scriptInstance
+										//Script scriptInstanceObj
+										//scriptInstanceObj = scriptInstance
 										Device deviceInstanceObj
 										def devId = deviceInstance?.id
 										Device.withTransaction {
@@ -817,7 +895,7 @@ class TclExecutionService {
 												def executionResult = new ExecutionResult()
 												executionResult.execution = execInstance
 												executionResult.executionDevice = executionDevice1
-												executionResult.script = scriptInstanceObj?.name
+												executionResult.script = newScriptName
 												executionResult.device = deviceInstanceObj?.stbName
 												executionResult.execDevice = null
 												executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
@@ -833,8 +911,8 @@ class TclExecutionService {
 										}
 									} catch (Exception e) {
 										e.printStackTrace()
-
 									}
+									index = index+1
 								}
 							}
 							if(aborted && executionService.abortList.contains(exeId?.toString())){
@@ -850,6 +928,7 @@ class TclExecutionService {
 						}
 						output.append(htmlData)
 						Thread.sleep(6000)
+						
 					}
 				}
 			}
@@ -860,14 +939,14 @@ class TclExecutionService {
 			}
 			htmlData = ""
 
-			if(!aborted && !pause){
+			if(!aborted && !pause){			
 				def executionDeviceObj1
 				ExecutionDevice.withTransaction{ wthTrans ->
 					def executionObj = Execution.findByName(execName)
 					def executionDeviceObj = ExecutionDevice.findAllByExecutionAndStatusNotEqual(executionObj, SUCCESS_STATUS)
 					executionDeviceObj1 = executionDeviceObj
-				}
-				if((executionDeviceObj1) && (rerun?.toString()?.equals("true"))){
+				}				
+				if((executionDeviceObj1) && ((rerun?.toString()?.equals(TRUE) || (rerun?.toString()?.equals("on"))))){
 					htmlData = reRunOnFailure(realPath,filePath,execName,executionName,url, category)
 					output.append(htmlData)
 				}
@@ -880,7 +959,6 @@ class TclExecutionService {
 
 		}
 		catch(Exception ex){
-
 		}
 		finally{
 			if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
@@ -910,7 +988,7 @@ class TclExecutionService {
 	def String executeScript(final String executionName, final ExecutionDevice executionDevice, final def scriptInstance,
 			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark,
 			final String isSystemDiagnostics,final String uniqueExecutionName,final String isMultiple, def executionResult,def isLogReqd,
-			final def category) {
+			final def category , final def combainedTcl) {
 		Date startTime = new Date()
 		String htmlData = ""
 		String stbIp = STRING_QUOTES + deviceInstance.stbIp + STRING_QUOTES
@@ -921,16 +999,25 @@ class TclExecutionService {
 		def totalTimeArray = Execution.executeQuery("select a.realExecutionTime from Execution a where a.name = :exName",[exName: executionName])
 		def executionResultId
 		if(executionResult == null){
-			try {
+			def newScriptName
+			try {			
+				
+				
+				if(combainedTcl?.scriptName){
+					newScriptName=combainedTcl?.scriptName
+				}else{
+					newScriptName=scriptInstance?.scriptName
+				}
 				def sql = new Sql(dataSource)
 				sql.execute("insert into execution_result(version,execution_id,execution_device_id,script,device,date_of_execution,status,category) values(?,?,?,?,?,?,?,?)",
-						[1,executionInstance?.id, executionDevice?.id, scriptInstance?.scriptName,  deviceInstance.stbName, startTime, UNDEFINED_STATUS, category])
+						[1,executionInstance?.id, executionDevice?.id, newScriptName?.toString(),  deviceInstance.stbName, startTime, UNDEFINED_STATUS, category])
 				def result = ExecutionResult.findByExecution(executionInstance)
 			} catch (Exception e) {
 				e.printStackTrace()
 				println e.message
 			}
-			def resultArray1 = ExecutionResult.executeQuery("select a.id from ExecutionResult a where a.execution = :exId and a.script = :scriptname and device = :devName ",[exId: executionInstance, scriptname: scriptInstance.scriptName, devName: deviceInstance?.stbName.toString()])
+			
+			def resultArray1 = ExecutionResult.executeQuery("select a.id from ExecutionResult a where a.execution = :exId and a.script = :scriptname and device = :devName ",[exId: executionInstance, scriptname: newScriptName?.toString(), devName: deviceInstance?.stbName.toString()])
 			if(resultArray1[0]){
 				executionResultId = resultArray1[0]
 			}
@@ -959,13 +1046,13 @@ class TclExecutionService {
 		def  scriptDir = grailsApplication.parentContext.getResource("fileStore"+FILE_SEPARATOR+FileStorePath.RDKTCL.value()).file?.absolutePath
 		def tclFilePath = scriptDir+FILE_SEPARATOR+sFile.scriptName+".tcl"
 		def configFilePath = scriptDir+FILE_SEPARATOR+"Config_" + deviceInstance?.stbName+".txt"
-		String outData = executionService.executeTclScript(tclFilePath, configFilePath, execTime, uniqueExecutionName , scriptInstance.scriptName, scriptDir)
+		String outData		
+		outData = executionService?.executeTclScript(tclFilePath, configFilePath, execTime, uniqueExecutionName , scriptInstance.scriptName, scriptDir,combainedTcl.scriptName )
+		//outData = executionService?.executeTclScript(tclFilePath, configFilePath, execTime, uniqueExecutionName , scriptInstance.scriptName, scriptDir )
+	
 
 		def logPath = "${realPath}/logs//${executionId}//${executionDevice?.id}//${executionResultId}//"
 		executescriptService.copyLogsIntoDir(realPath,logPath, executionId,executionDevice?.id, executionResultId)
-
-
-		//println "outData : "+outData
 
 		outData?.eachLine { line ->
 			htmlData += (line + HTML_BR )
@@ -988,7 +1075,6 @@ class TclExecutionService {
 
 		timeDiff =  String.valueOf(myVal1)
 		if(executionService.abortList.contains(executionInstance?.id?.toString())){
-
 			executescriptService.resetAgent(deviceInstance,TRUE)
 		}else if(Utility.isFail(htmlData) ){
 			def logTransferFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
@@ -1116,7 +1202,7 @@ class TclExecutionService {
 	}
 
 	def reRunOnFailure(final String realPath, final String filePath, final String execName, final String uniqueExecutionName, final String appUrl, final String category){
-		try {
+		try {			
 			boolean pause = false
 			List pendingScripts = []
 			def aborted=false
@@ -1128,7 +1214,6 @@ class TclExecutionService {
 			Execution rerunExecutionInstance
 			def executionSaveStatus = true
 			if(result != SUCCESS_STATUS){
-
 				def scriptName
 				def scriptGroupInstance = ScriptGroup.findByName(executionInstance?.scriptGroup)
 				/**
@@ -1163,7 +1248,6 @@ class TclExecutionService {
 						catch(Exception eX){
 							println  " ERROR "+ eX.printStackTrace()
 						}
-
 						if(cnt == 0){
 							newExecName = execName + RERUN
 							scriptName = executionInstance?.script
@@ -1227,13 +1311,38 @@ class TclExecutionService {
 									}catch (Exception e){
 										e.getMessage()
 									}
-
-									if(Utility.isTclScriptExists(realPath, executionResult?.script)){
-										scriptInstance.put('scriptName', executionResult?.script)
+									
+									def scriptNameTcl
+									boolean tclCombained =  false
+									boolean compoundTCL = false
+									def combainedTclScript =  scriptService?.combinedTclScriptMap
+									combainedTclScript?.each{
+										if(it?.value?.toString().contains(executionResult?.script?.toString())){
+											compoundTCL = true
+											scriptNameTcl = it.key?.toString()
+										}
+									}
+									if(compoundTCL ){
+										scriptNameTcl= scriptNameTcl
+									}else{
+										scriptNameTcl = executionResult?.script?.toString()
+									}
+									
+									/*if((scriptService?.totalTclScriptList?.toString()?.contains(executionResult?.script?.toString())) && compoundTCL ){
+										scriptNameTcl = executionResult?.script?.toString()
+										combainedTclScript?.each{
+											if(it?.value?.toString()?.contains(executionResult?.script?.toString())){
+												scriptNameTcl = it.key?.toString()
+												tclCombained =true
+											}
+										}
+									}*/									
+									if(Utility.isTclScriptExists(realPath, scriptNameTcl)){
+										scriptInstance.put('scriptName', scriptNameTcl)
 										//aborted = executionService.abortList.contains(exeId?.toString())
 										aborted = executionService.abortList?.toString().contains(executionName?.id?.toString())
 										if(!aborted && !(deviceStatus?.toString().equals(Status.NOT_FOUND.toString()) || deviceStatus?.toString().equals(Status.HANG.toString())) && !pause){
-											htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null,"false", category)
+											htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null,"false", category,["scriptName":""])
 
 										}else{
 											if(!aborted && (deviceStatus.equals(Status.NOT_FOUND.toString()) ||  deviceStatus.equals(Status.HANG.toString()))){
@@ -1303,13 +1412,13 @@ class TclExecutionService {
 								executionService.abortList.remove(executionName?.id?.toString())
 							}
 							Execution executionInstance1 = Execution.findByName(newExecName)
-							if(!aborted && pause && pendingScripts.size() > 0 ){			
+							if(!aborted && pause && pendingScripts.size() > 0 ){
 								executionService.savePausedExecutionStatus(executionInstance1?.id)
 								executionService.saveExecutionDeviceStatusData(PAUSED, executionDevice?.id)
 							}
 							if(!aborted && !pause){
-								executionService.saveExecutionStatus(aborted,executionInstance1?.id)								
-							}							
+								executionService.saveExecutionStatus(aborted,executionInstance1?.id)
+							}
 						}
 						if(allocated && executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 							executionService.deviceAllocatedList.remove(deviceInstance?.id)
@@ -1410,17 +1519,13 @@ class TclExecutionService {
 					executionService.updateExecutionDeviceSkipStatusWithTransaction(FAILURE_STATUS, execDevice?.id)
 				}
 			}
-
 			boolean executionStarted = false
 			List pendingScripts = []
-
 			validScripts.each{ scriptInstance ->
 				scriptCounter++
 				if(scriptCounter == scriptGrpSize){
 					isMultiple = "false"
 				}
-
-
 				aborted = ExecutionService.abortList.contains(ex?.id?.toString())
 				String devStatus = ""
 				if(!pause && !aborted){
@@ -1512,7 +1617,6 @@ class TclExecutionService {
 					exDevice.save();
 				}
 			}
-
 
 			Execution executionInstance1 = Execution.findByName(execName)
 			if(!pause){

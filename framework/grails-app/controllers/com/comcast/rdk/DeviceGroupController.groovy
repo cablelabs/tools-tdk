@@ -1047,8 +1047,7 @@ class DeviceGroupController {
 					devList?.each{ dev ->
 						JsonObject device = new JsonObject()
 						device.addProperty("name", dev?.stbName)
-						device.addProperty("boxtype", dev?.boxType?.name)
-						
+						device.addProperty("boxtype", dev?.boxType?.name)						
 						//adding category of device - broadband or video
 						device.addProperty("category", dev?.category?.toString())
 						
@@ -1058,7 +1057,17 @@ class DeviceGroupController {
 								device.addProperty("mocachild", "true")
 								if(dev?.gatewayIp){
 									def devv = Device?.findByStbIpAndIsChild(dev?.gatewayIp,0)
-									device.addProperty("gateway", devv?.stbName)
+									//device.addProperty("gateway", devv?.stbName)
+									if(devv){
+										device.addProperty("gateway", devv?.stbName)
+								  }else{
+										 Device gwDev = findGatewayDevice(dev)
+										 if(gwDev){
+											   device.addProperty("gateway", gwDev?.stbName)
+										}else{
+											   device.addProperty("gateway", "not available")
+										}
+								  }
 								}
 							}else{
 								device.addProperty("ip", dev?.stbIp)
@@ -1082,6 +1091,24 @@ class DeviceGroupController {
 			e.printStackTrace()
 		}
 		render deviceJson
+	}
+	
+	/**
+	 * Function for finding the Gateway device 
+	 * @param device
+	 * @return
+	 */	
+	def findGatewayDevice(Device device){
+		def btList = BoxType.findAllByType("Gateway")
+		btList?.each { bt ->
+			def devList = Device.findAllByBoxType(bt)
+			devList?.each { dev ->
+				if(dev?.childDevices?.contains(device)){
+					return dev;
+				}
+			}
+		}
+		return null
 	}
 	
 	/**

@@ -46,6 +46,7 @@ class ScriptGroupController {
 	 * Injecting scriptgroupService
 	 */
 	def scriptgroupService
+	
 	public static final String EXPORT_EXCEL_FORMAT 			= "excel"
 	public static final String EXPORT_EXCEL_EXTENSION 		= "xls"
 
@@ -68,9 +69,11 @@ class ScriptGroupController {
 		 def lists = ScriptGroup.executeQuery('select name from ScriptGroup')
 		 [scriptGroupInstanceList: lists, scriptGroupInstanceTotal: lists.size(),error: params.error, scriptId: params.scriptId, scriptGroupId:params.scriptGroupId, scriptInstanceTotal: scriptNameList.size(), scriptGroupMap:scriptGroupMap]
 		 */
-		def scriptNameListV = scriptService.getScriptNameList(requestGetRealPath,RDKV)
-		scriptNameListV = scriptNameListV?scriptNameListV:[]
-		def scriptNameListB = scriptService.getScriptNameList(requestGetRealPath, RDKB)
+		
+		
+		def scriptNameListV = scriptService?.getScriptNameList(requestGetRealPath,RDKV)
+		scriptNameListV = scriptNameListV?scriptNameListV:[]	
+		def scriptNameListB = scriptService?.getScriptNameList(requestGetRealPath, RDKB)	
 		scriptNameListB = scriptNameListB?scriptNameListB:[]
 		def scriptNameListTCL = scriptService.getTCLNameList(requestGetRealPath)
 		scriptNameListTCL = scriptNameListTCL?scriptNameListTCL?.sort():[]
@@ -89,7 +92,7 @@ class ScriptGroupController {
 		def moduleMap =[:]
 		testGroup.each { moduleName  ->
 			moduleMap.put(moduleName,moduleName.testGroup)
-		}
+		}	
 		//[scriptGroupInstanceList: lists, scriptGroupInstanceTotal: lists.size(),error: params.error, scriptId: //params.scriptId, scriptGroupId:params.scriptGroupId, scriptInstanceTotal: scriptNameList.size(), //scriptGroupMap:scriptGroupMap, testGroup : moduleMap]
 		listsTCL = listsTCL?listsTCL?.sort():[]
 		//[scriptGroupInstanceList: lists, scriptGroupInstanceTotal: lists.size(),
@@ -99,7 +102,9 @@ class ScriptGroupController {
 			scriptGroupInstanceTotalV: listsV?.size(), scriptGroupInstanceTotalB: listsB?.size(),
 			tclScripts:scriptNameListTCL, tclScriptInstanceTotal:scriptNameListTCL?.size(),  scriptGrpTcl :listsTCL, tclScriptSize : listsTCL?.size(), testGroup : moduleMap ]
 	}
-
+	
+	
+	
 	/**
 	 * Method to get script file list when selecting test suite 
 	 */
@@ -121,8 +126,6 @@ class ScriptGroupController {
 		}
 		render  new Gson().toJson(finalScripts)
 	}
-
-
 	/**
 	 * Method to create the filtered script list based on module
 	 * @param scriptInstanceList
@@ -232,18 +235,18 @@ class ScriptGroupController {
 		def category = params?.category?.trim()
 		def scriptNameList = []  
 		def sList = null
-		if(!Category.RDKB_TCL.toString().equals(category)){
+		if(!(Category.RDKB_TCL.toString().equals(category))){
 			scriptNameList = scriptService.getScriptNameFileList(getRealPath(), category)
 		}else{
 			//issue fix 
-			 scriptService.tclScriptsList.each{
+			 scriptService.totalTclScriptList.each{
 				 if(it){
 					 scriptNameList?.add(it)
 				 }
 			 }
 		}
 		sList = scriptNameList.clone()		
-			sList?.sort{a,b -> a?.scriptName <=> b?.scriptName}
+			sList?.sort{a,b -> a?.scriptName <=> b?.scriptName} 
 		[scriptGroupInstance: new ScriptGroup(params),scriptInstanceList:sList,category:params?.category]
 	}
 
@@ -252,7 +255,7 @@ class ScriptGroupController {
 	 * Method to create script group.
 	 * @return
 	 */
-	def createScriptGrp(){
+	def createScriptGrp(){		
 		def errorList= []
 		def scriptGroupInstance = new ScriptGroup(params)
 		scriptGroupInstance.category = Utility.getCategory(params?.category)
@@ -279,12 +282,14 @@ class ScriptGroupController {
 
 			if(token && token.size()>0){
 				ScriptFile sctFile = ScriptFile.findById(token)
+			
 				if(sctFile && !scriptGroupInstance?.scriptList?.contains(sctFile)){
 					scriptGroupInstance.addToScriptList(sctFile)
 				}
 
 			}
 		}
+	
 
 		scriptGroupInstance.groups = utilityService.getGroup()
 		if (!scriptGroupInstance.save(flush: true)) {
@@ -475,6 +480,7 @@ class ScriptGroupController {
 
 	def edit(String name) {
 		def scriptGroupInstance = ScriptGroup.findByName(name)
+	
 		if (!scriptGroupInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [
 				message(code: 'scriptGroup.label', default: 'Test Suite'),
@@ -489,12 +495,12 @@ class ScriptGroupController {
 			scripts = scriptService.getScriptNameFileList(getRealPath(), scriptGroupInstance?.category?.toString());
 		}
 		else{
-			scripts = scriptService.tclScriptsList
+			scripts = scriptService.totalTclScriptList
 		}
 		def list4 = scripts.findAll(){
 			!((scriptGroupInstance.scriptList).contains(it))
 		}
-		list4.sort{a,b -> a?.scriptName <=> b?.scriptName}
+		list4.sort{a,b -> a?.scriptName <=> b?.scriptName}		
 
 		[scripts:list4,scriptNameList:scriptGroupInstance.scriptList,scriptGroupInstance: scriptGroupInstance , value : params.value]
 	}
@@ -827,13 +833,18 @@ class ScriptGroupController {
 			script.put("primitiveTest",primitiveTst)
 			def versList = []
 			def btList = []
+			def testProfileList =[]
 			Set btSet = node?.boxTypes.boxType.collect{ it.text() }
 			Set versionSet = node?.rdkVersions.rdkVersion.collect{ it.text() }
+			Set testProfileSet =  node?.test_profiles?.test_profile?.collect{ it.text() }
 			btSet.each { bt ->
 				btList.add(BoxType.findByName(bt))
 			}
 			versionSet.each { ver ->
 				versList.add(RDKVersions.findByBuildVersion(ver))
+			}
+			testProfileSet?.each{ tProfile ->
+				testProfileList?.add(TestProfile?.findByName(tProfile))
 			}
 			script.put("rdkVersions", versList)
 			script.put("boxTypes", btList)
@@ -841,6 +852,7 @@ class ScriptGroupController {
 			script.put("synopsis", node?.synopsis?.text())
 			script.put("scriptContent", scriptContent)
 			script.put("executionTime", node.execution_time.text())
+			script.put("testProfile",testProfileList)
 		}
 		return script
 	}
@@ -850,10 +862,9 @@ class ScriptGroupController {
 	 * @return
 	 */
 	def saveScript() {	
-		
 		def error = ''
-		def scriptList = scriptService.getScriptNameList(params?.category)
-			def scriptListRDKV  = scriptService.getScriptNameList(request.getRealPath("/"),RDKV)
+		def scriptList = scriptService.getScriptNameList(params?.category?.toString())
+		def scriptListRDKV  = scriptService.getScriptNameList(request.getRealPath("/"),RDKV)
 		def scriptListRDKB  = scriptService.getScriptNameList(request.getRealPath("/"),RDKB)	
 		if(scriptListRDKV?.toString()?.contains(params?.name?.toString()) || scriptListRDKB?.toString()?.contains(params?.name?.toString())){
 			render("Duplicate Script Name not allowed. Try Again.")
@@ -901,11 +912,11 @@ class ScriptGroupController {
 			}else{
 				longDuration = false
 			}
-
-
 			Set boxTypes = []
 			Set rdkVersions = []
 			Set scrptTags = []
+			Set testProfileList = []
+			
 			try {
 
 				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
@@ -973,7 +984,6 @@ class ScriptGroupController {
 
 					xml.rdk_versions(){
 						rdkVersList?.each { vers ->
-
 							def rdkVers = RDKVersions.findById(vers)
 							rdkVersions.add(rdkVers)
 							xml.rdk_version(rdkVers?.buildVersion)
@@ -1000,8 +1010,22 @@ class ScriptGroupController {
 					} catch (Exception e) {
 						println " error "+e.getMessage()
 						e.printStackTrace()
+					}				
+					
+					if(params?.testProfile)	{
+						def  scriptTestProfiles = params?.testProfile
+						if(scriptTestProfiles && scriptTestProfiles?.size() >  0){
+							xml.test_profiles(){
+								scriptTestProfiles?.each{
+									def tProfile = TestProfile?.findById(it)
+									testProfileList.add(tProfile?.toString())
+									xml.test_profile(tProfile)
+								}
+							}
+						}
 					}
-
+					
+					
 				}
 
 				String dirname = ptest?.module?.name
@@ -1023,32 +1047,24 @@ class ScriptGroupController {
 				File file = new File( pathToDir + Constants.FILE_SEPARATOR + scriptsDirName + Constants.FILE_SEPARATOR+dirname+Constants.FILE_SEPARATOR+params?.name?.trim()+".py");
 				if(!file.exists()){
 					file.createNewFile()
-				}
-				
-				
-				// New change ----->>
+				}				
 				File pyHeader = new File( "${request.getRealPath('/')}//fileStore//pyHeader.txt")
-				def pyHeaderContentList = pyHeader?.readLines()
+				
+				def pyHeaderContentList = pyHeader?.readLines()				
 				String pyHeaderContent = ""
 				pyHeaderContentList.each {
 					pyHeaderContent += it?.toString()+"\n"
 				}
 				String data =pyHeaderContent+"'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
-				//--------------------------
+				
 				//String data = "'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
 				file.write(data)
 				saveScript = true
 			} catch (Exception e) {
-				log.error "Error saving Script instance : ${params?.name}"
+				//log.error "Error saving Script instance : ${params?.name}"
 				render("Error in saving Script. Try Again." )
 			}
-
-			//TODO adding to default group pending
-
-			//			scriptInstance.groups = utilityService.getGroup()
-			
-
-			if(saveScript){
+			if(saveScript){				
 				def script = ScriptFile.findByScriptNameAndModuleName(params?.name?.trim(),ptest?.module?.name)
 				if(script == null){
 					script = new ScriptFile()
@@ -1057,22 +1073,21 @@ class ScriptGroupController {
 					script.category = Utility.getCategory(params?.category)
 					script.save(flush:true)
 				}
-
-
 				def sObject = new ScriptObject()
 				sObject.setBoxTypes(boxTypes)
-				sObject.setRdkVersions(rdkVersions)
+				sObject.setRdkVersions(rdkVersions)				
 				sObject.setScriptTags(scrptTags)
 				sObject.setName(params?.name?.trim())
 				sObject.setModule(ptest?.module?.name)
 				sObject.setScriptFile(script)
-				sObject.setLongDuration(longDuration)
-				
+				sObject.setLongDuration(longDuration)							
+				sObject?.setTestProfile(testProfileList)
 				scriptService.updateScript(script, params?.category)
 				scriptgroupService.saveToScriptGroups(script,sObject, params?.category)
 				scriptgroupService.saveToDefaultGroups(script,sObject, boxTypes, params?.category)
-				scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[], params?.category)
-				scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[] ,params?.category)
+				scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[], params?.category)				
+				scriptService?.updateScriptsFromTestProfile(script,sObject, params.category)
+				
 				def sName = params?.name
 				render(message(code: 'default.created.message', args: [
 					message(code: 'script.label', default: 'Script'),
@@ -1090,6 +1105,7 @@ class ScriptGroupController {
 	 */
 	def updateScript(Long id, Long version) {
 		def scriptList = scriptService.getScriptNameList(request.getRealPath("/"), params?.category)
+			 	
 		if (!scriptList?.contains(params?.prevScriptName?.trim())) {
 			flash.message = message(code: 'default.not.found.message', args: [
 				message(code: 'script.label', default: 'Script'),
@@ -1145,10 +1161,10 @@ class ScriptGroupController {
 		Set bTypes = []
 		Set rdkVers = []
 		Set scrptTags = []
+		Set testProfileList = []
+		//def tProfile
+		
 		try {
-
-
-
 			def writer = new StringWriter()
 			def xml = new MarkupBuilder(writer)
 
@@ -1167,8 +1183,6 @@ class ScriptGroupController {
 					e.printStackTrace()
 				}
 			}
-
-
 			if(params?.longDuration.equals("on")){
 				longDuration = true
 			}else{
@@ -1275,11 +1289,20 @@ class ScriptGroupController {
 				} catch (Exception e) {
 					println " error "+e.getMessage()
 					e.printStackTrace()
+				}					
+				if(params?.testProfile)	{
+					def  scriptTestProfiles = params?.testProfile
+					if(scriptTestProfiles && scriptTestProfiles?.size() >  0){
+						xml.test_profiles(){
+							scriptTestProfiles?.each{
+								def tProfile = TestProfile?.findById(it)
+								testProfileList.add(tProfile?.toString())
+								xml.test_profile(tProfile)
+							}
+						}
+					}
 				}
-
-
 			}
-
 			String dirname = ptest?.module?.name
 			dirname = dirname?.trim()
 
@@ -1291,9 +1314,6 @@ class ScriptGroupController {
 			if(!dir.exists()){
 				dir.mkdirs()
 			}
-
-
-
 			File file = new File( testScriptPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+FILE_SEPARATOR+params?.name?.trim()+".py");
 			if(!file.exists()){
 				file.createNewFile()
@@ -1306,8 +1326,7 @@ class ScriptGroupController {
 				pyHeaderContent += it?.toString()+"\n"
 			}
 			String data =pyHeaderContent+"'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
-			//----------------------------
-				
+						
 			//String data = "'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
 			file.write(data)
 			if(params?.prevScriptName != params?.name && params?.prevScriptName?.trim() != params?.name?.trim()){
@@ -1363,8 +1382,6 @@ class ScriptGroupController {
 			log.error "Error saving Script instance : ${params.name}"
 			return
 		}else{
-
-
 			def script = ScriptFile.findByScriptNameAndModuleName(params?.name?.trim(),ptest?.module?.name)
 			if(script == null){
 				script = new ScriptFile()
@@ -1382,6 +1399,7 @@ class ScriptGroupController {
 			sObject.setScriptFile(script)
 			sObject.setScriptTags(scrptTags)
 			sObject.setLongDuration(longDuration)
+			sObject.setTestProfile(testProfileList)		
 
 			if(boxTypes){
 				//			boxTypesList = scriptgroupService.createBoxTypeList(boxTypes)
@@ -1396,8 +1414,8 @@ class ScriptGroupController {
 			scriptgroupService.saveToDefaultGroups(script,sObject, bTypes,  params?.category)
 			scriptgroupService.updateScriptsFromRDKVersionBoxTypeTestSuites1(script, sObject, params?.category)
 			scriptgroupService.updateScriptsFromRDKVersionBoxTypeTestGroup(script,sObject,oldRDKVersions,oldBoxTypes)
-			scriptgroupService.updateScriptsFromScriptTag(script,sObject,oldTags,oldBoxTypes ,params?.category) 
-			
+			scriptgroupService.updateScriptsFromScriptTag(script,sObject,oldTags,oldBoxTypes ,params?.category)
+			scriptService?.updateScriptsFromTestProfile(script,sObject, params.category)
 			flash.message = message(code: 'default.updated.message', args: [
 				message(code: 'script.label', default: 'Script'),
 				params.name
