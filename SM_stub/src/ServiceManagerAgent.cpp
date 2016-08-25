@@ -504,7 +504,7 @@ bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Js
 #ifdef HAS_API_HDMI_CEC
                 if (QString::fromStdString(serviceName) == HdmiCecService::SERVICE_NAME)
                 {
-                        //stopHdmiCecService();
+                        stopHdmiCecService();
                 }
 #endif
 	}
