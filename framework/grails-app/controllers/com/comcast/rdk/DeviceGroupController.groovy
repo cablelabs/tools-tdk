@@ -1792,7 +1792,7 @@ class DeviceGroupController {
 		reader.close()
 		def jarPath = path + JAR_PATH
 		def classPath = path + CLASS_PATH
-		builder.append('class1  ').append(SOCKET_CLIENT).append('\n')
+		builder.append('class  ').append(SOCKET_CLIENT).append('\n')
 		def separator = getSeparator()
 		builder.append('classPath ').append(jarPath).append(separator).append(classPath).append('\n')
 		builder.toString()
