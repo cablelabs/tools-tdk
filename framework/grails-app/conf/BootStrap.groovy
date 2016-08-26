@@ -123,6 +123,7 @@ class BootStrap {
 			}
 		}*/
 		def rootFile = grailsApplication.parentContext.getResource("/")
+		scriptService?.testProfileTestSuiteList()
 		scriptService.initializeScriptsData(rootFile.file.getAbsolutePath())
 		primitiveService.initializePrimitiveTests(rootFile.file.getAbsolutePath())
 //		scriptService?.createSuite()

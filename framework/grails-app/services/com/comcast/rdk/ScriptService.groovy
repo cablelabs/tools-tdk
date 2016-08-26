@@ -1287,7 +1287,7 @@ class ScriptService {
 			def testSuiteConfig = 	props.load(grailsApplication.parentContext.getResource("/appConfig/testSuiteConfig.properties").inputStream)
 			def rdkVersion = props.get("rdkversion")
 			def boxType =  props.get("boxType")
-			def testProfile = props.get("testProfile")			
+			def testProfile = props.get("testProfile")
 			if( rdkVersion &&  boxType && testProfile){
 				def rdkVersionList =[]
 				if(rdkVersion?.toString()?.contains(",")){
@@ -1310,19 +1310,20 @@ class ScriptService {
 				rdkVersionList?.each{ rdkVer->
 					boxTypeList.each{ bType->
 						testProfileList?.each {tProile->
-								if(RDKVersions?.findByBuildVersion(rdkVer) && BoxType?.findByName(bType) && TestProfile?.findByName(tProile)){
-									def suiteName = rdkVer+"_"+bType+"_"+tProile
-									testProfileSuite?.add(suiteName)
-								}
+							if(RDKVersions?.findByBuildVersion(rdkVer?.toString()?.trim()) && BoxType?.findByName(bType.toString()?.trim()) && TestProfile?.findByName(tProile.toString()?.trim())){
+								def suiteName = rdkVer?.toString()?.trim()+"_"+bType?.toString()?.trim()+"_"+tProile?.toString()?.trim()
+								testProfileSuite?.add(suiteName)
+							}
 						}
 					}
 				}
 			}
+			return testProfileSuite
 		}catch(Exception e ){
 			println " ERROR "+e.getMessage()
 			e.printStackTrace()
 		}
-		return testProfileSuite
+		
 	}
 
 	/**
@@ -1340,7 +1341,6 @@ class ScriptService {
 			def bTypes = sObject?.getBoxTypes()
 			def testProfileList = sObject?.getTestProfile()
 			boolean value = false
-			def suiteList = testProfileTestSuiteList()
 			testProfileList?.each{ testProfile->				
 				def testProfileName = TestProfile?.findByName(testProfile?.toString())
 				bTypes?.each{ boxType ->
@@ -1348,7 +1348,7 @@ class ScriptService {
 						if(sObject?.getBoxTypes()?.toString()?.contains(boxType?.toString()) && sObject?.getRdkVersions()?.toString()?.contains(rdkVersionName?.toString())){
 							def suiteName  =  rdkVersionName?.toString()+"_"+boxType?.toString()+"_"+testProfileName?.toString()
 							def scriptGrpInstance = ScriptGroup.findByNameAndCategory(suiteName,category)
-							if(suiteList?.toString()?.contains(suiteName?.toString())){
+							if(testProfileSuite?.toString()?.contains(suiteName?.toString())){
 								value = true
 							}
 							if(value){
@@ -1380,9 +1380,7 @@ class ScriptService {
 	 * @param category
 	 * @return
 	 */
-	def removeScriptsFromTestProfiles(final def scriptInstance,final def sObject, final def category){
-		testProfileTestSuiteList()
-		def removedScript 
+	def removeScriptsFromTestProfiles(final def scriptInstance,final def sObject, final def category){ 
 		testProfileSuite?.each{ testSuite ->			
 			def scriptGroupInstance = ScriptGroup?.findByNameAndCategory(testSuite?.toString(),category )
 			if(scriptGroupInstance){				
@@ -1438,28 +1436,30 @@ class ScriptService {
 			if(scriptFile){
 				def script=getScript(realPath, moduleName,name,category )
 				if (script?.testProfile){
-					def suiteList = testProfileTestSuiteList()
+					removeScriptsFromTestProfiles(scriptFile,[:],category)
 					def boxTypeList = script?.boxTypes
 					def rdkVersions =  script?.rdkVersions
 					def testProfile =  script?.testProfile
-					rdkVersions?.each{ rdkVersion ->
-						boxTypeList?.each{ bType->
-							def suiteName  =  rdkVersion?.toString()+"_"+ bType?.toString()+"_"+ testProfile?.toString()
-							def scriptGrpInstance = ScriptGroup?.findByName(suiteName)
-							if(suiteList?.toString()?.contains(suiteName?.toString())){
-								value = true
-							}							
-							if(value){
-								if(!scriptGrpInstance){
-									scriptGrpInstance = new ScriptGroup()
-									scriptGrpInstance.name = suiteName
-									scriptGrpInstance?.category = category
-									scriptGrpInstance.save()
-									scriptGrpInstance?.addToScriptList(scriptFile)
+					testProfile.each{ tProfile->
+						rdkVersions?.each{ rdkVersion ->
+							boxTypeList?.each{ bType->
+								def suiteName  =  rdkVersion?.toString()+"_"+ bType?.toString()+"_"+ tProfile?.toString()
+								def scriptGrpInstance = ScriptGroup?.findByName(suiteName)
+								if(testProfileSuite?.toString()?.contains(suiteName?.toString())){
+									value = true
 								}
-								if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
-									scriptGrpInstance.addToScriptList(scriptFile)
-									scriptGrpInstance.save(flush:true)
+								if(value){
+									if(!scriptGrpInstance){
+										scriptGrpInstance = new ScriptGroup()
+										scriptGrpInstance.name = suiteName
+										scriptGrpInstance?.category = category
+										scriptGrpInstance.save()
+										scriptGrpInstance?.addToScriptList(scriptFile)
+									}
+									if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
+										scriptGrpInstance.addToScriptList(scriptFile)
+										scriptGrpInstance.save(flush:true)
+									}
 								}
 							}
 						}
@@ -1470,6 +1470,5 @@ class ScriptService {
 			println " ERROR "+ e.getMessage()
 			e.printStackTrace()
 		}
-	}
-	
+	}	
 }

@@ -436,10 +436,8 @@ class ExecutionService {
 		}else{
 		
 			command = "tclsh $tclExecutableFile $configFile"
-		} 	
-		println " COMMAND --->>> " + command 	
-		output += new ScriptExecutor(opFile).execute( command, execTime,executionName,executionProcessMap, scriptDir)
-		println  "OUTPUT \n ----------------------------------------\n "+ output
+		}	
+		output += new ScriptExecutor(opFile).execute( command, execTime,executionName,executionProcessMap, scriptDir)		
 		return output
 	}
 	
