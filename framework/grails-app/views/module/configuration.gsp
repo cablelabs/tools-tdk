@@ -122,6 +122,17 @@ function display(val) {
 							</g:link></td>
 						<td>Option to add Script Tags</td>
 					</tr>
+					
+				<tr>
+					<td>
+					
+						<g:link controller="TestProfile" action="index"
+								params="[category:com.comcast.rdk.Category.RDKV ]">
+								<span>Test Profile</span>
+							</g:link></td>
+						<td>Option to add Test profile</td>
+						
+				</tr>
 				<%--<g:if test="${SecurityUtils.subject.principal.equals("admin")}">
 					<tr>
 						<td><g:link controller="groups" action="index"
@@ -207,6 +218,15 @@ function display(val) {
 							</g:link></td>
 						<td>Option to add Script Tags</td>
 					</tr>
+					<tr>
+					<td>
+							<g:link controller="TestProfile" action="index"
+								params="[category:com.comcast.rdk.Category.RDKB ]">
+								<span>Test Profile</span>
+							</g:link></td>
+							<td>Option to add Test profile</td>
+					</tr>
+						
 					<%--<g:if test="${SecurityUtils.subject.principal.equals("admin")}">
 						<tr>
 							<td><g:link controller="groups" action="index"
@@ -230,7 +250,6 @@ function display(val) {
 	<div style="padding-top:40px;">
 	
 		<g:if test="${SecurityUtils.subject.principal.equals("admin")}">
-		
 		<div style="float: left; padding-left: 10%; ">
 				<h2 style="color: #A24C15;">
 					<center>Common Configuration</center>

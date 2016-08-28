@@ -96,12 +96,12 @@ if "SUCCESS" in result.upper():
     getAllTunerStates(obj,'SUCCESS')
 
     # Start recording channel 1-4 from device 1
-    print "\nStart " , maxTuner-2, " recordings from device 1 on different channels\n"
+    print "\nStart " , maxTuner-1, " recordings from device 1 on different channels\n"
     duration = 10000
     startTime = 0
     hot = 0
     deviceNo1 = 0
-    for channelNo in range(0,maxTuner-2):
+    for channelNo in range(1,maxTuner):
         # Frame different request URL for each client box
         streamId = '0'+str(channelNo+1)
         recordingId = 'RecordIdCh'+streamId

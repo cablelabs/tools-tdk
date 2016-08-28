@@ -90,7 +90,7 @@ if "SUCCESS" in result.upper():
     tdkTestObj = obj.createTestStep('TRM_TunerReserveForLive');
     locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
 
-    for loop in range(1,101):
+    for loop in range(1,51):
 
         print "------ Test loop %d start ------ \n"%loop
 

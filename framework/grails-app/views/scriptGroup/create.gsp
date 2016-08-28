@@ -118,8 +118,6 @@
 	height: 8px;
 	overflow: hidden;
 }
-
-
 </style>
 <script>
 	$(function() {
@@ -140,7 +138,6 @@
 			 });
 		
 	});
-
 </script>
 </head>
 <g:set var="entityName" value="${message(code: 'scriptGroup.label', default: 'TestSuite')}" />
@@ -179,7 +176,7 @@
 						<% 
 							String idScript = script?.id;
  					     %>
-							<li id = "script-${idScript}" class="ui-state-default">
+							<li id = "script-${idScript}" class="ui-state-default">								
 								${script?.scriptName} 
 							</li>
 						</g:each>
@@ -193,19 +190,36 @@
 				</td>
 				<td name="sortabletd"style="width: 45%">
 				<br>
-				<br>
+				<br>				
 					<ul name ="sortable" id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 380px; overflow: auto;">
-						<g:if test="${scriptGroupInstance}">
-						<g:each in='${scriptGroupInstance.scriptList}' var="script">
-							<li class="ui-state-default" title="${script.scriptName}">
-								${script.scriptName}
-							</li>
-						</g:each>
+						<g:if test="${category == 'RDKV' || category == 'RDKB'} ">
+							<g:if test="${scriptGroupInstance}">
+								<g:each in='${scriptGroupInstance.scriptList}' var="script">
+									<li class="ui-state-default" title="${script.scriptName}">
+										<g:hiddenField name="test" id="test"
+											value="${script.scriptName}" /> ${script.scriptName}
+									</li>
+								</g:each>
+							</g:if>
+							<g:else>
+								<li class="ui-state-default">No scripts in list</li>
+							</g:else>
 						</g:if>
-						<g:else> <li class="ui-state-default">
-								No scripts in list
-							</li></g:else>
-					</ul>
+						<g:elseif test="${category == "RDKB_TCL"}">
+							<g:if test="${scriptGroupInstance}">
+								<g:each in='${scriptGroupInstance.scriptList}'
+									var="script">
+									<li class="ui-state-default" title="${script.scriptName}">
+										<g:hiddenField name="test" id="test"
+											value="${script.scriptName}" /> ${script.scriptName}
+									</li>
+								</g:each>
+							</g:if>
+							<g:else>
+								<li class="ui-state-default">No scripts in list</li>
+							</g:else>
+						</g:elseif>
+					</ul>					
 				</td>
 				<td style="width: 5%">
 					<br><br>

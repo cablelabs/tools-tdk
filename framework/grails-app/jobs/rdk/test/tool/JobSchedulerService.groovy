@@ -197,7 +197,6 @@ class JobSchedulerService implements Job{
 							}
 							else{
 								def moduleName= ScriptService.scriptMapping.get(scripts[0])
-
 								scriptInstance = getScript(realpath,moduleName, scripts[0], category)
 
 								scriptStatus = validateScriptBoxTypes(scriptInstance,deviceInstance)
@@ -2571,25 +2570,26 @@ class JobSchedulerService implements Job{
 			script.put("primitiveTest",primitiveTest)
 			def versList = []
 			def btList = []
+			def testProfileList =[]
 			Set btSet = node?.box_types?.box_type?.collect{ it.text() }
 			Set versionSet = node?.rdk_versions?.rdk_version?.collect{ it.text() }
+			Set testProfileSet =  node?.test_profiles?.test_profile?.collect{ it.text() }
 			btSet.each { bt ->
 				btList.add(BoxType.findByName(bt))
 			}
 			versionSet.each { ver ->
 				versList.add(RDKVersions.findByBuildVersion(ver))
 			}
+			testProfileSet?.each{ tProfile ->
+				testProfileList?.add(TestProfile?.findByName(tProfile))
+			}
 			script.put("rdkVersions", versList)
 			script.put("boxTypes", btList)
 			script.put("status", node?.status?.text())
 			script.put("synopsis", node?.synopsis?.text())
 			script.put("scriptContent", scriptContent)
-			script.put("executionTime", node.execution_time.text())
-			if(node?.test_profile?.text() ){
-				script.put("testProfile",node?.test_profile?.text() )
-			}else{
-				script.put("testProfile", "" )
-			}
+			script.put("executionTime", node.execution_time.text())			
+			script.put("testProfile",testProfileList)	
 		}
 		return script
 	}

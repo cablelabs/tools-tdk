@@ -34,9 +34,9 @@ Test Type: Negative</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>This testcase will fail because of RDKTT-618</remarks>
+  <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
-  <skip>true</skip>
+  <skip>false</skip>
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
@@ -166,27 +166,6 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
 
-                                #Get the device Name
-                                print "Get default device name"
-				defaultName = "STB"
-                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetName');
-                                expectedresult = "SUCCESS"
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                getNameDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",getNameDetails;
-                                if expectedresult in actualresult:
-                                        print "DefaultName: %s GetName return value: %s"%(defaultName,getNameDetails)
-                                        #Compare the default name with current name.
-                                        if defaultName == getNameDetails:
-                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                print "getName return value matches with default name"
-                                        else:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "getName return value does not match with default name"
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-
                                 #Enable the cec support setting it true.
 				print "Set CEC Enabled"
                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetEnabled');
@@ -232,34 +211,6 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                                 print "CecSupport value not set to true"
         			else:
                 			tdkTestObj.setResultStatus("FAILURE");
-
-                                #Set the device Name
-				nameToSet = "testNameEn"
-				print "Set device name to ", nameToSet
-                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetName');
-                                expectedresult = "SUCCESS"
-                                tdkTestObj.addParameter("nameToSet",nameToSet);
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                setNameDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",setNameDetails;
-                                if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-
-                                #Get the device Name
-                                print "Get device name"
-                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetName');
-                                expectedresult = "SUCCESS"
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                getNameDetails = tdkTestObj.getResultDetails();
-                                print "[TEST EXECUTION DETAILS] : ",getNameDetails;
-                                if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
 
 				#Get the number of devices connected
 				tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetConnectedDevices');

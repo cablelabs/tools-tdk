@@ -10,27 +10,39 @@
  * ============================================================================
  */
 package com.comcast.rdk
-
+import com.comcast.rdk.Category
 /**
- * Class to hold the script related informations
- *
+ * Class represents BoxTypes.
+ * @author sreejasuma
  */
-class ScriptObject {
-	
+class TestProfile {
+
+	/**
+	 * Name of the BoxType
+	 */
 	String name
 	
-	String module
+	/**
+	 * Indicates the group name which the box belongs
+	 */
+	Groups groups
 	
-	PrimitiveTest primitiveTest
+	Category category = Category.RDKV
 	
-	Set boxTypes
+	static constraints = {
+        name(unique:true, blank:false, nullable:false)
+		category(nullable:false, blank:false)
+		groups(nullable:true, blank:true)
+    }
 	
-	Set rdkVersions
+	@Override
+	String toString() {
+		return name ?: 'NULL'
+	}
 	
-	Set scriptTags
-	ScriptFile scriptFile
-	
-	boolean longDuration
-	Set  testProfile
-
+	static mapping = {
+		sort id : "asc"
+		category enumType: "string" , defaultValue:'"RDKV"' 
+		datasource 'ALL'
+	}
 }

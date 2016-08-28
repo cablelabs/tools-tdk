@@ -136,10 +136,7 @@
 			 });
 			 document.getElementById("resultElement").value = myArray;
 			 }
-			 });
-
-		
-
+			 });	
 		 $( "#sortable" ).selectable({
 			 stop: function() {
 			 var result = $( "#select-result" ).empty();
@@ -163,9 +160,7 @@
 			            prev = curr; // othervise just save prev
 			        }
 			    }
-			 });
-		
-			
+			 });		
 	});
 
 </script>
@@ -226,15 +221,14 @@
 				<input type="image" src= "../images/arrow_left.png" onclick="removeScripts();return false;"  title = "Remove Scripts">
 				</td>
 				<td  style="width: 45%">
-				 <br>
-				 ${scriptGroupInstance} &emsp;&emsp;&emsp; &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;  Scripts Count : ${scriptGroupInstance.scriptList.size()} 
+				 <br>				 
+				 ${scriptGroupInstance}
+				  &emsp;&emsp;&emsp; &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;  Scripts Count : ${scriptGroupInstance.scriptList.size()}
 					<ul id="sortable" style="min-height : 454px; min-width : 250px; max-height : 350px; max-width : 380px; overflow: auto;">
-						<g:if test="${scriptGroupInstance}"><%--
-						<g:each in='${scriptGroupInstance.scriptList}' var="script">
-						--%>
-							<%--  New Modification for random and module wise sort--%>
-							
-						<% 
+						<%--<g:if test="${category == 'RDKV' || category == 'RDKB'} ">
+							--%>
+						<g:if test="${scriptGroupInstance}">
+							<% 
 							def scriptList =scriptGroupInstance?.scriptList
 							if( value != null && value?.toString().equals("randomlist")){
 								scriptList?.sort{  a,b -> a.id <=> b.id }	
@@ -245,24 +239,29 @@
 								scriptList = scriptList 
 							}																
 						%>
-						<g:each in='${scriptList}' var="script">	
-						<g:if test="${script}">
-						<% 
+							<g:each in='${scriptList}' var="script">
+								<g:if test="${script}">
+									<% 
 							String idSgScript = script?.id;
  					     %>
-							<li id = "sgscript-${idSgScript}end"  title="${script?.scriptName}" class="ui-state-default">
-								${script?.scriptName}
-							</li>
-							</g:if>
-						</g:each>
+									<li id="sgscript-${idSgScript}end"
+										title="${script?.scriptName}" class="ui-state-default">
+										${script?.scriptName}
+									</li>
+								</g:if>
+							</g:each>
 						</g:if>
-						<g:else> <li class="ui-state-default">
-								No scripts in list
-							</li></g:else>
-					</ul>
+						<g:else>
+							<li class="ui-state-default">No scripts in list</li>
+						</g:else>
+							</ul>
+					
+					
+					
+					
+					
 				</td>
-				<td style="width: 8%">
-				
+				<td style="width: 8%">				
 			<%-- The new change module wise or random wise --%>
 								<br> <br> <g:submitToRemote class="buttons"
 						value="Module Wise Sort" id="module"

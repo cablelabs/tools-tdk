@@ -13,6 +13,7 @@ package com.comcast.rdk
 
 import static Constants.*
 import java.io.File;
+import java.util.List;
 
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -37,7 +38,6 @@ class ScriptService {
 	public static volatile List scriptLockList = []
 	
 	
-	
 	public static volatile Map scriptsListMap = [:]
 	
 	public static volatile Map scriptNameListMap = [:]
@@ -49,6 +49,12 @@ class ScriptService {
 	public static volatile List tclScriptsList = []
 	
 	public static volatile List tclNameList = []
+	
+	public static volatile Map combinedTclScriptMap = [:]
+
+	public static volatile List testProfileSuite = []
+	
+	public static volatile List totalTclScriptList = []
 	
 	def primitiveService
 	
@@ -281,6 +287,7 @@ class ScriptService {
 			
 				if(updateReqd == true){
 					updateDefaultScriptGroups(realPath,name,module?.getName(), category)
+					updateSuiteWithTestProfileScripts(realPath,name,module?.getName(), category)
 				}
 			}
 			sLst?.sort()
@@ -553,49 +560,112 @@ class ScriptService {
 	private void initializeTCLScripts(final String path) {
 		def tclPath = path?.trim()
 		def tclFiles = new File(tclPath).listFiles(new FileFilter(){
-					boolean accept(File file) {
-						def fileName = file.name
-						//return fileName.startsWith("TC") && fileName.endsWith(".tcl")
-						if(!(fileName?.toString()?.equals("lib.tcl") || fileName?.toString()?.equals("proc.tcl"))){
-							return fileName.endsWith(".tcl")
-						}
-					}
-				})
+			boolean accept(File file) {
+				def fileName = file.name
+				//return fileName.startsWith("TC") && fileName.endsWith(".tcl")
+				if(!(fileName?.toString()?.equals("lib.tcl") || fileName?.toString()?.equals("proc.tcl"))){
+					return fileName.endsWith(".tcl")
+				}
+			}
+		})
 		tclScriptsList = []
 		tclNameList = []
+		totalTclScriptList = []
+
 		try{
-		tclFiles.each { tclFile ->
-			def fileName = tclFile.name.split(".tcl")[0]
-			def scriptFile = null
-			ScriptFile.withTransaction {
-			  scriptFile  = ScriptFile.findByScriptNameAndCategory(fileName, Category.RDKB_TCL)
-				if(scriptFile == null) {					
-					def scriptFile1 = new ScriptFile()
-					scriptFile1?.scriptName =fileName?.toString()
-					scriptFile1?.category = Category.RDKB_TCL
-					scriptFile1?.moduleName = "tcl" 
-					if(!(scriptFile1.save(flush:true))){
-						println "Error "	
+			tclFiles.each { tclFile ->
+				def fileName = tclFile.name.split(".tcl")[0]
+				def scriptFile = null
+				ScriptFile.withTransaction {
+					scriptFile  = ScriptFile.findByScriptNameAndCategory(fileName, Category.RDKB_TCL)
+					if(scriptFile == null) {
+						def scriptFile1 = new ScriptFile()
+						scriptFile1?.scriptName =fileName?.toString()
+						scriptFile1?.category = Category.RDKB_TCL
+						scriptFile1?.moduleName = "tcl"
+						if(!(scriptFile1.save(flush:true))){
+							println "Error "
+						}
 					}
 				}
-			}
-			def scriptName =ScriptFile.findByScriptNameAndCategory(fileName, Category.RDKB_TCL) 
-			if(scriptName){
-				tclScriptsList.add(scriptName)
+				def scriptName =ScriptFile.findByScriptNameAndCategory(fileName, Category.RDKB_TCL)
+				def cmdTclScriptListFinal  = []
+				if(scriptName){
+					try{
+						tclScriptsList.add(scriptName)
+						if(scriptName?.toString()?.contains("_to_")){
+							def splitScriptName = scriptName?.toString()?.split("_to_")
+							if(splitScriptName?.size() > 1){
+								def firstScriptName = splitScriptName[0]
+								def lastScriptName = splitScriptName[1]
+								def firstScriptNameSplit=  firstScriptName.split("_")
+								int firstTestCaseId = Integer.parseInt(firstScriptNameSplit.last())
+								def lastScriptNameSplit=  lastScriptName.split("_")
+								int lastTestCaseId =Integer.parseInt(lastScriptNameSplit.last())
+								def script
+								int i
+								def cmdTclScriptList = []
+								for(i = firstTestCaseId ; i <= lastTestCaseId ; i++){
+									script = firstScriptNameSplit[0]+"_"+firstScriptNameSplit[1]+"_0"+firstTestCaseId
+									cmdTclScriptList.add(script)
+									cmdTclScriptListFinal.add(script)
+									firstTestCaseId++
+								}
+								combinedTclScriptMap.put(scriptName,cmdTclScriptList)
+							}
+						}
+						else{
+							totalTclScriptList.add(scriptName)
+						}
+						cmdTclScriptListFinal?.each{
+							def scriptFile1 = ScriptFile.findByScriptNameAndCategory(it, Category.RDKB_TCL)
+							def scriptFile2
+							if(!scriptFile1){
+								scriptFile2 = new ScriptFile()
+								scriptFile2?.scriptName =it?.toString()
+								scriptFile2?.category = Category.RDKB_TCL
+								scriptFile2?.moduleName = "tcl"
+								if(!(scriptFile2?.save(flush:true))){
+									println "Error "
+								}else{
+									totalTclScriptList.add(scriptFile2)
+								}
+							}else{
+								totalTclScriptList.add(scriptFile1)
+							}
+						}
+					}catch(Exception e){
+						println " ERROR "+ e.getMessage()
+						e.printStackTrace()
+					}
+				}				
 				def realPath = path?.replace(FileStorePath.RDKTCL.value(),"")
 				if(realPath){
-					boolean updateReqd = isDefaultSGUpdateRequired(realPath)				
+					boolean updateReqd = isDefaultSGUpdateRequired(realPath)
 					if(updateReqd ){
 						updateTclScriptSuite(scriptName ,"RDKB_TCL")
-					}					
+					}
 				}
+				tclNameList.add(fileName)
 			}
-			tclNameList.add(fileName)
-		}
-		}catch(Exception e){
+	}catch(Exception e){
 			println e?.getMessage()
-		}
+		}		
 	}
+	
+	
+	/**
+	 * get Total TCL script List
+	 */
+	def getTotalTCLScriptList(def realPath){
+		if(totalTclScriptList == null || totalTclScriptList.isEmpty()){
+			initializeTCLScripts("${realPath}//fileStore//"+FileStorePath.RDKTCL.value())
+		}
+		return totalTclScriptList
+	}
+	
+	
+	
 	/**
 	 * Updating TCL script suite, when script.config value set as true
 	 * @param scriptFileInstance
@@ -764,12 +834,12 @@ class ScriptService {
 		}
 		return null;
 	}	
-	def getScript(realPath,dirName,fileName, category){		
+	def getScript(realPath,dirName,fileName, category){
 		dirName = dirName?.trim()
 		fileName = fileName?.trim()
 		Map script = [:]
 		try {
-			
+
 			def moduleObj = Module.findByName(dirName)
 			def scriptDirName = Constants.COMPONENT
 			if(moduleObj){
@@ -784,15 +854,14 @@ class ScriptService {
 			}
 			File file = null
 			/*if("RDKV".equals(category)){
-				//file = new File( "${realPath}//fileStore//testscriptsRDKV//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
-				
-			}
-			if("RDKB".equals(category)){
-				//file = new File( "${realPath}//fileStore//testscriptsRDKB//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
-			}*/
+			 //file = new File( "${realPath}//fileStore//testscriptsRDKV//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
+			 }
+			 if("RDKB".equals(category)){
+			 //file = new File( "${realPath}//fileStore//testscriptsRDKB//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
+			 }*/
 			def filename = getFileFromPath(realPath, scriptDirName, dirName, fileName, Utility.getCategory(category))
 			file = new File(filename)
-				
+
 			if(file.exists()){
 				String s = ""
 				List line = file.readLines()
@@ -825,17 +894,16 @@ class ScriptService {
 					try {
 						grpObj = Groups.findById(Integer.parseInt(grps))
 					} catch (Exception e) {
-//						e.printStackTrace()
+						//						e.printStackTrace()
 					}
 				}
 				script.put("groups",grpObj)
 				script.put("skip", getBooleanValue(node.skip.text()))
 				script.put("remarks",node?.remarks?.text())
 				script.put("longDuration", getBooleanValue(node.long_duration.text()))
-				
 				def nodePrimitiveTestName = node.primitive_test_name.text()
 				def primitiveMap = primitiveService.getPrimitiveModuleMap(realPath)
-				def moduleName1 = primitiveMap.get(nodePrimitiveTestName)				
+				def moduleName1 = primitiveMap.get(nodePrimitiveTestName)
 				def moduleObj1 = Module.findByName(dirName)
 				def primitiveDirName = Constants.COMPONENT
 				if(moduleObj){
@@ -843,7 +911,7 @@ class ScriptService {
 						primitiveDirName = Constants.INTEGRATION
 					}
 				}
-				
+
 				def primitiveTest = null
 				if("RDKV".equals(category)){
 					primitiveTest = primitiveService.getPrimitiveTest(realPath+"/fileStore/testscriptsRDKV/"+primitiveDirName+"//"+moduleName1+"/"+moduleName1+".xml",nodePrimitiveTestName)
@@ -851,17 +919,19 @@ class ScriptService {
 				if("RDKB".equals(category)){
 					primitiveTest = primitiveService.getPrimitiveTest(realPath+"/fileStore/testscriptsRDKB/"+primitiveDirName+"//"+moduleName1+"/"+moduleName1+".xml",nodePrimitiveTestName)
 				}
-				
+
 				//def primitiveTest = primitiveService.getPrimitiveTest(realPath+"/fileStore/testscripts/"+primitiveDirName+"//"+moduleName1+"/"+moduleName1+".xml",nodePrimitiveTestName)
 				script.put("primitiveTest",primitiveTest)
 				def versList = []
 				def sTagList = []
 				def btList = []
+				def testProfileList =[]
 				Set btSet = node?.box_types?.box_type?.collect{ it.text() }
 				Set versionSet = node?.rdk_versions?.rdk_version?.collect{ it.text() }
 				Set scriptTagSet = node?.script_tags?.script_tag?.collect{ it.text() }
-				
-				
+				Set testProfileSet =  node?.test_profiles?.test_profile?.collect{ it.text() }		
+				 
+
 				btSet.each { bt ->
 					btList.add(BoxType.findByNameAndCategory(bt, category))
 				}
@@ -870,8 +940,13 @@ class ScriptService {
 				}
 				scriptTagSet?.each { tag ->
 					sTagList.add(ScriptTag.findByName(tag))
+				}				
+				testProfileSet?.each{ tProfile ->					
+					testProfileList?.add(TestProfile?.findByName(tProfile))	
 				}
 				
+				
+
 				script.put("rdkVersions", versList)
 				script.put("scriptTags", sTagList)
 				script.put("boxTypes", btList)
@@ -881,6 +956,7 @@ class ScriptService {
 				script.put("scriptContent", scriptContent)
 				script.put("executionTime", getExecutionTime(node?.execution_time?.text()))
 				script.put("category", category)
+				script.put("testProfile",testProfileList)
 			}else{
 			}
 		} catch (Exception e) {
@@ -1200,6 +1276,200 @@ class ScriptService {
 			initializeTCLScripts("${realPath}//fileStore//"+FileStorePath.RDKTCL.value())
 		}
 		tclScriptsList
+	}
+	/**
+	 * The test profile test suite name list 
+	 * @return
+	 */
+	def testProfileTestSuiteList(){
+		try{
+			Properties props = new Properties()
+			def testSuiteConfig = 	props.load(grailsApplication.parentContext.getResource("/appConfig/testSuiteConfig.properties").inputStream)
+			def rdkVersion = props.get("rdkversion")
+			def boxType =  props.get("boxType")
+			def testProfile = props.get("testProfile")			
+			if( rdkVersion &&  boxType && testProfile){
+				def rdkVersionList =[]
+				if(rdkVersion?.toString()?.contains(",")){
+					rdkVersionList = rdkVersion?.split(",")
+				}else {
+					rdkVersionList?.add(rdkVersion)
+				}
+				def boxTypeList = []
+				if(boxType?.toString()?.contains(",")){
+					boxTypeList = boxType?.split(",")
+				}else {
+					boxTypeList?.add(boxType)
+				}
+				def testProfileList  = []
+				if(testProfile?.toString()?.contains(",")){
+					testProfileList	=  testProfile.split(",")
+				}else{
+					testProfileList?.add(testProfile)
+				}
+				rdkVersionList?.each{ rdkVer->
+					boxTypeList.each{ bType->
+						testProfileList?.each {tProile->
+								if(RDKVersions?.findByBuildVersion(rdkVer) && BoxType?.findByName(bType) && TestProfile?.findByName(tProile)){
+									def suiteName = rdkVer+"_"+bType+"_"+tProile
+									testProfileSuite?.add(suiteName)
+								}
+						}
+					}
+				}
+			}
+		}catch(Exception e ){
+			println " ERROR "+e.getMessage()
+			e.printStackTrace()
+		}
+		return testProfileSuite
+	}
+
+	/**
+	 * Function for creating the  test suite based on the test profile.
+	 * @param scriptInstance
+	 * @param sObject
+	 * @param category
+	 * @return
+	 */
+	def updateScriptsFromTestProfile(final def scriptInstance, final ScriptObject sObject, final def category ){
+		removeScriptsFromTestProfiles(scriptInstance, sObject,category)
+		//removesScriptsFromAllTestProfileSuites(scriptInstance, sObject,category)
+		try{			
+			def  rdkVersionsList = sObject?.getRdkVersions()
+			def bTypes = sObject?.getBoxTypes()
+			def testProfileList = sObject?.getTestProfile()
+			boolean value = false
+			def suiteList = testProfileTestSuiteList()
+			testProfileList?.each{ testProfile->				
+				def testProfileName = TestProfile?.findByName(testProfile?.toString())
+				bTypes?.each{ boxType ->
+					rdkVersionsList?.each { rdkVersionName ->
+						if(sObject?.getBoxTypes()?.toString()?.contains(boxType?.toString()) && sObject?.getRdkVersions()?.toString()?.contains(rdkVersionName?.toString())){
+							def suiteName  =  rdkVersionName?.toString()+"_"+boxType?.toString()+"_"+testProfileName?.toString()
+							def scriptGrpInstance = ScriptGroup.findByNameAndCategory(suiteName,category)
+							if(suiteList?.toString()?.contains(suiteName?.toString())){
+								value = true
+							}
+							if(value){
+								if(!scriptGrpInstance){
+									scriptGrpInstance = new ScriptGroup()
+									scriptGrpInstance.name = suiteName
+									scriptGrpInstance?.category = category
+									scriptGrpInstance.save()
+									scriptGrpInstance?.addToScriptList(scriptInstance)
+								}
+								if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptInstance)){
+									scriptGrpInstance.addToScriptList(scriptInstance)
+									scriptGrpInstance.save(flush:true)
+								}
+							}
+						}
+					}
+				}
+			}
+		}catch(Exception e){
+			println "ERROR "+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+	/**
+	 * Remove the scripts from test profile suite as per the configuration file entries 
+	 * @param scriptInstance
+	 * @param sObject
+	 * @param category
+	 * @return
+	 */
+	def removeScriptsFromTestProfiles(final def scriptInstance,final def sObject, final def category){
+		testProfileTestSuiteList()
+		def removedScript 
+		testProfileSuite?.each{ testSuite ->			
+			def scriptGroupInstance = ScriptGroup?.findByNameAndCategory(testSuite?.toString(),category )
+			if(scriptGroupInstance){				
+					scriptGroupInstance?.removeFromScriptList(scriptInstance)
+					scriptGroupInstance?.save()								
+			}
+		}	
+	}
+	
+	/**
+	 * Function for using removing the script from all test profile suites 
+	 * @param scriptInstance
+	 * @param sObject
+	 * @param category
+	 * @return
+	 */
+	def removesScriptsFromAllTestProfileSuites(final def scriptInstance,final def sObject, final def category){
+		def boxTypes = BoxType?.findAllByCategory(category)
+		def rdkVersions = RDKVersions?.findAllByCategory(category)
+		def testProfiles = TestProfile?.findAllByCategory(category)
+		def totalTestSuiteList = []	
+		boxTypes?.each{ bType ->
+			rdkVersions?.each{ rdkVersion->
+				testProfiles?.each{ tProfile->
+					def testSuiteName = rdkVersion?.toString()+"_"+bType?.toString()+"_"+tProfile?.toString()
+					def scriptGroupInstance = ScriptGroup?.findByName(testSuiteName)
+					if(scriptGroupInstance){
+						totalTestSuiteList?.add(scriptGroupInstance)	
+					}				
+				}			
+			}			
+		}
+		totalTestSuiteList?.each{ testSuite ->
+			def scriptGroupInstance = ScriptGroup?.findByNameAndCategory(testSuite?.toString(),category )
+			if(scriptGroupInstance){
+					scriptGroupInstance?.removeFromScriptList(scriptInstance)
+					scriptGroupInstance?.save()
+			}		
+		}			
+	}	
+	/**
+	 * The function used to adding test profile scripts in corresponding suite
+	 * @param realPath
+	 * @param name
+	 * @param moduleName
+	 * @param category
+	 * @return
+	 */
+	def updateSuiteWithTestProfileScripts(def realPath, def name , def moduleName, category){		
+		try{
+			def scriptFile = ScriptFile.findByScriptNameAndModuleName(name,moduleName)
+			boolean value = false
+			if(scriptFile){
+				def script=getScript(realPath, moduleName,name,category )
+				if (script?.testProfile){
+					def suiteList = testProfileTestSuiteList()
+					def boxTypeList = script?.boxTypes
+					def rdkVersions =  script?.rdkVersions
+					def testProfile =  script?.testProfile
+					rdkVersions?.each{ rdkVersion ->
+						boxTypeList?.each{ bType->
+							def suiteName  =  rdkVersion?.toString()+"_"+ bType?.toString()+"_"+ testProfile?.toString()
+							def scriptGrpInstance = ScriptGroup?.findByName(suiteName)
+							if(suiteList?.toString()?.contains(suiteName?.toString())){
+								value = true
+							}							
+							if(value){
+								if(!scriptGrpInstance){
+									scriptGrpInstance = new ScriptGroup()
+									scriptGrpInstance.name = suiteName
+									scriptGrpInstance?.category = category
+									scriptGrpInstance.save()
+									scriptGrpInstance?.addToScriptList(scriptFile)
+								}
+								if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
+									scriptGrpInstance.addToScriptList(scriptFile)
+									scriptGrpInstance.save(flush:true)
+								}
+							}
+						}
+					}
+				}
+			}
+		}catch(Exception e){
+			println " ERROR "+ e.getMessage()
+			e.printStackTrace()
+		}
 	}
 	
 }

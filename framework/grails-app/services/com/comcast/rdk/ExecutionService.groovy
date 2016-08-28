@@ -38,6 +38,10 @@ class ExecutionService {
     def grailsApplication
 	
 	/**
+	 * Injects the scriptService
+	 */
+	def scriptService
+	/**
 	 * transient variable to keep the list of execution to be aborted
 	 */
 	public static volatile List abortList = []
@@ -408,13 +412,34 @@ class ExecutionService {
 	 * @param scriptName
 	 * @return
 	 */
-	public String executeTclScript(final String tclExecutableFile, final String configFile, int execTime, final String executionName, final String scriptName, final String scriptDir) {
+	public String executeTclScript(final String tclExecutableFile, final String configFile, int execTime, final String executionName, final String scriptName, final String scriptDir, final String combainedTclScriptName) {
 		String opFile = prepareOutputfile(executionName, scriptName)
 		String output = NEW_LINE+getCurrentTime()+NEW_LINE+"Executing script : "+scriptName+NEW_LINE;
 		output += "======================================="+NEW_LINE
-		def tclFilePath = ""
-		def command = "tclsh $tclExecutableFile $configFile" 		
+		def tclFilePath = ""		
+		def command		
+		boolean combine = false 
+		if(combainedTclScriptName){
+			combine = true
+		}else{
+			combine = false 
+		}
+		if(combine &&  combainedTclScriptName && scriptService?.tclScriptsList?.toString().contains(scriptName?.toString()) && scriptService?.totalTclScriptList?.toString()?.contains(combainedTclScriptName?.toString())){
+			command =  "tclsh $tclExecutableFile $configFile $combainedTclScriptName"
+		}else if( !combainedTclScriptName && scriptService?.tclScriptsList?.toString().contains(scriptName?.toString()) && !scriptService?.totalTclScriptList?.toString()?.contains(scriptName?.toString())){
+			def startScriptName =  scriptName?.toString().split("_to_")
+			def firstName
+			if(startScriptName?.length > 0 ){
+				firstName = startScriptName[0]
+				command =  "tclsh $tclExecutableFile $configFile $firstName"
+			}
+		}else{
+		
+			command = "tclsh $tclExecutableFile $configFile"
+		} 	
+		println " COMMAND --->>> " + command 	
 		output += new ScriptExecutor(opFile).execute( command, execTime,executionName,executionProcessMap, scriptDir)
+		println  "OUTPUT \n ----------------------------------------\n "+ output
 		return output
 	}
 	

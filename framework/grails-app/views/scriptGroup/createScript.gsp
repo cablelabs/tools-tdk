@@ -48,8 +48,6 @@
 	}
 
 </script>
-
-
 <div id="scriptMessageDiv" class="message" style="display: none;"></div>
 <div id="scriptTclMessageDiv" class="message" style="display: none;"></div>
 
@@ -57,20 +55,17 @@
 <g:form action="saveScript" method="post">
 	<g:hiddenField name="category" value="${category}"/>
 	<table>
-
 		<tr>
 			<th colspan="4" align="center">Create New Script</th>
 		</tr>
-
 		<tr>
 			<td>Script Name</td>		 
 			<td><input type="text" name="name" id="name" size="37"
-				maxlength="150"> &emsp;&emsp;&emsp;&emsp;  <g:if test="${category == "RDKV"}">
+				maxlength="150"> &emsp;&emsp;&emsp;&emsp;&emsp;<g:if test="${category == "RDKV"}">
 				<a href=""
 				onclick="showStreamDetails();return false;">Show Stream Details</a>
 				</g:if></td>
 		</tr>
-
 		<tr>
 			<td>Primitive Test</td>
 			<td><select name="ptest" id="ptest" style="width: 250px" >
@@ -80,30 +75,36 @@
 							${primList}
 						</option>
 					</g:each>
-			</select>&emsp;&emsp;&emsp;&emsp; <span id="linkId"></span></td>
+			</select>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span id="linkId"></span></td>
 		</tr>
-				
+		<tr>
+		<td> </td>
+		<td>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+		&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Execution TimeOut &emsp;
+			<input type="text" id="execTime" name="executionTime" size="5"/>(min)		
+		</td>
+		</tr>				
 		<tr>
 			<td>Box Type</td>
 			<td>
 			<g:select id="boxTypes" name="boxTypes"  from="${com.comcast.rdk.BoxType.findAllByCategory(category)}" optionKey="id" required="" value="${deviceInstance?.boxType?.id}" class="many-to-one selectCombo" multiple="true"/>
-			&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Execution TimeOut &emsp;
-			<input type="text" id="execTime" name="executionTime" size="5"/>(min)
+			
+			 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Test Profile&emsp;&emsp;
+			 <g:select id="testProfile" name="testProfile"  from="${com.comcast.rdk.TestProfile.findAllByCategory(category)}"  optionKey="id"  required="" value="" class="many-to-one selectCombo" multiple="true"/>
 			</td>
-		</tr>
-		
+		</tr>		
 		<tr>
 			<td>RDK Version</td>
 			<td>
 				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.findAllByCategory(category)}" optionKey="id" required="" value="" class="many-to-one selectCombo" multiple="true"/>
-			 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Tags&emsp;&emsp; 
+			 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Tags&emsp;&emsp;&emsp;&emsp;&emsp;
 				<g:select id="scriptTags" name="scriptTags"  from="${com.comcast.rdk.ScriptTag.findAllByCategory(category)}" optionKey="id" value="" class="many-to-one selectCombo" multiple="true"/>
-			
 			</td>
 		</tr>
 		<tr>
 			<td></td>
-			<td><g:checkBox id="longDuration" name="longDuration" checked="false" title ="long duration test will be included only in default module/Box type test suites with name ending with LD" />&nbsp;Long duration test</td>
+			<td><g:checkBox id="longDuration" name="longDuration" checked="false" title ="long duration test will be included only in default module/Box type test suites with name ending with LD" />&nbsp;Long duration test
+			 </td>
 		</tr>
 		<tr>
 			<td></td>
@@ -116,20 +117,17 @@
 					value="">
 				</g:textArea></span></td>
 		</tr>
-
 		<tr>
 			<td>Synopsis</td>
 			<td><g:textArea name="synopsis" style="width:465px;height:40px;">
 				</g:textArea></td>
 		</tr>
-
 		<tr>
 			<td>Script Content</td>
 			<td><g:textArea id="scriptArea" name="scriptArea" 
 					class="scriptArea" style="color:RGB(130,15,15);font-size:12px">
 				</g:textArea></td>
 		</tr>
-
 		<tr id="buttons">
 			<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 			<td colspan="2" align="center">
@@ -143,7 +141,6 @@
 			</td>
 			</g:if>
 		</tr>
-
 	</table>
 </g:form>
 </g:if>
@@ -190,4 +187,6 @@
 		</table>
 	</g:form>
 </g:if>
+
+
 

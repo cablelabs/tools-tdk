@@ -34,7 +34,7 @@ Test Type: Negative.</synopsis>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
-  <remarks>This testcase will fail because of RDKTT-618</remarks>
+  <remarks>This testcase will fail because of RDKTT-612</remarks>
   <!-- Reason for skipping the tests if marked to skip -->
   <skip>true</skip>
   <!--  -->
