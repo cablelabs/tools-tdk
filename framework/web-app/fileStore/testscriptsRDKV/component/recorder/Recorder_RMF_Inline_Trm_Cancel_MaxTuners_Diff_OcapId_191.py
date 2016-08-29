@@ -85,7 +85,9 @@ if "FAILURE" in result.upper():
     #Get the result of connection with test component and STB
     result = trmObj.getLoadModuleResult();
     print "[TRM LIB RELOAD STATUS]  :  %s" %result;
-    trmObj.setLoadModuleStatus(result);
+    sleep(300)
+
+trmObj.setLoadModuleStatus(result);
 
 #Check for SUCCESS/FAILURE of Recorder module
 if "SUCCESS" in recLoadStatus.upper():
