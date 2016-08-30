@@ -2535,6 +2535,16 @@ class ExecutionController {
 			htmlData = "No device found with this name "+stbName
 		}
 		if(!executed){
+			
+			if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+				executionService.deviceAllocatedList.remove(deviceInstance?.id)
+			}
+			
+			String devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+			Thread.start{
+				deviceStatusService.updateOnlyDeviceStatus(deviceInstance, devStatus)
+			}
+			
 			jsonOutData.addProperty("status", "FAILURE")
 			jsonOutData.addProperty("result", htmlData)
 		}
@@ -2542,12 +2552,17 @@ class ExecutionController {
 	}
 
 	def clearDeviceAllocatedList(final String stbName){
+		JsonObject result = new JsonObject()
+		result.addProperty("stbName", stbName)
+		
 		def deviceInstance = Device.findByStbName(stbName)
 		if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 			executionService.deviceAllocatedList.remove(deviceInstance?.id)
-			render "Done"
+			result.addProperty("status", "cleared device allocation")
+		}else{
+			result.addProperty("status", "nothing to clear")
 		}
-		render "Nothing to clear"
+		render result
 	}
 
 	/**
