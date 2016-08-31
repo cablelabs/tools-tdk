@@ -640,6 +640,7 @@ class ScriptService {
 					}
 				}				
 				def realPath = path?.replace(FileStorePath.RDKTCL.value(),"")
+				realPath=realPath?.replace("fileStore//","")
 				if(realPath){
 					boolean updateReqd = isDefaultSGUpdateRequired(realPath)
 					if(updateReqd ){
