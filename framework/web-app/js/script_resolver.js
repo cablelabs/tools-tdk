@@ -364,9 +364,9 @@ function updateSG() {
 		elmnt = elmnt.replace("sgscript-","");
 		
 		elmnt = elmnt.replace("end","");
-		if(!(dataList.contains(","+elmnt+","))){
+		//if(!(dataList.contains(","+elmnt+","))){
 			dataList = dataList +","+ elmnt;
-		}
+		//}
 	});
 
 	var name = document.getElementById("scriptName").value;
@@ -524,9 +524,9 @@ function moduleOrRandomSort(value){
 			var elmnt = $(this).attr('id');
 			elmnt = elmnt.replace("sgscript-","");			
 			elmnt = elmnt.replace("end","");
-			if(!(dataList.contains(","+elmnt+","))){
+			//if(!(dataList.contains(","+elmnt+","))){
 				dataList = dataList +","+ elmnt;
-			}
+			//}
 		});	
 		var name = document.getElementById("scriptName").value;
 		var id = document.getElementById("sgId").value;

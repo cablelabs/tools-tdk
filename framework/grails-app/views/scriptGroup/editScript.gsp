@@ -101,7 +101,7 @@ function clearLocks(scriptName){
 			--%> &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Test
 				Profile&emsp;&emsp; <g:select id="testProfile" name="testProfile"
 					from="${com.comcast.rdk.TestProfile.findAllByCategory(script.category)}"
-					required="" value="${script.testProfile}"
+					 value="${script.testProfile}"
 					class="many-to-one selectCombo" multiple="true" optionKey="id"/></td>
 			</tr>
 			<tr>

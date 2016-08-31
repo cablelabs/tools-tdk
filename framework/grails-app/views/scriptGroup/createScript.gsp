@@ -90,7 +90,7 @@
 			<g:select id="boxTypes" name="boxTypes"  from="${com.comcast.rdk.BoxType.findAllByCategory(category)}" optionKey="id" required="" value="${deviceInstance?.boxType?.id}" class="many-to-one selectCombo" multiple="true"/>
 			
 			 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Test Profile&emsp;&emsp;
-			 <g:select id="testProfile" name="testProfile"  from="${com.comcast.rdk.TestProfile.findAllByCategory(category)}"  optionKey="id"  required="" value="" class="many-to-one selectCombo" multiple="true"/>
+			 <g:select id="testProfile" name="testProfile"  from="${com.comcast.rdk.TestProfile.findAllByCategory(category)}"  optionKey="id"   value="" class="many-to-one selectCombo" multiple="true"/>
 			</td>
 		</tr>		
 		<tr>
