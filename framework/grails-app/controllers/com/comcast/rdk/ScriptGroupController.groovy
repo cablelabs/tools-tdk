@@ -1640,7 +1640,13 @@ class ScriptGroupController {
 	 */
 	def exportScriptData(){
 		if(params?.id){
-			if(!exportScript(params)){
+			if(scriptService.tclScriptsList.toString()?.contains(params?.id?.trim()) ){
+				if(!exportTclScript(params)){
+					flash.message = "Download failed. No valid script is available for download."
+					render "Failed to download Script."
+				}
+			}
+			else if(!exportScript(params)){
 				flash.message = "Download failed. No valid script is available for download."
 				render "Failed to download Script."
 			}
@@ -1698,8 +1704,7 @@ class ScriptGroupController {
 			redirect(action: "list")
 		}
 	}
-
-
+	
 	/**
 	 * Method to download the script content as tcl file.
 	 * @param params
@@ -1709,7 +1714,7 @@ class ScriptGroupController {
 		def category = params?.category
 		def path = Utility.getTclDir(getRealPath())+FILE_SEPARATOR + params?.id+".tcl"
 		File sFile = new File(path)
-		if(sFile.exists()){
+		if(sFile?.exists()){
 			params.format = "text"
 			params.extension = "tcl"
 			String data = new String(sFile.getBytes())

@@ -2120,7 +2120,8 @@ class ExecutionService {
 							if(!executionResult?.status.equals( FAILURE_STATUS )){
 								executionResult?.status = params.resultStatus
 								executionResult?.save(flush:true)
-								if(!execution.result.equals( FAILURE_STATUS )){
+								String status = getExecutionStatus(params.execId)
+								if(!status.equals( FAILURE_STATUS )){
 									execution.result = params.resultStatus
 									execution.outputData = params.outputData
 									execution.executionTime = params.singleScriptExecTime
