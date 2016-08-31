@@ -1705,7 +1705,7 @@ class DeviceGroupController {
 										|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT) && category?.equals(RDKV)){
 											status = 2
 											deviceInstance.recorderId = recorderId
-											deviceInstance.macId =""
+											deviceInstance.macId = null
 										}
 										if(status > 0 && deviceInstance.save(flush:true)){
 											if(status == 2){
