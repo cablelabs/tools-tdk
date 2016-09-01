@@ -102,6 +102,7 @@ using namespace std;
 #define OCAP_LOG "/opt/logs/ocapri_log.txt"
 #define IP_FILE "/opt/ip.txt"
 #endif
+#define QT_APP "/opt/TDK/SMEventApp"
 
 #define IN
 #define OUT
@@ -183,6 +184,7 @@ class ServiceManagerAgent : public RDKTestStubInterface
                 bool SM_AVInputService_GetNumberOfInputs(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_AVInputService_GetCurrentVideoMode(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_AVInputService_IsContentProtected(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_RunSMEvent_QtApp(IN const Json::Value& req, OUT Json::Value& response);
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
 		

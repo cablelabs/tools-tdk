@@ -235,6 +235,7 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_GetNumberOfInputs,"TestMgr_SM_AVInputService_GetNumberOfInputs");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode,"TestMgr_SM_AVInputService_GetCurrentVideoMode");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_IsContentProtected,"TestMgr_SM_AVInputService_IsContentProtected");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_RunSMEvent_QtApp,"TestMgr_SM_RunSMEvent_QtApp");
 
 	return TEST_SUCCESS;
 }
@@ -2696,6 +2697,44 @@ bool ServiceManagerAgent::SM_AVInputService_IsContentProtected(IN const Json::Va
         return TEST_FAILURE;
 }
 
+
+/***************************************************************************
+ *Function name : SM_RunSMEvent_QtApp
+ *Descrption    : This function will execute the QT application SMEventApp to test a given event's propagation
+ *parameter [in]: req - service_name - name of SM service whose event is to be tested
+			event_name   - event name to be tested
+			event_param  - parameter to be passed to the event
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_RunSMEvent_QtApp(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_RunSMEvent_QtApp--->Entry\n");
+
+        std::string service_name = req["service_name"].asCString();
+        std::string event_name = req["event_name"].asCString();
+        int event_param = req["event_param"].asInt();
+        char cmnd[100] = {'\0'};
+        sprintf(cmnd, "%s %s %s %d", QT_APP, service_name.c_str(), event_name.c_str(), event_param);
+
+        DEBUG_PRINT(DEBUG_TRACE, "cmnd recieved is %s", cmnd);
+
+        if (~(service_name.empty() || event_name.empty()))
+        {
+                DEBUG_PRINT(DEBUG_TRACE, "Received non-empty params\n");
+                if(!system(cmnd))
+                {
+                        response["details"] = "QAPP started";
+                        response["result"] = "SUCCESS";
+                        DEBUG_PRINT(DEBUG_TRACE, "QApp started\n");
+                        return TEST_SUCCESS;
+                }
+        }
+
+        response["details"] = "QAPP execution failed";
+        response["result"] = "FAILURE";
+        DEBUG_PRINT(DEBUG_TRACE, "QApp returned error \n");
+        return TEST_FAILURE;
+}
+
 /**************************************************************************
  * Function Name: CreateObject
  * Description	: This function will be used to create a new object for the
@@ -2780,6 +2819,7 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_GetNumberOfInputs");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_GetCurrentVideoMode");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_IsContentProtected");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_RunSMEvent_QtApp");
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;
 }
