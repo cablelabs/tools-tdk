@@ -122,3 +122,27 @@ def DS_getSoundMode(obj,portName):
 
         return ret_list
 
+
+def RunSMEvent(obj, service_name, event_name, event_param):
+
+        tdkTestObj = obj.createTestStep('SM_RunSMEvent_QtApp');
+
+        tdkTestObj.addParameter("service_name",service_name);
+        tdkTestObj.addParameter("event_name",event_name);
+        tdkTestObj.addParameter("event_param",event_param);
+
+        expectedresult = "SUCCESS";
+        tdkTestObj.executeTestCase(expectedresult);
+
+        actualresult= tdkTestObj.getResult();
+        serviceDetail = tdkTestObj.getResultDetails();
+        print "Details: ", serviceDetail
+
+        if expectedresult in actualresult:
+                tdkTestObj.setResultStatus("SUCCESS");
+                retValue = "SUCCESS"
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+                retValue = "FAILURE"
+
+        return retValue
