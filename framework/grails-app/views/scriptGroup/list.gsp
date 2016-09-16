@@ -284,7 +284,10 @@
 											</g:each>
 										</td>
 										<td>
-											${name.value.size()}
+										  <g:if test="${name?.value}" >		
+											 ${name?.value?.size()}
+										  </g:if>
+										  <g:else>0</g:else>
 										</td>												
 									</tr>
 									</g:each>								
@@ -331,10 +334,13 @@
 												
 											</g:each>
 										</td>
-										<td>
-											${name.value.size()}
-										</td>												
-									</tr>
+											<td>
+												<g:if test="${name?.value}">
+													${name?.value?.size()}
+												</g:if> 
+												<g:else>0</g:else>
+											</td>
+										</tr>
 									</g:each>								
 							</tbody>
 						</table>

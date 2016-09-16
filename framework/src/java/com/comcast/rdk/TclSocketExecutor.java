@@ -200,17 +200,7 @@ public class TclSocketExecutor {
 	}
 
 	public static void main(String[] args) {
-		try {
-			File myFile = new File("log-"+System.currentTimeMillis()+".txt");
-			myFile.createNewFile();
-			PrintWriter pwr = new PrintWriter(myFile);
-			pwr.write("Here start " + new Date());
-			pwr.write("args " + args);
-			pwr.flush();
-			pwr.close();
-		} catch (Exception e) {
-			System.out.println(" errorrr "+e.getMessage());
-		}
+
 		String arr[] = new String[10];
 		int count = 0;
 		try {
