@@ -55,6 +55,32 @@ QString listToString(QVariantList conInfo)
         return details;
 }
 #endif
+#ifdef HAS_FRONT_PANEL
+static FrontPanelService *pFPService = NULL;
+bool startFPService(void)
+{
+        bool bReturn = false;
+        DEBUG_PRINT(DEBUG_TRACE,"Create new instance of Front Panel Service\n");
+        if (ServiceManager::getInstance()->doesServiceExist(FrontPanelService::SERVICE_NAME))
+        {
+                pFPService = dynamic_cast<FrontPanelService*>(ServiceManager::getInstance()->createService(FrontPanelService::SERVICE_NAME));
+                if (pFPService != NULL)
+                {
+                        DEBUG_PRINT(DEBUG_LOG,"pFPService = %p\n", pFPService);
+                        bReturn = true;
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_ERROR,"Failed to create instance of Front Panel Service\n");
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Front Panel Service does not exist");
+        }
+        return bReturn;
+}
+#endif
 #ifdef HAS_API_HDMI_CEC
 std::string rdkLogPath = getenv("RDK_LOG_PATH");
 std::string tdkPath = getenv("TDK_PATH");
@@ -235,6 +261,14 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_GetNumberOfInputs,"TestMgr_SM_AVInputService_GetNumberOfInputs");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode,"TestMgr_SM_AVInputService_GetCurrentVideoMode");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_IsContentProtected,"TestMgr_SM_AVInputService_IsContentProtected");
+        /*Front Panel Service APIs*/
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_GetBrightness,"TestMgr_SM_FP_GetBrightness");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetBrightness,"TestMgr_SM_FP_SetBrightness");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetLED,"TestMgr_SM_FP_SetLED");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetAPIVersion,"TestMgr_SM_FP_SetAPIVersion");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetPreferences,"TestMgr_SM_FP_SetPreferences");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_GetPreferences,"TestMgr_SM_FP_GetPreferences");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetBlink,"TestMgr_SM_FP_SetBlink");
 
 	return TEST_SUCCESS;
 }
@@ -435,7 +469,12 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
                 registerStatus = startHdmiCecService();
         }
 #endif
-
+#ifdef HAS_FRONT_PANEL
+        else if (serviceName == FrontPanelService::SERVICE_NAME)
+        {
+                registerStatus = startFPService();
+        }
+#endif
         return registerStatus;
 }
 
@@ -2696,6 +2735,450 @@ bool ServiceManagerAgent::SM_AVInputService_IsContentProtected(IN const Json::Va
         return TEST_FAILURE;
 }
 
+/***************************************************************************
+ *Function name : SM_FP_SetBrightness
+ *Descrption    : This will sets the brightness of the front panel LED..
+ *parameter [in]: req - name of the LED and Brightness value to be set.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_SetBrightness(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetBrightness ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+	FrontPanelService *ptr_service = pFPService;
+	if(ptr_service != NULL)
+        {
+        	QString LEDName = QString::fromStdString(req["LEDName"].asCString());
+        	int LEDBrightness = req["LEDBrightness"].asInt();
+		ServiceParams params, resultParams;
+	        QVariantList list;
+		bool ReturnValue ;
+        	DEBUG_PRINT(DEBUG_TRACE,"Calling setBrightness to LED : %s to brightness : %d\n",LEDName.toUtf8().constData(),LEDBrightness);
+		list.append(LEDName);
+		list.append(LEDBrightness);
+		params["params"]=list;
+                resultParams = ptr_service->callMethod("setBrightness", params);
+		ReturnValue = resultParams["success"].toBool();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setBrightness() call Success.\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="Front Panel Service setBrightness success";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setBrightness() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service setBrightness call failed";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+	DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+
+
+/***************************************************************************
+ *Function name : SM_FP_GetBrightness
+ *Descrption    : This will gets the brightness of the front panel LED..
+ *parameter [in]: req - name of the LED .
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_GetBrightness(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_GetBrightness ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+	FrontPanelService *ptr_service = pFPService;
+	if(ptr_service != NULL)
+        {
+        	QString LEDName = QString::fromStdString(req["LEDName"].asCString());
+		ServiceParams params, resultParams;
+	        QVariantList list;
+		bool ReturnValue ;
+		int LEDBrightness;
+                char *brightnessDetails = (char*)malloc(sizeof(char)*5);
+                memset(brightnessDetails , '\0', (sizeof(char)*5));
+		char BrightnessDetail[STR_DETAILS_20]= "Brightness:";
+        	DEBUG_PRINT(DEBUG_TRACE,"Calling getBrightness to LED : %s \n",LEDName.toUtf8().constData());
+		list.append(LEDName);
+		params["params"]=list;
+                resultParams = ptr_service->callMethod("getBrightness", params);
+		ReturnValue = resultParams["success"].toBool();
+		LEDBrightness = resultParams["brightness"].toInt();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service getBrightness() call Success.\n");
+                        response["result"]="SUCCESS";
+			sprintf(brightnessDetails , "%d",LEDBrightness);
+			strcat(BrightnessDetail,brightnessDetails);
+                        response["details"]=BrightnessDetail;
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service getBrightness() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service getBrightness call failed";
+                }
+		free(brightnessDetails);
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+	DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+
+
+/***************************************************************************
+ *Function name : SM_FP_SetLED
+ *Descrption    : This will sets the color and Brightness of the front panel LED..
+ *parameter [in]: req - name of the LED and Brightness value to be set.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_SetLED(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetLED ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+	FrontPanelService *ptr_service = pFPService;
+	if(ptr_service != NULL)
+        {
+        	QString LEDName = QString::fromStdString(req["LEDName"].asCString());
+        	int LEDBrightness = req["LEDBrightness"].asInt();
+        	int LEDColorRed = req["LEDColorRed"].asInt();
+        	int LEDColorBlue = req["LEDColorBlue"].asInt();
+        	int LEDColorGreen = req["LEDColorGreen"].asInt();
+		ServiceParams params, resultParams;
+		QVariantList list;
+		QVariantHash properties;
+		properties.insert("ledIndicator", LEDName);
+		properties.insert("brightness", LEDBrightness);
+		properties.insert("red",LEDColorRed);
+		properties.insert("blue",LEDColorBlue);
+		properties.insert("green",LEDColorGreen);
+		list.append(properties);
+
+		bool ReturnValue ;
+        	DEBUG_PRINT(DEBUG_TRACE,"Calling setLED to LED : %s to brightness : %d\n",LEDName.toUtf8().constData(),LEDBrightness);
+		params["params"]=list;
+                resultParams = ptr_service->callMethod("setLED", params);
+		ReturnValue = resultParams["success"].toBool();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setLED() call Success.\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="Front Panel Service setLED success";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setLED() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service setLED call failed";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+	DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+
+
+/***************************************************************************
+ *Function name : SM_FP_SetAPIVersion
+ *Descrption    : This will check the functionality of getApiVersionNumber and 
+		  setApiVersionNumber APIs.
+ *parameter [in]: req-  service_name-Name of the service.
+			apiVersion - Parameter to be passed to callMethod API.
+ *****************************************************************************/ 
+bool ServiceManagerAgent::SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response)
+{
+	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_SetAPIVersion ---->Entry\n");
+#ifdef HAS_FRONT_PANEL
+        FrontPanelService *ptr_service = pFPService;
+
+        if( &req["apiVersion"] == NULL)
+        {
+		response["result"]="FAILURE";
+		response["details"]=" apiVersion is NULL";
+                return TEST_FAILURE;
+        }
+	int setApiVersion=req["apiVersion"].asInt();
+	//ServiceParams params;
+	int getApiVersion=0;
+	char apiVersion[STR_DETAILS_20]= "API_VERSION:";
+	char *versionDetails = (char*)malloc(sizeof(char)*STR_DETAILS_20);
+	memset(versionDetails , '\0', (sizeof(char)*STR_DETAILS_20));
+	if(ptr_service != NULL)
+	{
+		getApiVersion =ptr_service->getApiVersionNumber();	
+		if(setApiVersion==getApiVersion)
+		{
+			response["result"]="SUCCESS";
+			response["details"]="SAME_DATA_ALREADY_ENTERED";
+			return TEST_SUCCESS;	
+		}
+		/*set API version by calling setApiVersionNumber API*/
+		ptr_service->setApiVersionNumber(setApiVersion);
+		/*get API version by calling getApiVersionNumber API*/
+		getApiVersion =ptr_service->getApiVersionNumber();	
+		sprintf(versionDetails,"%d",getApiVersion);
+		strcat(apiVersion,versionDetails);
+		DEBUG_PRINT(DEBUG_LOG,"Services:%s",apiVersion);
+		response["result"]="SUCCESS";
+		response["details"]=apiVersion;
+	}
+	else
+	{
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+	}
+	free(versionDetails);
+	DEBUG_PRINT(DEBUG_TRACE,"\nSM_FP_SetAPIVersion ---->Exit\n");
+	return TEST_SUCCESS;	
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+
+}
+
+
+
+/***************************************************************************
+ *Function name : SM_FP_SetPreferences
+ *Descrption    : This will sets the color and Brightness of the front panel LED..
+ *parameter [in]: req - name of the LED and Brightness value to be set.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_SetPreferences(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetPreferences ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+	FrontPanelService *ptr_service = pFPService;
+	if(ptr_service != NULL)
+        {
+        	std::string LEDName = req["LEDName"].asCString();
+        	int LEDBrightness = req["LEDBrightness"].asInt();
+        	int LEDColorRed = req["LEDColorRed"].asInt();
+        	int LEDColorBlue = req["LEDColorBlue"].asInt();
+        	int LEDColorGreen = req["LEDColorGreen"].asInt();
+		ServiceParams params, resultParams;
+		QVariantList list;
+                QVariantHash properties , setpref;
+                properties.insert("brightness", LEDBrightness);
+                properties.insert("red",LEDColorRed);
+                properties.insert("blue",LEDColorBlue);
+                properties.insert("green",LEDColorGreen);
+                setpref.insert(LEDName.c_str(),properties);
+                list.append(setpref);
+
+		bool ReturnValue ;
+        	DEBUG_PRINT(DEBUG_TRACE,"Calling setPreferences to LED \n");
+		params["params"]=list;
+                resultParams = ptr_service->callMethod("setPreferences", params);
+		ReturnValue = resultParams["success"].toBool();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setPreferences() call Success.\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="Front Panel Service setPreferences success";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setPreferences() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service setPreferences call failed";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+	DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+
+
+/***************************************************************************
+ *Function name : SM_FP_GetPreferences
+ *Descrption    : This will sets the color and Brightness of the front panel LED..
+ *parameter [in]: req - name of the LED and Brightness value to be set.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_GetPreferences(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_GetPreferences ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+	FrontPanelService *ptr_service = pFPService;
+	if(ptr_service != NULL)
+        {
+        	std::string LEDName = req["LEDName"].asCString();
+		char getprefdetails[STR_DETAILS_50] = {'\0'};
+		ServiceParams params, resultParams;
+		QVariantList list;
+                QVariantHash properties , getpref;
+
+		bool ReturnValue ;
+        	DEBUG_PRINT(DEBUG_TRACE,"Calling getPreferences to LED \n");
+		params["params"]=list;
+                resultParams = ptr_service->callMethod("getPreferences", params);
+		ReturnValue = resultParams["success"].toBool();
+		getpref = resultParams["preferences"].toHash();
+		properties = getpref[LEDName.c_str()].toHash();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service getPreferences() call Success.\n");
+			DEBUG_PRINT(DEBUG_TRACE,"LED:%s,Brightness:%d,Red:%d,Green:%d,Blue:%d",LEDName.c_str(),properties["brightness"].toInt(),properties["red"].toInt(),properties["green"].toInt(),properties["blue"].toInt());
+			sprintf(getprefdetails,"LED:%s,Brightness:%d,Red:%d,Green:%d,Blue:%d",LEDName.c_str(),properties["brightness"].toInt(),properties["red"].toInt(),properties["green"].toInt(),properties["blue"].toInt());
+                        response["result"]="SUCCESS";
+                        response["details"]=getprefdetails;
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service getPreferences() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service getPreferences call failed";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+	DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+
+
+/***************************************************************************
+ *Function name : SM_FP_SetBlink
+ *Descrption    : This will sets the Blink pattern of the front panel LED..
+ *parameter [in]: req - name of the LED and Brightness value to be set.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_SetBlink(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetBlink ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+	FrontPanelService *ptr_service = pFPService;
+	if(ptr_service != NULL)
+        {
+        	std::string LEDName = req["LEDName"].asCString();
+        	std::string LEDBrightness = req["LEDBrightness"].asCString();
+        	std::string LEDColorRed = req["LEDColorRed"].asCString();
+        	std::string LEDColorBlue = req["LEDColorBlue"].asCString();
+        	std::string LEDColorGreen = req["LEDColorGreen"].asCString();
+        	std::string BlinkDuration = req["BlinkDuration"].asCString();
+		std::string delimiter = ",";
+        	int iterationcount = req["IterationCount"].asInt();
+        	int sequencecount = req["SequenceCount"].asInt();
+		ServiceParams params, resultParams;
+		QVariantList Blinklist,patternlist;
+                QVariantHash blinkinfo , pattern[sequencecount];
+                blinkinfo.insert("ledIndicator", LEDName.c_str());
+                blinkinfo.insert("iterations",iterationcount);
+		size_t pos = 0;
+		std::string token;
+		int brightness, red, green, blue,duration;
+		for (int i = 0; i < sequencecount ;  i++)
+		{
+			token = LEDBrightness.substr(0, LEDBrightness.find(delimiter));
+			std::cout << token << std::endl;
+			LEDBrightness.erase(0, LEDBrightness.find(delimiter) + delimiter.length());
+			stringstream convert(token);
+			convert>>brightness;
+			pattern[i].insert("brightness",brightness);
+			token = LEDColorRed.substr(0, LEDColorRed.find(delimiter));
+			std::cout << token << std::endl;
+			LEDColorRed.erase(0, LEDColorRed.find(delimiter) + delimiter.length());
+			stringstream convert1(token);
+			convert1>>red;
+			pattern[i].insert("red",red);
+			token = LEDColorGreen.substr(0, LEDColorGreen.find(delimiter));
+			std::cout << token << std::endl;
+			LEDColorGreen.erase(0, LEDColorGreen.find(delimiter) + delimiter.length());
+			stringstream convert2(token);
+			convert2>>green;
+			pattern[i].insert("green",green);
+			token = LEDColorBlue.substr(0, LEDColorBlue.find(delimiter));
+			std::cout << token << std::endl;
+			LEDColorBlue.erase(0, LEDColorBlue.find(delimiter) + delimiter.length());
+			stringstream convert3(token);
+			convert3>>blue;
+			pattern[i].insert("blue",blue);
+			token = BlinkDuration.substr(0, BlinkDuration.find(delimiter));
+			std::cout << token << std::endl;
+			BlinkDuration.erase(0, BlinkDuration.find(delimiter) + delimiter.length());
+			stringstream convert4(token);
+			convert4>>duration;
+			pattern[i].insert("duration",duration);
+			patternlist << pattern[i];
+			DEBUG_PRINT(DEBUG_TRACE,"duration:%d,Brightness:%d,Red:%d,Green:%d,Blue:%d",duration,brightness,red,green,blue);
+		}
+		blinkinfo.insert("pattern",patternlist);
+		Blinklist.append(blinkinfo);
+		bool ReturnValue ;
+        	DEBUG_PRINT(DEBUG_TRACE,"Calling setBlink to LED \n");
+		params["params"]=Blinklist;
+                resultParams = ptr_service->callMethod("setBlink", params);
+		ReturnValue = resultParams["success"].toBool();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setBlink() call Success.\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="Front Panel Service setBlink success";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setBlink() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service setBlink call failed";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+	DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+
 /**************************************************************************
  * Function Name: CreateObject
  * Description	: This function will be used to create a new object for the
@@ -2780,6 +3263,14 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_GetNumberOfInputs");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_GetCurrentVideoMode");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_IsContentProtected");
+        /*Front Panel Service APIs*/
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_GetBrightness");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetBrightness");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetLED");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetAPIVersion");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetPreferences");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_GetPreferences");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetBlink");
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;
 }
