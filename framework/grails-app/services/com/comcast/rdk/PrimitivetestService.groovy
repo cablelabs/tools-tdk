@@ -63,30 +63,31 @@ class PrimitivetestService {
             Set parameters = primitiveTest?.parameters;
             for ( Map parameter : parameters ) {
                 if(parameter?.parameterType?.parameterTypeEnum.getTypeValue().equals("integer") ){
+					int val = 0 ;
                     try{
-                        int val = Integer.parseInt(parameter?.value);
-                        outData.addProperty (parameter?.parameterType.name, val);
+                        val = Integer.parseInt(parameter?.value);
                     }catch (Exception e){
-                        log.error("----Exception in converting to integer"+e.printStackTrace())
+                        log.error("----Exception in converting to integer")
                     }
+                    outData.addProperty (parameter?.parameterType.name, val);
                 }
 				else if(parameter?.parameterType?.parameterTypeEnum.getTypeValue().equals("float") ){
+					float floatVal = 0.0 ;
 					try{
-					    
-						float floatVal = Float.parseFloat(parameter?.value)
-						outData.addProperty (parameter?.parameterType.name, floatVal);
+						floatVal = Float.parseFloat(parameter?.value)
 					}catch (Exception e){
-						log.error("----Exception in converting to float"+e.printStackTrace())
+						log.error("----Exception in converting to float")
 					}
+					outData.addProperty (parameter?.parameterType.name, floatVal);
 				}
 				else if(parameter?.parameterType?.parameterTypeEnum.getTypeValue().equals("double") ){
+					double doubleVal = 0.00 ;
 					try{
-						
-						double doubleVal = Double.parseDouble(parameter?.value)
-						outData.addProperty (parameter?.parameterType.name, doubleVal);
+						doubleVal = Double.parseDouble(parameter?.value)
 					}catch (Exception e){
-						log.error("----Exception in converting to float"+e.printStackTrace())
+						log.error("----Exception in converting to double")
 					}
+					outData.addProperty (parameter?.parameterType.name, doubleVal);
 				}				
                 else{
                     outData.addProperty( parameter?.parameterType.name, parameter?.value.trim() );
