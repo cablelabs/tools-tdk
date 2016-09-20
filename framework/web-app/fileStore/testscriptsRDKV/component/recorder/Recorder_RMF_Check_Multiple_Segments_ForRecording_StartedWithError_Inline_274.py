@@ -145,19 +145,11 @@ if "SUCCESS" in recLoadStatus.upper():
                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                 print "Recording data after 1st reboot", recordingData
                 if 'NOTFOUND' not in recordingData:
-                    statusKey = 'status'
-                    statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
                     print "Successfully retrieved the recording list from recorder";
                     tdkTestObj.setResultStatus("SUCCESS");
-                    if "INCOMPLETE" in statusValue.upper():
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        print "Recording status set to INCOMPLETE";
-                    else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                        print "Recording status NOT set to INCOMPLETE successfully";
                 else:
-                     tdkTestObj.setResultStatus("FAILURE");
-                     print "Failed to retrieve the recording list from recorder";
+                    tdkTestObj.setResultStatus("FAILURE");
+                    print "Failed to retrieve the recording list from recorder";
 
                 # Reboot the STB to get the recording as multiple segements
                 print "Rebooting the STB to get the recording list"

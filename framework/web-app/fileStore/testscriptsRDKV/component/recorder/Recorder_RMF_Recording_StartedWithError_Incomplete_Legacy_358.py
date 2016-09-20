@@ -5,16 +5,16 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Recorder_RMF_Check_StatusOf_RecWith_Expired_Endtime_Inline_272</name>
+  <name>Recorder_RMF_Recording_StartedWithError_Incomplete_Legacy_358</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -24,7 +24,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_272 - To check the status of a recording which has an expired end time</synopsis>
+  <synopsis>Recording started with error should move to status incomplete</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -44,6 +44,7 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <script_tags />
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
@@ -60,7 +61,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_Check_StatusOf_RecWith_Expired_Endtime_Inline_272');
+recObj.configureTestCase(ip,port,'Recorder_RMF_Recording_StartedWithError_Incomplete_Legacy');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status :%s" %recLoadStatus ;
@@ -77,23 +78,26 @@ if "SUCCESS" in recLoadStatus.upper():
                print "Waiting for 5min for the recoder to be up"
 	       sleep(300);
 
-	#Primitive test case which associated to this Script
-        tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
-        expectedResult = "SUCCESS";
-        tdkTestObj.executeTestCase(expectedResult);
-
-        #Pre-requisite
-        jsonMsgNoUpdate = "{\"noUpdate\":{}}";        
-        actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
+        jsonMsgNoUpdate = "{\"noUpdate\":{}}";
+      	actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
  	print "No Update Schedule Details: %s"%actResponse;
 	sleep(10);
-        response = recorderlib.callServerHandler('clearStatus',ip);
 
+        #Pre-requisite
+       	response = recorderlib.callServerHandler('clearStatus',ip);
+        print "Clear Status Details: %s"%response;
+       	response = recorderlib.callServerHandler('retrieveStatus',ip);
+        print "Retrieve Status Details: %s"%response;
+
+       	#Primitive test case which associated to this script
+        tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
+       	expectedResult="SUCCESS";
+	
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        duration = "-120000";
-        startTime = "0";
+        duration = "700000";
+        startTime = "120000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime"
 
@@ -102,7 +106,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
-        actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
+        actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
         print "Update Schedule Details: %s"%actResponse; 
         
         if expResponse in actResponse:
@@ -125,33 +129,36 @@ if "SUCCESS" in recLoadStatus.upper():
             elif 'acknowledgement' in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "Successfully retrieved acknowledgement from recorder";
-                sleep(30)
-                tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
-                tdkTestObj.executeTestCase(expectedResult);
+                sleep(80)
+                # Reboot the STB before starting the recording
+                print "Rebooting the STB to get the recording list"
+                recObj.initiateReboot();
+                print "Sleeping to wait for the recoder to be up"
+                sleep(300);
+                print "Wait for the recording to complete partially"
+                sleep(400);
                 print "Sending getRecordings to get the recording list"
                 recorderlib.callServerHandler('clearStatus',ip)
-                recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
+                recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
                 print "Wait for 1 min to get response from recorder"
                 sleep(60)
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                #sleep(30)
-                print "Recording List: %s" %actResponse;
-                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);            
-                print recordingData
+                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                print "Recording data after 1st reboot", recordingData
                 if 'NOTFOUND' not in recordingData:
                     statusKey = 'status'
                     statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
                     print "Successfully retrieved the recording list from recorder";
                     tdkTestObj.setResultStatus("SUCCESS");
-                    if "ERASED" in statusValue.upper():
+                    if "INCOMPLETE" in statusValue.upper():
                         tdkTestObj.setResultStatus("SUCCESS");
-                        print "Recording with expired end time have status as ERASED";
+                        print "Recording with status INCOMPLETE";
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "Recording with expired end time did not handle properly";
+                        print "Recording status INCOMPLETE not set successfully";
                 else:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "Failed to retrieve the recording list from recorder";
+                     tdkTestObj.setResultStatus("FAILURE");
+                     print "Failed to retrieve the recording list from recorder";
             else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Failed to retrieve acknowledgement from recorder";
@@ -162,8 +169,9 @@ if "SUCCESS" in recLoadStatus.upper():
  
         #unloading Recorder module
         recObj.unloadModule("Recorder");
-        
+	    
 else:
     print "Failed to load Recorder module";
     #Set the module loading status
-    recObj.setLoadModuleStatus("FAILURE");	
+    recObj.setLoadModuleStatus("FAILURE");
+

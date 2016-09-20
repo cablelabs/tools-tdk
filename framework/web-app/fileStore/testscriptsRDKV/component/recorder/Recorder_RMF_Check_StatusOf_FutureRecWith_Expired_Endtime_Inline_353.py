@@ -5,16 +5,16 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Recorder_RMF_Check_StatusOf_RecWith_Expired_Endtime_Legacy_271</name>
+  <name>Recorder_RMF_Check_StatusOf_FutureRecWith_Expired_Endtime_Inline_353</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -24,11 +24,11 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_271 - To check the status of a recording which has an expired end time</synopsis>
+  <synopsis>Schedule a future recording with expired end time</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>60</execution_time>
+  <execution_time>30</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -44,7 +44,6 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
-  <script_tags />
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
@@ -61,7 +60,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_Check_StatusOf_RecWith_Expired_Endtime_Legacy_271');
+recObj.configureTestCase(ip,port,'Recorder_RMF_Check_StatusOf_FutureRecWith_Expired_Endtime_Inline_353');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status :%s" %recLoadStatus ;
@@ -94,7 +93,7 @@ if "SUCCESS" in recLoadStatus.upper():
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
         duration = "-120000";
-        startTime = "0";
+        startTime = "60000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime"
 
@@ -103,7 +102,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
-        actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
+        actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
         print "Update Schedule Details: %s"%actResponse; 
         
         if expResponse in actResponse:
@@ -131,11 +130,10 @@ if "SUCCESS" in recLoadStatus.upper():
                 tdkTestObj.executeTestCase(expectedResult);
                 print "Sending getRecordings to get the recording list"
                 recorderlib.callServerHandler('clearStatus',ip)
-                recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+                recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
                 print "Wait for 1 min to get response from recorder"
                 sleep(60)
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                #sleep(30)
                 print "Recording List: %s" %actResponse;
                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);            
                 print recordingData
@@ -146,10 +144,10 @@ if "SUCCESS" in recLoadStatus.upper():
                     tdkTestObj.setResultStatus("SUCCESS");
                     if "ERASED" in statusValue.upper():
                         tdkTestObj.setResultStatus("SUCCESS");
-                        print "Recording with expired end time have status as ERASED";
+                        print "Future Recording with expired end time have status as ERASED";
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "Recording with expired end time did not handle properly";
+                        print "Future Recording with expired end time did not handle properly";
                 else:
                     tdkTestObj.setResultStatus("FAILURE");
                     print "Failed to retrieve the recording list from recorder";
@@ -167,5 +165,5 @@ if "SUCCESS" in recLoadStatus.upper():
 else:
     print "Failed to load Recorder module";
     #Set the module loading status
-    recObj.setLoadModuleStatus("FAILURE");	  
+    recObj.setLoadModuleStatus("FAILURE");
 

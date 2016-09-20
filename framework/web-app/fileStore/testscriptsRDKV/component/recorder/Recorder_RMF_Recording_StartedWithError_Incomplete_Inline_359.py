@@ -5,16 +5,16 @@
 #  not be used, copied, distributed or otherwise  disclosed in whole or in part
 #  without the express written permission of Comcast.
 #  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
+#  Copyright (c) 2014 Comcast. All rights reserved.
+#  ===========================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Recorder_RMF_Check_Multiple_Segments_ForRecording_StartedWithError_Legacy_273</name>
+  <name>Recorder_RMF_Recording_StartedWithError_Incomplete_Inline_359</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -24,7 +24,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>CT_Recoder_DVR_Protocol_273 - Test for segmented recordings by rebooting the box when a recording is in StartedWithError</synopsis>
+  <synopsis>Recording started with error should move to status incomplete</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -44,7 +44,6 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
-  <script_tags />
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
@@ -61,7 +60,7 @@ port = <port>
 
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
-recObj.configureTestCase(ip,port,'Recorder_RMF_Check_Multiple_Segments_ForRecording_StartedWithError_Legacy_273');
+recObj.configureTestCase(ip,port,'Recorder_RMF_Recording_StartedWithError_Incomplete_Inline_359');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status :%s" %recLoadStatus ;
@@ -96,7 +95,7 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        duration = "1200000";
+        duration = "700000";
         startTime = "120000";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         now = "curTime"
@@ -106,7 +105,7 @@ if "SUCCESS" in recLoadStatus.upper():
 
         expResponse = "updateSchedule";
         tdkTestObj.executeTestCase(expectedResult);
-        actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
+        actResponse = recorderlib.callServerHandlerWithMsg('updateInlineMessage',jsonMsg,ip);
         print "Update Schedule Details: %s"%actResponse; 
         
         if expResponse in actResponse:
@@ -136,61 +135,29 @@ if "SUCCESS" in recLoadStatus.upper():
                 print "Sleeping to wait for the recoder to be up"
                 sleep(300);
                 print "Wait for the recording to complete partially"
-                sleep(300);
+                sleep(400);
                 print "Sending getRecordings to get the recording list"
                 recorderlib.callServerHandler('clearStatus',ip)
-                recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
+                recorderlib.callServerHandlerWithMsg('updateInlineMessage','{\"getRecordings\":{}}',ip)
                 print "Wait for 1 min to get response from recorder"
                 sleep(60)
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                 print "Recording data after 1st reboot", recordingData
                 if 'NOTFOUND' not in recordingData:
-                    print "Successfully retrieved the recording list from recorder";
-                    tdkTestObj.setResultStatus("SUCCESS");
-                else:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "Failed to retrieve the recording list from recorder";
-
-                # Reboot the STB to get the recording as multiple segements
-                print "Rebooting the STB to get the recording list"
-                recObj.initiateReboot();
-                print "Sleeping to wait for the recoder to be up"
-                sleep(300);
-                print "Wait for the recording to complete"
-                sleep(300);
-
-                tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
-                tdkTestObj.executeTestCase(expectedResult);
-                print "Sending getRecordings to get the recording list"
-                recorderlib.callServerHandler('clearStatus',ip)
-                recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
-                print "Wait for 1 min to get response from recorder"
-                sleep(60)
-                actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                print "Recording List: %s" %actResponse;
-                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);            
-                print recordingData
-                if 'NOTFOUND' not in recordingData:
-                    print "Successfully retrieved the recording list from recorder";
                     statusKey = 'status'
                     statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
-                    durationList = recorderlib.getValueFromKeyInRecording(recordingData,'duration')
-                    print "Durations in recording data " , durationList
+                    print "Successfully retrieved the recording list from recorder";
                     tdkTestObj.setResultStatus("SUCCESS");
                     if "INCOMPLETE" in statusValue.upper():
-                        if ((len(durationList) == 2)):
-                            tdkTestObj.setResultStatus("SUCCESS");
-                            print "Recording contains two segments after power interruption"
-                        else:
-                            tdkTestObj.setResultStatus("FAILURE");
-                            print "Recording not segmented after power interruption"
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        print "Recording with status INCOMPLETE";
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "Recording not completed successfully";
+                        print "Recording status INCOMPLETE not set successfully";
                 else:
-                    tdkTestObj.setResultStatus("FAILURE");
-                    print "Failed to retrieve the recording list from recorder";
+                     tdkTestObj.setResultStatus("FAILURE");
+                     print "Failed to retrieve the recording list from recorder";
             else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Failed to retrieve acknowledgement from recorder";
