@@ -41,8 +41,6 @@ using namespace std;
 #include "websocketservice.h"
 #endif
 #ifdef HAS_FRONT_PANEL
-#include "frontPanelIndicator.hpp"
-#include "frontPanelConfig.hpp"
 #include "frontpanelservice.h"
 #endif
 #ifdef HAS_STATE_OBSERVER
@@ -185,14 +183,7 @@ class ServiceManagerAgent : public RDKTestStubInterface
                 bool SM_AVInputService_GetNumberOfInputs(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_AVInputService_GetCurrentVideoMode(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_AVInputService_IsContentProtected(IN const Json::Value& req, OUT Json::Value& response);
-                /*Front panel Service APIs*/
-                bool SM_FP_SetBrightness(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_GetBrightness(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_SetLED(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_SetPreferences(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_GetPreferences(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_SetBlink(IN const Json::Value& req, OUT Json::Value& response);
+
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
 		
 };

@@ -10,7 +10,7 @@
 
 QT += widgets network core gui
 DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
-DEFINES += HAS_API_HDMI_CEC HAS_FRONT_PANEL USE_DS USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION
+DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION
 DEFINES += HAS_API_AVINPUT USE_AVINPUT
 DEFINES += QT_WEBKIT_LIB
 
@@ -65,14 +65,6 @@ contains(DEFINES,HAS_API_HDMI_CEC) {
 HEADERS += servicemanager/include/services/hdmicecservice.h
 SOURCES += servicemanager/src/services/hdmicecservice.cpp
 LIBS += -lRCEC -lRCECOSHal -lRCECIARMBusHal
-}
-
-contains(DEFINES,HAS_FRONT_PANEL) {
-HEADERS += servicemanager/include/helpers/frontpanel.h \
-        servicemanager/include/services/frontpanelservice.h
-SOURCES += servicemanager/src/helpers/frontpanel.cpp \
-        servicemanager/src/services/frontpanelservice.cpp
-LIBS +=  -ludev -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5OpenGL -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata -lIARMBus -ldshalsrv -ldshalcli
 }
 
 contains(DEFINES,HAS_API_APPLICATION) {
