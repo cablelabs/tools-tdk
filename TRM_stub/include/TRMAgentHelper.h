@@ -33,7 +33,7 @@
 
 #define OUTPUT_LEN 2040 // max limit in TDK framework is 2048
 #define GUID_LEN   64
-#define MAX_RETRY  20
+#define MAX_RETRY  10
 
 enum Type {
     REQUEST = 0x1234,

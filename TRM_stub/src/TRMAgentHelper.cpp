@@ -317,17 +317,17 @@ bool waitForTRMResponse()
     int retry_count = 0;
     while ((false == responseReceived) && (retry_count < MAX_RETRY))
     {
-	usleep(250000); //250ms
+	usleep(500000); //500ms
 	retry_count++;
     }
 
     if( false == responseReceived )
     {
-        DEBUG_PRINT(DEBUG_TRACE, "%s() - Timeout. Failed to get response msg within %f sec(s)\n", __FUNCTION__, 0.25*retry_count);
+        DEBUG_PRINT(DEBUG_TRACE, "%s() - Timeout. Failed to get response msg within %f sec(s)\n", __FUNCTION__, 0.5*retry_count);
     }
     else
     {
-        DEBUG_PRINT(DEBUG_TRACE, "%s() - Received response in %f sec(s)\n", __FUNCTION__, 0.25*retry_count);
+        DEBUG_PRINT(DEBUG_TRACE, "%s() - Received response in %f sec(s)\n", __FUNCTION__, 0.5*retry_count);
     }
 
     return responseSuccess;
@@ -339,17 +339,17 @@ string waitForResrvResponse()
     int retry_count = 0;
     while ((false == resrvResponseReceived) && (retry_count < MAX_RETRY))
     {
-        usleep(250000); //250ms
+        usleep(500000); //500ms
         retry_count++;
     }
 
     if( false == resrvResponseReceived )
     {
-        DEBUG_PRINT(DEBUG_TRACE, "%s() - Timeout. Failed to get response msg within %f sec(s)\n", __FUNCTION__, 0.25*retry_count);
+        DEBUG_PRINT(DEBUG_TRACE, "%s() - Timeout. Failed to get response msg within %f sec(s)\n", __FUNCTION__, 0.5*retry_count);
     }
     else
     {
-        DEBUG_PRINT(DEBUG_TRACE, "%s() - Received response in %f sec(s)\n", __FUNCTION__, 0.25*retry_count);
+        DEBUG_PRINT(DEBUG_TRACE, "%s() - Received response in %f sec(s)\n", __FUNCTION__, 0.5*retry_count);
     }
 
     return reservationSuccess;
