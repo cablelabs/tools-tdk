@@ -1450,14 +1450,27 @@ class ExecutescriptService {
 			//println "Error "+ex.getMessage()
 		}
 		finally{
+			
 			if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
-				executionService.deviceAllocatedList.remove(deviceInstance?.id)
+				executionService.deviceAllocatedList.removeAll(deviceInstance?.id)
 			}
 			
 			String devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
 			Thread.start{
 				deviceStatusService.updateOnlyDeviceStatus(deviceInstance, devStatus)
 			}
+			
+			Thread.sleep(1000);
+			
+			Device devv = Device.get(deviceInstance?.id)
+			println "["+ deviceInstance?.stbName+"] ["+  devStatus + "] ["+devv?.deviceStatus+"]"
+			
+			if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+				println " Device instance is still there in the allocated list :  "+deviceInstance?.stbName + " id "+ deviceInstance?.id 
+				executionService.deviceAllocatedList.removeAll(deviceInstance?.id)
+				println " Again checking the device lock  for "+deviceInstance?.stbName + " status =  "+executionService.deviceAllocatedList.contains(deviceInstance?.id)
+			}
+			
 		}
 		
 		return htmlData
