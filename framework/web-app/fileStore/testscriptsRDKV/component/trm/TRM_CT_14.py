@@ -50,7 +50,7 @@ Test Type: Negative</synopsis>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
-from trm import getMaxTuner,reserveForRecord
+from trm import getMaxTuner,reserveForRecord,getAllTunerStates
 from time import sleep
 
 #IP and Port of box, No need to change,
@@ -86,11 +86,27 @@ if "SUCCESS" in result.upper():
     if ( 0 == maxTuner ):
         print "Exiting without executing the script"
     else:
+        tdkTestObj = obj.createTestStep('TRM_TunerReserveForRecord');
+        # Get all Tuner states for fetching live local tuning locator
+        initStates = getAllTunerStates(obj,'SUCCESS')
+        if 'Live' in initStates:
+            for deviceNo in range(0,maxTuner):
+		streamId = '0'+str(deviceNo+1)
+		recordingId = 'RecordIdCh'+streamId
+		locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
+		if locator in initStates:
+		    reserveForRecord(obj,'SUCCESS',kwargs={'deviceNo':deviceNo,'streamId':streamId,'duration':20000,'startTime':0,'recordingId':recordingId,'hot':0})
+		    break;
+
         for deviceNo in range(0,maxTuner+1):
             # Frame different request URL for each client box
             streamId = '0'+str(deviceNo+1)
             recordingId = 'RecordIdCh'+streamId
-            if ( maxTuner == deviceNo ):
+            locator = "ocap://"+tdkTestObj.getStreamDetails(streamId).getOCAPID()
+
+            if locator in initStates:
+		continue
+            elif ( maxTuner == deviceNo ):
                 expectedRes = "FAILURE"
             else:
                 expectedRes = "SUCCESS"
