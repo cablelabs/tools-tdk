@@ -2382,6 +2382,7 @@ class ExecutionController {
 	//	}
 
 	def singleTestRestExecution(final String stbName, final String boxType, final String scriptName , final int repeat, final String reRunOnFailure, final String timeInfo,final String performance,final String isLog){
+		println " singleTestRestExecution [stbName="+stbName+"] [scriptName="+scriptName+"]"
 		def moduleName= scriptService.scriptMapping.get(scriptName)
 		def deviceInstance = Device.findByStbName(stbName)
 		String  url = getApplicationUrl()
@@ -2425,6 +2426,7 @@ class ExecutionController {
 									}
 								}
 								catch(Exception eX){
+									println " Error "+eX.getMessage()
 								}
 								status = status.trim()
 								//execute script only if the device is free
@@ -2486,6 +2488,7 @@ class ExecutionController {
 													//													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,FALSE)
 
 													executed = true
+													println " singleTestRestExecution [stbName="+stbName+"] [scriptName="+scriptName+"]"+" [execName="+execName+"] [Triggered Execution]"
 													url = url + "/execution/thirdPartyJsonResult?execName=${execName}"
 													jsonOutData.addProperty("status", "RUNNING")
 													jsonOutData.addProperty("result", url)
@@ -2537,7 +2540,7 @@ class ExecutionController {
 			}
 		} finally {
 			if(!executed){
-
+				println " singleTestRestExecution [stbName="+stbName+"] [scriptName="+scriptName+"] not executed "
 				if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 					executionService.deviceAllocatedList.removeAll(deviceInstance?.id)
 				}
@@ -2562,6 +2565,7 @@ class ExecutionController {
 				jsonOutData.addProperty("result", htmlData)
 			}
 		}
+		println " singleTestRestExecution [stbName="+stbName+"] [scriptName="+scriptName+"] [jsonOutData="+jsonOutData+"]"
 		render jsonOutData
 	}
 

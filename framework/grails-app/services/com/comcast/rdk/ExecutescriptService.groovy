@@ -1034,20 +1034,24 @@ class ExecutescriptService {
 	{
 		boolean aborted = false
 		boolean pause = false
+		def htmlData = ""
+		Device deviceInstance
+		def deviceId
+		try{
+			
 		def scriptInstance
-		Device deviceInstance 
 		Device.withTransaction {
 			deviceInstance= Device.findById(device)
 		}
+		deviceId = deviceInstance?.id
 		ScriptGroup scriptGroupInstance
 		StringBuilder output = new StringBuilder();
-		def htmlData = ""
 		int scriptGrpSize = 0
 		int scriptCounter = 0
 		def isMultiple = TRUE
 		List pendingScripts = []
 		
-		try{
+		
 		
 		if(groupType == TEST_SUITE){
 			scriptCounter = 0
@@ -1249,6 +1253,8 @@ class ExecutescriptService {
 		}
 		else if(groupType == SINGLE_SCRIPT){
 
+			println " [ScriptName="+scripts + "] [Device="+deviceInstance?.stbName+"] [execName="+execName+"]"
+			
 			if(scripts instanceof String){
 				def moduleName= scriptService.scriptMapping.get(scripts)
 				def script1 = scriptService.getScript(realPath,moduleName, scripts, category)
@@ -1447,30 +1453,35 @@ class ExecutescriptService {
 		
 		}
 		catch(Exception ex){
-			//println "Error "+ex.getMessage()
+			println "Error "+ex.getMessage()
 		}
 		finally{
-			
-			if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
-				executionService.deviceAllocatedList.removeAll(deviceInstance?.id)
+
+			try {
+				if(executionService.deviceAllocatedList?.contains(deviceId)){
+					executionService.deviceAllocatedList?.removeAll(deviceId)
+				}
+
+				String devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+				Thread.start{
+					deviceStatusService.updateOnlyDeviceStatus(deviceInstance, devStatus)
+				}
+
+				Thread.sleep(1000);
+
+				Device devv = Device.get(deviceId)
+				println "["+ deviceInstance?.stbName+"] ["+  devStatus + "] ["+devv?.deviceStatus+"]"+" [execName="+execName+"]"
+
+				if(executionService.deviceAllocatedList.contains(deviceId)){
+					println " Device instance is still there in the allocated list :  "+deviceInstance?.stbName + " id "+ deviceInstance?.id +" [execName="+execName+"]"
+					executionService.deviceAllocatedList.removeAll(deviceId)
+					println " Again checking the device lock  for "+deviceInstance?.stbName + " status =  "+executionService.deviceAllocatedList.contains(deviceInstance?.id)
+				}
+			} catch (Exception e) {
+				println " Error "+e.getMessage()
+				e.printStackTrace()
 			}
-			
-			String devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
-			Thread.start{
-				deviceStatusService.updateOnlyDeviceStatus(deviceInstance, devStatus)
-			}
-			
-			Thread.sleep(1000);
-			
-			Device devv = Device.get(deviceInstance?.id)
-			println "["+ deviceInstance?.stbName+"] ["+  devStatus + "] ["+devv?.deviceStatus+"]"
-			
-			if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
-				println " Device instance is still there in the allocated list :  "+deviceInstance?.stbName + " id "+ deviceInstance?.id 
-				executionService.deviceAllocatedList.removeAll(deviceInstance?.id)
-				println " Again checking the device lock  for "+deviceInstance?.stbName + " status =  "+executionService.deviceAllocatedList.contains(deviceInstance?.id)
-			}
-			
+
 		}
 		
 		return htmlData
