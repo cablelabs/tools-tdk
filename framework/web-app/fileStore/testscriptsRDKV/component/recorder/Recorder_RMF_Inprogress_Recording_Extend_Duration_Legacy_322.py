@@ -162,23 +162,14 @@ if "SUCCESS" in recLoadStatus.upper():
                             recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
                             print recordingData
                             if 'NOTFOUND' not in recordingData:
-                                expDurationValue = recorderlib.getValueFromKeyInRecording(recordingData,'expectedDuration')
-                                actDurationValue = recorderlib.getValueFromKeyInRecording(recordingData,'duration')
-                                print "expectedDuration: ", expDurationValue
-                                print "ActualDuration: ", actDurationValue[0]
-                                difference_duration = expDurationValue - actDurationValue[0]
-                                statusValue = recorderlib.getValueFromKeyInRecording(recordingData,'status')
-				print "status: ", statusValue
-				if "COMPLETE" in statusValue.upper():
-                                	if (int(newDuration) == int(expDurationValue) and difference_duration < 10000):
-                                    		tdkTestObj.setResultStatus("SUCCESS");
-                                    		print "Using Update Schedule message duration updated for an inprogress recording as expected";
-					else:
-						tdkTestObj.setResultStatus("FAILURE");
-						print "Using Update Schedule message duration NOT updated for an inprogress recording";
+                                reqRecording = {"recordingId":recordingID,"duration":180000,"deletePriority":"P3"}
+                                ret = recorderlib.verifyCompletedRecording(recordingData,reqRecording)
+                                if ret in "FALSE":
+                                    tdkTestObj.setResultStatus("FAILURE");
+                                    print "Recording not extended and have undesirable values";
                                 else:
-                                    	tdkTestObj.setResultStatus("FAILURE");
-                                    	print "Recording not completed successfully";
+                                    tdkTestObj.setResultStatus("SUCCESS");
+                                    print "Recording got extended and not have undesirable values";
                             else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "Failed to retrieve the recording list from recorder";
