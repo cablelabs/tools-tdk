@@ -1046,10 +1046,29 @@ class TclExecutionService {
 		def  scriptDir = grailsApplication.parentContext.getResource("fileStore"+FILE_SEPARATOR+FileStorePath.RDKTCL.value()).file?.absolutePath
 		def tclFilePath = scriptDir+FILE_SEPARATOR+sFile.scriptName+".tcl"
 		def configFilePath = scriptDir+FILE_SEPARATOR+"Config_" + deviceInstance?.stbName+".txt"
-		String outData		
-		outData = executionService?.executeTclScript(tclFilePath, configFilePath, execTime, uniqueExecutionName , scriptInstance.scriptName, scriptDir,combainedTcl.scriptName )
-		//outData = executionService?.executeTclScript(tclFilePath, configFilePath, execTime, uniqueExecutionName , scriptInstance.scriptName, scriptDir )
+		String scriptData = readScriptContent(tclFilePath)
+		scriptData = executionService.convertScriptFromHTMLToPython(scriptData)
+		
+		//Required only for TDK TCL execution 
+		scriptData = scriptData.replace('$ClassPath $Class' , '$ClassPath $Class '+executionResultId+' ' )
 	
+		
+		Date date = new Date()
+		String newFile = FILE_STARTS_WITH+date.getTime().toString()+TCL_EXTENSION
+		File file = new File(filePath, newFile)
+		boolean isFileCreated = file.createNewFile()
+		if(isFileCreated) {
+			file.setExecutable(true, false )
+		}
+		PrintWriter fileNewPrintWriter = file.newPrintWriter();
+		fileNewPrintWriter.print( scriptData )
+		fileNewPrintWriter.flush()
+		fileNewPrintWriter.close()
+		
+		String outData		
+		outData = executionService?.executeTclScript(file.getPath(), configFilePath, execTime, uniqueExecutionName , scriptInstance.scriptName, scriptDir,combainedTcl.scriptName )
+		//outData = executionService?.executeTclScript(tclFilePath, configFilePath, execTime, uniqueExecutionName , scriptInstance.scriptName, scriptDir )
+		file.delete()
 
 		def logPath = "${realPath}/logs//${executionId}//${executionDevice?.id}//${executionResultId}//"
 		executescriptService.copyLogsIntoDir(realPath,logPath, executionId,executionDevice?.id, executionResultId)
@@ -1201,6 +1220,24 @@ class TclExecutionService {
 		return htmlData
 	}
 
+	def readScriptContent(String filename){
+		File file = new File(filename)
+		String scriptContent = ""
+		if(file.exists()){
+			String s = ""
+			List line = file.readLines()			
+			int indx = 0
+			while(indx < line.size()){
+				String lineData = line.get(indx)
+				scriptContent = scriptContent + lineData+"\n"
+				indx++
+			}
+		}else{
+			println " file Not present "
+		}
+		return scriptContent
+	}
+	
 	def reRunOnFailure(final String realPath, final String filePath, final String execName, final String uniqueExecutionName, final String appUrl, final String category){
 		try {			
 			boolean pause = false

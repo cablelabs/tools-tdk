@@ -489,7 +489,10 @@ function removeScript(id){
 
 function removeScript(id, category){
 	
-	if(id.contains('@')){
+	//if(id.contains('@')){
+	//if(id.search('@')){
+	// issue fix for delete script  
+	if(id.includes('@')){
 		checkAnyEditingScript();
 		$("#currentScriptId").val("");
 		$.get('deleteScript', {id: id, category:category}, function(data) { document.location.reload();  });

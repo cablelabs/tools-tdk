@@ -316,8 +316,13 @@ class PrimitiveTestController {
 
 							file.write(xmlHeaderContent+writer.toString())
 							//file.write(writer.toString())
-							primitiveService.addToPrimitiveList(params?.testName,moduleObj.getName(), category)
-						} catch (Exception e) {
+							if(primitiveService.addToPrimitiveList(params?.testName,moduleObj.getName(), category)){
+								render "PrimitiveTest created successully"
+							}else{
+								render "PrimitiveTest not created successully"
+								
+							}
+													} catch (Exception e) {
 							e.printStackTrace()
 						}
 					}

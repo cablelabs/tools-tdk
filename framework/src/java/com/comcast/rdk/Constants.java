@@ -49,6 +49,7 @@ public final class Constants
     public static final String TEMP_VERSIONFILE_NAME= "Version_File.py";
     public static final String RESULT_TOKEN         = "[SCRIPTSTATUSRESULT]";
     public static final String PYTHON_EXTENSION     = ".py";
+    public static final String TCL_EXTENSION     = ".tcl";
     public static final String FILE_STARTS_WITH     = "/script_";
     public static final String FAILURE_STATUS       = "FAILURE";
     public static final String SUCCESS_STATUS       = "SUCCESS";

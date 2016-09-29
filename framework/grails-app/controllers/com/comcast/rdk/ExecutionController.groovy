@@ -2382,8 +2382,6 @@ class ExecutionController {
 	//	}
 
 	def singleTestRestExecution(final String stbName, final String boxType, final String scriptName , final int repeat, final String reRunOnFailure, final String timeInfo,final String performance,final String isLog){
-		println " singleTestRestExecution [stbName="+stbName+"] [scriptName="+scriptName+"]"
-		def moduleName= scriptService.scriptMapping.get(scriptName)
 		def deviceInstance = Device.findByStbName(stbName)
 		String  url = getApplicationUrl()
 		String htmlData = ""
@@ -2392,177 +2390,249 @@ class ExecutionController {
 		String filePath = "${request.getRealPath('/')}//fileStore"
 		boolean executed = false
 		JsonObject jsonOutData = new JsonObject()
+		String  sName = scriptName
 		int i =0;
-		try{
-			// Loop  For checking the repeat count
+		boolean valid = false;
+		boolean TCL = false;
+		try {
 			if(deviceInstance){
 				def category = deviceInstance.category
-				if(moduleName){
-
-					def scriptInstance1 = scriptService.getScript(getRealPath(),moduleName, scriptName, category.toString())
-					if(scriptInstance1){
-
-						//check whether the script is valid for this execution
-						if(executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
-							String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-							if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
-								String status = ""
-								try {
-									status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
-
-									synchronized (lock) {
-										if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
-											status = "BUSY"
-										}else{
-											if((status.equals( Status.FREE.toString() ))){
-												if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
-													executionService.deviceAllocatedList.add(deviceInstance?.id)
-													Thread.start{
-														deviceStatusService.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
-													}
-												}
-											}
-										}
-									}
+				if(("RDKB".equals(category?.toString()))){
+					if((scriptService?.tclScriptsList?.toString()?.contains(scriptName?.trim()))  ){
+						TCL = true
+					}
+					if(!TCL){
+					boolean compoundTCL = false
+					def combainedTclScript =  scriptService?.combinedTclScriptMap
+					combainedTclScript?.each{
+						if(it?.value?.toString().contains(scriptName?.toString())){
+							compoundTCL = true
+						}
+					}
+					if((scriptService?.totalTclScriptList?.toString()?.contains(scriptName?.toString())) && compoundTCL ){
+						combainedTclScript?.each{
+							if(it?.value?.toString()?.contains(scriptName?.toString())){
+								TCL = true
+							}
+						}
+					}
+					}
+				}
+				if(!TCL ){
+					def moduleName= scriptService.scriptMapping.get(scriptName)
+					if(moduleName){
+						def scriptInstance1 = scriptService.getScript(getRealPath(),moduleName, scriptName, category.toString())
+						if(scriptInstance1){
+							//check whether the script is valid for this execution
+							if(executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
+								String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
+								if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
+									valid = true
+								}else{
+									htmlData = "RDK Version supported by the script is not matching with the RDK Version of selected Device "+deviceInstance?.stbName+"<br>"
 								}
-								catch(Exception eX){
-									println " Error "+eX.getMessage()
-								}
-								status = status.trim()
-								//execute script only if the device is free
-
-								if((status.equals( Status.FREE.toString() ))){
-
-									if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
-										executionService.deviceAllocatedList.add(deviceInstance?.id)
-									}
-
-									def deviceName
-									ExecutionDevice executionDevice
-									def execution
-									def executionSaveStatus = true
-									DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT1)
-									Calendar cal = Calendar.getInstance()
-									deviceName = deviceInstance?.stbName
-
-
-									execName = CI_EXECUTION+deviceName+dateFormat.format(cal.getTime()).toString()
-									newExecName = execName
-									//execName = CI_EXECUTION+deviceName+dateFormat.format(cal.getTime()).toString()
-
-									try {
-										//									executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptName, deviceName, null,url)
-										//executionSaveStatus =  executionService.saveExecutionDetails(execName, scriptName, deviceName, null,url,timeInfo,performance,reRunOnFailure,FALSE)
-										executionSaveStatus =  executionService.saveExecutionDetails(execName,[scriptName:scriptName, deviceName:deviceName, scriptGroupInstance:null,
-											appUrl:url, isBenchMark:timeInfo, isSystemDiagnostics:performance, rerun:reRunOnFailure, isLogReqd:FALSE,category:category?.toString(),rerunOnFailure:FALSE])
-									} catch (Exception e) {
-										executionSaveStatus = false
-									}
-
-									if(executionSaveStatus){
-										execution = Execution.findByName(execName)
-										try{
-											executionDevice = new ExecutionDevice()
-											executionDevice.execution = execution
-											executionDevice.dateOfExecution = new Date()
-											executionDevice.device = deviceInstance?.stbName
-											executionDevice.deviceIp = deviceInstance?.stbIp
-											executionDevice.status = UNDEFINED_STATUS
-											executionDevice.category = category
-											if(executionDevice.save(flush:true)){
-												String getRealPathString  = getRealPath()
-												executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
-												def rerun = null
-												if(reRunOnFailure?.equals(TRUE)){
-													rerun = "on"
-												}
-
-												if(repeat > 1){
-
-												}else{
-													htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
-															filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,isLog,category?.toString())
-
-													// The Execution is done through only one device
-													//											htmlData = executescriptService.executescriptsOnDevice(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
-													//													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,FALSE)
-
-													executed = true
-													println " singleTestRestExecution [stbName="+stbName+"] [scriptName="+scriptName+"]"+" [execName="+execName+"] [Triggered Execution]"
-													url = url + "/execution/thirdPartyJsonResult?execName=${execName}"
-													jsonOutData.addProperty("status", "RUNNING")
-													jsonOutData.addProperty("result", url)
-
-												}
-											}
-										}
-										catch(Exception e){
-											println " ERROR "+e.getMessage()
-										}
-									}
-									else{
-										htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
-									}
-								}
-								else if(status.equals( Status.ALLOCATED.toString() )){
-									htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
-								}
-								else if(status.equals( Status.NOT_FOUND.toString() )){
-									htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
-								}
-								else if(status.equals( Status.HANG.toString() )){
-									htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
-								}
-								else if(status.equals( Status.BUSY.toString() )){
-									htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
-								}else if(status.equals( Status.TDK_DISABLED.toString() )){
-									htmlData = htmlData + "TDK is not enabled  in the Device to execute scripts"
-
-								}
-								else{
-									htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
-								}
-
 							}else{
-								htmlData = "RDK Version supported by the script is not matching with the RDK Version of selected Device "+deviceInstance?.stbName+"<br>"
+								htmlData = message(code: 'execution.boxtype.nomatch')
 							}
 						}else{
-							htmlData = message(code: 'execution.boxtype.nomatch')
+							htmlData = "No Script is available with name ${scriptName} in module ${moduleName}"
 						}
 					}else{
-						htmlData = "No Script is available with name ${scriptName} in module ${moduleName}"
+						htmlData = "No module associated with script ${scriptName}"
 					}
+
 				}else{
-					htmlData = "No module associated with script ${scriptName}"
+
+					def scriptInstance1 = [:]
+					boolean compoundTCL = false
+					def combainedTclScript =  scriptService?.combinedTclScriptMap
+					combainedTclScript?.each{
+						if(it?.value?.toString().contains(sName)){
+							compoundTCL = true
+						}
+					}
+					if((scriptService?.totalTclScriptList?.toString()?.contains(sName)) && compoundTCL ){
+						combainedTclScript?.each{
+							if(it?.value?.toString()?.contains(sName)){
+								sName = it.key?.toString()
+							}
+						}
+					}
+					def scriptValid = Utility.isTclScriptExists(realPath,  sName)
+					if(scriptValid) {
+						if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){
+							scriptInstance1.put('scriptName',sName )
+							valid = true
+						}
+						else{
+							htmlData = "<br>"+stbName +"  : No Config file is available with name Config_${deviceInstance?.stbName}.txt"
+						}
+
+					}else{
+						htmlData = "<br>"+stbName +"  : No TCL Script is available with name ${scriptName}"
+					}
 				}
+				String status = ""
+				if(valid){
+					try {
+						status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+
+						synchronized (lock) {
+							if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+								status = "BUSY"
+							}else{
+								if((status.equals( Status.FREE.toString() ))){
+									if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+										executionService.deviceAllocatedList.add(deviceInstance?.id)
+										Thread.start{
+											deviceStatusService.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
+										}
+									}
+								}
+							}
+						}
+					}
+					catch(Exception eX){
+					}
+			
+				status = status.trim()
+				//execute script only if the device is free
+				if((status.equals( Status.FREE.toString() ))){
+					if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+						executionService.deviceAllocatedList.add(deviceInstance?.id)
+					}
+
+					def deviceName
+					ExecutionDevice executionDevice
+					def execution
+					def executionSaveStatus = true
+					DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT1)
+					Calendar cal = Calendar.getInstance()
+					deviceName = deviceInstance?.stbName
+
+
+					execName = CI_EXECUTION+deviceName+dateFormat.format(cal.getTime()).toString()
+					newExecName = execName
+					//execName = CI_EXECUTION+deviceName+dateFormat.format(cal.getTime()).toString()
+
+					try {
+						//									executionSaveStatus = scriptexecutionService.saveExecutionDetails(execName, scriptName, deviceName, null,url)
+						//executionSaveStatus =  executionService.saveExecutionDetails(execName, scriptName, deviceName, null,url,timeInfo,performance,reRunOnFailure,FALSE)
+						executionSaveStatus =  executionService.saveExecutionDetails(execName,[scriptName:scriptName, deviceName:deviceName, scriptGroupInstance:null,
+							appUrl:url, isBenchMark:timeInfo, isSystemDiagnostics:performance, rerun:reRunOnFailure, isLogReqd:FALSE,category:category?.toString(),rerunOnFailure:FALSE])
+					} catch (Exception e) {
+						executionSaveStatus = false
+					}
+
+					if(executionSaveStatus){
+						execution = Execution.findByName(execName)
+						try{
+							executionDevice = new ExecutionDevice()
+							executionDevice.execution = execution
+							executionDevice.dateOfExecution = new Date()
+							executionDevice.device = deviceInstance?.stbName
+							executionDevice.deviceIp = deviceInstance?.stbIp
+							executionDevice.status = UNDEFINED_STATUS
+							executionDevice.category = category
+							if(executionDevice.save(flush:true)){
+								String getRealPathString  = getRealPath()
+								executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
+								def rerun = null
+								if(reRunOnFailure?.equals(TRUE)){
+									rerun = "on"
+								}
+
+								if(repeat > 1){
+
+								}else{
+									if(!TCL ){
+										htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
+												filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,isLog,category?.toString())
+
+										// The Execution is done through only one device
+										//											htmlData = executescriptService.executescriptsOnDevice(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
+										//													filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,FALSE)
+
+										executed = true
+										println " singleTestRestExecution [stbName="+stbName+"] [scriptName="+scriptName+"]"+" [execName="+execName+"] [Triggered Execution]"
+										url = url + "/execution/thirdPartyJsonResult?execName=${execName}"
+										jsonOutData.addProperty("status", "RUNNING")
+										jsonOutData.addProperty("result", url)
+
+									}else{
+										tclExecutionService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, scriptName, "", execName,
+												filePath, getRealPath(), SINGLE_SCRIPT, url, timeInfo, performance, rerun,isLog,category?.toString())
+										executed = true
+										url = url + "/execution/thirdPartyJsonResult?execName=${execName}"
+										jsonOutData.addProperty("status", "RUNNING")
+										jsonOutData.addProperty("result", url)
+									}
+
+								}
+							}
+						}
+						catch(Exception e){
+							println " ERROR "+e.getMessage()
+						}
+					}
+					else{
+						htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+					}
+				}
+				else if(status.equals( Status.ALLOCATED.toString() )){
+					htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+				}
+				else if(status.equals( Status.NOT_FOUND.toString() )){
+					htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+				}
+				else if(status.equals( Status.HANG.toString() )){
+					htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+				}
+				else if(status.equals( Status.BUSY.toString() )){
+					htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+				}else if(status.equals( Status.TDK_DISABLED.toString() )){
+					htmlData = htmlData + "TDK is not enabled  in the Device to execute scripts"
+
+				}
+				else{
+					htmlData = htmlData + "Device ${deviceInstance?.stbName} is not free to execute Scripts"
+				}
+
+							
+				}
+
 			}else{
 				htmlData = "No device found with this name "+stbName
 			}
 		} finally {
 			if(!executed){
 				println " singleTestRestExecution [stbName="+stbName+"] [scriptName="+scriptName+"] not executed "
-				if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
-					executionService.deviceAllocatedList.removeAll(deviceInstance?.id)
-				}
-				
-				String devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
-				Thread.start{
-					deviceStatusService.updateOnlyDeviceStatus(deviceInstance, devStatus)
-				}
-				
-				Thread.sleep(1000);
-				
-				Device devv = Device.get(deviceInstance?.id)
-				println "**["+ deviceInstance?.stbName+"] ["+  devStatus + "] ["+devv?.deviceStatus+"]"
-				
-				if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
-					println " Device instance is still there in the allocated list :  "+deviceInstance?.stbName + " id "+ deviceInstance?.id 
-					executionService.deviceAllocatedList.removeAll(deviceInstance?.id)
-					println " Again checking the device lock  for "+deviceInstance?.stbName + " status =  "+executionService.deviceAllocatedList.contains(deviceInstance?.id)
+				if(deviceInstance){
+					if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+						executionService.deviceAllocatedList.removeAll(deviceInstance?.id)
+					}
+
+					String devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+					Thread.start{
+						deviceStatusService.updateOnlyDeviceStatus(deviceInstance, devStatus)
+					}
+
+					Thread.sleep(1000);
+
+					Device devv = Device.get(deviceInstance?.id)					
+						println "**["+ deviceInstance?.stbName+"] ["+  devStatus + "] ["+devv?.deviceStatus+"]"
+					if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
+						println " Device instance is still there in the allocated list :  "+deviceInstance?.stbName + " id "+ deviceInstance?.id
+						executionService.deviceAllocatedList.removeAll(deviceInstance?.id)
+						println " Again checking the device lock  for "+deviceInstance?.stbName + " status =  "+executionService.deviceAllocatedList.contains(deviceInstance?.id)
+					}
+				}else{
+					htmlData = "No device found with this name "+stbName
 				}
 
-				jsonOutData.addProperty("status", "FAILURE")
-				jsonOutData.addProperty("result", htmlData)
+					jsonOutData.addProperty("status", "FAILURE")
+					jsonOutData.addProperty("result", htmlData)
+				
 			}
 		}
 		println " singleTestRestExecution [stbName="+stbName+"] [scriptName="+scriptName+"] [jsonOutData="+jsonOutData+"]"
@@ -3010,12 +3080,16 @@ class ExecutionController {
 								imageNameDetails = it?.toString()
 							}
 						}
-					def imageName = imageNameDetails?.split(":")
-					if(imageName.size() > 1 && imageName[0]?.toString()?.equals("imagename")){
-						executionObj?.addProperty("ImageName",imageName[1])
-					}else{
-						executionObj?.addProperty("ImageName","Image name not available")
-					}
+						if(imageNameDetails){
+							def imageName = imageNameDetails?.split(":")
+							if(imageName.size() > 1 && imageName[0]?.toString()?.equals("imagename")){
+								executionObj?.addProperty("ImageName",imageName[1])
+							}else{
+								executionObj?.addProperty("ImageName","Image name not available")
+							}
+						}else{
+							executionObj?.addProperty("ImageName","Image name not available")
+						}
 					}
 				}else{
 					executionObj?.addProperty("ImageName","Image name not available")

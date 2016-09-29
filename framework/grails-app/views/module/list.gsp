@@ -13,6 +13,16 @@
 <!DOCTYPE html>
 <html>
 	<head>
+	<script type='text/javascript'>
+	$(document).ready(function() {
+		$("#upload_Module").hide();
+		$("#list-module").show();
+	});
+	function hideModuleListPage() {
+		$("#list-module").hide();
+		$("#upload_Module").show();
+	}
+	</script>
 		<meta name="layout" content="main">
 		<g:set var="entityName" value="${category}  ${message(code: 'module.label', default: 'Module')}" />
 		<title><g:message code="default.list.label" args="[entityName]" /></title>
@@ -27,6 +37,10 @@
 
 				<li> <g:link class="create" action="createFunction"  params="[category:category]"> Create Function </g:link></li>
 				<li><g:link class ="create" action="createParameter" params="[category:category]"> Create Parameters </g:link></li>			
+				<li> <img src="../images/reorder_up.png" height="12" width="12"/><g:submitToRemote class="test" 
+						before="hideModuleListPage()" action="uploadModule;"
+						value=" Upload Module Deails"/>
+				</li>
 				
 			</ul>
 		</div>
@@ -66,5 +80,20 @@
 				<g:paginate total="${moduleInstanceTotal}" params="[category:category]" />
 			</div>
 		</div>
+	<div class="contextMenu" id="upload_Module" align="left"
+		style="height :290px; " >
+		<br> <br> <br> <br>
+		<g:form method="POST" controller="module" action="uploadModule"
+			enctype="multipart/form-data" params="[category : category]">
+			<br><br><br><br>
+			&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<label> <b>Select Module XML File </b>
+			</label>
+			&emsp;
+			<input class="uploadFile" type="file" name="file" />
+			&emsp;&emsp;
+			<g:actionSubmit class="buttons" style="width : 100px; "
+				action="uploadModule" value="Upload Module" />
+		</g:form>
+	</div>
 	</body>
 </html>

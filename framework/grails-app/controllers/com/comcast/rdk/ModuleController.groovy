@@ -18,6 +18,7 @@ import java.util.List;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject
 import grails.converters.JSON
+import groovy.xml.MarkupBuilder
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.util.StringUtils;
 import org.apache.shiro.SecurityUtils
@@ -196,7 +197,7 @@ class ModuleController {
 		
 	}
     def save() {
-        def moduleInstance = new Module(params)
+          /*   def moduleInstance = new Module(params)
 		moduleInstance.groups = utilityService.getGroup()
 		Category category = getCategory(params?.category)
 		def savedEntity = true
@@ -226,7 +227,15 @@ class ModuleController {
 			return
 		}
         flash.message = message(code: 'default.created.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
-        redirect(action: "create",  params:[category:params?.category])
+        redirect(action: "create",  params:[category:params?.category])*/
+		def moduleInstance = new Module(params)
+		moduleInstance.groups = utilityService.getGroup()
+		if (!moduleInstance.save(flush: true)) {
+			render(view: "create", model: [moduleInstance: moduleInstance , category:params?.category ])
+			return
+		}
+		flash.message = message(code: 'default.created.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
+		redirect(action: "create", params:[category:params?.category])
     }
     /**
      * Save function corresponding to the selected modules
@@ -627,4 +636,240 @@ class ModuleController {
 	private String getRootPath(){
 		return request.getSession().getServletContext().getRealPath(Constants.FILE_SEPARATOR)
 	}
+	
+	/**
+	 * Function for download module details as XML
+	 * @return
+	 */
+	def downloadXml(){
+		def moduleName  = Module?.findById(params?.id)
+		String moduleData = ""
+		def writer = new StringWriter()
+		def xml = new MarkupBuilder(writer)
+		if(moduleName){
+			try{
+				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
+				xml.xml(){
+				xml.module(){
+					mkp.yield "\r\n  "
+					mkp.comment "Module Name "
+					xml.moduleName(moduleName)
+					mkp.yield "\r\n  "
+					mkp.comment "Category of the module "
+					xml.category(params.category)
+					mkp.yield "\r\n  "
+					mkp.comment "Excecution time out of module"
+					xml.executionTimeOut(moduleName?.executionTime)
+					mkp.yield "\r\n  "
+					mkp.comment "Excecution time out of module"
+					xml.testGroup(moduleName?.testGroup)
+					mkp.yield "\r\n  "
+					mkp.comment "Logs File Names of module"
+					xml.logFileNames(moduleName?.stbLogFiles)
+					mkp.yield "\r\n  "
+					mkp.comment "Crash File Names of the module"
+					xml.crashFileNames(moduleName?.logFileNames)
+					def functions = Function.findAllByModule(moduleName)
+					if(functions){
+						mkp.yield "\r\n  "
+						mkp.comment "Total functions corresponding module "
+						xml.functions(){
+							functions?.each{ funName ->
+								xml.function(name:funName?.toString())
+							}
+						}
+						mkp.yield "\r\n  "
+						mkp.comment "Total parameters corresponding module "
+						xml.parameters(){
+							functions?.each{ funName ->
+								def parameterInstance =  ParameterType?.findAllByFunction(funName)
+								if(parameterInstance){
+									parameterInstance?.each{ parameterName->
+										xml.parameter(funName:funName,parameterName:parameterName,parameterType:parameterName?.parameterTypeEnum ,range:parameterName?.rangeVal)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			moduleData = writer?.toString()
+			}catch(Exception e){
+				println " ERROR "+ e.printStackTrace()
+			}
+			if(moduleData){
+				params.format = "text"
+				params.extension = "xml"
+				response.setHeader("Content-Type", "application/octet-stream;")
+				response.setHeader("Content-Disposition", "attachment; filename=\""+ moduleName?.toString()+"-module.xml\"")
+				response.outputStream << moduleData.getBytes()
+			}else{
+				flash.message = "Download failed due to device information not available."
+				redirect(action: "show")
+			}
+		}else{
+			flash.message ="Module does not exist"
+			redirect(action:"show")
+		}
+	}
+	/**
+	 * Function for uploading the module details
+	 * @return
+	 */
+	def uploadModule(){					
+			def category
+			def uploadedFile = request?.getFile("file")			
+			if( uploadedFile?.originalFilename?.endsWith(".xml")) {
+				InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
+				def fileContent = reader?.readLines()
+				if(fileContent){
+					def moduleName
+					def executionTimeOut
+					def testGroup
+					String moduleXmlContent = ""
+					def logFileNames
+					def crashFileName
+					List crashFile = []
+					List logFile =[]
+					def node
+					def parameters
+					def functions
+					fileContent?.each{ xmlData->
+						moduleXmlContent += xmlData +"\n"
+					}
+					boolean moduleSaveStatus  = true
+					try{
+						XmlParser parser = new XmlParser();
+						node = parser.parseText(moduleXmlContent)
+						if(node){
+							moduleName = node?.module?.moduleName?.text()?.trim()
+							category = node?.module?.category?.text()?.trim()
+							executionTimeOut  = node?.module?.executionTimeOut?.text()?.trim()
+							testGroup =  node?.module?.testGroup?.text()?.trim()
+							def testGrpStatus = com.comcast.rdk.TestGroup?.values()?.toString()?.contains(testGroup)
+							logFileNames = node?.module?.logFileNames?.text()?.trim()
+							crashFileName = node?.module?.crashFileNames?.text()?.trim()
+							if(!moduleName){
+								flash.message = "Module name is blank"
+							}else if(!category){
+								flash.message = "Category is blank"
+							}else if(!(category?.toString()?.equals(params?.category?.toString()))){
+								flash.message =  " The category not matching with accoding the user  "+params?.category
+							}else if(!(executionTimeOut.toString().isInteger())){
+								flash.message = "Excecution time out is not valid"
+							}else if(!testGroup){
+								flash.message =	"The test group is blank "
+							}else if(testGrpStatus?.toString()?.equals("false")){
+								flash.message =	"The test group value is invalid "
+							}else{
+							 	int newExcutionTimeOut =Integer?.parseInt(node?.module?.executionTimeOut?.text()?.trim())
+								if(logFileNames){
+									logFileNames = logFileNames?.toString()?.replace("[", "")
+									logFileNames = logFileNames?.toString()?.replace("]", "")
+									def	logFileNamesList = logFileNames?.split(",")
+									logFileNamesList?.each{
+										logFile?.add(it)
+									}
+								}
+								if(crashFileName){
+									crashFileName = crashFileName?.toString()?.replace("[", "")
+									crashFileName = crashFileName?.toString()?.replace("]", "")
+									def	crashFileNamesList = crashFileName?.split(",")
+									crashFileNamesList?.each{
+										crashFile?.add(it)
+									}
+								}
+								functions = []
+								def parameterTotalList = []
+								node?.module?.functions?.function?.each{
+									functions?.add(it?.@name)
+								}
+								def parameterList = [:]
+								node?.module?.parameters?.parameter?.each{
+									parameterList = [:]
+									parameterList?.put("funName",it?.@funName)
+									parameterList?.put("paramsName",it?.@parameterName)
+									parameterList?.put("parameterType",it?.@parameterType)
+									parameterList?.put("paramRange",it?.@range)
+									parameterTotalList.add(parameterList)
+								}
+								def moduleInstance =  Module?.findByName(moduleName)
+								if(!moduleInstance){
+									Module newModuleInstance = new Module()
+									newModuleInstance?.name = moduleName
+									newModuleInstance?.category = category
+									newModuleInstance?.executionTime = newExcutionTimeOut
+									newModuleInstance?.testGroup = testGroup
+									newModuleInstance?.logFileNames = crashFile
+									newModuleInstance?.stbLogFiles = logFile
+									newModuleInstance.groups = utilityService.getGroup()
+									if(newModuleInstance?.save(flush:true)){
+										moduleSaveStatus = true
+									}else{
+										moduleSaveStatus = false
+									}
+								}
+								if(moduleSaveStatus){
+									def newFunList = []
+									def moduleInstance1 =  Module?.findByName(moduleName)
+									if(functions)	{
+										functions?.each { funName->
+											if(!(Function?.findByNameAndModule(funName,moduleInstance1))){
+												newFunList.add(funName)
+											}
+										}
+										try{
+											newFunList?.each { newFunName ->
+												def functionInstance  = new Function()
+												functionInstance?.name = newFunName
+												functionInstance?.module = moduleInstance1
+												functionInstance?.category =  category?.toString()
+												if(functionInstance?.save(flush:true)){
+												}
+											}
+										}catch(Exception e){
+											println " Error "+ e.getMessage()
+											e.printStackTrace()
+										}
+									}
+									if(parameterTotalList){
+										parameterTotalList?.each{ parameter ->
+											def functionInstance = Function?.findByNameAndModule(parameter?.funName, moduleInstance1)
+											if(functionInstance){
+												if(!(ParameterType?.findByNameAndFunction(parameter?.paramsName?.toString(),functionInstance ))){
+													try{
+														def parameterInstance = new ParameterType()
+														parameterInstance.name = parameter?.paramsName
+														parameterInstance.parameterTypeEnum = parameter?.parameterType
+														parameterInstance?.rangeVal = parameter?.paramRange
+														parameterInstance?.function = functionInstance
+														if(parameterInstance?.save(flush:true)){
+														}
+													}catch(Exception e){
+														e.printStackTrace()
+													}
+												}else{
+												}
+											}
+										}
+									}
+									flash.message ="Module details uploaded successfully "
+								}else{
+									flash.message =" Module details not saved"
+								}
+							}
+						}
+					}catch (Exception e){
+						flash.message ="XML tags not in correct format "
+						println e.printStackTrace()
+					}
+				}else{
+					flash.message ="File content is empty"
+				}
+			}else{
+				flash.message="Error, The file extension is not in .xml format"
+			}	
+			redirect(action:"list", params:[category:params?.category])				
+	}
+	
 }

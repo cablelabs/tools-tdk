@@ -155,6 +155,7 @@
 					<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete Module')}" onclick="return confirm('It will delete all tests and scripts within this module. Do you want to continue?');" />
 					<%--<g:actionSubmit class="delete" action="deleteParameterType" value="Delete Selected Parameter/s" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />
 					--%>
+<g:actionSubmit class="download" action="downloadXml" value= "Download Module XML" onclick="return confirm('Do you want to download module xml ?');"/>
 					</fieldset>
 			</g:form>
 		</div>

@@ -134,6 +134,7 @@ class PrimitiveService {
 	}
 	
 	def getPrimitiveList(def realPath, def category){
+		primitiveListMap = [:]
 		if(primitiveListMap == null || primitiveListMap.size() == 0){
 			initializePrimitiveTests(realPath)
 		}
