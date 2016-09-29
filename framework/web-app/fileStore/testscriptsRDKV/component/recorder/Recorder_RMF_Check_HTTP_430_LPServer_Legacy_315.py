@@ -152,7 +152,7 @@ if "SUCCESS" in recLoadStatus.upper():
             print "Clear the Longpoll server error" 
             actResponse = recorderlib.callServerHandlerWithType('clearError','LPServer',ip);
             print "Waiting for the connection re-establishment and recording to get completed"
-            sleep(90);
+            sleep(180);
 
             tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
             tdkTestObj.executeTestCase(expectedResult);

@@ -14,7 +14,7 @@
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Recorder_RMF_Rec_NotOrphaned_StartedLate_Legacy_207</name>
+  <name>Recorder_RMF_Rec_NotOrphaned_PowerInterrupt_Legacy_207</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -24,7 +24,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>If a recording is interrupted by settop reboot and becomes corrupted and lost, Recorder should resume recording what’s left and report as STARTED_LATE.  It should not be reported as ORPHANED.</synopsis>
+  <synopsis>If a recording is interrupted by settop reboot and becomes corrupted and lost, Recorder should resume recording whats left and report as PowerInterrupt if the first segment is more than 5 seconds.  It should not be reported as ORPHANED.</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -59,7 +59,7 @@ port = <port>
 #Test component to be tested
 recObj = tdklib.TDKScriptingLibrary("Recorder","2.0");
 #This will be replaced with correspoing Box Ip and port while executing script
-recObj.configureTestCase(ip,port,'Recorder_RMF_Rec_NotOrphaned_StartedLate_Legacy_207');
+recObj.configureTestCase(ip,port,'Recorder_RMF_Rec_NotOrphaned_PowerInterrupt_Legacy_207');
 #Get the result of connection with test component and STB
 recLoadStatus = recObj.getLoadModuleResult();
 print "Recorder module loading status : %s" %recLoadStatus;
@@ -207,7 +207,6 @@ if "SUCCESS" in recLoadStatus.upper():
 		exit();
         print "Successfully retrieved the recording data";
 	# end of full sync for recording list 
-	# check for status and error of 1st recording ... erased and orphaned 
  	key = 'status'
         value = recorderlib.getValueFromKeyInRecording(recordingData,key)
 	print "key: ",key," value: ",value
@@ -232,13 +231,12 @@ if "SUCCESS" in recLoadStatus.upper():
         	recObj.unloadModule("Recorder");
 		exit();
 	print "Recording error set";
-	if "STARTED_LATE" not in value.upper():
+	if "POWER_INTERRUPTION" not in value.upper():
        		tdkTestObj.setResultStatus("FAILURE");
-	        print "error not marked as STARTED_LATE";
+	        print "error not marked as POWER_INTERRUPTION";
         	recObj.unloadModule("Recorder");
 		exit();
-	print "error marked as STARTED_LATE";
-	# end of check for status and error of 1st recording ... erased and orphaned 
+	print "error marked as POWER_INTERRUPTION";
         #unloading Recorder module
         recObj.unloadModule("Recorder");
 else:
