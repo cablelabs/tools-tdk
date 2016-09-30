@@ -22,6 +22,7 @@
 #include "servicemanagernotifier.h"
 #include "dsMgr.h"
 #include "libIBus.h"
+#include "libIARM.h"
 #include "rdktestagentintf.h"
 
 #define PORT 0
@@ -31,4 +32,10 @@ class AVIListener : public ServiceListener
 {
 public:
        	void onServiceEvent(const QString& event, ServiceParams params);
+};
+
+class DisListener : public ServiceListener
+{
+public:
+        void onServiceEvent(const QString& event, ServiceParams params);
 };

@@ -30,6 +30,29 @@ void AVIListener::onServiceEvent(const QString& event, ServiceParams params)
 }
 #endif
 
+
+#ifdef USE_DISPLAY_SETTINGS
+void DisListener::onServiceEvent(const QString& event, ServiceParams params)
+{
+        QVariantList connectedVideoDisplays = params["connectedVideoDisplays"].toList();
+        DEBUG_PRINT(DEBUG_TRACE,"onServiceEvent receieved for DS \n");
+
+        if( connectedVideoDisplays.isEmpty())
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Received event CONNECTED_DISPLAYS_UPDATED with disconnected \n");
+                app->exit();
+        }
+        else if(connectedVideoDisplays[0].toString() == "HDMI0")
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Received event CONNECTED_DISPLAYS_UPDATED with connected %s",connectedVideoDisplays[0].toString().toUtf8().constData());
+                app->exit();
+        }
+        else
+                app->exit(FAIL);
+}
+#endif
+
+
 bool sm_create(QString serviceName)
 {
 	ServiceStruct serviceStruct;
@@ -43,6 +66,14 @@ bool sm_create(QString serviceName)
 		serviceStruct.serviceName = AVInputService::SERVICE_NAME;
 	}
 	else
+#endif
+#ifdef USE_DISPLAY_SETTINGS
+        if (serviceName == DISPLAY_SETTINGS_SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createDisplaySettingsService;
+                serviceStruct.serviceName = serviceName;
+        }
+        else
 #endif
 		return registerStatus;
         registerStatus = ServiceManager::getInstance()->registerService(serviceName, serviceStruct);
@@ -74,6 +105,17 @@ bool sm_event_register(QString serviceName, QString eventName)
         }
 	else
 #endif
+#ifdef USE_DISPLAY_SETTINGS
+        if(eventName == EVT_DISPLAY_SETTINGS_CONNECTED_DISPLAYS_UPDATED)
+        {
+                //event_list.append(EVT_DISPLAY_SETTINGS_CONNECTED_DISPLAYS_UPDATED);
+                event_list.append("connectedVideoDisplaysUpdated");
+                listener = new DisListener();
+                if(!listener)
+                        return registerStatus;
+        }
+	else
+#endif
 		return registerStatus;
 	if(listener)
 		registerStatus = ptr_service->registerForEvents(event_list,listener);
@@ -85,6 +127,7 @@ void iarm_register()
 	IARM_Bus_Init("IARM_BUS_TDK_QAPP");
 	IARM_Bus_Connect();
 	IARM_Bus_RegisterEventHandler(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG, dsHdmiEventHandler);
+	IARM_Bus_RegisterEventHandler(IARM_BUS_DSMGR_NAME,IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG, dsHdmiEventHandler);
 
 	DEBUG_PRINT(DEBUG_TRACE, "IARM event registered \n");
 }
@@ -102,15 +145,24 @@ void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, s
 	                ServiceManagerNotifier::getInstance()->notifyHdmiInputHotPlugEvent(hdmiin_hotplug_port, hdmiin_hotplug_conn);
 	        	break;
         	}
+                case IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG :
+                {
+                        IARM_Bus_DSMgr_EventData_t *eventData = (IARM_Bus_DSMgr_EventData_t *)data;
+                        int hdmi_hotplug_event = eventData->data.hdmi_hpd.event;
+                        printf("Received IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG  event data:%d \r\n", hdmi_hotplug_event);
+                        ServiceManagerNotifier::getInstance()->notifyHdmiHotPlugEvent(hdmi_hotplug_event);
+                        break;
+                }
 		default:
 			break;
 	}
 }
 
-bool iarm_broadcast(QString eventName, QString eventParam)
+IARM_Result_t iarm_broadcast(QString eventName, QString eventParam)
 {
         IARM_Bus_DSMgr_EventData_t _eventData;
-	bool retStatus = true;
+//	bool retStatus = true;
+	IARM_Result_t retStatus = IARM_RESULT_INVALID_STATE;
 
 #ifdef HAS_API_AVINPUT
 	if(eventName == AVInputService::EVENT_NAME_ON_AVINPUT_ACTIVE)
@@ -118,7 +170,7 @@ bool iarm_broadcast(QString eventName, QString eventParam)
 	        _eventData.data.hdmi_in_connect.port = (dsHdmiInPort_t)PORT;
         	_eventData.data.hdmi_in_connect.isPortConnected = eventParam.toInt();
 
-	        IARM_Bus_BroadcastEvent(IARM_BUS_DSMGR_NAME,
+	        retStatus = IARM_Bus_BroadcastEvent(IARM_BUS_DSMGR_NAME,
                                 (IARM_EventId_t)IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG,
                                 (void *)&_eventData,
                                 sizeof(_eventData));
@@ -128,8 +180,18 @@ bool iarm_broadcast(QString eventName, QString eventParam)
                 _eventData.data.hdmi_in_connect.port = (dsHdmiInPort_t)PORT;
                 _eventData.data.hdmi_in_connect.isPortConnected = eventParam.toInt();
 
-                IARM_Bus_BroadcastEvent(IARM_BUS_DSMGR_NAME,
+                retStatus = IARM_Bus_BroadcastEvent(IARM_BUS_DSMGR_NAME,
                                 (IARM_EventId_t)IARM_BUS_DSMGR_EVENT_HDMI_IN_HOTPLUG,
+                                (void *)&_eventData,
+                                sizeof(_eventData));
+        }
+#endif
+#ifdef USE_DISPLAY_SETTINGS
+        if(eventName == EVT_DISPLAY_SETTINGS_CONNECTED_DISPLAYS_UPDATED)
+        {
+                _eventData.data.hdmi_hpd.event = (dsDisplayEvent_t)eventParam.toInt();
+                retStatus = IARM_Bus_BroadcastEvent(IARM_BUS_DSMGR_NAME,
+                                (IARM_EventId_t)IARM_BUS_DSMGR_EVENT_HDMI_HOTPLUG,
                                 (void *)&_eventData,
                                 sizeof(_eventData));
         }
@@ -178,7 +240,7 @@ int main(int argc, char* argv[])
 		return FAIL;
 	}	
 
-	if( !iarm_broadcast(eventName, eventParam) )
+	if( iarm_broadcast(eventName, eventParam) )
 		return FAIL;
 
 	DEBUG_PRINT(DEBUG_TRACE,"Starting main loop\n");

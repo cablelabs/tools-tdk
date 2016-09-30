@@ -9,7 +9,7 @@
 #  ============================================================================
 
 QT += widgets network core gui
-DEFINES += HAS_API_AVINPUT USE_AVINPUT DEBUG_LEVEL_TRACE RDK2DOT0 
+DEFINES += HAS_API_AVINPUT USE_AVINPUT USE_DISPLAY_SETTINGS DEBUG_LEVEL_TRACE RDK2DOT0 
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -60,6 +60,12 @@ exists(../../platform/SM_stub/intel.pri) : include(../../platform/SM_stub/intel.
 exists(../../platform/SM_stub/broadcom.pri) : include(../../platform/SM_stub/broadcom.pri)
 
 SOURCES += sm_qapp.cpp 
+
+contains(DEFINES,USE_DISPLAY_SETTINGS) {
+HEADERS += ../servicemanager/include/services/displaysettingsservice.h
+
+SOURCES += ../servicemanager/src/services/displaysettingsservice.cpp
+}
 
 contains(DEFINES,HAS_API_AVINPUT) {
 	HEADERS += ../servicemanager/include/abstractservice.h \
