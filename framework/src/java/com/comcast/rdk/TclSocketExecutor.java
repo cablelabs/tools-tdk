@@ -107,8 +107,8 @@ public class TclSocketExecutor {
 			return this;
 		}
 
-		public Builder addResultID() {
-			object.put(RESULT_ID, "1");
+		public Builder addResultID(String resultId) {
+			object.put(RESULT_ID, resultId);
 			return this;
 		}
 
@@ -208,11 +208,12 @@ public class TclSocketExecutor {
 				arr[count] = s;
 				++count;
 			}
-			String oui = args[0];
-			String sNo = args[1];
-			String deviceType = args[2];
-			String methodType = args[3];
-			String paramName = args[4];
+			String resultId = args[0];
+			String oui = args[1];
+			String sNo = args[2];
+			String deviceType = args[3];
+			String methodType = args[4];
+			String paramName = args[5];
 			String paramValue = null;
 			String paramType = null;
 			String module = getModuleName(paramName);
@@ -223,8 +224,8 @@ public class TclSocketExecutor {
 			
 			if (StringUtils.hasText(methodType)
 					&& methodType.toUpperCase().contains("SET")) {
-				paramValue = args[5];
-				paramType = args[6];
+				paramValue = args[6];
+				paramType = args[7];
 				if (!StringUtils.hasText(paramValue)
 						|| !StringUtils.hasText(paramType)) {
 					System.out
@@ -253,7 +254,7 @@ public class TclSocketExecutor {
 			
 			pw = new PrintWriter(out, true);
 
-			loadModule(module, buf, pw);
+			loadModule(module, resultId, buf, pw);
 			try{
 				Thread.sleep(3000);
 			}
@@ -305,14 +306,14 @@ public class TclSocketExecutor {
 		}
 	}
 
-	private static void loadModule(String module, BufferedReader buf,
+	private static void loadModule(String module, String resultId, BufferedReader buf,
 			PrintWriter pw) throws Exception {
 		try {
 			String val;
 			Builder builder = new Builder();
 			builder.addJSONRPCVersion().loadModule()
 					.addModuleToLoadOrUnload(module).addPerformanceParams()
-					.addResultID().build();
+					.addResultID(resultId).build();
 
 			System.out.println("Load module request : " + builder.build());
 			pw.println(builder.build());
