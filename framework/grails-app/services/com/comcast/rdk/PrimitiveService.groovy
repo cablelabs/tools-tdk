@@ -112,7 +112,9 @@ class PrimitiveService {
 			def modules = getModulesListBasedOnCategory(realPath, category)
 			def map = [:]
 			modules?.each{ module ->
-				map.put(module, primitiveMap.get(module)?.sort())
+			if(!(module?.toString()?.equals("scriptDb2File.py"))){
+					map.put(module, primitiveMap.get(module)?.sort())
+				}
 			}
 			return map
 		}

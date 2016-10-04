@@ -162,9 +162,9 @@ class ModuleService {
 				primitiveFile.createNewFile()
 				primitiveFile.write(createXmlModuleDeclaration(moduleInstance))
 			}
-			//def xml = new XmlSlurper().parse(primitiveFile)
-			XmlParser parser = new XmlParser();
-			def xml = parser.parseText(primitiveFile)
+			def xml = new XmlSlurper().parse(primitiveFile)
+		//	XmlParser parser = new XmlParser();
+		//	def xml = parser.parseText(primitiveFile)
 			def val = xml.module?.primitiveTests?.primitiveTest.find{it.function?.text().equals(params?.name?.trim())}
 			if(val == null || "".equals(val?.text()?.trim())){
 				xml.module?.primitiveTests*.appendNode({primitiveTest(name:params?.name, id : '' , version :'1'){function(params?.name)}})
@@ -197,9 +197,9 @@ class ModuleService {
 			if(moduleInstance){
 				def primitiveXml = getPrimitiveTestFilePath(rootPath , moduleInstance, category)
 				def primitiveFile = new File(primitiveXml)
-				//def xml = new XmlSlurper().parse(primitiveFile)
-				XmlParser parser = new XmlParser();
-				def xml = parser.parseText(primitiveFile)				
+				def xml = new XmlSlurper().parse(primitiveFile)
+			//	XmlParser parser = new XmlParser();
+			//	def xml = parser.parseText(primitiveFile)				
 				functionList.each{ functionName ->
 					xml.module?.primitiveTests?.primitiveTest?.each{ primTest ->
 						def val = primTest.function?.find{it.text()?.trim().equals(functionName?.trim())}
@@ -252,9 +252,9 @@ class ModuleService {
 			def defaultVal = params?.defaultVal
 			def functionId = params?.function?.id
 			def func = Function.findById(functionId)
-			//def xml = new XmlSlurper().parse(primitiveFile)
-			XmlParser parser = new XmlParser();
-			def xml = parser.parseText(primitiveFile)
+			def xml = new XmlSlurper().parse(primitiveFile)
+		//	XmlParser parser = new XmlParser();
+		//	def xml = parser.parseText(primitiveFile)
 			
 		    def primaryTest = xml.module.primitiveTests.primitiveTest.find{ primitive  ->
 				primitive.@name.equals(func?.name?.trim())
@@ -323,9 +323,9 @@ class ModuleService {
 			def testScriptsDir = getTestScriptsFolder(category)
 			def primitiveXml = getPrimitiveTestFilePath(rootPath , moduleInstance, category)
 			File primitiveFile = new File(primitiveXml)
-			//def xml = new XmlSlurper().parse(primitiveFile)
-			XmlParser parser = new XmlParser();
-			def xml = parser.parseText(primitiveFile)
+			def xml = new XmlSlurper().parse(primitiveFile)
+		//	XmlParser parser = new XmlParser();
+		//	def xml = parser.parseText(primitiveFile)
 			paramList.each{ param ->
 				xml.module?.primitiveTests?.primitiveTest?.each{ primitive ->
 					def parameter = primitive?.parameters?.parameter?.find{it.@name.equals(param?.trim())}

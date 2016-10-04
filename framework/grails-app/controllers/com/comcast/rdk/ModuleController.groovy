@@ -488,10 +488,10 @@ class ModuleController {
 		if(unDeletedList.size() > 0){
 			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), unDeletedList.toString() ])}"
 		}
-		fnList.removeAll(unDeletedList)
-		if(!fnList.isEmpty()){
-			moduleService.removeFunction(params, getRootPath(), getCategory(params?.category), fnList)
-		}
+	//	fnList.removeAll(unDeletedList)
+	//	if(!fnList.isEmpty()){
+	//		moduleService.removeFunction(params, getRootPath(), getCategory(params?.category), fnList)
+	//	}
         redirect(action: "show", id : params?.moduleid, params:[category:params?.category])    
     }
     
@@ -532,13 +532,13 @@ class ModuleController {
 		catch (Exception e) {
 			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), parameterTypeInstance?.name])}"
 		}
-		paramsList.removeAll(unDeletedList)
+		//paramsList.removeAll(unDeletedList)
 		if(unDeletedList.size() > 0){
 			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'parameter.label', default: 'Parameter'), unDeletedList.toString() ])}"
 		}
-		if(!paramsList.isEmpty()){
-			moduleService.removeParameters(params, getRootPath(),getCategory(params?.category), paramsList)
-		}
+	//	if(!paramsList.isEmpty()){
+	//		moduleService.removeParameters(params, getRootPath(),getCategory(params?.category), paramsList)
+	//	}
 		redirect(action: "show", id : params?.moduleid, params:[category:params?.category])
 	}
     
