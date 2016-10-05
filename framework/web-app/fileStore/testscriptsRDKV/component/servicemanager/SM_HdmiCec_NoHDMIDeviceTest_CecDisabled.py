@@ -212,26 +212,27 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
         			else:
                 			tdkTestObj.setResultStatus("FAILURE");
 
+				#DELIA-17273: The support for getConnectedDevices is removed
 				#Get the number of devices connected
-				tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetConnectedDevices');
-	                        expectedresult = "SUCCESS"
-        	                tdkTestObj.executeTestCase(expectedresult);
-                             	actualresult = tdkTestObj.getResult();
-                        	getConnDevDetails = tdkTestObj.getResultDetails();
-	                        print "[TEST EXECUTION DETAILS] : ",getConnDevDetails;
-				if expectedresult in actualresult:
-					#Value must be greater than 0
-       	                                defCount = 1
-               	                        deviceCount = int(getConnDevDetails)
-                               	        #Compare the deviceCount with default Count
-                                        if deviceCount == defCount:
-      	                                        tdkTestObj.setResultStatus("SUCCESS");
-						print "deviceCount matches default count 1 without TV connected"
-                        	        else:
-                                	        tdkTestObj.setResultStatus("FAILURE");
-						print "deviceCount does not match default count 1 without TV connected"
-	                        else:
-        	                        tdkTestObj.setResultStatus("FAILURE");
+				#tdkTestObj = smObj.createTestStep('SM_HdmiCec_GetConnectedDevices');
+	                        #expectedresult = "SUCCESS"
+        	                #tdkTestObj.executeTestCase(expectedresult);
+                             	#actualresult = tdkTestObj.getResult();
+                        	#getConnDevDetails = tdkTestObj.getResultDetails();
+	                        #print "[TEST EXECUTION DETAILS] : ",getConnDevDetails;
+				#if expectedresult in actualresult:
+				#	#Value must be greater than 0
+       	                        #        defCount = 1
+               	                #        deviceCount = int(getConnDevDetails)
+                               	#        #Compare the deviceCount with default Count
+                                #        if deviceCount == defCount:
+      	                        #                tdkTestObj.setResultStatus("SUCCESS");
+				#		print "deviceCount matches default count 1 without TV connected"
+                        	#        else:
+                                #	        tdkTestObj.setResultStatus("FAILURE");
+				#		print "deviceCount does not match default count 1 without TV connected"
+	                        #else:
+        	                #        tdkTestObj.setResultStatus("FAILURE");
 
                                 #Calling IARM_Bus_DisConnect API
                                 disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
