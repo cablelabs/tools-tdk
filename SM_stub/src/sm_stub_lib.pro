@@ -10,8 +10,7 @@
 
 QT += widgets network core gui
 DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
-DEFINES += HAS_API_HDMI_CEC USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
-DEFINES += HAS_API_AVINPUT USE_AVINPUT
+DEFINES += USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
 DEFINES += QT_WEBKIT_LIB
 
 greaterThan(QT_MAJOR_VERSION, 4) {
@@ -26,6 +25,7 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/servicemanager/helpers/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/ccec/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/osal/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmbus/
+INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmmgrs/sysmgr
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds-rpc/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds-hal/
@@ -37,8 +37,15 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/qt5/QtCore \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKit \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKitWidgets \
                ${STAGING_DIR_TARGET}/usr/include/qt5/include
-INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmmgrs/sysmgr
-exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri): INCLUDEPATH += ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/
+
+exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/intel/build/intel.pri) {
+        INCLUDEPATH += ${SM_STUB_ROOT_PATH}/servicemanager/platform/intel/include/helpers/
+}
+exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri) {
+        DEFINES += HAS_API_HDMI_CEC
+        DEFINES += HAS_API_AVINPUT USE_AVINPUT
+        INCLUDEPATH += ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/
+}
 
 cross_compile:DEFINES+=CROSS_COMPILED_FOR_DEVICE
 
@@ -62,30 +69,36 @@ exists(../../platform/SM_stub/broadcom.pri) : include(../../platform/SM_stub/bro
 SOURCES += ServiceManagerAgent.cpp
 
 contains(DEFINES,HAS_API_HDMI_CEC) {
-HEADERS += ../servicemanager/include/services/hdmicecservice.h
-SOURCES += ../servicemanager/src/services/hdmicecservice.cpp
+	HEADERS += ../servicemanager/include/services/hdmicecservice.h
+	SOURCES += ../servicemanager/src/services/hdmicecservice.cpp
 LIBS += -lRCEC -lRCECOSHal -lRCECIARMBusHal
 }
 
 contains(DEFINES,HAS_API_APPLICATION) {
-HEADERS += ../servicemanager/include/services/applicationservice.h
-SOURCES += ../servicemanager/src/services/applicationservice.cpp \
+	HEADERS += ../servicemanager/include/services/applicationservice.h
+	SOURCES += ../servicemanager/src/services/applicationservice.cpp \
 }
 
 contains(DEFINES,USE_DISPLAY_SETTINGS) {
-HEADERS += ../servicemanager/include/services/displaysettingsservice.h
-SOURCES += ../servicemanager/src/services/displaysettingsservice.cpp
+	HEADERS += ../servicemanager/include/services/displaysettingsservice.h
+	SOURCES += ../servicemanager/src/services/displaysettingsservice.cpp
 }
 
 contains(DEFINES,HAS_API_AVINPUT) {
-HEADERS += ../servicemanager/include/abstractservice.h \
-           $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/avinputservice.h
+	HEADERS += ../servicemanager/include/abstractservice.h \
+                   $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/avinputservice.h
 
-exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri): HEADERS += \
-                        ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinputhelper.h \
-                        ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinput.h
+	SOURCES += ../servicemanager/src/abstractservice.cpp \
+                   ../servicemanager/src/services/avinputservice.cpp
 
-SOURCES += ../servicemanager/src/abstractservice.cpp \
-           ../servicemanager/src/services/avinputservice.cpp
-exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri): SOURCES += $$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/src/helpers/avinputhelper.cpp
+        exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/intel/build/intel.pri) {
+                HEADERS += ${SM_STUB_ROOT_PATH}/servicemanager/platform/intel/include/helpers/avinputhelper.h \
+                           ${SM_STUB_ROOT_PATH}/servicemanager/platform/intel/include/helpers/avinput.h
+                SOURCES += $$(SM_STUB_ROOT_PATH)/servicemanager/platform/intel/src/helpers/avinputhelper.cpp
+        }
+        exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri) {
+                HEADERS += ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinputhelper.h \
+                           ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinput.h
+                SOURCES += $$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/src/helpers/avinputhelper.cpp
+        }
 }

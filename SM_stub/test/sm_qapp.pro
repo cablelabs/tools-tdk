@@ -9,7 +9,8 @@
 #  ============================================================================
 
 QT += widgets network core gui
-DEFINES += HAS_API_AVINPUT USE_AVINPUT USE_DISPLAY_SETTINGS DEBUG_LEVEL_TRACE RDK2DOT0 
+DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
+DEFINES += USE_DISPLAY_SETTINGS
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -23,6 +24,7 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/servicemanager/helpers/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/ccec/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/osal/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmbus/
+INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmmgrs/sysmgr/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds-rpc/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds-hal/
@@ -35,9 +37,14 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/qt5/QtCore \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKitWidgets \
                ${STAGING_DIR_TARGET}/usr/include/qt5/include \
 	       ${STAGING_DIR_TARGET}/usr/include/directfb
-INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmmgrs/sysmgr
 
-exists(../servicemanager/platform/broadcom/build/broadcom.pri): INCLUDEPATH += ../servicemanager/platform/broadcom/include/helpers/
+exists(../servicemanager/platform/intel/build/intel.pri) {
+        INCLUDEPATH += ../servicemanager/platform/intel/include/helpers/
+}
+exists(../servicemanager/platform/broadcom/build/broadcom.pri) {
+        DEFINES += HAS_API_AVINPUT USE_AVINPUT
+        INCLUDEPATH += ../servicemanager/platform/broadcom/include/helpers/
+}
 
 cross_compile:DEFINES+=CROSS_COMPILED_FOR_DEVICE
 
@@ -59,12 +66,11 @@ LIBS += -lservicemanager -lds -ldshalcli -lIARMBus -ljsoncpp -ljsonrpc-cpp
 exists(../../platform/SM_stub/intel.pri) : include(../../platform/SM_stub/intel.pri)
 exists(../../platform/SM_stub/broadcom.pri) : include(../../platform/SM_stub/broadcom.pri)
 
-SOURCES += sm_qapp.cpp 
+SOURCES += sm_qapp.cpp
 
 contains(DEFINES,USE_DISPLAY_SETTINGS) {
-HEADERS += ../servicemanager/include/services/displaysettingsservice.h
-
-SOURCES += ../servicemanager/src/services/displaysettingsservice.cpp
+	HEADERS += ../servicemanager/include/services/displaysettingsservice.h
+	SOURCES += ../servicemanager/src/services/displaysettingsservice.cpp
 }
 
 contains(DEFINES,HAS_API_AVINPUT) {
@@ -74,8 +80,21 @@ contains(DEFINES,HAS_API_AVINPUT) {
 	SOURCES += ../servicemanager/src/abstractservice.cpp \
                    ../servicemanager/src/services/avinputservice.cpp
 
-	exists(../servicemanager/platform/broadcom/build/broadcom.pri): 
-		HEADERS += ../servicemanager/platform/broadcom/include/helpers/avinputhelper.h \
+        exists(../servicemanager/platform/intel/build/intel.pri) {
+                LIBS += -lgdl
+                LIBS += -lavcap
+                LIBS += -lpipeline_library
+                LIBS += -lismd_clock_recovery -lismd_core -lismd_vidrend -lismd_vidpproc -lismd_audio -lismd_bufmon -lismd_demux
+                LIBS += -lfile_io_utils
+                LIBS += -lpal -lismd_avcap_shim -lEGL
+                LIBS += -lavemedia -lfaxportingkit
+                HEADERS += ../servicemanager/platform/intel/include/helpers/avinputhelper.h \
+                           ../servicemanager/platform/intel/include/helpers/avinput.h
+                SOURCES += ../servicemanager/platform/intel/src/helpers/avinputhelper.cpp
+        }
+        exists(../servicemanager/platform/broadcom/build/broadcom.pri) {
+                HEADERS += ../servicemanager/platform/broadcom/include/helpers/avinputhelper.h \
                            ../servicemanager/platform/broadcom/include/helpers/avinput.h
-		SOURCES += ../servicemanager/platform/broadcom/src/helpers/avinputhelper.cpp
+                SOURCES += ../servicemanager/platform/broadcom/src/helpers/avinputhelper.cpp
+        }
 }
