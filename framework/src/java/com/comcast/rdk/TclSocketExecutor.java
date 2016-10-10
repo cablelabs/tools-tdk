@@ -208,12 +208,16 @@ public class TclSocketExecutor {
 				arr[count] = s;
 				++count;
 			}
-			String resultId = args[0];
-			String oui = args[1];
-			String sNo = args[2];
-			String deviceType = args[3];
-			String methodType = args[4];
-			String paramName = args[5];
+			String resultId = "1";
+			int indx = 0 ;
+			if(args.length == 6 || args.length == 8){
+				resultId = args[indx ++];
+			}
+			String oui = args[indx ++];
+			String sNo = args[indx ++];
+			String deviceType = args[indx ++];
+			String methodType = args[indx ++];
+			String paramName = args[indx ++];
 			String paramValue = null;
 			String paramType = null;
 			String module = getModuleName(paramName);
@@ -224,8 +228,8 @@ public class TclSocketExecutor {
 			
 			if (StringUtils.hasText(methodType)
 					&& methodType.toUpperCase().contains("SET")) {
-				paramValue = args[6];
-				paramType = args[7];
+				paramValue = args[indx ++];
+				paramType = args[indx ++];
 				if (!StringUtils.hasText(paramValue)
 						|| !StringUtils.hasText(paramType)) {
 					System.out

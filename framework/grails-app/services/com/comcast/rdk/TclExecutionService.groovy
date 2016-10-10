@@ -1050,7 +1050,7 @@ class TclExecutionService {
 		scriptData = executionService.convertScriptFromHTMLToPython(scriptData)
 		
 		//Required only for TDK TCL execution 
-		scriptData = scriptData.replace('$ClassPath $Class' , '$ClassPath $Class '+executionResultId+' ' )
+		scriptData = scriptData.replace('java -cp $ClassPath $Class ' , 'java -cp $ClassPath $Class '+executionResultId+' ' )
 	
 		
 		Date date = new Date()

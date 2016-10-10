@@ -611,7 +611,11 @@ class ScriptexecutionService {
 						}
 
 						deviceNode.addProperty("Device",execDevice?.device?.toString())
-						deviceNode.addProperty("BoxType",boxType?.toString())
+						def bbType = boxType?.toString()
+						if(boxType?.toString()?.equals("Broadband")){
+							bbType = "Hybrid-1"
+						}
+						deviceNode.addProperty("BoxType",bbType)
 						deviceNode.addProperty("ImageName",imgName?.toString())
 						deviceNode.add("ComponentLevelDetails",compArray)
 						deviceNode.add("SystemLevelDetails",systemArray)
