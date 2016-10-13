@@ -13,73 +13,67 @@ LOG_PATH=$TDK_PATH/
 LOGFILE=output_json_parser_details.log
 STREAMING_IP=$1
 BASE_URL=$2
-echo "Base Url : " $BASE_URL
-echo "Streaming IP :" $STREAMING_IP
 
-#check for xdiscovery.conf file
-cmd=`cat $XDISCOVERY_PATH/xdiscovery.conf|grep outputJsonFile=|grep -v "#"|awk -F "=" '{print $2}'`
-if [ $? == 0 ] && [ "$cmd" != "" ]; then
-        echo $cmd
-        echo "output.json location has parsed successfully"
-        echo SUCCESS > $LOG_PATH/$LOGFILE
+echo "Streaming IP :" $STREAMING_IP
+echo "Base Url     :" $BASE_URL
+
+#Parse xdiscovery.conf file to get the location of output.json file
+outputjsonfile=`cat $XDISCOVERY_PATH/xdiscovery.conf|grep outputJsonFile=|grep -v "#"|awk -F "=" '{print $2}' | tr -d '\r\n'`
+echo "Location of output.json file="$outputjsonfile
+if [ $? == 0 ] && [ "$outputjsonfile" != "" ]; then
+        echo "SUCCESS<DETAILS>Parsed output.json location" > $LOG_PATH/$LOGFILE
+	if [ -e $outputjsonfile ]; then
+        	echo $outputjsonfile "file found"
+        	echo "SUCCESS<DETAILS>"$outputjsonfile" file found" >> $LOG_PATH/$LOGFILE
+        else
+        	echo $outputjsonfile "file not found"
+        	echo "FAILURE<DETAILS>"$outputjsonfile" file not found" > $LOG_PATH/$LOGFILE
+        	exit 1
+        fi
 else
-	echo $cmd
-        echo "Not able to parse xdiscovery.conf "
-        echo FAILURE > $LOG_PATH/$LOGFILE
+        echo "FAILURE<DETAILS>Unable to parse output.json location" > $LOG_PATH/$LOGFILE
         exit 1
 fi
 
+#Read play url from output.json
 if [ "$STREAMING_IP" == "mdvr" ]; then
-	Parse_out=`cat $cmd |grep playbackUrl|cut -f2- -d":"|cut -f1 -d "&"|cut -f2 -d "\""|head -1`
-        if [ $? == 0 ] && [ "$Parse_out" != "" ]; then
-        	echo $Parse_out
-                echo "Got proper play url from output.json"
-                echo SUCCESS > $LOG_PATH/$LOGFILE
+	playUrl=`cat $outputjsonfile |grep playbackUrl|cut -f2- -d":"|cut -f1 -d "&"|cut -f2 -d "\""|head -1`
+	echo "mDVR PlayUrl="$playUrl
+        if [ $? == 0 ] && [ "$playUrl" != "" ]; then
+                echo "SUCCESS<DETAILS>PlayUrl="$playUrl >> $LOG_PATH/$LOGFILE
         else
-        	echo $Parse_out
-                echo "Not able to parse output.json "
-                echo FAILURE > $LOG_PATH/$LOGFILE
+                echo "Unable to read play url from output.json"
+                echo "FAILURE<DETAILS>Unable to read play url from output.json" >> $LOG_PATH/$LOGFILE
                 exit 1
         fi
 else 
-                                                                                                                                        
-#Parse the play url from output.json
-Parse_out=`cat $cmd |grep playbackUrl|cut -f2- -d":"|cut -f1 -d "&"|grep $STREAMING_IP|cut -f2 -d "\""`
-if [ $? == 0 ] && [ "$Parse_out" != "" ]; then
-	echo $Parse_out
-        echo "Got proper play url from output.json"
-        echo SUCCESS > $LOG_PATH/$LOGFILE
-else
-	Parse_out=`cat $cmd |grep playbackUrl|cut -f2- -d":"|cut -f1 -d "&"|grep 127.0.0.1|cut -f2 -d "\""`
-        if [ $? == 0 ] && [ "$Parse_out" != "" ]; then
-        	echo $Parse_out
-                echo "Got proper play url from output.json"
-                echo SUCCESS > $LOG_PATH/$LOGFILE
-        else
-        	echo $Parse_out
-                echo "Not able to parse output.json "
-                echo FAILURE > $LOG_PATH/$LOGFILE
-                exit 1
-        fi
- fi
-fi                                                                                                                                             
+	playUrl=`cat $outputjsonfile |grep playbackUrl|cut -f2- -d":"|cut -f1 -d "&"|grep $STREAMING_IP|cut -f2 -d "\""`
+	echo "StreamingIP PlayUrl="$playUrl
+	if [ $? == 0 ] && [ "$playUrl" != "" ]; then
+		echo "SUCCESS<DETAILS>PlayUrl="$playUrl >> $LOG_PATH/$LOGFILE
+	else
+		playUrl=`cat $outputjsonfile |grep playbackUrl|cut -f2- -d":"|cut -f1 -d "&"|grep 127.0.0.1|cut -f2 -d "\""`
+		echo "LoopbackIP PlayUrl="$playUrl
+        	if [ $? == 0 ] && [ "$playUrl" != "" ]; then
+			echo "SUCCESS<DETAILS>PlayUrl="$playUrl >> $LOG_PATH/$LOGFILE
+        	else
+                	echo "FAILURE<DETAILS>Unable to read play url from output.json" >> $LOG_PATH/$LOGFILE
+                	exit 1
+        	fi
+ 	fi
+fi
+
 #parse the base URL
-Parse_base=`echo $BASE_URL |cut -f2 -d "?"`
-if [ $? == 0 ] && [ "$Parse_base" != "" ]; then
-	echo $Parse_base
-	echo "Parsed the base url properly"
-        echo SUCCESS > $LOG_PATH/$LOGFILE
+baseUrl=`echo $BASE_URL |cut -f2 -d "?"`
+echo "Service locator="$baseUrl
+if [ $? == 0 ] && [ "$baseUrl" != "" ]; then
+        echo "SUCCESS<DETAILS>Service locator="$baseUrl >> $LOG_PATH/$LOGFILE
 else
-        echo $Parse_base
-        echo "Not able to parse base url "
-        echo FAILURE > $LOG_PATH/$LOGFILE
+        echo "FAILURE<DETAILS>Unable to read service locator from base url" >> $LOG_PATH/$LOGFILE
         exit 1
 fi
-                                                                                                                                                                                                                                                                                                                        
-#Concat the final url
-final_url=$Parse_out"&"$Parse_base
-echo $final_url > $LOG_PATH/$LOGFILE
 
-
-
-                                                                                                                                                                                                        
+#Concatenate to get final url
+final_url=$playUrl"&"$baseUrl
+echo "Final Url="$final_url
+echo $final_url >> $LOG_PATH/$LOGFILE

@@ -102,10 +102,10 @@ std::string fetchStreamingInterface()
         interfacefile.open(Streaming_Interface_name.c_str());
         if(interfacefile.is_open())
         {
-                if(getline(interfacefile,line)>0);
+                if(getline(interfacefile,line)>0)
                 {
                         interfacefile.close();
-                        DEBUG_PRINT(DEBUG_LOG,"\nStreaming IP fetched fetched\n");
+                        DEBUG_PRINT(DEBUG_LOG,"\nStreaming IP fetched\n");
                         DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function--> Exit\n");
                         return line;
                 }
@@ -220,7 +220,7 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
         logfile.open(TDK_testmodule_PR_log.c_str());
         if(logfile.is_open())
         {
-            	if(getline(logfile,line)>0);
+            	if(getline(logfile,line)>0)
                 {
                         logfile.close();
                         DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites set\n");
@@ -1508,7 +1508,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	
         int playSpeedStrPosition = url.find("play_speed");
 
-	if( url.find("recordingId")!= -1)
+	if( url.find("recordingId")!= std::string::npos)
         {
                 DEBUG_PRINT(DEBUG_LOG,"\nDVR url\n");
         	int TimePosStrPosition = url.find("time_pos");
@@ -1535,7 +1535,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 			retHNSrcValue = pSource->play();
 		}
         }
-        else if( url.find("live")!= -1)
+        else if( url.find("live")!= std::string::npos)
         {
                 DEBUG_PRINT(DEBUG_LOG,"\nLive url\n");
 		retHNSrcValue = pSource->play();
@@ -1609,7 +1609,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	if(checkresult == TEST_FAILURE)
 	{
 		response["result"] = "FAILURE";
-		response["details"] = "Video playback have encountered an error.";
+		response["details"] = "Video playback encountered an error";
 		close_Term_HNSrc_MPSink(response);
 		return TEST_FAILURE;
 	}
@@ -1617,7 +1617,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS) && curSpeed == 1.0 )
 	{
 		response["result"] = "FAILURE";
-		response["details"] = "Audio playback have encountered an error.";
+		response["details"] = "Audio playback encountered an error";
 		close_Term_HNSrc_MPSink(response);
 		return TEST_FAILURE;
 	}
@@ -3385,14 +3385,14 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Play(IN const Json::Value& req, OUT Js
 	if(TEST_FAILURE == getstreamingstatus(VIDEO_STATUS))
 	{
 		response["result"] = "FAILURE";
-		response["details"] = "Video playback have encountered an error.";
+		response["details"] = "Video playback encountered an error";
 		close_Term_HNSrc_MPSink(response);
 		return TEST_FAILURE;
 	}
 	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS))
 	{
 		response["result"] = "FAILURE";
-		response["details"] = "Audio playback have encountered an error.";
+		response["details"] = "Audio playback encountered an error";
 		close_Term_HNSrc_MPSink(response);
 		return TEST_FAILURE;
 	}
@@ -3490,15 +3490,10 @@ Return the Error code and Error Description to the testFramework.
 bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ERMF_GETURL---Entry\n");
-	CURL *curl;
-	CURLcode curlResponse;
-	int errorResponse;
-	FILE *filepointer;
 	string url;
-	Json::Value root;
 	url=(char*)request["Validurl"].asCString();
 
-	DEBUG_PRINT(DEBUG_LOG,"\nValidurl from TestFramework : %s\n",request["Validurl"].asCString());
+	DEBUG_PRINT(DEBUG_LOG,"Validurl from TestFramework : %s\n",request["Validurl"].asCString());
 	string streaming_interface;
 	string streamingip;
 	size_t pos = 0;
@@ -3518,11 +3513,13 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
                         response["details"] = token;
                         return TEST_FAILURE;
         }
-   if( (pos = url.find (":8080")) != std::string::npos)
-    {
-        streamingip = url.substr (0, pos);
-    }
-DEBUG_PRINT(DEBUG_TRACE, "IP :%send\n",streamingip.c_str());
+
+        if( (pos = url.find (":8080")) != std::string::npos)
+        {
+            streamingip = url.substr (0, pos);
+        }
+        DEBUG_PRINT(DEBUG_TRACE, "IP :%s\n",streamingip.c_str());
+
 #ifdef  SINGLE_TUNER_IP_CLIENT
         found=url.find("live");
         if (found!=std::string::npos)
@@ -3530,17 +3527,14 @@ DEBUG_PRINT(DEBUG_TRACE, "IP :%send\n",streamingip.c_str());
 		response["result"] = "SUCCESS";
 	        response["details"]= url;
                 return TEST_SUCCESS;
-
         }
 	streamingip="mdvr";
-	
 #endif
-// Added the code to parse the base URL from output.json
+        // Added the code to parse the base URL from output.json
 	ifstream logfile;
 	string json_parser_cmd, json_parser_log,line;
 	json_parser_cmd=g_tdkPath + "/" + JSON_PARSER_SCRIPT;
 	json_parser_log=g_tdkPath + "/" + JSON_PARSER_LOG_PATH;
-	//string parser_chk= "source "+json_parser_cmd + " "+ streamingip + " "+"\""+ urlIn.c_str()+"\"";
 	string parser_chk= "source "+json_parser_cmd + " "+ streamingip + " "+"\""+ url.c_str()+"\"";
 	try
         {
@@ -3554,42 +3548,40 @@ DEBUG_PRINT(DEBUG_TRACE, "IP :%send\n",streamingip.c_str());
 		response["details"] = "Exception occured execution of parser script";
 		return TEST_FAILURE;
         }
+
 	logfile.open(json_parser_log.c_str());
         if(logfile.is_open())
         {
-                if(getline(logfile,line)>0);
+                while(logfile.good())
                 {
-                        logfile.close();
-			pos = line.find(":8080");
-			if (pos!=std::string::npos)
-        		{
-                        	DEBUG_PRINT(DEBUG_LOG,"\noutput.json parsed \n");
-				response["result"] = "SUCCESS";
-				response["details"]= line;
-				logfile.close();
-                        	return TEST_SUCCESS;
-			}
-			else
-			{
-				response["result"] = "FAILURE";
-				response["details"]= line;
-				logfile.close();
-				return TEST_FAILURE;
-			}	
+                        getline(logfile,line);
+                        if (!line.empty())
+                        {
+                                response["details"]= line;
+				if (line.find("FAILURE") != std::string::npos)
+        			{
+					response["result"] = "FAILURE";
+                                	logfile.close();
+                                	DEBUG_PRINT(DEBUG_ERROR,"Json file not parsed \n");
+                                	DEBUG_PRINT(DEBUG_LOG,"TDKIntegrationStub::E2ERMF_GETURL---Exit\n");
+                                	return TEST_FAILURE;
+				}
+                        }
                 }
+
                 logfile.close();
-                DEBUG_PRINT(DEBUG_ERROR,"\nJson file  not parsed \n");
-		response["result"] = "FAILURE";
-		response["details"] = "Proper result is not found in the log file";
-                return TEST_FAILURE;
+                DEBUG_PRINT(DEBUG_LOG,"output.json parsed successfully\n");
+                response["result"] = "SUCCESS";
         }
         else
         {
                 DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the log file.\n");
 		response["result"] = "FAILURE";
-		response["details"] = "Unable to open the log file";
+		response["details"] = "Unable to open the output.json parsing log file";
+                DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ERMF_GETURL---Exit\n");
                 return TEST_FAILURE;
         }
+
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ERMF_GETURL---Exit\n");
 	return TEST_SUCCESS;
 }
@@ -3758,7 +3750,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 	if(checkresult == TEST_FAILURE)
 	{
 		response["result"] = "FAILURE";
-		response["details"] = "Video playback have encountered an error.";
+		response["details"] = "Video playback encountered an error";
 		pSink->term();
 		pSource->close();
 		pSource->term();
@@ -3774,7 +3766,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS))
 	{
 		response["result"] = "FAILURE";
-		response["details"] = "Audio playback have encountered an error.";
+		response["details"] = "Audio playback encountered an error";
 		pSink->term();
 		pSource->close();
 		pSource->term();
@@ -3833,7 +3825,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
 	
 	double mediaTime;
 	pSource->getMediaTime(mediaTime);
-        DEBUG_PRINT(DEBUG_LOG, "Mediatime  is %d\n", mediaTime);
+        DEBUG_PRINT(DEBUG_LOG, "Mediatime  is %lf\n", mediaTime);
 	pSource->setVideoLength(mediaTime);
         if (SpeedRate >0)
         {
@@ -3996,7 +3988,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::V
 	
         int playSpeedStrPosition = url.find("play_speed");
 
-	if( url.find("recordingId")!= -1)
+	if( url.find("recordingId")!= std::string::npos)
         {
                 DEBUG_PRINT(DEBUG_LOG,"\nDVR url\n");
         	int TimePosStrPosition = url.find("time_pos");
@@ -4023,7 +4015,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::V
 			retHNSrcValue = pSource->play();
 		}
         }
-        else if( url.find("live")!= -1)
+        else if( url.find("live")!= std::string::npos)
         {
                 DEBUG_PRINT(DEBUG_LOG,"\nLive url\n");
 		retHNSrcValue = pSource->play();
@@ -4070,13 +4062,11 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::V
 		close_Term_HNSrc_MPSink(response);
 		return TEST_FAILURE;
 	}
-	int checkcount=0;
-	bool checkresult=true;
 	// additional check with scripts 
 	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS) && curSpeed == 1.0 )
 	{
 		response["result"] = "FAILURE";
-		response["details"] = "Audio playback have encountered an error.";
+		response["details"] = "Audio playback encountered an error.";
 		close_Term_HNSrc_MPSink(response);
 		return TEST_FAILURE;
 	}
