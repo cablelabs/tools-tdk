@@ -1458,9 +1458,8 @@ class ExecutescriptService {
 		finally{
 
 			try {
-				if(executionService.deviceAllocatedList?.contains(deviceId)){
-					executionService.deviceAllocatedList?.removeAll(deviceId)
-				}
+				
+				removeBusyLock(deviceId)
 
 				String devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
 				Thread.start{
@@ -1472,9 +1471,13 @@ class ExecutescriptService {
 				Device devv = Device.get(deviceId)
 				println "["+ deviceInstance?.stbName+"] ["+  devStatus + "] ["+devv?.deviceStatus+"]"+" [execName="+execName+"]"
 
-				if(executionService.deviceAllocatedList.contains(deviceId)){
-					println " Device instance is still there in the allocated list :  "+deviceInstance?.stbName + " id "+ deviceInstance?.id +" [execName="+execName+"]"
-					executionService.deviceAllocatedList.removeAll(deviceId)
+				if(executionService.deviceAllocatedList?.contains(deviceId)){
+					println " Device instance is still there in the allocated list :  "+deviceInstance?.stbName + " id "+ deviceInstance?.id +" [execName="+execName+"]"+ " deviceAllocatedList "+executionService.deviceAllocatedList
+					removeBusyLock(deviceId)
+					devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+					Thread.start{
+						deviceStatusService.updateOnlyDeviceStatus(deviceInstance, devStatus)
+					}
 					println " Again checking the device lock  for "+deviceInstance?.stbName + " status =  "+executionService.deviceAllocatedList.contains(deviceInstance?.id)
 				}
 			} catch (Exception e) {
@@ -1487,6 +1490,17 @@ class ExecutescriptService {
 		return htmlData
 	}
 
+	private void removeBusyLock(def deviceId ){
+		try {
+			if(executionService.deviceAllocatedList?.contains(deviceId)){
+				println " removeBusyLock "+deviceId+" status "+executionService.deviceAllocatedList?.removeAll(deviceId)
+			}
+		} catch (Exception e) {
+			println " removeBusyLock Error "+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+	
 	/**
 	 * Deletes the file created to store execution log
 	 * @param opFileName

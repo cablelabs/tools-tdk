@@ -48,7 +48,7 @@ class ExecutionService {
 	
 	public static volatile List pauseList = []
 	
-	public static volatile List deviceAllocatedList = []
+	public static volatile List deviceAllocatedList = [].asSynchronized()
 	
 	public static volatile Map executionProcessMap = [:]
 	
