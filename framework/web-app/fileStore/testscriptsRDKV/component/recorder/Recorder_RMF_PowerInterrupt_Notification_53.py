@@ -90,7 +90,7 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule
         requestID = str(randint(10, 500));
         recordingID = str(randint(10000, 500000));
-        duration = "300000";
+        duration = "540000";
         startTime = "0";
         ocapId = tdkTestObj.getStreamDetails('01').getOCAPID()
         ocapId2 = tdkTestObj.getStreamDetails('02').getOCAPID()
@@ -126,6 +126,8 @@ if "SUCCESS" in recLoadStatus.upper():
                         recObj.initiateReboot();
                         print "Sleeping to wait for the recoder to be up"
                         sleep(300);
+                        print "Wait for the recording to complete"
+                        sleep(300)
 			actResponse =recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsgNoUpdate,ip);
                         tdkTestObj1 = recObj.createTestStep('Recorder_SendRequest');
                         tdkTestObj1.executeTestCase(expectedResult);
