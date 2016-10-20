@@ -215,10 +215,10 @@ class ExecutescriptService {
 			def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 			//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
 			//logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
-			logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath, executionId,executionDevice?.id, executionResultId)
+			logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath, executionId,executionDevice?.id, executionResultId,url)
 			if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
 				//transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
-				transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId , realPath)
+				transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId , realPath,url)
 			}
 			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 			Thread.sleep(4000)
@@ -333,9 +333,9 @@ class ExecutescriptService {
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 		def logTransferFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
 		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-			logTransfer(deviceInstance,logTransferFilePath,logTransferFileName ,realPath, executionId,executionDevice?.id, executionResultId)
+			logTransfer(deviceInstance,logTransferFilePath,logTransferFileName ,realPath, executionId,executionDevice?.id, executionResultId,url)
 		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
-			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId, ,realPath)
+			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId, ,realPath,url)
 		}
 		}
 		Date endTime = new Date()
@@ -558,12 +558,15 @@ class ExecutescriptService {
 	 * @param deviceInstance
 	 * @return
 	 */
-	def logTransfer(def deviceInstance, def logTransferFilePath, def logTransferFileName, def realPath,  def executionId, def executionDeviceId , def executionResultId){
+	def logTransfer(def deviceInstance, def logTransferFilePath, def logTransferFileName, def realPath,  def executionId, def executionDeviceId , def executionResultId , def url){
 		Thread.sleep(4000)
 		try{			
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callConsoleLogTransfer.py").file
+			
+			String scriptName = getConsoleFileTransferScriptName(deviceInstance)
+			
+			File layoutFolder = grailsApplication.parentContext.getResource(scriptName).file
 			def absolutePath = layoutFolder.absolutePath
-			String[] cmd = [
+			def cmdList = [
 				PYTHON_COMMAND,
 				absolutePath,
 				deviceInstance?.stbIp,
@@ -573,12 +576,21 @@ class ExecutescriptService {
 				//logTransferFilePath
 				logTransferFileName			
 			]
+			
+			if(scriptName?.equals(CONSOLE_FILE_UPLOAD_SCRIPT)){
+				cmdList.push(url)
+			}
+			
+			String [] cmd = cmdList.toArray()
+			
+			
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,2)
 			copyAgentconsoleLogIntoDir(realPath,logTransferFilePath,executionId,executionDeviceId,executionResultId)
 			Thread.sleep(4000)
 		}
-		catch(Exception e){			
+		catch(Exception e){		
+			println " Error "+e.getMessage()	
 		}		
 	}
 	/**
@@ -792,7 +804,7 @@ class ExecutescriptService {
 								executionDevice.category = Utility.getCategory(category)
 								executionDevice.save(flush:true)
 							}
-							executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
+							executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort,appUrl)
 							def scriptInstance
 							def htmlData
 
@@ -1801,7 +1813,7 @@ class ExecutescriptService {
 			
 			def scriptId
 			String deviceID = deviceInstance?.id
-			executionService.executeVersionTransferScript(realPath,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
+			executionService.executeVersionTransferScript(realPath,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort,url)
 			try {
 				htmlData = repeatExecutionOnDevice(execName,deviceID , executionDevice, "", scriptGroupInstance?.id, execName,
 					filePath, realPath, TEST_SUITE, url, isBenchMark, isSystemDiagnostics, rerun,isLogReqd)
@@ -2091,7 +2103,30 @@ class ExecutescriptService {
 		return htmlData
 	}
 	
-	def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId,def realPath){
+	/**
+	 * method to fetch the name of the file transfer script
+	 */
+	def getFileTransferScriptName(Device device){
+		String scriptName = FILE_TRANSFER_SCRIPT
+		if(device?.category?.equals(Category.RDKB) && InetUtility.isIPv6Address(device?.stbIp)){
+			scriptName = FILE_UPLOAD_SCRIPT
+		}
+		return scriptName
+	}
+	
+	/**
+	 * method to fetch the name of the console file transfer script
+	 */
+	def getConsoleFileTransferScriptName(Device device){
+		String scriptName = CONSOLE_FILE_TRANSFER_SCRIPT
+		if(device?.category?.equals(Category.RDKB) && InetUtility.isIPv6Address(device?.stbIp)){
+			scriptName = CONSOLE_FILE_UPLOAD_SCRIPT
+		}
+		return scriptName
+	}
+	
+	
+	def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId,def realPath,def url){
 		try {
 			def module
 			def stbLogFiles
@@ -2113,7 +2148,9 @@ class ExecutescriptService {
 			//new File(directoryPath).mkdirs()
 			
 			stbLogFiles?.each{ name -> 
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+				
+			String scriptName = getFileTransferScriptName(dev)
+			File layoutFolder = grailsApplication.parentContext.getResource(scriptName).file
 
 			File fileStore = grailsApplication.parentContext.getResource("//fileStore//").file
 			def fileStorePath = fileStore.absolutePath
@@ -2124,7 +2161,7 @@ class ExecutescriptService {
 			
 			if((absolutePath) && !(absolutePath.isEmpty())){
 
-				String[] cmd = [
+				def cmdList = [
 					"python",
 					absolutePath,
 					dev?.stbIp,
@@ -2133,12 +2170,18 @@ class ExecutescriptService {
 					name,
 					directoryPath+"_"+fName 
 				]
+				
+				if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+					cmdList.push(url)
+				}
+				
+				String [] cmd = cmdList.toArray()
 				try {
 					ScriptExecutor scriptExecutor = new ScriptExecutor()
 					def outputData = scriptExecutor.executeScript(cmd,1)
 					copyStbLogsIntoDir(realPath,stbFilePath, execId,execDeviceId,execResultId)
 				}catch (Exception e) {
-				println " error >> "+e.getMessage()
+					println " error >> "+e.getMessage()
 					e.printStackTrace()
 				}
 			}

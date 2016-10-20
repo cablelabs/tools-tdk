@@ -846,7 +846,7 @@ class ScriptexecutionService {
 			executescriptService.copyPerformanceLogIntoDir(realPath, performanceFilePath ,executionId,executionDeviceInstance?.id,executionResultId)
 		}
 		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
-			executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId,realPath)
+			executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId,realPath,url)
 		}
 		
 			
@@ -854,7 +854,7 @@ class ScriptexecutionService {
 		//new File("${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}").mkdirs()
 		def logTransferFileName1 = "${executionId}_${execDeviceId}_${executionResultId}_AgentConsoleLog.txt"
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}//"
-		executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName1, realPath,executionId,execDeviceId,executionResultId)
+		executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName1, realPath,executionId,execDeviceId,executionResultId,url)
 
 		
 		outData?.eachLine { line ->
@@ -901,9 +901,9 @@ class ScriptexecutionService {
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 			}
-			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath, executionId,execDeviceId, executionResultId)
+			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath, executionId,execDeviceId, executionResultId,url)
 			if(isLogReqd){
-				executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId, realPath)
+				executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId, realPath,url)
 			}	
 			
 			

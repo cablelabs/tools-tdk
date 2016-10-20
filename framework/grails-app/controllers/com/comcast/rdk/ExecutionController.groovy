@@ -767,7 +767,7 @@ class ExecutionController {
 												executionDevice.category = category
 												if(executionDevice.save(flush:true)){
 													String getRealPathString  = getRealPath()
-													executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
+													executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort,url)
 													//	scriptexecutionService.executeScriptGroup(scriptGroup, boxType, execName, executionDevice?.id.toString(), deviceInstance,url, filePath, getRealPathString, callbackUrl, imageName, category )
 													def rerun = null
 													if(rerun1?.equals(TRUE)){
@@ -1231,7 +1231,7 @@ class ExecutionController {
 												return
 											}
 											else{
-												executionService.executeVersionTransferScript(request.getRealPath('/'),filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
+												executionService.executeVersionTransferScript(request.getRealPath('/'),filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort,url)
 											}
 											if(deviceList.size() > 1){
 												executescriptService.executeScriptInThread(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
@@ -2331,7 +2331,7 @@ class ExecutionController {
 		ThirdPartyExecutionDetails.withTransaction {
 			ThirdPartyExecutionDetails  thirdPartyExecutionDetails = ThirdPartyExecutionDetails.findByExecName(exName)
 			if(thirdPartyExecutionDetails){
-				scriptexecutionService.executeCallBackUrl(thirdPartyExecutionDetails.execName,thirdPartyExecutionDetails.url,thirdPartyExecutionDetails.callbackUrl,thirdPartyExecutionDetails.filePath,thirdPartyExecutionDetails.executionStartTime,thirdPartyExecutionDetails.imageName,thirdPartyExecutionDetails.boxType,realPath,moduleType)
+				scriptexecutionService.executeCallBackUrl(thirdPartyExecutionDetails.execName,thirdPartyExecutionDetails.url,thirdPartyExecutionDetails.callbackUrl,thirdPartyExecutionDetails.filePath,thirdPartyExecutionDetails.executionStartTime,thirdPartyExecutionDetails.imageName,thirdPartyExecutionDetails.boxType,realPath)
 			}
 		}
 	}
@@ -2536,7 +2536,7 @@ class ExecutionController {
 							executionDevice.category = category
 							if(executionDevice.save(flush:true)){
 								String getRealPathString  = getRealPath()
-								executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
+								executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort,url)
 								def rerun = null
 								if(reRunOnFailure?.equals(TRUE)){
 									rerun = "on"
@@ -3263,7 +3263,7 @@ class ExecutionController {
 										executionDevice.category = moduleInstance?.category
 										if(executionDevice.save(flush:true)){
 											String getRealPathString  = getRealPath()
-											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
+											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort,url)
 											htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, newScriptList, "", execName,
 													filePath, getRealPath(), SINGLE_SCRIPT, url, time, perfo, rerun,isLog,moduleInstance?.category.toString())
 											executed = true
@@ -3365,5 +3365,33 @@ class ExecutionController {
 			jsonOutData.addProperty("Remarks", "No device found with this name "+stbName)
 		}
 		render jsonOutData
-	}	
+	}
+	
+		
+	/**
+	 * REST API : invoked by devices to upload the logs to TM
+	 */
+	def uploadLogs(String fileName){
+		String data = "";
+			try {
+				String deviceStreams , deviceOcapId
+				def node
+				if(params?.logFile){
+					def uploadedFile = request.getFile("logFile")
+					if(uploadedFile){
+						InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
+						def fileContent = reader?.readLines()
+						def logPath = "${realPath}/logs//logs"
+						File logFile = new File(logPath+"//${fileName}")
+						fileContent?.each { logg ->
+							data = data + logg+"\n";
+							logFile << logg+"\n"
+						}
+					}
+				}
+			}catch(Exception e ){
+				println  "uploadLogs ERROR "+ e.getMessage()
+			}
+			render data;
+	}
 }

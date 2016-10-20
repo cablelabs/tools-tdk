@@ -344,7 +344,7 @@ class TclExecutionService {
 										return
 									}
 									else{
-										executionService.executeVersionTransferScript(realPath, filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort)
+										executionService.executeVersionTransferScript(realPath, filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort,url)
 									}
 									if(deviceList.size() > 1){
 										executeScriptInThread(execName, device, executionDevice, params?.scripts, params?.scriptGrp, executionName,
@@ -1099,9 +1099,9 @@ class TclExecutionService {
 			def logTransferFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
 			def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 			//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath, executionId,executionDevice?.id, executionResultId)
+			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath, executionId,executionDevice?.id, executionResultId,url)
 			if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
-				executescriptService.transferSTBLog("tcl", deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
+				executescriptService.transferSTBLog("tcl", deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId,url)
 			}
 			executionService.updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 			Thread.sleep(4000)
@@ -1192,9 +1192,9 @@ class TclExecutionService {
 
 			def logTransferFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
 			def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
-			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName ,realPath, executionId,executionDevice?.id, executionResultId)
+			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName ,realPath, executionId,executionDevice?.id, executionResultId,url)
 
-			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath,executionId,executionDevice?.id, executionResultId)
+			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath,executionId,executionDevice?.id, executionResultId,url)
 			if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
 				executescriptService.transferSTBLog('tcl', deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
 			}
@@ -1311,7 +1311,7 @@ class TclExecutionService {
 								executionDevice.category = Utility.getCategory(category)
 								executionDevice.save(flush:true)
 							}
-							executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
+							executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort,appUrl)
 							def executionResultList
 							try{
 								ExecutionResult.withTransaction {
@@ -1829,13 +1829,13 @@ class TclExecutionService {
 			outData += scriptExecutor.executeScript(cmd,10)
 		}
 		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
-			executescriptService.transferSTBLog('tcl', deviceInstance,""+executionId,""+execDeviceId,""+executionResultId)
+			executescriptService.transferSTBLog('tcl', deviceInstance,""+executionId,""+execDeviceId,""+executionResultId,url)
 		}
 
 
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}//"
 		new File("${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}").mkdirs()
-		executescriptService.logTransfer(deviceInstance,logTransferFilePath, logTransferFileName)
+		executescriptService.logTransfer(deviceInstance,logTransferFilePath, logTransferFileName,url)
 
 
 		outData?.eachLine { line ->
@@ -1872,7 +1872,7 @@ class TclExecutionService {
 		if(executionService.abortList.contains(executionInstance?.id?.toString())){
 			executionService.resetAgent(deviceInstance,TRUE)
 		}	else if(Utility.isFail(htmlData)){
-			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName)
+			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,url)
 			if(isLogReqd){
 				executescriptService.transferSTBLog('tcl', deviceInstance,""+executionId,""+execDeviceId,""+executionResultId)
 			}

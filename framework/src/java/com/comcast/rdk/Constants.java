@@ -59,8 +59,10 @@ public final class Constants
     public static final String ABORTED_STATUS    	= "ABORTED";
     public static final String COMPLETED_STATUS    	= "COMPLETED";
     public static final String NOT_APPLICABLE_STATUS="N/A";
-    
-    
+    public static final String FILE_TRANSFER_SCRIPT = "//fileStore//filetransfer.py";
+    public static final String FILE_UPLOAD_SCRIPT   = "//fileStore//fileupload.py";
+    public static final String CONSOLE_FILE_TRANSFER_SCRIPT = "//fileStore//callConsoleLogTransfer.py";
+    public static final String CONSOLE_FILE_UPLOAD_SCRIPT   = "//fileStore//callConsoleLogUpload.py";
     
     public static final String ERROR_STATUS         = "error";
     public static final String KEY_GROUP            = "Suite";

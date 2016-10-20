@@ -290,7 +290,7 @@ class JobSchedulerService implements Job{
 									}
 
 								}
-								executeVersionTransferScript(realpath, filePath, executionName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
+								executeVersionTransferScript(realpath, filePath, executionName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort,url)
 								int scriptGrpSize = 0
 								int scriptCounter = 0
 								def isMultiple = TRUE
@@ -921,7 +921,7 @@ class JobSchedulerService implements Job{
 								executionDevice.category = execution.category
 								executionDevice.save(flush:true)
 							}
-							executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort)
+							executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort,url)
 							def executionResultList = ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatusNotEqual(executionInstance,execDeviceInstance,SUCCESS_STATUS)
 							def scriptInstance
 							def htmlData
@@ -1058,6 +1058,18 @@ class JobSchedulerService implements Job{
 			println " ERROR "+e.getMessage()
 		}
 	}
+			
+	/**
+	 * method to fetch the name of the file transfer script
+	 */
+	def getFileTransferScriptName(Device device){
+		String scriptName = FILE_TRANSFER_SCRIPT
+		if(device?.category?.equals(Category.RDKB) && InetUtility.isIPv6Address(device?.stbIp)){
+			scriptName = FILE_UPLOAD_SCRIPT
+		}
+		return scriptName
+	}
+	
 	/**
 	 * Method to execute the script to get the device's version details
 	 * @param realPath
@@ -1068,7 +1080,7 @@ class JobSchedulerService implements Job{
 	 * @param logTransferPort
 	 * @return
 	 */
-	def executeVersionTransferScript(final String realPath, final String filePath, final String executionName, def exectionDeviceId, final String stbName, final String logTransferPort){
+	def executeVersionTransferScript(final String realPath, final String filePath, final String executionName, def exectionDeviceId, final String stbName, final String logTransferPort, def url){
 		try{
 			def executionInstance = Execution.findByName(executionName)
 			
@@ -1078,9 +1090,11 @@ class JobSchedulerService implements Job{
 			}
 			String versionFileName = "${executionInstance?.id}_${exectionDeviceId?.toString()}_version.txt"
 			def versionFilePath = "${realPath}//logs//version//${executionInstance?.id}//${exectionDeviceId?.toString()}"
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+			String scriptName = getFileTransferScriptName(device)
+			File layoutFolder = grailsApplication.parentContext.getResource(scriptName).file
 			def absolutePath = layoutFolder.absolutePath
-			String[] cmd = [
+			
+			def cmdList = [
 				PYTHON_COMMAND,
 				absolutePath,
 				device.stbIp,
@@ -1088,6 +1102,14 @@ class JobSchedulerService implements Job{
 				"/version.txt",
 				versionFileName
 			]
+			
+			if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+				cmdList.push(url)
+			}
+					
+			String [] cmd = cmdList.toArray()
+			
+			
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def outputData = scriptExecutor.executeScript(cmd,1)
 			copyVersionLogsIntoDir(realPath, versionFilePath, executionInstance?.id, exectionDeviceId?.toString())
@@ -1095,7 +1117,7 @@ class JobSchedulerService implements Job{
 			
 
 			if(device?.boxType?.type?.equalsIgnoreCase(BOXTYPE_CLIENT)){
-				getDeviceDetails(device,device?.agentMonitorPort,realPath)
+				getDeviceDetails(device,device?.agentMonitorPort,realPath,url)
 			}
 		}
 		catch(Exception ex){
@@ -1223,7 +1245,7 @@ class JobSchedulerService implements Job{
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 
 		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName, realPath, executionId,executionDevice?.id,executionResultId  )
+		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName, realPath, executionId,executionDevice?.id,executionResultId,url  )
 
 		file.delete()
 		// TFTP transfer --->>>
@@ -1371,9 +1393,9 @@ class JobSchedulerService implements Job{
 		def logTransferFilePath1 = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 
 		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1 ,realPath, executionId,executionDevice?.id, executionResultId)
+		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1 ,realPath, executionId,executionDevice?.id, executionResultId,url)
 		if(isLogReqd?.toString()?.equals("true")){
-			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
+			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId,realPath,url)
 		}
 		return htmlData
 	}
@@ -1611,7 +1633,7 @@ class JobSchedulerService implements Job{
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}//"
 		def logPath = "${realPath}/logs//${executionId}//${executionDevice?.id}//${executionResultId}//"
 		copyLogsIntoDir(realPath,logPath, executionId,executionDevice?.id, executionResultId)
-		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,executionId,executionDevice?.id, executionResultId )
+		logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,executionId,executionDevice?.id, executionResultId,url )
 
 		outData?.eachLine { line ->
 			htmlData += (line + HTML_BR )
@@ -1770,26 +1792,33 @@ class JobSchedulerService implements Job{
 		def logTransferFileName1 = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
 
 		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1 ,realPath, executionId,executionDevice?.id, executionResultId)
+		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1 ,realPath, executionId,executionDevice?.id, executionResultId,url)
 		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
-			transferSTBLog('tcl', deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId)
+			transferSTBLog('tcl', deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId,realPath,url)
 		}
 		return htmlData
 	}
 
-
+	def getConsoleFileTransferScriptName(Device device){
+		String scriptName = CONSOLE_FILE_TRANSFER_SCRIPT
+		if(device?.category?.equals(Category.RDKB) && InetUtility.isIPv6Address(device?.stbIp)){
+			scriptName = CONSOLE_FILE_UPLOAD_SCRIPT
+		}
+		return scriptName
+	}
 
 	/**
 	 * Refreshes the status in agent as it is called with flag false
 	 * @param deviceInstance
 	 * @return
 	 */
-	def logTransfer1(def deviceInstance, def logTransferFilePath, def logTransferFileName, def realPath , def executionId, def executionDeviceId , def executionResultId){
+	def logTransfer1(def deviceInstance, def logTransferFilePath, def logTransferFileName, def realPath , def executionId, def executionDeviceId , def executionResultId, def url){
 		Thread.sleep(4000)
 		try{
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callConsoleLogTransfer.py").file
+			String scriptName = getConsoleFileTransferScriptName(deviceInstance)
+			File layoutFolder = grailsApplication.parentContext.getResource(scriptName).file
 			def absolutePath = layoutFolder.absolutePath
-			String[] cmd = [
+			def cmdList = [
 				PYTHON_COMMAND,
 				absolutePath,
 				deviceInstance?.stbIp,
@@ -1797,6 +1826,13 @@ class JobSchedulerService implements Job{
 				"AgentConsole.log",
 				logTransferFileName // File Name
 			]
+			
+			if(scriptName?.equals(CONSOLE_FILE_UPLOAD_SCRIPT)){
+				cmdList.push(url)
+			}
+			
+			String [] cmd = cmdList.toArray()
+			
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 			copyAgentconsoleLogIntoDir(realPath,logTransferFilePath,executionId,executionDeviceId,executionResultId  )
@@ -1807,7 +1843,7 @@ class JobSchedulerService implements Job{
 	}
 
 
-	def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId){
+	def transferSTBLog(def moduleName , def dev,def execId, def execDeviceId,def execResultId,def realPath,def url){
 		try {
 			def module
 			Module.withTransaction {
@@ -1825,8 +1861,9 @@ class JobSchedulerService implements Job{
 			//new File(directoryPath).mkdirs()
 
 			module?.logFileNames?.each{ name ->
-
-				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+				
+				String scriptName = getFileTransferScriptName(dev)
+				File layoutFolder = grailsApplication.parentContext.getResource(scriptName).file
 
 				File fileStore = grailsApplication.parentContext.getResource("//fileStore//").file
 				def fileStorePath = fileStore.absolutePath
@@ -1836,7 +1873,7 @@ class JobSchedulerService implements Job{
 				fName = fName?.replaceAll("/", "_")
 				if((absolutePath) && !(absolutePath.isEmpty())){
 
-					String[] cmd = [
+					def cmdList = [
 						"python",
 						absolutePath,
 						dev?.stbIp,
@@ -1846,6 +1883,11 @@ class JobSchedulerService implements Job{
 						//directoryPath+"//"+fName
 						directoryPath+"_"+fName
 					]
+					
+					if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+						cmdList.push(url)
+					}
+					String [] cmd = cmdList.toArray()
 					try {
 						ScriptExecutor scriptExecutor = new ScriptExecutor()
 						def outputData = scriptExecutor.executeScript(cmd,1)
@@ -1927,10 +1969,11 @@ class JobSchedulerService implements Job{
 	 * @param deviceInstance
 	 * @return
 	 */
-	def logTransfer(def deviceInstance, def logTransferFilePath, def logTransferFileName , def realPath , def executionId, def executionDeviceId , def executionResultId){
-		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callConsoleLogTransfer.py").file
+	def logTransfer(def deviceInstance, def logTransferFilePath, def logTransferFileName , def realPath , def executionId, def executionDeviceId , def executionResultId , def url){
+		String scriptName = getConsoleFileTransferScriptName(deviceInstance)
+		File layoutFolder = grailsApplication.parentContext.getResource(scriptName).file
 		def absolutePath = layoutFolder.absolutePath
-		String[] cmd = [
+		def cmdList = [
 			PYTHON_COMMAND,
 			absolutePath,
 			deviceInstance?.stbIp,
@@ -1939,6 +1982,14 @@ class JobSchedulerService implements Job{
 			logTransferFileName
 			//logTransferFilePath
 		]
+		
+		if(scriptName?.equals(CONSOLE_FILE_UPLOAD_SCRIPT)){
+			cmdList.push(url)
+		}
+		
+		String [] cmd = cmdList.toArray()
+		
+		
 		ScriptExecutor scriptExecutor = new ScriptExecutor()
 		def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 		copyAgentconsoleLogIntoDir(realPath,logTransferFilePath,executionId,executionDeviceId,executionResultId  )
@@ -2308,12 +2359,13 @@ class JobSchedulerService implements Job{
 	 * @param realPath
 	 * @return
 	 */
-	def getDeviceDetails(Device device, def logTransferPort, def realPath){
+	def getDeviceDetails(Device device, def logTransferPort, def realPath,def url){
 		try {
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+			String scriptName = getFileTransferScriptName(device)
+			File layoutFolder = grailsApplication.parentContext.getResource(scriptName).file
 			def absolutePath = layoutFolder.absolutePath
 			def filePath = "${realPath}//logs//devicelogs//${device?.stbName}//"
-			String[] cmd = [
+			def cmdList = [
 				"python",
 				absolutePath,
 				device?.stbIp,
@@ -2321,6 +2373,13 @@ class JobSchedulerService implements Job{
 				"/version.txt",
 				"${device?.stbName}"+"_"+"${device?.stbName}.txt"
 			]
+			
+			if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+				cmdList.push(url)
+			}
+					
+			String [] cmd = cmdList.toArray()
+			
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def outputData = scriptExecutor.executeScript(cmd,1)
 			copyDeviceLogIntoDir(realPath,filePath)

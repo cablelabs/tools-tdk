@@ -590,7 +590,7 @@ class ExecutionService {
 	 * @param logTransferPort
 	 * @return
 	 */
-    def executeVersionTransferScript(final String realPath, final String filePath, final String executionName, def exectionDeviceId, final String stbName, final String logTransferPort){
+    def executeVersionTransferScript(final String realPath, final String filePath, final String executionName, def exectionDeviceId, final String stbName, final String logTransferPort,def url){
         try{
 	        def executionInstance = Execution.findByName(executionName)
 	      /*  String fileContents = new File(filePath+DOUBLE_FWD_SLASH+VERSIONTRANSFER_FILE).text
@@ -618,9 +618,11 @@ class ExecutionService {
 			Device device = Device.findByStbName(stbName)
 			String versionFileName = "${executionInstance?.id}_${exectionDeviceId?.toString()}_version.txt"
 			def versionFilePath = "${realPath}//logs//version//${executionInstance?.id}//${exectionDeviceId?.toString()}"
-			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+			String scriptName = getFileTransferScriptName(device)
+			File layoutFolder = grailsApplication.parentContext.getResource(scriptName).file
 			def absolutePath = layoutFolder.absolutePath
-			String[] cmd = [
+			
+			def cmdList = [
 				PYTHON_COMMAND,
 				absolutePath,
 				device.stbIp,
@@ -628,6 +630,12 @@ class ExecutionService {
 				"/version.txt",
 				versionFileName
 			]
+			
+			if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+				cmdList.push(url)
+			}
+			
+			String [] cmd = cmdList.toArray()
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def outputData = scriptExecutor.executeScript(cmd,1)
 			copyVersionLogsIntoDir(realPath, versionFilePath, executionInstance?.id , exectionDeviceId?.toString())
@@ -641,11 +649,12 @@ class ExecutionService {
 				dev = Device.findByStbName(devName)
 			}
 			if(dev?.boxType?.type?.equalsIgnoreCase(BOXTYPE_CLIENT)){
-				getDeviceDetails(dev,device.agentMonitorPort,realPath)
+				getDeviceDetails(dev,device.agentMonitorPort,realPath,url)
 			}
 			
         }
-		catch(Exception ex){			
+		catch(Exception ex){	
+			println " Error "+ex.getMessage()		
 		}		
     }
 	
@@ -712,19 +721,31 @@ class ExecutionService {
 	}
 	
 	
+	/**
+	 * method to fetch the name of the file transfer script
+	 */
+	
+	def getFileTransferScriptName(Device device){
+		String scriptName = FILE_TRANSFER_SCRIPT
+		if(device?.category?.equals(Category.RDKB) && InetUtility.isIPv6Address(device?.stbIp)){
+			scriptName = FILE_UPLOAD_SCRIPT
+		}
+		return scriptName
+	}
 	
 	
 
-	def getDeviceDetails(Device device, def logTransferPort, def realPath){
+	def getDeviceDetails(Device device, def logTransferPort, def realPath,def url){
 		
 		try {
 			//new File("${realPath}//logs//devicelogs//${device?.stbName}").mkdirs()
 
-		File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//filetransfer.py").file
+		String scriptName = getFileTransferScriptName(device)
+		File layoutFolder = grailsApplication.parentContext.getResource(scriptName).file
 		def absolutePath = layoutFolder.absolutePath
 		def filePath = "${realPath}//logs//devicelogs//${device?.stbName}//"
 		
-		String[] cmd = [
+		def cmdList = [
 			"python",
 			absolutePath,
 			device?.stbIp,
@@ -733,6 +754,12 @@ class ExecutionService {
 			"${device?.stbName}"+"_"+"${device?.stbName}.txt" 
 		]
 
+		if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+			cmdList.push(url)
+		}
+				
+		String [] cmd = cmdList.toArray()
+		
 	    ScriptExecutor scriptExecutor = new ScriptExecutor()
 	    def outputData = scriptExecutor.executeScript(cmd,1)
 		copyDeviceLogIntoDir(realPath,filePath)
