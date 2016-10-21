@@ -395,7 +395,7 @@ class ExecutionController {
 		}
 		[scripts : params?.scripts, devices : params?.devices, device : params?.deviceId, scriptGroup : params?.scriptGroup, jobDetailList : JobDetails.list(),
 			jobInstanceTotal : JobDetails.count(), isSystemDiagnostics : params?.systemDiagnostics, isBenchMark : params?.benchMarking, rerun : rerun,
-			repeatCount : repeatCount,isStbLogRequired : params?.isLogReqd, category : category]
+			repeatCount : repeatCount,isStbLogRequired : params?.isLogReqd, category : params?.category]
 	}
 
 	/**

@@ -1520,7 +1520,7 @@ class JobSchedulerService implements Job{
 	 * @return
 	 */
 
-	def copyVersionLogsIntoDir(def realPath, def logTransferFilePath){
+	def copyVersionLogsIntoDir(def realPath, def logTransferFilePath,  def executionId , def executionDeviceId){
 		try {
 			String logsPath = realPath.toString()+"/logs/logs/"
 			File logDir  = new File(logsPath)
@@ -1528,11 +1528,15 @@ class JobSchedulerService implements Job{
 				logDir.eachFile{ file->
 					if(file?.toString().contains("version.txt")){
 						def logFileName =  file.getName().split("_")
-						def  versionFileName = logFileName[1]+"_"+logFileName.last()
-						new File(logTransferFilePath?.toString()).mkdirs()
-						File logTransferPath  = new File(logTransferFilePath)
-						if(file.exists()){
-							boolean fileMoved = file.renameTo(new File(logTransferPath, versionFileName));
+						if(logFileName?.length > 0){
+							if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString())){
+								def  versionFileName = logFileName[1]+"_"+logFileName.last()
+								new File(logTransferFilePath?.toString()).mkdirs()
+								File logTransferPath  = new File(logTransferFilePath)
+								if(file.exists()){
+									boolean fileMoved = file.renameTo(new File(logTransferPath, versionFileName));
+								}
+							}
 						}
 					}
 				}
