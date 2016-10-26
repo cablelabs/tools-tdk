@@ -13,7 +13,7 @@ After=swupdate.service
 Requires=swupdate.service
 
 [Service]
-ExecStartPre=/bin/sh -c 'rm -rf /opt/TDK/libs/ && cp -r /var/TDK /opt/'
+ExecStartPre=/bin/sh -c 'rm -rf /opt/TDK/lib* && cp -r /var/TDK /opt/'
 ExecStart=/bin/sh -c '/opt/TDK/StartTDK.sh'
 
 [Install]

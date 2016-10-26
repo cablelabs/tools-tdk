@@ -57,6 +57,8 @@ else
         	if [ $? == 0 ] && [ "$playUrl" != "" ]; then
 			echo "SUCCESS<DETAILS>PlayUrl="$playUrl >> $LOG_PATH/$LOGFILE
         	else
+			displayJson=`cat $outputjsonfile`
+			echo "output.json contents:\n"$displayJson
                 	echo "FAILURE<DETAILS>Unable to read play url from output.json" >> $LOG_PATH/$LOGFILE
                 	exit 1
         	fi
