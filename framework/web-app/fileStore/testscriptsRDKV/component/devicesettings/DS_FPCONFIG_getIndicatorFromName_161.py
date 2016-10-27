@@ -90,10 +90,23 @@ if "SUCCESS" in loadmodulestatus.upper():
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
 
+                #Get supported indicators
+                print ""
+                tdkTestObj = obj.createTestStep('DS_GetIndicators');
+                expectedresult="SUCCESS"
+                tdkTestObj.executeTestCase(expectedresult);
+                actualresult = tdkTestObj.getResult();
+                supportedIndicators = tdkTestObj.getResultDetails();
+                print "Supported indicators: ",supportedIndicators
+                if expectedresult in actualresult:
+                        tdkTestObj.setResultStatus("SUCCESS");
+                else:
+                        tdkTestObj.setResultStatus("FAILURE");
+
                 #calling Device Settings - Get Front Panel Indicator.
 		tdkTestObj = obj.createTestStep('DS_FPCONFIG_getIndicatorFromName');
 		
-		indicatorList = ["Message","Power", "Record", "Remote","RfByPass"]
+		indicatorList = supportedIndicators.split(',')
 		print ""
 		for indicator_name in indicatorList:
 	                #Set FP indicator name. 

@@ -89,20 +89,37 @@ if "SUCCESS" in loadmodulestatus.upper():
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
 
+                #Get supported indicators
+                print ""
+                tdkTestObj = obj.createTestStep('DS_GetIndicators');
+                expectedresult="SUCCESS"
+                tdkTestObj.executeTestCase(expectedresult);
+                actualresult = tdkTestObj.getResult();
+                supportedIndicators = tdkTestObj.getResultDetails();
+                print "Supported indicators: ",supportedIndicators
+                if expectedresult in actualresult:
+                        tdkTestObj.setResultStatus("SUCCESS");
+                else:
+                        tdkTestObj.setResultStatus("FAILURE");
+
 		print "IDs:: 0:Message 1:Power 2:Record 3:Remote 4:RfByPass"
-                indicatorList = [0,1,2,3,4]
+                indicatorList = {'Message': 0, 'Power': 1, 'Record': 2, 'Remote': 3, 'RfByPass':4}
+
                 print " "
-                for indicator_id in indicatorList:
+                for key in indicatorList:
+                    if key not in supportedIndicators:
+                        pass
+                    else:
                         #Set FP indicator name.
 			#calling Device Settings - Get Front Panel Indicator.
 			tdkTestObj = obj.createTestStep('DS_FPCONFIG_getIndicatorFromId');
-                        tdkTestObj.addParameter("indicator_id",indicator_id);
+                        tdkTestObj.addParameter("indicator_id",indicatorList[key]);
                         expectedresult="SUCCESS"
                         tdkTestObj.executeTestCase(expectedresult);
                         actualresult = tdkTestObj.getResult();
 			details = tdkTestObj.getResultDetails()
                         print "[DS_FPCONFIG_getIndicatorFromId RESULT] : %s" %actualresult;
-                        print "[IndicatorId: %d DETAILS: %s]" %(indicator_id,details);
+                        print "[IndicatorId: %d DETAILS: %s]" %(indicatorList[key],details);
 
                        #Check for SUCCESS/FAILURE return value of DS_FPCONFIG_getIndicatorFromId
                         if expectedresult in actualresult:
