@@ -51,7 +51,7 @@ class BootStrap {
 	def scriptService
 	def primitiveService
 	def executionService
-     
+         def utilityService
 	def mailService
 	
     def init = { servletContext ->
@@ -183,7 +183,8 @@ class BootStrap {
 				def moduleInstance = new Module()
 				moduleInstance.name = 'tcl'
 				moduleInstance.testGroup = TestGroup.Component
-				moduleInstance.groups= null
+				//moduleInstance.groups= null
+				moduleInstance.groups= utilityService.getGroup()
 				moduleInstance.category= Category.RDKB_TCL
 				if(!moduleInstance.save(flush:true)){
 					moduleInstance.errors.each{

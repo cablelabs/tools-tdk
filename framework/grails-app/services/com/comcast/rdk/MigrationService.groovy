@@ -1399,6 +1399,7 @@ class MigrationService {
 		List migrationList = moduleTempList
 		List savedList = []
 		migrationList.each{ mModule ->
+	if(!(mModule?.toString()?.equals("tcl"))){
 			def groups
 			Groups.withSession {
 				groups = Groups.findByName(mModule?.groups?.name)
@@ -1440,6 +1441,7 @@ class MigrationService {
 				}
 			}
 
+			}
 		}
 	}
 

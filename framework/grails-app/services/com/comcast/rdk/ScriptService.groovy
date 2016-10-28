@@ -499,6 +499,13 @@ class ScriptService {
 			e.printStackTrace()
 		}
 	}
+	/**
+	 * Create suite with no open source script based on the box types and rdk_versions   
+	 * @param scriptObject
+	 * @param scriptFile
+	 * @param category
+	 * @return
+	 */
 	
 	def createDefaultGroupWithoutOS(def scriptObject , def scriptFile, def category){
 		def sName = scriptObject.getModule()
@@ -519,10 +526,10 @@ class ScriptService {
 								scriptGrpInstance = new ScriptGroup()
 								scriptGrpInstance.name = name
 								scriptGrpInstance.category = Utility.getCategory(category)
+								scriptGrpInstance.save(flush:true)
 							}
 							if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
-								scriptGrpInstance.addToScriptList(scriptFile)
-								scriptGrpInstance.save(flush:true)
+								scriptGrpInstance.addToScriptList(scriptFile)								
 							}
 						}else{
 							if(scriptGrpInstance && scriptGrpInstance?.scriptList?.contains(scriptFile)){
@@ -530,7 +537,29 @@ class ScriptService {
 							}
 						}
 					}
-				}
+					// For adding the emulator suite with out recording
+					if(!(sName?.toString()?.equals("recorder")) && bType?.name.toString()?.equals("Emulator-HYB") && vers?.toString()?.equals("RDK2.0")){
+						String suiteName = vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE+"_WOR"
+						ScriptGroup.withTransaction {
+							def scriptGrpInstance = ScriptGroup.findByName(suiteName)
+							if(!scriptObject?.getLongDuration()){
+								if(!scriptGrpInstance){
+									scriptGrpInstance = new ScriptGroup()
+									scriptGrpInstance.name = suiteName
+									scriptGrpInstance.category = Utility.getCategory(category)
+									scriptGrpInstance.save(flush:true)
+								}
+								if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
+									scriptGrpInstance.addToScriptList(scriptFile)									
+								}
+							}else{
+								if(scriptGrpInstance && scriptGrpInstance?.scriptList?.contains(scriptFile)){
+									scriptGrpInstance.removeFromScriptList(scriptFile)
+								}
+							}
+						}
+					}	
+				}			 		
 			}
 		}
 	}
