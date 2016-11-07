@@ -218,7 +218,7 @@ if "SUCCESS" in recLoadStatus.upper():
         #Execute updateSchedule to fallback again and to get error RDK-10028
         requestID = str(randint(10, 500));
         recordingID1 = str(randint(10000, 500000));
-        duration = "60000";
+        duration = "600000";
         startTime = "0";
         ocapId = "0xbad1"
         now = "curTime"
@@ -231,8 +231,8 @@ if "SUCCESS" in recLoadStatus.upper():
         actResponse = recorderlib.callServerHandlerWithMsg('updateMessage',jsonMsg,ip);
         print "Update Schedule Details: %s"%actResponse;
         #Wait for getting the error code again
-        print "Waiting for 10 minutes getting the error code RDK-10028 again"
-        sleep(600) 
+        print "Waiting for 5 minutes getting the error code RDK-10028 again"
+        sleep(300) 
 
         actResponse = recorderlib.callServerHandlerWithType('clearError','RWSStatus',ip);
         actResponse = recorderlib.callServerHandlerWithType('clearError','RWSSecureStatus',ip);
@@ -326,10 +326,10 @@ if "SUCCESS" in recLoadStatus.upper():
         print "Reverted the RWS status Url"
         rmfConfObj.setResultStatus("SUCCESS");
                  
-        #recObj.initiateReboot();
-        #obj.resetConnectionAfterReboot();
+        recObj.initiateReboot();
+        obj.resetConnectionAfterReboot();
         print "Sleeping to wait for the recoder to be up"
-        #sleep(300);
+        sleep(300);
         #unloading Recorder module
         recObj.unloadModule("Recorder");
         obj.unloadModule("mediaframework");
