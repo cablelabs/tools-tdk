@@ -161,7 +161,7 @@ if "SUCCESS" in recLoadStatus.upper():
                             response = recorderlib.callServerHandler('clearStatus',ip);
                             print "Clear Status Details: %s"%response;
                             #Wait for the recording 
-			    sleep(480);
+			    sleep(300);
                             tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
                             tdkTestObj.executeTestCase(expectedResult);
                             print "Sending getRecordings to get the recording list"
@@ -171,22 +171,21 @@ if "SUCCESS" in recLoadStatus.upper():
                             sleep(60)
                             actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                             print "Recording List: %s" %actResponse;
-                            recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);
-                            recordingData1 = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1));
-                            print recordingData
+                            recordingData1 = recorderlib.getRecordingFromRecId(actResponse,recordingID);
+                            recordingData2 = recorderlib.getRecordingFromRecId(actResponse,str(int(recordingID)+1));
                             print recordingData1
-                            if 'NOTFOUND' not in recordingData:
-                                statusKey = 'status'
-                                statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
-                                statusValue1 = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
-                                print "Successfully retrieved the recording list from recorder";
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                if "COMPLETE" in statusValue.upper() and "COMPLETE" in statusValue1.upper():
-                                    tdkTestObj.setResultStatus("SUCCESS");
-                                    print "Both recordings completed successfully.";
-                                else:
+                            print recordingData2
+                            if 'NOTFOUND' not in (recordingData1 or recordingData2):
+                                reqRecording1 = {"recordingId":recordingID,"duration":60000,"deletePriority":"P3"}
+                                reqRecording2 = {"recordingId":str(int(recordingID)+1),"duration":60000,"deletePriority":"P3"}
+                                ret1 = recorderlib.verifyCompletedRecording(recordingData1,reqRecording1)
+                                ret2= recorderlib.verifyCompletedRecording(recordingData2,reqRecording2)
+                                if "FALSE" in (ret1 or ret2):
                                     tdkTestObj.setResultStatus("FAILURE");
-                                    print "Recordings not completed successfully";
+                                    print "Recording has undesirable values";
+                                else:
+                                    tdkTestObj.setResultStatus("SUCCESS");
+                                    print "Recording NOT have any undesirable values";
                             else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "Failed to retrieve the recording list from recorder";

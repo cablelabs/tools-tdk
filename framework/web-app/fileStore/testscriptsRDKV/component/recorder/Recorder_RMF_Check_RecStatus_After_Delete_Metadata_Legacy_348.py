@@ -162,8 +162,8 @@ if "SUCCESS" in recLoadStatus.upper():
         	recObj.unloadModule("Recorder");
 		exit();
 	print "Recording marked as COMPLETE ";
-
-        print "Deleting recording Metadata"
+    
+        print "Deleting Blobs including backup"
         tdkTestObj1 = recObj.createTestStep('Recorder_ExecuteCmd');
         expectedResult="SUCCESS";
         tdkTestObj1.addParameter("command","find /tmp/mnt/diska3/persistent/dvr/recdbser/ -type f | xargs grep -rls " +recordingID+ "| xargs rm -rf");
@@ -176,6 +176,39 @@ if "SUCCESS" in recLoadStatus.upper():
         else:
             tdkTestObj1.setResultStatus("FAILURE");
 
+
+        tdkTestObj1.addParameter("command","find /mnt/nvram1/dvr/recdbser/ -type f | xargs grep -rls " +recordingID+ "| xargs rm -rf");
+        #Execute the test case in STB
+        tdkTestObj1.executeTestCase("SUCCESS");
+        result = tdkTestObj1.getResult();
+        print "[TEST EXECUTION RESULT] : %s" %result;
+        if "SUCCESS" in result:
+            tdkTestObj1.setResultStatus("SUCCESS");
+        else:
+            tdkTestObj1.setResultStatus("FAILURE");
+
+
+        tdkTestObj1.addParameter("command","find /opt/persistent/dvr/recdbser/ -type f | xargs grep -rls " +recordingID+ "| xargs rm -rf");
+        #Execute the test case in STB
+        tdkTestObj1.executeTestCase("SUCCESS");
+        result = tdkTestObj1.getResult();
+        print "[TEST EXECUTION RESULT] : %s" %result;
+        if "SUCCESS" in result:
+            tdkTestObj1.setResultStatus("SUCCESS");
+        else:
+            tdkTestObj1.setResultStatus("FAILURE");
+       
+        tdkTestObj1.addParameter("command","find /tmp/mnt/diska3/dvr_persistent/dvr/recdbser -type f | xargs grep -rls " +recordingID+ "| xargs rm -rf");
+        #Execute the test case in STB
+        tdkTestObj1.executeTestCase("SUCCESS");
+        result = tdkTestObj1.getResult();
+        print "[TEST EXECUTION RESULT] : %s" %result;
+        if "SUCCESS" in result:
+            tdkTestObj1.setResultStatus("SUCCESS");
+        else:
+            tdkTestObj1.setResultStatus("FAILURE");
+
+        print "Deleting XML's including backup"
         tdkTestObj1 = recObj.createTestStep('Recorder_ExecuteCmd');
         expectedResult="SUCCESS";
         tdkTestObj1.addParameter("command","find /opt/data/OCAP_MSV/0/0/DEFAULT_RECORDING_VOLUME/dvr -type f -name \"*.xml*\" -mmin -3 | xargs rm -rf");
@@ -187,6 +220,7 @@ if "SUCCESS" in recLoadStatus.upper():
             tdkTestObj1.setResultStatus("SUCCESS");
         else:
             tdkTestObj1.setResultStatus("FAILURE");
+
         sleep(10);
 
         tdkTestObj.executeTestCase(expectedResult);
