@@ -211,20 +211,6 @@ function build()
        echo "BUILDING tdk FAILED"
        exit $retCode
     fi
-    touch $RDK_PROJECT_ROOT_PATH/tdk_image
-
-    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh" ]; then
-        rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/cpc/Mediaplayer_stub/libmediaplayerstub.so* ${TDK_LIB_PATH}
-    fi
-    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so" ];then
-    rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so* ${TDK_LIB_PATH}
-    fi
-    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/test/SMEventApp" ];then
-        cp ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/test/SMEventApp ${TDK_BIN_PATH}
-    fi
-    if [ -d "${RDK_PROJECT_ROOT_PATH}/tdk/platform/SM_stub/scripts" ];then
-        cp ${RDK_PROJECT_ROOT_PATH}/tdk/platform/SM_stub/scripts/* ${TDK_BIN_PATH}/scripts/
-    fi
 }
 
 function rebuild()
@@ -235,8 +221,25 @@ function rebuild()
 
 function install()
 {
-    true	
+    touch $RDK_PROJECT_ROOT_PATH/tdk_image
+
+    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh" ]; then
+        rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/cpc/Mediaplayer_stub/libmediaplayerstub.so* ${TDK_LIB_PATH}
+    fi
+    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so" ];then
+        rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so* ${TDK_LIB_PATH}
+    fi
+    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/test/SMEventApp" ];then
+        # Installing SMEventApp only for non-rng150 devices due to packaging size constraint
+        if [ $RDK_PLATFORM_DEVICE != "rng150" ]; then
+            cp ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/test/SMEventApp ${TDK_BIN_PATH}
+        fi
+    fi
+    if [ -d "${RDK_PROJECT_ROOT_PATH}/tdk/platform/SM_stub/scripts" ];then
+        cp ${RDK_PROJECT_ROOT_PATH}/tdk/platform/SM_stub/scripts/* ${TDK_BIN_PATH}/scripts/
+    fi
 }
+
 
 
 # run the logic

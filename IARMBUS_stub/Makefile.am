@@ -31,7 +31,8 @@ libiarmbusstub_la_LIBADD = -lIARMBus
 libiarmbusstub_la_includedir = ${includedir}
 libiarmbusstub_la_include_HEADERS = ${top_srcdir}/IARMBUS_stub/include/IARMBUSAgent.h
 
-bin_PROGRAMS = tst_iarmbus Test_Event_Mgr gen_single_event gen_multiple_events gen_irevent
+bin_PROGRAMS = tst_iarmbus Test_Event_Mgr gen_single_event gen_multiple_events
+
 tst_iarmbusdir = ${bindir}
 tst_iarmbus_SOURCES = src/tst_iarmbus.c
 tst_iarmbus_LDADD = -lIARMBus -lz -lglib-2.0
@@ -51,8 +52,3 @@ gen_multiple_eventsdir = ${bindir}
 gen_multiple_events_SOURCES = src/gen_multiple_events.cpp
 gen_multiple_events_LDADD = -lrt -lIARMBus -lz -lglib-2.0
 gen_multiple_events_includedir = ${includedir}
-
-gen_ireventdir = ${bindir}
-gen_irevent_SOURCES = src/gen_irevent.cpp
-gen_irevent_LDADD = -lrt -lIARMBus -lz -lglib-2.0
-gen_irevent_includedir = ${includedir}

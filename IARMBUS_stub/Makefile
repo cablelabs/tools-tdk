@@ -12,8 +12,7 @@ COPTS     := -c -g -Wall -DGCC4_XXX -Wno-format -Wunused
 APP_EXE   := tst_iarmbus
 DUMMY_TESTAPP_EXE   := Test_Event_Mgr 
 SINGLEEVT_APP_EXE   := gen_single_event
-MULTIEVT_APP_EXE   := gen_multiple_events
-IREVT_APP_EXE      := gen_irevent
+MULTIEVT_APP_EXE    := gen_multiple_events
 
 ifeq ($(RDK_VERSION),RDK1DOT3)
 COPTS     += -DRDK_BR_1DOT3
@@ -61,18 +60,15 @@ LIBIARM	  := libiarmbusstub.so
 #
 LIB        = $(LIBDIR)/$(LIBIARM)
 
-SOURCES   := $(SRC_DIR)/IARMBUSStub.cpp
-SOURCE_APP:= $(SRC_DIR)/tst_iarmbus.c
-DUMMY_TEST_APP_SOURCE:= $(SRC_DIR)/Test_Event_Mgr.c
-TARGET    := $(TARGETDIR)/$(APP_EXE)
-DUMMY_TEST_APP    := $(TARGETDIR)/$(DUMMY_TESTAPP_EXE)
-SINGLEEVT_SOURCE_APP:= $(SRC_DIR)/gen_single_event.cpp
-MULTIEVT_SOURCE_APP:= $(SRC_DIR)/gen_multiple_events.cpp
-IREVT_SOURCE_APP:= $(SRC_DIR)/gen_irevent.cpp
-SINGLEEVT_APP_TARGET    := $(TARGETDIR)/$(SINGLEEVT_APP_EXE)
-MULTIEVT_APP_TARGET    := $(TARGETDIR)/$(MULTIEVT_APP_EXE)
-IREVT_APP_TARGET    := $(TARGETDIR)/$(IREVT_APP_EXE)
-
+SOURCES               := $(SRC_DIR)/IARMBUSStub.cpp
+SOURCE_APP            := $(SRC_DIR)/tst_iarmbus.c
+DUMMY_TEST_APP_SOURCE := $(SRC_DIR)/Test_Event_Mgr.c
+TARGET                := $(TARGETDIR)/$(APP_EXE)
+DUMMY_TEST_APP        := $(TARGETDIR)/$(DUMMY_TESTAPP_EXE)
+SINGLEEVT_SOURCE_APP  := $(SRC_DIR)/gen_single_event.cpp
+MULTIEVT_SOURCE_APP   := $(SRC_DIR)/gen_multiple_events.cpp
+SINGLEEVT_APP_TARGET  := $(TARGETDIR)/$(SINGLEEVT_APP_EXE)
+MULTIEVT_APP_TARGET   := $(TARGETDIR)/$(MULTIEVT_APP_EXE)
 
 #
 # Intermediate files
@@ -116,13 +112,7 @@ $(MULTIEVT_APP_TARGET): $(MULTIEVT_SOURCE_APP)
 	$(CROSSCOMPILE)$(CC) $(INCLUDES) -DDEBUG_LEVEL_TRACE $(LDOPTS) -lrt -o $(MULTIEVT_APP_EXE) $^
 	mv $(MULTIEVT_APP_EXE) $(TARGETDIR)
 
-$(IREVT_APP_TARGET): $(IREVT_SOURCE_APP)
-	mkdir -p $(TARGETDIR)
-	$(CROSSCOMPILE)$(CC) $(INCLUDES) -DDEBUG_LEVEL_TRACE $(LDOPTS) -lrt -o $(IREVT_APP_EXE) $^
-	mv $(IREVT_APP_EXE) $(TARGETDIR)
-
-
-build: $(LIB) $(TARGET) $(DUMMY_TEST_APP) $(SINGLEEVT_APP_TARGET) $(MULTIEVT_APP_TARGET) $(IREVT_APP_TARGET)
+build: $(LIB) $(TARGET) $(DUMMY_TEST_APP) $(SINGLEEVT_APP_TARGET) $(MULTIEVT_APP_TARGET)
 #
 # Clean 
 #
@@ -133,5 +123,3 @@ clean:
 	rm -rf $(DUMMY_TEST_APP)
 	rm -rf $(SINGLEEVT_APP_TARGET)
 	rm -rf $(MULTIEVT_APP_TARGET)
-	rm -rf $(IREVT_APP_TARGET)
-

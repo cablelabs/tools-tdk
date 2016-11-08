@@ -14,7 +14,6 @@
 #include "pwrMgr.h"
 #include "rdktestagentintf.h"
 #include "IARMBUSAgent.h"
-#include "gen_irevent.h"
 
 int main(int argc,char **argv)
 {
