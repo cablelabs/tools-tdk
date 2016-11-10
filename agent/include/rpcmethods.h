@@ -85,6 +85,7 @@ class RpcMethods
         bool RPCExecuteLoggerScript (const Json::Value& request, Json::Value& response);
 	bool RPCRemoveLogs (const Json::Value& request, Json::Value& response);
 	bool RPCPushLog (const Json::Value& request, Json::Value& response);
+	bool RPCUploadLog (const Json::Value& request, Json::Value& response);
 	bool RPCGetImageName (const Json::Value& request, Json::Value& response);
 
         /* Below methods are applicable only for Gateway boxes */
