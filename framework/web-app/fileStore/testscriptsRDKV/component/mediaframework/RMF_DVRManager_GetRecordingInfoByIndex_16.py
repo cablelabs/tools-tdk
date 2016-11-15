@@ -107,12 +107,32 @@ print "Mediaframework Dvrsink module loading status :%s" %result;
 if "SUCCESS" in result.upper():
     obj.setLoadModuleStatus("SUCCESS");
     
+    #Get the recording count 
+    tdkTestObj = obj.createTestStep('RMF_DVRManager_GetRecordingCount');
+    expectedRes = "SUCCESS"
+
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedRes);
+
+    #Get the result of execution
+    result = tdkTestObj.getResult();
+    print "[TEST EXECUTION RESULT] : %s" %result;
+    rec_count= tdkTestObj.getResultDetails();
+    if "SUCCESS" in result.upper():
+        #Set the result status of execution
+        tdkTestObj.setResultStatus("SUCCESS");
+        print "DVRMgr GetRecordingCount Successful: [%s]" % rec_count;
+    else:
+         tdkTestObj.setResultStatus("FAILURE");
+         print "DVRMgr GetRecordingCount Failed: [%s]"% rec_count;
+
+    
    #Prmitive test case which associated to this Script   
     tdkTestObj= obj.createTestStep('RMF_DVRManager_CheckRecordingInfoByIndex');
 
     #since it is negative test case.
     expectedRes = "FAILURE"
-    index = 1000
+    index = int(filter(str.isdigit,rec_count))+1
     print "Requested index : %d" %index;
     tdkTestObj.addParameter("index",index);
 
