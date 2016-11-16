@@ -64,10 +64,9 @@ def getImageName(deviceIP,devicePort):
 		tcpClient.close()
 
 		if "Method not found" in result:
-                        print "METHOD_NOT_FOUND"
-			sys.stdout.flush()
-			sys.exit()
-
+			message = "METHOD_NOT_FOUND"
+                        #print "METHOD_NOT_FOUND"
+			#sys.stdout.flush()
 		else:
 			resultIndex = result.find("result") + len("result"+"\":\"")
 	                message = result[resultIndex:]
@@ -77,5 +76,6 @@ def getImageName(deviceIP,devicePort):
 		return message
 
 	except socket.error:
-		print "AGENT_NOT_FOUND"
-		sys.stdout.flush()
+		#print "AGENT_NOT_FOUND"
+		#sys.stdout.flush()
+		return "AGENT_NOT_FOUND"
