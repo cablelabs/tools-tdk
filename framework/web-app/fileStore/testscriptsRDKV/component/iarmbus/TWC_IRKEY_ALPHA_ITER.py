@@ -76,12 +76,12 @@ IRKEY_ALPHA_ITER_TC_12</synopsis>
 #This script is supposed to be called from the genericscript.py 
 #TODO:replace this caling script name with correct one
 from time import sleep;
-import tdklib;
+from tdklib import TDKScriptingLibrary;
 import datalib;
 import numpy as np;
 
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
+obj = TDKScriptingLibrary("iarmbus","1.3");
 
 #Ip address of the selected STB for testing
 ip = <ipaddress>
@@ -97,22 +97,24 @@ if "SUCCESS" in loadmodulestatus.upper():
 		data = f.readlines();
 		#expectedresult="SUCCESS/FAILURE"
 		#print data
+		globalCount=1
 		for line in data:
 			if line[0] == '#':
 				continue
-			print line
-			print "got line"
+			#print line
+			print "Read entry: ",
 			Eline = line.split("\n");
 			print Eline[0]
 			Estring=Eline[0].split(":")
-	       		print Estring, "=",Estring[0]," + ",Estring[1]," + ",Estring[2]
+	       		#print Estring, "=",Estring[0]," + ",Estring[1]," + ",Estring[2]
 			keytype = int(Estring[1]);
 	        	keycode = int(Estring[2]); 
 	        	# Iterate on this action for 6 times
 	        	itercount = 6;
         		dataReadings = np.zeros(itercount);
 			for i in range(itercount):
-				print '******** Iteration %d **********\n' % i ;
+				print '\nEvent count: ',globalCount, '******** Iteration %d **********\n' % i ;
+				globalCount += 1
             			#calling IARMBUS API "IARM_Bus_Init"
 		            	tdkTestObj = obj.createTestStep('IARMBUS_Init',0);
 				expectedresult="SUCCESS/FAILURE"

@@ -98,7 +98,7 @@ int main(int argc,char **argv)
     IARM_Bus_Init("Bus_Client");
     IARM_Bus_Connect();
 
-    if(strcmp(ownerName,"IRMgr")==0)
+    if(strcmp(ownerName,IARM_BUS_IRMGR_NAME)==0)
     {
         /*Event Data for BUS,IR,PWR events*/
         IRMgr_EventData_tp eventData_ir;
@@ -114,9 +114,9 @@ int main(int argc,char **argv)
             DEBUG_PRINT(DEBUG_ERROR, "[gen_single_event pid=%d] clock gettime error",getpid());
         }
 
-        IARM_Bus_BroadcastEvent(IARM_BUS_IRMGR_NAME, IARM_BUS_IRMGR_EVENT_IRKEY, (void*)&eventData_ir, sizeof(eventData_ir));
+        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_IRMGR_NAME, IARM_BUS_IRMGR_EVENT_IRKEY, (void*)&eventData_ir, sizeof(eventData_ir));
     }
-    else if(strcmp(ownerName,"PWRMgr")==0)
+    else if(strcmp(ownerName,IARM_BUS_PWRMGR_NAME)==0)
     {
         _IARM_Bus_PWRMgr_EventData_tp eventData_pwr;
         /*Braodcasting PWR event*/
@@ -127,9 +127,9 @@ int main(int argc,char **argv)
             DEBUG_PRINT(DEBUG_ERROR, "[gen_single_event pid=%d] clock gettime error",getpid());
         }
 
-        IARM_Bus_BroadcastEvent(IARM_BUS_PWRMGR_NAME,IARM_BUS_PWRMGR_EVENT_MODECHANGED,(void*)&eventData_pwr, sizeof(eventData_pwr));
+        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_PWRMGR_NAME,IARM_BUS_PWRMGR_EVENT_MODECHANGED,(void*)&eventData_pwr, sizeof(eventData_pwr));
     }
-    else if(strcmp(ownerName,"Daemon")==0)
+    else if(strcmp(ownerName,IARM_BUS_DAEMON_NAME)==0)
     {
         /*Braodcasting Bus event-ResolutionChange*/
         DEBUG_PRINT(DEBUG_LOG,"[gen_single_event pid=%d] Broadcasting ResolutionChange event\n",getpid());
@@ -140,7 +140,7 @@ int main(int argc,char **argv)
         {
             DEBUG_PRINT(DEBUG_ERROR, "[gen_single_event pid=%d] clock gettime error",getpid());
         }
-        IARM_Bus_BroadcastEvent(IARM_BUS_DAEMON_NAME,IARM_BUS_EVENT_RESOLUTIONCHANGE, (void*) &eventData_bus1, sizeof(eventData_bus1));
+        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_DAEMON_NAME,IARM_BUS_EVENT_RESOLUTIONCHANGE, (void*) &eventData_bus1, sizeof(eventData_bus1));
     }
     else if(strcmp(ownerName,"DummyTestMgr")==0)
     {
@@ -155,7 +155,7 @@ int main(int argc,char **argv)
             }
             eventData.data.dummy0.dummyData = 1;
             DEBUG_PRINT(DEBUG_LOG,"[gen_single_event pid=%d] Broadcasting IARM_BUS_DUMMYMGR_EVENT_DUMMYX event\n",getpid());
-            IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYX, &eventData, sizeof(eventData));
+            retCode = IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYX, &eventData, sizeof(eventData));
 
         } else if(eventId == 1) {
             eventData.data.dummy1.dummyData = 2;
@@ -166,7 +166,7 @@ int main(int argc,char **argv)
                 DEBUG_PRINT(DEBUG_ERROR, "[gen_single_event pid=%d] clock gettime error",getpid());
             }
 
-            IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYY, &eventData, sizeof(eventData));
+            retCode = IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYY, &eventData, sizeof(eventData));
         } else if (eventId == 2) {
             eventData.data.dummy2.dummyData = 3;
             DEBUG_PRINT(DEBUG_LOG,"[gen_single_event pid=%d] Broadcasting IARM_BUS_DUMMYMGR_EVENT_DUMMYZ event\n",getpid());
@@ -175,7 +175,7 @@ int main(int argc,char **argv)
             {
                 DEBUG_PRINT(DEBUG_ERROR, "[gen_single_event pid=%d] clock gettime error",getpid());
             }
-            IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYZ, &eventData, sizeof(eventData));
+            retCode = IARM_Bus_BroadcastEvent(IARM_BUS_DUMMYMGR_NAME,IARM_BUS_DUMMYMGR_EVENT_DUMMYZ, &eventData, sizeof(eventData));
         } else {
             DEBUG_PRINT(DEBUG_TRACE,"[gen_single_event pid=%d] Error : Invalid Input eventId...\n",getpid());
         }
@@ -184,6 +184,11 @@ int main(int argc,char **argv)
     {
         DEBUG_PRINT(DEBUG_LOG,"[gen_single_event pid=%d] Error! Unsupported owner\n",getpid());
     }
+
+    if (IARM_RESULT_SUCCESS != retCode)
+        DEBUG_PRINT(DEBUG_LOG,"[gen_single_event pid=%d] IARM_Bus_BroadcastEvent error status = %d\n",getpid(), retCode);
+    else
+	DEBUG_PRINT(DEBUG_LOG,"[gen_single_event pid=%d] IARM_Bus_BroadcastEvent is success\n",getpid());
 
     sleep(1);
 
