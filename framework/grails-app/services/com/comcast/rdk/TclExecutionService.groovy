@@ -82,8 +82,6 @@ class TclExecutionService {
 		if(params?.repeatNo){
 			repeatCount = (params?.repeatNo)?.toInteger()
 		}
-
-
 		def executionInstance = Execution.findByName(executionName)
 		StringBuilder output = new StringBuilder();
 
@@ -132,14 +130,14 @@ class TclExecutionService {
 							//def scriptInstance1 = getTclBoxDetails(realPath, deviceInstance?.stbName)
 							def scriptInstance1 = [:]					
 							
-							boolean compoundTCL = false
+							boolean combinedTCL = false
 							def combainedTclScript =  scriptService?.combinedTclScriptMap
 							combainedTclScript?.each{
 								if(it?.value?.toString().contains(scripts?.toString())){
-									compoundTCL = true
+									combinedTCL = true
 								}
 							}							
-							if((scriptService?.totalTclScriptList?.toString()?.contains(scripts?.toString())) && compoundTCL ){
+							if((scriptService?.totalTclScriptList?.toString()?.contains(scripts?.toString())) && combinedTCL ){
 								combainedTclScript?.each{									
 									if(it?.value?.toString()?.contains(scripts?.toString())){
 										scripts = it.key?.toString()
@@ -164,14 +162,14 @@ class TclExecutionService {
 						else{						
 							scripts.each { script ->
 								def scriptInstance1 = [:]
-								boolean compoundTCL = false
+								boolean combinedTCL = false
 								def combainedTclScript =  scriptService?.combinedTclScriptMap
 								combainedTclScript?.each{
 									if(it?.value?.toString().contains(script?.toString())){
-										compoundTCL = true
+										combinedTCL = true
 									}
 								}
-								if((scriptService?.totalTclScriptList?.toString()?.contains(script?.toString())) && compoundTCL ){
+								if((scriptService?.totalTclScriptList?.toString()?.contains(script?.toString())) && combinedTCL ){
 									combainedTclScript?.each{
 										if(it?.value?.toString()?.contains(script?.toString())){
 											script = it.key?.toString()
@@ -499,8 +497,7 @@ class TclExecutionService {
 		def isMultiple = TRUE
 		List pendingScripts = []
 		try{
-			if(groupType == TEST_SUITE){
-				
+			if(groupType == TEST_SUITE){				
 				scriptCounter = 0
 				boolean skipStatus = false
 				boolean notApplicable = false
@@ -636,12 +633,16 @@ class TclExecutionService {
 						}						
 						if(!aborted && pause) {
 							def newScriptName 
-							if(scriptGroupInstance?.scriptList?.size() ==  validScriptList?.size()){
-								if( !(scriptService?.totalTclScriptList?.toString()?.contains(scriptObj?.scriptName?.toString())) && scriptService?.tclScriptsList?.toString()?.contains(scriptObj?.scriptName?.toString())){
-									newScriptName=  scriptGroupInstance?.scriptList[index]?.toString()
+							if(scriptGroupInstance?.scriptList?.size() ==  validScriptList?.size()){								
+								if(!(scriptService?.totalTclScriptList?.toString()?.contains(scriptObj?.scriptName?.toString())) && scriptService?.tclScriptsList?.toString()?.contains(scriptObj?.scriptName?.toString())){
+									
+									newScriptName= scriptGroupInstance?.scriptList[index]?.toString()
+									
+									
 								}else{
-								newScriptName = scriptObj?.scriptName
-								}
+									
+									newScriptName = scriptObj?.scriptName?.toString()
+								}			
 							}							
 							try {
 								pendingScripts.add(newScriptName)
@@ -713,14 +714,14 @@ class TclExecutionService {
 					def combinedScript = [:]
 					def scriptNameTcl
 					boolean tclCombained =  false
-					boolean compoundTCL = false
+					boolean combinedTCL = false
 					def combainedTclScript =  scriptService?.combinedTclScriptMap
 					combainedTclScript?.each{ 
 						if(it?.value?.toString().contains(scripts?.toString())){
-							compoundTCL = true 							
+							combinedTCL = true 							
 						}						
 					}
-					if((scriptService?.totalTclScriptList?.toString()?.contains(scripts?.toString())) && compoundTCL ){
+					if((scriptService?.totalTclScriptList?.toString()?.contains(scripts?.toString())) && combinedTCL ){
 						scriptNameTcl = scripts						
 						combainedTclScript?.each{
 							if(it?.value?.toString()?.contains(scripts?.toString())){
@@ -762,7 +763,7 @@ class TclExecutionService {
 					boolean notApplicable = false
 					boolean skipStatus = false
 					def tclCombained = false
-					boolean compoundTCL = false
+					boolean combinedTCL = false
 					def scriptNameTcl
 					def combinedScript = [:]				
 					scripts.each { script ->						
@@ -1000,9 +1001,7 @@ class TclExecutionService {
 		def executionResultId
 		if(executionResult == null){
 			def newScriptName
-			try {			
-				
-				
+			try {		
 				if(combainedTcl?.scriptName){
 					newScriptName=combainedTcl?.scriptName
 				}else{
@@ -1351,36 +1350,29 @@ class TclExecutionService {
 									
 									def scriptNameTcl
 									boolean tclCombained =  false
-									boolean compoundTCL = false
+									boolean combinedTCL = false
 									def combainedTclScript =  scriptService?.combinedTclScriptMap
 									combainedTclScript?.each{
 										if(it?.value?.toString().contains(executionResult?.script?.toString())){
-											compoundTCL = true
+											combinedTCL = true
 											scriptNameTcl = it.key?.toString()
 										}
 									}
-									if(compoundTCL ){
+									def combainedTclMap = [:]
+									if(combinedTCL ){										
 										scriptNameTcl= scriptNameTcl
+										combainedTclMap.put("scriptName",executionResult?.script?.toString())
 									}else{
 										scriptNameTcl = executionResult?.script?.toString()
-									}
-									
-									/*if((scriptService?.totalTclScriptList?.toString()?.contains(executionResult?.script?.toString())) && compoundTCL ){
-										scriptNameTcl = executionResult?.script?.toString()
-										combainedTclScript?.each{
-											if(it?.value?.toString()?.contains(executionResult?.script?.toString())){
-												scriptNameTcl = it.key?.toString()
-												tclCombained =true
-											}
-										}
-									}*/									
+										combainedTclMap.put("scriptName","")
+									}	
+									Thread.sleep(6000)
 									if(Utility.isTclScriptExists(realPath, scriptNameTcl)){
 										scriptInstance.put('scriptName', scriptNameTcl)
 										//aborted = executionService.abortList.contains(exeId?.toString())
 										aborted = executionService.abortList?.toString().contains(executionName?.id?.toString())
 										if(!aborted && !(deviceStatus?.toString().equals(Status.NOT_FOUND.toString()) || deviceStatus?.toString().equals(Status.HANG.toString())) && !pause){
-											htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null,"false", category,["scriptName":""])
-
+											htmlData = executeScript(newExecName, executionDevice, scriptInstance, deviceInstance, appUrl, filePath, realPath,"false","false",uniqueExecutionName,isMultiple,null,"false", category,combainedTclMap)
 										}else{
 											if(!aborted && (deviceStatus.equals(Status.NOT_FOUND.toString()) ||  deviceStatus.equals(Status.HANG.toString()))){
 												pause = true
@@ -1453,6 +1445,10 @@ class TclExecutionService {
 								executionService.savePausedExecutionStatus(executionInstance1?.id)
 								executionService.saveExecutionDeviceStatusData(PAUSED, executionDevice?.id)
 							}
+							if(aborted && !pause){
+								executionService.saveExecutionStatus(aborted,executionInstance1?.id)
+							}
+							//Issue fix : For execution status not updated properly
 							if(!aborted && !pause){
 								executionService.saveExecutionStatus(aborted,executionInstance1?.id)
 							}

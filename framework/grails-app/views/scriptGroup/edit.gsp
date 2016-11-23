@@ -254,28 +254,60 @@
 						<g:else>
 							<li class="ui-state-default">No scripts in list</li>
 						</g:else>
-							</ul>
-					
-					
-					
-					
+							</ul>				
 					
 				</td>
 				<td style="width: 8%">				
 			<%-- The new change module wise or random wise --%>
-								<br> <br> <g:submitToRemote class="buttons"
-						value="Module Wise Sort" id="module"
-						before="moduleOrRandomSort('module')" style=" min-width:150px;" title="Module wise script list sort"   />
-					<br> <br> <g:submitToRemote class="buttons" id="random"
-						value="     Random Sort     " controller="scriptGroup"
-						style="min-width:150px;"
-						before="moduleOrRandomSort('random')" title="Random wise script list sort" /> <br> <br>							
-					<g:submitToRemote class="buttons"
-						value="   Suite Clean Up   " controller="scriptGroup"
-						style="min-width:150px;"						
-						title="Test Suite Clean Up" before="cleanUp();" onLoading ="cleanUpTestSuite('${scriptGroupInstance}', '${scriptGroupInstance.category}')" /><br><br>				
-					<input type="image" src= "../images/reorder_up.png" value="Move Up" onclick="moveUp();return false;"  title  = " Move Up "> <br><br>
-					<input type="image" src="../images/reorder_down.png" value="Move Down" onclick="moveDown();return false;"  title  = " Move Down ">
+			<div style="min-width: 150px;">
+						<table>
+							<tr width="100px">
+								<br>
+								<br>
+								<g:submitToRemote class="buttons"
+									value="      Module Wise Sort    " id="module"
+									before="moduleOrRandomSort('module')" style=" min-width:220px;"
+									title="Module wise script list sort" />
+								<br>
+								<br>
+							</tr>
+							<tr>
+								<g:submitToRemote class="buttons" id="random"
+									value="         Random Sort        " controller="scriptGroup"
+									style="min-width:500px;" before="moduleOrRandomSort('random')"
+									title="Random wise script list sort" />
+								<br>
+								<br>
+							</tr>
+							<tr>
+								<g:submitToRemote class="buttons"
+									value="       Suite Clean Up       " controller="scriptGroup"
+									style="min-width:180px;" title="Test Suite Clean Up"
+									before="cleanUp();"
+									onLoading="cleanUpTestSuite('${scriptGroupInstance}', '${scriptGroupInstance.category}')" />
+								<br>
+								<br>
+							</tr>
+							<tr>								
+								<g:submitToRemote class="buttons" value=" Download Test Cases " onLoading="downloadScriptGroupTestCase('${scriptGroupInstance?.name}','${scriptGroupInstance.category}');" ></g:submitToRemote>
+							</tr>
+							<br>
+							<br>
+							<tr>
+								<input type="image" src="../images/reorder_up.png"
+									value="Move Up" onclick="moveUp();return false;"
+									title=" Move Up ">
+								<br>
+								<br>
+							</tr>
+							<tr>
+								<input type="image" src="../images/reorder_down.png"
+									value="Move Down" onclick="moveDown();return false;"
+									title=" Move Down ">
+							</tr>
+						</table>
+					</div>
+
 				</td>
 			</tr>
 		</table>

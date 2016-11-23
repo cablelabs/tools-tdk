@@ -56,6 +56,7 @@ class ScriptService {
 	
 	public static volatile List totalTclScriptList = []
 	
+	public static volatile Map newTestCaseMap  = [:]
 	def primitiveService
 	
 	def scriptgroupService
@@ -562,7 +563,8 @@ class ScriptService {
 				}			 		
 			}
 		}
-	}
+	}	
+
 	
 	
 		def createDefaultScriptTagGroup(def scriptObject , def scriptFile, def category){
@@ -987,6 +989,44 @@ class ScriptService {
 				script.put("executionTime", getExecutionTime(node?.execution_time?.text()))
 				script.put("category", category)
 				script.put("testProfile",testProfileList)
+				def testCaseDeatilsMap =[:]
+				if(node?.test_cases){
+					testCaseDeatilsMap?.put(T_C_ID,node?.test_cases?.test_case_id?.text())
+					testCaseDeatilsMap?.put(T_C_OBJ,node?.test_cases?.test_objective?.text())
+					testCaseDeatilsMap?.put(T_C_TYPE,node?.test_cases?.test_type?.text())
+					testCaseDeatilsMap?.put(T_C_SETUP,node?.test_cases?.test_setup?.text())
+					//testCaseDeatilsMap?.put(T_C_STREAM_ID,node?.test_cases?.steam_id?.text())
+					testCaseDeatilsMap?.put(T_C_SKIP,node?.test_cases?.skipped?.text())
+					testCaseDeatilsMap?.put(T_C_PRE_REQUISITES, node?.test_cases?.pre_requisite?.text())
+					testCaseDeatilsMap?.put(T_C_INTERFACE,node?.test_cases?.api_or_interface_used?.text())
+					testCaseDeatilsMap?.put(T_C_IOPARAMS, node?.test_cases?.input_parameters?.text())
+					testCaseDeatilsMap?.put(T_C_AUTOAPROCH,node?.test_cases?.automation_approch?.text())
+					testCaseDeatilsMap?.put(T_C_EX_OUTPUT,node?.test_cases?.except_output?.text())
+					testCaseDeatilsMap?.put(T_C_PRIORITY,node?.test_cases?.priority?.text())
+					testCaseDeatilsMap?.put(T_C_TSI, node?.test_cases?.test_stub_interface?.text())
+					testCaseDeatilsMap?.put(T_C_SCRIPT,node?.test_cases?.test_script?.text())
+					testCaseDeatilsMap?.put(T_C_RELEASE_VERSION,node?.test_cases?.release_version?.text())
+					testCaseDeatilsMap?.put(T_C_REMARKS,node?.test_cases?.remarks?.text())
+					script?.put(T_C_DETAILS,testCaseDeatilsMap)
+				}else{
+					testCaseDeatilsMap?.put(T_C_ID,"")
+					testCaseDeatilsMap?.put(T_C_OBJ,"")
+					testCaseDeatilsMap?.put(T_C_TYPE,"")
+					testCaseDeatilsMap?.put(T_C_SETUP,"")
+					testCaseDeatilsMap?.put(T_C_SKIP,"")
+					testCaseDeatilsMap?.put(T_C_PRE_REQUISITES, "")
+					testCaseDeatilsMap?.put(T_C_INTERFACE,"")
+					testCaseDeatilsMap?.put(T_C_IOPARAMS, "")
+					testCaseDeatilsMap?.put(T_C_AUTOAPROCH,"")
+					testCaseDeatilsMap?.put(T_C_EX_OUTPUT,"")
+					testCaseDeatilsMap?.put(T_C_PRIORITY,"")
+					testCaseDeatilsMap?.put(T_C_TSI, "")
+					testCaseDeatilsMap?.put(T_C_SCRIPT,"")
+					testCaseDeatilsMap?.put(T_C_RELEASE_VERSION,"")
+					testCaseDeatilsMap?.put(T_C_REMARKS,"")
+					script?.put(T_C_DETAILS,testCaseDeatilsMap)
+				
+				}
 			}else{
 			}
 		} catch (Exception e) {
@@ -1500,5 +1540,52 @@ class ScriptService {
 			println " ERROR "+ e.getMessage()
 			e.printStackTrace()
 		}
+	}
+	/**
+	 * Function return the test case map when adding the new script
+	 * @param testCaseMap
+	 * @return
+	 */
+	def addNewTestCaseDetails(def testCaseMap ,def uniqueId){
+		newTestCaseMap.put(uniqueId, testCaseMap)
+		return  testCaseMap		
+	}
+	
+	def getNewTestCaseDetails(def uniqueId){
+		return newTestCaseMap.get(uniqueId)
+	}
+	
+	/**
+	 * Function return the test case map when adding the new script
+	 * @param testCaseMap
+	 * @return
+	 */
+	def clearTestCaseDetailsMap(def uniqueId){
+		newTestCaseMap.remove(uniqueId)
+	}
+	
+
+	
+	/**
+	 * function used return the file names in particular module
+	 * @author nishab
+	 *
+	 */	
+	def getFileList(def moduleDir){
+		def fileList = []
+		File module =  new File(moduleDir?.toString())
+		if(module?.exists()){
+			File []  files = module.listFiles(new FilenameFilter() {
+						@Override
+						public boolean accept(File dir, String name) {
+							return name.endsWith(".py");
+						}
+					});
+			files?.each{file->
+				String name = ""+file?.name.trim()?.replace(".py", "")
+				fileList?.add(name)
+			}
+		}
+		return fileList
 	}	
 }

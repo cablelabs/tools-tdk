@@ -234,8 +234,54 @@ public final class Constants
     private static final String  TESTSCRIPTS_RDKV="testscriptsRDKV";
     private static final String  TESTSCRIPTS_RDKB="testscriptsRDKB";    
     
-	 private static final String SUCCESS ="SUCCESS";
+	private static final String SUCCESS ="SUCCESS";
 	private static final String FAILED ="FAILED";
 	private static final String REMARKS ="Remarks";
     private static final String STATUS ="Status";
+	//for test case doc details 
+	 private static final String TESTCASE ="TestCase_";
+    private static final String FILESTORE ="fileStore";
+    private static final String TEST_SCRIPTS="testscripts";
+    private static final String XML =".xml";
+    
+    private static final String TC_ID ="Test Case ID";
+    private static final String TC_OBJ ="Test Objective";
+    private static final String TC_TYPE ="Test Type";
+    private static final String TC_SETUP ="Supported Box Type";
+    private static final String TC_SKIP="Skipped";
+    private static final String TC_PRE_REQUISITES ="Test Prerequisites";
+    private static final String TC_INTERFACE ="RDK Interface";
+    private static final String TC_IOPARAMS ="Input Parameters";
+    private static final String TC_AUTOAPROCH ="Automation Approach";
+    private static final String TC_EX_OUTPUT ="Expected Output";
+    private static final String TC_PRIORITY ="Priority";
+    private static final String TC_TSI ="Test Stub Interface";
+    private static final String TC_SCRIPT ="Test Script";
+    private static final String TC_RELEASE_VERSION ="Update Release Version";
+  
+    private static final String T_C_ID ="testCaseId";
+    private static final String T_C_OBJ ="testObjective";    
+    private static final String T_C_TYPE ="testType";
+    private static final String T_C_SETUP ="testSetup"; 
+    private static final String T_C_SKIP="tcskip";
+    private static final String T_C_PRE_REQUISITES ="preRequisites";
+    private static final String T_C_INTERFACE ="interfaceUsed";
+    private static final String T_C_IOPARAMS ="inputParameters";
+    private static final String T_C_AUTOAPROCH ="automationApproch";
+    private static final String T_C_EX_OUTPUT ="expectedOutput";
+    private static final String T_C_PRIORITY ="priority";
+    private static final String T_C_TSI ="testStubInterface";
+    private static final String T_C_SCRIPT ="testScript";
+    private static final String T_C_RELEASE_VERSION ="releaseVersion";
+    private static final String T_C_REMARKS ="remarks";
+    private static final String T_C_DETAILS ="testCaseDetails";
+    
+    
+    private static final String YES ="Yes";
+    private static final String NO ="No";
+    private static final String HIGH ="High";
+    private static final String LOW ="Low";
+    private static final String MEDIUM ="Medium";
+    private static final String POSITIVE ="Positive";
+    private static final String NEGATIVE ="Negative";
 }

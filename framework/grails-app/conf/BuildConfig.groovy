@@ -99,6 +99,8 @@ grails.project.dependency.resolution = {
 		  compile 'com.googlecode.json-simple:json-simple:1.1.1'
 		  //mysql connector dependency
 		  runtime 'mysql:mysql-connector-java:5.1.10'
+		   // for excel reader 
+		 // runtime ('org.apache.poi:poi:3.7', 'org.apache.poi:poi-ooxml:3.7')
     }
 
     plugins {

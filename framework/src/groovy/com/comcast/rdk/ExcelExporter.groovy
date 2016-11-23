@@ -288,4 +288,124 @@ class ExcelExporter extends AbstractExporter {
 			e.printStackTrace()
 		}
 	}
+	/**
+	 * Function used to export test case data in script 
+* @param scriptName 
+	 * @param outputStream
+	 * @param dataMap
+	 * @return
+	 */
+	def exportTestCaseDoc(String scriptName, OutputStream outputStream, Map dataMap){
+		try{
+			def builder = new ExcelBuilder()
+			boolean isHeaderEnabled = true			
+			if(getParameters().containsKey("header.enabled")){
+				isHeaderEnabled = getParameters().get("header.enabled")
+			}
+			builder{
+				workbook(outputStream: outputStream){
+					List columnWidthList=[0.4,0.3,0.4,0.2,0.2,0.3,0.8,0.6,0.9,0.8,0.2,0.6,0.2,0.3,0.2]
+					sheet(name: "TEST_CASE_"+scriptName ?: "Export", widths: columnWidthList){
+						
+						format(name: "header"){
+							font(name: "arial", bold: true)
+						}
+						format(name: "titlecell"){
+							font(name: "arial", bold: true)
+						}
+						format(name: "cell"){
+							font(name: "arial", bold: false)
+						}
+						int rowIndex = 0
+						int coloumnIndex  = 0
+						dataMap?.each{ k,v ->
+							cell(row: rowIndex, column: coloumnIndex+0, value: k, format: "header")
+							cell(row: rowIndex+1, column: coloumnIndex+0, value: v, format: "cell")
+							coloumnIndex = coloumnIndex + 1
+						}
+					}
+				}
+			}
+			builder.write()					
+		}catch(Exception e){		
+			println " ERROR "+e.printStackTrace()
+		}
+	}
+	/**
+	 * Function for exporting the test case doc corresponding to the suite
+	 * @param suiteName
+	 * @param outputStream
+	 * @param dataMap
+	 * @param testCaseKeyList
+	 * @return
+	 */
+	def exportScriptGroupTestCase(String suiteName,OutputStream outputStream, Map dataMap , List testCaseKeyList){
+		try{
+			def builder = new ExcelBuilder()
+			boolean isHeaderEnabled = true
+			if(getParameters().containsKey("header.enabled")){
+				isHeaderEnabled = getParameters().get("header.enabled")
+			}
+			def sheetsList = dataMap.keySet() // For separate sheet name based on the module wise 
+			builder{
+				workbook(outputStream: outputStream){
+					sheetsList.each{sheetName->
+						def testCaseMap = dataMap?.get(sheetName)
+						def scriptFileInstance =  ScriptFile?.findByScriptName(sheetName?.toString())
+							List columnWidthList=[0.4,0.3,0.4,0.2,0.2,0.3,0.8,0.6,0.9,0.8,0.2,0.6,0.2,0.3,0.2]
+						sheet(name: sheetName.toString() ?: "Export", widths: columnWidthList){
+							format(name: "header"){
+								font(name: "arial", bold: true)
+							}
+							format(name: "titlecell"){
+								font(name: "arial", bold: true)
+							}
+							format(name: "cell"){
+								font(name: "arial", bold: false)
+							}
+							int rowIndex = 0
+							int coloumnIndex  = 0
+							def totalValueList = []
+							def valueItems = []
+							//For separate test case value and key in different list
+							if(testCaseMap  !=  []){
+								testCaseMap?.each{ testCase->
+									testCase?.each{ k,v->
+										valueItems?.add(v)
+									}
+									totalValueList?.add(valueItems)
+									valueItems = []
+								}
+								// Adding the test case header in a sheet
+								testCaseKeyList?.each{
+									cell(row: rowIndex, column: coloumnIndex+0, value: it, format: "header")
+									coloumnIndex = coloumnIndex + 1
+								}
+								def rawCount = 1
+								coloumnIndex = 0
+								// Adding the list of test case  value by appending each row
+								totalValueList?.each{
+									it?.each{
+										cell(row: rowIndex+rawCount, column: coloumnIndex+0, value: it, format: "cell")
+										coloumnIndex = coloumnIndex + 1
+									}
+									rawCount = rawCount +1
+									coloumnIndex = 0
+								}
+							}else{							
+								testCaseKeyList?.each{
+									cell(row: rowIndex, column: coloumnIndex+0, value: it, format: "header")
+									coloumnIndex = coloumnIndex + 1									
+								}							 	
+							}
+						}
+					}
+				}
+			}
+			builder?.write()
+		}catch(Exception e){
+			println "ERROR"+ e.getMessage()
+			e.printStackTrace()
+		}
+	}
 }

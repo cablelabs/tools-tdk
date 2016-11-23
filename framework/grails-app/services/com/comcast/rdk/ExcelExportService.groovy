@@ -64,6 +64,30 @@ class ExcelExportService {
 		ExcelExporter exporter = new ExcelExporter()
 		exporter.exportScriptData(outputStream, dataMap)	
 	}
+	/**
+	 * Function used to export the test case in a script 
+	 * @param scriptName
+	 * @param outputStream
+	 * @param dataMap
+	 * @throws ExportingException
+	 */
+	public void exportTestCase(String  scriptName , OutputStream outputStream, Map dataMap)throws ExportingException{
+		ExcelExporter exporter = new ExcelExporter()
+		exporter?.exportTestCaseDoc(scriptName ,outputStream ,dataMap)
+		
+	}
+	/**
+	 * Function for export the script group test cases
+	 * @param suiteName
+	 * @param outputStream
+	 * @param dataMap
+	 * @param testCaseKeyList
+	 * @throws ExportingException
+	 */
+	public void exportTestSuiteTestCase(String suiteName ,OutputStream outputStream, Map dataMap,List testCaseKeyList)throws ExportingException{
+		ExcelExporter exporter = new ExcelExporter()	
+		exporter?.exportScriptGroupTestCase(suiteName ,outputStream ,dataMap, testCaseKeyList)
+	}
 	
 	
 	

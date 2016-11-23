@@ -54,9 +54,10 @@
 <g:if test="${ category == 'RDKV' || category == 'RDKB'   }">
 <g:form action="saveScript" method="post">
 	<g:hiddenField name="category" value="${category}"/>
+	<g:hiddenField name="uniqueId" value="${uniqueId}"/>
 	<table>
 		<tr>
-			<th colspan="4" align="center">Create New Script</th>
+			<th colspan="4" align="center">Create New Script </th>
 		</tr>
 		<tr>
 			<td>Script Name</td>		 
@@ -75,7 +76,10 @@
 							${primList}
 						</option>
 					</g:each>
-			</select>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span id="linkId"></span></td>
+			</select>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;<span id="linkId"></span>
+				&emsp;&emsp;&emsp; 
+				<g:link  params="[category:category,uniqueId:uniqueId]"  onclick="newTestCaseAdd('${category}','${uniqueId}');return false;" >Add New Test Case</g:link>
+				</td>
 		</tr>
 		<tr>
 		<td> </td>
@@ -97,7 +101,7 @@
 			<td>RDK Version</td>
 			<td>
 				<g:select id="rdkVersions" name="rdkVersions"  from="${com.comcast.rdk.RDKVersions.findAllByCategory(category)}" optionKey="id" required="" value="" class="many-to-one selectCombo" multiple="true"/>
-			 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Tags&emsp;&emsp;&emsp;&emsp;&emsp;
+			  &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Tags&emsp;&emsp;&emsp;&emsp;&emsp;
 				<g:select id="scriptTags" name="scriptTags"  from="${com.comcast.rdk.ScriptTag.findAllByCategory(category)}" optionKey="id" value="" class="many-to-one selectCombo" multiple="true"/>
 			</td>
 		</tr>

@@ -26,14 +26,12 @@ function confirmExit()
     return "If you navigate away from this page, any unsaved changes will be lost !!!";
   }
 }
-
 function checkAnyEditingScripts(){
 	var scriptName = $("#scriptName").val();
 	if(scriptName && scriptName != "undefined"){
 		clearLocks(scriptName);
 	}
 }
-
 function clearLocks(scriptName){
 	$.get('removeEditLock', {scriptName: scriptName}, function(data) {
 	});
@@ -74,13 +72,17 @@ function clearLocks(scriptName){
 						<option value="${script.primitiveTest.name}">
 							${script.primitiveTest.name}
 						</option>
-				</select>&emsp;&emsp;&emsp;&emsp;&emsp;&emsp; <g:if
+				</select>&emsp;&emsp;&emsp;&emsp;&emsp; <g:if
 						test="${script?.primitiveTest?.module?.testGroup.toString() != "OpenSource"  }">
 						<a
 							href="JavaScript:newPopup('../htmls/${script?.primitiveTest?.module?.name.trim()}.html#${script.name}');">View&nbsp;${script?.primitiveTest?.module?.name}&nbsp;Testcase
 						</a>
-					</g:if></td>
-			</tr>
+						&emsp;	
+						<g:link  params="[category:category]"  onclick="editTestCase('${script.name}','${script?.primitiveTest?.name.trim()}','${category}');return false;" >Edit Test Case</g:link><%--
+						&emsp;	
+					<g:link  onClick="alert('The test case document download will start soon...');" action="downloadModuleTestCaseInExcel" params="[moduleName:"${script?.primitiveTest?.module}",category:"${category}"]">Download ${script?.primitiveTest?.module} Test Cases </g:link>
+					--%></g:if>
+					</td>			</tr>
 			<tr>
 			<tr>
 				<td></td>
@@ -110,7 +112,7 @@ function clearLocks(scriptName){
 						from="${com.comcast.rdk.RDKVersions.findAllByCategory(script.category)}"
 						optionKey="id" required="" value="${script.rdkVersions}"
 						class="many-to-one selectCombo" multiple="true" />
-					&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Tags&emsp;&emsp;&emsp;&emsp;&emsp;
+					 &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;Tags&emsp;&emsp;&emsp;&emsp;&emsp;
 					<g:select id="scriptTags" name="scriptTags"
 						from="${com.comcast.rdk.ScriptTag.list()}" optionKey="id"
 						value="${script?.scriptTags}" class="many-to-one selectCombo"

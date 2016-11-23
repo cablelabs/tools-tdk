@@ -20,10 +20,28 @@ import grails.converters.JSON
 import groovy.xml.MarkupBuilder
 import org.apache.shiro.SecurityUtils
 import org.apache.shiro.subject.Subject
+import groovy.xml.XmlUtil
+import javax.xml.namespace.QName;
+import groovy.util.slurpersupport.GPathResult;
+import groovy.util.slurpersupport.Node;
+import groovy.util.slurpersupport.NodeChild ;
+
+
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+
+/*import com.sun.corba.se.impl.orbutil.graph.Node
+import groovy.xml.StreamingMarkupBuilder
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFCell;*/
 
 /**
  * Controller class for Script and ScriptGroup domain.
@@ -46,7 +64,11 @@ class ScriptGroupController {
 	 * Injecting scriptgroupService
 	 */
 	def scriptgroupService
-	
+	/**
+	 * Injecting testCaseService
+	 */
+	def testCaseService
+
 	public static final String EXPORT_EXCEL_FORMAT 			= "excel"
 	public static final String EXPORT_EXCEL_EXTENSION 		= "xls"
 
@@ -69,11 +91,10 @@ class ScriptGroupController {
 		 def lists = ScriptGroup.executeQuery('select name from ScriptGroup')
 		 [scriptGroupInstanceList: lists, scriptGroupInstanceTotal: lists.size(),error: params.error, scriptId: params.scriptId, scriptGroupId:params.scriptGroupId, scriptInstanceTotal: scriptNameList.size(), scriptGroupMap:scriptGroupMap]
 		 */
-		
-		
+
 		def scriptNameListV = scriptService?.getScriptNameList(requestGetRealPath,RDKV)
-		scriptNameListV = scriptNameListV?scriptNameListV:[]	
-		def scriptNameListB = scriptService?.getScriptNameList(requestGetRealPath, RDKB)	
+		scriptNameListV = scriptNameListV?scriptNameListV:[]
+		def scriptNameListB = scriptService?.getScriptNameList(requestGetRealPath, RDKB)
 		scriptNameListB = scriptNameListB?scriptNameListB:[]
 		def scriptNameListTCL = scriptService.getTCLNameList(requestGetRealPath)
 		scriptNameListTCL = scriptNameListTCL?scriptNameListTCL?.sort():[]
@@ -92,7 +113,7 @@ class ScriptGroupController {
 		def moduleMap =[:]
 		testGroup.each { moduleName  ->
 			moduleMap.put(moduleName,moduleName.testGroup)
-		}	
+		}
 		//[scriptGroupInstanceList: lists, scriptGroupInstanceTotal: lists.size(),error: params.error, scriptId: //params.scriptId, scriptGroupId:params.scriptGroupId, scriptInstanceTotal: scriptNameList.size(), //scriptGroupMap:scriptGroupMap, testGroup : moduleMap]
 		listsTCL = listsTCL?listsTCL?.sort():[]
 		//[scriptGroupInstanceList: lists, scriptGroupInstanceTotal: lists.size(),
@@ -102,9 +123,9 @@ class ScriptGroupController {
 			scriptGroupInstanceTotalV: listsV?.size(), scriptGroupInstanceTotalB: listsB?.size(),
 			tclScripts:scriptNameListTCL, tclScriptInstanceTotal:scriptNameListTCL?.size(),  scriptGrpTcl :listsTCL, tclScriptSize : listsTCL?.size(), testGroup : moduleMap ]
 	}
-	
-	
-	
+
+
+
 	/**
 	 * Method to get script file list when selecting test suite 
 	 */
@@ -233,20 +254,20 @@ class ScriptGroupController {
 	 */
 	def create() {
 		def category = params?.category?.trim()
-		def scriptNameList = []  
+		def scriptNameList = []
 		def sList = null
 		if(!(Category.RDKB_TCL.toString().equals(category))){
 			scriptNameList = scriptService.getScriptNameFileList(getRealPath(), category)
 		}else{
-			//issue fix 
-			 scriptService.totalTclScriptList.each{
-				 if(it){
-					 scriptNameList?.add(it)
-				 }
-			 }
+			//issue fix
+			scriptService.totalTclScriptList.each{
+				if(it){
+					scriptNameList?.add(it)
+				}
+			}
 		}
-		sList = scriptNameList.clone()		
-			sList?.sort{a,b -> a?.scriptName <=> b?.scriptName} 
+		sList = scriptNameList.clone()
+		sList?.sort{a,b -> a?.scriptName <=> b?.scriptName}
 		[scriptGroupInstance: new ScriptGroup(params),scriptInstanceList:sList,category:params?.category]
 	}
 
@@ -255,7 +276,7 @@ class ScriptGroupController {
 	 * Method to create script group.
 	 * @return
 	 */
-	def createScriptGrp(){		
+	def createScriptGrp(){
 		def errorList= []
 		def scriptGroupInstance = new ScriptGroup(params)
 		scriptGroupInstance.category = Utility.getCategory(params?.category)
@@ -282,14 +303,14 @@ class ScriptGroupController {
 
 			if(token && token.size()>0){
 				ScriptFile sctFile = ScriptFile.findById(token)
-			
+
 				if(sctFile && !scriptGroupInstance?.scriptList?.contains(sctFile)){
 					scriptGroupInstance.addToScriptList(sctFile)
 				}
 
 			}
 		}
-	
+
 
 		scriptGroupInstance.groups = utilityService.getGroup()
 		if (!scriptGroupInstance.save(flush: true)) {
@@ -480,7 +501,7 @@ class ScriptGroupController {
 
 	def edit(String name) {
 		def scriptGroupInstance = ScriptGroup.findByName(name)
-	
+
 		if (!scriptGroupInstance) {
 			flash.message = message(code: 'default.not.found.message', args: [
 				message(code: 'scriptGroup.label', default: 'Test Suite'),
@@ -500,7 +521,7 @@ class ScriptGroupController {
 		def list4 = scripts.findAll(){
 			!((scriptGroupInstance.scriptList).contains(it))
 		}
-		list4.sort{a,b -> a?.scriptName <=> b?.scriptName}		
+		list4.sort{a,b -> a?.scriptName <=> b?.scriptName}
 
 		[scripts:list4,scriptNameList:scriptGroupInstance.scriptList,scriptGroupInstance: scriptGroupInstance , value : params.value]
 	}
@@ -615,9 +636,12 @@ class ScriptGroupController {
 	 * @return
 	 */
 	def createScript() {
+
 		def primitiveTestList
+		def uniqueId = "script_"+System.currentTimeMillis()
 		def lis
 		if(params?.category?.toString().equals(RDKV) || params?.category?.toString().equals(RDKB)){
+			scriptService?.addNewTestCaseDetails([:],uniqueId)
 			//		def primitiveTestList = PrimitiveTest.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])//PrimitiveTest.list([order: 'asc', sort: 'name'])
 			primitiveTestList = primitiveService.getPrimitiveList(getRealPath(), params?.category)
 			lis = primitiveTestList.toList()
@@ -626,7 +650,7 @@ class ScriptGroupController {
 			primitiveTestList = []
 			lis = []
 		}
-		[ primitiveTestList : lis, category: params?.category]
+		[ primitiveTestList : lis, category: params?.category,uniqueId:uniqueId]
 	}
 
 	/**
@@ -661,11 +685,11 @@ class ScriptGroupController {
 		if(scriptName?.toString()?.contains('@')){
 			def name  = scriptName?.tokenize('@')
 			scriptName = name[1]
-				
+
 		}else{
 			scriptName = params?.scriptName
 		}
-		//def scriptName = params?.scriptName		
+		//def scriptName = params?.scriptName
 		//def scriptText = scriptService.getTclScript(getRealPath(), scriptName)
 		def scriptText = scriptService.getTclScript(request.getRealPath("/"), scriptName)
 		if(scriptText){
@@ -681,7 +705,7 @@ class ScriptGroupController {
 		if(content && script){
 			def file = Utility.getTclFilePath(getRealPath(), script)
 			try{
-				
+
 				if(file){
 					Utility.writeContentToFile(content, file)
 					//removeLock(script)
@@ -853,6 +877,44 @@ class ScriptGroupController {
 			script.put("scriptContent", scriptContent)
 			script.put("executionTime", node.execution_time.text())
 			script.put("testProfile",testProfileList)
+			def testCaseDeatilsMap =[:]
+			if(node?.test_cases){
+				testCaseDeatilsMap?.put(T_C_ID,node?.test_cases?.test_case_id?.text())
+				testCaseDeatilsMap?.put(T_C_OBJ,node?.test_cases?.test_objective?.text())
+				testCaseDeatilsMap?.put(T_C_TYPE,node?.test_cases?.test_type?.text())
+				testCaseDeatilsMap?.put(T_C_SETUP,node?.test_cases?.test_setup?.text())
+				//testCaseDeatilsMap?.put(T_C_STREAM_ID,node?.test_cases?.steam_id?.text())
+				testCaseDeatilsMap?.put(T_C_SKIP,node?.test_cases?.skipped?.text())
+				testCaseDeatilsMap?.put(T_C_PRE_REQUISITES, node?.test_cases?.pre_requisite?.text())
+				testCaseDeatilsMap?.put(T_C_INTERFACE,node?.test_cases?.api_or_interface_used?.text())
+				testCaseDeatilsMap?.put(T_C_IOPARAMS, node?.test_cases?.input_parameters?.text())
+				testCaseDeatilsMap?.put(T_C_AUTOAPROCH,node?.test_cases?.automation_approch?.text())
+				testCaseDeatilsMap?.put(T_C_EX_OUTPUT,node?.test_cases?.except_output?.text())
+				testCaseDeatilsMap?.put(T_C_PRIORITY,node?.test_cases?.priority?.text())
+				testCaseDeatilsMap?.put(T_C_TSI, node?.test_cases?.test_stub_interface?.text())
+				testCaseDeatilsMap?.put(T_C_SCRIPT,node?.test_cases?.test_script?.text())
+				testCaseDeatilsMap?.put(T_C_RELEASE_VERSION,node?.test_cases?.release_version?.text())
+				testCaseDeatilsMap?.put(T_C_REMARKS,node?.test_cases?.remarks?.text())
+				script?.put(T_C_DETAILS,testCaseDeatilsMap)
+			}else{
+				testCaseDeatilsMap?.put(T_C_ID,"")
+				testCaseDeatilsMap?.put(T_C_OBJ,"")
+				testCaseDeatilsMap?.put(T_C_TYPE,"")
+				testCaseDeatilsMap?.put(T_C_SETUP,"")
+				//testCaseDeatilsMap?.put(T_C_STREAM_ID,"")
+				testCaseDeatilsMap?.put(T_C_SKIP,"")
+				testCaseDeatilsMap?.put(T_C_PRE_REQUISITES, "")
+				testCaseDeatilsMap?.put(T_C_INTERFACE,"")
+				testCaseDeatilsMap?.put(T_C_IOPARAMS, "")
+				testCaseDeatilsMap?.put(T_C_AUTOAPROCH,"")
+				testCaseDeatilsMap?.put(T_C_EX_OUTPUT,"")
+				testCaseDeatilsMap?.put(T_C_PRIORITY,"")
+				testCaseDeatilsMap?.put(T_C_TSI, "")
+				testCaseDeatilsMap?.put(T_C_SCRIPT,"")
+				testCaseDeatilsMap?.put(T_C_RELEASE_VERSION,"")
+				testCaseDeatilsMap?.put(T_C_REMARKS,"")
+				script?.put(T_C_DETAILS,testCaseDeatilsMap)
+			}
 		}
 		return script
 	}
@@ -861,11 +923,11 @@ class ScriptGroupController {
 	 * Save Script
 	 * @return
 	 */
-	def saveScript() {	
+	def saveScript() {
 		def error = ''
 		def scriptList = scriptService.getScriptNameList(params?.category?.toString())
 		def scriptListRDKV  = scriptService.getScriptNameList(request.getRealPath("/"),RDKV)
-		def scriptListRDKB  = scriptService.getScriptNameList(request.getRealPath("/"),RDKB)	
+		def scriptListRDKB  = scriptService.getScriptNameList(request.getRealPath("/"),RDKB)
 		if(scriptListRDKV?.toString()?.contains(params?.name?.toString()) || scriptListRDKB?.toString()?.contains(params?.name?.toString())){
 			render("Duplicate Script Name not allowed. Try Again.")
 		}else if((!params?.ptest) || params?.ptest == "default" ){
@@ -882,10 +944,10 @@ class ScriptGroupController {
 			def path = getRealPath()+Constants.FILE_SEPARATOR+"fileStore"+Constants.FILE_SEPARATOR
 
 			if(RDKV.equals(category)){
-				path = path+TESTSCRIPTS_RDKV + Constants.FILE_SEPARATOR + scriptsDirName.toString() + Constants.FILE_SEPARATOR + moduleName +Constants.FILE_SEPARATOR + moduleName +".xml"
+				path = path+TESTSCRIPTS_RDKV + Constants.FILE_SEPARATOR + scriptsDirName.toString() + Constants.FILE_SEPARATOR + moduleName +Constants.FILE_SEPARATOR + moduleName +XML
 			}
 			else if(RDKB.equals(category)){
-				path = path + TESTSCRIPTS_RDKB + Constants.FILE_SEPARATOR + scriptsDirName.toString() + Constants.FILE_SEPARATOR + moduleName  +Constants.FILE_SEPARATOR+moduleName+".xml"
+				path = path + TESTSCRIPTS_RDKB + Constants.FILE_SEPARATOR + scriptsDirName.toString() + Constants.FILE_SEPARATOR + moduleName  +Constants.FILE_SEPARATOR+moduleName+XML
 			}
 			ptest = primitiveService.getPrimitiveTest(path, params?.ptest)
 			def writer = new StringWriter()
@@ -916,7 +978,7 @@ class ScriptGroupController {
 			Set rdkVersions = []
 			Set scrptTags = []
 			Set testProfileList = []
-			
+
 			try {
 
 				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
@@ -991,42 +1053,84 @@ class ScriptGroupController {
 							mkp.comment ""
 						}
 					}
-					def scriptTagList = params?.scriptTags
-					if(scriptTagList && scriptTagList instanceof List){
-						//scriptTagList = scriptTagList?.sort()
-					}
-					try {
-						if(scriptTagList?.size() > 0){
-							xml.script_tags(){
-								scriptTagList?.each { tag ->
-									def sTag = ScriptTag.findById(tag)
-									scrptTags.add(sTag)
-									xml.script_tag(sTag?.name)
-									mkp.yield "\r\n    "
-									mkp.comment ""
-								}
-							}
+
+					def testCaseMap  = scriptService?.getNewTestCaseDetails(params?.uniqueId)
+					if((testCaseMap != [:]  )){
+						xml?.test_cases(){
+							xml.test_case_id(testCaseMap.testCaseId)
+							xml.test_objective(testCaseMap.testObjective)
+							xml.test_type(testCaseMap.testType)
+							xml.test_setup(testCaseMap.testSetup)
+							//xml.steam_id(testCaseMap.streamId)
+							xml.pre_requisite(testCaseMap.preRequisites)
+							xml.api_or_interface_used(testCaseMap.interfaceUsed)
+							xml.input_parameters(testCaseMap.inputParameters)
+							xml.automation_approch(testCaseMap.automationApproch)
+							xml.except_output(testCaseMap.expectedOutput)
+							xml.priority(testCaseMap.priority)
+							xml.test_stub_interface(testCaseMap.testStubInterface)
+							xml.test_script(testCaseMap.testScript)
+							xml.skipped(testCaseMap.tcskip)
+							xml.release_version(testCaseMap.releaseVersion)
+							xml.remarks(testCaseMap.remarks)
 						}
-					} catch (Exception e) {
-						println " error "+e.getMessage()
-						e.printStackTrace()
-					}				
-					
-					if(params?.testProfile)	{
-						def  scriptTestProfiles = params?.testProfile
-						if(scriptTestProfiles && scriptTestProfiles?.size() >  0){
-							xml.test_profiles(){
-								scriptTestProfiles?.each{
-									def tProfile = TestProfile?.findById(it)
-									testProfileList.add(tProfile?.toString())
-									xml.test_profile(tProfile)
-								}
-							}
+					}else{
+						xml?.test_cases(){
+							xml.test_case_id("")
+							xml.test_objective("")
+							xml.test_type("")
+							xml.test_setup("")
+							//xml.steam_id("")
+							xml.pre_requisite("")
+							xml.api_or_interface_used("")
+							xml.input_parameters("")
+							xml.automation_approch("")
+							xml.except_output("")
+							xml.priority("")
+							xml.test_stub_interface("")
+							xml.test_script("")
+							xml.skipped("")
+							xml.release_version("")
+							xml.remarks("")
 						}
 					}
-					
-					
 				}
+				def scriptTagList = params?.scriptTags
+				if(scriptTagList && scriptTagList instanceof List){
+					//scriptTagList = scriptTagList?.sort()
+				}
+				try {
+					if(scriptTagList?.size() > 0){
+						xml.script_tags(){
+							scriptTagList?.each { tag ->
+								def sTag = ScriptTag.findById(tag)
+								scrptTags.add(sTag)
+								xml.script_tag(sTag?.name)
+								mkp.yield "\r\n    "
+								mkp.comment ""
+							}
+						}
+					}
+				} catch (Exception e) {
+					println " error "+e.getMessage()
+					e.printStackTrace()
+				}
+
+				if(params?.testProfile)	{
+					def  scriptTestProfiles = params?.testProfile
+					if(scriptTestProfiles && scriptTestProfiles?.size() >  0){
+						xml.test_profiles(){
+							scriptTestProfiles?.each{
+								def tProfile = TestProfile?.findById(it)
+								testProfileList.add(tProfile?.toString())
+								xml.test_profile(tProfile)
+							}
+						}
+					}
+				}
+
+
+
 
 				String dirname = ptest?.module?.name
 				dirname = dirname?.trim()
@@ -1047,24 +1151,25 @@ class ScriptGroupController {
 				File file = new File( pathToDir + Constants.FILE_SEPARATOR + scriptsDirName + Constants.FILE_SEPARATOR+dirname+Constants.FILE_SEPARATOR+params?.name?.trim()+".py");
 				if(!file.exists()){
 					file.createNewFile()
-				}				
+				}
 				File pyHeader = new File( "${request.getRealPath('/')}//fileStore//pyHeader.txt")
-				
-				def pyHeaderContentList = pyHeader?.readLines()				
+
+				def pyHeaderContentList = pyHeader?.readLines()
 				String pyHeaderContent = ""
 				pyHeaderContentList.each {
 					pyHeaderContent += it?.toString()+"\n"
 				}
 				String data =pyHeaderContent+"'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
-				
+
 				//String data = "'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
 				file.write(data)
 				saveScript = true
+				scriptService?.clearTestCaseDetailsMap(params?.uniqueId)
 			} catch (Exception e) {
 				//log.error "Error saving Script instance : ${params?.name}"
 				render("Error in saving Script. Try Again." )
 			}
-			if(saveScript){				
+			if(saveScript){
 				def script = ScriptFile.findByScriptNameAndModuleName(params?.name?.trim(),ptest?.module?.name)
 				if(script == null){
 					script = new ScriptFile()
@@ -1075,19 +1180,19 @@ class ScriptGroupController {
 				}
 				def sObject = new ScriptObject()
 				sObject.setBoxTypes(boxTypes)
-				sObject.setRdkVersions(rdkVersions)				
+				sObject.setRdkVersions(rdkVersions)
 				sObject.setScriptTags(scrptTags)
 				sObject.setName(params?.name?.trim())
 				sObject.setModule(ptest?.module?.name)
 				sObject.setScriptFile(script)
-				sObject.setLongDuration(longDuration)							
+				sObject.setLongDuration(longDuration)
 				sObject?.setTestProfile(testProfileList)
 				scriptService.updateScript(script, params?.category)
 				scriptgroupService.saveToScriptGroups(script,sObject, params?.category)
 				scriptgroupService.saveToDefaultGroups(script,sObject, boxTypes, params?.category)
-				scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[], params?.category)				
+				scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[], params?.category)
 				scriptService?.updateScriptsFromTestProfile(script,sObject, params.category)
-				
+
 				def sName = params?.name
 				render(message(code: 'default.created.message', args: [
 					message(code: 'script.label', default: 'Script'),
@@ -1105,7 +1210,7 @@ class ScriptGroupController {
 	 */
 	def updateScript(Long id, Long version) {
 		def scriptList = scriptService.getScriptNameList(request.getRealPath("/"), params?.category)
-			 	
+
 		if (!scriptList?.contains(params?.prevScriptName?.trim())) {
 			flash.message = message(code: 'default.not.found.message', args: [
 				message(code: 'script.label', default: 'Script'),
@@ -1120,10 +1225,10 @@ class ScriptGroupController {
 		def category = params?.category?.trim()
 		def filePath = null
 		if(RDKV.equals(category)){
-			filePath = getRealPath() + FILE_SEPARATOR + "fileStore"+ FILE_SEPARATOR + TESTSCRIPTS_RDKV + FILE_SEPARATOR + scriptsDirName + FILE_SEPARATOR + moduleName+ FILE_SEPARATOR + moduleName +".xml"
+			filePath = getRealPath() + FILE_SEPARATOR + "fileStore"+ FILE_SEPARATOR + TESTSCRIPTS_RDKV + FILE_SEPARATOR + scriptsDirName + FILE_SEPARATOR + moduleName+ FILE_SEPARATOR + moduleName +XML
 		}
 		else if(RDKB.equals(category)){
-			filePath = getRealPath() + FILE_SEPARATOR + "fileStore"+ FILE_SEPARATOR + TESTSCRIPTS_RDKB + FILE_SEPARATOR + scriptsDirName + FILE_SEPARATOR + moduleName+ FILE_SEPARATOR + moduleName +".xml"
+			filePath = getRealPath() + FILE_SEPARATOR + "fileStore"+ FILE_SEPARATOR + TESTSCRIPTS_RDKB + FILE_SEPARATOR + scriptsDirName + FILE_SEPARATOR + moduleName+ FILE_SEPARATOR + moduleName +XML
 		}
 		//def ptest = primitiveService.getPrimitiveTest(getRealPath()+"/fileStore/testscripts/"+scriptsDirName+"/"+moduleName+"/"+moduleName+".xml", params?.ptest)
 		def ptest = primitiveService.getPrimitiveTest(filePath, params?.ptest)
@@ -1163,7 +1268,7 @@ class ScriptGroupController {
 		Set scrptTags = []
 		Set testProfileList = []
 		//def tProfile
-		
+
 		try {
 			def writer = new StringWriter()
 			def xml = new MarkupBuilder(writer)
@@ -1271,11 +1376,49 @@ class ScriptGroupController {
 						mkp.comment ""
 					}
 				}
-
+				if(scrpt?.testCaseDetails){
+					xml?.test_cases(){
+						xml.test_case_id(scrpt?.testCaseDetails.testCaseId)
+						xml.test_objective(scrpt?.testCaseDetails.testObjective)
+						xml.test_type(scrpt?.testCaseDetails.testType)
+						xml.test_setup(scrpt?.testCaseDetails.testSetup)
+						//xml.steam_id(testCaseMap.streamId)
+						xml.pre_requisite(scrpt?.testCaseDetails.preRequisites)
+						xml.api_or_interface_used(scrpt?.testCaseDetails.interfaceUsed)
+						xml.input_parameters(scrpt?.testCaseDetails.inputParameters)
+						xml.automation_approch(scrpt?.testCaseDetails.automationApproch)
+						xml.except_output(scrpt?.testCaseDetails.expectedOutput)
+						xml.priority(scrpt?.testCaseDetails.priority)
+						xml.test_stub_interface(scrpt?.testCaseDetails.testStubInterface)
+						xml.test_script(scrpt?.testCaseDetails.testScript)
+						xml.skipped(scrpt?.testCaseDetails.tcskip)
+						xml.release_version(scrpt?.testCaseDetails.releaseVersion)
+						xml.remarks(scrpt?.testCaseDetails.remarks)
+					}
+				}else{
+					xml?.test_cases(){
+						xml.test_case_id("")
+						xml.test_objective("")
+						xml.test_type("")
+						xml.test_setup("")
+						//xml.steam_id("")
+						xml.pre_requisite("")
+						xml.api_or_interface_used("")
+						xml.input_parameters("")
+						xml.automation_approch("")
+						xml.except_output("")
+						xml.priority("")
+						xml.test_stub_interface("")
+						xml.test_script("")
+						xml.skipped("")
+						xml.release_version("")
+						xml.remarks("")
+					}
+				}
 				def scriptTagList = params?.scriptTags
 				/*if(scriptTagList instanceof List){
-					scriptTagList = scriptTagList?.sort()
-				}*/
+				 scriptTagList = scriptTagList?.sort()
+				 }*/
 				try {
 					xml.script_tags(){
 						scriptTagList?.each { tag ->
@@ -1289,7 +1432,7 @@ class ScriptGroupController {
 				} catch (Exception e) {
 					println " error "+e.getMessage()
 					e.printStackTrace()
-				}					
+				}
 				if(params?.testProfile)	{
 					def  scriptTestProfiles = params?.testProfile
 					if(scriptTestProfiles && scriptTestProfiles?.size() >  0){
@@ -1302,6 +1445,7 @@ class ScriptGroupController {
 						}
 					}
 				}
+				
 			}
 			String dirname = ptest?.module?.name
 			dirname = dirname?.trim()
@@ -1318,7 +1462,7 @@ class ScriptGroupController {
 			if(!file.exists()){
 				file.createNewFile()
 			}
-			
+
 			File pyHeader = new File( "${request.getRealPath('/')}//fileStore//pyHeader.txt")
 			def pyHeaderContentList = pyHeader?.readLines()
 			String pyHeaderContent = ""
@@ -1326,7 +1470,7 @@ class ScriptGroupController {
 				pyHeaderContent += it?.toString()+"\n"
 			}
 			String data =pyHeaderContent+"'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
-						
+
 			//String data = "'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
 			file.write(data)
 			if(params?.prevScriptName != params?.name && params?.prevScriptName?.trim() != params?.name?.trim()){
@@ -1399,7 +1543,7 @@ class ScriptGroupController {
 			sObject.setScriptFile(script)
 			sObject.setScriptTags(scrptTags)
 			sObject.setLongDuration(longDuration)
-			sObject.setTestProfile(testProfileList)		
+			sObject.setTestProfile(testProfileList)
 
 			if(boxTypes){
 				//			boxTypesList = scriptgroupService.createBoxTypeList(boxTypes)
@@ -1704,7 +1848,7 @@ class ScriptGroupController {
 			redirect(action: "list")
 		}
 	}
-	
+
 	/**
 	 * Method to download the script content as tcl file.
 	 * @param params
@@ -1961,7 +2105,7 @@ class ScriptGroupController {
 					dir.mkdirs()
 				}
 
-				File file = new File( "${request.getRealPath('/')}/fileStore/testscripts/"+scriptsDirName+"/"+dirname+"/"+dirname+".xml");
+				File file = new File( "${request.getRealPath('/')}/fileStore/testscripts/"+scriptsDirName+"/"+dirname+"/"+dirname+XML);
 				if(!file.exists()){
 					file.createNewFile()
 				}
@@ -2192,8 +2336,8 @@ class ScriptGroupController {
 		boolean valid = false
 		if(params?.scriptGroupXml){
 			def uploadedFile = request.getFile('scriptGroupXml')
-			if(uploadedFile?.originalFilename?.endsWith(".xml")){
-				fileName = uploadedFile?.originalFilename?.replace(".xml","")
+			if(uploadedFile?.originalFilename?.endsWith(XML)){
+				fileName = uploadedFile?.originalFilename?.replace(XML,"")
 				InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
 				def fileContent = reader?.readLines()
 				if(ScriptGroup.findByName(fileName.trim())){
@@ -2233,11 +2377,11 @@ class ScriptGroupController {
 							scriptGroup.addProperty("Remarks"," scripts  name list is empty  ")
 						}else if(!category){
 							scriptGroup?.addProperty("STATUS","FAILURE")
-							scriptGroup.addProperty("Remarks"," Category not empty  ")						
+							scriptGroup.addProperty("Remarks"," Category not empty  ")
 						}else if(category && !Utility.getCategory(category)){
 							scriptGroup?.addProperty("STATUS","FAILURE")
 							scriptGroup.addProperty("Remarks"," Invalid Category  ")
-							
+
 						}
 						else{
 							try{
@@ -2420,9 +2564,9 @@ class ScriptGroupController {
 		String  idList
 		int indx = 0
 		if(uploadedFile){
-			if( uploadedFile?.originalFilename?.endsWith(".xml")) {
+			if( uploadedFile?.originalFilename?.endsWith(XML)) {
 
-				String fileName = uploadedFile?.originalFilename?.replace(".xml","")
+				String fileName = uploadedFile?.originalFilename?.replace(XML,"")
 
 				if(ScriptGroup.findByName(fileName?.trim())){
 					flash.message= "Test Suite with same name already exists ..... "
@@ -2444,7 +2588,7 @@ class ScriptGroupController {
 							node.script_group.scripts.script_name.each{
 								names.add(it.text())
 							}
-							 category =node?.script_group?.category?.text()?.trim()
+							category =node?.script_group?.category?.text()?.trim()
 						}
 						catch(Exception e){
 							log.error "ERROR"+e.getMessage()
@@ -2466,9 +2610,9 @@ class ScriptGroupController {
 									}
 								}
 								scriptGroupInstance.name = fileName.trim()
-								scriptGroupInstance.category = Utility.getCategory(category)								
-								scriptGroupInstance.groups = utilityService.getGroup()						
-								
+								scriptGroupInstance.category = Utility.getCategory(category)
+								scriptGroupInstance.groups = utilityService.getGroup()
+
 								if (!scriptGroupInstance.save(flush: true)) {
 									flash.message = "File not uploaded"
 								}else{
@@ -2538,21 +2682,21 @@ class ScriptGroupController {
 		try{
 			def requestGetRealPath = request.getRealPath("/")
 			def scriptMap = scriptService.getScriptsMap(requestGetRealPath)
-			def tclScriptMap = scriptService?.getTCLNameList(requestGetRealPath)			
+			def tclScriptMap = scriptService?.getTCLNameList(requestGetRealPath)
 			def detailDataMap = [:]
 			Map coverPageMap = [:]
 			Map detailsMap = [:]
 			List scriptNameList = []
 			Map moduleNameMap = [:]
-			def moduleInstance 
+			def moduleInstance
 			//For summary page
 			scriptMap.each{ moduleName, scripts ->
 				//moduleInstance = Module?.findByName(moduleName)
 				//detailsMap.put(moduleName, scripts.size())
 				detailsMap.put(moduleName, scripts.size())
 			}
-			
-			detailsMap.put("TCL_SCRIPTS",tclScriptMap?.size() )			
+
+			detailsMap.put("TCL_SCRIPTS",tclScriptMap?.size() )
 			coverPageMap.put("Details", detailsMap)
 			detailDataMap.put("coverPage", coverPageMap)
 			// For script list display according to the module wise
@@ -2575,8 +2719,8 @@ class ScriptGroupController {
 			println "ERROR"+ e.getMessage()
 		}
 	}
-	
-	
+
+
 	/**
 	 * Function upload the new script using UI .
 	 *
@@ -2589,6 +2733,7 @@ class ScriptGroupController {
 				def fileContent = reader?.readLines()
 				if(fileContent){
 					boolean saveScript = false
+					boolean testCaseTagValue = false
 					String xmlContent = ""
 					def node
 					int startIndex=0
@@ -2633,6 +2778,7 @@ class ScriptGroupController {
 					Set boxTypeList = []
 					Set rdkVersions = []
 					Set scrptTags = []
+					Set testProfile = []
 
 					node?.box_types?.box_type?.each{
 						def boxType = BoxType?.findByName(it?.text().trim())
@@ -2651,24 +2797,53 @@ class ScriptGroupController {
 						if(sTag){
 							scrptTags?.add(sTag)
 						}
-					}					
+					}
+					node?.test_profiles?.test_profile?.each{
+						def tProfile = TestProfile?.findByName(it?.text()?.trim())
+						if(tProfile){
+							testProfile?.add(tProfile)
+						}
+					}
+					if(node?.test_cases){
+						if(node?.test_cases?.test_case_id &&
+						node?.test_cases?.test_objective &&
+						(node?.test_cases?.test_type?.text()?.toString()?.equals(POSITIVE) || node?.test_cases?.test_type?.text()?.toString()?.equals(NEGATIVE))  &&
+						node?.test_cases?.test_setup &&
+						node?.test_cases?.skipped &&
+						node?.test_cases?.pre_requisite    &&
+						node?.test_cases?.api_or_interface_used &&
+						node?.test_cases?.input_parameters &&
+						node?.test_cases?.automation_approch &&
+						node?.test_cases?.except_output &&
+						(node?.test_cases?.priority?.text().toString()?.equals(HIGH) || node?.test_cases?.priority?.text().toString()?.equals(LOW) ||  node?.test_cases?.priority?.text().toString()?.equals(MEDIUM))
+						&& node?.test_cases?.test_stub_interface && node?.test_cases?.test_script &&
+						node?.test_cases?.release_version &&
+						node?.test_cases?.remarks &&
+						(node?.test_cases?.skipped?.text().toString()?.equals(NO) || node?.test_cases?.skipped?.text().toString()?.equals(YES)) ){
+							testCaseTagValue = false
+						}else{
+							testCaseTagValue = true
+						}
+					}else{
+						testCaseTagValue = false
+					}
 					def scriptList
-					String category= ""		
+					String category= ""
 					def moduleMap = primitiveService.getPrimitiveModuleMap(getRealPath())
 					def moduleName = moduleMap.get(primitiveTestName)
 					def moduleInstance =  Module?.findByName(moduleName)
 					if(moduleInstance){
 						if(params?.category?.toString()?.equals(RDKV)){
-							category = RDKV							
+							category = RDKV
 							scriptList = scriptService.getScriptNameList(getRealPath(), category)
 						}else{
 							category =RDKB
-							
-							scriptList = scriptService.getScriptNameList(getRealPath(), category)							
+
+							scriptList = scriptService.getScriptNameList(getRealPath(), category)
 						}
-					}					
+					}
 					def scriptsDirName = primitiveService.getScriptDirName(moduleName)
-					def ptest = primitiveService.getPrimitiveTest(getRealPath()+"//fileStore//testscripts//"+scriptsDirName+"//"+moduleName+"//"+moduleName+".xml", primitiveTestName)
+					def ptest = primitiveService.getPrimitiveTest(getRealPath()+"//fileStore//testscripts//"+scriptsDirName+"//"+moduleName+"//"+moduleName+XML, primitiveTestName)
 					if(!scriptName){
 						flash.message =" Script name should not be empty "
 					}else if(!primitiveTestName){
@@ -2695,23 +2870,26 @@ class ScriptGroupController {
 						flash.message =" RDK versions should be valid "
 					}else if(!(scrptTags?.size() >= 0)){
 						flash.message =" Script tags should be valid "
-					}
-					else{
+					}else if(!(testProfile?.size() >= 0)){
+						flash.message = "Test profile tags should be valid "
+					}else if(testCaseTagValue){
+						flash.message =" Test case tags or values should be valid"
+					}else{
 						try{
 							String dirname = ptest?.module?.name
-							dirname = dirname?.trim()							
-							
+							dirname = dirname?.trim()
+
 							def pathToDir =  "${request.getRealPath('/')}//fileStore"
 							if(RDKV.equals(category)){
 								pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV
 							}
 							else if(RDKB.equals(category)){
 								pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB
-							}							
+							}
 							File dir = new File( pathToDir + Constants.FILE_SEPARATOR + scriptsDirName +  Constants.FILE_SEPARATOR +dirname)
 							if(!dir.exists()){
 								dir.mkdirs()
-							}							
+							}
 							File file = new File( pathToDir + Constants.FILE_SEPARATOR + scriptsDirName + Constants.FILE_SEPARATOR+dirname+Constants.FILE_SEPARATOR+scriptName?.trim()+".py");
 							if(!file.exists()){
 								file.createNewFile()
@@ -2736,6 +2914,7 @@ class ScriptGroupController {
 							sObject.setBoxTypes(boxTypeList)
 							sObject.setRdkVersions(rdkVersions)
 							sObject.setScriptTags(scrptTags)
+							sObject.setTestProfile(testProfile)
 							sObject.setName(scriptName)
 							sObject.setModule(ptest?.module?.name)
 							sObject.setScriptFile(script)
@@ -2744,6 +2923,7 @@ class ScriptGroupController {
 							scriptgroupService.saveToScriptGroups(script,sObject, category)
 							scriptgroupService.saveToDefaultGroups(script,sObject, boxTypeList,category)
 							scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[],category)
+							scriptService?.updateScriptsFromTestProfile(script,sObject,category)
 							flash.message =" Script uploaded successfully"
 						}catch(Exception e){
 							flash.message =" Script not uploaded, please try again "
@@ -2761,13 +2941,12 @@ class ScriptGroupController {
 		}
 		redirect(action:"list")
 		return
-		
 	}
 	/**
 	 * Function for suite clean up with not available scripts
 	 * @return
 	 */
-	
+
 	def verifyScriptGroup(){
 		boolean value = true
 		try{
@@ -2776,19 +2955,19 @@ class ScriptGroupController {
 			def rPath = getRealPath()
 			List removeList = []
 			if(sg?.category?.toString()?.equals(RDKB) || sg?.category?.toString()?.equals(RDKV)){
-			sg?.scriptList.each { script ->
-				Map scriptInstance1 = scriptService.getScript(rPath,script?.moduleName, script?.scriptName, params?.category)
-				if(scriptInstance1 == null || scriptInstance1?.keySet()?.size() ==  0){
-					removeList.add(script)
+				sg?.scriptList.each { script ->
+					Map scriptInstance1 = scriptService.getScript(rPath,script?.moduleName, script?.scriptName, params?.category)
+					if(scriptInstance1 == null || scriptInstance1?.keySet()?.size() ==  0){
+						removeList.add(script)
+					}
 				}
-			}
-			}else if(sg?.category?.toString()?.equals(RDKB_TCL)){	
+			}else if(sg?.category?.toString()?.equals(RDKB_TCL)){
 				sg?.scriptList?.each{ tclScript ->
 					def content = scriptService?.getTclScript(rPath,tclScript?.toString())
 					if(!content){
 						removeList.add(tclScript)
 					}
-				}			 
+				}
 			}
 			if(removeList?.size() > 0){
 				def sGroup = ScriptGroup.findByName(params?.name)
@@ -2802,7 +2981,7 @@ class ScriptGroupController {
 		}
 		render  new Gson().toJson(value)
 	}
-	def verifyAllScriptGroups(){		
+	def verifyAllScriptGroups(){
 		long time1 = System.currentTimeMillis();
 		def sgList = ScriptGroup.findAll()
 		def map = [:]
@@ -2811,10 +2990,10 @@ class ScriptGroupController {
 			//def scriptListRDKV = scriptService.getScriptNameList(getRealPath(),"RDKV")
 			//def scriptListRDKB=  scriptService.getScriptNameList(getRealPath(),"RDKB")
 			def scriptListRDKV = scriptService.getScriptNameList(request.getRealPath("/"),RDKV)
-			scriptListRDKV = scriptListRDKV?scriptListRDKV:[]			
+			scriptListRDKV = scriptListRDKV?scriptListRDKV:[]
 			def scriptListRDKB=  scriptService.getScriptNameList(request.getRealPath("/"),RDKB)
 			scriptListRDKB = scriptListRDKB?scriptListRDKB:[]
-			def tclScriptList = scriptService.getTCLNameList(request.getRealPath("/"))		
+			def tclScriptList = scriptService.getTCLNameList(request.getRealPath("/"))
 			sgList?.each { scriptGroup ->
 				def rPath = getRealPath()
 				scriptGroup?.scriptList?.each{ script->
@@ -2831,11 +3010,11 @@ class ScriptGroupController {
 						if(!(tclScriptList?.toString()?.contains(script?.toString()))){
 							removeList.add(script)
 						}
-					}					
+					}
 				}
 				if(removeList?.size() > 0 ){
 					def sGroup = ScriptGroup.findByName(scriptGroup?.name)
-					//removeList.each{					
+					//removeList.each{
 					//	sGroup.scriptList.remove(it)
 					//}
 					sGroup.scriptList.removeAll(removeList)
@@ -2850,9 +3029,9 @@ class ScriptGroupController {
 			println e.printStackTrace()
 			println " ERROR "+e.getMessage()
 		}
-		redirect( action :"list")	
-	}	
-	
+		redirect( action :"list")
+	}
+
 	/**
 	 * function for saving the tcl script
 	 */
@@ -2892,12 +3071,12 @@ class ScriptGroupController {
 				scriptService.updateScript(script, params?.category)
 				updateTclScriptGroup(script, params?.category)
 				flash.message = message(code: 'default.created.message', args: [
-				message(code: 'script.label', default: 'Script'),
-				scriptName])
+					message(code: 'script.label', default: 'Script'),
+					scriptName])
 			}else {
 				flash.message = message(code: 'default.not.created.message', args: [
-				message(code: 'script.label', default: 'Script'),
-				scriptName])
+					message(code: 'script.label', default: 'Script'),
+					scriptName])
 			}
 		}else if (!scriptName && content){
 			flash.message = "Please enter the script name"
@@ -2906,8 +3085,8 @@ class ScriptGroupController {
 		}
 		redirect(action: "list")
 	}
-	
-	
+
+
 	/**
 	 * Function for deleting TCL script to UI
 	 * @return
@@ -2931,12 +3110,12 @@ class ScriptGroupController {
 				scriptInUse = false
 				scriptService.deleteScript(scriptObj, scriptObj?.category?.toString())
 				deleteTclScriptFromScriptGroup(scriptObj, params?.category)
-				
+
 			}
 			if(scriptInUse){
 				flash.message = "Can't Delete. Scripts may be used in Script Group"
 				render("Exception")
-			}			
+			}
 		}
 		if(file != null && file.exists()){
 			try {
@@ -2956,7 +3135,7 @@ class ScriptGroupController {
 			render("failure")
 		}
 	}
-	
+
 	/**
 	 * Update TCL script from script group 
 	 */
@@ -2971,7 +3150,7 @@ class ScriptGroupController {
 					scriptGrpInstance.scriptList = []
 					scriptGrpInstance.category = Utility.getCategory(category)
 					scriptGrpInstance?.save()
-				}	
+				}
 				if(!scriptGrpInstance?.scriptList?.toString().contains(script?.toString())){
 					scriptGrpInstance?.addToScriptList(script)
 				}
@@ -2984,11 +3163,11 @@ class ScriptGroupController {
 	/**
 	 * delete script from tcl Script group 
 	 */
-	def deleteTclScriptFromScriptGroup(final def script, final def category){		
+	def deleteTclScriptFromScriptGroup(final def script, final def category){
 		if(category?.toString()?.equals(RDKB_TCL)){
 			try{
 				def suiteName = "TCL_SCRIPTS"
-				def scriptGrpInstance = ScriptGroup?.findByNameAndCategory(suiteName,category)				
+				def scriptGrpInstance = ScriptGroup?.findByNameAndCategory(suiteName,category)
 				if(scriptGrpInstance){
 					scriptGrpInstance?.scriptList?.each { scriptInstance ->
 						if(scriptInstance?.toString()?.equals(script?.toString())){
@@ -2997,10 +3176,10 @@ class ScriptGroupController {
 						}
 					}
 				}
-			}catch(Exception e){				
+			}catch(Exception e){
 				e.printStackTrace()
 			}
-		}		
+		}
 	}
 	/**
 	 * REST API : for retrives execution time out for given script
@@ -3012,7 +3191,7 @@ class ScriptGroupController {
 	 * @param scriptName
 	 * @return
 	 */
-	def getScriptTimeout(String scriptName){		
+	def getScriptTimeout(String scriptName){
 		JsonObject jsonOutData = new JsonObject()
 		try{
 			if(scriptName){
@@ -3059,10 +3238,10 @@ class ScriptGroupController {
 					jsonOutData.addProperty("Remarks", "No script found with name  "+ scriptName)
 				}
 			}else{
-			jsonOutData.addProperty("Status", "FAILED")
-			jsonOutData.addProperty("Remarks", "No Script Name available" )
-			
-				
+				jsonOutData.addProperty("Status", "FAILED")
+				jsonOutData.addProperty("Remarks", "No Script Name available" )
+
+
 			}
 		}catch(Exception e){
 			println "ERROR "+e.getMessage()
@@ -3070,5 +3249,420 @@ class ScriptGroupController {
 		}
 		render jsonOutData
 	}
+	/**
+	 * Function for save the new test case document
+	 *
+	 */
+	def editTestCaseDoc(){
+		def moduleMap = primitiveService.getPrimitiveModuleMap(getRealPath())
+		def moduleName = moduleMap.get(params?.primitiveTestName)
+		def scriptsDirName = primitiveService.getScriptDirName(moduleName)
+		def ptest = primitiveService.getPrimitiveTest(getRealPath()+"//fileStore//testscripts//"+scriptsDirName+"//"+moduleName+"//"+moduleName+XML, params?.primitiveTestName)
+		def scrpt = scriptService.getScript(getRealPath(),moduleName, params?.name,params?.category)
+		def testCaseDetails = scrpt?.testCaseDetails
+		render(template: "editTestCase", model: [moduleName:moduleName , primitiveTest:ptest?.name , category:params?.category, script:scrpt,testCaseDetails:testCaseDetails ])
+	}
+
+	/**
+	 * For updating the test case document
+	 * @return
+	 */
+
+	def updateTestcaseDetails(){
+		boolean value = true
+		try{
+			def scriptsDirName = primitiveService.getScriptDirName(params?.moduleName)
+			def ptest = primitiveService.getPrimitiveTest(getRealPath()+"//fileStore//testscripts//"+scriptsDirName+"//"+params?.moduleName+"//"+params?.moduleName+".xml", params?.primitiveTest)
+			def scrpt = scriptService.getScript(getRealPath(),params?.moduleName, params?.script,params?.category)
+			String dirname = ptest?.module?.name
+			dirname = dirname?.trim()
+			def pathToDir =  "${request.getRealPath('/')}//fileStore"
+			if(RDKV.equals(params?.category)){
+				pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV
+			}
+			else if(RDKB.equals(params?.category)){
+				pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB
+			}
+			File file = new File( pathToDir + Constants.FILE_SEPARATOR + scriptsDirName + Constants.FILE_SEPARATOR+dirname+Constants.FILE_SEPARATOR+params?.script+".py");
+
+
+			if(file?.exists()){
+				String s = ""
+				List line = file.readLines()
+				int indx = line?.findIndexOf {  it.startsWith("'''")}
+				String scriptContent = ""
+				if(line.get(indx).startsWith("'''"))	{
+					indx++
+					while(indx < line.size() &&  !line.get(indx).startsWith("'''")){
+						s = s + line.get(indx)+"\n"
+						indx++
+					}
+					indx ++
+					while(indx < line.size()){
+						scriptContent = scriptContent + line.get(indx)+"\n"
+						indx++
+					}
+				}
+				def parser = new XmlParser(); //[XML Slurper not validate the node is correct or not]
+				def root = parser.parseText(s)
+
+				if(root?.test_cases){
+					root?.test_cases?.test_case_id[0].value = params.tcId?.toString()
+					root?.test_cases?.test_objective[0].value =  params.tcObjective?.toString()
+					root?.test_cases?.test_type[0].value = params.tcType?.toString()
+					root?.test_cases?.test_setup[0].value = params.tcSetup
+					root?.test_cases?.pre_requisite[0].value = params.preRequisits
+					root?.test_cases?.api_or_interface_used[0].value = params.tcApi
+					root?.test_cases?.input_parameters[0].value = params.tcInputParams
+					root?.test_cases?.automation_approch[0].value =  params.tcApproch
+					root?.test_cases?.except_output[0].value = params.tcExpectedOutput
+					root?.test_cases?.priority[0].value = params?.priority
+					root?.test_cases?.test_stub_interface[0].value =  params?.testStub
+					root?.test_cases?.test_script[0].value =  params?.testScript
+					root?.test_cases?.release_version[0].value =  params?.releaseVersion
+					root?.test_cases?.skipped[0].value = params?.tcSkip
+					root?.test_cases?.remarks[0].value =  params?.remarks
+				}else{
+					def writer = new StringWriter()
+					def xml = new MarkupBuilder(writer)
+					xml.test_cases(){
+						xml.test_case_id(params.tcId)
+						xml.test_objective(params.tcObjective)
+						xml.test_type(params.tcType)
+						xml.test_setup(params.tcSetup)
+						xml.pre_requisite(params.preRequisits)
+						xml.api_or_interface_used(params.tcApi)
+						xml.input_parameters(params.tcInputParams)
+						xml.automation_approch(params.tcApproch)
+						xml.except_output(params.tcExpectedOutput)
+						xml.priority(params.priority)
+						xml.test_stub_interface(params.testStub)
+						xml.test_script(params.testScript)
+						xml.skipped(params.tcSkip)
+						xml.release_version(params?.releaseVersion)
+						xml.remarks(params?.remarks)
+					}
+					def testCaseNode = new XmlParser().parseText(writer.toString())
+					root?.children()?.add(15,testCaseNode ) // Test case append at 15 position of xml header
+				}
+				String outxml = XmlUtil.serialize( root)
+				File pyHeader = new File( "${request.getRealPath('/')}//fileStore//pyHeader.txt")
+				def pyHeaderContentList = pyHeader?.readLines()
+				String pyHeaderContent = ""
+				pyHeaderContentList.each {
+					pyHeaderContent += it?.toString()+"\n"
+				}
+				String data =pyHeaderContent+"'''"+"\n"+outxml.toString() +"\n"+"'''"+"\n"+scrpt?.scriptContent
+				file.write(data)
+			}
+		}catch(Exception e){
+			println "Error"+e.printStackTrace()
+			value = false
+		}
+		render  new Gson().toJson(value)
+	}
+	/**
+	 * Function for adding new test case doc in the script XML part
+	 */
+	def addTestCaseDoc(){
+		render(template: "createTestCase", model: [category:params?.category, uniqueId:params?.uniqueId,name:params?.name])
+	}
+
+	/**
+	 * Function for used adding new testcase in new script
+	 */
+	def addTestCaseInScript(){
+		boolean value = true
+		try{
+			def	testCaseDeatilsMap = [:]
+			testCaseDeatilsMap?.put(T_C_ID,params.tcId)
+			testCaseDeatilsMap?.put(T_C_OBJ,params.tcObjective)
+			testCaseDeatilsMap?.put(T_C_TYPE,params.tcType)
+			testCaseDeatilsMap?.put(T_C_SETUP,params.tcSetup)
+			//testCaseDeatilsMap?.put(T_C_STREAM_ID,params.tcStreamId)
+			testCaseDeatilsMap?.put(T_C_SKIP,params.tcSkip)
+			testCaseDeatilsMap?.put(T_C_PRE_REQUISITES, params.preRequisits)
+			testCaseDeatilsMap?.put(T_C_INTERFACE,params.tcApi)
+			testCaseDeatilsMap?.put(T_C_IOPARAMS,params.tcInputParams )
+			testCaseDeatilsMap?.put(T_C_EX_OUTPUT,params.tcExpectedOutput)
+			testCaseDeatilsMap?.put(T_C_PRIORITY,params.priority)
+			testCaseDeatilsMap?.put(T_C_TSI, params.testStub)
+			testCaseDeatilsMap?.put(T_C_SCRIPT,params.testScript)
+			testCaseDeatilsMap?.put(T_C_RELEASE_VERSION,params.releaseVersion)
+			testCaseDeatilsMap?.put(T_C_AUTOAPROCH,params.tcApproch)
+			testCaseDeatilsMap?.put(T_C_REMARKS,params.remarks)
+
+			scriptService?.addNewTestCaseDetails(testCaseDeatilsMap,params?.uniqueId)
+			value = true
+		}catch(Exception e){
+			value = false
+			println "ERROR"+e.getMessage()
+		}
+		render  new Gson().toJson(value)
+	}
+	
+	/**
+	 * Function for downloading test case in excel file
+	 */
+	def downloadTestCaseInExcel(){
+		def testCaseDetails = testCaseService?.downloadTestCaseInExcel(params, getRealPath())
+		try{
+			params.format = EXPORT_EXCEL_FORMAT
+			params.extension = EXPORT_EXCEL_EXTENSION
+			response.contentType = grailsApplication.config.grails.mime.types[params.format]
+			def fileName = TESTCASE+params?.name
+			response.setHeader("Content-disposition", "attachment; filename="+fileName +".${params.extension}")
+			excelExportService?.exportTestCase(params?.name, response.outputStream,testCaseDetails)
+		}catch(Exception e){
+			println "ERROR "+e.printStackTrace()
+		}
+	}
+
+	/**
+	 * Function for downloading the test case in script group in excel file
+	 */
+	def downloadScriptGroupTestCase(){
+		try{
+			def scriptGrpInstance = ScriptGroup?.findByName(params?.scriptGrpName)
+			def totalTestCaseMap = testCaseService?.downloadScriptGroupTestCase(params,getRealPath())
+			params.format = EXPORT_EXCEL_FORMAT
+			params.extension = EXPORT_EXCEL_EXTENSION
+			response.contentType = grailsApplication.config.grails.mime.types[params.format]
+			def fileName = scriptGrpInstance?.toString()
+			response.setHeader("Content-disposition", "attachment; filename="+fileName +".${params.extension}")
+			excelExportService?.exportTestSuiteTestCase(scriptGrpInstance?.toString(),response.outputStream,totalTestCaseMap,testCaseService?.testCaseKeyMap())
+		}catch(Exception e){
+			println "ERROR"+e.getMessage()
+		}
+	}
+	
+	
+	/**
+	 * Function used to downloading total test case doc for module
+	 */
+	def downloadModuleTestCaseInExcel(){
+		try{
+			def totalTestCaseMap =testCaseService?.downloadModuleTestCaseInExcel(params,getRealPath())
+			params.format = EXPORT_EXCEL_FORMAT
+			params.extension = EXPORT_EXCEL_EXTENSION
+			response.contentType = grailsApplication.config.grails.mime.types[params.format]
+			def fileName = params?.moduleName?.toString()
+			response.setHeader("Content-disposition", "attachment; filename="+fileName +".${params.extension}")
+			excelExportService?.exportTestSuiteTestCase(params?.moduleName,response.outputStream,totalTestCaseMap, testCaseService?.testCaseKeyMap())
+		}catch(Exception e){
+			println "ERROR "+ e.getMessage()
+			e.printStackTrace()
+		}
+	}
+
+	/**
+	 * Function for upload test cases as xlsx file and copy the test case content in "scripts" .py files 
+	 * @return
+	 */
+	/*def uploadTestCase(){
+		try{
+			def file = request?.getFile('file')
+			if(file?.originalFilename?.endsWith(".xlsx")) {
+				def rowInfoList = []
+				def dataList = []
+				Workbook workbook = WorkbookFactory.create(file?.getInputStream())
+				Sheet sheet = workbook.getSheetAt(0)
+				println sheet
+				if(sheet){
+					int rowStart = 0;
+					int rowEnd = sheet?.getLastRowNum() + 1 ;
+					for (int rowNum = rowStart; rowNum < rowEnd; rowNum++) {
+						XSSFRow row = sheet?.getRow(rowNum);
+						def rowData =[:]
+						for (XSSFCell c : row) {
+							int columnIndex = c.getColumnIndex()
+							XSSFCell columnContent = row.getCell(columnIndex);
+							rowInfoList.add(columnContent)
+						}
+						dataList.add(rowInfoList)
+						rowInfoList = []
+					}
+				}
+				int totalColumnCount = dataList?.get(0)?.size()
+				def headerData = dataList?.get(0)
+				def tcMap = [:]
+				def totalTcList = []
+				dataList?.each { content->					
+					if(totalColumnCount ==  content?.size()){
+						for(int i = 0 ; i < totalColumnCount ; i++  ){
+							if(!(headerData?.get(i)?.equals(content?.get(i)))){
+								tcMap?.put(headerData?.get(i),content?.get(i) )
+							}
+						}
+						totalTcList?.add(tcMap)
+						tcMap = [:]
+					}
+				}
+				def moduleName = file?.originalFilename?.replaceAll(".xlsx", "")
+				println "moduleName----------------------------- "+moduleName
+				if(Module?.findByName(moduleName)){
+					def scriptName
+					def testCaseId
+					def testObj
+					def testType
+					def supportBox
+					def testPrerequest
+					def rdkInterface
+					def inputParams
+					def autoApproch
+					def expectedOutput
+					def testStubInterface
+					def skipped
+					def releaseVersion
+					def remarks
+					def priority
+					def each = totalTcList?.each{ tc ->
+						if(tc != [:] ){
+							tc?.each{ k,v ->
+								if(k?.toString()?.equals(TC_SCRIPT)){
+									scriptName = tc?.get(k)
+								}else if(k?.toString()?.equals(TC_ID)){
+									testCaseId = tc?.get(k)
+								}else if(k?.toString()?.equals(TC_OBJ)){
+									testObj=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_TYPE)){
+									testType=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_SETUP)){
+									supportBox=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_PRE_REQUISITES)){
+									testPrerequest=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_INTERFACE)){
+									rdkInterface=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_IOPARAMS)){
+									inputParams=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_AUTOAPROCH)){
+									autoApproch=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_EX_OUTPUT)){
+									expectedOutput=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_TSI)){
+									testStubInterface=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_PRIORITY)){
+									priority=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_SKIP)){
+									skipped=tc?.get(k)
+								}else if(k?.toString()?.equals(TC_RELEASE_VERSION)){
+									releaseVersion=tc?.get(k)
+								}else if(k?.toString()?.equals(REMARKS)){
+									remarks=tc?.get(k)
+								}
+							}
+							println "SCRIPT NAME "+scriptName?.toString()
+							println "====================================================================="
+							if(scriptName && testCaseId && testObj && testType && supportBox  && rdkInterface &&  inputParams && autoApproch && expectedOutput && priority && testStubInterface ){
+								try{
+									def scrpt = scriptService.getScript(getRealPath(),moduleName,scriptName?.toString(),RDKV)
+									def pathToDir =  "${request.getRealPath('/')}//fileStore"
+									if(RDKV.equals(RDKV)){
+										pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV
+									}
+									def scriptsDirName = primitiveService.getScriptDirName(moduleName)
+									//else if(RDKB.equals(RDKB)){
+									//pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB
+									//}
+									File fileName = new File( pathToDir + Constants.FILE_SEPARATOR +scriptsDirName+Constants.FILE_SEPARATOR+moduleName+Constants.FILE_SEPARATOR+scriptName?.toString()+".py");
+
+									if(fileName?.exists()){
+
+										String s = ""
+										List line = fileName?.readLines()
+										int indx = line?.findIndexOf {  it.startsWith("'''")}
+										String scriptContent = ""
+										if(line.get(indx).startsWith("'''"))	{
+											indx++
+											while(indx < line.size() &&  !line.get(indx).startsWith("'''")){
+												s = s + line.get(indx)+"\n"
+												indx++
+											}
+											indx ++
+											while(indx < line.size()){
+												scriptContent = scriptContent + line.get(indx)+"\n"
+												indx++
+											}
+										}
+										def parser = new XmlParser(); //[XML Slurper not validate the node is correct or not]
+										def root = parser.parseText(s)
+										if(root?.test_cases){
+											root?.test_cases?.test_case_id[0].value = testCaseId?.toString()
+											root?.test_cases?.test_objective[0].value =  testObj?.toString()
+											root?.test_cases?.test_type[0].value = testType?.toString()
+											root?.test_cases?.test_setup[0].value = supportBox?.toString()
+											root?.test_cases?.pre_requisite[0].value = testPrerequest?.toString()
+											root?.test_cases?.api_or_interface_used[0].value = rdkInterface?.toString()
+											root?.test_cases?.input_parameters[0].value = inputParams?.toString()
+											root?.test_cases?.automation_approch[0].value =  autoApproch?.toString()
+											root?.test_cases?.except_output[0].value = expectedOutput?.toString()
+											root?.test_cases?.priority[0].value = priority?.toString()
+											root?.test_cases?.test_stub_interface[0].value = testStubInterface?.toString()
+											root?.test_cases?.test_script[0].value = scriptName?.toString()
+											root?.test_cases?.release_version[0].value =  releaseVersion?.toString()
+											root?.test_cases?.skipped[0].value = skipped?.toString()
+											root?.test_cases?.remarks[0].value =  remarks?.toString()
+										}else{
+
+											def writer = new StringWriter()
+											def xml = new MarkupBuilder(writer)
+											xml.test_cases(){
+												xml.test_case_id(testCaseId?.toString())
+												xml.test_objective(testObj?.toString())
+												xml.test_type(testType?.toString())
+												xml.test_setup(supportBox?.toString())
+												xml.pre_requisite(testPrerequest?.toString())
+												xml.api_or_interface_used(rdkInterface?.toString())
+												xml.input_parameters(inputParams?.toString())
+												xml.automation_approch(autoApproch?.toString())
+												xml.except_output(expectedOutput?.toString())
+												xml.priority(priority?.toString())
+												xml.test_stub_interface(testStubInterface?.toString())
+												xml.test_script(scriptName?.toString())
+												xml.skipped(skipped?.toString())
+												xml.release_version(releaseVersion?.toString())
+												xml.remarks(remarks?.toString())
+											}
+											def testCaseNode = new XmlParser().parseText(writer.toString())
+											root?.children()?.add(15,testCaseNode ) // Test case append at 15 position of xml header
+										}
+										String outxml
+										try{
+											outxml = XmlUtil?.serialize(root)
+										}catch(Exception e){
+											println " error "+e.getMessage()
+											e.printStackTrace()
+										}
+										File pyHeader = new File( "${request.getRealPath('/')}//fileStore//pyHeader.txt")
+										def pyHeaderContentList = pyHeader?.readLines()
+										String pyHeaderContent = ""
+										pyHeaderContentList.each {
+											pyHeaderContent += it?.toString()+"\n"
+										}
+										String data =pyHeaderContent+"'''"+"\n"+outxml.toString() +"\n"+"'''"+"\n"+scrpt?.scriptContent
+										fileName.write(data)
+										flash.message= "Test Case Doc Updated successfuly "
+									}
+								}catch(Exception e){
+									println "Error"+e.getMessage()
+									flash.message= "Issue : Test cases not Updated  "
+								}
+							}else{
+								println " INVALID test case entries------------->>>"
+							}
+						}
+					}
+				}else{
+					flash.message = "Please test case with valid module name"
+				}
+			}else{
+				flash.message = "Please  upload the .xlsx file"
+			}
+		}catch(Exception e){
+			println "ERROR "+e.getMessage()
+		}
+		redirect(action:"list")
+		return
+	}*/
 }
 

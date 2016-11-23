@@ -58,6 +58,10 @@ class ExecutescriptService {
 	def scriptexecutionService
 
 	/**
+	 * Injects the tclExecutionService
+	 */
+	def tclExecutionService
+	/**
 	 * Injects dataSource.
 	 */
 	def dataSource
@@ -870,7 +874,6 @@ class ExecutescriptService {
 															def exDev = ExecutionDevice.findById(executionDevice?.id)
 															executionDevice1 = exDev
 														}
-
 														ExecutionResult.withTransaction { resultstatus ->
 															try {
 																def executionResult1 = new ExecutionResult()
@@ -1581,27 +1584,26 @@ class ExecutescriptService {
 		boolean pause = false
 		String url = ""
 		boolean aborted = false
-
 		try {
 			def rootFolder = grailsApplication.parentContext.getResource("/").file
-					String rootPath = rootFolder.absolutePath
-					String filePath = rootPath + "//fileStore"
-					String realPath = rootPath
-					def exId
-					def exResults
-					def eId = execDevice?.id
-							ExecutionDevice.withTransaction {
+			String rootPath = rootFolder.absolutePath
+			String filePath = rootPath + "//fileStore"
+			String realPath = rootPath
+			def exId
+			def exResults
+			def eId = execDevice?.id
+			ExecutionDevice.withTransaction {
 				ExecutionDevice exDevice =  ExecutionDevice.findById(eId)
-						exResults = exDevice?.executionresults
-								exId = exDevice?.execution?.id
+				exResults = exDevice?.executionresults
+				exId = exDevice?.execution?.id
 			}
 			Execution execution
 			boolean thirdParyExecution = false
 			def thirdPartyExecutionDetails
 			Execution.withTransaction {
 				execution = Execution.findById(exId)
-						thirdPartyExecutionDetails = execution?.thirdPartyExecutionDetails
-								thirdParyExecution = (thirdPartyExecutionDetails != null)
+				thirdPartyExecutionDetails = execution?.thirdPartyExecutionDetails
+				thirdParyExecution = (thirdPartyExecutionDetails != null)
 			}
 			ExecutionResult.withTransaction {
 				exResults =  ExecutionResult.findAllByExecutionAndExecutionDeviceAndStatus(execution,execDevice,PENDING)
@@ -1612,7 +1614,7 @@ class ExecutescriptService {
 			executionService.updateExecutionStatusData(INPROGRESS_STATUS, execution?.id)
 			String isMultiple = TRUE
 			int totalSize = exResults.size()
-			
+
 			Properties props = new Properties()
 			try {
 				def device = null
@@ -1622,98 +1624,137 @@ class ExecutescriptService {
 					device = Device.findByStbIp(exeDev?.deviceIp)
 				}
 				LogTransferService.transferLog(exName, Device.findByStbIp(exeDev?.deviceIp))
-				
+
 			} catch (Exception e) {
 				e.printStackTrace()
 			}
+			boolean tclScript = false // for validate TCL script or not
+			boolean validScript = false
 			exResults.each {
 				try {
 					scriptCounter++
 					if(scriptCounter == totalSize){
 						isMultiple = FALSE
 					}
-					
 					def idVal = it?.id
 					ExecutionResult.withTransaction {
 						def exResult = ExecutionResult.findById(idVal)
-								if(exResult?.status.equals(PENDING)){
-									
-											Device executionDevice = Device.findById(exResult?.deviceIdString)
-											
-											def scriptFile =ScriptFile.findByScriptName(exResult?.script)
-											def script1 =scriptService.getScript(realPath,scriptFile.moduleName,scriptFile.scriptName, scriptFile.category.toString())
-											if(script1){
-											if(executionService.validateScriptBoxTypes(script1,executionDevice)){
-												aborted = executionService.abortList.contains(exId?.toString())
-														
-														String devStatus = ""
-														if(!pause && !aborted){
-															try {
-																deviceInstance = executionDevice
-																		devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, executionDevice)
-																		/*Thread.start{
-									 deviceStatusService.updateDeviceStatus(executionDevice, devStatus)
-									 }*/
-																		
-																		if(devStatus.equals(Status.HANG.toString())){
-																			resetAgent(deviceInstance, TRUE)
-																			Thread.sleep(6000)
-																			devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
-																		}
-															}
-															catch(Exception eX){
-															}
-														}
-												if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()))&& !pause){
-													// ISSUE FIX related to restart execution not happening append category at the end. 													 
-													htmlData = executeScript(exResult?.execution?.name, execDevice, script1 , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple,exResult,execution?.isStbLogRequired, scriptFile.category?.toString())
-															output.append(htmlData)
-															if(!thirdParyExecution){
-																Thread.sleep(6000)
-															}
-												}else{
-													if(!aborted){
-														pause = true
-																def exeInstance = Execution.findByName(exResult.execution.name)
-																ExecutionDevice.withTransaction {
-															def exDev = ExecutionDevice.findById(execDevice?.id)
-																	exDev.status = PAUSED
-																	exDev.save(flush:true)
-														}
-														if(exeInstance){
-															executionService.updateExecutionStatusData(PAUSED, exeInstance.id);
-														}
-													}
-												}
-											}
-											}else{
-											String reason = "No script is available with name :"+scriptFile?.scriptName+" in module :"+scriptFile?.moduleName
-											executionService.saveNoScriptAvailableStatus(Execution.findByName(exResult?.execution?.name), executionDevice, scriptFile?.scriptName, deviceInstance,reason)
-											}
+						if(exResult?.status.equals(PENDING)){							
+							Device executionDevice = Device.findById(exResult?.deviceIdString)
+							aborted = executionService.abortList.contains(exId?.toString())
+							deviceInstance = executionDevice
+							def combinedScript = [:]
+							if(exResult?.category?.toString()?.equals(Category?.RDKV?.toString()) || exResult?.category?.toString()?.equals(Category?.RDKB?.toString())){
+								tclScript  = false
+							}else if(exResult?.category?.toString()?.equals(Category?.RDKB_TCL?.toString())){
+								tclScript  = true
+							}
+							def scriptFile =ScriptFile.findByScriptName(exResult?.script)
+							def script1
+							if(tclScript){
+								boolean tclCombined = false
+								def combainedTclScript =  ScriptService?.combinedTclScriptMap
+								def newScriptName  = ""
+								combainedTclScript?.each{
+									if(it?.value?.toString()?.contains(exResult?.script.toString())){
+										newScriptName = it.key?.toString()
+										tclCombined = true
+									}
 								}
+								if(tclCombined){
+									newScriptName= newScriptName
+								}else{
+									newScriptName = exResult?.script?.toString()							
+								}
+								if(Utility.isTclScriptExists(rootPath?.toString(), newScriptName?.toString())){								
+									if(Utility?.isConfigFileExists(rootPath, deviceInstance?.stbName)){
+										if(tclCombined){
+											combinedScript.put("scriptName", exResult?.script?.toString())
+										}else{
+											combinedScript.put("scriptName","")
+										}									
+										validScript = true
+									}
+								}
+								scriptFile = ScriptFile?.findByScriptName(newScriptName) 								
+							}else{
+								script1=scriptService.getScript(realPath,scriptFile.moduleName,scriptFile.scriptName, scriptFile.category.toString())
+								if(executionService.validateScriptBoxTypes(script1,executionDevice)){
+									validScript = true
+								}
+							}
+							if(validScript){
+								aborted = executionService.abortList.contains(exId?.toString())
+								String devStatus = ""
+								if(!pause && !aborted){
+									try {										
+										devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, executionDevice)
+										Thread.start{
+											deviceStatusService.updateDeviceStatus(executionDevice, devStatus)
+										}
+										if(devStatus.equals(Status.HANG.toString())){
+											resetAgent(deviceInstance, TRUE)
+											Thread.sleep(6000)
+											devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+										}
+									}
+									catch(Exception eX){
+									}
+								}
+								if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()))&& !pause){
+									// ISSUE FIX related to restart execution not happening append category at the end.
+									if(!tclScript){
+										htmlData = executeScript(exResult?.execution?.name, execDevice, script1 , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple,exResult,execution?.isStbLogRequired, scriptFile.category?.toString())
+									}else{	// For TCL script execution																		
+										htmlData = tclExecutionService?.executeScript(exResult?.execution?.name, execDevice, scriptFile , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple?.toString(),exResult,execution?.isStbLogRequired, execution?.category,combinedScript)
+										
+									}
+									output.append(htmlData)
+									if(!thirdParyExecution){
+										Thread.sleep(6000)
+									}
+								}else{
+									if(!aborted){
+										pause = true
+										def exeInstance = Execution.findByName(exResult.execution.name)
+										ExecutionDevice.withTransaction {
+											def exDev = ExecutionDevice.findById(execDevice?.id)
+											exDev.status = PAUSED
+											exDev.save(flush:true)
+										}
+										if(exeInstance){
+											executionService.updateExecutionStatusData(PAUSED, exeInstance.id);
+										}
+									}
+								}
+								//}
+							}else{
+								String reason = "No script is available with name :"+scriptFile?.scriptName+" in module :"+scriptFile?.moduleName
+								executionService.saveNoScriptAvailableStatus(Execution.findByName(exResult?.execution?.name), executionDevice, scriptFile?.scriptName, deviceInstance,reason, exResult?.category) // Issue fix 
+							}
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace()
 				}
 			}
-			
+
 			try {
 				LogTransferService.closeLogTransfer(exName)
 			} catch (Exception e) {
 				e.printStackTrace()
 			}
-						
-			if(aborted && executionService.abortList.contains(execution?.id?.toString())){				
+
+			if(aborted && executionService.abortList.contains(execution?.id?.toString())){
 				String dat = execution?.id?.toString()+","
-						executionService.abortList.remove(execution?.id?.toString())
+				executionService.abortList.remove(execution?.id?.toString())
 			}
-			
+
 			if(!pause){
 				Execution executionInstance1 = Execution.findByName(exName)
 				executionService.saveExecutionStatus(aborted, executionInstance1?.id)
-				
 			}
-			
+
 			//		if(!aborted && !pause){
 			//
 			//			def executionDeviceObj1
@@ -1732,11 +1773,11 @@ class ExecutescriptService {
 			//////					  output.append(htmlData)
 			////			  }
 			//		  }
-			
+
 			if(aborted && deviceInstance ){
 				resetAgent(deviceInstance)
 			}
-			
+
 			if(!aborted && thirdPartyExecutionDetails && !pause){
 				ThirdPartyExecutionDetails.withTransaction {
 					scriptexecutionService.executeCallBackUrl(thirdPartyExecutionDetails.execName,thirdPartyExecutionDetails.url,thirdPartyExecutionDetails.callbackUrl,thirdPartyExecutionDetails.filePath,thirdPartyExecutionDetails.executionStartTime,thirdPartyExecutionDetails.imageName,thirdPartyExecutionDetails.boxType,realPath)
@@ -1745,13 +1786,12 @@ class ExecutescriptService {
 		} catch (Exception e) {
 			e.printStackTrace()
 		}finally{
-//			if(!pause){
-//				Execution executionInstance1 = Execution.findByName(exName)
-//				executionService.saveExecutionStatus(aborted, executionInstance1?.id)
-//			}
+			//			if(!pause){
+			//				Execution executionInstance1 = Execution.findByName(exName)
+			//				executionService.saveExecutionStatus(aborted, executionInstance1?.id)
+			//			}
 		}
-		return pause;
-
+		return pause;	
 	}
 	
 	/**

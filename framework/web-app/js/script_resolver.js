@@ -43,6 +43,9 @@ $(document).ready(function() {
 			'upload_rdkb_script' : function(node){
 				uploadRDKBScript();	
 			},
+			/*'upload_test_case' : function(node){
+				uploadTestCase();	
+			},*/
 		}
 	});
 	$('.file').contextMenu('script_childs_menu', {
@@ -111,6 +114,18 @@ $(document).ready(function() {
 	$("#scriptid").addClass("changecolor");
 	
 });
+/**
+ * Function for show Test case doc 
+ */
+/*function uploadTestCase(){
+	$("#responseDiv123").hide();
+	$("#up_load").hide();
+	$("#up_load_rdkv_script").hide();	
+	$("#up_load_rdkb_script").hide();
+	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
+	$("#up_load_tc").show();
+}*/
 
 /**
  * Function for display the upload script option through UI
@@ -839,4 +854,121 @@ function cleanUpTestSuite(name ,  category){
  */
 function cleanUp(){
 	alert("Please wait, Suite clean up will take some time. ")
+}
+/**
+ * Function will display pop up for add new test case doccument
+ */
+function editTestCase(scriptName, primiveTest,category){
+	$.get('editTestCaseDoc', {name: scriptName , primitiveTestName : primiveTest, category: category}, function(data) { $("#testCaseDocPopUp").html(data); });		
+	$("#testCaseDocPopUp").modal({ opacity : 40, overlayCss : {
+		  backgroundColor : "#c4c4c4" }, containerCss: {
+	            //width: 700,
+	            //height: 800
+			  	width: ($(window).width() - 500),
+			  	height:  ($(window).height() -130)	   
+	            
+	        } }, { onClose : function(dialog) {
+		  $.modal.close(); } });		
+}
+
+/**
+ * Function for update test case doc 
+ */
+function updateTestCase(moduleName, category, primitiveTest, script){
+	var tcId = document.getElementById("tcId").value;
+	var tcObjective = document.getElementById("tcObjective").value;
+	var tcType = document.getElementById("tcType").value;	
+	var tcSetup = document.getElementById("tcSetup").value;
+	var tcApi = document.getElementById("tcApi").value;
+	var tcInputParams = document.getElementById("tcInputParams").value;
+	var preRequisits = document.getElementById("preRequisits").value;
+	var tcApproch = document.getElementById("tcApproch").value;
+	var tcExpectedOutput = document.getElementById("tcExpectedOutput").value;
+	var priority = document.getElementById("priority").value;	
+	var testStub = document.getElementById("testStub").value;
+	var remarks = document.getElementById("test_remarks").value;
+	var releaseVersion = document.getElementById("ReleaseVersion").value;	
+	//var tcStreamId = document.getElementById("tcStreamId").value;
+	var tcSkip = document.getElementById("tcSkipped1").value;	
+	var testScript = document.getElementById("testScript").value;	
+	if( tcId && tcObjective && tcType && tcSetup && tcApi && tcInputParams && tcApproch && tcExpectedOutput  && priority && testStub && testScript ){
+		$.get('updateTestcaseDetails',{tcId:tcId,tcObjective:tcObjective, tcType:tcType, tcSetup:tcSetup,tcApi:tcApi, tcInputParams:tcInputParams,preRequisits:preRequisits , tcApproch:tcApproch, tcExpectedOutput:tcExpectedOutput , priority:priority, testStub:testStub, remarks:remarks, releaseVersion:releaseVersion ,moduleName:moduleName, primitiveTest:primitiveTest,category:category,script:script,tcSkip:tcSkip,testScript:testScript}, function(data) {
+			var val = JSON.parse(data);
+			if( val == true ){
+				alert(" Test cases updated successfully ");
+			}else{
+				alert(" Test cases not updated ");
+			}
+		});
+	}else{
+		alert(" Test case not updated, Please fill the mandatory fields");	
+	}
+}
+
+/**
+ * Function display the new test case doc in the UI 
+ */
+function newTestCaseAdd(category,uniqueId){
+	var name = document.getElementById("name").value;
+	if(name != null && name.length > 0 ){
+	$.get('addTestCaseDoc', {category:category,uniqueId:uniqueId,name:name}, function(data) { $("#testCaseDocPopUp").html(data); });		
+	$("#testCaseDocPopUp").modal({ opacity : 40, overlayCss : {
+		  backgroundColor : "#c4c4c4" }, containerCss: {
+	            //width: 700,
+	            //height: 800
+			  	width: ($(window).width() - 500),
+			  	height:  ($(window).height() -130)	   
+	        } }, { onClose : function(dialog) {
+		  $.modal.close(); } });
+	}else{
+		alert("Please enter a valid script name");
+	}
+}
+
+
+/**
+ * Function for add new test case doc 
+ */
+function addTestCase(category,uniqueId){		
+	var tcId = document.getElementById("newtcId").value;
+	var tcObjective = document.getElementById("newtcObjective").value;
+	var tcType = document.getElementById("newtcType").value;
+	var tcSetup = document.getElementById("newtcSetup").value;
+	var tcApi = document.getElementById("newtcApi").value;
+	var tcInputParams = document.getElementById("newtcInputParams").value;
+	var preRequisits = document.getElementById("newpreRequisits").value;
+	var tcApproch = document.getElementById("newtcApproch").value;
+	var tcExpectedOutput = document.getElementById("newtcExpectedOutput").value;
+	var priority = document.getElementById("newpriority").value;
+	var testStub = document.getElementById("newtestStub").value;
+	var remarks = document.getElementById("newtest_remarks").value;
+	var releaseVersion = document.getElementById("newReleaseVersion").value;	
+	//var tcStreamId = document.getElementById("newtcStreamId").value;
+	var tcSkip = document.getElementById("newtcSkipped").value;
+	var testScript = document.getElementById("newtestScript").value;
+	if( tcId && tcObjective && tcType && tcSetup && tcApi &&  tcInputParams && tcApproch && tcExpectedOutput  && priority && testStub && testScript ){
+		$.get('addTestCaseInScript',{tcId:tcId,tcObjective:tcObjective, tcType:tcType, tcSetup:tcSetup,tcApi:tcApi, tcInputParams:tcInputParams,preRequisits:preRequisits , tcApproch:tcApproch, tcExpectedOutput:tcExpectedOutput , priority:priority, testStub:testStub, remarks:remarks, releaseVersion:releaseVersion ,testScript:testScript, tcSkip:tcSkip, category:category,uniqueId:uniqueId}, function(data) {
+			var val = JSON.parse(data);
+			if( val == true ){
+				alert(" Test case added while saving the script");
+			}
+		});
+	}else{		
+		alert("Please fill the mandatory fields");
+	}
+}
+
+/**
+ * Function used to downloading the test case doc according to the user user choice
+ * @param scriptGrpName
+ * @param category
+ */
+function downloadScriptGroupTestCase(scriptGrpName , category){
+	var value  = confirm("Do you want to download test case details ?");
+	if(value == true){	
+		// Ajax call not working  for download the report
+		// Specify controller function with params using "window.location" 
+		alert("Please wait, Test case document download may take few minutes...");
+		window.location = "downloadScriptGroupTestCase?category="+ category+"&scriptGrpName="+scriptGrpName; 
+	}	
 }

@@ -440,7 +440,23 @@
 								action="uploadScript" value="Upload" />
 						</g:form>
 					</div>						
-					</td>					
+					<%--<div class="contextMenu" id="up_load_tc" align="center"
+						style="width: 950px; height: 900px;">
+						<br> <br> <br> <br>
+						<g:form method="POST" controller="scriptGroup" action="uploadTestCase"
+							enctype="multipart/form-data" params="">
+							<label> <b><g:message code="scriptGroup.name.label"
+										default="Select test case doc" /></b>
+							</label>
+							&emsp;
+							<input class="uploadFile" type="file" name="file" />
+							&emsp;&emsp;
+							<g:actionSubmit class="buttons" style="width : 100px; "
+								action="uploadTestCase" value="Upload" />
+						</g:form>
+					</div>
+					
+					--%></td>					
 				</tr>
 			</table>
 		<div class="contextMenu" id="script_root_menu">
@@ -457,6 +473,8 @@
 			<li id="download_script"> <img src="../images/script_download.png" height="15px" width="15px"/>Download Script Details </li>
 			<li id= "upload_rdkv_script"> <img src="../images/reorder_up.png" height="15px" width="15px" > Upload RDKV Script </li>  
 			<li id= "upload_rdkb_script"> <img src="../images/reorder_up.png" height="15px" width="15px" > Upload RDKB Script </li>      
+				<%--<li id= "upload_test_case"> <img src="../images/reorder_up.png" height="15px" width="15px" > Upload Test Case Doc </li> 
+			--%>
 			</ul>
 		</div>
 	      	
@@ -491,6 +509,7 @@
 	      	</div>	      
 		</div>
 		<div id="streamDetailsPopup" style="display: none; overflow: auto; width : 98%; height : 98%;">			
+		<div id="testCaseDocPopUp"	style="display: none; overflow: auto; width : 98%; height : 98%;">
 	</div>
 	
 	<g:hiddenField name="currentScriptId" id="currentScriptId" value="${scriptId}"/>

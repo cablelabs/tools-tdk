@@ -3147,7 +3147,7 @@ class ExecutionController {
 		render totalExecutionList
 	}
 	
-	/**
+/**
 	 * REST API : for executing multiple script
 	 *  Input parameter
 	 *  	- scripts : script list
@@ -3187,32 +3187,86 @@ class ExecutionController {
 		def deviceInstance = Device.findByStbName(stbName)
 		def newScriptList = []
 		boolean executed = false
+		boolean valid = false;
+		boolean TCL = false;
+		def category
+		def newCategory
 		if(deviceInstance){
+			category = deviceInstance.category
 			if(scriptList?.size() > 0){
 				int i =0;
 				String scriptType  = MULTIPLESCRIPT
 				def moduleInstance
 				scriptList.each { script ->
-					def moduleName= scriptService.scriptMapping.get(script)
-					if( moduleName){
-						moduleInstance= Module?.findByName(moduleName)
-						def scriptInstance1 = scriptService.getScript(getRealPath()?.toString(),moduleName?.toString(), script?.toString(), moduleInstance?.category?.toString())
-						if(scriptInstance1){
-							if(executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
-								scriptStatusFlag = true
-								String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
-								if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
-									scriptVersionFlag = true
-									validScript = true
+					
+					if(category?.toString()?.equals(RDKB)){
+						def scriptName
+						if((scriptService?.tclScriptsList?.toString()?.contains(script?.trim()))  ){
+							TCL = true
+						}
+						scriptName = script?.toString()
+						boolean compoundTCL = false
+						def combainedTclScript =  scriptService?.combinedTclScriptMap
+						combainedTclScript?.each{
+							if(it?.value?.toString().contains(script)){
+								compoundTCL = true
+							}
+						}
+						if((scriptService?.totalTclScriptList?.toString()?.contains(script)) && compoundTCL ){
+							combainedTclScript?.each{
+								if(it?.value?.toString()?.contains(script)){
+									scriptName= script?.toString()
+									script = it.key?.toString()
+									TCL = true
+								}
+							}
+						}
+						if(Utility.isTclScriptExists(realPath,  script)) {
+							if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){
+								if(compoundTCL){
+									newScriptList << scriptName
+								}else{
 									newScriptList << script
+								}
+								validScript = true
+								valid =true
+								TCL = true
+							}
+							else{
+								outData = "   No Config file is available with name Config_${deviceInstance?.stbName}.txt"
+							}
+						}else{
+							outData = "   No TCL Script is available with name ${script}"
+						}
+					}					
+					if(TCL?.toString()?.equals(FALSE)){
+						def moduleName= scriptService.scriptMapping.get(script)
+						if( moduleName){
+							moduleInstance= Module?.findByName(moduleName)
+							def scriptInstance1 = scriptService?.getScript(getRealPath()?.toString(),moduleInstance?.toString(), script?.toString(), moduleInstance?.category?.toString())
+							if(scriptInstance1){
+								if(executionService.validateScriptBoxTypes(scriptInstance1,deviceInstance)){
+									scriptStatusFlag = true
+									String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);
+									if(executionService.validateScriptRDKVersions(scriptInstance1,rdkVersion)){
+										scriptVersionFlag = true
+										validScript = true
+										newScriptList << script
+									}
 								}
 							}
 						}
 					}
 				}
 				if(validScript && newScriptList?.size() > 0 ){
-					def totalStatus = scriptStatusFlag && scriptVersionFlag
-					if(totalStatus){
+					if(!TCL){
+						if(scriptStatusFlag && scriptVersionFlag){
+							valid = true
+						}else {
+							valid = false
+						}
+					}
+					if(valid){
 						String status = ""
 						try {
 							status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
@@ -3223,7 +3277,6 @@ class ExecutionController {
 									if((status.equals( Status.FREE.toString() ))){
 										if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 											executionService.deviceAllocatedList.add(deviceInstance?.id)
-
 											Thread.start{
 												deviceStatusService.updateOnlyDeviceStatus(deviceInstance, Status.BUSY.toString())
 											}
@@ -3239,6 +3292,13 @@ class ExecutionController {
 								if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 									executionService.deviceAllocatedList.add(deviceInstance?.id)
 								}
+								//	def newCategory
+								if(!TCL){
+									newCategory = moduleInstance?.category
+								}else{
+									newCategory = RDKB_TCL
+								}
+								
 								def execution
 								def executionSaveStatus = true
 								DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT1)
@@ -3249,7 +3309,7 @@ class ExecutionController {
 								def newExecName = execName
 								if(scriptType.equals(MULTIPLESCRIPT)){
 									def  scriptCount = newScriptList?.size()
-									executionSaveStatus = executionService.saveExecutionDetailsOnMultipleScripts(execName?.toString(), MULTIPLESCRIPT, deviceName, null,url,time,perfo,rerun,isLog,scriptCount, deviceInstance?.category?.toString(),FALSE)
+									executionSaveStatus = executionService.saveExecutionDetailsOnMultipleScripts(execName?.toString(), MULTIPLESCRIPT, deviceName, null,url,time,perfo,rerun,isLog,scriptCount, newCategory?.toString(),FALSE)
 								}
 								if(executionSaveStatus){
 									try{
@@ -3260,23 +3320,33 @@ class ExecutionController {
 										executionDevice.device = deviceInstance?.stbName
 										executionDevice.deviceIp = deviceInstance?.stbIp
 										executionDevice.status = UNDEFINED_STATUS
-										executionDevice.category = moduleInstance?.category
+										//executionDevice.category = moduleInstance?.category
+										executionDevice.category =Utility.getCategory(newCategory?.toString())
 										if(executionDevice.save(flush:true)){
 											String getRealPathString  = getRealPath()
-											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort,url)
-											htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, newScriptList, "", execName,
-													filePath, getRealPath(), SINGLE_SCRIPT, url, time, perfo, rerun,isLog,moduleInstance?.category.toString())
-											executed = true
-											url = url + "/execution/thirdPartyJsonResult?execName=${execName}"
-											jsonOutData.addProperty("Status", "RUNNING")
-											jsonOutData.addProperty("Remarks", url)
+											executionService.executeVersionTransferScript(getRealPathString,filePath,execName, executionDevice?.id, deviceInstance?.stbName, deviceInstance?.logTransferPort, url)
+											if(!TCL){
+												htmlData = executescriptService.executeScriptInThread(execName, ""+deviceInstance?.id, executionDevice, newScriptList, "", execName,
+														filePath, getRealPath(), SINGLE_SCRIPT, url, time, perfo, rerun,isLog,newCategory?.toString())
+												executed = true
+												url = url + "/execution/thirdPartyJsonResult?execName=${execName}"
+												jsonOutData.addProperty("Status", "RUNNING")
+												jsonOutData.addProperty("Remarks", url)
+											}else{
+												htmlData = tclExecutionService.executeScriptInThread(execName,""+deviceInstance?.id, executionDevice, newScriptList, "", execName,
+														filePath, getRealPath(), SINGLE_SCRIPT, url, time, perfo, rerun,isLog,newCategory?.toString())
+												executed = true
+												url = url + "/execution/thirdPartyJsonResult?execName=${execName}"
+												jsonOutData.addProperty("Status", "RUNNING")
+												jsonOutData.addProperty("Remarks", url)
+
+											}
 										}
 									}catch(Exception e){
 										println " ERROR "+e.getMessage()
 									}
 								}else{
 									outData= "Error while saving execution parameters "
-
 								}
 							}
 							catch(Exception e){
@@ -3294,15 +3364,15 @@ class ExecutionController {
 						}
 						else if(status.equals( Status.BUSY.toString() )){
 							outData =  " Device ${deviceInstance?.stbName} is not free to execute Scripts"
-							
+
 						}else if(status.equals( Status.TDK_DISABLED.toString() )){
-						
+
 							outData =  "TDK is not enabled  in the Device to execute scripts"
 						}
 						else{
 							outData =  " Device ${deviceInstance?.stbName} is not free to execute Scripts"
 						}
-					}else {
+					}else{
 						if(!scriptStatusFlag){
 							outData = " BoxType of Scripts in ScriptGroup is not matching with BoxType of Device ${deviceInstance?.stbName}"
 						}else if(!scriptVersionFlag){
@@ -3310,7 +3380,11 @@ class ExecutionController {
 						}
 					}
 				}else{
-					outData = "No valid script list found for execution  "
+					if(TCL){
+						outData = outData
+					}else{
+						outData = "No valid script list found for execution  "
+					}
 				}
 			}else{
 				outData = " script list empty   "
@@ -3324,6 +3398,8 @@ class ExecutionController {
 		}
 		render jsonOutData
 	}
+
+
 	/**
 	 * REST API : for getting the image name on a particular device
 	 * - Accessing the getimagename_cmndline file
