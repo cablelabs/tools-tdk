@@ -1,20 +1,11 @@
-#  ============================================================================
-#  COMCAST C O N F I D E N T I A L AND PROPRIETARY
-#  ============================================================================
-#  This file (and its contents) are the intellectual property of Comcast.  It may
-#  not be used, copied, distributed or otherwise  disclosed in whole or in part
-#  without the express written permission of Comcast.
-#  ============================================================================
-#  Copyright (c) 2016 Comcast. All rights reserved.
-#  ============================================================================
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
-  <id>1317</id>
+  <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>1</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>TR069_Get_DeviceXCOMSTBIP_14</name>
+  <name>TR069_Get_DeviceServicesSTBService1ComponentsX_RDKCENTRAL-COM_SDCardBadBlocks_103</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>585</primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -24,9 +15,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Objective: To fetch the device interface IP address by querying  the tr69Hostif through curl.  Query string "Device.DeviceInfo.X_COMCAST-COM_STB_IP". No set operation avaliable for this parameter.
-TestCaseID: CT_TR69_14
-TestType: Positive</synopsis>
+  <synopsis>This test is executed to get the value for 	"Device.Services.STBService.1.Components.X_RDKCENTRAL-COM_SDCard.BadBlocks"</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -62,7 +51,7 @@ obj = tdklib.TDKScriptingLibrary("tr069module","2.0");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'TR069_Get_DeviceXCOMSTBIP_14');
+obj.configureTestCase(ip,port,'TR069_Get_DeviceServicesSTBService1ComponentsX_RDKCENTRAL-COM_SDCardBadBlocks_103');
 
 #Get the result of connection with test component and STB
 loadStatusResult =obj.getLoadModuleResult();
@@ -76,37 +65,12 @@ if loadStatusExpected not in loadStatusResult.upper():
         exit();
 
 #Parameter is the profile path to be queried
-profilePath = "Device.DeviceInfo.X_COMCAST-COM_STB_IP"
+profilePath = "Device.Services.STBService.1.Components.X_RDKCENTRAL-COM_SDCard.BadBlocks"
 
 actualresult,tdkTestObj,details = tdklib.Create_ExecuteTestcase(obj,'Tr069_Get_Profile_Parameter_Values', 'SUCCESS',verifyList ={},path = profilePath);
 
 if "\"" in details:
         details = details[2:-1]
 print "[TEST EXCEUTION DETAILS] : %s"%details;
-
-if "Empty" not in details: 
-        #Prmitive test case which associated to this Script
-        tdkTestObj = obj.createTestStep('Tr069_Verify_Profile_Parameter_Values');
-
-        expectedResult = "SUCCESS"
-
-        #Parameter is the profile path to be queried
-        tdkTestObj.addParameter("path",profilePath)
-        tdkTestObj.addParameter("paramValue",details)
-
-        #Execute the test case in STB
-        tdkTestObj.executeTestCase(expectedResult);
-        
-        print "Requested Parameter To Verify: ",profilePath
-        #Get the result of execution
-        result = tdkTestObj.getResult();
-        print "[TEST EXECUTION RESULT] : %s" %result;
-        details = tdkTestObj.getResultDetails();
-        print "[TEST EXCEUTION DETAILS] : %s"%details;
-
-        tdkTestObj.setResultStatus(result);
-else:
-        tdkTestObj.setResultStatus(actualresult);
-
 
 obj.unloadModule("tr069module");
