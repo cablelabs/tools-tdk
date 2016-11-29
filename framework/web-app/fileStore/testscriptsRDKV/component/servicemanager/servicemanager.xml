@@ -194,7 +194,38 @@ Copyright (c) 2016 Comcast. All rights reserved.
           <parameter name="event_name" value=""/>
           <parameter name="service_name" value=""/>
         </parameters>
-      </primitiveTest>
+        </primitiveTest>
+	<primitiveTest id="" name="SM_DisplaySetting_GetConnectedAudioPorts" version="1">
+        <function>TestMgr_SM_GetConnectedAudioPorts</function>
+        <parameters/>
+	</primitiveTest>
+      	<primitiveTest id=" " name="SM_DisplaySetting_GetSoundMode" version="2">
+        <function>TestMgr_SM_GetSoundMode</function>
+        <parameters>
+          <parameter name="portName" value="portName"/>
+        </parameters>
+	</primitiveTest>
+      	<primitiveTest id=" " name="SM_GetSupportedAudioModes" version="2">
+        <function>TestMgr_SM_GetSupportedAudioModes</function>
+        <parameters>
+          <parameter name="portName" value="portName"/>
+        </parameters>
+	</primitiveTest>
+	<primitiveTest name="SM_DisplaySetting_SetSoundMode" id=" " version="1">
+        <function>TestMgr_SM_SetSoundMode</function>
+        <parameters>
+          <parameter name="audioMode" value=""/>
+          <parameter name="portName" value=""/>
+        </parameters>
+        </primitiveTest>
+	<primitiveTest name="SM_RunSMEvent_QtApp" id=" " version="1">
+        <function>TestMgr_SM_RunSMEvent_QtApp</function>
+        <parameters>
+          <parameter name="event_param" value=""/>
+          <parameter name="event_name" value=""/>
+	  <parameter name="service_name" value=""/>
+        </parameters>
+	</primitiveTest>
     </primitiveTests>
   </module>
 </xml>
