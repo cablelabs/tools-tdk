@@ -17,44 +17,50 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1289</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_MDVR_Max_ScheduleRecording</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>583</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_MDVR_GetResult</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>To verify that upto 3 client boxes  [XI3] can schedule recordings of 3 different channels on a single XG1 box simultaneously without any issues.
 Test Case Id: CT_MDVR_07</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>5</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
   <remarks>This test causes the RMFStreamer to crash and reboot the box. This is a bug in RDK</remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
   <skip>true</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_MDVR_07</test_case_id>
+    <test_objective>To verify that upto 3 client boxes  [XI3] can schedule recordings of 3 different channels on a single XG1 box simultaneously without any issues.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-1, XI3-3</test_setup>
+    <pre_requisite>None</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>1. XG1 is connected to XI3 client boxes.    
+2. XG1 &amp; all XI3 boxes should be up &amp; running.</input_parameters>
+    <automation_approch>1) Connect 3 client boxes (XI3) through XG1.
+2) Agent will be running in all the XI3 and XG1 box.                   
+3) TM frames 3 different request urls from 3 XI3 to XG1 to schedule the agent on XG1 to record contents for all the boxes connected.
+4) TM reads the log file to extract each recorded url and send it to the XI3 agent to play through mplayer.</automation_approch>
+    <except_output>Checkpoint 1.Check the return values of API's for failure status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libtdkintegrationstub.so</test_stub_interface>
+    <test_script>E2E_RMF_MDVR_Max_ScheduleRecording</test_script>
+    <skipped>Yes</skipped>
+    <release_version>M21</release_version>
+    <remarks>Skipped for now</remarks>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib

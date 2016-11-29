@@ -17,48 +17,58 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_LinearTrickplay_LongDuration_MonitorCPUTemp</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>577</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMF_TSB_Play</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Trickplay stress test to check tsb live trickplay with 4x 15x, 30x and 60x speeds and fetch CPU temp in each iteration.
 Testcase ID: E2E_LinearTV_54</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>600</execution_time>
-  <!--  -->
   <long_duration>true</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_RMF_TSB_60</test_case_id>
+    <test_objective>E2E_TSB- To check tsb live trickplay playback with different trick rates for long duration and monitor cpu temperate in each run.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>X13_1</test_setup>
+    <pre_requisite>Requesturl: http://Ipaddress:port /videoStreamInit?live=ocap://ID
+SpeedRate:4,15,30,60</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>1.XG1 and XI3 should be connected in moca</input_parameters>
+    <automation_approch>1.TM loads TDKIntegration_agent via the test agent 
+2.TDKIntegration_agent Frames the request URL after getting ocapId from the TM and  makes a RPC calls to the TDKIntegration_agent for tune.
+3.TDKIntegration_agent will  send framed url to the rmfStreamer.Upon receiving the response (Json response) the agent should extract the response url and send to TM
+4.TM sends the Response Url to the TDKIntegration_agent for playback with the HnSrc-&gt;MPSink Pipeline.
+5.TM Sends the speed value to TDKIntegration_agent to achieve Live trickplay. 
+6.Above 2 to 5 steps will be repeated for 4x 15x 30x and 60x trickplay rates.
+7.By Comparing Set and GetSpeed API of HNSrc, TDKIntegration_agent returns success or failure to TM.</automation_approch>
+    <except_output>Checkpoint 1. Set and Get Speed APIs return values of HNSrc Element  is verified as success or failure.
+Checkpoint 2. Error code parameter of Json response is verified as success or failure.
+Checkpoint 3. Verify if the cpu temperature is within limit, more than 0 and less than 125 C.</except_output>
+    <priority>Low</priority>
+    <test_stub_interface>libdevicesettingsstub.so
+tdkIntegrationstub.so</test_stub_interface>
+    <test_script>E2E_LinearTrickplay_LongDuration_MonitorCPUTemp</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

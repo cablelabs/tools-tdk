@@ -17,60 +17,75 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>78</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>9</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARMBUS RegisterCall test</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>9</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>IARMBUS_RegisterCall</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>This test script verifies the successful registration of an RPC call in the app
 Test Case ID : CT_IARMBUS_15</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>3</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_IARMBUS_15</test_case_id>
+    <test_objective>IARMBUS – Registering an RPC method that can be invoked by other applications.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XI3-1 / XG1-1</test_setup>
+    <pre_requisite>“IARMDaemonMain” process should be running.</pre_requisite>
+    <api_or_interface_used>IARM_Bus_Init(char *)
+IARM_Bus_Connect()
+IARM_Bus_RegisterCall(const char *, IARM_BusCall_t )
+IARM_Bus_Disconnect()
+IARM_Bus_Term()</api_or_interface_used>
+    <input_parameters>IARM_Bus_Init : 
+char *  - (test agent process_name)
+IARM_Bus_Connect : None
+IARM_Bus_RegisterCall : 
+const char * - IARM_BUS_COMMON_API_ReleaseOwnership
+IARM_BusCall_t- releaseOwnershipHandler
+IARM_Bus_Disconnect : None
+IARM_Bus_Term : None</input_parameters>
+    <automation_approch>1.TM loads the IARMBUS_Agent via the test agent
+2.The IARMBUS_Agent initializes and registers with IARM Bus Daemon. 
+3.IARMBUS_Agent registers a RPC methods for releasing the resource that can be invoked by other application.
+4.IARMBUS_Agent deregisters from the IARM Bus Daemon.
+5.For each API called in the script, IARMBUS_Agent will send SUCCESS or FAILURE status to Test Agent by comparing the return vale of APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libiarmbusstub.so
+1.TestMgr_IARMBUS_Init
+2.TestMgr_IARMBUS_Term
+3.TestMgr_IARMBUS_Connect
+4.TestMgr_IARMBUS_Disconnect
+5.TestMgr_IARMBUS_RegisterCall</test_stub_interface>
+    <test_script>IARMBUS RegisterCall test</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
   <script_tags>
     <script_tag>BASIC</script_tag>
-    <!--  -->
   </script_tags>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

@@ -17,53 +17,84 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1649</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>10</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_TSB_FF_RW_CheckMacroblocking_51</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>494</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Create_Instance</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Objective: RMF_HNSRC_MPSink –After 5 mins of tsb, Do FF from the middle of buffer to the live point and do RW. And make sure no freeze while approaching the live point.
 Test CaseID: CT_RMF_HNSRC_MPSink_51
 Test Type: Positive</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>13</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_RMF_HNSRC_MPSink_51</test_case_id>
+    <test_objective>RMF_HNSRC_MPSink –After 5 mins of tsb, Do FF from the middle of buffer to the live point and do RW. And make sure no freeze while approaching the live point.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>No</pre_requisite>
+    <api_or_interface_used>HNSrc init()
+HNSrc open()
+MPSink init()
+MPSink SetVideoRectangle()
+MPSink SetSource()
+HNSrc play()
+HNSrc getState()
+HNSrc SetSpeed()
+HNSrc GetSpeed()
+HNSrc close()
+MPSink term()
+HNSrc term()</api_or_interface_used>
+    <input_parameters>init: None
+open:Char *,Char *
+play:None
+GetState:RMFState
+SetSpeed: float – speed
+GetSpeed: None
+SetVideoRectangle: unsigned.
+unsigned, unsigned, 
+Unsigned, bool apply_now – x,y,h,w,false
+setSource: RMFMediaSourceBase*
+close:None
+term:None</input_parameters>
+    <automation_approch>1.TM loads mediaframework agent via the test agent.
+2.Mediaframework agent will create the instance for Hnsrc and  initialize the Hnsrc element.
+3.Mediaframework agent will create the instance for Mpsink and initialize the Mpsink element.
+4.Form the pipeline Hnsrc-&gt;Mpsink using set source ().
+5.Mediaframework agent will open and play the  Hnsrc element.
+6.Mediaframework agent will set speed as 4.0 and get the speed of the pipeline.
+7. Mediaframework agent will call get speed to fetch the speed, which is expected to be 1.0 as it reached the live streaming.
+8. Mediaframework agent will call set speed as -4.0 to rewind and the speed of the pipeline.
+9.Mediaframework agent will terminate the Hnsrc element .
+10.For each API called in the script, mediaframework agent  will send SUCCESS or FAILURE status to Test Agent by comparing the return vale of APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.
+CheckPoint 2. Check the Audio and Video quality using CheckAudioStatus.sh and CheckVideoStatus.sh scripts.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libmediaframeworkstub.so</test_stub_interface>
+    <test_script>RMF_HNSrc_MPSink_TSB_FF_RW_CheckMacroblocking_51</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks>none</remarks>
+  </test_cases>
   <script_tags>
     <script_tag>BASIC</script_tag>
-    <!--  -->
   </script_tags>
 </xml>
+
 '''
 import tdklib;
 import mediaframework;

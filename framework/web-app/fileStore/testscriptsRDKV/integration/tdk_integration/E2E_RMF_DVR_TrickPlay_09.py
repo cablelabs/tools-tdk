@@ -17,53 +17,60 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1006</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>14</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_TrickPlay_09</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>548</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_Rmf_Dvr_Play_TrickPlay_FF_FR</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>E2E_RMF_DVR_TrickPlay_09: To verify the video playback when Fast Forward is done at 32x speed from the middle of the playback.</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>18</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_DVR_TrickPlay_09</test_case_id>
+    <test_objective>To verify the video playback when Fast Forward is done at 32x speed from the middle of the playback</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-XI3_1</test_setup>
+    <pre_requisite>- At least one video must be selected for playing from recording list with minimum duration of 3mins.             - No other recording is scheduled to start during the test.                                                                       - XG1 and XI3 board should be up and running in same network                                                      
+- XG1 should have one or more recordings in it.</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>Parameters:
+PlayURL: 'http://192.168.30.80:8080/vldms/dvr?rec_id=114556&amp;1&amp;play_speed=4.00&amp;time_pos=0.00' 
+Speed: 32.0</input_parameters>
+    <automation_approch>1.TM loads endtoendrmf stub agent via the test agent.
+2.TM frames and sends the request URL and speed for endtoendrmf agent to play a video.
+3.The endtoendrmf agent will send URL to XG1 and XG1 starts pushing the recorded content requested and XI3 can play it.
+4.endtoendrmf agent will play the video by creating the HNSrc and MPSink pipeline and monitors the checkpoint.
+4.endtoendrmf  agent will send SUCCESS or FAILURE to TM based on the checkpoints..</automation_approch>
+    <except_output>Checkpoint 1.Check the return values of API's for success status.
+Checkpoint 2.Check the speed retuned by HNSource getSpeed() API.
+Checkpoint 3.Check the /proc/video_status for video playing or not. If playing it will be “yes” else “no”.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>TDKIntegration_Stub</test_stub_interface>
+    <test_script>E2E_RMF_DVR_TrickPlay_09</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks>1.URL to get the list of recordings from XG1 in not working. 
+2.Hardcoding the resquest URL for playing the video from XI3.</remarks>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

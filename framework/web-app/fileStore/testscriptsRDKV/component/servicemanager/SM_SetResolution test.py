@@ -17,48 +17,75 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>983</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_SetResolution test</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>141</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>SM_DisplaySetting_SetCurrentResolution</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>This script gets and sets the resolution using display settings service
 Test Case ID: CT_SM_11</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>2</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
   <remarks>This scripting has not developed as this functionality has not been implemented by Service Manager module</remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
   <skip>true</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_Service Manager_11</test_case_id>
+    <test_objective>Service Manager –  Get and set current resolution of Displaysettings service
+
+</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-1</test_setup>
+    <pre_requisite/>
+    <api_or_interface_used>bool registerService(const QString&amp; , ServiceStruct )
+Service* getGlobalService(const QString&amp; serviceName)
+QString getCurrentResolution(QString videoDisplay)
+void setCurrentResolution(QString videoDisplay, QString resolution)
+bool unregisterService(const QString&amp; )</api_or_interface_used>
+    <input_parameters>registerService : Qstring-serviceName, ServiceStruct - serviceStruct (function ptr)
+GetGlobalService: const Qstring – serviceName
+GetCurrentResolution : QString - videoDisplay
+SetCurrentResolution : QString – videoDisplay ,QString - resolution
+unregisterService : Qstring-serviceName</input_parameters>
+    <automation_approch>1. TM loads the Service_Manager_Agent via the test agent.
+2.Service_Manager_Agent will register a given Displaysettings service with ServiceManager component.
+3. On Success of registerService , Service_Manager_Agent will get the resolution for a given service and it will compare the default value with acquired value.
+4.From step-3, if both the values are not same then  step- 5 will be continued otherwise the agent will expect another value which is not equal to default value.
+5.Service_Manager_Agent will set resolution for DisplaySettings service.
+6. Service_Manager_Agent will get resolution for DisplaySettings service.
+7. Service_Manager_Agent will compare both resolution and return SUCCESS/FAILURE status.
+8.Service_Manager_Agent will deregister a given service from ServiceManager component.
+</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of APIs for success status.
+
+Checkpoint 2. Compare the resolution with new value.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>libservicemanagerstub.so
+1.TestMgr_SM_RegisterService
+2.TestMgr_SM_DisplaySetting_SetCurrentResolution.
+3.TestMgr_SM_UnRegisterService
+</test_stub_interface>
+    <test_script>SM_SetResolution test</test_script>
+    <skipped>Yes</skipped>
+    <release_version>M21</release_version>
+    <remarks>No Implementation in service source code.
+Function present in header file and also in source with empty function body.
+
+This scripting has not developed as this functionality has not been implemented by Service Manager module.</remarks>
+  </test_cases>
 </xml>
+
 '''
 # This will not test the actual functionality of setCurrentResolution API.Because this API is
 # not yet implemented in servicemanager components itself.

@@ -17,56 +17,69 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>204</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_SetDFC test_15</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>79</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DS_SetDFC</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>This test script Sets and gets the Zoom Settings of Video Device
 Test Case ID : CT_DS_15</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>3</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_DS_15</test_case_id>
+    <test_objective>Device Setting –  Get and Set the display video device mode(Zoom) for the video device.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XI3-1/XG1-1</test_setup>
+    <pre_requisite>1. dsMgrMain should be up and running.
+2. IARMDaemonMain should be up and running.</pre_requisite>
+    <api_or_interface_used>device::Manager::Initialize()
+Host::getVideoDevices()
+VideoDevice::SetPlatformDFC()
+VideoDevice::setDFC(int) or VideoDevice::setDFC(string)
+VideoDevice::getDFC()
+device::Manager::DeInitialize()</api_or_interface_used>
+    <input_parameters>setDFC : int -Id
+setDFC : String -
+E.g.: Full , Platform, None</input_parameters>
+    <automation_approch>1. TM loads the Device_Settings_Agent via the test agent.
+2.Device_Settings_Agent will set the new display mode settings to platform settings.(new Zoom settings).
+3.Device_Settings_Agent will get the display mode settings.
+4. Device_Settings_Agent will set the new display mode settings(new Zoom settings).
+5. Device_Settings_Agent will check for the new display settings and will return SUCCESS or FAILURE based on the result. 
+</automation_approch>
+    <except_output>Checkpoint 1. Check the Zoom Setting is set for platform.
+Checkpoint 2. Check the Zoom settings before and after setting it.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>TestMgr_DS_managerInitialize
+TestMgr_DS_VD_setDFC
+TestMgr_DS_managerDeinitialize</test_stub_interface>
+    <test_script>DS_SetDFC test_15</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
   <script_tags>
     <script_tag>BASIC</script_tag>
-    <!--  -->
   </script_tags>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

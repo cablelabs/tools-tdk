@@ -17,47 +17,63 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1570</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_LinearTV_Stress_LivePlayback_Longduration</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>541</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Live play back for long duration(10hrs). E2E_LinearTV_44</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>630</execution_time>
-  <!--  -->
   <long_duration>true</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_LinearTV_36</test_case_id>
+    <test_objective>LinearTV-Live play back for long duration(10hrs)</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-X13_1</test_setup>
+    <pre_requisite>Requesturl: http://Ipaddress:port /videoStreamInit?live=ocap://ID</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>1.XG1 and XI3 should be up and running                  2.Only one XG1 should be up in a network</input_parameters>
+    <automation_approch>1.TM loads TDKIntegration_agent via the test agent 
+2.TDKIntegration_agent Frames the request URL after getting ocapId from the TM and  makes a RPC calls to the TDKIntegration_agent for tune.
+3.TDKIntegration_agent will  send framed url to the rmfStreamer.Upon receiving the response (Json response) the agent should extract the response url and send to TM.
+4.TM loads RMFStub_agent via the test agent.
+5.TM will invoke “TestMgr_HNSrcMPSink_Video_State”.
+6.RMFStub_agent will Initialize the Hnsrc element using init() and return the status based on the API return.
+7.On success of init(),RMFStub_agent will input the streaming URL(obtained on step 3) using open() and return the status based on the API return .
+8.On success of open(),RMFStub_agent will call init api of MPsink return the status based on the API return.
+9.On success of init(),RMFStub_agent will the set the video co-ordinates using the setVideoRectangle() and return the status based on the API return.
+10.On success of setVideoRectangle(),RMFStub_agent will connect the source with sink using setSource() and return the status based on the API return.
+11.On success of SetSource(),RMFStub_agent will play the stream using play() through connected sink and return the status based on the API return.
+12.After every one minute period of play,get the state of the pipeline using getstate() and return the status based on the API return for ten hours. 
+13.On Success of getstate(),close the video using close() and return the status based on the API return.
+14.On success of close,RMFStub_agent will terminate using term() and return the status based on the API return 
+15.RMFStub_Agent will send SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1.Verifying the playback of player and get the state of play
+Checkpoint 2 Error code parameter of Json response is verified as success or failure.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>TDKIntegrationStub
+Mediaframework_stub</test_stub_interface>
+    <test_script>E2E_RMF_LinearTV_Stress_LivePlayback_Longduration</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

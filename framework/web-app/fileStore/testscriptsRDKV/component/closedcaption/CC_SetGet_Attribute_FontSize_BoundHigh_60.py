@@ -17,58 +17,54 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1271</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>CC_SetGet_Attribute_FontSize_BoundHigh_60</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>194</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>CC_SetGetAttribute</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Closed Caption - Set and get the  closed caption attribute of font size- Higher boundary value.		
 CT_ClosedCaption_60</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>1</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.2</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_ClosedCaption_60</test_case_id>
+    <test_objective>Closed Caption - Set and get the  closed caption attribute of font size- Higher boundary value.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XI3-1/XG1-1</test_setup>
+    <pre_requisite/>
+    <api_or_interface_used>vlGfxInit(0)                                                     vlMpeosCCManagerInit()                     ccSetAttributes(&amp;CCAttribute, AttributeType, ccType))                  ccGetAttributes(&amp;CCGetAttribute, ccType)</api_or_interface_used>
+    <input_parameters>Categories : CCSetGetAttribute : *attrib - Pointer to cc attribute structure list, type - 6 (list value of font size in the structure)(higher value), ccType - Digital/Analog.</input_parameters>
+    <automation_approch>1. TM loads the ClosedCaption_Manager_Agent via the test agent.
+2.ClosedCaption_Manager_Agent will initialize/start the ClosedCaption Manager.                        3.ClosedCaption_Manager_Agent will set the font size of the ClosedCaption Manager.                                                    4. ClosedCaption Manager component will return the font size through the ClosedCaption_Manager_Agent to the TM.                                                                          5. ClosedCaption_Manager_Agent will return SUCCESS/FAILURE status based on the return value of  APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.          Checkpoint 2.Check the value which is being set is being got back by the get API.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>TestMgr_CC_Init  TestMgr_CC_SetGetAttribute</test_stub_interface>
+    <test_script>CC_SetGet_Attribute_FontSize_BoundHigh_60</test_script>
+    <skipped>No</skipped>
+    <release_version>M-21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

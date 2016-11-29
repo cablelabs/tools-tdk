@@ -17,44 +17,67 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>2</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_Rec_Erased_Orphaned_Legacy_201</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id></primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
+  <primitive_test_id/>
   <primitive_test_name>Recorder_SendRequest</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Recorder should include in full or partial sync any recordings that are lost due to corruption in the next sync with Status=Erased, Error=ORPHANED.</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>100</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
-  <script_tags />
+  <test_cases>
+    <test_case_id>CT_Recoder_DVR_Protocol_201</test_case_id>
+    <test_objective>check that Recorder includes in full sync any recordings that are lost due to corruption in the next sync with Status=Erased, Error=ORPHANED</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>1. rmfStreamer executable should be running.
+2. Device time should be in current time of UTC.
+3. Two files should be created in the name of â&#128;&#156;stt_receivedâ&#128;&#157; and â&#128;&#156;stage4â&#128;&#157; in â&#128;&#156;/tmpâ&#128;&#157; path of device.
+4. In rmfconfig.ini file the parameters â&#128;&#156;FEATURE.LONGPOLL.URLâ&#128;&#157;,""FEATURE.RWS.GET.URL"" and ""FEATURE.RWS.POST.URL"" should be pointing to DVRSimulator</pre_requisite>
+    <api_or_interface_used>Json Interface</api_or_interface_used>
+    <input_parameters>Json Interface- source id, duration recording_id, start_time.</input_parameters>
+    <automation_approch>1.TM loads RecorderAgent via the test agent.
+2.TM gets an source_id from the streaming details page of the FW and sends it to RecorderAgent to generate request url.
+3.RecorderAgent / Python lib interface will frame the json message to schedule the current recording of 2 minutes 
+  and send to TDK Recorder Simulator server which is present in TM.
+4.Wait for the recording to complete.
+5.Reboot STB.
+6.noUpdate schedule message will be send to TDK Recorder Simulator server once STB is up to get the list of recordings.
+8.Check the status of previously scheduled recording, it should be complete.                                                                                            9. Delete the metadata (xml and files in  recdbser)  of previously completed recording. (Delete .bak files also)                                  
+10.RecorderAgent / Python lib interface will frame the json message to schedule the one more current recording of 2 minutes 
+  and send to TDK Recorder Simulator server which is present in TM.
+11.Wait for the recording to complete.
+12.Reboot STB.
+13.noUpdate schedule message will be send to TDK Recorder Simulator server once STB is up to get the list of recordings.
+14.Check the status of first recording, it should be ERASED and error should be set to ORPHANED.                             
+15.Status of the Json response from Recorder to TDK Recorder Simulator server getting extracted by TM.
+16.Depends on the result of above step RecorderAgent sends SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1 Status from the DVRSimulator of first recording
+Checkpoint 2 Get the response from recorder and verify that status has been received in full sync after second reboot for the first recording and verify the expected status and error.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>RecorderAgent
+1.TestMgr_Recorder_DeleteRecordingMetaData
+2.TestMgr_Recorder_SendRequest</test_stub_interface>
+    <test_script>Recorder_RMF_Rec_Erased_Orphaned_Legacy_201</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
+  <script_tags/>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib;

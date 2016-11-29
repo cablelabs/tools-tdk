@@ -17,46 +17,53 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1627</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>11</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TDK_E2E_DVR_Playback_Trickplay_All_Recordings_LongDuration_8hr_test</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>556</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_Rmf_LinearTv_Dvr_Play</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>DVRTrick – To verify the  trickplay (4x 15x 30x and 60x) speeds are working the DVR recordings for long duration
 Testcase Id: E2E_DVR_Skip_Fwd_16</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>600</execution_time>
-  <!--  -->
   <long_duration>true</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_DVR_Skip_Fwd_16</test_case_id>
+    <test_objective>DVRTrick – To verify the  trickplay (4x 15x 30x and 60x) speeds are working the DVR recordings for long duration(8hr)</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-XI3_2</test_setup>
+    <pre_requisite>None</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>XG1 and XI3 board should be Up and running in same network
+
+XG1 should have one or more recordings in it.</input_parameters>
+    <automation_approch>1.TM loads Tdkintegration_agent via the test agent.
+2. TM Frames the request url "http://ipaddress:8080/vldms/info/recordingurls" and makes a RPC call to the DVR_agent to get the list of recorded urls.
+3. DVR_agent will send the url to XG1 and response is captured into the log file and send it to TM.
+4. TM reads the log file to extract each recorded url and appends speed = trickspeed  and send it to the DVR_agent to play trhough mplayer.     
+repeat the step4 for different trickspeds for 8hours</automation_approch>
+    <except_output>Checkpoint 1.mplayer_actualresult value returned from the stub.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>TDKIntegration_Stub</test_stub_interface>
+    <test_script>TDK_E2E_DVR_Playback_Trickplay_All_Recordings_LongDuration_8hr_test</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

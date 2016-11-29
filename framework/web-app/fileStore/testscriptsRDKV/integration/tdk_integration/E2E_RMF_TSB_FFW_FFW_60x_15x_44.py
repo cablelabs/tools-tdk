@@ -17,53 +17,60 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1206</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_TSB_FFW_FFW_60x_15x_44</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>541</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>To check tsb live trickplay playback with 60x FFW speed followed by 15x FFW speed.Test case ID-E2E_RMF_TSB_44</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>7</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_RMF_TSB_44</test_case_id>
+    <test_objective>E2E_TSB- To check tsb live trickplay playback with 60x FFW speed followed by 15x FFW speed.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-X13_1</test_setup>
+    <pre_requisite>Requesturl: http://Ipaddress:port /videoStreamInit?live=ocap://ID
+SpeedRate:60.0 SpeedRate: 15.0</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>1.XG1 and XI3 should be connected in moca</input_parameters>
+    <automation_approch>1.TM loads TDKIntegration_agent via the test agent 
+2.TDKIntegration_agent Frames the request URL after getting ocapId from the TM and  makes a RPC calls to the TDKIntegration_agent for tune.
+3.TDKIntegration_agent will  send framed url to the rmfStreamer.Upon receiving the response (Json response) the agent should extract the response url and send to TM
+4.TM sends the Response Url to the TDKIntegration_agent for playback with the HnSrc-&gt;MPSink Pipeline.
+5.TM Sends the speed value to TDKIntegration_agent to achieve Live trickplay. 
+6.Above 2 to 5 steps will be repeated for 2 trickplay rates.
+7.By Comparing Set and GetSpeed API of HNSrc, TDKIntegration_agent returns success or failure to TM.</automation_approch>
+    <except_output>Checkpoint 1. Set and Get Speed APIs return values of HNSrc Element  is verified as success or failure.
+Checkpoint 2 Error code parameter of Json response is verified as success or failure.</except_output>
+    <priority>Low</priority>
+    <test_stub_interface>tdkIntegrationstub.so
+TestMgr_LiveTune_GETURL
+TestMgr_TSB_Play</test_stub_interface>
+    <test_script>E2E_RMF_TSB_FFW_FFW_60x_15x_44</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

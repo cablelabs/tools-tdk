@@ -17,53 +17,60 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1461</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>GstPluginRdk_Aesencrypt_EncryptionEnable_True</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>612</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>Gst_Aesencrypt_EncryptEnable_Set_Prop</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Objective:To set the aesencrypt plugin property, "encryption-enable" with true to enable encryption of mpegts packets.
 Test CaseID:CT_GST_PLUGINS_RDK_18.
 Test Type: Positive.</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>5</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_GST_PLUGINS_RDK_18</test_case_id>
+    <test_objective>To set the aesencrypt plugin property, "encryption-enable" with true to enable encryption of mpegts packets.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1/XI3</test_setup>
+    <pre_requisite>Gstcheck – g_object_set(),
+g_object_get(),</pre_requisite>
+    <api_or_interface_used>gpointer object,
+Const gchar *property name,
+Gboolean value,
+NULL</api_or_interface_used>
+    <input_parameters>No</input_parameters>
+    <automation_approch>1. TM loads gstpluginsrdkTest agent via the test agent.
+2. gstpluginsrdkTest agent will call gstcheck tool by passing the value to be set to the property of the gst plugin (aesencrypt).
+3. gstcheck tool sets the property value, and validates it and sends SUCCESS or FAILURE to gstpluginsrdkTest agent.
+4. gstpluginsrdkTest agent will send the result back to the TM.
+5. Then, TM Unloads gstpluginsrdkTest agent.</automation_approch>
+    <except_output>Checkpoint 1. GstCheck should return SUCCESS for success status else FAILURE.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libgstpluginsrdkstub.so</test_stub_interface>
+    <test_script>GstPluginRdk_Aesencrypt_EncryptionEnable_True</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
   <script_tags>
     <script_tag>BASIC</script_tag>
-    <!--  -->
   </script_tags>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 

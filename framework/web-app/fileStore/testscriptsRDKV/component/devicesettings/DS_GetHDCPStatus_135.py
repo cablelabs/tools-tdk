@@ -17,50 +17,57 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_GetHDCPStatus_135</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id> </primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
+  <primitive_test_id/>
   <primitive_test_name>DS_GetHDCPStatus</primitive_test_name>
-  <!--  -->
   <primitive_test_version>2</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Test get HDCP authentication status.
 TestcaseID: CT_DS135</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>3</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_DS135</test_case_id>
+    <test_objective>Test get HDCP authentication status</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-1/XI3-1</test_setup>
+    <pre_requisite>1. dsMgrMain should be up and running.
+2. IARMDaemonMain should be up and running.</pre_requisite>
+    <api_or_interface_used>device::Manager::Initialize() 
+device::Host::getVideoOutputPort.getHDCPStatus()
+device::Manager::DeInitialize()
+</api_or_interface_used>
+    <input_parameters>None</input_parameters>
+    <automation_approch>1. TM loads the Device_Settings_Agent via the test agent.
+2. Device_Settings_Agent will get the status of authentication.
+3. Device_Settings_Agent will return SUCCESS or FAILURE based on whether execution is successful.</automation_approch>
+    <except_output>Checkpoint 1.Check HDCP get status should execute without error.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>TestMgr_DS_managerInitialize
+TestMgr_DS_VOP_getHDCPStatus
+TestMgr_DS_managerDeinitialize</test_stub_interface>
+    <test_script>DS_GetHDCPStatus_135</test_script>
+    <skipped>No</skipped>
+    <release_version>M23</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

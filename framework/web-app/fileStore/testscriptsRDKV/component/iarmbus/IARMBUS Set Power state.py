@@ -17,56 +17,98 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>91</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARMBUS Set Power state</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>8</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>IARMBUS_BusCall</primitive_test_name>
-  <!--  -->
   <primitive_test_version>8</primitive_test_version>
-  <!--  -->
   <status>ALLOCATED</status>
-  <!--  -->
   <synopsis>This test script sets the Power state of the STB to the desired state
 Test Case ID : CT_IARMBUS_27</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>3</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_IARMBUS_26</test_case_id>
+    <test_objective>IARMBUS- Setting the Power state of STB from the process.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XI3-1 / XG1-1</test_setup>
+    <pre_requisite>IARMDaemonMain process should be running.</pre_requisite>
+    <api_or_interface_used>IARM_Bus_Init(char *) 
+IARM_Bus_Connect()
+IARM_Bus_RegisterCall(const char *methodName, IARM_BusCall_t handler)
+IARM_Bus_RegisterEventHandler(const char* , IARM_EventId_t , IARM_EventHandler_t )
+IARM_Bus_UnRegisterEventHandler(const char*, IARM_EventId_t )
+IARM_Bus_Call(const char *,  const char *, void *, size_t )
+IARM_Bus_Disconnect()
+IARM_Bus_Term()</api_or_interface_used>
+    <input_parameters>IARM_Bus_Init : 
+char *  - (test agent process_name)
+IARM_Bus_Connect : None
+IARM_Bus_Call : 
+const char* - IARM_BUS_PWRMGR_NAME, const char*-
+IARM_BUS_PWRMGR_API_SetPowerState,
+Void * - param,size_t sizeof(param)
+IARM_Bus_RegisterEventHandler : 
+const char * - IARM_BUS_PWRMGR_NAME , IARM_EventId_t - IARM_BUS_PWRMGR_EVENT_MODECHANGED ,
+IARM_EventHandler_t - _handler_Powermodechanged 
+IARM_Bus_UnRegisterEventHandler : 
+const char* - IARM_BUS_PWRMGR_NAME,
+IARM_EventId_t - IARM_BUS_PWRMGR_EVENT_MODECHANGED
+IARM_Bus_Call : 
+const char* IARM_BUS_PWRMGR_NAME, const char* - 
+IARM_BUS_PWRMGR_API_GetPowerState,
+void * -param, size_t -sizeof(param)
+IARM_Bus_Disconnect : None
+IARM_Bus_Term : None</input_parameters>
+    <automation_approch>1.TM loads the IARMBUS_Agent via the test agent.
+2.The IARMBUS_Agent initializes and registers with IARM Bus Daemon . 
+3.IARMBUS_Agent will register for “IARM_BUS_PWRMGR_EVENT_MODECHANGED” event and waits on event.
+4. TM makes RPC calls for getting the power state from IARMBUS_Agent
+5.TM makes RPC calls for setting the new power state from IARMBUS_Agent
+6.TM makes RPC calls for querying the latest power state from IARMBUS_Agent .
+7.TM  compares the two power state for successful change in the power state
+8.TM queries the last received event details to get the "IARM_BUS_PWRMGR_EVENT_MODECHANGED"event.
+9.IARMBUS_Agent deregisters from the IARM Bus Daemon.
+10.For each API called in the script, IARMBUS_Agent will send SUCCESS or FAILURE status to Test Agent by comparing the return vale of APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.
+
+Checkpoint 2.Check the Power state before and after setting the power state using API.
+
+Checkpoint3:Check whether the IARM_BUS_PWRMGR_EVENT_MODECHANGED event is received</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libiarmbusstub.so
+1.TestMgr_IARMBUS_Init
+2.TestMgr_IARMBUS_Term
+3.TestMgr_IARMBUS_Connect
+4.TestMgr_IARMBUS_Disconnect
+5.TestMgr_IARMBUS_BusCall
+6.TestMgr_IARMBUS_RegisterEventHandler
+7.TestMgr_IARMBUS_UnRegisterEventHandler
+8.TestMgr_IARMBUS_GetLastReceivedEventDetails</test_stub_interface>
+    <test_script>IARMBUS Set Power state</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

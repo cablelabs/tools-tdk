@@ -17,45 +17,68 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_HdmiCec_NoHDMIDeviceTest_CecDisabled</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>106</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>SM_RegisterService</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Objective: Service Manager - Checking the number of cec devices connected after disabling CEC without any hdmicec device connected.
 Test Case: CT_Service Manager_52.
 Test Type: Negative</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>4</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_Service Manager_35</test_case_id>
+    <test_objective>Service Manager – Checking the number of cec devices connected after disabling CEC. Default value: 0 (If no devices connected)</test_objective>
+    <test_type>Negative</test_type>
+    <test_setup>XG1-V3</test_setup>
+    <pre_requisite/>
+    <api_or_interface_used>bool registerService(const QString&amp; , ServiceStruct )
+Service* getGlobalService(const QString&amp; serviceName)
+bool setEnabled(bool false)
+bool getConnectedDevices()
+bool unregisterService(const QString&amp; )</api_or_interface_used>
+    <input_parameters>registerService : Qstring-serviceName, ServiceStruct - serviceStruct (function ptr)
+GetGlobalService: const Qstring – serviceName
+setEnabled: bool false
+getConnectedDevices: None
+UnregisterService : Qstring-serviceName</input_parameters>
+    <automation_approch>1. TM loads the Service_Manager_Agent via the test agent.
+2.Service_Manager_Agent will register a given hdmicec service with ServiceManager component.
+3.On Success of registerService, Service_Manager_Agent will disable cec service.
+4. On Success of disabling cec, 
+ Service_Manager_Agent will check number of  hdmicec device connected.
+5.Service_Manager_Agent will deregister a given service from ServiceManager component.
+6. Service_Manager_Agent will compare the count = 0 with current count returned.
+
+</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of APIs for success status.
+
+Checkpoint 2.Compare the number of devices connected should be 0.
+
+</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libservicemanagerstub.so
+</test_stub_interface>
+    <test_script>SM_HdmiCec_NoHDMIDeviceTest_CecDisabled</test_script>
+    <skipped>Yes</skipped>
+    <release_version>M25</release_version>
+    <remarks>SM_HdmiCec_GetNumOfDevicesConnected_CecDisabled changed to SM_HdmiCec_NoHDMIDeviceTest_CecDisabled during M-29 release</remarks>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 

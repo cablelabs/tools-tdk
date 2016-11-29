@@ -17,57 +17,63 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1441</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RDKLogger_Log_MPEOSDisabled</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>407</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RDKLogger_Log</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>To check that no message is logged when MPEOS debug support is disabled.
 Test Case ID: CT_RDKLogger_37
 Test Type: Negative</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>5</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
   <remarks>Running this testcase would cause subsequent rdklogger testcases to fail</remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
   <skip>true</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_RDKLogger_37</test_case_id>
+    <test_objective>To add a log message when MPEOS debug support is disabled</test_objective>
+    <test_type>Negative</test_type>
+    <test_setup>XI3-1/XG1-1</test_setup>
+    <pre_requisite>1. RDK debug manager module should be intialized     2. EnableMPELog should be set to FALSE in debug.ini file</pre_requisite>
+    <api_or_interface_used>rdk_dbg_MsgRaw()</api_or_interface_used>
+    <input_parameters>rdk_dbg_MsgRaw:  
+
+string – module (e.g., TEST)
+String – level (e.g., INFO)
+string - message (e.g., "Test Log message")</input_parameters>
+    <automation_approch>1. TM loads RDKLoggerStub_agent via the test agent.
+2. TM will invoke “TestMgr_RDKLogger_Log” in RDKLoggerStub_agent.
+3. RDKLoggerStub_agent will call rdk_logger_init() API of the component and get the result.  
+4. On success of rdk_logger_init() API, RDKLoggerStub_agent will call RDK_LOG() API of the component.
+5. RDKLoggerStub_Agent will send SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1..Check that log message is not logged by the API.
+Checkpoint 2.Check the return value of API for success status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>librdkloggerstub.so 
+TestMgr_RDKLogger_Log</test_stub_interface>
+    <test_script>RDKLogger_Log_MPEOSDisabled</test_script>
+    <skipped>Yes</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 from tdklib import TDKScriptingLibrary;

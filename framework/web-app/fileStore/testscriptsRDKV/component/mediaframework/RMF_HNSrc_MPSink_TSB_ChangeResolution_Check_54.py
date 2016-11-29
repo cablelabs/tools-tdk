@@ -17,48 +17,94 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1653</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_TSB_ChangeResolution_Check_54</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>494</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Create_Instance</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Objective: RMF_HNSRC_MPSink – Set the video resolution to 1080p. Then tune to any channel with tsb and pause for 30 mins to get buffer content.
 Test CaseID: CT_RMF_HNSRC_MPSink_54</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>18</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_RMF_HNSRC_MPSink_54</test_case_id>
+    <test_objective>RMF_HNSRC_MPSink – Set the video resolution to 1080p. Then tune to any channel with tsb and pause for 5 mins to get buffer content. Start playing for few seconds and change the video resolution to 480p and see the check the media time. And make sure media time must remain in the same point and should not change to live point.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>Box and TV must be connected with HDMI cable.</pre_requisite>
+    <api_or_interface_used>HNSrc init()
+HNSrc open()
+MPSink init()
+MPSink SetVideoRectangle()
+MPSink SetSource()
+Manager::Initialize()
+DS set video resolution() 
+DS get video resolution()
+Manager::DeInitialize()
+HNSrc play()
+HNSrc getState()
+HNSrc SetMediaTime()
+HNSrc GetMediaTime()
+HNSrc GetSpeed()
+HNSrc close()
+MPSink term()
+HNSrc term()</api_or_interface_used>
+    <input_parameters>init: None
+open:Char *,Char *
+play:None
+GetState:RMFState
+SetMediaTime: double mediatime
+GetMediaTime: double mediatime
+GetSpeed: None.
+SetVideoRectangle: unsigned.
+unsigned, unsigned, 
+Unsigned, bool apply_now – x,y,h,w,false
+setSource: RMFMediaSourceBase*
+close:None
+term:None</input_parameters>
+    <automation_approch>1.TM loads mediaframework agent and devicesetting agent via the test agent.
+2. DeviceSetting agent will call DS_ManagerInitialize to setResolution.
+3. DeviceSetting agent will call DS_Resolution to fetch the resolution supported based on which we will call the DS_SetResolution to set the resolution value 1080p.
+4. DeviceSetting agent will call DS_ManagerDeInitialize
+5.Mediaframework agent will create the instance for Hnsrc and  initialize the Hnsrc element.
+6.Mediaframework agent will create the instance for Mpsink and initialize the Mpsink element.
+7. Form the pipeline Hnsrc-&gt;Mpsink using set source ().
+8. DeviceSetting agent will call the setResolution() to set the resolution to 1080p and  check to verify the resolution is set.
+9.Mediaframework agent will open and play the  Hnsrc element.
+10. Mediaframework agent will call pause for 5 mins to get buffer content.
+11. Mediaframework agent will call play to playback the buffer content for few mins.
+12. DeviceSetting agent will call DS_ManagerInitialize to setResolution.
+13. DeviceSetting agent will call DS_Resolution to fetch the resolution supported based on which we will call the DS_SetResolution to set the resolution value 480p.
+14. DeviceSetting agent will call DS_ManagerDeInitialize.
+15. Mediaframework agent will call getMediaTime to check the mediaposition is not changed to the live point.
+16.Mediaframework agent will terminate the Hnsrc element .
+17.For each API called in the script, mediaframework agent  will send SUCCESS or FAILURE status to Test Agent by comparing the return vale of APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.
+CheckPoint 2. Verify the media position. Check the Audio and Video quality using CheckAudioStatus.sh and CheckVideoStatus.sh scripts.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libmediaframeworkstub.so
+libdevicesettingsstub.so</test_stub_interface>
+    <test_script>RMF_HNSrc_MPSink_TSB_ChangeResolution_Check_54</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks>none</remarks>
+  </test_cases>
 </xml>
+
 '''
 import tdklib;
 import mediaframework;

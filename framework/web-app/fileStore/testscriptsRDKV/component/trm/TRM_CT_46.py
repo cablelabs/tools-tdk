@@ -17,43 +17,56 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>2</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TRM_CT_46</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>598</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TRM_TunerReserveForLive</primitive_test_name>
-  <!--  -->
   <primitive_test_version>0</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Automation of RDK-16023 to verify that repeated reserve tuner requests either all succeed or all fail with "InvalidState" reserveTunerResponse when requested with same token and device ID. Testcase ID: CT_TRM_46</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>20</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_TRM_46</test_case_id>
+    <test_objective>Automation of RDK-16023 to verify that repeated reserve tuner requests either all succeed or all fail with "InvalidState" reserveTunerResponse when requested with same token and device ID</test_objective>
+    <test_type>Negative</test_type>
+    <test_setup>XG1-1</test_setup>
+    <pre_requisite>None</pre_requisite>
+    <api_or_interface_used>ReserveTuner</api_or_interface_used>
+    <input_parameters>INTEGER  deviceNo
+STRING    locator
+DOUBLE  duration
+DOUBLE  startTime
+STRING    token</input_parameters>
+    <automation_approch>1. TM loads TRMAgent via the test agent.  
+2. TM will invoke “TRMAgent_TunerReserveForLive” in TRMAgent for a channel from a terminal with duration value 20min and startTime=0 and get the reservation token T1
+3. TM will invoke “TRMAgent_TunerReserveForLive” in TRMAgent for same channel and terminal using token T1 and duration value 15min and startTime=0. 
+4. TRMAgent will connect to TRM Server on IP 127.0.0.1 port 9987 and post HTTP TRM ReserveTuner for tuning request messages in step 2 and 3
+5. TRMAgent will connect to TRM Server on IP 127.0.0.1 port 9987 and get the response from the TRM server.  
+6. Depending on the return values of ReserveTuner TRMRequest API, TRMAgent will send SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>1. Check the return value of API for success in step2
+2. Check the return value of API in step3 such that either all fail with "InvalidState" response code or all pass without any error</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libtrmstub.so
+TestMgr_TRM_TunerReserveForLive</test_stub_interface>
+    <test_script>TRM_CT_46</test_script>
+    <skipped>No</skipped>
+    <release_version>M36</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

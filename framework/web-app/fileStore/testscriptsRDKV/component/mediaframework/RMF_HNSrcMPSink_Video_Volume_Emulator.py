@@ -17,43 +17,78 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrcMPSink_Video_Volume_07_Emulator</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>289</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_HNSrcMPSink_Video_Volume</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>These Script tests the RDK Mediaframework to get and set of volume in video in HNSrc MPSink pipeline on Emulator platform. Test Case ID: CT_RMF_HNSrcMPSink_58.</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>8</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_RMF_HNSrcMPSink_58</test_case_id>
+    <test_objective>RMF_HNSRC_MPSink –To check the set &amp; get volume functionality of the HNSRC-MPSINK pipeline</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>Emulator Hybrid</test_setup>
+    <pre_requisite>No</pre_requisite>
+    <api_or_interface_used>HNSrc init()
+HNSrc open()
+MPSink init()
+MPSink SetVideoRectangle()
+MPSink SetSource()
+HNSrc play()
+HNSrc getState
+HNSrc SetVolume()
+HNSrc GetVolume()
+HNSrc close()
+MPSink term()
+HNSrc term()</api_or_interface_used>
+    <input_parameters>init: None
+open:Char *,Char *
+play:None
+GetState:RMFState
+setVolume: float – volume
+GetVolume: None
+SetVideoRectangle: unsigned.
+unsigned, unsigned, 
+Unsigned, bool apply_now – x,y,h,w,false
+setSource: RMFMediaSourceBase*
+close:None
+term:None</input_parameters>
+    <automation_approch>1.TM loads RMFStub_agent via the test agent.
+2.TM will invoke “TestMgr_HNSrcMPSink_Video_Volume”.
+3.RMFStub_agent will Initialize the Hnsrc element using init() and return the status based on the API return.
+4.On success of init(),RMFStub_agent will input the streaming URL using open() and return the status based on the API return .
+5.On success of open(),RMFStub_agent will the set the video co-ordinates using the setVideoRectangle() and return the status based on the API return.
+6.On success of setVideoRectangle(),RMFStub_agent will connect the source with sink using setSource() and return the status based on the API return.
+7.On success of SetSource(),RMFStub_agent will set the volume using SetVolume() and return the status based on the API return.
+8.On success of SetVolume(),RMFStub_agent will play the stream using play() through connected sink and return the status based on the API return.
+9.On success of play(),RMFStub_agent will get the volume value using GetVolume() and return the status based on the API return.
+10.On Success of GetVolume(),close the video using close() and return the status based on the API return.
+11.On success of close,RMFStub_agent will terminate using term() and return the status based on the API return 
+12.RMFStub_Agent will send SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libmediaframeworkstub.so</test_stub_interface>
+    <test_script>RMF_HNSrcMPSink_Video_Volume_Emulator</test_script>
+    <skipped>No</skipped>
+    <release_version>M30</release_version>
+    <remarks>none</remarks>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib;

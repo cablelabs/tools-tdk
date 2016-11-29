@@ -17,54 +17,60 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>XUPNP_GetBaseTrmUrl</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id> </primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
+  <primitive_test_id/>
   <primitive_test_name>XUPNP_GetUpnpResult</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>To get base TRM url value from xdiscovery process.
 Testcase ID: CT_XUPNP_20</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>3</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_XUPNP_20</test_case_id>
+    <test_objective>To get base TRM url value from xdiscovery process.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>1.start_upnp.sh should be started.
+2.Process xcal-device and xdiscovery should be running on GW Box and xdiscovery should be running on IPClient Box</pre_requisite>
+    <api_or_interface_used>IARM_Bus_Init : 
+(test agent process_name)
+IARM_Bus_Connect : None
+IARM_Bus_Call(IARM_BUS_XUPNP_API_GetXUPNPDeviceInfo)
+IARM_Bus_Disconnect : None
+IARM_Bus_Term : None</api_or_interface_used>
+    <input_parameters>string paramName=baseTrmUrl</input_parameters>
+    <automation_approch>1.TM loads xupnp_agent via the test agent. 
+2.The stub will invokes the RPC method for checking the parameter name in xupnp result resturned from IARM_Bus call and send the results.
+3. The stub function will verify the parameter name in xupnp result and  sends the results as Json response 
+4. TM will receive and display the result.</automation_approch>
+    <except_output>Checkpoint 1 stub will parse for parameter name in xupnp result.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>TestMgr_XUPNP_GetUpnpResult</test_stub_interface>
+    <test_script>XUPNP_GetBaseTrmUrl</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

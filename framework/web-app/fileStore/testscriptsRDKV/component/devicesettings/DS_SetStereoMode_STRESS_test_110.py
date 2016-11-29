@@ -17,52 +17,73 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>654</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_SetStereoMode_STRESS_test_110</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>85</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DS_SetStereoMode</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>ALLOCATED</status>
-  <!--  -->
   <synopsis>This test is to successfully change the Stereo Mode continuously for every 100ms repeatedly for x times.				
 Test case ID : CT_DS_110</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>3</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_DS_110</test_case_id>
+    <test_objective>Device Setting –  Get and set the supported stereo format continuously for every 100ms repeatedly for x times.</test_objective>
+    <test_type>Positive(Stress)</test_type>
+    <test_setup>XI3-1/XG1-1</test_setup>
+    <pre_requisite>1. dsMgrMain should be up and running.
+2. IARMDaemonMain should be up and running.</pre_requisite>
+    <api_or_interface_used>device::Manager::Initialize()
+Host::getVideoOutputPort()
+Host::getAudioOutputPort()
+AudioOutputPort::getSupportedStereoModes()
+AudioOutputPort::getStereoMode()
+AudioOutputPort::setStereoMode(int)
+AudioOutputPort::setStereoMode(string)
+device::Manager::DeInitialize()</api_or_interface_used>
+    <input_parameters>setStereoMode : string
+E.g.: MONO
+setStereoMode : int – id
+E.g.: 1</input_parameters>
+    <automation_approch>1. TM loads the Device_Settings_Agent via the test agent.
+2.Device_Settings_Agent will get the supported stereo modes.
+3.Device_Settings_Agent will get the current stereo format.
+4.Device_Settings_Agent will set new stereo format.
+5.Device_Settings_Agent will get the current stereo format.
+6.Device_Settings_Agent will check the current stereo format with new stereo format set.
+7.Device_Settings_Agent will wait for 100 ms and change to another stereo format and verify the change.
+8.The steps 3-7 will be repeated for 100 times and check the successful change of stereo format and store the result.
+9.Device_Settings_Agent will return SUCCESS or FAILURE based on the result from the above step(8th).</automation_approch>
+    <except_output>Checkpoint 1. Check the current stereo mode is present in the list of supported stereo modes.
+Checkpoint 2. Check the stereo mode before and after setting it.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>TestMgr_DS_managerInitialize
+TestMgr_DS_AOP_getSupportedStereoModes
+TestMgr_DS_AOP_setStereoMode
+TestMgr_DS_managerDeinitialize</test_stub_interface>
+    <test_script>DS_SetStereoMode_STRESS_test_110</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

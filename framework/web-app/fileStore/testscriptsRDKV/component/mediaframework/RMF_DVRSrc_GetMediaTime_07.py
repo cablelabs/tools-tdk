@@ -17,47 +17,58 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>848</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRSrc_GetMediaTime_07</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>494</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Create_Instance</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>ALLOCATED</status>
-  <!--  -->
   <synopsis>This script tests the RDK Mediaframework DVRSrc element to get mediaTime by getMediaTime API of DVRSource element.
 Test Case ID: CT_RMF_DVRSrc_07.				
 Test Type: Positive.</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>13</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_RMF_DVRSrc_07</test_case_id>
+    <test_objective>RMF_DVRSrc  – To get mediaTime by getMediaTime API of DVRSource element.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>No</pre_requisite>
+    <api_or_interface_used>RMFResult init()     
+RMFResult getMediaTime()
+RMFResult    term()</api_or_interface_used>
+    <input_parameters>Init(): None   
+getMediaTime():float &amp;time 
+term(): None</input_parameters>
+    <automation_approch>1. TM loads mediaframework agent via the test agent.
+2. Mediaframework agent will create the instance for DVRSrc and  initialize the DVRSrc element.
+3. Mediaframework agent will call getMediaTime API of DVRSrc element.
+4. Then compare the value returned by the API with default value for success.
+5. Mediaframework agent will terminate the  DVRSrc element.
+6. For each API called in the script, mediaframework agent  will send SUCCESS or FAILURE status to TM via the test agent by comparing the return value of APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.
+Checkpoint 2.Compare the return time value of getMediaTime API with default value for success status.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>libmediaframeworkstub.so</test_stub_interface>
+    <test_script>RMF_DVRSrc_GetMediaTime_07</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks>none</remarks>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 

@@ -17,51 +17,53 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DTCP_GetSessInfo_Neg_24</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id> </primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
+  <primitive_test_id/>
   <primitive_test_name>DTCP_Comp_Test</primitive_test_name>
-  <!--  -->
   <primitive_test_version>2</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>To retrieve information related to a null session handle.
 TestType: Negative	
 TestcaseID: CT_DTCP_24</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>5</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_DTCP_24</test_case_id>
+    <test_objective>To retrieve information related to a null session handle.</test_objective>
+    <test_type>Negative</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>DTCPMgrInitialize</pre_requisite>
+    <api_or_interface_used>dtcp_result_t DTCPMgrGetSessionInfo(DTCP_SESSION_HANDLE handle, DTCPIP_Session *session);</api_or_interface_used>
+    <input_parameters>handle=0</input_parameters>
+    <automation_approch>1.TM loads DTCP_agent via the test agent. 
+2.The stub will invokes the RPC method for to stop active session.
+3. The stub function will call the API and result will be shared back to TM
+4. TM will receive and display the result.</automation_approch>
+    <except_output>Checkpoint 1 stub will check for the return value of the function.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>TestMgr_DTCP_Test_Execute</test_stub_interface>
+    <test_script>DTCP_GetSessInfo_Neg_24</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

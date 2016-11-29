@@ -17,57 +17,63 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1375</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RDKLogger_Log_Trace4</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>591</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RDKLogger_Log_Msg</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>To log a TRACE4 level message.
 Test Case ID: CT_RDKLogger_17
 Test Type: Positive</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>5</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_RDKLogger_17</test_case_id>
+    <test_objective>To log a TRACE4 level message</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-1/XI3-1</test_setup>
+    <pre_requisite>1. RDK debug manager module should be intialized 
+2. Module should have TRACE4 level configured in debug.ini file</pre_requisite>
+    <api_or_interface_used>rdk_dbg_MsgRaw()</api_or_interface_used>
+    <input_parameters>rdk_dbg_MsgRaw: 
+string – level (e.g., TRACE4)
+string – module (e.g., TEST)
+string - message (e.g., "Test Trace4")</input_parameters>
+    <automation_approch>1. TM loads RDKLoggerStub_agent via the test agent.
+2. TM will invoke “TestMgr_RDKLogger_Log_Msg” in RDKLoggerStub_agent.
+3. RDKLoggerStub_agent will call rdk_logger_init() API of the component and get the result.  
+4. On success of rdk_logger_init() API, RDKLoggerStub_agent will call RDK_LOG() API of the component.
+5. RDKLoggerStub_Agent will send SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1..Check for the log message logged by the API.
+Checkpoint 2.Check the return value of API for success status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>librdkloggerstub.so 
+TestMgr_RDKLogger_Log_Msg</test_stub_interface>
+    <test_script>RDKLogger_Log_Trace4</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 from tdklib import TDKScriptingLibrary;

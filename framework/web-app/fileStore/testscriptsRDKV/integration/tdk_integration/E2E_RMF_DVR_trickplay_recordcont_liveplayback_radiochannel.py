@@ -17,51 +17,54 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1684</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>15</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_DVR_trickplay_recordcont_liveplayback_radiochannel</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>541</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>LinearTV ? Try to select trick play when device is in Radio channel</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>15</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
   <remarks>Causing ABL mode In Pace Xi3 box</remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_DVR_21</test_case_id>
+    <test_objective>Recorder-Try to select trick play in recorded content from XG1 when live playback is in radio channel</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>None</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>1.RMFMediastreamer executable should be running.</input_parameters>
+    <automation_approch>1.TM loads LinearTV_agent via the test agent 
+2.TM Frames the request URL and makes a RPC calls to the LinearTV_agent for tune
+3.LinearTV_agent will get request url from TM and sends to the XG1.Upon receiving the response (Json response) the agent should extract the response url and send to TM.
+4.TM sends the Response Url to the LinearTV_agent for playback with the HnSrc-&gt;Mpsink pipeline.
+5. Perform Trick Play on the recorded content using HnSrc-&gt; Mpsink pipeline.
+6.Depends on the result of above step agent sends SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1 Status from live playback</except_output>
+    <priority>High</priority>
+    <test_stub_interface>TDKIntegration_Stub</test_stub_interface>
+    <test_script>E2E_RMF_DVR_trickplay_recordcont_liveplayback_radiochannel</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

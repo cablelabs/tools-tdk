@@ -17,51 +17,56 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>971</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_DVRManager_GetRecordingInfoByIndex_16</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>522</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_DVRManager_CheckRecordingInfoByIndex</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>This is a negative test cases for get recording info by index functionality of DVR Manager class.
 Test Case ID: CT_RMF_DVRMgr_16
 Test Type: Negative</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>6</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_RMF_DVRMgr_16</test_case_id>
+    <test_objective>RMF_DVRMgr – To get the recording info by using invalid index</test_objective>
+    <test_type>Negative</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>Recording should not be present</pre_requisite>
+    <api_or_interface_used>DVRManager::getInstance()
+GetRecordingInfoByIndex</api_or_interface_used>
+    <input_parameters>getRecordingInfoByIndex:int index</input_parameters>
+    <automation_approch>1.TM loads RMFStub_agent via the test agent.
+2.TM will invoke “TestMgr_ getRecordingInfoByIndex” with index as a parameter in RMFStub_agent.
+3.RMFStub_agent will call getinstance of Dvr Manager 
+4.Call the methods  getRecordingInfoByIndex() 
+5.On success of API execution RMFStub_agent will send SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for failure status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libmediaframeworkstub.so</test_stub_interface>
+    <test_script>RMF_DVRManager_GetRecordingInfoByIndex_16</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks>none</remarks>
+  </test_cases>
   <script_tags>
     <script_tag>BASIC</script_tag>
-    <!--  -->
   </script_tags>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

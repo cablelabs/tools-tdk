@@ -17,52 +17,70 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>644</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_SetBrightness_STRESS_test_100</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>76</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DS_SetBrightness</primitive_test_name>
-  <!--  -->
   <primitive_test_version>3</primitive_test_version>
-  <!--  -->
   <status>ALLOCATED</status>
-  <!--  -->
   <synopsis>This test is to successfully change brightness value of the front panel indicator continuously for every 100ms repeatedly for x times.				
 Test case ID : CT_DS_100</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>4</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_DS_100</test_case_id>
+    <test_objective>Device Setting – Get and Set brightness for front panel Indicator with random values within range continuously for every 100ms repeatedly for x times.</test_objective>
+    <test_type>Positive(Stress)</test_type>
+    <test_setup>XI3-1/XG1-1</test_setup>
+    <pre_requisite>1. dsMgrMain should be up and running.
+2. IARMDaemonMain should be up and running.</pre_requisite>
+    <api_or_interface_used>device::Manager::Initialize()                                  FrontPanelIndicator::getInstance()
+FrontPanelIndicator::getIndicators()
+FrontPanelIndicator::getIndicator(string)
+FrontPanelIndicator::getBrightness() 
+FrontPanelIndicator::setBrightness(int)                  device::Manager::DeInitialize()</api_or_interface_used>
+    <input_parameters>getIndicator : string  - name
+E.g.: POWER
+SetBrightness : int - brightness 
+E.g.: Value  0. </input_parameters>
+    <automation_approch>1.TM loads the Device_Settings_Agent via the test agent.
+2.Device_Settings_Agent will get the list of Indicators.
+3.Device_Settings_Agent will get the indicators by passing the LED indicators.
+4.Device_Settings_Agent will get the value of brightness for LED Indicator.
+5.Device_Settings_Agent will set the brightness value to “brightness” for the LED Indicator.
+6.Device_Settings_Agent will check for the new brightness value.
+7.Device_Settings_Agent will wait for 100 ms and change to another brightness value and verify the change.
+8. The steps 4-7 will be repeated for 100 times and check the successful change of resolution and store the result.
+9.Device_Settings_Agent will return SUCCESS or FAILURE based on the result.</automation_approch>
+    <except_output>
+Checkpoint 1.Check for the value of POWER Indicator brightness after and before setting the value of brightness.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>TestMgr_DS_managerInitialize
+TestMgr_DS_FP_getIndicators
+TestMgr_DS_FP_setBrightness
+TestMgr_DS_managerDeinitialize</test_stub_interface>
+    <test_script>DS_SetBrightness_STRESS_test_100</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

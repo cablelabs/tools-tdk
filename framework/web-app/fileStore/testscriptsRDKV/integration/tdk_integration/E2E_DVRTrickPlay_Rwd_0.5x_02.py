@@ -17,48 +17,53 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1092</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>2</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_DVRTrickPlay_Rwd_0.5x_02</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>530</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_Get_Record_URLS</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>This script tests slow rewind operation sequentially on all recorded urls at the speed 0.5x than normal speed for playback  in End-to-End scenario.
 Test Case ID : E2E_DVRTrickPlay_Rwd_0.5x_02</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>5</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_DVRTrickPlay_Rwd_0.5x_02</test_case_id>
+    <test_objective>DVR – To verify Full frame Slow rewind operation at speed 0.5x than normal speed for playback.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-XI3_1</test_setup>
+    <pre_requisite>None</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>XG1 and XI3 board should be Up and running in same network
+
+XG1 should have one or more recordings in it.</input_parameters>
+    <automation_approch>1. TM loads DVR_agent via the test agent.
+2. TM Frames the request url "http://ipaddress:8080/vldms/info/recordingurls" and makes a RPC call to the DVR_agent to get the list of recorded urls.
+3. DVR_agent will send the url to XG1 and response is captured into the log file and send it to TM.
+4. TM reads the log file to extract each recorded url and appends Play_speed = -0.5x and time_pos = 8000 and send it to the DVR_agent to play through mplayer.</automation_approch>
+    <except_output>Checkpoint 1.mplayer_actualresult value returned from the stub.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>DVR_agent</test_stub_interface>
+    <test_script>E2E_DVRTrickPlay_Rwd_0.5x_02</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks>Parameters are Play_speed= -0.5000000 and time_position =8000</remarks>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

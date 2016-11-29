@@ -17,45 +17,64 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_HdmiCec_SendAbortMsg_CecEnabled</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>106</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>SM_RegisterService</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Objective: Service Manager – Send a message and receive message to and from the cec device after enabling the cec.
 Test Case Id: CT_Service Manager_46.
 Test Type: Negative.</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>4</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_Service Manager_46</test_case_id>
+    <test_objective>Service Manager â&#128;&#147; Send a random message and receive message to and from the cec device after enabling the cec.</test_objective>
+    <test_type>Negative</test_type>
+    <test_setup>XG1-V3</test_setup>
+    <pre_requisite>Atleast one HDMI device must be connected.</pre_requisite>
+    <api_or_interface_used>bool registerService(const QString&amp; , ServiceStruct )
+Service* getGlobalService(const QString&amp; serviceName)
+void setEnabled(bool true)
+void sendMessage(Qstring message)
+void onMessage( QString message )
+bool unregisterService(const QString&amp; )</api_or_interface_used>
+    <input_parameters>registerService : Qstring-serviceName, ServiceStruct - serviceStruct (function ptr)
+GetGlobalService: const Qstring â&#128;&#147; serviceName
+setEnabled: bool false
+sendMessage: Qstring message
+onMessage: Qstring message
+UnregisterService : Qstring-serviceName</input_parameters>
+    <automation_approch>1. TM loads the Service_Manager_Agent via the test agent.
+2.Service_Manager_Agent will register a given hdmicec service with ServiceManager component.
+3.On Success of registerService, Service_Manager_Agent will disable cec service.
+4. On Success of enabling cec, Service_Manager_Agent will send message for a CEC device.
+5. On Success of sending the message to the device, Service_Manager_Agent should recieve the message as response from the device and when onMessage event will be called.
+6 On Success of onMessage, Service_Manager_Agent will deregister a given service from ServiceManager component.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of APIs for success status.
+
+Checkpoint 2.Check for the message pattern for message sent in cec.txt.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libservicemanagerstub.so</test_stub_interface>
+    <test_script>SM_HdmiCec_SendAbortMsg_CecEnabled</test_script>
+    <skipped>No</skipped>
+    <release_version>M25</release_version>
+    <remarks>SM_HdmiCec_EnableCec_SendReceiveMsg changed to SM_HdmiCec_SendAbortMsg_CecEnabled during M-29 release</remarks>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib;

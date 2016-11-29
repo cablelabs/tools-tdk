@@ -17,56 +17,71 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>646</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_SetBlink_STRESS_test_102</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>75</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DS_SetBlink</primitive_test_name>
-  <!--  -->
   <primitive_test_version>2</primitive_test_version>
-  <!--  -->
   <status>ALLOCATED</status>
-  <!--  -->
   <synopsis>This test is to successfully change blink value of the front panel indicator continuously for every 100ms repeatedly for x times.				
 Test case ID : CT_DS_102</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>4</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_DS_102</test_case_id>
+    <test_objective>Device Setting – Get and Set the blink value of the POWER LED with different values continuously for every 100ms repeatedly for x times.</test_objective>
+    <test_type>Positive(Stress)</test_type>
+    <test_setup>XI3-1/XG1-1</test_setup>
+    <pre_requisite>1. dsMgrMain should be up and running.
+2. IARMDaemonMain should be up and running.</pre_requisite>
+    <api_or_interface_used>device::Manager::Initialize()
+FrontPanelConfig::getInstance()
+FrontPanelConfig::getIndicator(string)
+FrontPanelConfig::setBlink(int)
+FrontPanelConfig::getBlink()
+device::Manager::DeInitialize()</api_or_interface_used>
+    <input_parameters>getIndicator : string – name 
+Eg:name: “POWER”
+setBlink : int – blink
+E.g.: 1,2</input_parameters>
+    <automation_approch>1.TM loads the Device_Settings_Agent via the test agent
+2.Device_Settings_Agent will get Blink interval of front panel indicator LED.
+3.Device_Settings_Agent will set Blink interval to “blink ” of front panel indicator LED.
+4.Device_Settings_Agent will get  Blink interval of front panel indicator LED.
+5.TM compares the Blink Interval before and after setting the Interval. 
+6.Device_Settings_Agent will wait for 100 ms and change to another blink rate and verify the change.
+7. The steps 4-7 will be repeated for 100 times and check the successful change of blink rate and store the result.
+8.Device_Settings_Agent will return SUCCESS or FAILURE based on the result</automation_approch>
+    <except_output>
+Checkpoint 1.Check for the blink value of POWER Indicator after and before setting the value.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>TestMgr_DS_managerInitialize
+TestMgr_DS_FP_setBlink
+TestMgr_DS_managerDeinitialize</test_stub_interface>
+    <test_script>DS_SetBlink_STRESS_test_102</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

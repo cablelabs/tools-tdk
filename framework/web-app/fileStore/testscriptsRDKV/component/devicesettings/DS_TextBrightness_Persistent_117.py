@@ -17,46 +17,62 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1593</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>6</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_TextBrightness_Persistent_117</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>76</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DS_SetBrightness</primitive_test_name>
-  <!--  -->
   <primitive_test_version>3</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>To check that Front Panel timer brightness value is persisted after STB reboot.
 TestcaseID: CT_DS117</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>8</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_DS117</test_case_id>
+    <test_objective>To check that Front Panel timer brightness value is persisted after STB reboot</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-1/XI3-1</test_setup>
+    <pre_requisite>1. dsMgrMain should be up and running.
+2. IARMDaemonMain should be up and running.</pre_requisite>
+    <api_or_interface_used>device::Manager::Initialize() 
+FrontPanelIndicator::getInstance()
+FrontPanelIndicator::getTextDisplay()
+FrontPanelIndicator::setBrightness(int) 
+FrontPanelIndicator::getBrightness() 
+device::Manager::DeInitialize()
+</api_or_interface_used>
+    <input_parameters>integer brightness=5
+string text="Hello"
+integer get_only (0,1)</input_parameters>
+    <automation_approch>1.TM loads the Device_Settings_Agent via the test agent.
+2.Device_Settings_Agent will get the textdisplay by passing the message: "Hello"
+3.Device_Settings_Agent will set the value of brightness for text.
+4.Reboot the STB
+5.TM makes RPC calls for getting the text brightness value from Device_Settings_Agent and verify whether the brightness has changed.</automation_approch>
+    <except_output>Checkpoint 1 Check for return value of the brightness before and after reboot</except_output>
+    <priority>High</priority>
+    <test_stub_interface>TestMgr_DS_managerInitialize
+TestMgr_DS_FP_setBrightness
+TestMgr_DS_managerDeinitialize</test_stub_interface>
+    <test_script>DS_TextBrightness_Persistent_117</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks>XONE-11452 </remarks>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

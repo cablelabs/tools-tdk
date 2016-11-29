@@ -17,44 +17,54 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1129</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_QAMSource_GetUseFactoryMethods_08</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>563</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RmfElement_QAMSrc_UseFactoryMethods</primitive_test_name>
-  <!--  -->
   <primitive_test_version>0</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>RMFQAMSrc – To Check if factory methods are to be used by the client.
 Test Case ID: CT_RMF_QAMSrc_MPSink_08.</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>18</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_RMF_QAMSrc_MPSink_08</test_case_id>
+    <test_objective>RMFQAMSrc – To Check if factory methods are to be used by the client.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>monitorRMF.sh
+RmfStreamer
+Process should be stopped before runing the script.</pre_requisite>
+    <api_or_interface_used>rmf_Error init RMFResult RMFQAMSrc::init_platform() RMFQAMSrc::useFactoryMethods()      RMFResult RMFQAMSrc::uninit_platform()              rmf_Error uninit()</api_or_interface_used>
+    <input_parameters>rmf_platform Init(): int- argc, char * argv[]            RMFQAMSrc::init_platform() : None                                         RMFQAMSrc::useFactoryMethods(): None RMFQAMSrc::uninit_platform() : None                                rmf_platform Uninit(): None</input_parameters>
+    <automation_approch>1.TM loads mediaframework agent via the test agent.
+2.Mediaframework agent will call init() of rmfPlaftorm for initializing rmfplatform and get the result.
+3.On success, Mediaframework agent will call RMFQAMSrc init_platform() for initializing platform dependent functionalties and get the result.
+4.On success, Mediaframework agent will call RMFQAMSrc useFactoryMethods() to check whether QAMSRCFACTORYMETHOD is enabled or not.
+5.On success, Mediaframework agent will call RMFQAMSrc uninit_platform().
+6.On success, Mediaframework agent will call rmfplatform uninit().
+7.For each API called in the script, mediaframework agent  will send SUCCESS or FAILURE status to TM via the test agent by comparing the return value of APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for result(true or false) and return success status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libmediaframeworkstub.so</test_stub_interface>
+    <test_script>RMF_QAMSource_GetUseFactoryMethods_08</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks>none</remarks>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 

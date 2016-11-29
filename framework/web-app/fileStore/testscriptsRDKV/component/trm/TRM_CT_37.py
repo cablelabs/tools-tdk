@@ -17,47 +17,64 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1712</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>TRM_CT_37</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>620</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TRM_TunerReserveForLive</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>This tests tuning to channel 2 for 11s after scheduling recording on channel 1 from same device with start time 3s from now for 10s. 
 Test Case ID: CT_TRM_37 
 Test Type: Positive</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>10</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_TRM_37</test_case_id>
+    <test_objective>To attempt to schedule recording on channel 1 from device1 with start time 3s from now for 10s and again tune from same device1 to channel2 for 11s</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-1</test_setup>
+    <pre_requisite>None</pre_requisite>
+    <api_or_interface_used>ReserveTuner
+GetAllTunerStates</api_or_interface_used>
+    <input_parameters>INTEGER  deviceNo
+STRING    recordingId
+STRING    locator
+DOUBLE  duration	
+DOUBLE  startTime
+INTEGER hot</input_parameters>
+    <automation_approch>1. TM loads TRMAgent via the test agent.
+2. TM will invoke “TRMAgent_TunerReserveForLive” for live tune and “TRMAgent_TunerReserveForRecord” for record.
+3. TRMAgent will connect to TRM Server on IP 127.0.0.1 port 9987 and post HTTP TRM ReserveTuner messages with duration value = 10000 (10s) and startTime=0.
+4. Verify that TRM allows Device1 schedule a recording 3s from now for 10s on channel 1 with duration value = 10000 (10s) and startTime=3.
+5. Verify that TRM allows Device1 tune to channel 2 for 11s with duration value = 11000 (11s) and startTime=0.
+6. Verify all the reservations using TRMAgent_GetAllTunerStates.
+7. TRMAgent get the response from the TRM server for all the requests.  
+8. Depending on the return values of TRMRequest API, TRMAgent will send SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>1. Check the return value of API for success status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libtrmstub.so
+TestMgr_TRM_TunerReserveForRecord
+TestMgr_TRM_TunerReserveForLive
+TestMgr_TRM_GetAllTunerStates</test_stub_interface>
+    <test_script>TRM_CT_37</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

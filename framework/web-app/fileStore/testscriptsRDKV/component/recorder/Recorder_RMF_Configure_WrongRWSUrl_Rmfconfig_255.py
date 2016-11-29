@@ -17,44 +17,59 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_Configure_WrongRWSUrl_Rmfconfig_255</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id></primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
+  <primitive_test_id/>
   <primitive_test_name>Recorder_SendRequest</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>CT_Recoder_DVR_Protocol_255 - Check the error code after Bad RWS URL configured in the rmfconfig.ini</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>90</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
-  <script_tags />
+  <test_cases>
+    <test_case_id>CT_Recorder_DVR_Protocol_255</test_case_id>
+    <test_objective>Check whether error code is coming in the next reboot after Bad RWS URL configured in the rmfconfig.ini</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>1. rmfStreamer executable should be running.
+2. Device time should be in current time of UTC.
+3. Two files should be created in the name of “stt_received” and “stage4” in “/tmp” path of device.
+4. In rmfconfig.ini file the parameters “FEATURE.LONGPOLL.URL”,""FEATURE.RWS.GET.URL"" and ""FEATURE.RWS.POST.URL"" should be pointing to DVRSimulator</pre_requisite>
+    <api_or_interface_used>Json Interface</api_or_interface_used>
+    <input_parameters>Json Interface- source id, duration recording_id, start_time.</input_parameters>
+    <automation_approch>1. TM loads RecorderAgent via the test agent.
+2. TM gets an source_id from the streaming details page of the FW and sends it to RecorderAgent to generate request url.
+3.Configure alternate URL for the RWS Server in rmfconfig.ini and reboot the box
+4. Wait for 5 minute for the error code to come after multiple retries
+5.. Verify that error code RDK-10028 is available in ocapri log
+6. Depends on the result of above step RecorderAgent sends SUCCESS or FAILURE to TM.
+7.Revert the changes in rmfconfig.ini</automation_approch>
+    <except_output>Checkpoint 1 Acknowledgement status from the DVRSimulator.
+Checkpoint 2 The error code should be avilable in Ocapri log</except_output>
+    <priority>High</priority>
+    <test_stub_interface>RecorderAgent
+1.TestMgr_Recorder_SetValuesInRmfconfig
+2.TestMgr_Recorder_checkOcapri_log
+3.TestMgr_Recorder_clearOcapri_log</test_stub_interface>
+    <test_script>Recorder_RMF_Configure_WrongRWSUrl_Rmfconfig_255</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
+  <script_tags/>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk test case script
 import tdklib;

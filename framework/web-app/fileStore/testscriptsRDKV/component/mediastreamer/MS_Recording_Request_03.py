@@ -17,48 +17,57 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>821</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>MS_Recording_Request_03</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>111</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>MediaStreamer_Recording_Request</primitive_test_name>
-  <!--  -->
   <primitive_test_version>3</primitive_test_version>
-  <!--  -->
   <status>ALLOCATED</status>
-  <!--  -->
   <synopsis>This script tests Requesting recording content response of Mediastreamer.
 Test Case ID:CT_Mediastreamer_03</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>3</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.2</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_Mediastreamer_03</test_case_id>
+    <test_objective>Mediastreamer – Requesting playback of recorded content via webservice interface</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>1.Mediastreamer executable should be running
+2.XG1 should have one or more recordings in it.</pre_requisite>
+    <api_or_interface_used>Webservice Interface</api_or_interface_used>
+    <input_parameters>String-recordingId</input_parameters>
+    <automation_approch>1.TM loads Mediastreamer_agent via the test agent. 
+2.Mediastreamer_agent will get RecorderId from wbdevice.dat file in XG1 and frames the query url to get list of recordings. “http://localhostip:port/vldms/info/recordingurls” 
+3.Mediastreamer_agent will send the query url to the mediastreamer.
+4.Mediastreamer_agent will get the list of recordings,captures to log file and send it to TM.
+5. TM will read the log file and fetch the recordingId of a random url and send it to Mediastreamer_agent.
+6.Mediastreamer_agent will get RecorderId from wbdevice.dat file in XG1, recordingId from TM and frames the query url  “http://localhostip:port/videoStreamInit?recorderId=&amp;recordingid=ID” and send to the mediastreamer.
+7.Upon receiving the Json response from mediastreamer, Mediastreamer_agent will extract the Json parameters like error code and error description and send to TM.
+8.TM will do the error checking by verifying Error code and Error description parameters.</automation_approch>
+    <except_output>Checkpoint 1 Error code and Error description parameter of Json response is verified as success or failure.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>Mediastreamer_agent
+1.TestMgr_MediaStreamer_Recording_Request</test_stub_interface>
+    <test_script>MS_Recording_Request_03</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

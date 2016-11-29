@@ -17,61 +17,65 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>532</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RDKLogger_Dbg_Enabled_Status</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>401</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RDKLogger_Dbg_Enabled_Status</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>This tests the debug enabled status functionality of RDK Logger.
 Test Case ID: CT_RDKLogger_03
 Test Type: Positive</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>5</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_RDKLogger_03</test_case_id>
+    <test_objective>To check if a particular log level is enabled for a module</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-1/XI3-1</test_setup>
+    <pre_requisite>RDK debug manager module should be intialized</pre_requisite>
+    <api_or_interface_used>rdk_dbg_enabled()</api_or_interface_used>
+    <input_parameters>rdk_dbg_enabled:  
+string – level (e.g., INFO)
+string – module (e.g., QAMSRC)</input_parameters>
+    <automation_approch>1. TM loads RDKLoggerStub_agent via the test agent.  
+2. TM will invoke “TestMgr_RDKLogger_Dbg_Enabled_Status” in RDKLoggerStub_agent. 
+3. RDKLoggerStub_agent will call rdk_logger_init() API of the component and get the result.  
+4. On success of rdk_logger_init() API, RDKLoggerStub_agent will call rdk_dbg_enabled() API of the component and get the result. 
+5. RDKLoggerStub_agent will call a helper function to find if specified module and level are enabled in debug.ini file. 
+6. RDKLoggerStub_Agent will send SUCCESS or FAILURE to TM after comparing return  value of rdk_dbg_enabled() API and helper function.</automation_approch>
+    <except_output>Checkpoint 1..Check for the return value of  rdk_dbg_enabled API and cross check with debug.ini settings.
+Checkpoint 2.Check the return value of API for success status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>librdkloggerstub.so 
+TestMgr_RDKLogger_Dbg_Enabled_Status</test_stub_interface>
+    <test_script>RDKLogger_Dbg_Enabled_Status</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
   <script_tags>
     <script_tag>BASIC</script_tag>
-    <!--  -->
   </script_tags>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 from tdklib import TDKScriptingLibrary;

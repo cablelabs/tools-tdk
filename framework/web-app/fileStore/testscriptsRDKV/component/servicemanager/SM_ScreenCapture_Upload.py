@@ -17,48 +17,56 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1526</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>2</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_ScreenCapture_Upload</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>647</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>SM_ScreenCapture_Upload</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>To verify upload on screenCaptureService.
 Test Case ID:	CT_Service Manager_25</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>2</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
   <remarks>XONE-15627: This should be tested with http://xre.poc8.xcal.tv:9072/screenCaptureTool.</remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
   <skip>true</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_Service Manager_25</test_case_id>
+    <test_objective>To verify upload on screenCaptureService</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-1</test_setup>
+    <pre_requisite>None</pre_requisite>
+    <api_or_interface_used>ServiceManager::getGlobalService
+ScreenCaptureService::callMethod("uploadScreenCapture")</api_or_interface_used>
+    <input_parameters>string url</input_parameters>
+    <automation_approch>1. TM loads the Service_Manager_Agent via the test agent.
+2.Service_Manager_Agent will register ScreenCaptureService with ServiceManager component.
+3.On Success of registerService , Service_Manager_Agent will get url and execute screencaptureserice upload callmethod.
+4.Service_Manager_Agent will deregister a given service from ServiceManager component.
+5. Service_Manager_Agent will check upload status and return SUCCESS/FAILURE status.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of APIs for success status.</except_output>
+    <priority>High </priority>
+    <test_stub_interface>libservicemanagerstub.so
+1.TestMgr_SM_RegisterService
+2.TestMgr_SM_ScreenCapture_Upload
+3.TestMgr_SM_UnRegisterService</test_stub_interface>
+    <test_script>SM_ScreenCapture_Upload</test_script>
+    <skipped>Yes</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

@@ -17,47 +17,80 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>898</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrcMPSink_Video_Speed_08</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>495</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Init</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>ALLOCATED</status>
-  <!--  -->
   <synopsis>These Script tests the RDK Mediaframework trickplay function in HNSrc MPSink pipeline. Test Case ID: CT_RMF_HNSrc_MPSink_08.</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>11</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_RMF_HNSrc_MPSink_08</test_case_id>
+    <test_objective>RMF_HNSRC_MPSink –To check the trickplay functionality of the HNSRC-MPSINK pipeline</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>No</pre_requisite>
+    <api_or_interface_used>HNSrc init()
+HNSrc open()
+MPSink init()
+MPSink SetVideoRectangle()
+MPSink SetSource()
+HNSrc play()
+HNSrc getState()
+HNSrc SetSpeed()
+HNSrc GetSpeed()
+HNSrc close()
+MPSink term()
+HNSrc term()</api_or_interface_used>
+    <input_parameters>init: None
+open:Char *,Char *
+play:None
+GetState:RMFState
+SetSpeed: float – speed
+GetSpeed: None
+SetVideoRectangle: unsigned.
+unsigned, unsigned, 
+Unsigned, bool apply_now – x,y,h,w,false
+setSource: RMFMediaSourceBase*
+close:None
+term:None</input_parameters>
+    <automation_approch>1.TM loads RMFStub_agent via the test agent.
+2.TM will invoke “TestMgr_HNSrcMPSink_Video_Speed”.
+3.RMFStub_agent will Initialize the Hnsrc element using init() and return the status based on the API return.
+4.On success of init(),RMFStub_agent will input the streaming URL using open() and return the status based on the API return .
+5.On success of open(),RMFStub_agent will the set the video co-ordinates using the setVideoRectangle() and return the status based on the API return.
+6.On success of setVideoRectangle(),RMFStub_agent will connect the source with sink using setSource() and return the status based on the API return.
+7.On success of SetSource(),RMFStub_agent will set the speed using SetSpeed() and return the status based on the API return.
+8.On success of play() ,RMFStub_agent will play the stream using play() through connected sink and return the status based on the API return.
+On success of play() ,RMFStub_agent will pause the stream using pause() through connected sink and return the status based on the API return.
+10.On Success of play() agent,close the video using close() and return the status based on the API return.
+11.On success of close,RMFStub_agent will terminate using term() and return the status based on the API return 
+12.RMFStub_Agent will send SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libmediaframeworkstub.so</test_stub_interface>
+    <test_script>RMF_HNSrcMPSink_Video_Speed_08</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks>none</remarks>
+  </test_cases>
 </xml>
+
 '''
 import tdklib;
 import mediaframework;

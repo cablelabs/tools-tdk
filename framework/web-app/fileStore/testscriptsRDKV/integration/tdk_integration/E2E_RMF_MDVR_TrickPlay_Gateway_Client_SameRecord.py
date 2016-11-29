@@ -17,43 +17,50 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1540</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>7</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_MDVR_TrickPlay_Gateway_Client_SameRecord</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>583</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_MDVR_GetResult</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>To verify that when XG1 trick mode on the recorded content  try to playback the same recorded content in 2 client boxes from XG1.CT_MDVR_12</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>15</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_MDVR_19</test_case_id>
+    <test_objective>To verify that when XG1 trick mode on the recorded content  try to playback the same recorded content in 2 client boxes from XG1</test_objective>
+    <test_type>Negative</test_type>
+    <test_setup>XG1-1, XI3-2</test_setup>
+    <pre_requisite>None</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>1. XG1 is connected to XI3 client boxes.
+2. XG1 &amp; all XI3 boxes should be up &amp; running.</input_parameters>
+    <automation_approch>1) Connect 2 client boxes (XI3) through XG1.
+2) Agent will be running in all the XI3 and XG1 box.
+TM will get the recorded details from XG1.
+3) TM frames a request url with a recordingId from list of recorded urls and passes it to XI3 agents simultaneously to play through player app.
+4) TM reads Success or Failure message from each connected client and sends final result.</automation_approch>
+    <except_output>Checkpoint 1.Check the return values of API's from each XI3 for success status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libtdkintegrationstub.so</test_stub_interface>
+    <test_script>E2E_RMF_MDVR_TrickPlay_Gateway_Client_SameRecord</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib

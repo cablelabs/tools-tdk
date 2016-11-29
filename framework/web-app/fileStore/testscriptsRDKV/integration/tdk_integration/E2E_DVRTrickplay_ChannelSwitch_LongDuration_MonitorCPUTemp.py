@@ -17,48 +17,63 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_DVRTrickplay_ChannelSwitch_LongDuration_MonitorCPUTemp</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>541</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Continuous channel change, DVR playback and trickplay for a period of time (8hr) and fetch CPU temp in each iteration.
 Testcase ID: E2E_LinearTV_55</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>600</execution_time>
-  <!--  -->
   <long_duration>true</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_LinearTV_54</test_case_id>
+    <test_objective>LinearTV-Channel Change, DVR playback and Trickplay for longduration (8hr) and monitoring CPU temperature via devicesetting.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>X13_1</test_setup>
+    <pre_requisite>Requesturl: http://Ipaddress:port /videoStreamInit?live=ocap://ID</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>1.XG1 and XI3 should be up and running                  2.Only one XG1 should be up in a network</input_parameters>
+    <automation_approch>1.TM loads Tdkintegration_agent and DeviceSettingsAgent via the test agent 
+2.TM Frames the request URL and makes a RPC calls to the tdkintegration_agent for tune
+3.tdkintegration_agent will get request url from TM and sends to the XG1.Upon receiving the response (Json response) the agent should extract the response url and send to TM.
+4.TM sends the Response Url to the LinearTV_agent for playback with the hnsrc-mpsink pipeline  for 60 seconds"
+5 Repeat the steps 3 and 4
+6. tdkintegration_agent will get request url from TM 
+7. TM sends the Response Url for DVR playback for 60 seconds"
+8 TM run the trickplay in 4x 15x 30x and 60x speeds
+9. Get the CPU temperature from DeviceSettingsAgent.
+10. loop the steps 2-9  for a different service and continue for eight hours
+11. tdkintegration_agent will send SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1.Verifying the playback of player and get the state of play
+Checkpoint 2 Error code parameter of Json response is verified as success or failure. 
+Checkpoint 3 Response logs verified to check the trickplay occur at the corresponding speeds.
+Checkpoint 4. Script to check whether the audio pid and video pid is set
+Checkpoint 5. Verify if the cpu temperature is within limit, more than 0 and less than 125 C.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libdevicesettingsstub.so
+tdkIntegrationstub.so</test_stub_interface>
+    <test_script>E2E_DVRTrickplay_ChannelSwitch_LongDuration_MonitorCPUTemp</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

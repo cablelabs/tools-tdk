@@ -17,52 +17,73 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>652</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_SetCompression_STRESS_test_109</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>78</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DS_SetCompression</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>ALLOCATED</status>
-  <!--  -->
   <synopsis>This test is to successfully change the Compression format  continuously for every 100ms repeatedly for x times.				
 Test case ID : CT_DS_109</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>4</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_DS_109</test_case_id>
+    <test_objective>Device Setting –  Get and set  the supported compression format continuously for every 100ms repeatedly for x times.</test_objective>
+    <test_type>Positive(Stress)</test_type>
+    <test_setup>XI3-1/XG1-1</test_setup>
+    <pre_requisite>1. dsMgrMain should be up and running.
+2. IARMDaemonMain should be up and running.</pre_requisite>
+    <api_or_interface_used>device::Manager::Initialize()
+Host::getVideoOutputPort()
+Host::getAudioOutputPort()
+AudioOutputPort::getSupportedCompression()
+AudioOutputPort::getCompression()
+AudioOutputPort::setCompression(int)
+AudioOutputPort::setCompression(string)
+device::Manager::DeInitialize()</api_or_interface_used>
+    <input_parameters>SetCompression : string
+E.g.: LIGHT
+SetCompression : int – id
+E.g.: 1.</input_parameters>
+    <automation_approch>1. TM loads the Device_Settings_Agent via the test agent.
+2.Device_Settings_Agent will get the supported compression formats.
+3.Device_Settings_Agent will get the current compression format.
+4.Device_Settings_Agent will set new compression format.
+5.Device_Settings_Agent will get the current compression format.
+6.Device_Settings_Agent will check the current compression format with new compression format set.
+7.Device_Settings_Agent will wait for 100 ms and change to another compression format  and verify the change.
+8.The steps 3-7 will be repeated for 100 times and check the successful change of compression format and store the result.
+9.Device_Settings_Agent will return SUCCESS or FAILURE based on the result from the above step(8th). </automation_approch>
+    <except_output>
+Checkpoint 1. Check the compression format before and after setting it.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>TestMgr_DS_managerInitialize
+TestMgr_DS_AOP_getSupportedCompressions
+TestMgr_DS_AOP_setCompression
+TestMgr_DS_managerDeinitialize</test_stub_interface>
+    <test_script>DS_SetCompression_STRESS_test_109</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

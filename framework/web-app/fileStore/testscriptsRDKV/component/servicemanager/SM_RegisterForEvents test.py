@@ -17,52 +17,71 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>301</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>2</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_RegisterForEvents test</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>135</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>SM_RegisterForEvents</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>This script Registers for events for a given service
 Test Case ID: CT_SM_9</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>2</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_Service Manager_9</test_case_id>
+    <test_objective>Service Manager -  Register and DeRegister events for a given services.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-1</test_setup>
+    <pre_requisite/>
+    <api_or_interface_used>bool registerService(const QString&amp; , ServiceStruct )
+Service* getGlobalService(const QString&amp; serviceName)
+bool registerForEvents(QList&lt;QString&gt; eventNames, ServiceListener* listener)
+bool unregisterEvents(ServiceListener* listener)
+bool unregisterService(const QString&amp; )</api_or_interface_used>
+    <input_parameters>registerService : Qstring-serviceName, ServiceStruct - serviceStruct (function ptr)
+GetGlobalService: const Qstring - serviceName
+RegisterForEvents : Qlist&lt;QString&gt; - eventNames, ServiceListener* - listener 
+UnregisterEvents : ServiceListener* - listener
+unregisterService : Qstring-serviceName
+
+</input_parameters>
+    <automation_approch>1. TM loads the Service_Manager_Agent via the test agent.
+2.Service_Manager_Agent will register a given service with ServiceManager component.
+3.On Success of registerService , Service_Manager_Agent register event for a given service.
+4. Service_Manager_Agent Deregister event for a given service.
+5.Service_Manager_Agent will deregister a given service from ServiceManager component.
+6. Service_Manager_Agent will check both API's return values and return SUCCESS/FAILURE status.
+</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of APIs for success status.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>libservicemanagerstub.so
+1.TestMgr_SM_RegisterService
+2.TestMgr_SM_RegisterForEvents
+2.TestMgr_SM_UnRegisterService
+</test_stub_interface>
+    <test_script>SM_RegisterForEvents test</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
   <script_tags>
     <script_tag>BASIC</script_tag>
-    <!--  -->
   </script_tags>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

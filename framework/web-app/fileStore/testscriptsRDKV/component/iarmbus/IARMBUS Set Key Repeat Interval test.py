@@ -17,56 +17,86 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>89</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARMBUS Set Key Repeat Interval test</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>8</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>IARMBUS_BusCall</primitive_test_name>
-  <!--  -->
   <primitive_test_version>8</primitive_test_version>
-  <!--  -->
   <status>ALLOCATED</status>
-  <!--  -->
   <synopsis>This test script Sets the Key Repeat Interval of the STB to the desired value
 Test Case ID : CT_IARMBUS_25</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>3</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_IARMBUS_24</test_case_id>
+    <test_objective>IARMBUS – Setting Key Repeat Interval time for STB .</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XI3-1 / XG1-1</test_setup>
+    <pre_requisite>1. “IARMDaemonMain” Process should be running.
+
+2. “irMgrMain” Process should be running.</pre_requisite>
+    <api_or_interface_used>IARM_Bus_Init(char *) 
+IARM_Bus_Connect()
+IARM_Bus_Call(const char *,  const char *, void *, size_t )
+IARM_Bus_Disconnect()
+IARM_Bus_Term()</api_or_interface_used>
+    <input_parameters>IARM_Bus_Init : 
+char *  - (test agent process_name)
+IARM_Bus_Connect : None
+IARM_Bus_Call : 
+const char * - IARM_BUS_IRMGR_NAME,
+const char * - IARM_BUS_IRMGR_API_GetRepeatInterval,
+void * - param, size_t -sizeof(param)
+IARM_Bus_Call : 
+const char* - IARM_BUS_IRMGR_NAME  
+const char* - IARM_BUS_IRMGR_API_SetRepeatInterval
+void * - param, size_t -sizeof(param)
+IARM_Bus_Disconnect : None
+IARM_Bus_Term : None</input_parameters>
+    <automation_approch>1.TM loads the IARMBUS_Agent via the test agent.
+2.The IARMBUS_Agent initializes and registers with IARM Bus Daemon .
+3.IARMBUS_Agent will invoke the RPC for getting the key repeat interval time.  
+4.IARMBUS_Agent will return the Key Repeat Interval to the Test Agent.
+5.IARMBUS_Agent will set key repeat time.
+6.IARMBUS_Agent will invoke the RPC for getting the key repeat interval time.
+7.IARMBUS_Agent will return the Key Repeat Interval to the Test Agent.  
+8.Test Agent will compare the Key Repeat Interval time before and after setting it.
+9.IARMBUS_Agent deregisters from the IARM Bus Daemon.
+10.For each API called in the script, IARMBUS_Agent will send SUCCESS or FAILURE status to Test Agent by comparing the return vale of APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.
+
+Checkpoint 2.Check the Key Repeat  interval before and after setting the value.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libiarmbusstub.so
+1.TestMgr_IARMBUS_Init
+2.TestMgr_IARMBUS_Term
+3.TestMgr_IARMBUS_Connect
+4.TestMgr_IARMBUS_Disconnect
+5.TestMgr_IARMBUS_BusCall</test_stub_interface>
+    <test_script>IARMBUS Set Key Repeat Interval test</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

@@ -17,58 +17,78 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1498</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>CC_SetGet_Attribute_FontColor_196</name>
-  <!-- If you are adding a new script you can specify the script name. -->
   <primitive_test_id>194</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>CC_SetGetAttribute</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>CC should be displayed font color : white and background color :yellow				
 Test case Id - CT_ClosedCaption_196</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>1</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.2</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_ClosedCaption_196</test_case_id>
+    <test_objective>Closed Caption - [XQA][DAC-XG1][RDK 1.3][POC6][Settings] –Font color in CC is displayed as black were in settings it set as white with background color yellow [always reproducible,multiple boxes]
+Steps .
+1.Navigate to settings-&gt;device settings-&gt;closed caption
+2.set followings settings
+
+Digiatal service - primary langauage
+Font size - small/medium/large
+Font style - Default
+Font color-white
+Font opacity - solid
+Font edge style - uniform
+Font edge color - black/none
+Back ground colour - yellow
+Back ground opacity - solid
+
+Expected behavior.
+CC should be displayed
+font color : white
+background color :yellow
+
+Actual behavior
+CC is displayed in
+Font color : Black
+background color : yellow</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XI3-1/XG1-1</test_setup>
+    <pre_requisite/>
+    <api_or_interface_used>vlGfxInit(0)                                                     vlMpeosCCManagerInit()                  ccSetAttributes(&amp;CCAttribute, AttributeType, ccType))                  ccGetAttributes(&amp;CCGetAttribute, ccType)</api_or_interface_used>
+    <input_parameters>Categories : CCSetGetAttribute : *attrib - Pointer to cc attribute structure list, type - 1 (list value of fontcolor in the structure), Pointer to cc attribute structure list,         type - 0 (list value of charBgColor in the structure) BgColor, ccType - Digital/Analog.</input_parameters>
+    <automation_approch>1. TM loads the ClosedCaption_Manager_Agent via the test agent.
+2.ClosedCaption_Manager_Agent will initialize/start the  ClosedCaption Manager.                        3.ClosedCaption_Manager_Agent will set the font color  to white the ClosedCaption Manager.                                                    4.ClosedCaption_Manager_Agent will set the BG color  to yellow                                                     
+5.Test Manger will request the font color by calling get attributes.                                                                          6. ClosedCaption_Manager_Agent will return SUCCESS status based on the return value of  APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.          Checkpoint 2.Check the value which is being set is being got back by the get API.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>TestMgr_CC_Init  TestMgr_CC_SetGetAttribute</test_stub_interface>
+    <test_script>CC_SetGet_Attribute_FontColor_196</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

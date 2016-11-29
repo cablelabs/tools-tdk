@@ -17,55 +17,58 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>11</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_Set_Resolution_During_Standby</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>541</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>This test to change the resolution during Standby Mode</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>5</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_LinearTV_48</test_case_id>
+    <test_objective>Set the Resolutions during STANDBY</test_objective>
+    <test_type>Negative</test_type>
+    <test_setup>XG1-X13_1</test_setup>
+    <pre_requisite/>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>TV must be connected</input_parameters>
+    <automation_approch>1. TM loads the Device_Settings_Agent and IARMBus Agent via the test agent.
+2.Device_Settings_Agent will get the status of display connection.
+3. IARMBus Agent sets the powermode to STANDBY
+4.Device_Settings_Agent should not be able to get the list resolution supported by a given port.
+5.Device_Settings_Agent should not be able to get the default resolution supported by a given port.
+6. Device_Settings_Agent will get the display resolution.
+6. Device_Settings_Agent will set the new display resolution.
+7. Device_Settings_Agent will check for the new display resolution and will return SUCCESS or FAILURE based on the result.</automation_approch>
+    <except_output>Checkpoint 1.Check the return values of API's</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>DS_Stub</test_stub_interface>
+    <test_script>E2E_Set_Resolution_During_Standby</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

@@ -17,60 +17,90 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>1324</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>2</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>IARM_BUS_DiskMgr_Event_ExtHDD_On_21</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>18</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>IARMBUS_BroadcastEvent</primitive_test_name>
-  <!--  -->
   <primitive_test_version>6</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>IARMBUS – Broadcasting and Receiving “IARM_BUS_DISKMGR_EVENT_EXTHDD” event with event type 
 Test case Id - CT_IARMBUS_21</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>3</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_IARMBUS_21</test_case_id>
+    <test_objective>IARMBUS – Broadcasting and Receiving “IARM_BUS_DISKMGR_EVENT_EXTHDD” event with event type DISKMGR_EVENT_EXTHDD_ON.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XI3-1 / XG1-1</test_setup>
+    <pre_requisite>“IARMDaemonMain” and "diskMgrMain" process should be running.</pre_requisite>
+    <api_or_interface_used>IARM_Bus_Init(char *)
+IARM_Bus_Connect()
+IARM_Bus_RegisterEventHandler(const char* , IARM_EventId_t , IARM_EventHandler_t )
+IARM_Bus_BroadcastEvent(const char *, IARM_EventId_t , void *, size_t )
+IARM_Bus_UnRegisterEventHandler(const char*, IARM_EventId_t )
+IARM_Bus_Disconnect()
+IARM_Bus_Term()</api_or_interface_used>
+    <input_parameters>IARM_Bus_Init : 
+char *  - (test agent process_name)
+IARM_Bus_Connect : None
+IARM_Bus_RegisterEventHandler : 
+const char * - IARM_BUS_DISKMGR_NAME , IARM_EventId_t - IARM_BUS_DISKMGR_EVENT_EXTHDD, IARM_EventHandler_t - _evthandler 
+IARM_Bus_BroadcastEvent :
+Const char* - IARM_BUS_DISKMGR_NAME,
+IARM_EventId_t – IARM_BUS_DISKMGR_EVENT_EXTHDD ,
+Void * - eventdata, size_t – sizeof (eventdata)
+IARM_Bus_UnRegisterEventHandler : 
+const char* – IARM_BUS_DISKMGR_NAME , IARM_EventId_t – IARM_BUS_DISKMGR_EVENT_EXTHDD
+IARM_Bus_Disconnect : None
+IARM_Bus_Term : None</input_parameters>
+    <automation_approch>1.TM loads the IARMBUS_Agent via the test agent
+2.The IARMBUS_Agent initializes and registers with IARM Bus Daemon (First Application).
+3.TM loads(initializes and registers) another application with IARM Daemon(second application) .
+4.IARMBUS_Agent will register for “IARM_BUS_DISKMGR_EVENT_EXTHDD” event and waits on event.
+5.Second application will broadcast the event to the bus.
+6.IARMBUS_Agent should receive the event and event handler should handle the event(printing some log message) .
+7.IARMBUS_Agent deregisters from the IARM Bus Daemon.
+8.For each API called in the script, IARMBUS_Agent will send SUCCESS or FAILURE status to Test Agent by comparing the return vale of APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.
+
+Checkpoint 2. Check for  the print  message.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>libiarmbusstub.so
+1.TestMgr_IARMBUS_Init
+2.TestMgr_IARMBUS_Term
+3.TestMgr_IARMBUS_Connect
+4.TestMgr_IARMBUS_Disconnect
+5.TestMgr_IARMBUS_BroadcastEvent
+6.TestMgr_IARMBUS_RegisterEventHandler
+7.TestMgr_IARMBUS_UnRegisterEventHandler
+8.TestMgr_IARMBUS_InvokeSecondApplication</test_stub_interface>
+    <test_script>IARM_BUS_DiskMgr_Event_ExtHDD_On_21</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
   <script_tags>
     <script_tag>BASIC</script_tag>
-    <!--  -->
   </script_tags>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 from tdklib import TDKScriptingLibrary;

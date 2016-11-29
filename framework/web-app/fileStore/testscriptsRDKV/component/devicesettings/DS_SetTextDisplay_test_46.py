@@ -17,60 +17,77 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
+<?xml version="1.0" encoding="UTF-8"?><xml>
   <id>637</id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>2</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>DS_SetTextDisplay_test_46</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>86</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>DS_SetText</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>This test script Sets and gets the valid text in the text display of given Front panel Indicator
 Test Case ID : CT_DS_46</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>3</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-3</box_type>
-    <!--  -->
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
     <box_type>Terminal-RNG</box_type>
-    <!--  -->
     <box_type>IPClient-4</box_type>
-    <!--  -->
     <box_type>Emulator-Client</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK1.3</rdk_version>
-    <!--  -->
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_DS_46</test_case_id>
+    <test_objective>Device Setting – Get and Set the Text of the Text display</test_objective>
+    <test_type>Positive(Boundary condition)</test_type>
+    <test_setup>XI3-1/XG1-1</test_setup>
+    <pre_requisite>1. dsMgrMain should be up and running.
+2. IARMDaemonMain should be up and running.</pre_requisite>
+    <api_or_interface_used>device::Manager::Initialize()   
+FrontPanelConfig::getInstance()
+FrontPanelConfig::getTextDisplays ()      
+FrontPanelConfig::getTextDisplay(string)
+FrontPanelConfig::setText()
+Device::Manager::DeInitialize()</api_or_interface_used>
+    <input_parameters>getTextDisplay : string – name 
+name:“TEXT” 
+SetText : string- text
+E.g.: text: “hello”</input_parameters>
+    <automation_approch>1.TM loads the Device_Settings_Agent via the test agent
+2.Device_Settings_Agent will get the list of test display panel in the front Panel.
+3.Device_Settings_Agent will get a instance for single test display panel by “passing name:TEXT”
+4.Device_Settings_Agent will set some text in the text display panel of front panel indicator.
+5.TM makes RPC calls for getting the Time format from Device_Settings_Agent and verify whether the format has changed.
+6.Device_Settings_Agent will return SUCCESS or FAILURE based on the result from the above step(5th)</automation_approch>
+    <except_output>
+
+
+Checkpoint 1. Check for the return value of setText APIs.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>TestMgr_DS_managerInitialize
+TestMgr_DS_FP_setText
+TestMgr_DS_FP_setTime
+TestMgr_DS_FP_setTimeForamt
+TestMgr_DS_FP_getTextDisplays
+TestMgr_DS_managerDeinitialize</test_stub_interface>
+    <test_script>DS_SetTextDisplay_test_46</test_script>
+    <skipped>No</skipped>
+    <release_version>M21</release_version>
+    <remarks/>
+  </test_cases>
   <script_tags>
     <script_tag>BASIC</script_tag>
-    <!--  -->
   </script_tags>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

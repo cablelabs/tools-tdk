@@ -17,45 +17,61 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>2</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>E2E_RMF_delete_liverecord_lessthanonemin</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>541</primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>TDKE2E_RMFLinearTV_GetURL</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Try to delete recorded content when recorded content is below 1min from  XG1 .</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>18</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
     <box_type>Emulator-HYB</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>E2E_DVR_28</test_case_id>
+    <test_objective>Try to delete recorded content when recorded content is below 1min from  XG1 .</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>None</pre_requisite>
+    <api_or_interface_used>None</api_or_interface_used>
+    <input_parameters>1.RMFMediastreamer executable should be running.</input_parameters>
+    <automation_approch>1.TM loads Recorder_agent via the test agent.
+2.TM gets an source_id from the streaming details page of the FW and sends it to Recorder_agent to generate request url.
+3.TM pass the parameters like duration and recording_id to Recorder_agent.
+3.Recorder_agent will frame the json message to schedule the recording and send to TDK_Recorder_server which is present in TM.
+4.Status of the Json response from Mediastreamer to TDK_Recorder_Server getting extracted by TM.
+5 Recorder_agent  will do the error checking by verifying ocapri_logs.
+6.TM loads RMFStub_agent via the test agent.
+7.TM will invoke “TestMgr_ deleteRecording"" with recordingId as a parameter in RMFStub_agent.
+8.TM pass the parameters like duration and recording_id to Recorder_agent.
+9.RMFStub_agent will call getinstance of Dvr Manager 
+10.Call the methods  deleteRecording 
+11 On success of API execution RMFStub_agent will send SUCCESS or FAILURE to TM."
+12.Depends on the result of above step Recorder_agent sends SUCCESS or FAILURE to TM.
+13.Depends on the result of above step agent sends SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1 Status from live playback
+Checkpoint 2.Check the return value of API for success status.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>MediaFramework_Stub
+TDKIntegration_Stub</test_stub_interface>
+    <test_script>E2E_RMF_delete_liverecord_lessthanonemin</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

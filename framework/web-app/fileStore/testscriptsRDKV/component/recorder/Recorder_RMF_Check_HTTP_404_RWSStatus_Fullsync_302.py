@@ -17,44 +17,61 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>3</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Recorder_RMF_Check_HTTP_404_RWSStatus_Fullsync_302</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id></primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
+  <primitive_test_id/>
   <primitive_test_name>Recorder_SendRequest</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>RWS status server should send HTTP 404 when the server is enabled with HTTP 404 error and also during full sync after retry recorder should send error code RDK-10028</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>60</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
-  <script_tags />
+  <test_cases>
+    <test_case_id>CT_Recorder_DVR_Protocol_302</test_case_id>
+    <test_objective>RWS status server should send HTTP 404 when the server is enabled with HTTP 404 error and also during full sync after retry recorder should send error code RDK-10028</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1</test_setup>
+    <pre_requisite>1. rmfStreamer executable should be running.
+2. Device time should be in current time of UTC.
+3. Two files should be created in the name of “stt_received” and “stage4” in “/tmp” path of device.
+4. In rmfconfig.ini file the parameters “FEATURE.LONGPOLL.URL”,"FEATURE.RWS.GET.URL" and "FEATURE.RWS.POST.URL" should be pointing to DVRSimulator</pre_requisite>
+    <api_or_interface_used>Json Interface</api_or_interface_used>
+    <input_parameters>Json Interface- source id, duration recording_id, start_time.</input_parameters>
+    <automation_approch>1. TM loads RecorderAgent via the test agent.
+2. Schedule a 1 min recording and wait for the recording to complete
+3.Configure RWS status server and RWS secure status server with error 404 and reboot the box
+ 4.Check ocapri log and application log for error code 404 and connection retry requests
+5. Also check the ocapri log for RDK error code RDK-10028 for connection lost with RWS server.
+6.Clear the RWS status server and RWS secure status server error 404
+7.Depends on the result of above step RecorderAgent sends SUCCESS or FAILURE to TM.</automation_approch>
+    <except_output>Checkpoint 1 Acknowledgement status from the DVRSimulator.
+
+Checkpoint 2 Check whether the error codes are available in ocapri log</except_output>
+    <priority>High</priority>
+    <test_stub_interface>RecorderAgent
+1.TestMgr_Recorder_SendRequest
+2.TestMgr_Recorder_clearOcapri_log
+3.TestMgr_Recorder_checkOcapri_log
+4.TestMgr_Recorder_ExecuteCmd</test_stub_interface>
+    <test_script>Recorder_RMF_Check_HTTP_404_RWSStatus_Fullsync_302</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
+  </test_cases>
+  <script_tags/>
 </xml>
+
 '''
 #use tdklib library,which provides a wrapper for tdk test case script
 import tdklib;
