@@ -632,6 +632,7 @@ class ExecutionService {
 			]
 			
 			if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+				url = updateTMUrl(url,device)
 				cmdList.push(url)
 			}
 			
@@ -727,7 +728,7 @@ class ExecutionService {
 	
 	def getFileTransferScriptName(Device device){
 		String scriptName = FILE_TRANSFER_SCRIPT
-		if(device?.category?.equals(Category.RDKB) && InetUtility.isIPv6Address(device?.stbIp)){
+			if(InetUtility.isIPv6Address(device?.stbIp)){
 			scriptName = FILE_UPLOAD_SCRIPT
 		}
 		return scriptName
@@ -755,6 +756,7 @@ class ExecutionService {
 		]
 
 		if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+			url = updateTMUrl(url,device)
 			cmdList.push(url)
 		}
 				
@@ -2266,8 +2268,27 @@ class ExecutionService {
 	   }
 	}).start();
  }
- 
- 
+  /**
+  * Function for updating the TM ip[ipv6, ipv4] according to the  device selection
+  * @param url
+  * @param device
+  * @return
+  */ 
+	def updateTMUrl(String url,Device device){
+		try {
+			if(InetUtility.isIPv6Address(device?.stbIp) && device?.category?.equals(Category.RDKV)){
+				File configFile = grailsApplication.parentContext.getResource("/fileStore/tm.config").file
+						String ipV6Address = InetUtility.getIPAddress(configFile, Constants.IPV6_INTERFACE)
+						String ipV4Address = InetUtility.getIPAddress(configFile, Constants.IPV4_INTERFACE)
+						if(ipV4Address &&ipV6Address && !ipV4Address.isEmpty() && !ipV6Address.isEmpty()){
+							url = url.replace(ipV4Address, "[${ipV6Address}]")
+						}
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		return url
+	}
  
  
  

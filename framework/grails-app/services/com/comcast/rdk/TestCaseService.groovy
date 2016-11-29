@@ -42,22 +42,7 @@ class TestCaseService {
 			def scriptsDirName = primitiveService.getScriptDirName(moduleName)
 			def ptest = primitiveService.getPrimitiveTest(realPath+Constants.FILE_SEPARATOR+FILESTORE+Constants.FILE_SEPARATOR+TEST_SCRIPTS+scriptsDirName+Constants.FILE_SEPARATOR+moduleName+Constants.FILE_SEPARATOR+moduleName+XML, params?.primitiveTest)
 			def scrpt = scriptService.getScript(realPath,moduleName, params?.name,params?.category)
-			def testCase = scrpt?.testCaseDetails
-			/*testCaseDetails?.put(TC_SCRIPT,testCase?.testScript)
-			testCaseDetails?.put(TC_ID,testCase?.testCaseId)
-			testCaseDetails?.put(TC_OBJ,testCase?.testObjective)
-			testCaseDetails?.put(TC_TYPE,testCase?.testType)
-			testCaseDetails?.put(TC_SETUP,testCase?.testSetup)
-			testCaseDetails?.put(TC_PRE_REQUISITES, testCase?.preRequisites)
-			testCaseDetails?.put(TC_INTERFACE,testCase?.interfaceUsed)
-			testCaseDetails?.put(TC_IOPARAMS, testCase?.inputParameters)
-			testCaseDetails?.put(TC_AUTOAPROCH,testCase?.automationApproch)
-			testCaseDetails?.put(TC_EX_OUTPUT,testCase?.expectedOutput)
-			testCaseDetails?.put(TC_PRIORITY,testCase?.priority)
-			testCaseDetails?.put(TC_TSI,testCase?.testStubInterface)
-			testCaseDetails?.put(TC_SKIP,testCase?.tcskip)
-			testCaseDetails?.put(TC_RELEASE_VERSION,testCase?.releaseVersion)
-			testCaseDetails?.put(REMARKS,testCase?.remarks)*/
+			def testCase = scrpt?.testCaseDetails			
 			testCaseDetails =  getTestCaseMap(testCase)
 		}catch(Exception e){
 			println "ERROR "+e.printStackTrace()
@@ -80,22 +65,7 @@ class TestCaseService {
 					def scriptFileInstance  = ScriptFile.findByScriptName(script?.toString())
 					def scriptDetails = scriptService.getScript(realPath,scriptFileInstance?.moduleName?.toString(),script?.toString(),params.category)
 					def testCase =  scriptDetails?.testCaseDetails
-					if(testCase){
-						/*testCaseMap?.put(TC_SCRIPT,testCase?.testScript)
-						testCaseMap?.put(TC_ID,testCase?.testCaseId)
-						testCaseMap?.put(TC_OBJ,testCase?.testObjective)
-						testCaseMap?.put(TC_TYPE,testCase?.testType)
-						testCaseMap?.put(TC_SETUP,testCase?.testSetup)
-						testCaseMap?.put(TC_PRE_REQUISITES, testCase?.preRequisites)
-						testCaseMap?.put(TC_INTERFACE,testCase?.interfaceUsed)
-						testCaseMap?.put(TC_IOPARAMS, testCase?.inputParameters)
-						testCaseMap?.put(TC_AUTOAPROCH,testCase?.automationApproch)
-						testCaseMap?.put(TC_EX_OUTPUT,testCase?.expectedOutput)
-						testCaseMap?.put(TC_PRIORITY,testCase?.priority)
-						testCaseMap?.put(TC_TSI,testCase?.testStubInterface)
-						testCaseMap?.put(TC_SKIP,testCase?.tcskip)
-						testCaseMap?.put(TC_RELEASE_VERSION,testCase?.releaseVersion)
-						testCaseMap?.put(REMARKS,testCase?.remarks)*/
+					if(testCase){					
 						testCaseMap =  getTestCaseMap(testCase)
 					}
 					if(totalTestCaseMap.containsKey(scriptFileInstance?.moduleName) ) {
@@ -137,22 +107,7 @@ class TestCaseService {
 			files.each { file ->
 				def scriptDetails = scriptService.getScript(realPath,params?.moduleName,file,params.category)
 				def testCase =  scriptDetails?.testCaseDetails
-				if(testCase){
-					/*testCaseMap?.put(TC_SCRIPT,testCase?.testScript)
-					testCaseMap?.put(TC_ID,testCase?.testCaseId)
-					testCaseMap?.put(TC_OBJ,testCase?.testObjective)
-					testCaseMap?.put(TC_TYPE,testCase?.testType)
-					testCaseMap?.put(TC_SETUP,testCase?.testSetup)
-					testCaseMap?.put(TC_PRE_REQUISITES, testCase?.preRequisites)
-					testCaseMap?.put(TC_INTERFACE,testCase?.interfaceUsed)
-					testCaseMap?.put(TC_IOPARAMS, testCase?.inputParameters)
-					testCaseMap?.put(TC_AUTOAPROCH,testCase?.automationApproch)
-					testCaseMap?.put(TC_EX_OUTPUT,testCase?.expectedOutput)
-					testCaseMap?.put(TC_PRIORITY,testCase?.priority)
-					testCaseMap?.put(TC_TSI,testCase?.testStubInterface)
-					testCaseMap?.put(TC_SKIP,testCase?.tcskip)
-					testCaseMap?.put(TC_RELEASE_VERSION,testCase?.releaseVersion)
-					testCaseMap?.put(REMARKS,testCase?.remarks)*/
+				if(testCase){					
 					testCaseMap =  getTestCaseMap(testCase)
 					if(testCaseMap?.get(TC_SCRIPT)){
 						moduleTestCaseList?.add(testCaseMap)

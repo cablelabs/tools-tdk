@@ -3422,17 +3422,24 @@ class ScriptGroupController {
 	 * Function for downloading the test case in script group in excel file
 	 */
 	def downloadScriptGroupTestCase(){
+		def scriptGrpInstance = ScriptGroup?.findByName(params?.scriptGrpName)
 		try{
-			def scriptGrpInstance = ScriptGroup?.findByName(params?.scriptGrpName)
 			def totalTestCaseMap = testCaseService?.downloadScriptGroupTestCase(params,getRealPath())
-			params.format = EXPORT_EXCEL_FORMAT
-			params.extension = EXPORT_EXCEL_EXTENSION
-			response.contentType = grailsApplication.config.grails.mime.types[params.format]
-			def fileName = scriptGrpInstance?.toString()
-			response.setHeader("Content-disposition", "attachment; filename="+fileName +".${params.extension}")
-			excelExportService?.exportTestSuiteTestCase(scriptGrpInstance?.toString(),response.outputStream,totalTestCaseMap,testCaseService?.testCaseKeyMap())
+			if(totalTestCaseMap != [:]){
+				params.format = EXPORT_EXCEL_FORMAT
+				params.extension = EXPORT_EXCEL_EXTENSION
+				response.contentType = grailsApplication.config.grails.mime.types[params.format]
+				def fileName = scriptGrpInstance?.toString()
+				response.setHeader("Content-disposition", "attachment; filename="+fileName +".${params.extension}")
+				excelExportService?.exportTestSuiteTestCase(scriptGrpInstance?.toString(),response.outputStream,totalTestCaseMap,testCaseService?.testCaseKeyMap())
+			}else{
+				flash.message = "No test cases available in ${scriptGrpInstance?.name}  "
+				redirect(action:"list")
+			}
 		}catch(Exception e){
 			println "ERROR"+e.getMessage()
+			flash.message = "No test cases available in ${scriptGrpInstance?.name}  "
+			redirect(action:"list")
 		}
 	}
 	

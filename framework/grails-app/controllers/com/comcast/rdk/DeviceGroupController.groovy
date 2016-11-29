@@ -1853,42 +1853,48 @@ class DeviceGroupController {
 	 * Function  used to upload RDKB device configuration for tcl script execution .
 	 * @return
 	 */	
-	def uploadTclConfig(){
-		def message = 'TCL Config file upload failed'
+		def uploadTclConfig(){
+		JsonObject deviceObj = new JsonObject()
 		def realPath = request.getSession().getServletContext().getRealPath(FILE_SEPARATOR)
-		def filePath =  realPath+"fileStore"+FILE_SEPARATOR+FileStorePath.RDKTCL.value()+FILE_SEPARATOR
+		def filePath =  realPath+FILESTORE+FILE_SEPARATOR+FileStorePath.RDKTCL.value()+FILE_SEPARATOR
 		def deviceName = params.deviceName?.trim()
 		if(deviceName){
 			Device dev = Device?.findByStbName(deviceName)
 			if(dev){
 				filePath = filePath + 'Config_'+deviceName+".txt"
 				try{
-					def tclFile =  request?.getFile('tclConfigFile')					
+					def tclFile =  request?.getFile('tclConfigFile')
 					if(tclFile){
 						if(!tclFile?.empty){
 							def content = readFromStream(tclFile, realPath)
 							content = content + "\ndeviceIp  "+dev?.stbIp
 							Utility.writeContentToFile(content, filePath)
-							message = 'File uploaded successfully'
+							deviceObj.addProperty(STATUS_C,SUCCESS)
+							deviceObj.addProperty(REMARKS_C,"File uploaded successfully ")
 						}else{
-							message = "File content is empty "
+							deviceObj.addProperty(STATUS_C,FAILURE)
+							deviceObj.addProperty(REMARKS_C,"File content is empty ")
 						}
 					}else{
-						message = " tclConfigFile missing "
+						deviceObj.addProperty(STATUS_C,FAILURE)
+						deviceObj.addProperty(REMARKS_C,"tclConfigFile missing ")
 					}
 				}
 				catch(Exception e){
-					message = 'TCL Config file upload failed'
+					deviceObj.addProperty(STATUS_C,FAILURE)
+					deviceObj.addProperty(REMARKS_C,"TCL Config file upload failed ")
 					println e.getMessage()
 				}
 			}else{
-				message = 'No device found with name '+deviceName
+				deviceObj.addProperty(STATUS_C,FAILURE)
+				deviceObj.addProperty(REMARKS_C,"No device found with name "+deviceName)
 			}
 		}
 		else{
-			message = 'deviceName missing'
+			deviceObj.addProperty(STATUS_C,FAILURE)
+			deviceObj.addProperty(REMARKS_C,'deviceName missing')
 		}
-		render message
+		render deviceObj
 	}
 }
 

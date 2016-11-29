@@ -508,8 +508,8 @@
 	        	</ul>
 	      	</div>	      
 		</div>
-		<div id="streamDetailsPopup" style="display: none; overflow: auto; width : 98%; height : 98%;">			
-		<div id="testCaseDocPopUp"	style="display: none; overflow: auto; width : 98%; height : 98%;">
+		<div id="streamDetailsPopup" style="display: none; overflow: auto; width : 98%; height : 98%;">	</div>		
+		<div id="testCaseDocPopUp"	style="display: none; overflow: auto; width : 98%; height : 98%;"></div>
 	</div>
 	
 	<g:hiddenField name="currentScriptId" id="currentScriptId" value="${scriptId}"/>

@@ -1279,7 +1279,7 @@ class JobSchedulerService implements Job{
 	 */
 	def getFileTransferScriptName(Device device){
 		String scriptName = FILE_TRANSFER_SCRIPT
-		if(device?.category?.equals(Category.RDKB) && InetUtility.isIPv6Address(device?.stbIp)){
+			if(InetUtility.isIPv6Address(device?.stbIp)){
 			scriptName = FILE_UPLOAD_SCRIPT
 		}
 		return scriptName
@@ -1319,6 +1319,7 @@ class JobSchedulerService implements Job{
 			]
 
 			if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+				url = ExecutionService.updateTMUrl(url,device)
 				cmdList.push(url)
 			}
 
@@ -2113,7 +2114,7 @@ class JobSchedulerService implements Job{
 
 	def getConsoleFileTransferScriptName(Device device){
 		String scriptName = CONSOLE_FILE_TRANSFER_SCRIPT
-		if(device?.category?.equals(Category.RDKB) && InetUtility.isIPv6Address(device?.stbIp)){
+		if(InetUtility.isIPv6Address(device?.stbIp)){
 			scriptName = CONSOLE_FILE_UPLOAD_SCRIPT
 		}
 		return scriptName
@@ -2197,6 +2198,7 @@ class JobSchedulerService implements Job{
 					]
 
 					if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+						url = ExecutionService.updateTMUrl(url,dev)
 						cmdList.push(url)
 					}
 					String [] cmd = cmdList.toArray()
@@ -2710,6 +2712,7 @@ class JobSchedulerService implements Job{
 			]
 
 			if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+				url = ExceutionService?.updateTMUrl(url,device)
 				cmdList.push(url)
 			}
 

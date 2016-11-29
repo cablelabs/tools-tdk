@@ -582,6 +582,7 @@ class ExecutescriptService {
 			]
 			
 			if(scriptName?.equals(CONSOLE_FILE_UPLOAD_SCRIPT)){
+				url = executionService.updateTMUrl(url,deviceInstance)
 				cmdList.push(url)
 			}
 			
@@ -1481,7 +1482,7 @@ class ExecutescriptService {
 					deviceStatusService.updateOnlyDeviceStatus(deviceInstance, devStatus)
 				}
 
-				Thread.sleep(1000);
+				Thread.sleep(2000);
 
 				Device devv = Device.get(deviceId)
 				println "["+ deviceInstance?.stbName+"] ["+  devStatus + "] ["+devv?.deviceStatus+"]"+" [execName="+execName+"]"
@@ -2159,7 +2160,7 @@ class ExecutescriptService {
 	 */
 	def getConsoleFileTransferScriptName(Device device){
 		String scriptName = CONSOLE_FILE_TRANSFER_SCRIPT
-		if(device?.category?.equals(Category.RDKB) && InetUtility.isIPv6Address(device?.stbIp)){
+		if(InetUtility.isIPv6Address(device?.stbIp)){
 			scriptName = CONSOLE_FILE_UPLOAD_SCRIPT
 		}
 		return scriptName
@@ -2212,6 +2213,7 @@ class ExecutescriptService {
 				]
 				
 				if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
+					url = executionService.updateTMUrl(url,dev)
 					cmdList.push(url)
 				}
 				

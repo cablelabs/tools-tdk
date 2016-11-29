@@ -33,6 +33,7 @@ import org.quartz.impl.triggers.SimpleTriggerImpl
 
 import rdk.test.tool.*
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 
@@ -2481,6 +2482,9 @@ class ExecutionController {
 							if(executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 								status = "BUSY"
 							}else{
+								if(!status.equals( Status.FREE.toString() )){
+									status = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
+								}
 								if((status.equals( Status.FREE.toString() ))){
 									if(!executionService.deviceAllocatedList.contains(deviceInstance?.id)){
 										executionService.deviceAllocatedList.add(deviceInstance?.id)
@@ -2913,11 +2917,11 @@ class ExecutionController {
 						//For multiple script execution
 						//saveExecutionDetails = executionService.saveExecutionDetailsOnMultipleScripts(execName?.toString(), MULTIPLESCRIPT, deviceInstance?.toString(), scriptGroupInstance,url?.toString(),isBenchMark?.toString(),isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString(),scriptCount,)
 						saveExecutionDetails= executionService.saveExecutionDetails(execName?.toString(),[scriptName:MULTIPLESCRIPT, deviceName:deviceInstance?.toString(), scriptGroupInstance:scriptGroupInstance,
-													appUrl:url?.toString(), isBenchMark:isBenchMark?.toString(), isSystemDiagnostics:isSystemDiagnostics?.toString(), rerun:rerun?.toString(), isLogReqd:isLogReqd?.toString(),category:deviceInstance?.category?.toString(), rerunOnFailure : FALSE])
+													appUrl:url?.toString(), isBenchMark:isBenchMark?.toString(), isSystemDiagnostics:isSystemDiagnostics?.toString(), rerun:rerun?.toString(), isLogReqd:isLogReqd?.toString(),category:executionInstance1?.category?.toString(), rerunOnFailure : FALSE])
 					}else{						//For test suite execution
 						//saveExecutionDetails = executionService.saveExecutionDetails(execName?.toString(), scripts, deviceInstance?.toString(), scriptGroupInstance ,url?.toString(),isBenchMark?.toString(),isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString())
 					saveExecutionDetails= executionService.saveExecutionDetails(execName?.toString(),[scriptName:scripts, deviceName:deviceInstance?.toString(), scriptGroupInstance:scriptGroupInstance,
-						appUrl:url?.toString(), isBenchMark:isBenchMark?.toString(), isSystemDiagnostics:isSystemDiagnostics?.toString(), rerun:rerun?.toString(), isLogReqd:isLogReqd?.toString(),category:deviceInstance?.category?.toString(), rerunOnFailure:FALSE])
+						appUrl:url?.toString(), isBenchMark:isBenchMark?.toString(), isSystemDiagnostics:isSystemDiagnostics?.toString(), rerun:rerun?.toString(), isLogReqd:isLogReqd?.toString(),category:executionInstance1?.category?.toString(), rerunOnFailure:FALSE])
 					}
 					if(saveExecutionDetails){
 						try {
@@ -2946,8 +2950,16 @@ class ExecutionController {
 								myGroup = "TestSuite"
 
 							}							
-							executescriptService.executescriptsOnDevice(execName?.toString(), deviceId?.toString(), executionDevice, scripts, scriptGroupInstance?.id.toString(), executionName?.toString(),
-									filePath, getRealPath(),myGroup?.toString(), url?.toString(), isBenchMark?.toString(), isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString(),deviceInstance.category?.toString())
+	if(executionInstance1?.category?.toString().equals(RDKB_TCL)){
+								tclExecutionService?.executescriptsOnDevice(execName?.toString(), deviceId?.toString(), executionDevice, scripts, scriptGroupInstance?.id.toString(), executionName?.toString(),
+									filePath, getRealPath(),myGroup?.toString(), url?.toString(), isBenchMark?.toString(), isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString(),executionInstance1?.category?.toString())
+							}else{
+								executescriptService.executescriptsOnDevice(execName?.toString(), deviceId?.toString(), executionDevice, scripts, scriptGroupInstance?.id.toString(), executionName?.toString(),
+									filePath, getRealPath(),myGroup?.toString(), url?.toString(), isBenchMark?.toString(), isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString(),executionInstance1?.category?.toString())
+							}
+							/*executescriptService.executescriptsOnDevice(execName?.toString(), deviceId?.toString(), executionDevice, scripts, scriptGroupInstance?.id.toString(), executionName?.toString(),
+									filePath, getRealPath(),myGroup?.toString(), url?.toString(), isBenchMark?.toString(), isSystemDiagnostics?.toString(),rerun?.toString(),isLogReqd?.toString(),deviceInstance.category?.toString())*/
+
 						}else{
 							flash.message =  " Save Execution status is null  "
 						}
@@ -3001,7 +3013,12 @@ class ExecutionController {
 					if(value ==  true ){
 						String uniqueName = executionInstance?.toString()+"12"
 						//ISSUE fix
-						executescriptService?.reRunOnFailure(getRealPath()?.toString(), filePath?.toString() , params?.executionName?.toString(),uniqueName?.toString(), url?.toString(), deviceInstance?.category?.toString() )
+						//executescriptService?.reRunOnFailure(getRealPath()?.toString(), filePath?.toString() , params?.executionName?.toString(),uniqueName?.toString(), url?.toString(), deviceInstance?.category?.toString() )
+						if(!(executionInstance?.category?.toString()?.equals(RDKB_TCL))){
+							executescriptService?.reRunOnFailure(getRealPath()?.toString(), filePath?.toString() , params?.executionName?.toString(),uniqueName?.toString(), url?.toString(), executionInstance?.category?.toString() )
+						}else{
+							tclExecutionService?.reRunOnFailure(getRealPath()?.toString(), filePath?.toString() , params?.executionName?.toString(),uniqueName?.toString(), url?.toString(), executionInstance?.category?.toString())
+						}
 					}else{
 						flash.message = "Failue script list not found in the suite"
 					}
@@ -3424,6 +3441,7 @@ class ExecutionController {
 				ScriptExecutor scriptExecutor = new ScriptExecutor()
 				def outputData = scriptExecutor.executeScript(cmd,1)
 				if(outputData && !(outputData?.toString()?.contains("METHOD_NOT_FOUND") || outputData?.toString()?.contains("AGENT_NOT_FOUND") )){
+					jsonOutData.addProperty("Status", "SUCCESS")
 					jsonOutData.addProperty("DeviceIp", device?.stbIp)
 					jsonOutData?.addProperty("ImageName",outputData.toString()?.trim())
 				}
@@ -3469,5 +3487,83 @@ class ExecutionController {
 				println  "uploadLogs ERROR "+ e.getMessage()
 			}
 			render data;
+	}
+	/**
+	 * REST API : Method to get the module wise execution status
+	 */
+	def getExecutionStatus(String execName){
+		JsonObject jsonObj = new JsonObject()
+		Execution executionInstance = Execution.findByName(execName)
+		jsonObj.addProperty("ExecutionName", execName)
+		def detailDataMap = executedbService.prepareDetailMap(executionInstance,request.getRealPath('/'))
+
+		def tDataMap = [:]
+		int total = 0
+		detailDataMap?.keySet()?.each { k ->
+			Map mapp = detailDataMap?.get(k)
+			int tCount = 0
+			mapp?.keySet()?.each { status ->
+
+				def tStatusCounter = tDataMap.get(status)
+				def statusCounter = mapp.get(status)
+				if(!tStatusCounter){
+					tStatusCounter = 0
+				}
+				if(!status.equals("PENDING")){
+					tCount = tCount + statusCounter
+					tStatusCounter = tStatusCounter + statusCounter
+					tDataMap.put(status, tStatusCounter)
+				}
+
+
+			}
+			mapp.put("Executed", tCount)
+			def success = mapp?.get("SUCCESS")
+			if(success){
+				int rate = 0
+				if(tCount > 0){
+					int na = 0
+					if(mapp?.keySet().contains("N/A")){
+						na = mapp?.get("N/A")
+					}
+					rate = ((success * 100)/(tCount - na))
+				}
+				mapp.put("passrate",rate)
+
+			}
+			total = total + tCount
+		}
+		tDataMap.put("Executed", total)
+		int rate
+		if(tDataMap?.get("SUCCESS")){
+			int success = tDataMap?.get("SUCCESS")
+			int na = 0
+			if(tDataMap?.keySet().contains("N/A")){
+				na = tDataMap?.get("N/A")
+			}
+			rate = ((success * 100)/(total - na))
+		}
+
+		tDataMap.put("passrate",rate)
+
+		def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
+		def device = Device.findByStbName(executionInstance?.device)
+		
+		jsonObj.addProperty("DeviceName", executionInstance?.device)
+		if(executionInstance?.script){
+			jsonObj.addProperty("Script", executionInstance?.script)
+		}else if(executionInstance?.scriptGroup){
+			jsonObj.addProperty("ScriptGroup", executionInstance?.scriptGroup)
+		}
+		jsonObj.addProperty("ExecutionStatus", executionInstance?.executionStatus)
+		jsonObj.addProperty("Result", executionInstance?.result)
+		jsonObj.addProperty("Date", executionInstance?.dateOfExecution?.toString())
+		Gson gson = new Gson();
+		String dataMap = gson.toJson(tDataMap);
+		jsonObj.addProperty("DataMap", dataMap)
+		gson = new Gson();
+		String detailsMap = gson.toJson(detailDataMap);
+		jsonObj.addProperty("detailDataMap", detailsMap)
+		render jsonObj
 	}
 }

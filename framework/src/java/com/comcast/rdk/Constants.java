@@ -106,6 +106,7 @@ public final class Constants
 	public static final String STATUS_NONE          = "none";	
 	public static final String SEMI_COLON           = ";";
 	public static final String COLON          		= ":";
+	public static final String PERCENTAGE           = "%";
     public static final String KEY_DAILY            = "Daily";
     public static final String KEY_WEEKLY           = "Weekly";
     public static final String KEY_MONTHLY          = "Monthly";
@@ -284,4 +285,11 @@ public final class Constants
     private static final String MEDIUM ="Medium";
     private static final String POSITIVE ="Positive";
     private static final String NEGATIVE ="Negative";
+	
+	private static final String FAILURE ="FAILURE";
+    private static final String STATUS_C= "STATUS";
+    private static final String REMARKS_C = "REMARKS";
+    
+	public static final String IPV6_INTERFACE ="ipv6.interface";
+    public static final String IPV4_INTERFACE ="interface";
 }
