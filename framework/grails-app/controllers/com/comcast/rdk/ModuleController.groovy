@@ -228,13 +228,18 @@ class ModuleController {
 		}
         flash.message = message(code: 'default.created.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
         redirect(action: "create",  params:[category:params?.category])*/
-		def moduleInstance = new Module(params)
-		moduleInstance.groups = utilityService.getGroup()
-		if (!moduleInstance.save(flush: true)) {
-			render(view: "create", model: [moduleInstance: moduleInstance , category:params?.category ])
-			return
+		def module  = Module?.findByName(params.name)
+		if(module){
+			flash.message ="${params?.name} module name is alredy exist "
+		}else{
+			def moduleInstance = new Module(params)
+			moduleInstance.groups = utilityService.getGroup()
+			if (!moduleInstance.save(flush: true)) {
+				flash.message = message(code: 'default.not.created.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
+			}else{
+				flash.message = message(code: 'default.created.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
+			}
 		}
-		flash.message = message(code: 'default.created.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
 		redirect(action: "create", params:[category:params?.category])
     }
     /**

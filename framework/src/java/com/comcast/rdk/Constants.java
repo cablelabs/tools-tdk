@@ -292,4 +292,15 @@ public final class Constants
     
 	public static final String IPV6_INTERFACE ="ipv6.interface";
     public static final String IPV4_INTERFACE ="interface";
+    public static final String EXECUTION_NAME  ="ExecutionName";
+    public static final String EXECUTED ="Executed";
+    public static final String DEVICE_NAME= "DeviceName";
+   	public static final String SCRIPT="Script";
+   	public static final String SCRIPT_GROUP="ScriptGroup";
+   	public static final String EXECUTION_STATUS="ExecutionStatus";
+   	public static final String RESULT="Result";
+   	public static final String DATE="Date";
+   	public static final String DATATMAP="DataMap";
+   	public static final String DETAIL_DATA_MAP ="DetailDataMap";
+   	public static final String PASS_RATE= "PassRate"; 
 }

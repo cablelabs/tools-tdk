@@ -3492,78 +3492,71 @@ class ExecutionController {
 	 * REST API : Method to get the module wise execution status
 	 */
 	def getExecutionStatus(String execName){
-		JsonObject jsonObj = new JsonObject()
+		def jsonObjMap = [:]
 		Execution executionInstance = Execution.findByName(execName)
-		jsonObj.addProperty("ExecutionName", execName)
+		if(executionInstance){
+		jsonObjMap.put(EXECUTION_NAME, execName)
 		def detailDataMap = executedbService.prepareDetailMap(executionInstance,request.getRealPath('/'))
-
 		def tDataMap = [:]
 		int total = 0
 		detailDataMap?.keySet()?.each { k ->
 			Map mapp = detailDataMap?.get(k)
 			int tCount = 0
 			mapp?.keySet()?.each { status ->
-
 				def tStatusCounter = tDataMap.get(status)
 				def statusCounter = mapp.get(status)
 				if(!tStatusCounter){
 					tStatusCounter = 0
 				}
-				if(!status.equals("PENDING")){
+				if(!status.equals(PENDING)){
 					tCount = tCount + statusCounter
 					tStatusCounter = tStatusCounter + statusCounter
 					tDataMap.put(status, tStatusCounter)
 				}
-
-
 			}
-			mapp.put("Executed", tCount)
-			def success = mapp?.get("SUCCESS")
+			mapp.put(EXECUTED, tCount)
+			def success = mapp?.get(SUCCESS)
 			if(success){
 				int rate = 0
 				if(tCount > 0){
 					int na = 0
-					if(mapp?.keySet().contains("N/A")){
-						na = mapp?.get("N/A")
+					if(mapp?.keySet().contains(NOT_APPLICABLE_STATUS)){
+						na = mapp?.get(NOT_APPLICABLE_STATUS)
 					}
 					rate = ((success * 100)/(tCount - na))
 				}
-				mapp.put("passrate",rate)
-
+				mapp.put(PASS_RATE,rate)
 			}
 			total = total + tCount
 		}
-		tDataMap.put("Executed", total)
+		tDataMap.put(EXECUTED, total)
 		int rate
-		if(tDataMap?.get("SUCCESS")){
-			int success = tDataMap?.get("SUCCESS")
+		if(tDataMap?.get(SUCCESS)){
+			int success = tDataMap?.get(SUCCESS)
 			int na = 0
-			if(tDataMap?.keySet().contains("N/A")){
-				na = tDataMap?.get("N/A")
+			if(tDataMap?.keySet().contains(NOT_APPLICABLE_STATUS)){
+				na = tDataMap?.get(NOT_APPLICABLE_STATUS)
 			}
 			rate = ((success * 100)/(total - na))
 		}
-
-		tDataMap.put("passrate",rate)
-
+		tDataMap.put(PASS_RATE,rate)
 		def executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
 		def device = Device.findByStbName(executionInstance?.device)
-		
-		jsonObj.addProperty("DeviceName", executionInstance?.device)
+		jsonObjMap.put(DEVICE_NAME, executionInstance?.device)
 		if(executionInstance?.script){
-			jsonObj.addProperty("Script", executionInstance?.script)
+			jsonObjMap.put(SCRIPT, executionInstance?.script)
 		}else if(executionInstance?.scriptGroup){
-			jsonObj.addProperty("ScriptGroup", executionInstance?.scriptGroup)
+			jsonObjMap.put(SCRIPT_GROUP, executionInstance?.scriptGroup)
 		}
-		jsonObj.addProperty("ExecutionStatus", executionInstance?.executionStatus)
-		jsonObj.addProperty("Result", executionInstance?.result)
-		jsonObj.addProperty("Date", executionInstance?.dateOfExecution?.toString())
-		Gson gson = new Gson();
-		String dataMap = gson.toJson(tDataMap);
-		jsonObj.addProperty("DataMap", dataMap)
-		gson = new Gson();
-		String detailsMap = gson.toJson(detailDataMap);
-		jsonObj.addProperty("detailDataMap", detailsMap)
-		render jsonObj
+		jsonObjMap.put(EXECUTION_STATUS, executionInstance?.executionStatus)
+		jsonObjMap.put(RESULT, executionInstance?.result)
+		jsonObjMap.put(DATE, executionInstance?.dateOfExecution?.toString())
+		jsonObjMap.put(DATATMAP, tDataMap)
+		jsonObjMap.put(DETAIL_DATA_MAP,detailDataMap)
+		}else{
+			jsonObjMap.put(STATUS,FAILED)
+			jsonObjMap.put(REMARKS, "No execution found with this name "+execName)
+		}
+		render jsonObjMap as JSON
 	}
 }
