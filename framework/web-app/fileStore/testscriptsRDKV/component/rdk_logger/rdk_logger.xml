@@ -111,13 +111,6 @@
           <parameter name='module' value='' />
         </parameters>
       </primitiveTest>
-      <primitiveTest name='RDKLogger_Log_MPEOSDisabled' id='' version='1'>
-        <function>TestMgr_RDKLogger_Log_MPEOSDisabled</function>
-        <parameters>
-          <parameter name='level' value=''/>
-          <parameter name='module' value=''/>
-        </parameters>
-      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>

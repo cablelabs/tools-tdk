@@ -254,7 +254,7 @@ bool RDKLoggerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAge
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_Msg, "TestMgr_RDKLogger_Log_Msg");
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_SetLogLevel, "TestMgr_RDKLogger_SetLogLevel");
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_GetLogLevel, "TestMgr_RDKLogger_GetLogLevel");
-        ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_MPEOSDisabled,"TestMgr_RDKLogger_Log_MPEOSDisabled");
+        //ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_MPEOSDisabled,"TestMgr_RDKLogger_Log_MPEOSDisabled");
 
         return TEST_SUCCESS;
 }
@@ -915,6 +915,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_GetLogLevel(IN const Json::Value& req, OUT J
 	return TEST_FAILURE;
 }
 
+#if 0
 bool RDKLoggerAgent::RDKLoggerAgent_Log_MPEOSDisabled(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_MPEOSDisabled --->Entry\n");
@@ -999,6 +1000,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log_MPEOSDisabled(IN const Json::Value& req,
                 return TEST_FAILURE;
         }
 }
+#endif
 
 /**************************************************************************
 Function Name   : CreateObject
@@ -1043,7 +1045,7 @@ bool RDKLoggerAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgent
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_Msg");
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_SetLogLevel");
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_GetLogLevel");
-        ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_MPEOSDisabled");
+        //ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_MPEOSDisabled");
 
         return TEST_SUCCESS;
 }
