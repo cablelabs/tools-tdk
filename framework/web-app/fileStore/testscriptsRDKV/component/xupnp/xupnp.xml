@@ -46,18 +46,6 @@
           <parameter name="stateId" value="0"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest id="" name="XUPNP_ModifyBasicDeviceXml" version="1">
-        <function>TestMgr_XUPNP_ModifyBasicDeviceXml</function>
-        <parameters/>
-      </primitiveTest>
-      <primitiveTest id="" name="XUPNP_CheckXMLRestoration" version="1">
-        <function>TestMgr_XUPNP_CheckXMLRestoration</function>
-        <parameters/>
-      </primitiveTest>
-      <primitiveTest id="" name="XUPNP_ReadXcalDeviceLogFile" version="1">
-        <function>TestMgr_XUPNP_ReadXcalDeviceLogFile</function>
-        <parameters/>
-      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>

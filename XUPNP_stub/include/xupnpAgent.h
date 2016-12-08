@@ -37,10 +37,8 @@
 #define XDISCOVERY             "xdiscovery"
 #define XDISC_LOG_FILE         "/opt/logs/xdiscovery.log"
 #define XCALDEV_LOG_FILE       "/opt/logs/xdevice.log"
-#define BASICDEVXML_FILE       "/opt/xupnp/BasicDevice.xml"
 #define XDISCONFIG             "/etc/xupnp/xdiscovery.conf"
 #define XDISCONFIG_EMULTR      "/etc/xdiscovery.conf"
-#define STARTUPCMD             "/etc/init.d/start-upnp-service restart"
 
 using namespace std;
 
@@ -63,10 +61,7 @@ public:
     bool XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::Value& response);
     bool XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response);
     bool XUPNPAgent_CheckXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response);
-    bool XUPNPAgent_ModifyBasicDeviceXml(IN const Json::Value& req, OUT Json::Value& response);
-    bool XUPNPAgent_CheckXMLRestoration(IN const Json::Value& req, OUT Json::Value& response);
     //Only for Gateway boxes
-    bool XUPNPAgent_ReadXcalDeviceLogFile(IN const Json::Value& req, OUT Json::Value& response);
     bool XUPNPAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response);
 };
 
