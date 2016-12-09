@@ -37,7 +37,7 @@
   <!--  -->
   <groups_id />
   <!--  -->
-  <execution_time>5</execution_time>
+  <execution_time>2</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
   <!-- execution_time is the time out time for test execution -->
@@ -57,6 +57,31 @@
     <rdk_version>RDK2.0</rdk_version>
     <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_TR69_99</test_case_id>
+    <test_objective>To fetch the Unique serial number of SD Flash card (32 bit PSN field in CID register) by querying the tr69Hostif through curl.
+Query string "Device.Services.STBService.1.Components.X_RDKCENTRAL-COM_SDCard.SerialNumber".
+No set operation available for this parameter.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XI3</test_setup>
+    <pre_requisite>No</pre_requisite>
+    <api_or_interface_used>curl -d '{"paramList" : [{"name" : "Device.Services.STBService.1.Components.X_RDKCENTRAL-COM_SDCard.SerialNumber"}]}' http://127.0.0.1:10999</api_or_interface_used>
+    <input_parameters>None</input_parameters>
+    <automation_approch>1. TM loads tr69Test agent via the test agent.
+2. Tr69Test agent will frame the curl request message
+"Device.Services.STBService.1.Components.X_RDKCENTRAL-COM_SDCard.SerialNumber" to fetch the IP Address of the interface.
+3. Tr69Test agent will get the curl response which be a vaild string with IP on SUCCESS.
+4. If tr69Test agent will get the empty curl response if FAILURE.
+5. TM Unloads tr69Test agent.</automation_approch>
+    <except_output>Checkpoint 1. Need to return a valid IP on SUCCESS. Empty on FAILURE.
+Checkpoint 2. Can verify returned IP address is correct or not through ifconifg cmd.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>TestMgr_GetParameterValue</test_stub_interface>
+    <test_script>TR069_Get_DeviceServicesSTBService1ComponentsX_RDKCENTRAL-COM_SDCardSerialNumber_99</test_script>
+    <skipped>No</skipped>
+    <release_version>M43</release_version>
+    <remarks></remarks>
+  </test_cases>
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
