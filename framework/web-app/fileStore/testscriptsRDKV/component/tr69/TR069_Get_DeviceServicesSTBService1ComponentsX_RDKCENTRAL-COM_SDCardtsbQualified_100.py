@@ -83,7 +83,7 @@ if loadStatusExpected not in loadStatusResult.upper():
         exit();
 
 #Parameter is the profile path to be queried
-profilePath = "DeviceServicesSTBService1ComponentsX_RDKCENTRAL-COM_SDCardtsbQualified"
+profilePath = "Device.Services.STBService.1.Components.X_RDKCENTRAL-COM_SDCard.tsbQualified"
 
 actualresult,tdkTestObj,details = tdklib.Create_ExecuteTestcase(obj,'Tr069_Get_Profile_Parameter_Values', 'SUCCESS',verifyList ={},path = profilePath);
 
