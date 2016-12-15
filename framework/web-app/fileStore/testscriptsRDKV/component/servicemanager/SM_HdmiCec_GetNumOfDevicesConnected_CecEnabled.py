@@ -34,6 +34,7 @@ Test Type: Positive</synopsis>
   <remarks>This testcase will fail because of DELIA-17273 as getConnectedDevices API is deprecated now. To be unskipped in later releases</remarks>
   <skip>true</skip>
   <box_types>
+    <box_type>IPClient-3</box_type>
     <box_type>Hybrid-1</box_type>
   </box_types>
   <rdk_versions>
