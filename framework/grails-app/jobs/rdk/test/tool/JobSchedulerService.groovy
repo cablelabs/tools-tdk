@@ -18,6 +18,7 @@
 */
 package rdk.test.tool
 
+import java.io.File;
 import java.io.InputStream;
 import java.net.URLConnection;
 import java.text.DateFormat
@@ -1286,8 +1287,14 @@ class JobSchedulerService implements Job{
 	 */
 	def getFileTransferScriptName(Device device){
 		String scriptName = FILE_TRANSFER_SCRIPT
-			if(InetUtility.isIPv6Address(device?.stbIp)){
+		if(InetUtility.isIPv6Address(device?.stbIp)){
 			scriptName = FILE_UPLOAD_SCRIPT
+		}else{
+			String mechanism = getIPV4LogUploadMechanism()
+			if(mechanism?.equals(Constants.REST_MECHANISM)){
+				scriptName = FILE_UPLOAD_SCRIPT
+			}
+
 		}
 		return scriptName
 	}
@@ -1326,7 +1333,7 @@ class JobSchedulerService implements Job{
 			]
 
 			if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
-				url = ExecutionService.updateTMUrl(url,device)
+				url = updateTMUrl(url,device)
 				cmdList.push(url)
 			}
 
@@ -2123,6 +2130,12 @@ class JobSchedulerService implements Job{
 		String scriptName = CONSOLE_FILE_TRANSFER_SCRIPT
 		if(InetUtility.isIPv6Address(device?.stbIp)){
 			scriptName = CONSOLE_FILE_UPLOAD_SCRIPT
+		}else{
+			String mechanism = getIPV4LogUploadMechanism()
+			if(mechanism?.equals(Constants.REST_MECHANISM)){
+				scriptName = CONSOLE_FILE_UPLOAD_SCRIPT
+			}
+
 		}
 		return scriptName
 	}
@@ -2719,7 +2732,7 @@ class JobSchedulerService implements Job{
 			]
 
 			if(scriptName?.equals(FILE_UPLOAD_SCRIPT)){
-				url = ExceutionService?.updateTMUrl(url,device)
+				url = updateTMUrl(url,device)
 				cmdList.push(url)
 			}
 
@@ -3368,5 +3381,57 @@ class JobSchedulerService implements Job{
 			ex.printStackTrace()
 		}
 	}
+	
+	def getIPV4LogUploadMechanism(){
+		String mechanism = Constants.TFTP_MECHANISM
+		try {
+			File configFile = grailsApplication.parentContext.getResource(Constants.TM_CONFIG_FILE).file
+			mechanism = getConfigProperty(configFile, Constants.LOG_UPLOAD_IPV4)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		return mechanism
+	}
+	
+	public static String getConfigProperty(File configFile, String key) {
+		try {
+			Properties prop = new Properties();
+			if (configFile.exists()) {
+				InputStream is = new FileInputStream(configFile);
+				prop.load(is);
+				String value = prop.getProperty(key);
+				if (value != null && !value.isEmpty()) {
+					return value;
+				}
+			}else{
+				System.out.println("DBG :::: No Config File !!! ");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	/**
+	 * Function for updating the TM ip[ipv6, ipv4] according to the  device selection
+	 * @param url
+	 * @param device
+	 * @return
+	 */
+	   def updateTMUrl(String url,Device device){
+		   try {
+			   if(InetUtility.isIPv6Address(device?.stbIp) && device?.category?.equals(Category.RDKV)){
+				   File configFile = grailsApplication.parentContext.getResource("/fileStore/tm.config").file
+						   String ipV6Address = InetUtility.getIPAddress(configFile, Constants.IPV6_INTERFACE)
+						   String ipV4Address = InetUtility.getIPAddress(configFile, Constants.IPV4_INTERFACE)
+						   if(ipV4Address &&ipV6Address && !ipV4Address.isEmpty() && !ipV6Address.isEmpty()){
+							   url = url.replace(ipV4Address, "[${ipV6Address}]")
+						   }
+			   }
+		   } catch (Exception e) {
+			   e.printStackTrace()
+		   }
+		   return url
+	   }
 
 }

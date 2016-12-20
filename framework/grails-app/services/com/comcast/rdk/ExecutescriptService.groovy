@@ -2156,8 +2156,14 @@ class ExecutescriptService {
 	 */
 	def getFileTransferScriptName(Device device){
 		String scriptName = FILE_TRANSFER_SCRIPT
-		if(device?.category?.equals(Category.RDKB) && InetUtility.isIPv6Address(device?.stbIp)){
+		if(InetUtility.isIPv6Address(device?.stbIp)){
 			scriptName = FILE_UPLOAD_SCRIPT
+		}else{
+			String mechanism = executionService.getIPV4LogUploadMechanism()
+			if(mechanism?.equals(Constants.REST_MECHANISM)){
+				scriptName = FILE_UPLOAD_SCRIPT
+			}
+			
 		}
 		return scriptName
 	}
@@ -2169,6 +2175,12 @@ class ExecutescriptService {
 		String scriptName = CONSOLE_FILE_TRANSFER_SCRIPT
 		if(InetUtility.isIPv6Address(device?.stbIp)){
 			scriptName = CONSOLE_FILE_UPLOAD_SCRIPT
+		}else{
+			String mechanism = executionService.getIPV4LogUploadMechanism()
+			if(mechanism?.equals(Constants.REST_MECHANISM)){
+				scriptName = CONSOLE_FILE_UPLOAD_SCRIPT
+			}
+			
 		}
 		return scriptName
 	}

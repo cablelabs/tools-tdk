@@ -25,8 +25,12 @@ import org.codehaus.groovy.grails.web.json.JSONObject
 import org.junit.After;
 import grails.converters.JSON
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.FutureTask
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -735,8 +739,14 @@ class ExecutionService {
 	
 	def getFileTransferScriptName(Device device){
 		String scriptName = FILE_TRANSFER_SCRIPT
-			if(InetUtility.isIPv6Address(device?.stbIp)){
+		
+		if(InetUtility.isIPv6Address(device?.stbIp)){
 			scriptName = FILE_UPLOAD_SCRIPT
+		}else{
+			if(getIPV4LogUploadMechanism()?.equals(Constants.REST_MECHANISM)){
+				scriptName = FILE_UPLOAD_SCRIPT
+			}
+			
 		}
 		return scriptName
 	}
@@ -2296,8 +2306,36 @@ class ExecutionService {
 		}
 		return url
 	}
+	
+	def getIPV4LogUploadMechanism(){
+		String mechanism = Constants.TFTP_MECHANISM
+		try {
+			File configFile = grailsApplication.parentContext.getResource(Constants.TM_CONFIG_FILE).file
+			mechanism = getConfigProperty(configFile, Constants.LOG_UPLOAD_IPV4)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		return mechanism
+	}
  
- 
+	public static String getConfigProperty(File configFile, String key) {
+		try {
+			Properties prop = new Properties();
+			if (configFile.exists()) {
+				InputStream is = new FileInputStream(configFile);
+				prop.load(is);
+				String value = prop.getProperty(key);
+				if (value != null && !value.isEmpty()) {
+					return value;
+				}
+			}else{
+				println "DBG :::: No Config File !!! "
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
  
 	
 }
