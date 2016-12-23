@@ -147,16 +147,38 @@ if "SUCCESS" in recLoadStatus.upper():
             elif 'acknowledgement' in actResponse:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "Successfully retrieved acknowledgement from recorder";
-                sleep(30)
                 tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
                 tdkTestObj.executeTestCase(expectedResult);
-                print "Sending getRecordings to get the recording list"
-                recorderlib.callServerHandler('clearStatus',ip)
-                recorderlib.callServerHandlerWithMsg('updateMessage','{\"getRecordings\":{}}',ip)
                 print "Wait for 1 min to get response from recorder"
                 sleep(60)
                 actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
-                #sleep(30)
+                print "Recording List: %s" %actResponse;
+                recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);            
+                print recordingData
+                if 'NOTFOUND' not in recordingData:
+                    statusKey = 'status'
+                    statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
+                    print "Successfully retrieved the recording list from recorder";
+                    tdkTestObj.setResultStatus("SUCCESS");
+                    if "ERASED" in statusValue.upper():
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        print "Recording with expired end time have status as ERASED";
+                    else:
+                        tdkTestObj.setResultStatus("FAILURE");
+                        print "Recording with expired end time did not handle properly";
+                else:
+                    tdkTestObj.setResultStatus("FAILURE");
+                    print "Failed to retrieve the recording list from recorder";
+
+                recorderlib.callServerHandler('clearStatus',ip)
+                # Reboot the STB
+                print "Rebooting the STB to get the recording list from full sync"
+                recObj.initiateReboot();
+                print "Sleeping to wait for the recoder to be up"
+                sleep(300);
+                tdkTestObj = recObj.createTestStep('Recorder_SendRequest');
+                tdkTestObj.executeTestCase(expectedResult);
+                actResponse = recorderlib.callServerHandler('retrieveStatus',ip)
                 print "Recording List: %s" %actResponse;
                 recordingData = recorderlib.getRecordingFromRecId(actResponse,recordingID);            
                 print recordingData

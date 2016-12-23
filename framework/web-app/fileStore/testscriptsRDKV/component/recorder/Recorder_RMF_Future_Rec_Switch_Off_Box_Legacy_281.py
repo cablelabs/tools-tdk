@@ -40,7 +40,7 @@
   </rdk_versions>
   <test_cases>
     <test_case_id>CT_Recorder_DVR_Protocol_281</test_case_id>
-    <test_objective>Recorder should sent erased status for a recording where the  box is in off state for the whole duration of that recording using legacy</test_objective>
+    <test_objective>Recorder should sent failed status for a recording where the  box is in off state for the whole duration of that recording using legacy</test_objective>
     <test_type>Positive</test_type>
     <test_setup>XG1</test_setup>
     <pre_requisite>1. rmfStreamer executable should be running.
@@ -58,7 +58,7 @@
 8.Depends on the result of above step RecorderAgent sends SUCCESS or FAILURE to TM.</automation_approch>
     <except_output>Checkpoint 1 Acknowledgement status from the DVRSimulator.
 
-Checkpoint 2 Check whether the recording status is erased or not</except_output>
+Checkpoint 2 Check whether the recording status is failed or not</except_output>
     <priority>High</priority>
     <test_stub_interface>RecorderAgent
 1.TestMgr_Recorder_SendRequest</test_stub_interface>
@@ -173,12 +173,12 @@ if "SUCCESS" in recLoadStatus.upper():
                                     value = recorderlib.getValueFromKeyInRecording(recordingData,key)
                                     print "key: ",key," value: ",value
                                     print "Successfully retrieved the recording list from recorder";
-                                    if "ERASED" in value.upper():
+                                    if "FAILED" in value.upper():
                                         tdkTestObj.setResultStatus("SUCCESS");
-                                        print "Recorder sent ERASED status";
+                                        print "Recorder sent FAILED status";
                                     else:
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "Recorder NOT sent ERASED status";
+                                        print "Recorder NOT sent FAILED status";
                                 else:
                                     tdkTestObj.setResultStatus("FAILURE");
                                     print "Failed to retrieve the recording list from recorder";
