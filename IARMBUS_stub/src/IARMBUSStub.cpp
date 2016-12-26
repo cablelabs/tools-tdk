@@ -20,6 +20,7 @@
 #include "IARMBUSAgent.h"
 #include <cstring>
 #include <sstream>
+#include <errno.h>
 
 std::ostringstream gsysMgrdata;
 std::ostringstream gEventdata;
@@ -59,15 +60,15 @@ static    IARM_Bus_DUMMYMGR_HandlerReady_Param_t handler_param;
 
 /**************************************************************************
  *
- * Function Name        : prereqcheck
- * Descrption   : This function will get the existense of pre- requisite app
- *                and return SUCCESS or FAILURE status to the caller
+ * Function Name : iarmMgrStatus
+ * Descrption    : This function will get the existense of pre- requisite app
+ *                 and return SUCCESS or FAILURE status to the caller
  *
  * @param retval [in] ownerName - owner(manager) to be checked.
  *		 [out]- bool - SUCCESS / FAILURE
  ***************************************************************************/
 
-bool prereqcheck(char *ownerName )
+bool iarmMgrStatus(char *ownerName )
 {
         char output[LINE_LEN] = {'\0'};
     	char strCmd[STR_LEN] = {'\0'};
@@ -109,8 +110,8 @@ bool prereqcheck(char *ownerName )
 		return TEST_FAILURE;
 	}
 
-    	sprintf(strCmd,"pidof %s",appName);
-        DEBUG_PRINT(DEBUG_ERROR,"Checking running status of %s using %s \n", ownerName, strCmd);
+    	sprintf(strCmd,"pidof %s 2>&1",appName);
+        DEBUG_PRINT(DEBUG_ERROR,"Checking running status of %s using '%s'\n", ownerName, strCmd);
     	fp = popen(strCmd, "r");
     	/* Read the output */
     	if (fp != NULL)
@@ -122,7 +123,7 @@ bool prereqcheck(char *ownerName )
             pclose(fp);
     	}
     	else {
-            DEBUG_PRINT(DEBUG_ERROR, "Failed to get status of process %s\n",appName);
+            DEBUG_PRINT(DEBUG_ERROR, "Encountered popen error: %s\n", strerror(errno));
     	}
 
 	return running;
@@ -183,9 +184,10 @@ bool IARMBUSAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgent
  *****************************************************************************/
 std::string IARMBUSAgent::testmodulepre_requisites()
 {
+#if 0
 	DEBUG_PRINT(DEBUG_LOG,"Entering %s function\n", __func__);
 
-	if ((prereqcheck((char*)IARM_BUS_DAEMON_NAME))== TEST_SUCCESS)
+	if ((iarmMgrStatus((char*)IARM_BUS_DAEMON_NAME)) == TEST_SUCCESS)
 	{
 		DEBUG_PRINT(DEBUG_LOG,"[Success] Daemon Mgr running. Exiting %s function\n", __func__);
 		return "SUCCESS";
@@ -195,6 +197,8 @@ std::string IARMBUSAgent::testmodulepre_requisites()
 		DEBUG_PRINT(DEBUG_LOG,"[Failed] Daemon Mgr not running. Exiting %s function\n", __func__);
 		return "FAILURE<DETAILS> Pre-requisite check failed for Daemon Mgr";
 	}
+#endif
+        return "SUCCESS";
 }
 
 /***************************************************************************
@@ -222,7 +226,7 @@ static IARM_Result_t _ReleaseOwnership(void *arg)
 
 /**************************************************************************
  *
- * Function Name	: getResult
+ * Function Name: getResult
  * Descrption	: This function will get the retvalue as input and it returns 
  *		  corresponding SUCCESS or FAILUER status to the 
  *		  wrapper function.
@@ -231,13 +235,14 @@ static IARM_Result_t _ReleaseOwnership(void *arg)
  ***************************************************************************/
 char* getResult(int retval,char *resultDetails)
 {
+        DEBUG_PRINT(DEBUG_LOG,"API return value = %d\n", retval);
 	if(retval==0)
 	{
 		strcpy(resultDetails,"SUCCESS");
 		return (char*)"SUCCESS";
 	}
 	else
-	{       
+	{
 		switch(retval)
 		{
 			case 1: strcpy(resultDetails,"INVALID_PARAM");
@@ -1171,37 +1176,30 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, 
 	char *ownerName=(char*)req["owner_name"].asCString();
         char *eventhandler=(char*)req["evt_handler"].asCString();
 
-        DEBUG_PRINT(DEBUG_LOG,"Register Owner: %s Event Id: %d\n", ownerName, eventId);
-	if(prereqcheck(ownerName))
-	{
-		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEventHandler from IARMBUSAgent_RegisterEventHandler \n");
-		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
-        	if (strcmp(eventhandler,"NULL")==0)
+	DEBUG_PRINT(DEBUG_LOG,"IARM_Bus_RegisterEventHandler [Owner: %s Event Id: %d]\n", ownerName, eventId);
+	/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
+        if (strcmp(eventhandler,"NULL")==0)
+        {
+                retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, NULL);
+        }
+        else
+        {
+                retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandler);
+                if( retval && !iarmMgrStatus(ownerName) )
         	{
-                	retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, NULL);
+                	DEBUG_PRINT(DEBUG_ERROR,"Given IARM Mgr is not running\n");
         	}
-        	else
-        	{
-                	retval=IARM_Bus_RegisterEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandler);
-        	}
+        }
 
-		/*Checking the return value of API*/
-		/*Filling json response with SUCCESS status*/	
-		response["result"]=getResult(retval,resultDetails);
-		response["details"]=resultDetails;
-		free(resultDetails);
-		DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterEventHandler --->Exit \n");
-		return TEST_SUCCESS;
-	}
-	else
-	{
-		response["result"]="FAILURE";
-		response["details"]="Prerequisite check failed. Given IARM Mgr is not running";
-		free(resultDetails);
-		DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_RegisterEventHandler -- Pre-Requisite check Failed for the given Owner \n");
-		return TEST_FAILURE;
-	}
+	/*Checking the return value of API*/
+	/*Filling json response with SUCCESS status*/	
+	response["result"]=getResult(retval,resultDetails);
+	response["details"]=resultDetails;
+	free(resultDetails);
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterEventHandler --->Exit \n");
+	return TEST_SUCCESS;
 }
+
 /**************************************************************************
  * Function Name	: IARMBUSAgent_UnRegisterEventHandler
  * Description	: IARMBUSAgent_UnRegisterEventHandler wrapper function will be used to call IARMBUS API 
@@ -1225,28 +1223,21 @@ bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req
 	int eventId=req["event_id"].asInt();
 	char *ownerName=(char*)req["owner_name"].asCString();
 
-	DEBUG_PRINT(DEBUG_LOG,"UnRegister Owner: %s Event Id: %d\n", ownerName, eventId);
-	if(prereqcheck(ownerName))
+	DEBUG_PRINT(DEBUG_LOG,"IARM_Bus_UnRegisterEventHandler [Owner: %s Event Id: %d]\n", ownerName, eventId);
+	/*Calling IARMBUS API IARM_Bus_UnRegisterEventHandler */
+	retval=IARM_Bus_UnRegisterEventHandler(ownerName,(IARM_EventId_t)eventId);
+	/*Checking the return value of API*/
+        if( retval && !iarmMgrStatus(ownerName) )
         {
-		DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_UnRegisterEventHandler from IARMBUSAgent_UnRegisterEventHandler \n");
-		/*Calling IARMBUS API IARM_Bus_UnRegisterEventHandler */
-		retval=IARM_Bus_UnRegisterEventHandler(ownerName,(IARM_EventId_t)eventId);
-		/*Checking the return value of API*/
-		/*Filling json response with SUCCESS status*/	
-		response["result"]=getResult(retval,resultDetails);
-		response["details"]=resultDetails;
-		free(resultDetails);
-		DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_UnRegisterEventHandler --->Exit \n");
-		return TEST_SUCCESS;
-	}
-	else
-        {
-        	response["result"]="FAILURE";
-        	response["details"]="Prerequisite check failed. Given IARM Mgr is not running";
-        	free(resultDetails);
-        	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_UnRegisterEventHandler -- Pre-Requisite check Failed for the given Owner \n");
-        	return TEST_FAILURE;
+        	DEBUG_PRINT(DEBUG_ERROR,"Given IARM Mgr is not running\n");
         }
+
+	/*Filling json response with SUCCESS status*/	
+	response["result"]=getResult(retval,resultDetails);
+	response["details"]=resultDetails;
+	free(resultDetails);
+	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_UnRegisterEventHandler --->Exit \n");
+	return TEST_SUCCESS;
 }
 
 /**************************************************************************
@@ -1383,14 +1374,6 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
 	char *ownerName=(char*)req["owner_name"].asCString();
 
 	DEBUG_PRINT(DEBUG_ERROR,"Broadcast event id: %d from %s\n", eventId, ownerName);
-	if(!prereqcheck(ownerName))
-        {
-        	response["result"]="FAILURE";
-        	response["details"]="Prerequisite check failed. Given IARM Mgr is not running";
-        	free(resultDetails);
-        	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_BroadcastEvent -- Pre-Requisite check Failed for the given Owner \n");
-        	return TEST_FAILURE;
-        }
 
 	if(strcmp(ownerName,IARM_BUS_IRMGR_NAME)==0)
 	{	
@@ -1440,7 +1423,13 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
 		/*Calling IARMBUS API IARM_Bus_BroadcastEvent  */
 		retval=IARM_Bus_BroadcastEvent(ownerName,(IARM_Bus_SYSMgr_EventId_t)eventId,(void*)&eventData,sizeof(eventData));
 	}
+  
 	/*Checking the return value of API*/
+        if( retval && !iarmMgrStatus(ownerName) )
+        {
+        	DEBUG_PRINT(DEBUG_ERROR,"Given IARM Mgr is not running\n");
+        }
+
 	/*Filling json response with SUCCESS status*/
 	response["result"]=getResult(retval,resultDetails);
 	response["details"]=resultDetails;
@@ -1481,14 +1470,6 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 	char *methodName=(char*)req["method_name"].asCString();
 
 	DEBUG_PRINT(DEBUG_ERROR,"BusCall method: %s owner: %s\n", methodName, ownerName);
-	if(!prereqcheck(ownerName))
-        {
-        	response["result"]="FAILURE";
-        	response["details"]="Prerequisite check failed. Given IARM Mgr is not running";
-        	free(resultDetails);
-        	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_BusCall -- Pre-Requisite check Failed for the given Owner \n");
-        	return TEST_FAILURE;
-        }
 
 	if(strcmp(ownerName,IARM_BUS_IRMGR_NAME)==0)
 	{	
@@ -1823,6 +1804,11 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 		free(dummydatadetails);
         }
 
+        if( retval && !iarmMgrStatus(ownerName) )
+        {
+        	DEBUG_PRINT(DEBUG_ERROR,"Given IARM Mgr is not running\n");
+        }
+
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusCall --->Exit \n");
 	return TEST_SUCCESS;
@@ -2137,7 +2123,7 @@ void _evtHandlerRept1(const char *owner, IARM_EventId_t eventId, void *data, siz
 	/* Get the request details*/
 	char *ownerName=(char*) owner;
 
-	DEBUG_PRINT(DEBUG_LOG,"owner : %s, eventId : %d ", owner, eventId);
+	DEBUG_PRINT(DEBUG_LOG,"owner : %s, eventId : %d \n", owner, eventId);
 
 	/* Register Corresponding Event Hander for the Event*/
 	if(strcmp(ownerName,IARM_BUS_IRMGR_NAME)==0)
@@ -2602,48 +2588,41 @@ bool IARMBUSAgent::IARMBUSAgent_RemoveEventHandler(IN const Json::Value& req, OU
         char *ownerName=(char*)req["owner_name"].asCString();
         char *eventhandler=(char*)req["evt_handler"].asCString();
 
-	DEBUG_PRINT(DEBUG_LOG,"Owner: %s EventId: %d eventhandler: %s\n", ownerName, eventId, eventhandler);
-
-        if(prereqcheck(ownerName))
-        {
-        	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RemoveEventHandler from IARMBUSAgent_RemoveEventHandler \n");
-        	/*Calling IARMBUS API IARM_Bus_RemoveEventHandler */
-		if (strcmp(eventhandler,"NULL")==0)
-		{
+        DEBUG_PRINT(DEBUG_LOG,"IARM_Bus_RemoveEventHandler [Owner: %s EventId: %d eventhandler: %s]\n", ownerName, eventId, eventhandler);
+        /*Calling IARMBUS API IARM_Bus_RemoveEventHandler */
+	if (strcmp(eventhandler,"NULL")==0)
+	{
         		retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, NULL);
-		}
-		else if (strcmp(eventhandler,"evtHandler")==0)
-		{
+	}
+	else if (strcmp(eventhandler,"evtHandler")==0)
+	{
 	        	retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandler);
-		}
-		else if (strcmp(eventhandler,"evtHandler1")==0)
-		{
+	}
+	else if (strcmp(eventhandler,"evtHandler1")==0)
+	{
 	        	retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept1);
-		}
-		else if (strcmp(eventhandler,"evtHandler2")==0)
-		{
+	}
+	else if (strcmp(eventhandler,"evtHandler2")==0)
+	{
 	        	retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept2);
-		}
-		else if (strcmp(eventhandler,"evtHandler3")==0)
-		{
+	}
+	else if (strcmp(eventhandler,"evtHandler3")==0)
+	{
 	        	retval=IARM_Bus_RemoveEventHandler(ownerName,(IARM_EventId_t)eventId, _evtHandlerRept3);
-		}
-        	/*Checking the return value of API*/
-        	/*Filling json response with SUCCESS status*/
-        	response["result"]=getResult(retval,resultDetails);
-        	response["details"]=resultDetails;
-        	free(resultDetails);
-        	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RemoveEventHandler --->Exit \n");
-        	return TEST_SUCCESS;
-        }
-        else
+	}
+  
+        /*Checking the return value of API*/
+        if( retval && !iarmMgrStatus(ownerName) )
         {
-        	response["result"]="FAILURE";
-        	response["details"]="Prerequisite check failed. Given IARM Mgr is not running";
-        	free(resultDetails);
-        	DEBUG_PRINT(DEBUG_ERROR,"IARMBUSAgent_RemoveEventHandler -- Pre-Requisite check Failed for the given Owner \n");
-        	return TEST_FAILURE;
+        	DEBUG_PRINT(DEBUG_ERROR,"Given IARM Mgr is not running\n");
         }
+
+        /*Filling json response with SUCCESS status*/
+        response["result"]=getResult(retval,resultDetails);
+        response["details"]=resultDetails;
+        free(resultDetails);
+        DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RemoveEventHandler --->Exit \n");
+        return TEST_SUCCESS;
 }
 
 /**************************************************************************
@@ -2713,5 +2692,3 @@ extern "C" void DestroyObject(IARMBUSAgent *stubobj)
         DEBUG_PRINT(DEBUG_LOG,"Destroying IARMBUS Agent object\n");
         delete stubobj;
 }
-
-
