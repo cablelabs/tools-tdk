@@ -189,8 +189,8 @@ class BootStrap {
 				def moduleInstance = new Module()
 				moduleInstance.name = 'tcl'
 				moduleInstance.testGroup = TestGroup.Component
-				//moduleInstance.groups= null
-				moduleInstance.groups= utilityService.getGroup()
+				moduleInstance.groups= null
+				
 				moduleInstance.category= Category.RDKB_TCL
 				if(!moduleInstance.save(flush:true)){
 					moduleInstance.errors.each{

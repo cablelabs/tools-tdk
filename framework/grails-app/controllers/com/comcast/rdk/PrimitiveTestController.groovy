@@ -181,7 +181,7 @@ class PrimitiveTestController {
 		try {
 			//def primitiveList = primitiveService.getPrimitiveList(getRealPath(), category)
 			def primitiveList = primitiveService.getAllPrimitiveTest(getRealPath(), category)
-			if(primitiveList?.toString().contains(params?.testName?.toString())){
+			if(primitiveList?.toString().contains(params?.testName?.trim()?.toString())){
 				render("Duplicate PrimitiveTest Name not allowed. Try Again")
 			}
 			else{
@@ -218,7 +218,7 @@ class PrimitiveTestController {
 						}
 						def funName = fun?.getName()
 						root?.module?.primitiveTests?.appendNode{
-							primitiveTest(name :params?.testName,id:" ",version: "1"){
+							primitiveTest(name :params?.testName?.trim(),id:" ",version: "1"){
 								function(fun?.getName())
 								parameters{
 									list1.each { p ->
@@ -231,7 +231,7 @@ class PrimitiveTestController {
 					else{
 
 						root?.module?.primitiveTests?.appendNode{
-							primitiveTest(name :params?.testName,id:'',version:'1'){
+							primitiveTest(name :params?.testName?.trim(),id:'',version:'1'){
 								function(fun?.getName())
 								parameters()
 							}
@@ -242,7 +242,7 @@ class PrimitiveTestController {
 					try {
 						def writer = new FileWriter(primitiveFile)
 						XmlUtil.serialize(root, writer)
-						if( primitiveService.addToPrimitiveList(params?.testName,moduleObj.getName(), category))
+						if( primitiveService.addToPrimitiveList(params?.testName?.trim(),moduleObj.getName(), category))
 						{
 							render "PrimitiveTest created successully"
 						}
@@ -287,7 +287,7 @@ class PrimitiveTestController {
 
 									xml.primitiveTests(){
 
-										xml.primitiveTest(name : params?.testName, id : '' , version :'1' ){
+										xml.primitiveTest(name : params?.testName?.trim(), id : '' , version :'1' ){
 											xml.function(funName)
 											if(list1.size()> 0){
 												xml.parameters(){
@@ -323,7 +323,7 @@ class PrimitiveTestController {
 
 							file.write(xmlHeaderContent+writer.toString())
 							//file.write(writer.toString())
-							if(primitiveService.addToPrimitiveList(params?.testName,moduleObj.getName(), category)){
+							if(primitiveService.addToPrimitiveList(params?.testName?.trim(),moduleObj.getName(), category)){
 								render "PrimitiveTest created successully"
 							}else{
 								render "PrimitiveTest not created successully"

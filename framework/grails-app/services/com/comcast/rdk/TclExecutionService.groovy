@@ -1035,9 +1035,18 @@ class TclExecutionService {
 
 		Date executionStartDt = new Date()
 		def executionStartTime =  executionStartDt.getTime()
+		//setting default execution time as 20 minutes 
+		int execTime = 20
+		try {
+			Module module = Module.findByName("tcl")
+			int exTime = module?.executionTime
+			if(exTime > 0){
+				execTime = exTime
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 
-		//setting execution time as 12 minutes
-		int execTime = 12
 		/*try {
 		 if(scriptInstance?.executionTime instanceof String){
 		 execTime = Integer.parseInt(scriptInstance?.executionTime)

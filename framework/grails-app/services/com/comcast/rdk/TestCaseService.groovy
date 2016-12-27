@@ -37,10 +37,9 @@ class TestCaseService {
 	def downloadTestCaseInExcel(def params , realPath){ 
 		Map testCaseDetails = [:]
 		try{
-			def moduleMap = primitiveService.getPrimitiveModuleMap(getRealPath())
+			def moduleMap = primitiveService.getPrimitiveModuleMap(realPath)
 			def moduleName = moduleMap.get(params?.primitiveTest)
 			def scriptsDirName = primitiveService.getScriptDirName(moduleName)
-			def ptest = primitiveService.getPrimitiveTest(realPath+Constants.FILE_SEPARATOR+FILESTORE+Constants.FILE_SEPARATOR+TEST_SCRIPTS+scriptsDirName+Constants.FILE_SEPARATOR+moduleName+Constants.FILE_SEPARATOR+moduleName+XML, params?.primitiveTest)
 			def scrpt = scriptService.getScript(realPath,moduleName, params?.name,params?.category)
 			def testCase = scrpt?.testCaseDetails			
 			testCaseDetails =  getTestCaseMap(testCase)
