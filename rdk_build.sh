@@ -233,8 +233,8 @@ function install()
     if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/platform/Mediaplayer_stub/mp_conf.sh" ]; then
         rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/cpc/Mediaplayer_stub/libmediaplayerstub.so* ${TDK_LIB_PATH}
     fi
-    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so" ];then
-        rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/libservicemanagerstub.so* ${TDK_LIB_PATH}
+    if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/src/libservicemanagerstub.so" ];then
+        rsync -rplEogDWI --force --exclude=.svn ${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/src/libservicemanagerstub.so* ${TDK_LIB_PATH}
     fi
     if [ -e "${RDK_PROJECT_ROOT_PATH}/tdk/SM_stub/test/SMEventApp" ];then
         # Installing SMEventApp only for non-rng150 devices due to packaging size constraint
