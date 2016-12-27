@@ -32,6 +32,7 @@
   <remarks>retrieveDisabledStatus api support for rws status server is removed from recorder</remarks>
   <skip>true</skip>
   <box_types>
+    <box_type>Emulator-HYB</box_type>
     <box_type>Hybrid-1</box_type>
   </box_types>
   <rdk_versions>

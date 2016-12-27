@@ -36,6 +36,7 @@ more than 30 seconds from requested (note: not to be confused with expectedStart
   <skip>true</skip>
   <!--  -->
   <box_types>
+    <box_type>Emulator-HYB</box_type>
     <box_type>Hybrid-1</box_type>
   </box_types>
   <rdk_versions>

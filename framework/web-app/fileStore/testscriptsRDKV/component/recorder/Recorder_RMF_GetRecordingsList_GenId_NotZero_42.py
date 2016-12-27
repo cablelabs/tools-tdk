@@ -32,6 +32,7 @@
   <remarks>This is an invalid requirement as per DELIA-15387</remarks>
   <skip>true</skip>
   <box_types>
+    <box_type>Emulator-HYB</box_type>
     <box_type>Hybrid-1</box_type>
   </box_types>
   <rdk_versions>
