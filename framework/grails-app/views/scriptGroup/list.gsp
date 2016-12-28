@@ -16,6 +16,7 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
+<%@page import="com.comcast.rdk.Category"%>
 <%@ page import="com.comcast.rdk.ScriptGroup" %>
 <%@ page import="org.apache.shiro.SecurityUtils"%>
 <%@ page import="com.comcast.rdk.User" %>
@@ -59,7 +60,7 @@
 		}
 		
 	});
-	
+		
 	//Popup window code
 	function newPopup(url) {
 		popupWindow = window.open(
@@ -431,7 +432,40 @@
 
 						</g:form>
 					</div>
+
+					<div class="contextMenu" id="update_scriptgroup" align="center"
+						style="width: 950px; height: 900px;">
+						<br> <br> <br> <br>
+						<g:form method="POST" controller="scriptGroup"
+							action="updateTestSuite" enctype="multipart/form-data" >
+							<table style="width: 60%">
+								<tr>
+									<td><label>Select Category</label> &nbsp;&nbsp; <g:select
+											id="category" name="category"
+											from="${['RDKV','RDKB']}"
+											noSelection="['' : 'Please Select']" required=""  autocomplete="off" 
+											class="many-to-one"
+											onchange="${remoteFunction(action:"getModuleList",update:"propData", params: " \'category=\' + this.value")}" />
+									</td>
+									<td>
 										
+										<div id="propData">
+										<label>Select Category</label> &nbsp;&nbsp;
+											<g:select id="module" name="module" from="${[]}"
+												noSelection="['' : 'Please Select']" optionKey="id"
+												required="" value="" class="many-to-one" />
+										</div>
+									</td>
+									<td>
+										<input type="button" class="save" value="${message(code: 'default.button.update.label', default: 'Update')}" onclick="updateScriptGroups();">
+									</td>
+								</tr>
+							</table>
+							<div id="update_output"></div>
+							
+						</g:form>
+					</div>
+
 					<div class="contextMenu" id="up_load_rdkb_script" align="center"
 						style="width: 950px; height: 900px;">
 						<br> <br> <br> <br>
@@ -506,6 +540,7 @@
 						before="testSuitesCleanUp()" action="verifyAllScriptGroups;"
 						value="Test Suites Clean Up" onFailure="testSuitesCleanUpFailure()"
 						onSuccess="testSuitesCleanUpSuccess()" /></li>
+					<li id="update_scriptgrp"><img src="../images/refresh.gif" height="15px" width="15px"/>Update Test Suite</li>
 	        	</ul>
 	        </div>
 			<div class="contextMenu" id="scriptgrp_childs_menu">

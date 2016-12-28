@@ -100,6 +100,9 @@ $(document).ready(function() {
 			'upload_scriptGroup' : function(node) {	
 				showUploadOption();
 			},
+			'update_scriptgrp' : function(node) {	
+				updateScriptGroup();
+			},
 			
 		}
 	});
@@ -145,6 +148,7 @@ function uploadRDKVScript(){
 	$("#up_load_rdkb_script").hide();
 	$("#list-scriptDetails").hide();
 	$("#list-scriptDetails1").hide();
+	$("#update_scriptgroup").hide();
 }
 function uploadRDKBScript(){
 	$("#responseDiv123").hide();
@@ -153,6 +157,7 @@ function uploadRDKBScript(){
 	$("#up_load_rdkb_script").show();
 	$("#list-scriptDetails").hide();
 	$("#list-scriptDetails1").hide();
+	$("#update_scriptgroup").hide();
 	
 }
 
@@ -175,6 +180,20 @@ function showUploadOption(){
 	$("#up_load_rdkb_script").hide();
 	$("#list-scriptDetails").hide();
 	$("#list-scriptDetails1").hide();
+	$("#update_scriptgroup").hide();
+}
+
+/**
+ * function will shows the upload option 
+ */
+function updateScriptGroup(){
+	$("#responseDiv123").hide();
+	$("#up_load").hide();
+	$("#up_load_rdkv_script").hide();
+	$("#up_load_rdkb_script").hide();
+	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
+	$("#update_scriptgroup").show();
 }
 /**
  * Function will hide the upload option.
@@ -187,6 +206,7 @@ function hideUploadOption(){
 	$("#up_load_rdkb_script").hide();
 	$("#list-scriptDetails").hide();
 	$("#list-scriptDetails1").hide();
+	$("#update_scriptgroup").hide();
 }
 
 var displayedGroups = [];
@@ -587,6 +607,14 @@ function editScriptGroup(id) {
 	$.get('getScriptsList', {group: id}, function(data) { $(id).html(data); });
 }
 
+function updateProgressMessage(){
+	alert("Test Suite update in progess...");
+}
+
+function updateCompletionMessage(){
+	alert("Test Suite update completed.");
+}
+
 function exportScripts() {
 	$.get('exportScriptAsXML', function(data) { alert("Script exporting is done.");});
 }
@@ -964,6 +992,39 @@ function addTestCase(category,uniqueId){
 		alert("Please fill the mandatory fields");
 	}
 }
+
+/**
+ * Function to update the system created script groups based on module.
+ */
+function updateScriptGroups(){
+	var category = document.getElementById("category").value;
+	var module = document.getElementById("module").value;
+	
+	if(category == null || category == ""){
+		alert("Please select a category.");
+		return;
+	}
+	
+	if(module == null || module == "" ){
+		alert("Please select a module.");
+		return;
+	}
+	
+	var flag = false;
+	$.get('getScriptUpdateStatus', function(data) {
+		var val = JSON.parse(data);
+		flag = val;
+		if( val == true ){
+			alert(" Another Test Suite update in progress !!! Please try after sometime.");
+		}else{
+			alert("Starting Test Suite update... ");
+			$.get('updateTestSuite',{category:category,module:module}, function(data) {
+				alert("Test Suite update completed !!! ");
+			});
+		}
+	});
+	
+	}
 
 /**
  * Function used to downloading the test case doc according to the user user choice

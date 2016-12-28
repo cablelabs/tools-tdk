@@ -71,10 +71,16 @@ class ScriptGroupController {
 	 * Injecting scriptgroupService
 	 */
 	def scriptgroupService
+	
 	/**
 	 * Injecting testCaseService
 	 */
 	def testCaseService
+	
+	/**
+	 * To keep the status of any system test suite update operation
+	 */
+	public static transient scriptUpdateProgress = false
 
 	public static final String EXPORT_EXCEL_FORMAT 			= "excel"
 	public static final String EXPORT_EXCEL_EXTENSION 		= "xls"
@@ -3678,5 +3684,57 @@ class ScriptGroupController {
 		redirect(action:"list")
 		return
 	}*/
+	
+	/**
+	 * Method to get the module list based on category
+	 */
+	def getModuleList(){
+		def moduleList
+		if(params?.category?.equals(Constants.RDKB_TCL)){
+			moduleList = ['tcl']
+		}else{
+		  moduleList = Module.findAllByCategory(params?.category)
+		}
+		render(template:"modulelist", model:[ moduleList : moduleList])
+	}
+	
+	/**
+	 * Method to check whether any script update operation is in progress.
+	 */
+	def getScriptUpdateStatus(){
+		render new Gson().toJson(scriptUpdateProgress) 
+	}
+	
+	/**
+	 * Method to update the system created test suite based on module.
+	 * @return
+	 */
+	def updateTestSuite(){
+		Map status = [:]
+		if(!scriptUpdateProgress){
+			scriptUpdateProgress = true
+			try {
+				def module = params.module
+				def category = params?.category
+				def realPath = request.getRealPath("/")
+				try {
+					def moduleName
+					Module.withTransaction {
+						Module mod = Module.get(module)
+						moduleName = mod?.getName()
+					}
+					scriptService.updateScriptGroups(moduleName,realPath, category)
+				} catch (Exception e) {
+					e.printStackTrace()
+				}finally{
+					scriptUpdateProgress = false
+				}
+			} catch (Exception e1) {
+				e1.printStackTrace()
+			}
+		}
+		status.put("status", "update completed")
+		render status as JSON
+	}
 }
 

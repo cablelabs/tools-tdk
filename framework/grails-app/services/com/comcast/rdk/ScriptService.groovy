@@ -494,16 +494,50 @@ class ScriptService {
 					sObject.setScriptFile(sFile)
 					sObject.setScriptTags(script?.scriptTags?.toSet())
 					sObject.setLongDuration(script?.longDuration)
-
 					ScriptGroup.withTransaction{
-						scriptgroupService.saveToScriptGroups(sFile,sObject, category)
-						scriptgroupService.saveToDefaultGroups(sFile,sObject, script?.boxTypes, category)
+							scriptgroupService.saveToScriptGroups(sFile,sObject, category)
+							scriptgroupService.saveToDefaultGroups(sFile,sObject, script?.boxTypes, category)
 					}
-					createDefaultGroupWithoutOS(sObject,sFile, category)
-					createDefaultScriptTagGroup(sObject,sFile, category)
+						createDefaultGroupWithoutOS(sObject,sFile, category)
+					
+						createDefaultScriptTagGroup(sObject,sFile, category)
 				}
 			}
 		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+	
+	
+	/**
+	 * Method to update all the system created Test suites for the metnioned script if reqd.
+	 */
+	def updateDefaultScriptGroupsList(def realPath, def name , def moduleName, category){
+		try {
+			def sFile
+			sFile= ScriptFile.findByScriptNameAndModuleName(name,moduleName)
+			if(sFile){
+				def script = getMinimalScript(realPath,moduleName, name, category)
+				if(script){
+					def sObject = new ScriptObject()
+					sObject.setBoxTypes(script?.boxTypes?.toSet())
+					sObject.setRdkVersions(script?.rdkVersions.toSet())
+					sObject.setName(name)
+					sObject.setModule(moduleName)
+					sObject.setScriptFile(sFile)
+					sObject.setScriptTags(script?.scriptTags?.toSet())
+					sObject.setLongDuration(script?.longDuration)
+
+					scriptgroupService.saveToScriptGroups(sFile,sObject, category)
+					scriptgroupService.saveToDefaultGroups(sFile,sObject, script?.boxTypes, category)
+					createDefaultGroupWithoutOS(sObject,sFile, category)
+					createDefaultScriptTagGroup(sObject,sFile, category)
+					scriptgroupService.updateScriptsFromScriptTag(sFile,sObject,[],[], category)
+					updateSuiteWithTestProfileScript(sObject,sFile, category)
+				}
+			}
+		} catch (Exception e) {
+			println " ERROR "+e.getMessage()
 			e.printStackTrace()
 		}
 	}
@@ -573,26 +607,26 @@ class ScriptService {
 	}	
 
 	
-	
-		def createDefaultScriptTagGroup(def scriptObject , def scriptFile, def category){
-			scriptObject?.boxTypes?.each{ bType ->
 
-				scriptObject?.scriptTags?.each{ tag ->
-					String name = tag?.toString()+"_"+bType?.name
-					ScriptGroup.withTransaction {
-						def scriptGrpInstance = ScriptGroup.findByName(name)
-							if(!scriptGrpInstance){
-								scriptGrpInstance = new ScriptGroup()
-								scriptGrpInstance.name = name
-								scriptGrpInstance.category = Utility.getCategory(category)
-							}
-							if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
-								scriptGrpInstance.addToScriptList(scriptFile)
-								scriptGrpInstance.save(flush:true)
-							}
+	def createDefaultScriptTagGroup(def scriptObject , def scriptFile, def category){
+		scriptObject?.boxTypes?.each{ bType ->
+
+			scriptObject?.scriptTags?.each{ tag ->
+				String name = tag?.toString()+"_"+bType?.name
+				ScriptGroup.withTransaction {
+					def scriptGrpInstance = ScriptGroup.findByName(name)
+					if(!scriptGrpInstance){
+						scriptGrpInstance = new ScriptGroup()
+						scriptGrpInstance.name = name
+						scriptGrpInstance.category = Utility.getCategory(category)
+						scriptGrpInstance.save(flush:true)
+					}
+					if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
+						scriptGrpInstance.addToScriptList(scriptFile)
 					}
 				}
 			}
+		}
 	}
 	
 	private void initializeTCLScripts(final String path) {
@@ -1120,6 +1154,7 @@ class ScriptService {
 			script.put("longDuration", getBooleanValue(node.long_duration.text()))
 			def versList = []
 			def btList = []
+			def tagList = []
 			Set btSet = node?.box_types?.box_type?.collect{ it.text() }
 			Set versionSet = node?.rdk_versions?.rdk_version?.collect{ it.text() }
 			btSet.each { bt ->
@@ -1128,8 +1163,16 @@ class ScriptService {
 			versionSet.each { ver ->
 				versList.add(RDKVersions.findByBuildVersionAndCategory(ver,  Utility.getCategory(category)))
 			}
+			
+			Set tagSet = node?.script_tags?.script_tag?.collect{ it.text() }
+			tagSet.each { tag ->
+				tagList.add(ScriptTag.findByNameAndCategory(tag, Utility.getCategory(category)))
+			}
+			
 			script.put("rdkVersions", versList)
 			script.put("boxTypes", btList)
+			script.put("scriptTags", tagList)
+			
 		}
 		return script
 	}
@@ -1532,10 +1575,10 @@ class ScriptService {
 										scriptGrpInstance?.category = category
 										scriptGrpInstance.save()
 										scriptGrpInstance?.addToScriptList(scriptFile)
+										scriptGrpInstance.save(flush:true)
 									}
 									if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
 										scriptGrpInstance.addToScriptList(scriptFile)
-										scriptGrpInstance.save(flush:true)
 									}
 								}
 							}
@@ -1595,4 +1638,137 @@ class ScriptService {
 		}
 		return fileList
 	}	
+
+	/**
+	 * To fetch the file directory object for the mentioned module name.
+	 */
+	def getModuleDirectory(def moduleName , def realPath , def category){
+		String dirName = ""
+		def path = null
+		File module = null
+		if(!category?.equals(Category.RDKB_TCL.toString())){
+
+			def moduleObj = Module.findByName(moduleName)
+			def scriptDirName = Constants.COMPONENT
+			if(moduleObj){
+				if(moduleObj?.testGroup?.groupValue.equals(TestGroup.E2E.groupValue)){
+					scriptDirName = Constants.INTEGRATION
+				}
+			}
+
+			if(category?.equals(Category.RDKV.toString())){
+				dirName = FileStorePath.RDKV.value()
+			}else if(category?.equals(Category.RDKB.toString())){
+				dirName = FileStorePath.RDKB.value()
+			}
+			path = "${realPath}//fileStore//"+dirName+"//"+scriptDirName+"//"+moduleName
+
+		}else if(category?.equals(Category.RDKB_TCL.toString())){
+			dirName = FileStorePath.RDKTCL.value()
+			path = "${realPath}//fileStore//"+dirName
+		}
+		if(path){
+			module = new File (path)
+		}
+		return module
+	}
+
+	/**
+	 * Method to update the script groups both RDKv & RDKB from script group page ui
+	 */
+	def updateScriptGroups(def moduleName , def realPath , def category){
+		File module = getModuleDirectory(moduleName, realPath, category)
+		if(category?.equals(Category.RDKB_TCL.toString())){
+			updateTCLScriptGroup(module)
+		}else{
+			updateScriptGroup(module, realPath, category)
+		}
+	}
+
+	/**
+	 * Method to update the script groups 
+	 */
+	private void updateScriptGroup(def moduleDir, def realPath, def category){
+		try {
+			File [] files = moduleDir.listFiles(new FilenameFilter() {
+						@Override
+						public boolean accept(File dir, String name) {
+							return name.endsWith(".py");
+						}
+					});
+			def sLst = []
+			files.each { file ->
+				String name = ""+file?.name?.trim()?.replace(".py", "")
+				updateDefaultScriptGroupsList(realPath,name,moduleDir?.getName(), category)
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
+
+	/**
+	 * Method to update the TCL script groups
+	 */
+	private void updateTCLScriptGroup(final String tclDir) {
+		def tclFiles = tclDir.listFiles(new FileFilter(){
+					boolean accept(File file) {
+						def fileName = file.name
+						if(!(fileName?.toString()?.equals("lib.tcl") || fileName?.toString()?.equals("proc.tcl"))){
+							return fileName.endsWith(".tcl")
+						}
+					}
+				})
+
+		try{
+			tclFiles.each { tclFile ->
+				def fileName = tclFile.name.split(".tcl")[0]
+				def scriptName =ScriptFile.findByScriptNameAndCategory(fileName, Category.RDKB_TCL)
+				if(scriptName){
+					updateTclScriptSuite(scriptName ,"RDKB_TCL")
+				}
+			}
+		}catch(Exception e){
+			println e?.getMessage()
+			e.printStackTrace()
+		}
+	}
+	
+	/**
+	 * Method to update the script groups based on test profile
+	 */
+	def updateSuiteWithTestProfileScript(def script , def scriptFile , def category){
+		try{
+			boolean value = false
+			removeScriptsFromTestProfiles(scriptFile,[:],category)
+			def boxTypeList = script?.boxTypes
+			def rdkVersions =  script?.rdkVersions
+			def testProfile =  script?.testProfile
+			testProfile.each{ tProfile->
+				rdkVersions?.each{ rdkVersion ->
+					boxTypeList?.each{ bType->
+						def suiteName  =  rdkVersion?.toString()+"_"+ bType?.toString()+"_"+ tProfile?.toString()
+						def scriptGrpInstance = ScriptGroup?.findByName(suiteName)
+						if(testProfileSuite?.toString()?.contains(suiteName?.toString())){
+							value = true
+						}
+						if(value){
+							if(!scriptGrpInstance){
+								scriptGrpInstance = new ScriptGroup()
+								scriptGrpInstance.name = suiteName
+								scriptGrpInstance?.category = category
+								scriptGrpInstance.save()
+								scriptGrpInstance?.addToScriptList(scriptFile)
+								scriptGrpInstance.save(flush:true)
+							}
+							if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptFile)){
+								scriptGrpInstance.addToScriptList(scriptFile)
+							}
+						}
+					}
+				}
+			}
+		}catch(Exception e){
+			e.printStackTrace()
+		}
+	}
 }
