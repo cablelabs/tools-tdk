@@ -185,7 +185,7 @@ if "SUCCESS" in recLoadStatus.upper():
                                 reqRecording2 = {"recordingId":str(int(recordingID)+1),"duration":60000,"deletePriority":"P3"}
                                 ret1 = recorderlib.verifyCompletedRecording(recordingData1,reqRecording1)
                                 ret2 = recorderlib.verifyCompletedRecording(recordingData2,reqRecording2)
-                                if  "FALSE" not in (ret1 and ret2):
+                                if  "FALSE" not in (ret1,ret2):
                                     tdkTestObj.setResultStatus("SUCCESS");
                                     print "Recordings started and completed as expected";
                                 else:
