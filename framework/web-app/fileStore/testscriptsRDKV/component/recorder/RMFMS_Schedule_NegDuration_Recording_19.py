@@ -146,7 +146,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         print recordingData;
                         statusKey = 'status'
                         statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
-                        if ('NOTFOUND' not in recordingData and "ERASED" in statusValue.upper()):
+                        if ('NOTFOUND' not in recordingData and "FAILED" in statusValue.upper()):
 				tdkTestObj.setResultStatus("SUCCESS");
 				print "Recording found for the negative duration and the status is in ERASED state";
                         else:

@@ -52,7 +52,7 @@
 2. TM gets an source_id from the streaming details page of the FW and sends it to RecorderAgent to generate request url.
 3.RecorderAgent / Python lib interface will frame the json message to schedule a  future recording with an expired end time using inlinemechanism and send to TDK Recorder Simulator server which is present in TM.
 4.getrecordings message will be send to TDK Recorder Simulator server once STB is up to get the list of recordings.
-5. Verify the completed recording has Erased status
+5. Verify the completed recording has Failed status
 6.Depends on the result of above step RecorderAgent sends SUCCESS or FAILURE to TM.</automation_approch>
     <except_output>Checkpoint 1 Acknowledgement status from the DVRSimulator.
 Checkpoint 2 Get the list of recordings to check the state of current recordings</except_output>
@@ -163,9 +163,9 @@ if "SUCCESS" in recLoadStatus.upper():
                     statusValue = recorderlib.getValueFromKeyInRecording(recordingData,statusKey)
                     print "Successfully retrieved the recording list from recorder";
                     tdkTestObj.setResultStatus("SUCCESS");
-                    if "ERASED" in statusValue.upper():
+                    if "FAILED" in statusValue.upper():
                         tdkTestObj.setResultStatus("SUCCESS");
-                        print "Future Recording with expired end time have status as ERASED";
+                        print "Future Recording with expired end time have status as FAILED";
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Future Recording with expired end time did not handle properly";

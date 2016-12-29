@@ -53,7 +53,7 @@
 3.Schedule a future recording of 2 minutes duration with start time  1 minutes using legacy
 4.Extend the duration of  recording to a past end time using updateSchedule message 
 5. Wait for the recording to complete
-6. Verify the recording has Erased status 
+6. Verify the recording has Failed status 
 7.Depends on the result of above step RecorderAgent sends SUCCESS or FAILURE to TM.</automation_approch>
     <except_output>Checkpoint 1 Acknowledgement status from the DVRSimulator.
 Checkpoint 2 Get the list of recordings to check the state of current recordings</except_output>
@@ -186,7 +186,7 @@ if "SUCCESS" in recLoadStatus.upper():
                             if 'NOTFOUND' not in recordingData:
                                 statusValue = recorderlib.getValueFromKeyInRecording(recordingData,'status')
 				print "status: ", statusValue
-				if "ERASED" in statusValue.upper():
+				if "FAILED" in statusValue.upper():
                                     tdkTestObj.setResultStatus("SUCCESS");
                                     print "Future recording NOT extended to a past end time";
                                 else:
