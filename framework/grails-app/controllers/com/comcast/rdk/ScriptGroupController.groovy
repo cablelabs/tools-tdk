@@ -3717,6 +3717,14 @@ class ScriptGroupController {
 				def module = params.module
 				def category = params?.category
 				def realPath = request.getRealPath("/")
+				
+				if(module instanceof String){
+					try {
+						module = Long.parseLong(module)
+					} catch (Exception e) {
+						e.printStackTrace()
+					}
+				}
 				try {
 					def moduleName
 					Module.withTransaction {

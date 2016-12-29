@@ -94,6 +94,7 @@ $(document).ready(function() {
 				createScriptGrpForm('RDKB');
 			},
 			'add_scriptgrpTCL' : function(node) {
+				hideUpload();
 				hideAllSearchoptions();
 				createScriptGrpForm('RDKB_TCL');
 			},
@@ -159,6 +160,10 @@ function uploadRDKBScript(){
 	$("#list-scriptDetails1").hide();
 	$("#update_scriptgroup").hide();
 	
+}
+
+function hideUpload(){
+	$("#update_scriptgroup").hide();
 }
 
 
@@ -452,11 +457,11 @@ function createSG() {
 function createScriptForm(category) {
 	checkAnyEditingScript();
 	$("#up_load").hide();
+	$("#update_scriptgroup").hide();
 	$("#up_load_rdkv_script").hide();	
 	$("#up_load_rdkb_script").hide();
 	$("#list-scriptDetails").hide();
 	$("#list-scriptDetails1").hide();
-
 	$("#responseDiv123").show();
 	$.get('createScript', {category:category}, function(data) { $("#responseDiv").html(data); });
 }
@@ -468,10 +473,13 @@ function createScriptForm(category) {
  */
 function createTCLScriptForm(category) {
 	checkAnyEditingScript();
+	$("#up_load").hide();
+	$("#update_scriptgroup").hide();
 	$("#up_load_rdkv_script").hide();	
 	$("#up_load_rdkb_script").hide();
 	$("#list-scriptDetails").hide();
 	$("#list-scriptDetails1").hide();
+	$("#responseDiv123").show();
 	$.get('createScript', {category:category}, function(data) { 
 		$("#responseDiv").html(data);		
 	});
@@ -998,7 +1006,7 @@ function addTestCase(category,uniqueId){
  */
 function updateScriptGroups(){
 	var category = document.getElementById("category").value;
-	var module = document.getElementById("module").value;
+	var module = document.getElementById("moduleId").value;
 	
 	if(category == null || category == ""){
 		alert("Please select a category.");

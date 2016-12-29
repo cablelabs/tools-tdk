@@ -18,7 +18,7 @@
 -->
 <div>
 	<label>Select Module</label> &nbsp;&nbsp;
-	<g:select id="module" name="module" from="${moduleList}"
+	<g:select id="moduleId" name="moduleId" from="${moduleList}"
 		noSelection="['' : 'Please Select']" optionKey="id" required=""
 		value="" class="many-to-one" />
 </div>

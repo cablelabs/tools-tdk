@@ -450,8 +450,8 @@
 									<td>
 										
 										<div id="propData">
-										<label>Select Category</label> &nbsp;&nbsp;
-											<g:select id="module" name="module" from="${[]}"
+										<label>Select Module</label> &nbsp;&nbsp;
+											<g:select id="moduleId" name="moduleId" from="${[]}"
 												noSelection="['' : 'Please Select']" optionKey="id"
 												required="" value="" class="many-to-one" />
 										</div>
