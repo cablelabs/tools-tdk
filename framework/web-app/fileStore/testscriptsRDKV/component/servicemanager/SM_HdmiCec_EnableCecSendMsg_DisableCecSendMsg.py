@@ -142,17 +142,14 @@ iarmObj.setLoadModuleStatus(iarmLoadStatus.upper());
 
 if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
-	service_name = "com.comcast.hdmiCec_1"
-
-	register = servicemanager.registerService(smObj,service_name)
-        if "SUCCESS" in register:
-
-                #Calling IARM Bus Init
-		init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')
-		if "SUCCESS" in init:
-			connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
-			if "SUCCESS" in connect:
-
+        #Calling IARM Bus Init
+	init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')
+	if "SUCCESS" in init:
+		connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
+		if "SUCCESS" in connect:
+			service_name = "com.comcast.hdmiCec_1"
+			register = servicemanager.registerService(smObj,service_name)
+			if "SUCCESS" in register:
                                 #Enable the cec support setting it true.
 				print "Set CEC Enabled"
                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetEnabled');
@@ -261,12 +258,12 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 				else:
 					tdkTestObj.setResultStatus("FAILURE");
 
-                                #Calling IARM_Bus_DisConnect API
-                                disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
-                        term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
+                                #Unregister hdmicec service
+				unregister = servicemanager.unRegisterService(smObj,service_name)
 
-                #Unregister hdmicec service
-		unregister = servicemanager.unRegisterService(smObj,service_name)
+                        #Calling IARM_Bus_DisConnect API
+                        disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
+                term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
 
         #Unload the modules
         smObj.unloadModule("servicemanager");

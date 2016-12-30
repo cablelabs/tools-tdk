@@ -129,7 +129,7 @@ else:
 
 #Test component to be tested
 smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
-iarmObj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
+iarmObj = tdklib.TDKScriptingLibrary("iarmbus","2.0");
 
 smObj.configureTestCase(ip,port,'"SM_HdmiCec_SendMsgGetPowerStatus_CecEnabled');
 iarmObj.configureTestCase(ip,port,'"SM_HdmiCec_SendMsgGetPowerStatus_CecEnabled');
@@ -145,22 +145,21 @@ iarmObj.setLoadModuleStatus(iarmLoadStatus.upper());
 
 if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 
-	service_name = "com.comcast.hdmiCec_1"
-
-	register = servicemanager.registerService(smObj,service_name)
-        if "SUCCESS" in register:
-
-                #Calling IARM Bus Init
-		init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')
-		if "SUCCESS" in init:
-			connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
-			if "SUCCESS" in connect:
-
+        #Calling IARM Bus Init
+	init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')
+	if "SUCCESS" in init:
+		connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
+		if "SUCCESS" in connect:
+                        #Register HdmiCecService
+			service_name = "com.comcast.hdmiCec_1"
+			register = servicemanager.registerService(smObj,service_name)
+			if "SUCCESS" in register:
                                 #Enable the cec support setting it true.
 				print "Set CEC Enabled"
                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_SetEnabled');
                                 expectedresult = "SUCCESS"
 				valueToSetEnabled = 1
+				print "setEnabled to ",valueToSetEnabled
 				tdkTestObj.addParameter("valueToSetEnabled",valueToSetEnabled);
                                 tdkTestObj.executeTestCase(expectedresult);
                                 actualresult = tdkTestObj.getResult();
@@ -168,8 +167,8 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 print "[TEST EXECUTION DETAILS] : ",setEnabledDetails;
                                 if expectedresult in actualresult:
 					tdkTestObj.setResultStatus("SUCCESS");
-                                        #Sending the message to the connected device
 
+                                        #Sending the message to the connected device
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
                                         message = "30 8F 53 65 74 74 " + str(b2a_hex(urandom(1))).upper()
@@ -181,7 +180,10 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
         	                        print "[TEST EXECUTION DETAILS] : ",sendMsgDetails;
 					if expectedresult in actualresult:
 						tdkTestObj.setResultStatus("SUCCESS");
-                                                sleep(70);
+
+                                                #Wait for data to be printed to cec log
+                                                sleep(70)
+
 						#Check for the message sent for confirmation.
 						tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
 						expectedresult = "SUCCESS"
@@ -210,7 +212,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                                                 eventregisterdetail =tdkTestObj.getResultDetails(); 
                                                                 print eventregisterdetail;
                                                                 print "SUCCESS: Application succesfully executes SM_RegisterForEvents API";
-                                                                sleep(70);
+                                                                sleep(70)
                                                                 tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
                 		                                expectedresult = "SUCCESS"
                                                                 #Assuming TV is on and should receive power state 039000
@@ -259,12 +261,12 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 				else:
 					tdkTestObj.setResultStatus("FAILURE");
 
-                                #Calling IARM_Bus_DisConnect API
-                                disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
-                        term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
+				#Unregister hdmicec service
+				unregister = servicemanager.unRegisterService(smObj,service_name)
 
-                #Unregister hdmicec service
-		unregister = servicemanager.unRegisterService(smObj,service_name)
+                        #Calling IARM_Bus_DisConnect API
+                        disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
+                term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
 
         #Unload the modules
         smObj.unloadModule("servicemanager");
