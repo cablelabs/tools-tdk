@@ -75,7 +75,7 @@ Checkpoint 2.Compare the number of devices connected should be greater than 0.
 </test_stub_interface>
     <test_script>SM_HdmiCec_GetNumOfDevicesConnected_CecEnabled</test_script>
     <skipped>Yes</skipped>
-    <release_version>M25</release_version>
+    <release_version>M41</release_version>
     <remarks>SM_HdmiCec_GetNumOfDevicesConnected_CecEnabled_AtLeastOne changed to SM_HdmiCec_GetNumOfDevicesConnected_CecEnabled during M-29 release</remarks>
   </test_cases>
 </xml>

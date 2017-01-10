@@ -70,7 +70,7 @@ Checkpoint 2 : Get the response from recorder in full sync and verify that statu
 1.TestMgr_Recorder_SendRequest</test_stub_interface>
     <test_script>Recorder_RMF_RecStartedEarly_StartedIncomplete_Inline_86</test_script>
     <skipped>Yes</skipped>
-    <release_version/>
+    <release_version>M42</release_version>
     <remarks/>
   </test_cases>
 </xml>

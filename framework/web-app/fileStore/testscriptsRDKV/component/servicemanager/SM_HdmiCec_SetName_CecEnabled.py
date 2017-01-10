@@ -72,7 +72,7 @@ Checkpoint 2.Compare the name set with current name returned.</except_output>
     <test_stub_interface>libservicemanagerstub.so</test_stub_interface>
     <test_script>SM_HdmiCec_SetName_CecEnabled</test_script>
     <skipped>Yes</skipped>
-    <release_version>M25</release_version>
+    <release_version>M41</release_version>
     <remarks>SM_HdmiCec_EnableCec_SetGetDeviceName changed to SM_HdmiCec_SetName_CecEnabled during M-29 release</remarks>
   </test_cases>
 </xml>

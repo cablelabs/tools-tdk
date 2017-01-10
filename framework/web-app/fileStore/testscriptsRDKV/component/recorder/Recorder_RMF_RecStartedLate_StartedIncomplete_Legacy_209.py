@@ -68,8 +68,8 @@ more than 30 seconds from requested</test_objective>
     <test_stub_interface>RecorderAgent
 1.TestMgr_Recorder_SendRequest</test_stub_interface>
     <test_script>Recorder_RMF_RecStartedLate_StartedIncomplete_Legacy_209</test_script>
-    <skipped>No</skipped>
-    <release_version/>
+    <skipped>Yes</skipped>
+    <release_version>M42</release_version>
     <remarks/>
   </test_cases>
 </xml>

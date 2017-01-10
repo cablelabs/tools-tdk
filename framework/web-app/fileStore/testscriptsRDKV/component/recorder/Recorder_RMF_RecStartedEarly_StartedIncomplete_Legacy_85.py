@@ -69,8 +69,8 @@ Checkpoint 2 : Get the response from recorder in full sync and verify that statu
     <test_stub_interface>RecorderAgent
 1.TestMgr_Recorder_SendRequest</test_stub_interface>
     <test_script>Recorder_RMF_RecStartedEarly_StartedIncomplete_Legacy_85</test_script>
-    <skipped>No</skipped>
-    <release_version/>
+    <skipped>Yes</skipped>
+    <release_version>M42</release_version>
     <remarks/>
   </test_cases>
 </xml>

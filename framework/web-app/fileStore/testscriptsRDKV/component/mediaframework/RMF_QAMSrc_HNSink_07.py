@@ -94,7 +94,7 @@ HNSink::uninit_platform():  None</input_parameters>
     <priority>Medium</priority>
     <test_stub_interface>libmediaframeworkstub.so</test_stub_interface>
     <test_script>RMF_QAMSrc_HNSink_07</test_script>
-    <skipped>No</skipped>
+    <skipped>Yes</skipped>
     <release_version>M21</release_version>
     <remarks>none</remarks>
   </test_cases>
