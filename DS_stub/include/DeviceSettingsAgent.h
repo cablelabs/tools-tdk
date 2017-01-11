@@ -195,6 +195,7 @@ class DeviceSettingsAgent : public RDKTestStubInterface
 		//bool VOPCONFIG_load(IN const Json::Value& req, OUT Json::Value& response);
 		bool VD_setPlatformDFC(IN const Json::Value& req, OUT Json::Value& response);
 		bool VD_getSupportedDFCs(IN const Json::Value& req, OUT Json::Value& response);
+		bool VD_getHDRCapabilities(IN const Json::Value& req, OUT Json::Value& response);
 		//bool VD_addDFC(IN const Json::Value& req, OUT Json::Value& response);
 		bool VDCONFIG_getDevices(IN const Json::Value& req, OUT Json::Value& response);
 		bool VDCONFIG_getDFCs(IN const Json::Value& req, OUT Json::Value& response);

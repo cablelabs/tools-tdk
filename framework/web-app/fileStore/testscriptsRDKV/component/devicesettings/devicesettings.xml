@@ -582,6 +582,10 @@
           <parameter name="port_name" value="HDMI0"/>
         </parameters>
       </primitiveTest>
+      <primitiveTest name="DS_VD_getHDRCapabilities" id="" version="1">
+        <function>TestMgr_DS_VD_getHDRCapabilities</function>
+        <parameters/>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>

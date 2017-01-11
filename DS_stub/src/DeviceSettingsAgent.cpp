@@ -174,6 +174,7 @@ bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VD_setDFC, "TestMgr_DS_VD_setDFC");
         ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VD_setPlatformDFC, "TestMgr_DS_VD_setPlatformDFC");
         ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VD_getSupportedDFCs, "TestMgr_DS_VD_getSupportedDFCs");
+        ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VD_getHDRCapabilities, "TestMgr_DS_VD_getHDRCapabilities");
         //ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::VD_addDFC, "TestMgr_DS_VD_addDFC");
 
 	//VideoDevice Config
@@ -931,6 +932,41 @@ bool DeviceSettingsAgent::VD_getSupportedDFCs(IN const Json::Value& req, OUT Jso
         DEBUG_PRINT(DEBUG_TRACE,"VD_getSupportedDFCs ---->Exit\n");
         return TEST_SUCCESS;
 }
+
+bool DeviceSettingsAgent::VD_getHDRCapabilities(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"VD_getHDRCapabilities ---->Entry\n");
+
+        try
+        {
+                char details[256] = {'\0'};
+		int Capabilities =0;
+	        char *HDRCap = (char*)malloc(sizeof(char)*20);
+	        memset(HDRCap,'\0', (sizeof(char)*20));
+                DEBUG_PRINT(DEBUG_LOG,"Calling getHDRCapabilities\n");
+                device::VideoDevice decoder = device::Host::getInstance().getVideoDevices().at(0);
+                DEBUG_PRINT(DEBUG_LOG,"Calling DSgetHDRCapabilities\n");
+                decoder.getHDRCapabilities(&Capabilities);
+		DEBUG_PRINT(DEBUG_LOG,"HDR Capabilities = %d\n",Capabilities);
+		strcat(details," Capabilities:");
+		sprintf(HDRCap, "%d" , Capabilities);
+		strcat(details,HDRCap);
+		response["details"]=details;
+		response["result"]= "SUCCESS";
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception Caught in VD_getHDRCapabilities\n");
+                response["details"]= "Exception Caught in VD_getHDRCapabilities";
+                response["result"]= "FAILURE";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE,"VD_HDRCapabilities ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+
+
 
 bool DeviceSettingsAgent::VDCONFIG_getDevices(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -4372,6 +4408,7 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
         ptrAgentObj->UnregisterMethod("TestMgr_DS_VOPCONFIG_getSupportedTypes");
         ptrAgentObj->UnregisterMethod("TestMgr_DS_VD_setPlatformDFC");
         ptrAgentObj->UnregisterMethod("TestMgr_DS_VD_getSupportedDFCs");
+        ptrAgentObj->UnregisterMethod("TestMgr_DS_VD_getHDRCapabilities");
         ptrAgentObj->UnregisterMethod("TestMgr_DS_VDCONFIG_getDevices");
         ptrAgentObj->UnregisterMethod("TestMgr_DS_VDCONFIG_getDFCs");
         ptrAgentObj->UnregisterMethod("TestMgr_DS_VDCONFIG_getDefaultDFC");
