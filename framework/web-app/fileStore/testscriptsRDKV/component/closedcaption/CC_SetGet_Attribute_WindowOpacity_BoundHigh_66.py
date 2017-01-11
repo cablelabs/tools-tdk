@@ -68,6 +68,24 @@ Test case Id - CT_ClosedCaption_66</synopsis>
     <rdk_version>RDK1.3</rdk_version>
     <!--  -->
   </rdk_versions>
+  <test_cases>
+    <test_case_id>CT_ClosedCaption_66</test_case_id>
+    <test_objective>Closed Caption - Set and get the  closed caption attribute of window opacity - Higher boundary value.</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XI3-1/XG1-1</test_setup>
+    <pre_requisite/>
+    <api_or_interface_used>vlGfxInit(0)                                                     vlMpeosCCManagerInit()                                                    ccSetAttributes(&amp;CCAttribute, AttributeType, ccType))                  ccGetAttributes(&amp;CCGetAttribute, ccType)</api_or_interface_used>
+    <input_parameters>Categories : CCSetGetAttribute : *attrib - Pointer to cc attribute structure list, type - 5 (list value of winOpacity in the structure)(higher value), ccType - Digital/Analog.</input_parameters>
+    <automation_approch>1. TM loads the ClosedCaption_Manager_Agent via the test agent.
+2.ClosedCaption_Manager_Agent will initialize/start the  ClosedCaption Manager.                        3.ClosedCaption_Manager_Agent will set the window opacity of the closed caption manager with ClosedCaption Manager component.                                                    4. ClosedCaption Manager component will return the window opacity through the ClosedCaption_Manager_Agent to the TM.                                                                          5. ClosedCaption_Manager_Agent will return SUCCESS/FAILURE status based on the return value of  APIs.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.          Checkpoint 2.Check the value which is being set is being got back by the get API.</except_output>
+    <priority>Medium</priority>
+    <test_stub_interface>TestMgr_CC_Init  TestMgr_CC_SetGetAttribute</test_stub_interface>
+    <test_script>CC_SetGet_Attribute_WindowOpacity_BoundHigh_66</test_script>
+    <skipped>No</skipped>
+    <release_version>M-21</release_version>
+    <remarks/>
+  </test_cases>
 </xml>
 '''
 #use tdklib library,which provides a wrapper for tdk testcase script
