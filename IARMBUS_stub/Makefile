@@ -26,7 +26,7 @@ SRC_DIR   := ./src/
 OBJDIR	  := obj
 COPTS     := -c -g -Wall -DGCC4_XXX -Wno-format -Wunused
 APP_EXE   := tst_iarmbus
-DUMMY_TESTAPP_EXE   := Test_Event_Mgr 
+DUMMY_TESTAPP_EXE   := DUMMYMgr
 SINGLEEVT_APP_EXE   := gen_single_event
 MULTIEVT_APP_EXE    := gen_multiple_events
 

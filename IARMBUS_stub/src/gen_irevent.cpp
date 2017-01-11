@@ -23,9 +23,9 @@
 #include "gen_irevent.h"
 
 /********************************************************
-* Function Name	: _ReleaseOwnership
-* Description  	: This the call back function used to rgister with
-*		  registercall method
+* Function Name : _ReleaseOwnership
+* Description   : This the call back function used to rgister with
+*                 registercall method
 *
 ********************************************************/
 
@@ -111,37 +111,37 @@ int main(int argc,char **argv)
     }
 
     IARM_Result_t retCode = IARM_RESULT_SUCCESS;
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Client Entering\n", getpid());
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Connect second application\n", getpid());
-    IARM_Bus_Init("Bus_Client");
-    IARM_Bus_Connect();
-    IARM_Bus_RegisterCall(IARM_BUS_COMMON_API_ReleaseOwnership, _ReleaseOwnership);
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Requesting Resource\n",getpid());
-    retCode=IARM_BusDaemon_RequestOwnership(IARM_BUS_RESOURCE_FOCUS);
+    retCode = IARM_Bus_Init("Bus_Client");
+    DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] IARM_Bus_Init status = %d\n",getpid(), retCode);
+    if (IARM_RESULT_SUCCESS == retCode) {
+        retCode = IARM_Bus_Connect();
+        DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] IARM_Bus_Connect status = %d\n",getpid(), retCode);
+        if (IARM_RESULT_SUCCESS == retCode) {
+                retCode = IARM_Bus_RegisterCall(IARM_BUS_COMMON_API_ReleaseOwnership, _ReleaseOwnership);
+                DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] RegisterCall IARM_BUS_COMMON_API_ReleaseOwnership status = %d\n",getpid(), retCode);
+                retCode = IARM_BusDaemon_RequestOwnership(IARM_BUS_RESOURCE_FOCUS);
+                DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Requesting Resource status = %d\n",getpid(), retCode);
 
-    /*Event Data for BUS,IR,PWR events*/
-    IRMgr_EventData_tp eventData_ir;
-
-    /*Braodcasting IR IRKey event*/
-    eventData_ir.data.irkey.keyType = type;
-    eventData_ir.data.irkey.keyCode = code;
-
-    if( clock_gettime( CLOCK_REALTIME, &eventData_ir.data.irkey.clock_when_event_sent) == -1)
-    {
-        DEBUG_PRINT(DEBUG_ERROR, "[gen_irevent pid=%d] clock gettime error",getpid());
+                /*Event Data for BUS IR events*/
+                IRMgr_EventData_tp eventData_ir;
+                eventData_ir.data.irkey.keyType = type;
+                eventData_ir.data.irkey.keyCode = code;
+                if( clock_gettime( CLOCK_REALTIME, &eventData_ir.data.irkey.clock_when_event_sent) == -1)
+                {
+                        DEBUG_PRINT(DEBUG_ERROR, "[gen_irevent pid=%d] clock gettime error",getpid());
+                }
+                DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Sending %d %lx %lx \n",getpid(),code,eventData_ir.data.irkey.clock_when_event_sent.tv_sec,eventData_ir.data.irkey.clock_when_event_sent.tv_nsec);
+                retCode = IARM_Bus_BroadcastEvent(IARM_BUS_IRMGR_NAME, IARM_BUS_IRMGR_EVENT_IRKEY, (void*)&eventData_ir, sizeof(eventData_ir));
+                DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Broadcasting IR event %d %d (status=%d)\n",getpid(),type,code,retCode);
+                sleep(1);
+                retCode = IARM_BusDaemon_ReleaseOwnership(IARM_BUS_RESOURCE_FOCUS);
+                DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Releasing Resource status = %d\n",getpid(),retCode);
+                retCode = IARM_Bus_Disconnect();
+                DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] IARM_Bus_Disconnect status = %d\n",getpid(), retCode);
+        }
+        retCode = IARM_Bus_Term();
+        DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] IARM_Bus_Term status = %d\n",getpid(), retCode);
     }
-
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Sending %d %lx %lx \n",getpid(),code,eventData_ir.data.irkey.clock_when_event_sent.tv_sec,eventData_ir.data.irkey.clock_when_event_sent.tv_nsec);
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Broadcasting IR event %d %d\n",getpid(),type,code);
-    IARM_Bus_BroadcastEvent(IARM_BUS_IRMGR_NAME, IARM_BUS_IRMGR_EVENT_IRKEY, (void*)&eventData_ir, sizeof(eventData_ir));
-
-    sleep(1);
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Releasing Resource\n",getpid());
-    retCode = IARM_BusDaemon_ReleaseOwnership(IARM_BUS_RESOURCE_FOCUS);
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Disconnect second application",getpid());
-    IARM_Bus_Disconnect();
-    IARM_Bus_Term();
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] Bus Client Exiting\r\n",getpid());
     DEBUG_PRINT(DEBUG_TRACE,"[gen_irevent pid=%d] <-----------SECOND APPLICATION---Exit-------------->\n",getpid());
     return(retCode);
 }

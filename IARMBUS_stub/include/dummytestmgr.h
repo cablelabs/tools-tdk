@@ -17,13 +17,18 @@
  * limitations under the License.
 */
 
-#include "iarmUtil.h"
-#include "libIARM.h"
-#include "libIBus.h"
+#ifndef __DUMMYEVENT_H__
+#define __DUMMYEVENT_H__
+
 #include <stdbool.h>
 #include <time.h>
 
-#define IARM_BUS_DUMMYMGR_NAME		     "Test_Event_Mgr"
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+#define IARM_BUS_DUMMYMGR_NAME		     "DUMMYMgr"
 #define IARM_BUS_DUMMYMGR_API_HANDLER_READY  "HandlerReady"
 #define IARM_BUS_DUMMYMGR_API_DummyAPI0      "DummyAPI0"
 #define IARM_BUS_DUMMYMGR_API_DummyAPI1      "DummyAPI1"
@@ -53,6 +58,16 @@ typedef struct _DUMMYMGR_EventData_t {
                 char dummyData[DATA_LEN];
                 struct timespec clock_when_event_sent;   /*!< clock val at send */
         } dummy0;
+        struct _EventData_DUMMY_1{
+                /* Declare Event Data structure for DUMMYMGR_EVENT_DUMMY1 */
+                char dummyData[DATA_LEN];
+                struct timespec clock_when_event_sent;   /*!< clock val at send */
+        } dummy1;
+        struct _EventData_DUMMY_2{
+                /* Declare Event Data structure for DUMMYMGR_EVENT_DUMMY2 */
+                char dummyData[DATA_LEN];
+                struct timespec clock_when_event_sent;   /*!< clock val at send */
+        } dummy2;
     } data;
 } IARM_Bus_DUMMYMGR_EventData_t;
 
@@ -72,3 +87,8 @@ typedef struct _IARM_Bus_DUMMYMGR_DummyAPI1_Param_t {
 	int iData1;
 	int iRet1;
 } IARM_Bus_DUMMYMGR_DummyAPI1_Param_t;
+
+#ifdef __cplusplus
+}
+#endif
+#endif //__DUMMYEVENT_H__

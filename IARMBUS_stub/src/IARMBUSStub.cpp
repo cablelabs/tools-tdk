@@ -851,11 +851,11 @@ void _DUMMYTestMgrevtHandler(const char *owner, IARM_EventId_t eventId, void *da
 
 	if (strcmp(owner, IARM_BUS_DUMMYMGR_NAME) == 0) {
 		/* Handle events here */
-		IARM_Bus_DUMMYMGR_EventData_tp *eventData = (IARM_Bus_DUMMYMGR_EventData_tp *)data;
+		IARM_Bus_DUMMYMGR_EventData_t *eventData = (IARM_Bus_DUMMYMGR_EventData_t *)data;
 		
 		switch(eventId) {
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYX:
-			DEBUG_PRINT(DEBUG_LOG,"Received Event X: %d",eventData->data.dummy0.dummyData);
+			DEBUG_PRINT(DEBUG_LOG,"Received Event X: %s",eventData->data.dummy0.dummyData);
 			DEBUG_PRINT(DEBUG_LOG,"Received Event - X : IARM_BUS_DUMMYMGR_EVENT_DUMMYX \r\n");
 			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy0.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy0.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 			strcpy(LastEvent , "IARM_BUS_DUMMYMGR_EVENT_DUMMYX");
@@ -863,7 +863,7 @@ void _DUMMYTestMgrevtHandler(const char *owner, IARM_EventId_t eventId, void *da
 			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving EVENT_DUMMYX was %lf seconds\r\n",EvtTime);
 			break;
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYY:
-			DEBUG_PRINT(DEBUG_LOG,"Received Event Y: %d",eventData->data.dummy1.dummyData);
+			DEBUG_PRINT(DEBUG_LOG,"Received Event Y: %s",eventData->data.dummy1.dummyData);
 			DEBUG_PRINT(DEBUG_LOG,"Received Event - Y : IARM_BUS_DUMMYMGR_EVENT_DUMMYY \r\n");
 			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy1.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy1.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 			strcpy(LastEvent , "IARM_BUS_DUMMYMGR_EVENT_DUMMYY");
@@ -871,7 +871,7 @@ void _DUMMYTestMgrevtHandler(const char *owner, IARM_EventId_t eventId, void *da
 			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving EVENT_DUMMYY was %lf seconds\r\n",EvtTime);
 			break;
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYZ:
-			DEBUG_PRINT(DEBUG_LOG,"Received Event Z: %d",eventData->data.dummy2.dummyData);
+			DEBUG_PRINT(DEBUG_LOG,"Received Event Z: %s",eventData->data.dummy2.dummyData);
 			DEBUG_PRINT(DEBUG_LOG,"Received Event - Z : IARM_BUS_DUMMYMGR_EVENT_DUMMYZ \r\n");
 			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy2.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy2.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 			strcpy(LastEvent , "IARM_BUS_DUMMYMGR_EVENT_DUMMYZ");
@@ -1103,8 +1103,8 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 			DEBUG_PRINT(DEBUG_LOG, "Time taken for receiving EVENT_DUMMYX was %lf seconds\r\n",EvtTime);
 			break;
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYY:
-                        DEBUG_PRINT(DEBUG_LOG,"Data received from event Y: %s",eventData->data.dummy0.dummyData);
-			if(strncmp(dummydata_y,eventData->data.dummy0.dummyData,DATA_LEN)==0)
+                        DEBUG_PRINT(DEBUG_LOG,"Data received from event Y: %s",eventData->data.dummy1.dummyData);
+			if(strncmp(dummydata_y,eventData->data.dummy1.dummyData,DATA_LEN)==0)
                         {
                                 DEBUG_PRINT(DEBUG_LOG,"Data received matches dummydata_y: %s",dummydata_y);
                         }
@@ -1112,14 +1112,14 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
 			evtname='Y';
 			DEBUG_PRINT(DEBUG_LOG,"Received Event - Y : IARM_BUS_DUMMYMGR_EVENT_DUMMYY \r\n");
 					
-			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy0.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy0.clock_when_event_sent.tv_nsec)) / (double)BILLION;
+			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy1.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy1.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 			strcpy(LastEvent , "IARM_BUS_DUMMYMGR_EVENT_DUMMYY");
 			fill_LastReceivedKey(__func__,LastEvent, EvtTime);
 			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving EVENT_DUMMYY was %lf seconds\r\n",EvtTime);
 			break;
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYZ:
-                        DEBUG_PRINT(DEBUG_LOG,"Data received from event Z: %s",eventData->data.dummy0.dummyData);
-			if(strncmp(dummydata_z,eventData->data.dummy0.dummyData,DATA_LEN)==0)
+                        DEBUG_PRINT(DEBUG_LOG,"Data received from event Z: %s",eventData->data.dummy2.dummyData);
+			if(strncmp(dummydata_z,eventData->data.dummy2.dummyData,DATA_LEN)==0)
                         {
                                 DEBUG_PRINT(DEBUG_LOG,"Data received matches dummydata_z: %s",dummydata_z);
                         }
@@ -1132,7 +1132,7 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
                 	pthread_cond_signal(&cond);
                 	pthread_mutex_unlock(&lock);
 
-			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy0.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy0.clock_when_event_sent.tv_nsec)) / (double)BILLION;
+			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy2.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy2.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 			strcpy(LastEvent , "IARM_BUS_DUMMYMGR_EVENT_DUMMYZ");
 			fill_LastReceivedKey(__func__,LastEvent, EvtTime);
 			DEBUG_PRINT(DEBUG_LOG, "Time taken for receving EVENT_DUMMYZ was %lf seconds\r\n",EvtTime);
@@ -2069,11 +2069,11 @@ void _evtHandler_Perf(const char *owner, IARM_EventId_t eventId, void *data, siz
 		DEBUG_PRINT(DEBUG_LOG,"Inside DummyMgr event handler\n");
 
 		/* Handle events here */
-		IARM_Bus_DUMMYMGR_EventData_tp *eventData = (IARM_Bus_DUMMYMGR_EventData_tp *)data;
+		IARM_Bus_DUMMYMGR_EventData_t *eventData = (IARM_Bus_DUMMYMGR_EventData_t *)data;
 		switch(eventId) {
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYX:
 
-			DEBUG_PRINT(DEBUG_LOG,"Received event X: %d",eventData->data.dummy0.dummyData);
+			DEBUG_PRINT(DEBUG_LOG,"Received event X: %s",eventData->data.dummy0.dummyData);
 			DEBUG_PRINT(DEBUG_LOG,"Received Event - X : IARM_BUS_DUMMYMGR_EVENT_DUMMYX \r\n");
 			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy0.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy0.clock_when_event_sent.tv_nsec)) / (double)BILLION;
 			strcpy(LastEvent , "IARM_BUS_DUMMYMGR_EVENT_DUMMYX");
@@ -2082,7 +2082,7 @@ void _evtHandler_Perf(const char *owner, IARM_EventId_t eventId, void *data, siz
 			break;
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYY:
 
-			DEBUG_PRINT(DEBUG_LOG,"Received event Y: %d",eventData->data.dummy1.dummyData);
+			DEBUG_PRINT(DEBUG_LOG,"Received event Y: %s",eventData->data.dummy1.dummyData);
 			DEBUG_PRINT(DEBUG_LOG,"Received Event - Y : IARM_BUS_DUMMYMGR_EVENT_DUMMYY \r\n");
 					
 			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy1.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy1.clock_when_event_sent.tv_nsec)) / (double)BILLION;
@@ -2092,7 +2092,7 @@ void _evtHandler_Perf(const char *owner, IARM_EventId_t eventId, void *data, siz
 			break;
 		case IARM_BUS_DUMMYMGR_EVENT_DUMMYZ:
 
-			DEBUG_PRINT(DEBUG_LOG,"Received event Z: %d",eventData->data.dummy2.dummyData);
+			DEBUG_PRINT(DEBUG_LOG,"Received event Z: %s",eventData->data.dummy2.dummyData);
 			DEBUG_PRINT(DEBUG_LOG,"Received Event - Z : IARM_BUS_DUMMYMGR_EVENT_DUMMYZ \r\n");
 						
 			EvtTime = ((double)(clock_at_recv_event.tv_sec - eventData->data.dummy2.clock_when_event_sent.tv_sec) + (double)(clock_at_recv_event.tv_nsec - eventData->data.dummy2.clock_when_event_sent.tv_nsec)) / (double)BILLION;
@@ -2143,7 +2143,7 @@ void _evtHandlerRept1(const char *owner, IARM_EventId_t eventId, void *data, siz
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_IBUSevtHandler(owner, eventId, data, len);
 	}
-	else if(strcmp(ownerName,"DummyTestMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_DUMMYMGR_NAME)==0)
 	{
 		DEBUG_PRINT(DEBUG_LOG,"Registered for DUMMY TEST MANAGER Events ... \n");
 		_DUMMYTestMgrevtHandler(owner, eventId, data, len);
@@ -2185,7 +2185,7 @@ void _evtHandlerRept2(const char *owner, IARM_EventId_t eventId, void *data, siz
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_IBUSevtHandler(owner, eventId, data, len);
 	}
-	else if(strcmp(ownerName,"DummyTestMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_DUMMYMGR_NAME)==0)
 	{
 		DEBUG_PRINT(DEBUG_LOG,"Registered for DUMMY TEST MANAGER Events ... \n");
 		_DUMMYTestMgrevtHandler(owner, eventId, data, len);
@@ -2227,7 +2227,7 @@ void _evtHandlerRept3(const char *owner, IARM_EventId_t eventId, void *data, siz
 		/*Calling IARMBUS API IARM_Bus_RegisterEventHandler */
 		_IBUSevtHandler(owner, eventId, data, len);
 	}
-	else if(strcmp(ownerName,"DummyTestMgr")==0)
+	else if(strcmp(ownerName,IARM_BUS_DUMMYMGR_NAME)==0)
 	{
 		DEBUG_PRINT(DEBUG_LOG,"Registered for DUMMY TEST MANAGER Events ... \n");
 		_DUMMYTestMgrevtHandler(owner, eventId, data, len);
@@ -2424,9 +2424,8 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
 			DEBUG_PRINT(DEBUG_LOG,"resource_type : %d \n", resrcType);
 			execl(path.c_str(),appname, "-o", ownerName, "-r", sresrcType.c_str(), (char*)NULL);
 		}
-		else if(strcmp(ownerName,"DummyTestMgr")==0)
+		else if(strcmp(ownerName,IARM_BUS_DUMMYMGR_NAME)==0)
 		{
-			DEBUG_PRINT(DEBUG_LOG,"DummyTestMgr Triggering events.. \n");
          		std::string seventId;          // string which will contain the result
          		std::ostringstream convert3;   // stream used for the conversion
          		convert3 << eventId;      // insert the textual representation of 'Number' in the characters in the stream

@@ -127,7 +127,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         for i in range(0,100):
                                 print "**************** Iteration ", (i+1), " ****************";
                                 tdkTestObj = obj.createTestStep('IARMBUS_InvokeSecondApplication');
-                                tdkTestObj.addParameter("appname","Test_Event_Mgr");
+                                tdkTestObj.addParameter("appname","DUMMYMgr");
                                 tdkTestObj.addParameter("argv1","");
                                 tdkTestObj.addParameter("apptype","background");
                                 expectedresult="SUCCESS"
@@ -153,7 +153,7 @@ if "SUCCESS" in loadmodulestatus.upper():
 
                                                 #calling two dummy RPC using IARM_Bus_Call API
                                                 tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
-                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                                 tdkTestObj.addParameter("method_name","DummyAPI0");
                                                 api_0_Data=1;
                                                 tdkTestObj.addParameter("testapp_API0_data",api_0_Data);
@@ -178,7 +178,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                         print "FAILURE: IARM_Bus_Call failed. %s" %details;
 
                                                 tdkTestObj = obj.createTestStep('IARMBUS_BusCall');
-                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                                 tdkTestObj.addParameter("method_name","DummyAPI1");
                                                 api_1_Data=3;
                                                 tdkTestObj.addParameter("testapp_API1_data",api_1_Data);

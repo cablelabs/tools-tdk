@@ -38,16 +38,16 @@
                 gettimeofday(&tv, NULL); \
                 curtime=tv.tv_sec;\
                 strftime(buffer,30,"%m-%d-%Y %T.",localtime(&curtime));\
-                fprintf(stdout,"\n%s%ld [%s %s():%d pid=%d] ", buffer, tv.tv_usec, "tst_iarmbus", __FUNCTION__, __LINE__, getpid());\
+                fprintf(stdout,"%s%ld [%s [pid=%d] %s():%d] ",buffer, tv.tv_usec, "tst_iarmbus", getpid(),__FUNCTION__, __LINE__);\
                 fprintf(stdout,pui8Debugmsg);\
                 fflush(stdout);\
       }while(0)
 
 
 /********************************************************
-* Function Name	: _ReleaseOwnership
-* Description  	: This the call back function used to rgister with 
-*		  registercall method
+* Function Name : _ReleaseOwnership
+* Description   : This the call back function used to rgister with
+*                 registercall method
 *
 ********************************************************/
 
@@ -62,94 +62,94 @@ int main(int argc, char *argv[] )
 {
         DEBUG_PRINT("\n<-----------SECOND APPLICATION---Entry-------------->\n");
 
-	IARM_Result_t retCode = IARM_RESULT_SUCCESS;
-	DEBUG_PRINT("Client Entering %d\r\n", getpid());
+        IARM_Result_t retCode = IARM_RESULT_SUCCESS;
 
-	IARM_Bus_Init("Bus_Client");
-	IARM_Bus_Connect();
+        retCode = IARM_Bus_Init("Bus_Client");
+        DEBUG_PRINT("IARM_Bus_Init status = %d\n",retCode);
+        if(IARM_RESULT_SUCCESS == retCode) {
+                retCode = IARM_Bus_Connect();
+                DEBUG_PRINT("IARM_Bus_Connect status = %d\n",retCode);
+                if(IARM_RESULT_SUCCESS == retCode) {
+                        retCode = IARM_Bus_RegisterCall(IARM_BUS_COMMON_API_ReleaseOwnership, _ReleaseOwnership);
+                        DEBUG_PRINT("RegisterCall IARM_BUS_COMMON_API_ReleaseOwnership status = %d\n",retCode);
+                        retCode = IARM_BusDaemon_RequestOwnership(IARM_BUS_RESOURCE_FOCUS);
+                        DEBUG_PRINT("Requesting Resource focus status = %d\n",retCode);
 
-	IARM_Bus_RegisterCall(IARM_BUS_COMMON_API_ReleaseOwnership, _ReleaseOwnership);
-	DEBUG_PRINT("Requesting Resource\n");
-	retCode=IARM_BusDaemon_RequestOwnership(IARM_BUS_RESOURCE_FOCUS);
+                        /*Broadcasting Bus event-ResourceAvailable*/
+                        IARM_Bus_EventData_t raEventData;
+                        raEventData.resrcType = (IARM_Bus_ResrcType_t)0;
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_DAEMON_NAME, IARM_BUS_EVENT_RESOURCEAVAILABLE, (void*) &raEventData, sizeof(raEventData));
+                        DEBUG_PRINT("Broadcasting Daemon ResourceAvailable Event (id: %d) status=%d\n", IARM_BUS_EVENT_RESOURCEAVAILABLE, retCode);
 
-	/*Broadcasting Bus event-ResourceAvailable*/
-	DEBUG_PRINT("Broadcasting Daemon ResourceAvailable Event (id: %d)\n", IARM_BUS_EVENT_RESOURCEAVAILABLE);
-	IARM_Bus_EventData_t raEventData;
-        raEventData.resrcType = (IARM_Bus_ResrcType_t)0;
-	IARM_Bus_BroadcastEvent(IARM_BUS_DAEMON_NAME, IARM_BUS_EVENT_RESOURCEAVAILABLE, (void*) &raEventData, sizeof(raEventData));
+                        /*Broadcasting Bus event-ResolutionChange*/
+                        IARM_Bus_ResolutionChange_EventData_t rcEventData;
+                        rcEventData.width=1;
+                        rcEventData.height=2;
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_DAEMON_NAME, IARM_BUS_EVENT_RESOLUTIONCHANGE, (void*) &rcEventData, sizeof(rcEventData));
+                        DEBUG_PRINT("Broadcasting Daemon ResolutionChange Event (id: %d) status=%d\n", IARM_BUS_EVENT_RESOLUTIONCHANGE, retCode);
 
-	/*Broadcasting Bus event-ResolutionChange*/
-	DEBUG_PRINT("Broadcasting Daemon ResolutionChange Event (id: %d)\n", IARM_BUS_EVENT_RESOLUTIONCHANGE);
-        IARM_Bus_ResolutionChange_EventData_t rcEventData;
-        rcEventData.width=1;
-	rcEventData.height=2;	
-	IARM_Bus_BroadcastEvent(IARM_BUS_DAEMON_NAME, IARM_BUS_EVENT_RESOLUTIONCHANGE, (void*) &rcEventData, sizeof(rcEventData));
-	
-	/*Broadcasting IR IRKey event*/
-        IARM_Bus_IRMgr_EventData_t eventData_ir0;
-        eventData_ir0.data.irkey.keyType = 0x00008000;
-        eventData_ir0.data.irkey.keyCode = 0x00000033;
-	DEBUG_PRINT("Broadcasting Digit3 Key Press IR Event (id: %d)\n", IARM_BUS_IRMGR_EVENT_IRKEY);
-	IARM_Bus_BroadcastEvent(IARM_BUS_IRMGR_NAME, IARM_BUS_IRMGR_EVENT_IRKEY, (void*)&eventData_ir0, sizeof(eventData_ir0));
+                        /*Broadcasting IRKey event*/
+                        IARM_Bus_IRMgr_EventData_t eventData_ir0;
+                        eventData_ir0.data.irkey.keyType = 0x00008000;
+                        eventData_ir0.data.irkey.keyCode = 0x00000033;
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_IRMGR_NAME, IARM_BUS_IRMGR_EVENT_IRKEY, (void*)&eventData_ir0, sizeof(eventData_ir0));
+                        DEBUG_PRINT("Broadcasting Digit3 Key Press IR Event (id: %d) status=%d\n", IARM_BUS_IRMGR_EVENT_IRKEY,retCode);
 
-        IARM_Bus_IRMgr_EventData_t eventData_ir1;
-        eventData_ir1.data.irkey.keyType = 0x00008100;
-        eventData_ir1.data.irkey.keyCode = 0x00000033;
-        DEBUG_PRINT("Broadcasting Digit3 Key Release IR Event (id: %d)\n", IARM_BUS_IRMGR_EVENT_IRKEY);
-        IARM_Bus_BroadcastEvent(IARM_BUS_IRMGR_NAME, IARM_BUS_IRMGR_EVENT_IRKEY, (void*)&eventData_ir1, sizeof(eventData_ir1));
-	
-	/*Broadcasting PWR event*/
-	IARM_Bus_PWRMgr_EventData_t eventData_pwr;
-	eventData_pwr.data.state.newState = (IARM_Bus_PWRMgr_PowerState_t)IARM_BUS_PWRMGR_POWERSTATE_ON;
-	DEBUG_PRINT("Broadcasting PWRMgr Mode Changed Event (id: %d)\n", IARM_BUS_PWRMGR_EVENT_MODECHANGED);
-	IARM_Bus_BroadcastEvent(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_EVENT_MODECHANGED,(void*)&eventData_pwr, sizeof(eventData_pwr));
+                        IARM_Bus_IRMgr_EventData_t eventData_ir1;
+                        eventData_ir1.data.irkey.keyType = 0x00008100;
+                        eventData_ir1.data.irkey.keyCode = 0x00000033;
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_IRMGR_NAME, IARM_BUS_IRMGR_EVENT_IRKEY, (void*)&eventData_ir1, sizeof(eventData_ir1));
+                        DEBUG_PRINT("Broadcasting Digit3 Key Release IR Event (id: %d) status=%d\n", IARM_BUS_IRMGR_EVENT_IRKEY,retCode);
 
-	/*Broadcasting DISKMGR event*/
-	IARM_BUS_DISKMgr_EventData_t eventData_disk;
-	char *eventType = NULL; 
-	DEBUG_PRINT("Broadcasting DISKMgr HWDISK Event (id: %d)\n", IARM_BUS_DISKMGR_EVENT_HWDISK);
-	IARM_Bus_BroadcastEvent(IARM_BUS_DISKMGR_NAME, IARM_BUS_DISKMGR_EVENT_HWDISK,(void*)&eventData_disk,sizeof(eventData_disk));
+                        /*Broadcasting PWR event*/
+                        IARM_Bus_PWRMgr_EventData_t eventData_pwr;
+                        eventData_pwr.data.state.newState = (IARM_Bus_PWRMgr_PowerState_t)IARM_BUS_PWRMGR_POWERSTATE_ON;
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_PWRMGR_NAME, IARM_BUS_PWRMGR_EVENT_MODECHANGED,(void*)&eventData_pwr, sizeof(eventData_pwr));
+                        DEBUG_PRINT("Broadcasting PWRMgr Mode Changed Event (id: %d) status=%d\n", IARM_BUS_PWRMGR_EVENT_MODECHANGED,retCode);
 
-	if (argc < 2)
-	{
-		eventType = (char *)"ON";
-	}
-	else
-	{
-		eventType = argv[1];
-	}
+                        /*Broadcasting DISKMGR event*/
+                        IARM_BUS_DISKMgr_EventData_t eventData_disk;
+                        char *eventType = NULL;
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_DISKMGR_NAME, IARM_BUS_DISKMGR_EVENT_HWDISK,(void*)&eventData_disk,sizeof(eventData_disk));
+                        DEBUG_PRINT("Broadcasting DISKMgr HWDISK Event (id: %d) status=%d\n", IARM_BUS_DISKMGR_EVENT_HWDISK,retCode);
 
-	if(strcmp(eventType,"ON")==0)
-		eventData_disk.eventType = DISKMGR_EVENT_EXTHDD_ON;
-	else if(strcmp(eventType,"OFF")==0)
-		eventData_disk.eventType =DISKMGR_EVENT_EXTHDD_OFF;
-	else if(strcmp(eventType,"PAIR")==0)
-		eventData_disk.eventType =DISKMGR_EVENT_EXTHDD_PAIR;
-	DEBUG_PRINT("Broadcasting DISKMgr %s EXTHDD Event (id: %d)\n", eventType, IARM_BUS_DISKMGR_EVENT_EXTHDD);
-	IARM_Bus_BroadcastEvent(IARM_BUS_DISKMGR_NAME, IARM_BUS_DISKMGR_EVENT_EXTHDD,(void*)&eventData_disk,sizeof(eventData_disk));
+                        if (argc < 2)
+                                eventType = (char *)"ON";
+                        else
+                                eventType = argv[1];
 
-	/*Broadcasting SYSMGR event*/
-	IARM_Bus_SYSMgr_EventData_t eventData_sys;
-	eventData_sys.data.xupnpData.deviceInfoLength = 0;
-	DEBUG_PRINT("Broadcasting SYSMgr Xupnp Data Request Event (id: %d)\n", IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_REQUEST);
-	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_REQUEST,(void*)&eventData_sys,sizeof(eventData_sys));
-	DEBUG_PRINT("Broadcasting SYSMgr Xupnp Data Update Event (id: %d)\n", IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_UPDATE);
-	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_UPDATE,(void*)&eventData_sys,sizeof(eventData_sys));
-	DEBUG_PRINT("Broadcasting SYSMgr CARD FW download Event (id: %d)\n", IARM_BUS_SYSMGR_EVENT_CARD_FWDNLD);
-	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_CARD_FWDNLD,(void*)&eventData_sys,sizeof(eventData_sys));
-	DEBUG_PRINT("Broadcasting SYSMgr HDCP Profile Update Event (id: %d)\n", IARM_BUS_SYSMGR_EVENT_HDCP_PROFILE_UPDATE);
-	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_HDCP_PROFILE_UPDATE,(void*)&eventData_sys,sizeof(eventData_sys));
-	DEBUG_PRINT("Broadcasting SYSMgr System State Event (id: %d)\n", IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE);
-	IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE,(void*)&eventData_sys,sizeof(eventData_sys));
+                        if(strcmp(eventType,"ON")==0)
+                                eventData_disk.eventType = DISKMGR_EVENT_EXTHDD_ON;
+                        else if(strcmp(eventType,"OFF")==0)
+                                eventData_disk.eventType =DISKMGR_EVENT_EXTHDD_OFF;
+                        else if(strcmp(eventType,"PAIR")==0)
+                                eventData_disk.eventType =DISKMGR_EVENT_EXTHDD_PAIR;
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_DISKMGR_NAME, IARM_BUS_DISKMGR_EVENT_EXTHDD,(void*)&eventData_disk,sizeof(eventData_disk));
+                        DEBUG_PRINT("Broadcasting DISKMgr %s EXTHDD Event (id: %d) status=%d\n", eventType, IARM_BUS_DISKMGR_EVENT_EXTHDD, retCode);
 
-	sleep(1);
+                        /*Broadcasting SYSMGR event*/
+                        IARM_Bus_SYSMgr_EventData_t eventData_sys;
+                        eventData_sys.data.xupnpData.deviceInfoLength = 0;
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_REQUEST,(void*)&eventData_sys,sizeof(eventData_sys));
+                        DEBUG_PRINT("Broadcasting SYSMgr Xupnp Data Request Event (id: %d) status=%d\n", IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_REQUEST,retCode);
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_UPDATE,(void*)&eventData_sys,sizeof(eventData_sys));
+                        DEBUG_PRINT("Broadcasting SYSMgr Xupnp Data Update Event (id: %d) status=%d\n", IARM_BUS_SYSMGR_EVENT_XUPNP_DATA_UPDATE,retCode);
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_CARD_FWDNLD,(void*)&eventData_sys,sizeof(eventData_sys));
+                        DEBUG_PRINT("Broadcasting SYSMgr CARD FW download Event (id: %d) status=%d\n", IARM_BUS_SYSMGR_EVENT_CARD_FWDNLD,retCode);
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_HDCP_PROFILE_UPDATE,(void*)&eventData_sys,sizeof(eventData_sys));
+                        DEBUG_PRINT("Broadcasting SYSMgr HDCP Profile Update Event (id: %d) status=%d\n", IARM_BUS_SYSMGR_EVENT_HDCP_PROFILE_UPDATE,retCode);
+                        retCode = IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE,(void*)&eventData_sys,sizeof(eventData_sys));
+                        DEBUG_PRINT("Broadcasting SYSMgr System State Event (id: %d) status=%d\n", IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE, retCode);
 
-	DEBUG_PRINT("Releasing Resource\n");
-	retCode = IARM_BusDaemon_ReleaseOwnership(IARM_BUS_RESOURCE_FOCUS);
+                        sleep(1);
 
-	IARM_Bus_Disconnect();
-	IARM_Bus_Term();
-
-	DEBUG_PRINT("Bus Client Exiting\r\n");
+                        retCode = IARM_BusDaemon_ReleaseOwnership(IARM_BUS_RESOURCE_FOCUS);
+                        DEBUG_PRINT("Releasing Resource focus status=%d\n",retCode);
+                        retCode = IARM_Bus_Disconnect();
+                        DEBUG_PRINT("IARM_Bus_Disconnect status = %d\n",retCode);
+                }
+                retCode = IARM_Bus_Term();
+                DEBUG_PRINT("IARM_Bus_Term status = %d\n",retCode);
+        }
         DEBUG_PRINT("\n<-----------SECOND APPLICATION---Exit-------------->\n");
 }

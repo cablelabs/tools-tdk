@@ -141,7 +141,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 				
                                 print "**************** Iteration ", (i+1), " ****************";
                                 tdkTestObj = obj.createTestStep('IARMBUS_InvokeSecondApplication');
-                                tdkTestObj.addParameter("appname","Test_Event_Mgr");
+                                tdkTestObj.addParameter("appname","DUMMYMgr");
                                 tdkTestObj.addParameter("argv1","");
                                 tdkTestObj.addParameter("apptype","background");
                                 expectedresult="SUCCESS"
@@ -156,7 +156,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                         time.sleep(2)			
                                         #calling IARMBUS API "IARM_Bus_RegisterEventHandler"
                                         tdkTestObj = obj.createTestStep('IARMBUS_RegisterEventHandler');
-                                        tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                        tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                         tdkTestObj.addParameter("event_id",0);
                                         expectedresult="SUCCESS"
                                         tdkTestObj.executeTestCase(expectedresult);
@@ -168,7 +168,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                 print "SUCCESS: Event Handler registered for Event-X";
                                                 #calling IARMBUS API "IARM_Bus_RegisterEventHandler"
                                                 tdkTestObj = obj.createTestStep('IARMBUS_RegisterEventHandler');
-                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                                 tdkTestObj.addParameter("event_id",1);
                                                 expectedresult="SUCCESS"
                                                 tdkTestObj.executeTestCase(expectedresult);
@@ -180,7 +180,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                         print "SUCCESS: Event Handler registered for Event-Y";
                                                         #calling IARMBUS API "IARM_Bus_RegisterEventHandler"
                                                         tdkTestObj = obj.createTestStep('IARMBUS_RegisterEventHandler');
-                                                        tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                        tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                                         tdkTestObj.addParameter("event_id",2);
                                                         expectedresult="SUCCESS"
                                                         tdkTestObj.executeTestCase(expectedresult);
@@ -225,7 +225,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                                                 print "FAILURE: Events are not received in order";
                                                                                 tdkTestObj = obj.createTestStep('IARMBUS_UnRegisterEventHandler');
                                                                                 #deregistering event handler for event-X
-                                                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                                                tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                                                                 tdkTestObj.addParameter("event_id",0);
                                                                                 expectedresult="SUCCESS"
                                                                                 tdkTestObj.executeTestCase(expectedresult);
@@ -240,7 +240,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                                                         print "FAILURE : IARM_Bus_UnRegisterEventHanlder failed. %s " %details;
                                                                                 tdkTestObj = obj.createTestStep('IARMBUS_UnRegisterEventHandler');
                                                                                 #deregistering event handler for event-Y
-                                                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                                                tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                                                                 tdkTestObj.addParameter("event_id",1);
                                                                                 expectedresult="SUCCESS"
                                                                                 tdkTestObj.executeTestCase(expectedresult);
@@ -255,7 +255,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                                                         print "FAILURE : IARM_Bus_UnRegisterEventHanlder failed. %s " %details;
                                                                                 tdkTestObj = obj.createTestStep('IARMBUS_UnRegisterEventHandler');
                                                                                 #deregistering event handler for event-Z
-                                                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                                                tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                                                                 tdkTestObj.addParameter("event_id",2);
                                                                                 expectedresult="SUCCESS"
                                                                                 tdkTestObj.executeTestCase(expectedresult);
@@ -274,7 +274,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                                         print "FAILURE: GetLastReceivedEventDetails failed and all the events are not received";
                                                                 tdkTestObj = obj.createTestStep('IARMBUS_UnRegisterEventHandler');
                                                                 #deregistering event handler for event-X
-                                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                                tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                                                 tdkTestObj.addParameter("event_id",0);
                                                                 expectedresult="SUCCESS"
                                                                 tdkTestObj.executeTestCase(expectedresult);
@@ -289,7 +289,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                                         print "FAILURE : IARM_Bus_UnRegisterEventHanlder failed. %s " %details;
                                                                 tdkTestObj = obj.createTestStep('IARMBUS_UnRegisterEventHandler');
                                                                 #deregistering event handler for event-Y
-                                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                                tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                                                 tdkTestObj.addParameter("event_id",1);
                                                                 expectedresult="SUCCESS"
                                                                 tdkTestObj.executeTestCase(expectedresult);
@@ -304,7 +304,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                                                                         print "FAILURE : IARM_Bus_UnRegisterEventHanlder failed. %s " %details;
                                                                 tdkTestObj = obj.createTestStep('IARMBUS_UnRegisterEventHandler');
                                                                 #deregistering event handler for event-Z
-                                                                tdkTestObj.addParameter("owner_name","Test_Event_Mgr");
+                                                                tdkTestObj.addParameter("owner_name","DUMMYMgr");
                                                                 tdkTestObj.addParameter("event_id",2);
                                                                 expectedresult="SUCCESS"
                                                                 tdkTestObj.executeTestCase(expectedresult);

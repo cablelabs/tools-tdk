@@ -99,49 +99,56 @@ int main(int argc,char **argv)
     }
 
     IARM_Result_t retCode = IARM_RESULT_SUCCESS;
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_multiple_events pid=%d] Client Entering \n", getpid());
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_multiple_events pid=%d] Connect second application\n", getpid());
-    IARM_Bus_Init(IARM_BUS_DUMMYMGR_NAME);
-    IARM_Bus_Connect();
-
-    _IARM_Bus_PWRMgr_EventData_tp eventData_pwr;
-    /*Braodcasting PWR event*/
-    eventData_pwr.data.state.newState = (IARM_Bus_PWRMgr_PowerState_t) newState;
-    DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] Broadcasting PWR event\n",getpid());
-    if( clock_gettime( CLOCK_MONOTONIC, &eventData_pwr.data.state.clock_when_event_sent) == -1)
+    retCode = IARM_Bus_Init(IARM_BUS_DUMMYMGR_NAME);
+    DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] IARM_Bus_Init ret status = %d\n",getpid(), retCode);
+    if (IARM_RESULT_SUCCESS == retCode)
     {
-        DEBUG_PRINT(DEBUG_ERROR, "[gen_multiple_events pid=%d] clock gettime error",getpid());
+        retCode = IARM_Bus_Connect();
+        DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] IARM_Bus_Connect ret status = %d\n",getpid(), retCode);
+        if (IARM_RESULT_SUCCESS == retCode)
+        {
+            _IARM_Bus_PWRMgr_EventData_tp eventData_pwr;
+            /*Broadcasting PWR event*/
+            eventData_pwr.data.state.newState = (IARM_Bus_PWRMgr_PowerState_t) newState;
+            DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] Broadcasting PWR event\n",getpid());
+            if( clock_gettime( CLOCK_MONOTONIC, &eventData_pwr.data.state.clock_when_event_sent) == -1)
+            {
+               DEBUG_PRINT(DEBUG_ERROR, "[gen_multiple_events pid=%d] clock gettime error",getpid());
+            }
+            retCode = IARM_Bus_BroadcastEvent(IARM_BUS_PWRMGR_NAME,IARM_BUS_PWRMGR_EVENT_MODECHANGED,(void*)&eventData_pwr, sizeof(eventData_pwr));
+            DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] IARM_Bus_BroadcastEvent ret status = %d\n",getpid(), retCode);
+          
+            IRMgr_EventData_tp eventData_ir;
+            /*Broadcasting IRKey event*/
+            eventData_ir.data.irkey.keyType = type;
+            eventData_ir.data.irkey.keyCode = code;
+            DEBUG_PRINT(DEBUG_TRACE,"[gen_multiple_events pid=%d] Broadcasting IR event %d %d\n",getpid(),type,code);
+            if( clock_gettime( CLOCK_MONOTONIC, &eventData_ir.data.irkey.clock_when_event_sent) == -1)
+            {
+                DEBUG_PRINT(DEBUG_ERROR, "[gen_multiple_events pid=%d] clock gettime error",getpid());
+            }
+            retCode = IARM_Bus_BroadcastEvent(IARM_BUS_IRMGR_NAME, IARM_BUS_IRMGR_EVENT_IRKEY, (void*)&eventData_ir, sizeof(eventData_ir));
+            DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] IARM_Bus_BroadcastEvent ret status = %d\n",getpid(), retCode);
+          
+            /*Broadcasting Bus event-ResolutionChange*/
+            DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] Broadcasting ResolutionChange event\n",getpid());
+            IARM_Bus_ResolutionChange_EventData_tp eventData_bus1;
+            eventData_bus1.width=1;
+            eventData_bus1.height=2;
+            if( clock_gettime( CLOCK_MONOTONIC, &eventData_bus1.clock_when_event_sent) == -1)
+            {
+                DEBUG_PRINT(DEBUG_ERROR, "[gen_multiple_events pid=%d] clock gettime error",getpid());
+            }
+            retCode = IARM_Bus_BroadcastEvent(IARM_BUS_DAEMON_NAME,IARM_BUS_EVENT_RESOLUTIONCHANGE, (void*) &eventData_bus1, sizeof(eventData_bus1));
+            DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] IARM_Bus_BroadcastEvent ret status = %d\n",getpid(), retCode);
+          
+            sleep(1);
+
+            retCode = IARM_Bus_Disconnect();
+            DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] IARM_Bus_Disconnect ret status = %d\n",getpid(), retCode);
+        }
+        retCode = IARM_Bus_Term();
+        DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] IARM_Bus_Term ret status = %d\n",getpid(), retCode);
     }
-    IARM_Bus_BroadcastEvent(IARM_BUS_PWRMGR_NAME,IARM_BUS_PWRMGR_EVENT_MODECHANGED,(void*)&eventData_pwr, sizeof(eventData_pwr));
-
-    /*Event Data for BUS,IR,PWR events*/
-    IRMgr_EventData_tp eventData_ir;
-    /*Braodcasting IR IRKey event*/
-    eventData_ir.data.irkey.keyType = type;
-    eventData_ir.data.irkey.keyCode = code;
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_multiple_events pid=%d] Broadcasting IR event %d %d\n",getpid(),type,code);
-    if( clock_gettime( CLOCK_MONOTONIC, &eventData_ir.data.irkey.clock_when_event_sent) == -1)
-    {
-        DEBUG_PRINT(DEBUG_ERROR, "[gen_multiple_events pid=%d] clock gettime error",getpid());
-    }
-    IARM_Bus_BroadcastEvent(IARM_BUS_IRMGR_NAME, IARM_BUS_IRMGR_EVENT_IRKEY, (void*)&eventData_ir, sizeof(eventData_ir));
-
-    /*Braodcasting Bus event-ResolutionChange*/
-    DEBUG_PRINT(DEBUG_LOG,"[gen_multiple_events pid=%d] Broadcasting ResolutionChange event\n",getpid());
-    IARM_Bus_ResolutionChange_EventData_tp eventData_bus1;
-    eventData_bus1.width=1;
-    eventData_bus1.height=2;
-    if( clock_gettime( CLOCK_MONOTONIC, &eventData_bus1.clock_when_event_sent) == -1)
-    {
-        DEBUG_PRINT(DEBUG_ERROR, "[gen_multiple_events pid=%d] clock gettime error",getpid());
-    }
-    IARM_Bus_BroadcastEvent(IARM_BUS_DAEMON_NAME,IARM_BUS_EVENT_RESOLUTIONCHANGE, (void*) &eventData_bus1, sizeof(eventData_bus1));
-
-    sleep(1);
-
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_multiple_events pid=%d] Disconnect second application\n",getpid());
-    IARM_Bus_Disconnect();
-    IARM_Bus_Term();
-    DEBUG_PRINT(DEBUG_TRACE,"[gen_multiple_events pid=%d] Bus Client Exiting\r\n",getpid());
     DEBUG_PRINT(DEBUG_TRACE,"[gen_multiple_events pid=%d] <-----------SECOND APPLICATION---Exit-------------->\n",getpid());
 }
