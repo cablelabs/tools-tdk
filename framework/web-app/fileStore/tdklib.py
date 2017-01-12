@@ -54,6 +54,21 @@ from xml.dom.minidom import Document,parseString
 #------------------------------------------------------------------------------
 AGENTPORT = 8087
 
+#Getting the ipv6 address of TM using REST API
+def get_ipv6_address(self):
+    # Constructing Query URL
+    ipv6_url = self.url + '/execution/getTMIPAddress?type=ipv6.interface'
+    response = urllib.urlopen(ipv6_url).read()
+    if 'SUCCESS' in response:
+        ipv6_interface = json.loads(response)
+    else:
+        print "#TDK_@error-ERROR : Unable to get IPv6 address from REST !!!"
+        exit()
+
+    sys.stdout.flush()
+    return ipv6_interface['IP']
+    
+
 #------------------------------------------------------------------------------
 # module class
 #------------------------------------------------------------------------------
@@ -843,10 +858,15 @@ class PrimitiveTestCase:
 		try:
 			tcpClient = self.getSocketInstance(deviceIP)
 			tcpClient.connect((deviceIP, agentMonitorPort))
-                	status = 1
-
-			jsonMsg = {'jsonrpc':'2.0','id':'2','method':'PushLog','STBfilename':boxFile,'TMfilename':tmFile}
-			query = json.dumps(jsonMsg)
+			if self.isValidIpv6Address(deviceIP):
+                                tmIPv4 = self.url.split('/')[2].split(':')[0];
+                                tmIPv6 = get_ipv6_address(self)
+                                tmIPv6 = "[" + tmIPv6 + "]"
+                                logUploadURL = self.url.replace(tmIPv4, tmIPv6)
+                                jsonMsg = {'jsonrpc':'2.0','id':'2','method':'uploadLogs','STBfilename':boxFile,'TMfilename':tmFile, 'logUploadURL':logUploadURL}
+                        else:
+                                jsonMsg = {'jsonrpc':'2.0','id':'2','method':'PushLog','STBfilename':boxFile,'TMfilename':tmFile}
+                        query = json.dumps(jsonMsg)
 			tcpClient.send(query) #Sending json query
 
 			result = tcpClient.recv(1048) #Receiving response
@@ -856,6 +876,8 @@ class PrimitiveTestCase:
 			message = result[resultIndex:]
 			message = message[:(message.find("\""))]
 			sys.stdout.flush()
+			if message == "SUCCESS":
+			    	status = 1
 
 		except socket.error:
 			print "#TDK_@error-ERROR: Unable to connect agent.."
