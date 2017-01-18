@@ -31,7 +31,7 @@ Test Type: Positive.</synopsis>
   <groups_id/>
   <execution_time>4</execution_time>
   <long_duration>false</long_duration>
-  <remarks>This testcase will fail because of RDKTT-612</remarks>
+  <remarks>This testcase will fail as setName API is deprecated now</remarks>
   <skip>true</skip>
   <box_types>
     <box_type>IPClient-3</box_type>

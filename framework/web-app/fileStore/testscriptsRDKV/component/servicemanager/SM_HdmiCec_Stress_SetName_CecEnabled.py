@@ -31,7 +31,7 @@ Test Type: Positive.</synopsis>
   <groups_id/>
   <execution_time>4</execution_time>
   <long_duration>false</long_duration>
-  <remarks>This testcase will fail because of RDKTT-612</remarks>
+  <remarks>This testcase will fail as setName API is deprecated now</remarks>
   <skip>true</skip>
   <box_types>
     <box_type>IPClient-3</box_type>
@@ -71,7 +71,7 @@ Checkpoint 2.Compare the name set with current name returned.</except_output>
     <priority>High</priority>
     <test_stub_interface>libservicemanagerstub.so</test_stub_interface>
     <test_script>SM_HdmiCec_Stress_SetName_CecEnabled</test_script>
-    <skipped>No</skipped>
+    <skipped>Yes</skipped>
     <release_version>M25</release_version>
     <remarks>SM_HdmiCec_EnableCec_SetName_FiveTimes changed to SM_HdmiCec_Stress_SetName_CecEnabled during M-29 release</remarks>
   </test_cases>

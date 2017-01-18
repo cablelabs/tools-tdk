@@ -31,7 +31,7 @@ Test Type: Negative</synopsis>
   <groups_id/>
   <execution_time>4</execution_time>
   <long_duration>false</long_duration>
-  <remarks>This testcase will fail because of DELIA-17273 as getConnectedDevices API is deprecated now. To be unskipped in later releases</remarks>
+  <remarks>This testcase will fail because of DELIA-17273 as getConnectedDevices API is deprecated now.</remarks>
   <skip>true</skip>
   <box_types>
     <box_type>IPClient-3</box_type>
@@ -74,7 +74,7 @@ Checkpoint 2.Compare the number of devices connected should be greater than 0.
     <test_stub_interface>libservicemanagerstub.so
 </test_stub_interface>
     <test_script>SM_HdmiCec_GetNumOfDevicesConnected_CecDisabled</test_script>
-    <skipped>No</skipped>
+    <skipped>Yes</skipped>
     <release_version>M25</release_version>
     <remarks>SM_HdmiCec_GetNumOfDevicesConnected_CecDisabled_AtLeastOne change dto SM_HdmiCec_GetNumOfDevicesConnected_CecDisabled  during M-29 release </remarks>
   </test_cases>
