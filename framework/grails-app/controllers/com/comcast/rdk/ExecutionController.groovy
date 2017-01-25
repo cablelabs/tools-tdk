@@ -3566,4 +3566,29 @@ class ExecutionController {
 		}
 		render jsonObjMap as JSON
 	}
+	
+	/**
+	 * REST API : Method to get the TM IP Address
+	 */
+	def getTMIPAddress(String type){
+		def jsonObjMap = [:]
+		String ipAddress = null
+		File configFile = grailsApplication.parentContext.getResource("/fileStore/tm.config").file
+		if(type?.equals(IPV6_INTERFACE)){
+			jsonObjMap.put(STATUS,SUCCESS)
+			ipAddress = InetUtility.getIPAddress(configFile, Constants.IPV6_INTERFACE)
+		}else if(type?.equals(IPV4_INTERFACE)){
+			jsonObjMap.put(STATUS,SUCCESS)
+			ipAddress = InetUtility.getIPAddress(configFile, Constants.IPV4_INTERFACE)
+		}else{
+			jsonObjMap.put(STATUS,FAILED)
+			jsonObjMap.put(REMARKS, "Not a supported IP Type "+type)
+		}
+		if(ipAddress != null){
+			jsonObjMap.put("IP",ipAddress)
+		}
+		jsonObjMap.put("type",type)
+		render jsonObjMap as JSON
+	}
+	
 }

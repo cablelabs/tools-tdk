@@ -241,6 +241,8 @@ public final class Constants
     
     private static final String  TESTSCRIPTS_RDKV="testscriptsRDKV";
     private static final String  TESTSCRIPTS_RDKB="testscriptsRDKB";    
+    private static final String  TESTSCRIPTS_RDKV_ADV="testscriptsRDKVAdvanced";
+    private static final String  TESTSCRIPTS_RDKB_ADV="testscriptsRDKBAdvanced"; 
     
 	private static final String SUCCESS ="SUCCESS";
 	private static final String FAILED ="FAILED";

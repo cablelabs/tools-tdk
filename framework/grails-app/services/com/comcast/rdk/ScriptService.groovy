@@ -49,6 +49,8 @@ class ScriptService {
 	
 	public static volatile Map scriptNameListMap = [:]
 	
+	public static volatile Map scriptsListAdvanced = [:]
+	
 	//public static volatile Map scriptGroupMapB = [:]
 	
 	//public static volatile List scriptLockListB = []
@@ -207,7 +209,7 @@ class ScriptService {
 				Constants.INTEGRATION
 			]
 			def start = System.currentTimeMillis()
-			['testscriptsRDKV', 'testscriptsRDKB'].each{ fileStorePath ->
+			[Constants.TESTSCRIPTS_RDKV, Constants.TESTSCRIPTS_RDKB, Constants.TESTSCRIPTS_RDKV_ADV, Constants.TESTSCRIPTS_RDKB_ADV ].each{ fileStorePath ->
 		
 					dirList.each{ directory ->
 						File scriptsDir = new File( "${realPath}//fileStore//$fileStorePath//"+directory+"//")
@@ -217,14 +219,17 @@ class ScriptService {
 							
 							modules.each { module ->
 								def category = null
-								if("testscriptsRDKV".equals(fileStorePath)){
-									category = "RDKV"
-								}
-								else if("testscriptsRDKB".equals(fileStorePath)){
-									category = "RDKB"
-								}
-								initialize( module, updateReqd, realPath, category)
+							if(Constants.TESTSCRIPTS_RDKV.equals(fileStorePath)){
+								category = Constants.RDKV
+							}else if(Constants.TESTSCRIPTS_RDKV_ADV.equals(fileStorePath)){
+								category = Constants.RDKV
+							}else if(Constants.TESTSCRIPTS_RDKB.equals(fileStorePath)){
+								category = Constants.RDKB
+							}else if(Constants.TESTSCRIPTS_RDKB_ADV.equals(fileStorePath)){
+								category = Constants.RDKB
 							}
+							initialize( module, updateReqd, realPath, category,fileStorePath)
+						}
 						}
 					
 			
@@ -240,7 +245,7 @@ class ScriptService {
 		return scriptsList
 	}	
 	
-	private void initialize(def module, def updateReqd, def realPath, def category){
+	private void initialize(def module, def updateReqd, def realPath, def category,def fileStorePath){
 		def start1 =System.currentTimeMillis()
 		try {
 			File [] files = module.listFiles(new FilenameFilter() {
@@ -251,6 +256,9 @@ class ScriptService {
 					});
 			def start2 = System.currentTimeMillis()
 			def sLst = []
+			if(scriptGroupMap.keySet().contains(module?.getName())){
+				sLst = scriptGroupMap.get(module?.getName())
+			}
 			files.each { file ->
 				String name = ""+file?.name?.trim()?.replace(".py", "")
 				def sFile
@@ -280,6 +288,8 @@ class ScriptService {
 					scriptNameListmap = []
 					scriptNameListMap.put(category, scriptNameListmap)
 				}
+				
+				scriptsListAdvanced.put(sFile?.id, fileStorePath)
 				if(!scriptNameListmap.contains(name)){
 					scriptNameListmap.add(name)
 				}
@@ -299,10 +309,12 @@ class ScriptService {
 				}
 			}
 			sLst?.sort()
+			
 			scriptGroupMap.put(module?.getName(), sLst)
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
+		
 	}
 	/*def removeOrphanScriptFile(String realPath,List oldList , List newList){
 		oldList.removeAll(newList)
@@ -1017,8 +1029,6 @@ class ScriptService {
 				testProfileSet?.each{ tProfile ->					
 					testProfileList?.add(TestProfile?.findByName(tProfile))	
 				}
-				
-				
 
 				script.put("rdkVersions", versList)
 				script.put("scriptTags", sTagList)
@@ -1119,11 +1129,24 @@ class ScriptService {
 			}
 		}
 		File file = null
+		boolean isAdvanced = Utility.isAdvancedScript(fileName, moduleObj?.getName())
 		if("RDKV".equals(category) ){
-			file = new File( "${realPath}//fileStore//testscriptsRDKV//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
+			String sDirName= ""  
+			if(isAdvanced){
+				sDirName= "//" +FILESTORE+"//" + TESTSCRIPTS_RDKV_ADV +"//"  
+			}else{
+				sDirName= "//" +FILESTORE+"//" + TESTSCRIPTS_RDKV +"//"
+			}
+			file = new File( "${realPath}"+sDirName+scriptDirName+"//"+dirName+"//"+fileName+".py");
 		}
 		else if("RDKB".equals(category)){
-			file = new File( "${realPath}//fileStore//testscriptsRDKB//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
+			String sDirName= ""  
+			if(isAdvanced){
+				sDirName= "//" +FILESTORE+"//" + TESTSCRIPTS_RDKB_ADV +"//"  
+			}else{
+				sDirName= "//" +FILESTORE+"//" + TESTSCRIPTS_RDKB +"//"
+			}
+			file = new File( "${realPath}"+sDirName+scriptDirName+"//"+dirName+"//"+fileName+".py");
 		}
 		Map script = [:]
 		if(file.exists()){
@@ -1254,7 +1277,7 @@ class ScriptService {
 			scriptsList.clear()
 			List scriptList = []
 			boolean updateReqd = isDefaultSGUpdateRequired(realPath)
-			[FileStorePath.RDKB.value(), FileStorePath.RDKV.value()].each{  path ->
+			[FileStorePath.RDKB.value(), FileStorePath.RDKV.value(),FileStorePath.RDKBADVANCED.value(), FileStorePath.RDKVADVANCED.value()].each{  path ->
 				
 				def category
 				if(path.equals(FileStorePath.RDKB.value())){
@@ -1370,20 +1393,37 @@ class ScriptService {
 	 * @return
 	 */
 	def getFileFromPath(def realPath, def dirName, def moduleName, def fileName, def category){
-		def path = realPath + FILE_SEPARATOR + "fileStore"
+		def path = new StringBuffer() 
+		
+		path = path?.append(realPath).append(FILE_SEPARATOR).append(FILESTORE)
+
+		boolean isAdvanced = Utility.isAdvancedScript(fileName, moduleName)
+		
+		String testDirName = ""
+		String extn = ".py"
 		switch(category){
-			case Category.RDKV: 
-				path = path + FILE_SEPARATOR + FileStorePath.RDKV.value() + FILE_SEPARATOR +  dirName + FILE_SEPARATOR + moduleName + FILE_SEPARATOR +fileName+".py"
+			case Category.RDKV:
+				testDirName =  FileStorePath.RDKV.value()
+				if(isAdvanced){
+					testDirName =  FileStorePath.RDKVADVANCED.value()
+				}
 				break;
-			case Category.RDKB: 
-				path = path + FILE_SEPARATOR + FileStorePath.RDKB.value() + FILE_SEPARATOR + dirName + FILE_SEPARATOR + moduleName + FILE_SEPARATOR + fileName+".py"
+			case Category.RDKB:
+				testDirName =  FileStorePath.RDKB.value()
+				if(isAdvanced){
+					testDirName =  FileStorePath.RDKBADVANCED.value()
+				}
 				break;
 			case Category.RDKB_TCL:
-				path = path + FILE_SEPARATOR + FileStorePath.RDKTCL.value() + FILE_SEPARATOR + dirName + FILE_SEPARATOR + moduleName + FILE_SEPARATOR + fileName+".tcl"
+				testDirName = FileStorePath.RDKTCL.value()
+				extn = ".tcl"
 				break;
 			default: break;
-		}	
-	}	
+		}
+		path = path?.append(FILE_SEPARATOR).append(testDirName).append(FILE_SEPARATOR).append(dirName).append(FILE_SEPARATOR).append(moduleName).append(FILE_SEPARATOR).append(fileName).append(extn)
+		
+		return path?.toString()
+	}
 	
 	/***
 	 * Retrieve tcl scripts list

@@ -114,6 +114,7 @@ class ScriptGroupController {
 		def scriptGroupMapB = scriptService.getScriptsMap(requestGetRealPath, RDKB)
 		scriptGroupMapB = scriptGroupMapB?scriptGroupMapB:[:]
 		def scriptGroupMapV = scriptService.getScriptsMap(requestGetRealPath, RDKV)
+		
 		scriptGroupMapV = scriptGroupMapV?scriptGroupMapV:[:]
 		//def lists = ScriptGroup.executeQuery('select name from ScriptGroup')
 		def listsV = ScriptGroup.executeQuery("select name from ScriptGroup where category=:category order by name",[category:Category.RDKV])
@@ -955,7 +956,7 @@ class ScriptGroupController {
 			def category = params?.category?.trim()
 			def ptest
 			def path = getRealPath()+Constants.FILE_SEPARATOR+"fileStore"+Constants.FILE_SEPARATOR
-
+			
 			if(RDKV.equals(category)){
 				path = path+TESTSCRIPTS_RDKV + Constants.FILE_SEPARATOR + scriptsDirName.toString() + Constants.FILE_SEPARATOR + moduleName +Constants.FILE_SEPARATOR + moduleName +XML
 			}
@@ -1107,40 +1108,42 @@ class ScriptGroupController {
 							xml.remarks("")
 						}
 					}
-				}
-				def scriptTagList = params?.scriptTags
-				if(scriptTagList && scriptTagList instanceof List){
-					//scriptTagList = scriptTagList?.sort()
-				}
-				try {
-					if(scriptTagList?.size() > 0){
-						xml.script_tags(){
-							scriptTagList?.each { tag ->
-								def sTag = ScriptTag.findById(tag)
-								scrptTags.add(sTag)
-								xml.script_tag(sTag?.name)
-								mkp.yield "\r\n    "
-								mkp.comment ""
+					
+					def scriptTagList = params?.scriptTags
+					if(scriptTagList && scriptTagList instanceof List){
+						//scriptTagList = scriptTagList?.sort()
+					}
+					try {
+						if(scriptTagList?.size() > 0){
+							xml.script_tags(){
+								scriptTagList?.each { tag ->
+									def sTag = ScriptTag.findById(tag)
+									scrptTags.add(sTag)
+									xml.script_tag(sTag?.name)
+									mkp.yield "\r\n    "
+									mkp.comment ""
+								}
+							}
+						}
+					} catch (Exception e) {
+						println " error "+e.getMessage()
+						e.printStackTrace()
+					}
+	
+					if(params?.testProfile)	{
+						def  scriptTestProfiles = params?.testProfile
+						if(scriptTestProfiles && scriptTestProfiles?.size() >  0){
+							xml.test_profiles(){
+								scriptTestProfiles?.each{
+									def tProfile = TestProfile?.findById(it)
+									testProfileList.add(tProfile?.toString())
+									xml.test_profile(tProfile)
+								}
 							}
 						}
 					}
-				} catch (Exception e) {
-					println " error "+e.getMessage()
-					e.printStackTrace()
 				}
-
-				if(params?.testProfile)	{
-					def  scriptTestProfiles = params?.testProfile
-					if(scriptTestProfiles && scriptTestProfiles?.size() >  0){
-						xml.test_profiles(){
-							scriptTestProfiles?.each{
-								def tProfile = TestProfile?.findById(it)
-								testProfileList.add(tProfile?.toString())
-								xml.test_profile(tProfile)
-							}
-						}
-					}
-				}
+				
 
 
 
@@ -1149,11 +1152,20 @@ class ScriptGroupController {
 				dirname = dirname?.trim()
 
 				def pathToDir =  "${request.getRealPath('/')}//fileStore"
+				boolean isAdvanced = Utility.isAdvancedScript(params?.name?.trim(), moduleName)
 				if(RDKV.equals(category)){
-					pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV
+					if(isAdvanced){
+						pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV_ADV
+					}else{
+						pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV
+					}
 				}
 				else if(RDKB.equals(category)){
-					pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB
+					if(isAdvanced){
+						pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB_ADV
+					}else{
+						pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB
+					}
 				}
 				//File dir = new File( "${request.getRealPath('/')}//fileStore//testscripts/"+scriptsDirName+"//"+dirname+"/")
 				File dir = new File( pathToDir + Constants.FILE_SEPARATOR + scriptsDirName +  Constants.FILE_SEPARATOR +dirname)
@@ -1465,8 +1477,7 @@ class ScriptGroupController {
 
 			def scriptsDirName1 = primitiveService.getScriptDirName(moduleName)
 
-			def testScriptPath = getTestScriptPath(params?.category?.trim())
-
+			def testScriptPath = getTestScriptPath(params?.category?.trim(),params?.name?.trim(),moduleName)
 			File dir = new File( testScriptPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+"/")
 			if(!dir.exists()){
 				dir.mkdirs()
@@ -1846,7 +1857,7 @@ class ScriptGroupController {
 		if(category == null){
 			category = primitiveService.getCategory(moduleName)
 		}
-		def path = getTestScriptPath(category) + FILE_SEPARATOR + scriptDir+ FILE_SEPARATOR +moduleName + FILE_SEPARATOR + params?.id+".py"
+		def path = getTestScriptPath(category,params?.id,moduleName) + FILE_SEPARATOR + scriptDir+ FILE_SEPARATOR +moduleName + FILE_SEPARATOR + params?.id+".py"
 		File sFile = new File(path)
 		if(sFile.exists()){
 			params.format = "text"
@@ -2317,15 +2328,55 @@ class ScriptGroupController {
 		}
 		render scriptGrp
 	}
+	
+	/**
+	 * 
+	 * Method to get the test scripts path not considering the advance test scripts.
+	 */
 	private String getTestScriptPath(def category){
 		def path = null
 		category = Utility.getCategory(category?.trim())
 		switch(category){
-			case Category.RDKV: path =  getRealPath() +  "fileStore"+FILE_SEPARATOR + FileStorePath.RDKV.value()
+			case Category.RDKV: 
+				path =  getRealPath() +  FILESTORE + FILE_SEPARATOR + FileStorePath.RDKV.value()
 				break;
-			case Category.RDKB: path = getRealPath() + "fileStore" + FILE_SEPARATOR + FileStorePath.RDKB.value()
+			case Category.RDKB: 
+				path = getRealPath() + FILESTORE + FILE_SEPARATOR + FileStorePath.RDKB.value()
 				break;
-			case Category.RDKB_TCL: path = getRealPath()  + "fileStore" + FILE_SEPARATOR + FileStorePath.RDKTCL.value()
+			case Category.RDKB_TCL: 
+				path = getRealPath()  + FILESTORE + FILE_SEPARATOR + FileStorePath.RDKTCL.value()
+				break;
+			default:
+				break;
+		}
+		return path
+	}
+	
+	/**
+	 * Method to get the Test Script path considering the Advanced Test scripts also.
+	 */
+	private String getTestScriptPath(def category,def scriptName , def moduleName){
+		def path = null
+		category = Utility.getCategory(category?.trim())
+
+		boolean isAdvanced = Utility.isAdvancedScript(scriptName, moduleName)
+		switch(category){
+			case Category.RDKV:
+				if(!isAdvanced){
+					path = getRealPath() +  FILESTORE + FILE_SEPARATOR + FileStorePath.RDKV.value()
+				}else{
+					path = getRealPath() +  FILESTORE + FILE_SEPARATOR + FileStorePath.RDKVADVANCED.value()
+				}
+				break;
+			case Category.RDKB:
+				if(!isAdvanced){
+					path = getRealPath() +  FILESTORE + FILE_SEPARATOR + FileStorePath.RDKB.value()
+				}else{
+					path = getRealPath() +  FILESTORE + FILE_SEPARATOR + FileStorePath.RDKBADVANCED.value()
+				}
+				break;
+			case Category.RDKB_TCL: 
+				path = getRealPath()  + FILESTORE + FILE_SEPARATOR + FileStorePath.RDKTCL.value()
 				break;
 			default:
 				break;
@@ -2482,6 +2533,25 @@ class ScriptGroupController {
 		Map script = [:]
 		try {
 
+			
+			boolean isAdvanced = Utility.isAdvancedScript(fileName, dirName)
+			def pathToDir = "${realPath}//fileStore"
+			if(RDKV.equals(category)){
+				if(isAdvanced){
+					pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV_ADV
+				}else{
+					pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV
+				}
+			}
+			else if(RDKB.equals(category)){
+				if(isAdvanced){
+					pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB_ADV
+				}else{
+					pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB
+				}
+			}
+			
+			
 			def moduleObj = Module.findByName(dirName)
 			def scriptDirName = Constants.COMPONENT
 			if(moduleObj){
@@ -2489,7 +2559,7 @@ class ScriptGroupController {
 					scriptDirName = Constants.INTEGRATION
 				}
 			}
-			File file = new File( "${realPath}//fileStore//testscripts//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
+			File file = new File( pathToDir+"//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
 
 			if(file.exists()){
 				return file;
@@ -2856,7 +2926,7 @@ class ScriptGroupController {
 						}
 					}
 					def scriptsDirName = primitiveService.getScriptDirName(moduleName)
-					def ptest = primitiveService.getPrimitiveTest(getRealPath()+"//fileStore//testscripts//"+scriptsDirName+"//"+moduleName+"//"+moduleName+XML, primitiveTestName)
+					def ptest = primitiveService.getPrimitiveTest(getRealPath()+"//fileStore//testscripts"+category+"//"+scriptsDirName+"//"+moduleName+"//"+moduleName+XML, primitiveTestName)
 					if(!scriptName){
 						flash.message =" Script name should not be empty "
 					}else if(!primitiveTestName){
@@ -3290,14 +3360,24 @@ class ScriptGroupController {
 			String dirname = ptest?.module?.name
 			dirname = dirname?.trim()
 			def pathToDir =  "${request.getRealPath('/')}//fileStore"
+			
+			boolean isAdvanced = Utility.isAdvancedScript(params?.script, params?.moduleName)
 			if(RDKV.equals(params?.category)){
-				pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV
+				if(isAdvanced){
+					pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV_ADV
+				}else{
+					pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV
+				}
 			}
 			else if(RDKB.equals(params?.category)){
-				pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB
+				if(isAdvanced){
+					pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB_ADV
+				}else{
+					pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKB
+				}
 			}
+			
 			File file = new File( pathToDir + Constants.FILE_SEPARATOR + scriptsDirName + Constants.FILE_SEPARATOR+dirname+Constants.FILE_SEPARATOR+params?.script+".py");
-
 
 			if(file?.exists()){
 				String s = ""

@@ -101,7 +101,8 @@ class TestCaseService {
 			def testCaseMap = [:]
 			def moduleTestCaseList = []			
 			def scriptDirName = primitiveService.getScriptDirName(params?.moduleName)
-			def moduleDir =  realPath+Constants.FILE_SEPARATOR+FILESTORE+Constants.FILE_SEPARATOR+TEST_SCRIPTS+params?.category+FILE_SEPARATOR+scriptDirName+Constants.FILE_SEPARATOR+params?.moduleName
+			[TEST_SCRIPTS+params?.category, TEST_SCRIPTS+params?.category+'Advanced'].each{ dirName ->
+			def moduleDir =  realPath+Constants.FILE_SEPARATOR+FILESTORE+Constants.FILE_SEPARATOR+dirName+FILE_SEPARATOR+scriptDirName+Constants.FILE_SEPARATOR+params?.moduleName
 			def files = scriptService?.getFileList(moduleDir)
 			files.each { file ->
 				def scriptDetails = scriptService.getScript(realPath,params?.moduleName,file,params.category)
@@ -113,6 +114,7 @@ class TestCaseService {
 					}
 				}
 				testCaseMap = [:]
+			}
 			}
 			if(moduleTestCaseList != [:]){
 				totalTestCaseMap?.put(params?.moduleName, moduleTestCaseList)

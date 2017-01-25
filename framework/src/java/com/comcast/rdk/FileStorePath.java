@@ -20,7 +20,7 @@ package com.comcast.rdk;
 
 public enum FileStorePath {
 
-	RDKV("testscriptsRDKV"), RDKB("testscriptsRDKB"), RDKTCL("testscriptsTCL");
+	RDKV("testscriptsRDKV"), RDKB("testscriptsRDKB"), RDKTCL("testscriptsTCL"),RDKVADVANCED("testscriptsRDKVAdvanced"), RDKBADVANCED("testscriptsRDKBAdvanced");
 
 	private String pathName;
 

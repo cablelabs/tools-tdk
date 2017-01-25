@@ -2937,9 +2937,9 @@ class JobSchedulerService implements Job{
 		}
 		//File file = new File( "${realPath}//fileStore//testscripts//"+scriptDirName+"//"+dirName+"//"+fileName+".py");
 		File file = null
-		def fileStorePath = Utility.getFileStorePath(realPath, category)
+		def fileStorePath = Utility.getFileStorePath(realPath, category,dirName,fileName)
+		def primitiveFileStorePath = Utility.getPrimitiveFileStorePath(realPath, category)
 		file = new File(fileStorePath+FILE_SEPARATOR+scriptDirName+FILE_SEPARATOR+dirName+FILE_SEPARATOR+fileName+".py")
-
 		Map script = [:]
 		if(file.exists()){
 			//String s = ""
@@ -2981,7 +2981,7 @@ class JobSchedulerService implements Job{
 					scriptDirName1 = Constants.INTEGRATION
 				}
 			}
-			def primitiveTest = getPrimitiveTest(fileStorePath+FILE_SEPARATOR+scriptDirName1+FILE_SEPARATOR+moduleName1+FILE_SEPARATOR+moduleName1+".xml",nodePrimitiveTestName)
+			def primitiveTest = getPrimitiveTest(primitiveFileStorePath+FILE_SEPARATOR+scriptDirName1+FILE_SEPARATOR+moduleName1+FILE_SEPARATOR+moduleName1+".xml",nodePrimitiveTestName)
 			//def primitiveTest = getPrimitiveTest(realPath+"//fileStore//testscripts//"+scriptDirName1+"//"+moduleName1+"//"+moduleName1+".xml",nodePrimitiveTestName)
 
 			script.put("primitiveTest",primitiveTest)

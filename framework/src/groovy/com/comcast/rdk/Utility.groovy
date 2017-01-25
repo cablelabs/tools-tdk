@@ -19,6 +19,7 @@
 package com.comcast.rdk
 
 import org.springframework.util.StringUtils;
+
 import static com.comcast.rdk.Constants.*;
 
 import com.comcast.rdk.Category
@@ -42,7 +43,49 @@ public class Utility{
 		return realPath + FILE_SEPARATOR +  "fileStore" + FILE_SEPARATOR + FileStorePath.RDKTCL.value();
 	}
 
-	public static String getFileStorePath(final String realPath, final Category category){
+	/**
+	 * Method to check whether a script is part of advanced scripts.
+	 */
+	public static boolean isAdvancedScript(def fileName, def moduleName ){
+		ScriptFile sFile
+		ScriptFile.withTransaction {
+			sFile = ScriptFile.findByScriptNameAndModuleName(fileName,moduleName)
+		}
+
+		String filePath = ScriptService.scriptsListAdvanced.get(sFile?.id)
+		return (filePath?.equals(TESTSCRIPTS_RDKV_ADV) || filePath?.equals(TESTSCRIPTS_RDKB_ADV) )
+	}
+	
+	/**
+	 * Method to get the file store path for a script.
+	 */
+	public static String getFileStorePath(final String realPath, final Category category,String moduleName, String fileName){
+		String path = realPath + FILE_SEPARATOR + FILESTORE + FILE_SEPARATOR
+		boolean isAdvanced = isAdvancedScript(fileName, moduleName)
+		switch(category){
+			case Category.RDKB: 
+				if(isAdvanced){
+					path = path + FileStorePath.RDKBADVANCED.value()
+				}else{
+					path = path + FileStorePath.RDKB.value()
+				}
+				break
+			case Category.RDKV : 
+				if(isAdvanced){
+					path = path + FileStorePath.RDKVADVANCED.value()
+				}else{
+					path = path + FileStorePath.RDKV.value()
+				}
+				break
+			case Category.RDKB_TCL : 
+				path = path + FileStorePath.RDKTCL.value()
+				break
+			default:break
+		}
+		return path
+	}
+	
+	public static String getPrimitiveFileStorePath(final String realPath, final Category category){
 		String path = realPath + FILE_SEPARATOR + 'fileStore' + FILE_SEPARATOR
 		switch(category){
 			case Category.RDKB: path = path + FileStorePath.RDKB.value()
