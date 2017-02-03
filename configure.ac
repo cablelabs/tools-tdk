@@ -107,7 +107,7 @@ AC_ARG_ENABLE([hybrid],
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Recorder_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub"
+                  SUBDIR_HYBRID="TRM_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub"
                   AGENT_FLAGS=" -DPORT_FORWARD"
                   TDK_GST_LIBS=" -lgstreamer-$GST_MAJORMINOR -lgstbase-$GST_MAJORMINOR"
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc"
@@ -124,7 +124,7 @@ AC_ARG_ENABLE([client],
         [
           case "${enableval}" in
              yes) CLIENT=true
-                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub"
+                  SUBDIR_CLIENT="TR069_stub"
                   TDKINTEGRATION_FLAGS="-DIPCLIENT" ;;
            no) CLIENT=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
@@ -138,7 +138,7 @@ AC_ARG_ENABLE([quemux86mc],
         [
           case "${enableval}" in
              yes) QEMUX86MC=true
-                  SUBDIR_CLIENT="TR069_stub gstPluginsRdk_check gstPluginsRdk_stub"
+                  SUBDIR_CLIENT="TR069_stub"
                   TDKINTEGRATION_FLAGS="-DIPCLIENT -DSTAND_ALONE_CLIENT" ;;
            no) QEMUX86MC=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
@@ -207,9 +207,6 @@ AC_CONFIG_FILES([Makefile
          ClosedCaption_stub/Makefile
          RDKLogger_stub/Makefile
          TDKIntegration_Stub/Makefile
-         gstPluginsRdk_check/Makefile
-         gstPluginsRdk_stub/Makefile
-         Recorder_stub/Makefile
          Mediaframework_stub/Makefile
          MediaStreamer_stub/Makefile
          OpenSourceComponent_Stub/Makefile
