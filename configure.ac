@@ -133,6 +133,21 @@ AC_ARG_ENABLE([client],
          [echo "client build is enable"])
 AM_CONDITIONAL([CLIENT], [test x$CLIENT = xtrue])
 
+AC_ARG_ENABLE([aspcomponents],
+         AS_HELP_STRING([--enable-aspcomponents],[enable aspcomponents (default is no)]),
+         [
+           case "${enableval}" in
+              yes) ASPCOMPONENTS=true
+                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID="advancecomponents/Recorder_stub"],
+                          [test x$CLIENT = xtrue], [SUBDIR_CLIENT="advancecomponents/gstPluginsRdk_check advancecomponents/gstPluginsRdk_stub"],
+                          [echo box type not specified]) ;;
+             no) ASPCOMPONENTS=false ;;
+            *) AC_MSG_ERROR([bad value ${enableval} for --enable-aspcomponents ]) ;;
+             esac
+            ],
+           [echo "advanced components build is not enabled"])
+AM_CONDITIONAL([ASPCOMPONENTS], [test x$ASPCOMPONENTS = xtrue])
+
 AC_ARG_ENABLE([quemux86mc],
         AS_HELP_STRING([--enable-qemux86mc],[enable quemux86mc build]),
         [
@@ -206,6 +221,9 @@ AC_CONFIG_FILES([Makefile
          DS_stub/Makefile
          ClosedCaption_stub/Makefile
          RDKLogger_stub/Makefile
+         advancecomponents/Recorder_stub/Makefile
+         advancecomponents/gstPluginsRdk_check/Makefile
+         advancecomponents/gstPluginsRdk_stub/Makefile
          TDKIntegration_Stub/Makefile
          Mediaframework_stub/Makefile
          MediaStreamer_stub/Makefile
