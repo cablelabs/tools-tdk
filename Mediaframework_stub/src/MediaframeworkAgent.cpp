@@ -128,7 +128,7 @@ std::string fetchStreamingInterface()
 	interfacefile.open(Streaming_Interface_name.c_str());
 	if(interfacefile.is_open())
 	{
-		if(getline(interfacefile,line)>0);
+		if(getline(interfacefile,line))
                 {
                         interfacefile.close();
                         DEBUG_PRINT(DEBUG_LOG,"\nStreaming IP fetched fetched\n");
@@ -258,7 +258,7 @@ string qamsrcpre_requisites()
         logfile.open(MF_testmodule_PR_log.c_str());
         if(logfile.is_open())
         {
-                if(getline(logfile,line)>0);
+                if(getline(logfile,line))
                 {
                         logfile.close();
                         DEBUG_PRINT(DEBUG_LOG,"\n qamsrc Pre-Requisites set\n");
@@ -340,7 +340,7 @@ std::string MediaframeworkAgent::testmodulepre_requisites()
         logfile.open(MF_testmodule_PR_log.c_str());
         if(logfile.is_open())
         {
-                if(getline(logfile,line)>0);
+                if(getline(logfile,line))
                 {
                         logfile.close();
                         DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites set\n");
