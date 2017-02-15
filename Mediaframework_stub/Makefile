@@ -120,7 +120,7 @@ $(LIB): $(OBJS)
 	$(CROSSCOMPILE)$(CC) $(OBJS) -fPIC $(LIBOPTS) -shared -o $(LIBMF) $(LDOPTS) 
 	rm -rf $(OBJDIR)
 	mkdir -p $(TDK_BIN_PATH)/scripts
-	cp -r ../platform/Mediaframework_stub/scripts/* $(TDK_BIN_PATH)/scripts
+	cp -r ../Mediaframework_stub/scripts/* $(TDK_BIN_PATH)/scripts
 	mv $(LIBMF) $(LIBDIR)
 #
 # Build everything
