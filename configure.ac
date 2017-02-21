@@ -201,6 +201,14 @@ AC_ARG_ENABLE([errorlog],
 PKG_CHECK_MODULES([XML2], [libxml-2.0 >= 2.7.8])
 PKG_CHECK_MODULES([JANSON],[jansson >= 2.4])
 
+m4_syscmd([test -d advancecomponents/Recorder_stub/])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/Recorder_stub/Makefile])])
+
+
+m4_syscmd([test -d advancecomponents/gstPluginsRdk_check/])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/gstPluginsRdk_check/Makefile])])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/gstPluginsRdk_stub/Makefile])])
+
 AC_SUBST(COPTS)
 AC_SUBST(AGENT_FLAGS)
 AC_SUBST(DVRMGR_FLAGS)
@@ -221,9 +229,6 @@ AC_CONFIG_FILES([Makefile
          DS_stub/Makefile
          ClosedCaption_stub/Makefile
          RDKLogger_stub/Makefile
-         advancecomponents/Recorder_stub/Makefile
-         advancecomponents/gstPluginsRdk_check/Makefile
-         advancecomponents/gstPluginsRdk_stub/Makefile
          TDKIntegration_Stub/Makefile
          Mediaframework_stub/Makefile
          MediaStreamer_stub/Makefile
