@@ -21,6 +21,7 @@ package com.comcast.rdk
 import static Constants.*
 import java.io.File;
 import java.util.List;
+import com.comcast.rdk.Category
 
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -986,6 +987,12 @@ class ScriptService {
 				script.put("skip", getBooleanValue(node.skip.text()))
 				script.put("remarks",node?.remarks?.text())
 				script.put("longDuration", getBooleanValue(node.long_duration.text()))
+				boolean adv = getBooleanValue(node.advanced_script.text())
+				if(!adv){
+					adv = Utility.isAdvancedScript(fileName, dirName)
+				}
+				script.put("advScript",adv)
+				
 				def nodePrimitiveTestName = node.primitive_test_name.text()
 				def primitiveMap = primitiveService.getPrimitiveModuleMap(realPath)
 				def moduleName1 = primitiveMap.get(nodePrimitiveTestName)
@@ -1276,14 +1283,15 @@ class ScriptService {
 			def list1 = scriptsList.collect()
 			scriptsList.clear()
 			List scriptList = []
+			Map tempScriptGroupMap = [:]
 			boolean updateReqd = isDefaultSGUpdateRequired(realPath)
 			[FileStorePath.RDKB.value(), FileStorePath.RDKV.value(),FileStorePath.RDKBADVANCED.value(), FileStorePath.RDKVADVANCED.value()].each{  path ->
 				
 				def category
-				if(path.equals(FileStorePath.RDKB.value())){
+				if(path.equals(FileStorePath.RDKB.value()) || path.equals(FileStorePath.RDKBADVANCED.value())){
 					category = Category.RDKB.toString()
 				}
-				else if(path.equals(FileStorePath.RDKV.value())){
+				else if(path.equals(FileStorePath.RDKV.value()) || path.equals(FileStorePath.RDKVADVANCED.value())){
 					category = Category.RDKV.toString()
 				}
 
@@ -1306,6 +1314,9 @@ class ScriptService {
 										});
 								def start2 = System.currentTimeMillis()
 								def sLst = []
+								if(tempScriptGroupMap.keySet().contains(module?.getName())){
+									sLst = tempScriptGroupMap.get(module?.getName())
+								}
 								files.each { file ->
 									String name = ""+file?.name?.trim()?.replace(".py", "")
 									def sFile
@@ -1319,12 +1330,16 @@ class ScriptService {
 										sFile.category = Utility.getCategory(category)
 										sFile.save(flush:true)
 									}
+									
+									sFile = ScriptFile.findByScriptNameAndModuleName(name,module.getName())
+									
 									def scriptsListmap = scriptsListMap.get(category)
 									if(scriptsListmap == null){
 										scriptsListmap = []
 										scriptsListMap.put(category, scriptsListmap)
 									}
 									if(!scriptsListmap.contains(sFile)){
+										
 										scriptsListmap.add(sFile)
 										sLst.add(name)
 										scriptMapping.put(name, module?.getName())
@@ -1343,7 +1358,7 @@ class ScriptService {
 										sLst.add(name)
 										scriptMapping.put(name, module?.getName())
 									}
-
+									scriptsListAdvanced.put(sFile?.id, path)
 									if(!scriptNameList.contains(name)){
 										scriptNameList.add(name)
 									}
@@ -1358,6 +1373,7 @@ class ScriptService {
 									if( key.toString()  ==  module.getName()?.toString()){
 										if(!(value?.equals(sLst))){
 											scriptGroupMap.put(module?.getName(), sLst)
+											tempScriptGroupMap.put(module?.getName(), sLst)
 											value1 = false
 										}else {
 											value1 = true
@@ -1381,6 +1397,36 @@ class ScriptService {
 		}
 		return value1
 	}	
+	
+	def updateAdvScriptMap(String sName , String moduleName , Category category , boolean isAdvanced){
+
+		ScriptFile sFile = ScriptFile.findByScriptNameAndModuleName(sName,moduleName)
+		if(sFile){
+			String path = ""
+			switch(category){
+				case Category.RDKV:
+					if(!isAdvanced){
+						path = FileStorePath.RDKV.value()
+					}else{
+						path = FileStorePath.RDKVADVANCED.value()
+					}
+					break;
+				case Category.RDKB:
+					if(!isAdvanced){
+						path = FileStorePath.RDKB.value()
+					}else{
+						path = FileStorePath.RDKBADVANCED.value()
+					}
+					break;
+				case Category.RDKB_TCL:
+					path = FileStorePath.RDKTCL.value()
+					break;
+				default:
+					break;
+			}
+			scriptsListAdvanced.put(sFile?.id, path)
+		}
+	}
 	
 	/***
 	 * Returns the fileName

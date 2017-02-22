@@ -47,13 +47,19 @@ public class Utility{
 	 * Method to check whether a script is part of advanced scripts.
 	 */
 	public static boolean isAdvancedScript(def fileName, def moduleName ){
-		ScriptFile sFile
-		ScriptFile.withTransaction {
-			sFile = ScriptFile.findByScriptNameAndModuleName(fileName,moduleName)
-		}
+		boolean isAdv = false
+		try {
+			ScriptFile sFile
+			ScriptFile.withTransaction {
+				sFile = ScriptFile.findByScriptNameAndModuleName(fileName,moduleName)
+			}
 
-		String filePath = ScriptService.scriptsListAdvanced.get(sFile?.id)
-		return (filePath?.equals(TESTSCRIPTS_RDKV_ADV) || filePath?.equals(TESTSCRIPTS_RDKB_ADV) )
+			String filePath = ScriptService.scriptsListAdvanced.get(sFile?.id)
+			isAdv = (filePath?.equals(TESTSCRIPTS_RDKV_ADV) || filePath?.equals(TESTSCRIPTS_RDKB_ADV) )
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		return isAdv
 	}
 	
 	/**

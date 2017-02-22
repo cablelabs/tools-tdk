@@ -123,6 +123,10 @@
 				Execution</td>
 		</tr>
 		<tr>
+			<td></td>
+			<td><g:checkBox id ="advScript" name="advScript" checked="false" title ="enable for advanced test script" />&nbsp;Advanced script</td>
+		</tr>
+		<tr>
 			<td style="width: 15%;"><span id="skipReason" style="display:none;">Reason For Skipping</span></td>
 			<td><span id="skipRemarks" style="display:none;" style="display:none;"><g:textArea name="remarks" style="width:465px;height:20px;"
 					value="">

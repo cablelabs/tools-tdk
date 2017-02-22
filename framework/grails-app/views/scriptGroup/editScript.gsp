@@ -139,6 +139,10 @@ function clearLocks(scriptName){
 						checked="${script.skip}" onclick="showSkipRemarks(this)" />&nbsp;Skip
 					Execution</td>
 			</tr>
+			<tr>
+			<td></td>
+				<td><g:checkBox id ="advScript" name="advScript" checked="${script.advScript}" title ="enable for advanced test script" />&nbsp;Advanced script</td>
+			</tr>
 			<g:if test="${script.skip}">
 				<tr>
 					<td style="width: 15%;"><span id="skipReason123">Reason

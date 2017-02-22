@@ -942,6 +942,8 @@ class ScriptGroupController {
 		def scriptList = scriptService.getScriptNameList(params?.category?.toString())
 		def scriptListRDKV  = scriptService.getScriptNameList(request.getRealPath("/"),RDKV)
 		def scriptListRDKB  = scriptService.getScriptNameList(request.getRealPath("/"),RDKB)
+		String dirname
+		boolean isAdvanced = false
 		if(scriptListRDKV?.toString()?.contains(params?.name?.toString()) || scriptListRDKB?.toString()?.contains(params?.name?.toString())){
 			render("Duplicate Script Name not allowed. Try Again.")
 		}else if((!params?.ptest) || params?.ptest == "default" ){
@@ -988,6 +990,11 @@ class ScriptGroupController {
 			}else{
 				longDuration = false
 			}
+			
+			if(params?.advScript.equals("on")){
+				isAdvanced = true
+			}
+			
 			Set boxTypes = []
 			Set rdkVersions = []
 			Set scrptTags = []
@@ -1028,6 +1035,9 @@ class ScriptGroupController {
 					mkp.yield "\r\n  "
 					mkp.comment ""
 					xml.long_duration(longDuration)
+					mkp.yield "\r\n  "
+					mkp.comment ""
+					xml.advanced_script(isAdvanced)
 					mkp.yield "\r\n  "
 					mkp.comment "execution_time is the time out time for test execution"
 					xml.remarks(params?.remarks?.trim())
@@ -1148,11 +1158,11 @@ class ScriptGroupController {
 
 
 
-				String dirname = ptest?.module?.name
+				dirname = ptest?.module?.name
 				dirname = dirname?.trim()
 
 				def pathToDir =  "${request.getRealPath('/')}//fileStore"
-				boolean isAdvanced = Utility.isAdvancedScript(params?.name?.trim(), moduleName)
+				
 				if(RDKV.equals(category)){
 					if(isAdvanced){
 						pathToDir = pathToDir + Constants.FILE_SEPARATOR + TESTSCRIPTS_RDKV_ADV
@@ -1217,7 +1227,7 @@ class ScriptGroupController {
 				scriptgroupService.saveToDefaultGroups(script,sObject, boxTypes, params?.category)
 				scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[], params?.category)
 				scriptService?.updateScriptsFromTestProfile(script,sObject, params.category)
-
+				scriptService.updateAdvScriptMap(params?.name?.trim(), dirname, Utility.getCategory(params?.category), isAdvanced)
 				def sName = params?.name
 				render(message(code: 'default.created.message', args: [
 					message(code: 'script.label', default: 'Script'),
@@ -1249,6 +1259,7 @@ class ScriptGroupController {
 		def scriptsDirName = primitiveService.getScriptDirName(moduleName)
 		def category = params?.category?.trim()
 		def filePath = null
+		String dirname
 		if(RDKV.equals(category)){
 			filePath = getRealPath() + FILE_SEPARATOR + "fileStore"+ FILE_SEPARATOR + TESTSCRIPTS_RDKV + FILE_SEPARATOR + scriptsDirName + FILE_SEPARATOR + moduleName+ FILE_SEPARATOR + moduleName +XML
 		}
@@ -1262,7 +1273,9 @@ class ScriptGroupController {
 		def oldBoxTypes = scrpt?.boxTypes
 		def oldRDKVersions = scrpt?.rdkVersions
 		def oldTags = scrpt?.scriptTags
+		def oldAdvStatus = scrpt?.advScript
 		boolean isLongDuration = scrpt?.longDuration
+		boolean isAdvanced = false
 
 		if (params.scriptVersion != null) {
 
@@ -1326,7 +1339,15 @@ class ScriptGroupController {
 			}else{
 				skipStatus = false
 			}
+			
+			
+			if(params?.advScript.equals("on")){
+				isAdvanced = true
+			}else{
+				isAdvanced = false
+			}
 
+			def catgry = Utility.getCategory(category)
 
 			xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
 			xml.xml(){
@@ -1361,6 +1382,9 @@ class ScriptGroupController {
 				mkp.yield "\r\n  "
 				mkp.comment ""
 				xml.long_duration(longDuration)
+				mkp.yield "\r\n  "
+				mkp.comment ""
+				xml.advanced_script(isAdvanced)
 				mkp.yield "\r\n  "
 				mkp.comment "execution_time is the time out time for test execution"
 				xml.remarks(params?.remarks?.trim())
@@ -1472,22 +1496,41 @@ class ScriptGroupController {
 				}
 				
 			}
-			String dirname = ptest?.module?.name
+			dirname = ptest?.module?.name
 			dirname = dirname?.trim()
-
+			isAdvanced = isAdvanced || (!oldAdvStatus && Utility.isAdvancedScript(params?.prevScriptName, dirname))
 			def scriptsDirName1 = primitiveService.getScriptDirName(moduleName)
-
-			def testScriptPath = getTestScriptPath(params?.category?.trim(),params?.name?.trim(),moduleName)
+			def testScriptPath = getTestScriptPath(catgry,isAdvanced)
 			File dir = new File( testScriptPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+"/")
 			if(!dir.exists()){
 				dir.mkdirs()
 			}
 			File file = new File( testScriptPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+FILE_SEPARATOR+params?.name?.trim()+".py");
+			boolean checkOldFile = false
+			
+			try {
+				if(!oldAdvStatus?.equals(isAdvanced)){
+					def oldPath = getTestScriptPath(catgry,oldAdvStatus)
+					File oldFile = new File( oldPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+FILE_SEPARATOR+params?.name?.trim()+".py")
+					if(oldFile?.exists()){
+						oldFile?.renameTo(file)
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace()
+			}
+			
 			if(!file.exists()){
 				file.createNewFile()
 			}
 
-			File pyHeader = new File( "${request.getRealPath('/')}//fileStore//pyHeader.txt")
+			def headerFile
+			if(isAdvanced){
+				headerFile = "pyRDKMHeader.txt"
+			}else{
+				headerFile = "pyHeader.txt"
+			}
+			File pyHeader = new File( "${request.getRealPath('/')}//fileStore//${headerFile}")
 			def pyHeaderContentList = pyHeader?.readLines()
 			String pyHeaderContent = ""
 			pyHeaderContentList.each {
@@ -1588,6 +1631,8 @@ class ScriptGroupController {
 				message(code: 'script.label', default: 'Script'),
 				params.name
 			])
+			
+			scriptService.updateAdvScriptMap(params?.name?.trim(), dirname, Utility.getCategory(params?.category), isAdvanced)
 		}
 		def newid= params?.id
 		if(params?.id?.contains("@")){
@@ -2334,32 +2379,16 @@ class ScriptGroupController {
 	 * Method to get the test scripts path not considering the advance test scripts.
 	 */
 	private String getTestScriptPath(def category){
-		def path = null
 		category = Utility.getCategory(category?.trim())
-		switch(category){
-			case Category.RDKV: 
-				path =  getRealPath() +  FILESTORE + FILE_SEPARATOR + FileStorePath.RDKV.value()
-				break;
-			case Category.RDKB: 
-				path = getRealPath() + FILESTORE + FILE_SEPARATOR + FileStorePath.RDKB.value()
-				break;
-			case Category.RDKB_TCL: 
-				path = getRealPath()  + FILESTORE + FILE_SEPARATOR + FileStorePath.RDKTCL.value()
-				break;
-			default:
-				break;
-		}
-		return path
+		return getTestScriptPath(category, false)
 	}
 	
 	/**
-	 * Method to get the Test Script path considering the Advanced Test scripts also.
+	 *
+	 * Method to get the test scripts path not considering the advance test scripts.
 	 */
-	private String getTestScriptPath(def category,def scriptName , def moduleName){
+	private String getTestScriptPath(def category,boolean isAdvanced){
 		def path = null
-		category = Utility.getCategory(category?.trim())
-
-		boolean isAdvanced = Utility.isAdvancedScript(scriptName, moduleName)
 		switch(category){
 			case Category.RDKV:
 				if(!isAdvanced){
@@ -2375,13 +2404,22 @@ class ScriptGroupController {
 					path = getRealPath() +  FILESTORE + FILE_SEPARATOR + FileStorePath.RDKBADVANCED.value()
 				}
 				break;
-			case Category.RDKB_TCL: 
+			case Category.RDKB_TCL:
 				path = getRealPath()  + FILESTORE + FILE_SEPARATOR + FileStorePath.RDKTCL.value()
 				break;
 			default:
 				break;
 		}
 		return path
+	}
+	
+	/**
+	 * Method to get the Test Script path considering the Advanced Test scripts also.
+	 */
+	private String getTestScriptPath(def category,def scriptName , def moduleName){
+		category = Utility.getCategory(category?.trim())
+		boolean isAdvanced = Utility.isAdvancedScript(scriptName, moduleName)
+		return getTestScriptPath(category, isAdvanced)
 	}
 	/**
 	 * REST API :- create a new suite
