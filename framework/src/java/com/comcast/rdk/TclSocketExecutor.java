@@ -52,6 +52,7 @@ public class TclSocketExecutor {
 	private static final String METHOD = "method";
 	private static final String PARAM_NAME = "paramName";
 	private static final String PARAM_VALUE = "paramValue";
+	private static final String PARAMLIST_VALUE = "paramList";
 	private static final String PARAM_TYPE = "paramType";
 	private static final String PARAM = "param1";
 	private static final String DELIMITER = ",";
@@ -85,6 +86,11 @@ public class TclSocketExecutor {
 
 		public Builder addParamValue(String value) {
 			object.put(PARAM_VALUE, value);
+			return this;
+		}
+		
+		public Builder addParamList(String value) {
+			object.put(PARAMLIST_VALUE, value);
 			return this;
 		}
 
@@ -147,7 +153,9 @@ public class TclSocketExecutor {
 	public static String getMethodName(String module , String methodType){
 		String method = "";
 		if(module.equals("wifiagent")){
-			if(methodType.toUpperCase().contains("SET")){
+			if(methodType.toUpperCase().contains("SETMULTIPLE")){
+				method = "WIFIAgent_SetMultiple";
+			}else if(methodType.toUpperCase().contains("SET")){
 				method = "WIFIAgent_Set";
 			}else if(methodType.toUpperCase().contains("GET")){
 				method = "WIFIAgent_Get";
@@ -374,14 +382,39 @@ public class TclSocketExecutor {
 		String[] paramTypes = paramType.split(DELIMITER);
 		boolean valid = checkForValidMultipleSetParams(paramNames.length,
 				paramValues.length, paramTypes.length);
+		StringBuffer paramList = new StringBuffer();
+		String paramListString = "";
+		String val = null;
 		if (valid) {
 			for (int i = 0; i < paramNames.length; i++) {
-				executeSet(method, paramNames[i], paramValues[i],
-						paramTypes[i], pw, buf);
+				paramList.append(paramNames[i]).append("|").append(paramValues[i]).append("|").append(paramTypes[i]);
+				if(i < paramNames.length-1){
+					paramList.append("|");
+				}
 			}
+			paramListString = paramList.toString();
 		} else {
 			System.out
 					.println("Parameter Names/Values/Types list doesn't match. ");
+			throwError();
+		}
+		
+		
+		Builder builder = new Builder();
+		builder.addJSONRPCVersion().addMethod(method).addParamList(paramListString);
+		pw.println(builder.build());
+		pw.flush();
+
+		String respo = buf.readLine();
+		System.out.println("Response " + method + " : " + respo);
+		if (!StringUtils.hasText(respo)) {
+			System.out.println(" Going to throw Error ");
+			throwError();
+		}
+		val = getResultStatus(respo);
+		if (!StringUtils.hasText(val) || (!val.equalsIgnoreCase("SUCCESS"))) {
+			//terminateConnection(buf, pw);
+			System.out.println(" Going to throw Error as fail");
 			throwError();
 		}
 	}
