@@ -1903,6 +1903,35 @@ class DeviceGroupController {
 		}
 		render deviceObj
 	}
+		
+	/**
+	 * REST API to fetch the box type 
+	 */
+	def getDeviceBoxType(String deviceName){
+		Map status = [:]
+		BoxType bType = null
+		status.put("devicename", deviceName)
+		if(deviceName){
+			try {
+				Device dev = Device?.findByStbName(deviceName)
+				if(dev){
+					bType = dev?.getBoxType()
+					status.put("status", "SUCCESS")
+					status.put("boxtype", bType?.getName())
+				}else{
+					status.put("status", "FAILURE")
+					status.put("remarks", "No valid device found with this name")
+				}
+			} catch (Exception e) {
+				status.put("status", "FAILURE")
+				e.printStackTrace()
+			}
+		}else{
+			status.put("status", "FAILURE")
+			status.put("remarks", "Not a valid device name")
+		}
+		render status as JSON
+	}
 }
 
 
