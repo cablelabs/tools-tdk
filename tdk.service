@@ -18,8 +18,8 @@
 ##########################################################################
 [Unit]
 Description=TDK Test Agent Start
-After=swupdate.service
-Requires=swupdate.service
+After=network-online.target
+Requires=network-online.target
 
 [Service]
 ExecStartPre=/bin/sh -c 'rm -rf /opt/TDK/lib* && cp -r /var/TDK /opt/'
