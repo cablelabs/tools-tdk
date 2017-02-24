@@ -138,8 +138,8 @@ AC_ARG_ENABLE([aspcomponents],
          [
            case "${enableval}" in
               yes) ASPCOMPONENTS=true
-                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID="advancecomponents/Recorder_stub"],
-                          [test x$CLIENT = xtrue], [SUBDIR_CLIENT="advancecomponents/gstPluginsRdk_check advancecomponents/gstPluginsRdk_stub"],
+                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" advancecomponents/Recorder_stub"],
+                          [test x$CLIENT = xtrue], [SUBDIR_CLIENT+=" advancecomponents/gstPluginsRdk_check advancecomponents/gstPluginsRdk_stub"],
                           [echo box type not specified]) ;;
              no) ASPCOMPONENTS=false ;;
             *) AC_MSG_ERROR([bad value ${enableval} for --enable-aspcomponents ]) ;;
