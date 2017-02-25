@@ -1556,6 +1556,28 @@ class TDKScriptingLibrary:
 
         ########## End of Function ##########
 
+        def getDeviceBoxType(self):
+
+        # Create an object for getDeviceBoxType
+
+        # Syntax      : OBJ.getDeviceBoxType()
+        # Description : Create an object of Device Box Type
+        # Parameters  : None
+        # Return Value: Return the box type
+
+                 url = self.url + '/deviceGroup/getDeviceBoxType?deviceIp='+self.IP
+                 response = urllib.urlopen(url).read()
+                 if 'SUCCESS' in response:
+                        boxType = json.loads(response)
+                 else:
+                        print "#TDK_@error-ERROR : Unable to get Device Box Type from REST !!!"
+                        exit()
+
+                 sys.stdout.flush()
+                 return boxType['boxtype']
+
+        ########## End of Function ##########
+
 	def unloadModule(self, cName):
 
 	# Unload the component test module
