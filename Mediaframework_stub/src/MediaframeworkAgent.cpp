@@ -594,7 +594,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckRmfStreamerCrash(IN const Jso
 			DEBUG_PRINT(DEBUG_LOG,"File %s open success \n", RecorderLogFilePath.c_str());
                 	while (!RecorderLogFile.eof())
 	                {
-        	                if(getline(RecorderLogFile,line_Recorder_Log)>0)
+        	                if(getline(RecorderLogFile,line_Recorder_Log))
                 	        {
                         	        if(line_Recorder_Log.find(patternToSearch.c_str()) != string::npos)
                                 	{
