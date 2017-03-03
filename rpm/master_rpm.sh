@@ -40,7 +40,7 @@ cd ~/rpm/RPMS/i586/
 sudo alien apache-tomcat-6.0.37-18.i586.rpm
 sudo dpkg -i apache-tomcat_6.0.37-19_i386.deb
 sleep 10
-sudo etc/init.d/tomcat6 start
+sudo /etc/init.d/tomcat6 start
 
 
 #MySQL Installation 
@@ -54,25 +54,13 @@ sh setupdb.sh
 cd ~/rpm/SOURCES/RDKTDK
 sh deployWar.sh
 
-
-#TFTPY Installation
-
-cd ~/rpm/SOURCES/tftp_Python-0.6.0/
-sudo python setup.py build
-sudo python setup.py install
-
-
-#Copy PythonLib
-
-cd ~/rpm/SOURCES
-sudo cp python_path.sh /etc/profile.d/
-source /etc/profile.d/python_path.sh
-sudo mkdir -p $PYTHONPATH
-echo "Copying pythonLib....."
-sudo cp -r pythonLib/* $PYTHONPATH
-
-
 #Expect Installation
 
+sudo apt-get install python-tftpy
 sudo apt-get install expect
+sudo apt-get install python-MySQLdb
+sudo apt-get install python-xlwt
+sudo apt-get install python-xlrd
+sudo apt-get install python-numpy
+sudo apt-get install python-paramiko
 
