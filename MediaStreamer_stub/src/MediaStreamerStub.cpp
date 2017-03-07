@@ -40,7 +40,12 @@
 #define SUCCESS_PATTERN "Current Position="
 #define FRAME_SEARCH_PATTERN "next_predicted_frame = "
 #define TRASPORT_CMD_PATTERN "IpStreamOut::transport_command"
-#define FETCH_STREAMING_INT_NAME "streaming_interface_file"
+/*
+ Fetching Streaming Interface Name
+ */
+#define BUFFER_LENGTH 64
+#define STREAMING_INTERFACE "Streaming Interface"
+#define FETCH_STREAMING_INT_FILE "streaming_interface_file"
 
 #ifdef USE_SOC_INIT
 void soc_uninit();
@@ -138,47 +143,48 @@ std::string GetHostIP (const char* szInterface)
 
 } /* End of GetHostIP */
 
+/*********************************************************************************************
+Function name : fetchStreamingInterface
 
+Arguments     : NULL
+
+Description   : Fetching the streaming interface name from streaming_interface_name file
+ ********************************************************************************************/
 std::string fetchStreamingInterface()
 {
-    DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
-    ifstream interfacefile;
-    string Fetch_Streaming_interface_cmd, Streaming_Interface_name,line;
-    Streaming_Interface_name = g_tdkPath + "/" + FETCH_STREAMING_INT_NAME;
-    /*      //Fetch_Streaming_interface_cmd = g_tdkPath + "/" + FETCH_STREAMING_INT_SCRIPT;
-            //string fetch_streaming_int_chk= "source "+Fetch_Streaming_interface_cmd;
-            //try
-            {
-                    system((char*)fetch_streaming_int_chk());
-            }
-            catch(...)
-            {
-                    DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of streaming ip fetch script\n");
-                    DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
-                    return "FAILURE<DETAILS>Exception occured execution of streaming ip fetch script";
-            }
-    */
+        FILE *interfaceFile = NULL;
+        char streamingInterfaceName[BUFFER_LENGTH] = {'\0'};
+        string streamingInterfaceFile, fetchInterfaceCmd;
 
-    interfacefile.open(Streaming_Interface_name.c_str());
-    if(interfacefile.is_open())
-    {
-        if(getline(interfacefile,line)>0);
+        DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
+
+        streamingInterfaceFile = g_tdkPath + "/" + FETCH_STREAMING_INT_FILE;
+        fetchInterfaceCmd = "cat " + streamingInterfaceFile + "| grep \"" + STREAMING_INTERFACE + "\" | cut -d \"=\" -f 2 |tr -d '\\r\\n'";
+
+        /*Reading the streaming_interface_file to read the interface name */
+        interfaceFile = popen(fetchInterfaceCmd.c_str(), "r");
+        if(interfaceFile == NULL)
         {
-            interfacefile.close();
-            DEBUG_PRINT(DEBUG_LOG,"Streaming IP fetched fetched\n");
-            DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function--> Exit\n");
-            return line;
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the streaming interface file.\n");
+                return "FAILURE<DETAILS>Unable to open the streaming interface file";
         }
-        interfacefile.close();
-        DEBUG_PRINT(DEBUG_ERROR,"Streaming IP fetched not fetched\n");
-        return "FAILURE<DETAILS>Proper result is not found in the streaming interface name file";
-    }
-    else
-    {
-        DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the streaming interface file.\n");
-        return "FAILURE<DETAILS>Unable to open the streaming interface  file";
-    }
+        if(fgets(streamingInterfaceName, BUFFER_LENGTH, interfaceFile) != NULL)
+        {
+                pclose(interfaceFile);
+                DEBUG_PRINT(DEBUG_TRACE, "Streaming interface = %s \n",streamingInterfaceName);
+                DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function--> Exit\n");
+                return streamingInterfaceName;
+        }
+	else
+        {
+                pclose(interfaceFile);
+                DEBUG_PRINT(DEBUG_ERROR,"\nStreaming interface not fetched\n");
+                return "FAILURE<DETAILS>Proper interface name not found in streaming interface file";
+        }
+
+
 }
+
 
 /**************************************************************************
 Function name : MediaStreamerAgent::initialize

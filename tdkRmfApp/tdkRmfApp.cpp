@@ -37,7 +37,6 @@ using namespace std;
 
 #define SUCCESS 0
 #define FAILURE 1
-#define FETCH_STREAMING_INT_NAME "streaming_interface_file"
 #define DEBUG_PRINT(pui8Debugmsg...)\
       do{\
                 char buffer[30];\
@@ -51,6 +50,12 @@ using namespace std;
                 fflush(stdout);\
       }while(0)
 
+/*
+ Fetching Streaming Interface Name
+ */
+#define BUFFER_LENGTH            64
+#define STREAMING_INTERFACE      "Streaming Interface"
+#define FETCH_STREAMING_INT_FILE "streaming_interface_file"
 
 #ifdef USE_SOC_INIT
 void soc_uninit();
@@ -110,45 +115,50 @@ static long long getCurrentTime()
     return currentTime;
 }
 
-//********************************************************//
-// Helper function: fetchStreamingInterface
-// Function: Reads the streaming interface name from given file
-//********************************************************//
+/*********************************************************************************************
+Function name : fetchStreamingInterface
 
+Arguments     : NULL
+
+Description   : Fetching the streaming interface name from streaming_interface_name file
+ ********************************************************************************************/
 std::string fetchStreamingInterface()
 {
-    ifstream interfaceFile;
-    string line;
-    char *g_tdkPath = getenv("TDK_PATH");
+        FILE *interfaceFile = NULL;
+        char streamingInterfaceName[BUFFER_LENGTH] = {'\0'};
+        string streamingInterfaceFile, fetchInterfaceCmd;
+        char *g_tdkPath = getenv("TDK_PATH");
 
-    if (NULL == g_tdkPath)
-    {
+        DEBUG_PRINT("Fetch Streaming Interface function --> Entry\n");
+        if (NULL == g_tdkPath)
+        {
         DEBUG_PRINT("Error! TDK_PATH not exported \n");
         return "FAILURE<DETAILS>TDK_PATH not exported";
-    }
-
-    string strCmd = string(g_tdkPath) + "/" + FETCH_STREAMING_INT_NAME;
-
-    DEBUG_PRINT("Fetching streaming interface from file: %s", strCmd.c_str());
-    interfaceFile.open(strCmd.c_str());
-    if(interfaceFile.is_open())
-    {
-        if(getline(interfaceFile,line)>0);
-        {
-            interfaceFile.close();
-            DEBUG_PRINT("Streaming interface: %s", line.c_str());
-            return line;
         }
-        interfaceFile.close();
 
-        DEBUG_PRINT("No contents found in streaming interface file");
-        return "FAILURE<DETAILS>Proper result is not found in the streaming interface name file";
-    }
-    else
-    {
-        DEBUG_PRINT("Failed to read streaming interface file");
-        return "FAILURE<DETAILS>Unable to open the streaming interface file";
-    }
+	streamingInterfaceFile = string(g_tdkPath) + "/" + FETCH_STREAMING_INT_FILE;
+        fetchInterfaceCmd = "cat " + streamingInterfaceFile + "| grep \"" + STREAMING_INTERFACE + "\" | cut -d \"=\" -f 2 |tr -d '\\r\\n'";
+
+        /*Reading the streaming_interface_file to read the interface name */
+	interfaceFile = popen(fetchInterfaceCmd.c_str(), "r");
+        if(interfaceFile == NULL)
+        {
+                DEBUG_PRINT("\nUnable to open the streaming interface file.\n");
+                return "FAILURE<DETAILS>Unable to open the streaming interface file";
+        }
+	if(fgets(streamingInterfaceName, BUFFER_LENGTH, interfaceFile) != NULL)
+        {
+                pclose(interfaceFile);
+                DEBUG_PRINT("Streaming interface = %s \n",streamingInterfaceName);
+                DEBUG_PRINT("Fetch Streaming Interface function--> Exit\n");
+                return streamingInterfaceName;
+        }
+        else
+        {
+                pclose(interfaceFile);
+                DEBUG_PRINT("\nStreaming interface not fetched\n");
+                return "FAILURE<DETAILS>Proper interface name not found in streaming interface file";
+        }
 }
 
 static HNSource* hnSource=NULL;

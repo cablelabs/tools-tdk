@@ -42,7 +42,13 @@ void soc_init(int , char *, int );
 #endif
 
 #define PRE_REQUISITE_FILE "scripts/tdkintegration_test_module_pre-script.sh"
-#define PRE_REQUISITE_LOG_PATH "logs/tdkintegration_testmodule_prereq_details.log" 
+#define PRE_REQUISITE_LOG_PATH "logs/tdkintegration_testmodule_prereq_details.log"
+/*
+ Fetching Streaming Interface Name
+ */
+#define BUFFER_LENGTH 64
+#define STREAMING_INTERFACE "Streaming Interface"
+#define FETCH_STREAMING_INT_FILE "streaming_interface_file" 
 /********************************************************************************************************************
 Purpose:               To get the current status of the AV running
 
@@ -83,51 +89,43 @@ Function name : fetchStreamingInterface
 
 Arguments     : NULL
 
-Description   : Fetching the streaming interface name from streaming_interface_name file 
+Description   : Fetching the streaming interface name from streaming_interface_name file
  ********************************************************************************************/
 std::string fetchStreamingInterface()
 {
+        FILE *interfaceFile = NULL;
+        char streamingInterfaceName[BUFFER_LENGTH] = {'\0'};
+        string streamingInterfaceFile, fetchInterfaceCmd;
+
         DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
-        ifstream interfacefile;
-        string Fetch_Streaming_interface_cmd, Streaming_Interface_name,line;
-        Streaming_Interface_name = g_tdkPath + "/" + FETCH_STREAMING_INT_NAME;
-/*      //Fetch_Streaming_interface_cmd = g_tdkPath + "/" + FETCH_STREAMING_INT_SCRIPT;
-        //string fetch_streaming_int_chk= "source "+Fetch_Streaming_interface_cmd;
-        //try
-        {
-                system((char*)fetch_streaming_int_chk());
-        }
-        catch(...)
-        {
-                DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of streaming ip fetch script\n");
-                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
-                return "FAILURE<DETAILS>Exception occured execution of streaming ip fetch script";
 
-        }
-*/
+        streamingInterfaceFile = g_tdkPath + "/" + FETCH_STREAMING_INT_FILE;
+        fetchInterfaceCmd = "cat " + streamingInterfaceFile + "| grep \"" + STREAMING_INTERFACE + "\" | cut -d \"=\" -f 2 |tr -d '\\r\\n'";
 
-        interfacefile.open(Streaming_Interface_name.c_str());
-        if(interfacefile.is_open())
+        /*Reading the streaming_interface_file to read the interface name */
+        interfaceFile = popen(fetchInterfaceCmd.c_str(), "r");
+        if(interfaceFile == NULL)
         {
-                if(getline(interfacefile,line)>0)
-                {
-                        interfacefile.close();
-                        DEBUG_PRINT(DEBUG_LOG,"\nStreaming IP fetched\n");
-                        DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function--> Exit\n");
-                        return line;
-                }
-                interfacefile.close();
-                DEBUG_PRINT(DEBUG_ERROR,"\nStreaming IP fetched not fetched\n");
-                return "FAILURE<DETAILS>Proper result is not found in the streaming interface name file";
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the streaming interface file.\n");
+                return "FAILURE<DETAILS>Unable to open the streaming interface file";
+        }
+        if(fgets(streamingInterfaceName, BUFFER_LENGTH, interfaceFile) != NULL)
+        {
+                pclose(interfaceFile);
+                DEBUG_PRINT(DEBUG_TRACE, "Streaming interface = %s \n",streamingInterfaceName);
+                DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function--> Exit\n");
+                return streamingInterfaceName;
         }
         else
         {
-                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the streaming interface file.\n");
-                return "FAILURE<DETAILS>Unable to open the streaming interface  file";
+                pclose(interfaceFile);
+                DEBUG_PRINT(DEBUG_ERROR,"\nStreaming interface not fetched\n");
+                return "FAILURE<DETAILS>Proper interface name not found in streaming interface file";
         }
 
 
 }
+
 
 /*************************************************************************
   Function name : E2ELinearTVStub constructor

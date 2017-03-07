@@ -118,34 +118,44 @@ void createTestRecordingSpec (string recordingId, string playUrl, RecordingSpec 
 }
 #endif
 
+/*********************************************************************************************
+Function name : fetchStreamingInterface
+
+Arguments     : NULL
+
+Description   : Fetching the streaming interface name from streaming_interface_name file
+ ********************************************************************************************/
 std::string fetchStreamingInterface()
 {
-	DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
-	ifstream interfacefile;
-	string Fetch_Streaming_interface_cmd, Streaming_Interface_name,line;
-	Streaming_Interface_name = g_tdkPath + "/" + FETCH_STREAMING_INT_NAME;
+        FILE *interfaceFile = NULL;
+        char streamingInterfaceName[BUFFER_LENGTH] = {'\0'};
+        string streamingInterfaceFile, fetchInterfaceCmd;
 
-	interfacefile.open(Streaming_Interface_name.c_str());
-	if(interfacefile.is_open())
-	{
-		if(getline(interfacefile,line))
-                {
-                        interfacefile.close();
-                        DEBUG_PRINT(DEBUG_LOG,"\nStreaming IP fetched fetched\n");
-                        DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function--> Exit\n");
-                        return line;
-                }
-                interfacefile.close();
-                DEBUG_PRINT(DEBUG_ERROR,"\nStreaming IP fetched not fetched\n");
-                return "FAILURE<DETAILS>Proper result is not found in the streaming interface name file";
-	}
-	else
+        DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function --> Entry\n");
+
+        streamingInterfaceFile = g_tdkPath + "/" + FETCH_STREAMING_INT_FILE;
+        fetchInterfaceCmd = "cat " + streamingInterfaceFile + "| grep \"" + STREAMING_INTERFACE + "\" | cut -d \"=\" -f 2 |tr -d '\\r\\n'";
+
+        /*Reading the streaming_interface_file to read the interface name */
+        interfaceFile = popen(fetchInterfaceCmd.c_str(), "r");
+        if(interfaceFile == NULL)
         {
                 DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the streaming interface file.\n");
-                return "FAILURE<DETAILS>Unable to open the streaming interface  file";
+                return "FAILURE<DETAILS>Unable to open the streaming interface file";
         }
-
-
+        if(fgets(streamingInterfaceName, BUFFER_LENGTH, interfaceFile) != NULL)
+        {
+                pclose(interfaceFile);
+                DEBUG_PRINT(DEBUG_TRACE, "Streaming interface = %s \n",streamingInterfaceName);
+                DEBUG_PRINT(DEBUG_TRACE, "Fetch Streaming Interface function--> Exit\n");
+                return streamingInterfaceName;
+        }
+        else
+        {
+                pclose(interfaceFile);
+                DEBUG_PRINT(DEBUG_ERROR,"\nStreaming interface not fetched\n");
+                return "FAILURE<DETAILS>Proper interface name not found in streaming interface file";
+        }
 }
 
 HNSource* createHNSrc(std::string& url)

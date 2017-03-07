@@ -81,7 +81,12 @@
 #define POST_REQUISITE_FILE "scripts/mediaframework_test_module_post-script.sh"
 #define QAM_PRE_REQUISITE_FILE "scripts/mediaframework_qamsrc_test_module_pre-script.sh"
 #define QAM_PRE_REQUISITE_LOG_PATH "logs/Mediaframework_qamsrc_testmodule_postreq_details.log"
-#define FETCH_STREAMING_INT_NAME "streaming_interface_file"
+/*
+ Fetching Streaming Interface Name
+ */
+#define STREAMING_INTERFACE "Streaming Interface"
+#define FETCH_STREAMING_INT_FILE "streaming_interface_file"
+
 using namespace std;
 
 string g_tdkPath = getenv("TDK_PATH");
