@@ -2220,9 +2220,9 @@ bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT 
 			std::string messageToSend = req["messageToSend"].asCString();
 			DEBUG_PRINT(DEBUG_TRACE,"Message to Send: %s\n", messageToSend.c_str());
 			DEBUG_PRINT(DEBUG_TRACE,"Length of message received: %d\n", messageToSend.length());
-                        if (messageToSend.length() == 20)
+                        if (messageToSend.length() == 5)
                         {
-                            const int msgLength = 7;
+                            const int msgLength = 2;
                             uint8_t *buf = new uint8_t [msgLength];
                             istringstream bufferStr(messageToSend);
                             DEBUG_PRINT(DEBUG_TRACE,"Hex stream input: ");
