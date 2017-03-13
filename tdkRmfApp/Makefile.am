@@ -18,7 +18,7 @@
 ##########################################################################
 ACLOCAL_AMFLAGS = -Im4 --install
 
-AM_CPPFLAGS = -g -Wall -DGCC4_XXX -fPIC -DRMF_OSAL_LITTLE_ENDIAN ${SOC_FLAGS}
+AM_CPPFLAGS = -g -Wall -DGCC4_XXX -fPIC -DRMF_OSAL_LITTLE_ENDIAN -DUSE_RBI ${SOC_FLAGS}
 
 AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/json \
@@ -30,5 +30,5 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
 bin_PROGRAMS = tdkRmfApp
 tdkRmfAppdir = ${bindir}
 tdkRmfApp_SOURCES = tdkRmfApp.cpp
-tdkRmfApp_LDFLAGS = -ldvrmgr -ldvrsink -lmediaplayersink -lhnsource -luuid ${SOC_LIBS} $(TDK_GST_LIBS)
+tdkRmfApp_LDFLAGS = -ldvrmgr -ldvrsink -lmediaplayersink -lhnsource -luuid -lsharedtsb -lrbifilter -lrbi ${SOC_LIBS} $(TDK_GST_LIBS)
 tdkRmfApp_includedir = ${includedir}

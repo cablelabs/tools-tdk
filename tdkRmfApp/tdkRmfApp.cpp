@@ -29,6 +29,7 @@
 #include "mediaplayersink.h"
 #include "hnsource.h"
 #ifndef SINGLE_TUNER_IP_CLIENT
+#include "sharedtsb.h"
 #include "DVRSink.h"
 #include "dvrmanager.h"
 #endif
@@ -396,6 +397,8 @@ int rmfMpSinkUninitialize()
 int rmfDvrSinkInitialize(string dvrRecordId,int duration,string title,string ocapId)
 {
     RMFResult retResult = RMF_RESULT_SUCCESS;
+    SharedTSB *pSharedTsb = NULL;
+    DVRManager *pDvrMngr = NULL;
 
     string streamingIntf = fetchStreamingInterface();
     if (streamingIntf.find("FAILURE") != std::string::npos)
@@ -421,7 +424,7 @@ int rmfDvrSinkInitialize(string dvrRecordId,int duration,string title,string oca
     url.append(":8080/hnStreamStart?live=");
     url.append(ocapId);
 
-    DEBUG_PRINT("Play Url: %s", url.c_str());
+    DEBUG_PRINT("Play Url: %s\n", url.c_str());
 
     /* Make an entry of recording in the DVR Manager.*/
     long long recDuration = duration;
@@ -438,47 +441,43 @@ int rmfDvrSinkInitialize(string dvrRecordId,int duration,string title,string oca
     spec.setBitRate(RecordingBitRate_low);
 
     DEBUG_PRINT("Create Recording using RecordingSpec\n");
-    int result= DVRManager::getInstance()->createRecording( spec );
-    if ( result != DVRResult_ok )
+    pDvrMngr = DVRManager::getInstance();
+    retResult = pDvrMngr->createRecording (spec);
+    if (DVRResult_ok != retResult)
     {
-        DEBUG_PRINT("Error: Unable to create recording for id: %s", dvrRecordId.c_str());
+        DEBUG_PRINT("Error: Unable to create recording for id: %s\n", dvrRecordId.c_str());
         return FAILURE;
     }
-    DEBUG_PRINT("Creating recording id: %s success", dvrRecordId.c_str());
+    DEBUG_PRINT("Created recording with id: %s\n", dvrRecordId.c_str());
 
-    /*Initialzing the dvrSink instance */
-    DEBUG_PRINT("Create DVRSink instance");
-    dvrSink = new DVRSink(dvrRecordId);
-    if ( NULL == dvrSink )
+    /*
+     * Get Shared TSB
+     */
+    pSharedTsb = SharedTSB::getSharedTSB (url);
+    if (NULL == pSharedTsb) 
     {
-        DEBUG_PRINT("Error: unable to create DVRSink");
-        return FAILURE;
+	DEBUG_PRINT("Error: Failed to create SharedTSB\n");
+	return FAILURE;
     }
-    DEBUG_PRINT("DVRSink instance creation SUCCESS");
+    /*
+     * Setting source and sink to sharedTSB's source and sink   
+     */
+    hnSource = (HNSource *)pSharedTsb->src();
+    dvrSink = pSharedTsb->dvrSink();
 
-    DEBUG_PRINT("Init DVRSink instance");
-    retResult = dvrSink->init();
-    if(RMF_RESULT_SUCCESS != retResult)
+    DEBUG_PRINT ("Converting the created TSB to Recording\n");
+    retResult = pDvrMngr->convertTSBToRecording (pSharedTsb->tsbId(), spec.recordingId());
+    if (RMF_RESULT_SUCCESS != retResult)
     {
-        DEBUG_PRINT("DVRSink init() FAILURE");
-        delete dvrSink;
-        return FAILURE;
+    	DEBUG_PRINT ("Recording failed, releasing shared TSB\n");
+    	SharedTSB::releaseSharedTSB (pSharedTsb);
+    	hnSource = NULL;
+    	dvrSink = NULL;
+    
+    	return FAILURE;
     }
-    DEBUG_PRINT("DVRSink instance Init SUCCESS");
-
-    DEBUG_PRINT("SetSource Hnsrc instance");
-    retResult = dvrSink->setSource(hnSource);
-    if(RMF_RESULT_SUCCESS != retResult)
-    {
-        DEBUG_PRINT("Error: DVRSink setSource() FAILURE");
-        dvrSink->term();
-        delete dvrSink;
-        return FAILURE;
-    }
-    DEBUG_PRINT("DVRSink instance setSource SUCCESS");
-
-    DEBUG_PRINT("RMF DVRSink Initialization Successful");
-
+    DEBUG_PRINT ("Successfully converted TSB to recording\n");    
+    
     return SUCCESS;
 }
 
