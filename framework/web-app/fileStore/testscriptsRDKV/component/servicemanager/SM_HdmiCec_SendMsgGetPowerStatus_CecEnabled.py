@@ -129,7 +129,7 @@ else:
 
 #Test component to be tested
 smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
-iarmObj = tdklib.TDKScriptingLibrary("iarmbus","2.0");
+iarmObj = tdklib.TDKScriptingLibrary("iarmbus","1.3");
 
 smObj.configureTestCase(ip,port,'"SM_HdmiCec_SendMsgGetPowerStatus_CecEnabled');
 iarmObj.configureTestCase(ip,port,'"SM_HdmiCec_SendMsgGetPowerStatus_CecEnabled');
@@ -167,11 +167,25 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                                 print "[TEST EXECUTION DETAILS] : ",setEnabledDetails;
                                 if expectedresult in actualresult:
 					tdkTestObj.setResultStatus("SUCCESS");
+					sleep(30)
+					tdkTestObj = smObj.createTestStep('SM_RegisterForEvents');
+                                        expectedresult = "SUCCESS"
+                                        expectedresult="SUCCESS"
+                                        event_name="onMessage";
+                                        tdkTestObj.addParameter("service_name",service_name);
+                                        tdkTestObj.addParameter("event_name",event_name);
+                                        tdkTestObj.executeTestCase(expectedresult);
+                                        actualresult= tdkTestObj.getResult();
+                                        if expectedresult in actualresult:
+                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                eventregisterdetail =tdkTestObj.getResultDetails();
+                                                print eventregisterdetail;
+                                                print "SUCCESS: Application succesfully executes SM_RegisterForEvents API";
 
                                         #Sending the message to the connected device
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
-                                        message = "30 8F 53 65 74 74 " + str(b2a_hex(urandom(1))).upper()
+                                        message = "30 8F"
 					print "Message to be sent to HDMI device: ",message
 	                                tdkTestObj.addParameter("messageToSend",message);
 	                                tdkTestObj.executeTestCase(expectedresult);
@@ -182,7 +196,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 						tdkTestObj.setResultStatus("SUCCESS");
 
                                                 #Wait for data to be printed to cec log
-                                                sleep(70)
+                                                sleep(30)
 
 						#Check for the message sent for confirmation.
 						tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
@@ -197,60 +211,41 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 							logpath=tdkTestObj.getLogPath();
 							print "Log path : %s" %logpath;
 							#tdkTestObj.transferLogs(logpath,"false");
-							
-							#Check for the reply from the Cec device.
-							tdkTestObj = smObj.createTestStep('SM_RegisterForEvents');	
-		                                        expectedresult = "SUCCESS"
-                                                        expectedresult="SUCCESS"
-                                                        event_name="onMessage";
+                                                        tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
+                		                        expectedresult = "SUCCESS"
+                                                        #Assuming TV is on and should receive power state 039000
+                                		        pattern = "03 90 00"
+		                                        tdkTestObj.addParameter("pattern",pattern);
+		                                        tdkTestObj.executeTestCase(expectedresult);
+                		                        actualresult = tdkTestObj.getResult();
+		                                        patternDetails= tdkTestObj.getResultDetails();
+		                                        print "[TEST EXECUTION DETAILS] : ",patternDetails;
+							if expectedresult in actualresult:
+	                        	                        tdkTestObj.setResultStatus("SUCCESS");
+        	                        	                logpath=tdkTestObj.getLogPath();
+                	                        	        print "Log path : %s" %logpath;
+                        	                                #tdkTestObj.transferLogs(logpath,"false");
+							else:
+								tdkTestObj.setResultStatus("FAILURE");
+								logpath=tdkTestObj.getLogPath();
+								print "Log path : %s" %logpath;
+								#tdkTestObj.transferLogs(logpath,"false");
+
+                                                        tdkTestObj = smObj.createTestStep('SM_UnRegisterForEvents');
                                                         tdkTestObj.addParameter("service_name",service_name);
                                                         tdkTestObj.addParameter("event_name",event_name);
                                                         tdkTestObj.executeTestCase(expectedresult);
                                                         actualresult= tdkTestObj.getResult();
+                                                        #Check for SUCCESS/FAILURE return value of SM_RegisterForEvents
                                                         if expectedresult in actualresult:
-                                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                                eventregisterdetail =tdkTestObj.getResultDetails(); 
-                                                                print eventregisterdetail;
-                                                                print "SUCCESS: Application succesfully executes SM_RegisterForEvents API";
-                                                                sleep(70)
-                                                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_CheckStatus');
-                		                                expectedresult = "SUCCESS"
-                                                                #Assuming TV is on and should receive power state 039000
-                                		                pattern = "03 90 00"
-		                                                tdkTestObj.addParameter("pattern",pattern);
-		                                                tdkTestObj.executeTestCase(expectedresult);
-                		                                actualresult = tdkTestObj.getResult();
-		                                                patternDetails= tdkTestObj.getResultDetails();
-		                                                print "[TEST EXECUTION DETAILS] : ",patternDetails;
-								if expectedresult in actualresult:
-	                        	                                tdkTestObj.setResultStatus("SUCCESS");
-        	                        	                        logpath=tdkTestObj.getLogPath();
-                	                        	                print "Log path : %s" %logpath;
-                        	                        	        #tdkTestObj.transferLogs(logpath,"false");
-								else:
-									tdkTestObj.setResultStatus("FAILURE");
-									logpath=tdkTestObj.getLogPath();
-									print "Log path : %s" %logpath;
-									#tdkTestObj.transferLogs(logpath,"false");
-                                                                tdkTestObj = smObj.createTestStep('SM_UnRegisterForEvents');
-                                                                tdkTestObj.addParameter("service_name",service_name);
-                                                                tdkTestObj.addParameter("event_name",event_name);
-                                                                tdkTestObj.executeTestCase(expectedresult);
-                                                                actualresult= tdkTestObj.getResult();
-                                                                #eventregisterdetail =tdkTestObj.getResultDetails();
-                                                                #Check for SUCCESS/FAILURE return value of SM_RegisterForEvents
-                                                                if expectedresult in actualresult:
-                                                                        tdkTestObj.setResultStatus("SUCCESS");
-                                                                        eventregisterdetail =tdkTestObj.getResultDetails(); 
-                                                                        print eventregisterdetail;
-                                                                        print "SUCCESS: Application succesfully executes SM_UnRegisterForEvents API";
-                                                                else:
-                                                                        tdkTestObj.setResultStatus("FAILURE");
-                                                                        print "FAILURE: Application Failed to execute SM_UnRegisterForEvents API";
-
+                                                            tdkTestObj.setResultStatus("SUCCESS");
+                                                            eventregisterdetail =tdkTestObj.getResultDetails(); 
+                                                            print eventregisterdetail;
+                                                            print "SUCCESS: Application succesfully executes SM_UnRegisterForEvents API";
                                                         else:
-                                                                tdkTestObj.setResultStatus("FAILURE");
-                                                                print "FAILURE: Application Failed to execute SM_RegisterForEvents API";
+                                                            tdkTestObj.setResultStatus("FAILURE");
+                                                            print "FAILURE: Application Failed to execute SM_UnRegisterForEvents API";
+
                                                 else:
 							tdkTestObj.setResultStatus("FAILURE");
 							logpath=tdkTestObj.getLogPath();
