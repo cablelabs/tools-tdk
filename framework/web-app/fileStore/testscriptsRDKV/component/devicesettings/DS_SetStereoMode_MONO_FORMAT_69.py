@@ -104,13 +104,13 @@ if "SUCCESS" in loadmodulestatus.upper():
         tdkTestObj.executeTestCase(expectedresult);
         actualresult = tdkTestObj.getResult();
         #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize 
-        if expectedresult in actualresult:
-                tdkTestObj.setResultStatus("SUCCESS");
+	if expectedresult in actualresult:
+       	        tdkTestObj.setResultStatus("SUCCESS");
                 #calling DS_GetSupportedStereoModes get list of StereoModes.
                 tdkTestObj = obj.createTestStep('DS_GetSupportedStereoModes');
                 tdkTestObj.addParameter("port_name","HDMI0");
                 expectedresult="SUCCESS"
-                tdkTestObj.executeTestCase(expectedresult);
+		tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
                 stereomodedetails = tdkTestObj.getResultDetails();
                 #Check for SUCCESS/FAILURE return value of DS_GetSupportedStereoModes
@@ -120,42 +120,48 @@ if "SUCCESS" in loadmodulestatus.upper():
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE :Failed to get supported streoe modes";
-                #calling DS_SetStereoMode to get and set the stereo modes
-                tdkTestObj = obj.createTestStep('DS_SetStereoMode');
-                stereomode="MONO";
-                print "Stereo mode value set to:%s" %stereomode;  
-                tdkTestObj.addParameter("stereo_mode",stereomode);
-                expectedresult="SUCCESS"
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                stereomodedetails = tdkTestObj.getResultDetails();
-                #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
-                if expectedresult in actualresult:
-                        print "SUCCESS :Application successfully get and set the MONO stereo mode";
-                        print "getstereomode: %s" %stereomodedetails;
-                        #comparing stereo modes before and after setting
-                        if stereomode in stereomodedetails:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: Both the stereo modes are same";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: Both the stereo modes are not same";
-                else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                        print "FAILURE :Application failed to set and get the MONO stereo mode";
-                #calling DS_ManagerDeInitialize to DeInitialize API 
-                tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
-                expectedresult="SUCCESS"
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                #Check for SUCCESS/FAILURE return value of DS_ManagerDeInitialize 
-                if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        print "SUCCESS :Application successfully DeInitialized the DeviceSetting library";
-                else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                        print "FAILURE: Deinitalize failed" ;
-        else:
+		#Check for MONO among the return value of DS_GetSupportedStereoModes
+		if "MONO" in stereomodedetails:
+			#calling DS_SetStereoMode to get and set the stereo modes
+                	tdkTestObj = obj.createTestStep('DS_SetStereoMode');
+                	stereomode="MONO";
+                	print "Stereo mode value set to:%s" %stereomode;  
+                	tdkTestObj.addParameter("stereo_mode",stereomode);
+                	expectedresult="SUCCESS"
+                	tdkTestObj.executeTestCase(expectedresult);
+                	actualresult = tdkTestObj.getResult();
+                	stereomodedetails = tdkTestObj.getResultDetails();
+                	#Check for SUCCESS/FAILURE return value of DS_SetStereoMode
+                	if expectedresult in actualresult:
+                        	print "SUCCESS :Application successfully get and set the MONO stereo mode";
+                        	print "getstereomode: %s" %stereomodedetails;
+                        	#comparing stereo modes before and after setting
+                        	if stereomode in stereomodedetails:
+                                	tdkTestObj.setResultStatus("SUCCESS");
+                                	print "SUCCESS: Both the stereo modes are same";
+                        	else:
+                                	tdkTestObj.setResultStatus("FAILURE");
+                                	print "FAILURE: Both the stereo modes are not same";
+                	else:
+                        	tdkTestObj.setResultStatus("FAILURE");
+                        	print "FAILURE :Application failed to set and get the MONO stereo mode";
+               
+		 	#calling DS_ManagerDeInitialize to DeInitialize API 
+                	tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
+                	expectedresult="SUCCESS"
+                	tdkTestObj.executeTestCase(expectedresult);
+                	actualresult = tdkTestObj.getResult();
+                	#Check for SUCCESS/FAILURE return value of DS_ManagerDeInitialize 
+                	if expectedresult in actualresult:
+                        	tdkTestObj.setResultStatus("SUCCESS");
+                        	print "SUCCESS :Application successfully DeInitialized the DeviceSetting library";
+                	else:
+                        	tdkTestObj.setResultStatus("FAILURE");
+                        	print "FAILURE: Deinitalize failed" ;
+      		else:
+	  		tdkTestObj.setResultStatus("FAILURE");
+			print "FAILURE: Device does not support MONO mode"
+	else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "FAILURE: Device Setting Initialize failed";
         print "[TEST EXECUTION RESULT] : %s" %actualresult;
