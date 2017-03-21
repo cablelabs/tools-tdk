@@ -240,8 +240,6 @@ if Expected_Result in loadModuleStatus.upper():
 
                                                                                                    
 													if Expected_Result in result.upper():
-														time.sleep(15)
-														
 														result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
 														result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
 														if Expected_Result in result.upper():

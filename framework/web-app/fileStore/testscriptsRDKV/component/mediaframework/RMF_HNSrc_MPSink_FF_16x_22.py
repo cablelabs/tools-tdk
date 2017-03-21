@@ -220,7 +220,6 @@ if Expected_Result in loadModuleStatus.upper():
 												time.sleep(20);
 												result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
 												if Expected_Result in result.upper():
-													time.sleep(5);
 													result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
 													if Expected_Result in result.upper():			
 														Mediaspeed[1]=float(Mediaspeed[1]);
