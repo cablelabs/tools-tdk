@@ -69,10 +69,10 @@ LDOPTS    +=  -L $(IMAGE_PATH)/usr/local/lib \
               -L $(IMAGE_PATH)/usr/lib \
               -L $(RDK_BUILD_DIR)/opensource/openssl \
               -L $(RDK_BUILD_DIR)/opensource/lib \
-              -llog4c -lrdkloggers -lrmfosalutils -lrmfosal -lrmfbase -lglib-2.0 -lgobject-2.0 -lgmodule-2.0 -lhnsource -lmediaplayersink
+	      -llog4c -lrdkloggers -lrmfosalutils -lrmfosal -lrmfbase -lglib-2.0 -lgobject-2.0 -lgmodule-2.0 -lhnsource -lmediaplayersink
 
 ifneq ($(SINGLE_TUNER_IP_CLIENT),y)
-LDOPTS    +=  -ldvrmgr -lTasseograph -ldvrsink -ldvrmgrsoc -ltinyxml -luuid -lrbifilter -lrbi -lsharedtsb
+LDOPTS    +=  -ldvrmgr -lTasseograph -ltrm -ldvrsink -ldvrmgrsoc -ltinyxml -luuid -lrbifilter -lrbi -lsharedtsb
 endif
 
 BOPTS   := -shared
