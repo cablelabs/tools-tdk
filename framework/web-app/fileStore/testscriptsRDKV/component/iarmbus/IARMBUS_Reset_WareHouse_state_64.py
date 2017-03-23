@@ -31,7 +31,7 @@ Test case Id - CT_IARMBUS_64</synopsis>
   <execution_time>3</execution_time>
   <long_duration>false</long_duration>
   <remarks>Causes warehouse reset of the box</remarks>
-  <skip>true</skip>
+  <skip>false</skip>
   <box_types>
     <box_type>Hybrid-1</box_type>
     <box_type>Emulator-HYB</box_type>
@@ -80,7 +80,7 @@ IARM_Bus_Term : None</input_parameters>
 4.TestMgr_IARMBUS_Disconnect
 5.TestMgr_IARMBUS_BusCall</test_stub_interface>
     <test_script>IARMBUS_Reset_WareHouse_state_64</test_script>
-    <skipped>Yes</skipped>
+    <skipped>No</skipped>
     <release_version>M21</release_version>
     <remarks/>
   </test_cases>
