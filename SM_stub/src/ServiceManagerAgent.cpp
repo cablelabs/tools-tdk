@@ -18,7 +18,6 @@
 */
 
 #include "ServiceManagerAgent.h"
-
 #ifdef HAS_API_APPLICATION
 QString listToString(QVariantList conInfo);
 
@@ -243,7 +242,11 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode,"TestMgr_SM_AVInputService_GetCurrentVideoMode");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_AVInputService_IsContentProtected,"TestMgr_SM_AVInputService_IsContentProtected");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_RunSMEvent_QtApp,"TestMgr_SM_RunSMEvent_QtApp");
-
+	/*VideoApplicationEventsService APIs*/
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_VideoApplicationEventsService_SetEnable,"TestMgr_SM_VideoApplicationEventsService_SetEnable");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent,"TestMgr_SM_VideoApplicationEventsService_IsEnableEvent");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications,"TestMgr_SM_VideoApplicationEventsService_SetApplications");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications,"TestMgr_SM_VideoApplicationEventsService_GetApplications");
 	return TEST_SUCCESS;
 }
 
@@ -413,6 +416,12 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
         {
                 serviceStruct.createFunction = &createWebSocketService;
         }
+#endif
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+	else if (serviceName == VideoApplicationEventsService::SERVICE_NAME)
+	{
+		serviceStruct.createFunction = &createVideoApplicationEventsService;
+	}
 #endif
 #ifdef HAS_API_HDMI_CEC
         else if (serviceName == HdmiCecService::SERVICE_NAME)
@@ -2706,6 +2715,243 @@ bool ServiceManagerAgent::SM_AVInputService_IsContentProtected(IN const Json::Va
 
 
 /***************************************************************************
+ *Function name : SM_VideoApplicationEventsService_SetEnable 
+ *Descrption    : This function will enable/disable Video Application Events
+ *parameter [in]: req - valueToSetEnabled - value corresponding event enable/disable
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetEnable(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_SetEnable---->Entry\n");
+
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+        Service* ptrService = NULL;
+        ServiceParams inParams, resultParams;
+        QVariantList inList;
+        bool valueToSetEnabled = req["valueToSetEnabled"].asInt();
+        if (ServiceManager::getInstance()->doesServiceExist(VideoApplicationEventsService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(VideoApplicationEventsService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        inList.append(valueToSetEnabled);
+                        inParams["params"] = inList;
+
+                        resultParams = ptrService->callMethod("setEnabled", inParams);
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Set Enable event success");
+                                response["details"] = "Set Enable event success";
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Set Enable event failed");
+                                response["details"] = "Set Enable event failed";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+        	DEBUG_PRINT(DEBUG_TRACE,"Video Application Events Service does not exist\n");
+                response["details"] = "Video Application Events Service does not exist";
+                response["result"] = "FAILURE";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Video Application Events Service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Video Application Events Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_SetEnable---->Exit\n");
+        return TEST_FAILURE;
+}
+
+
+/***************************************************************************
+ *Function name : SM_VideoApplicationEventsService_IsEnableEvent
+ *Descrption    : This function will check if Video Application Events are enabled or not
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_IsEnableEvent---->Entry\n");
+
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+        Service* ptrService = NULL;
+        ServiceParams inParams, resultParams;
+        if (ServiceManager::getInstance()->doesServiceExist(VideoApplicationEventsService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(VideoApplicationEventsService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        resultParams = ptrService->callMethod("isEnabled", inParams);
+                        bool status = resultParams["success"].toBool();
+			printf("ENABLE STATUS: %d\n", status);
+                        if(status)
+                        {
+				char enableStatus[STR_DETAILS_20] = {'\0'};
+                                DEBUG_PRINT(DEBUG_TRACE,"Event enable data retrieved");
+                                sprintf(enableStatus,"%d",resultParams["enabled"].toBool());
+                                response["details"] = enableStatus;
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Failed to retrieve event enable data");
+                                response["details"] = "Failed to retrieve event enable data";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+        	DEBUG_PRINT(DEBUG_TRACE,"Video application events service does not exist\n");
+                response["details"] = "Video application events service does not exist";
+                response["result"] = "FAILURE";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Video application events service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Video application events service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_IsEnableEvent---->exit\n");
+        return TEST_FAILURE;
+}
+
+
+bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_SetApplications---->entry\n");
+
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+        Service* ptrService = NULL;
+        ServiceParams inParams, resultParams;
+        QVariantList inList, appList;
+	QHash<QString,QVariant> appDetails;
+
+	appDetails["applicationName"] = req["applicationName"].asCString();
+	appDetails["maxRandomDelay"] = req["maxRandomDelay"].asInt();
+	appDetails["filters"] = req["filters"].asCString();
+	printf("APPLICATION NAME: %s\n", req["applicationName"].asCString());
+
+	appList << appDetails;
+
+        if (ServiceManager::getInstance()->doesServiceExist(VideoApplicationEventsService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(VideoApplicationEventsService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        inList.insert(0, appList);
+                        inParams["params"] = inList;
+
+                        resultParams = ptrService->callMethod("setApplications", inParams);
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Applications set successfully");
+                                response["details"] = "Applications set successfully";
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Application set failed");
+                                response["details"] = "Application set failed";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+        	DEBUG_PRINT(DEBUG_TRACE,"Video application events service does not exist\n");
+                response["details"] = "Video application events service does not exist";
+                response["result"] = "FAILURE";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Video application events service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Video application events service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_SetApplications-------->exit\n");
+        return TEST_FAILURE;
+}
+
+bool ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_GetApplications---->entry\n");
+
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+        Service* ptrService = NULL;
+        ServiceParams inParams, resultParams;
+        QVariantList inList, appList;
+
+        if (ServiceManager::getInstance()->doesServiceExist(VideoApplicationEventsService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(VideoApplicationEventsService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        resultParams = ptrService->callMethod("getApplications", inParams);
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"applications retrieved successfully");
+				char appData[STR_DETAILS_200] = {'\0'};
+				QVariantList appArray;
+				QHash<QString,QVariant> appDetails;
+				QString appString = "[";
+				
+				appArray = resultParams["applications"].toList();
+				int  k = 0 ;
+				if(0 != appArray.size())
+				{
+					for(k = 0; k < appArray.size(); k++)
+    					{
+						appString += "{";
+        					appDetails = appArray.at(k).toHash();
+						sprintf(appData,"{\"applicationName\":%s, \"maxRandomDelay\":%d, \"filters\" : null}", appDetails["applicationName"].toString().toStdString().c_str(), appDetails["maxRandomDelay"].toInt());
+					}
+					appString += appData; 
+				}
+				appString += "]";
+
+                                response["details"] = appString.toUtf8().constData();
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Application get failed");
+                                response["details"] = "Application get failed";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+        	DEBUG_PRINT(DEBUG_TRACE,"Video application events service does not exist\n");
+                response["details"] = "Video application events service does not exist";
+                response["result"] = "FAILURE";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Video application events service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Video application events service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_GetApplications---->exit\n");
+        return TEST_FAILURE;
+}
+
+
+
+
+
+/***************************************************************************
  *Function name : SM_RunSMEvent_QtApp
  *Descrption    : This function will execute the QT application SMEventApp to test a given event's propagation
  *parameter [in]: req - service_name - name of SM service whose event is to be tested
@@ -2827,6 +3073,11 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_GetCurrentVideoMode");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_AVInputService_IsContentProtected");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_RunSMEvent_QtApp");
+	/*VideoApplicationService APIs*/
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_VideoApplicationEventsService_SetEnable");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_VideoApplicationEventsService_IsEnableEvent");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_VideoApplicationEventsService_SetApplications");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_VideoApplicationEventsService_GetApplications");
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;
 }

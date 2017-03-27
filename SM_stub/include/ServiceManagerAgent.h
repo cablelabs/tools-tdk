@@ -111,6 +111,10 @@ using namespace std;
 #endif
 #define QT_APP "/opt/TDK/SMEventApp"
 
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+#include "videoapplicationeventsservice.h"
+#endif
+
 #define IN
 #define OUT
 
@@ -192,6 +196,11 @@ class ServiceManagerAgent : public RDKTestStubInterface
                 bool SM_AVInputService_GetCurrentVideoMode(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_AVInputService_IsContentProtected(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_RunSMEvent_QtApp(IN const Json::Value& req, OUT Json::Value& response);
+		/*VideoApplicationEventsService APIs*/
+		bool SM_VideoApplicationEventsService_SetEnable(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_VideoApplicationEventsService_IsEnableEvent(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_VideoApplicationEventsService_SetApplications(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_VideoApplicationEventsService_GetApplications(IN const Json::Value& req, OUT Json::Value& response);
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
 		

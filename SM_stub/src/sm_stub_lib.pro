@@ -21,6 +21,7 @@ QT += widgets network core gui
 DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
 DEFINES += USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
 DEFINES += QT_WEBKIT_LIB
+DEFINES += HAS_API_VIDEO_APPLICATION_EVENTS
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -110,4 +111,9 @@ contains(DEFINES,HAS_API_AVINPUT) {
                            ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinput.h
                 SOURCES += $$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/src/helpers/avinputhelper.cpp
         }
+}
+
+contains(DEFINES,HAS_API_VIDEO_APPLICATION_EVENTS) {
+	HEADERS += ../servicemanager/include/services/videoapplicationeventsservice.h 
+	SOURCES += ../servicemanager/src/services/videoapplicationeventsservice.cpp
 }
