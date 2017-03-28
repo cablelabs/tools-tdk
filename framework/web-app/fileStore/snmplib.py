@@ -30,7 +30,30 @@ import signal
 import subprocess
 import tdklib
 import pipes
+import urllib
+import json
 
+def getDeviceBoxType(self):
+
+        # Create an object for getDeviceBoxType
+
+        # Syntax      : OBJ.getDeviceBoxType()
+        # Description : Create an object of Device Box Type
+        # Parameters  : None
+        # Return Value: Return the box type
+
+                 url = self.url + '/deviceGroup/getDeviceBoxType?deviceIp='+self.ip
+                 response = urllib.urlopen(url).read()
+                 if 'SUCCESS' in response:
+                        boxType = json.loads(response)
+                 else:
+                        print "#TDK_@error-ERROR : Unable to get Device Box Type from REST !!!"
+                        exit()
+
+                 sys.stdout.flush()
+                 return boxType['boxtype']
+
+        ########## End of Function ##########
 
 def SnmpExecuteCmd(Obj,SnmpMethod,SnmpVersion,OID,IP_Address):
 
@@ -43,11 +66,11 @@ def SnmpExecuteCmd(Obj,SnmpMethod,SnmpVersion,OID,IP_Address):
 	# IP_Address   : IP address of the device
         # Return Value : Console output of the snmp command
 
-
 	expectedResult="SUCCESS";
         Obj.executeTestCase(expectedResult);	
         actualresult = Obj.getResult();
         details = Obj.getResultDetails().strip();
+	BoxType = getDeviceBoxType(Obj);
         print "result", actualresult, details;
 
 	if expectedResult not in actualresult:
@@ -56,7 +79,7 @@ def SnmpExecuteCmd(Obj,SnmpMethod,SnmpVersion,OID,IP_Address):
 	if "." in IP_Address:
 		
 		# Constructing Query Command
-		if SnmpMethod == "snmpset":
+		if "Emulator" in BoxType and SnmpMethod == "snmpset":
 			details = "private";
 
 		cmd=SnmpMethod + ' -OQ -Ir ' + SnmpVersion + ' -c ' + details + ' ' + IP_Address + ' ' +  OID
