@@ -233,6 +233,16 @@
 	  <parameter name="service_name" value=""/>
         </parameters>
 	</primitiveTest>
+	<primitiveTest name="SM_VideoApplicationEventsService_SetEnable" id=" " version="1">
+        <function>TestMgr_SM_VideoApplicationEventsService_SetEnable</function>
+        <parameters>
+          <parameter name="valueToSetEnabled" value=""/>
+        </parameters>
+        </primitiveTest>
+        <primitiveTest name="SM_VideoApplicationEventsService_IsEnableEvent" id=" " version="1">
+        <function>TestMgr_SM_VideoApplicationEventsService_IsEnableEvent</function>
+        <parameters/>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>
