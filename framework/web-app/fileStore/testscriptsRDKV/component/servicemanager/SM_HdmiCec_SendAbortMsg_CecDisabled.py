@@ -171,7 +171,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
 	                                tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
 	                                expectedresult = "SUCCESS"
 					#Send the random message.
-                                        message = "30 FF 00 FF FF FF " + str(b2a_hex(urandom(1))).upper()
+                                        message = "30 FF"
                                         print "Message to be sent to HDMI device: ",message
 	                                tdkTestObj.addParameter("messageToSend",message);
 	                                tdkTestObj.executeTestCase(expectedresult);

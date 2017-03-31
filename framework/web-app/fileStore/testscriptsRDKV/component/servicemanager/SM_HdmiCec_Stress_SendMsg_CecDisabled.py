@@ -173,7 +173,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
         					#Set the device Name
        	 					tdkTestObj = smObj.createTestStep('SM_HdmiCec_SendMessage');
         					expectedresult = "SUCCESS"
-        					message = "30 8F 53 69 74 76 " + str(b2a_hex(urandom(1))).upper()
+        					message = "30 8F"
 						print "Message to be sent to HDMI device: ",message
         					tdkTestObj.addParameter("messageToSend",message);
         					tdkTestObj.executeTestCase(expectedresult);
