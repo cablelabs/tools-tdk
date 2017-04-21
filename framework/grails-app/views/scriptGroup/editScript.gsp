@@ -171,11 +171,7 @@ function clearLocks(scriptName){
 			</tr>
 			<tr>
 				<td style="width: 15%;">Script Content</td>
-				<td style="width: 80%;"><g:textArea id="scriptArea"
-						name="scriptArea" class="scriptArea"
-						style="color:RGB(130,15,15);font-size:12px">
-						${script.scriptContent}
-					</g:textArea></td>
+				<td style="width: 80%;"><g:textArea id="scriptArea" name="scriptArea" class="scriptArea" style="color:RGB(130,15,15);font-size:12px">${script.scriptContent}</g:textArea></td>
 			</tr>
 			<tr>
 				<td></td>

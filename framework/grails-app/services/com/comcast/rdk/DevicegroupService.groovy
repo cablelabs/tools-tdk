@@ -40,7 +40,8 @@ class DevicegroupService {
             deviceGrpInstance = new DeviceGroup()     
             deviceGrpInstance.name = boxType
         }        
-            
+        
+        deviceGrpInstance?.category = deviceInstance?.category
         deviceGrpInstance?.addToDevices(deviceInstance)
         deviceGrpInstance?.save(flush:true)
 
