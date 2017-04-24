@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xml>
+  <module name="netsrvmgr" testGroup="Component">
+    <primitiveTests>
+      <primitiveTest id="" name="NetSrvMgr_WifiMgr_GetAvailableSSIDs" version="1">
+        <function>TestMgr_NetSrvMgr_WifiMgrGetAvailableSSIDs</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="NetSrvMgr_WifiMgr_GetCurrentState" version="1">
+        <function>TestMgr_NetSrvMgr_WifiMgrGetCurrentState</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="NetSrvMgr_WifiMgr_GetLAFState" version="1">
+        <function>TestMgr_NetSrvMgr_WifiMgrGetLAFState</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="NetSrvMgr_WifiMgr_GetPairedSSID" version="1">
+        <function>TestMgr_NetSrvMgr_WifiMgrGetPairedSSID</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest name="NetSrvMgr_WifiMgr_SetEnabled" id=" " version="1">
+        <function>TestMgr_NetSrvMgr_WifiMgrSetEnabled</function>
+        <parameters>
+          <parameter name="enable" value="0"/>
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>

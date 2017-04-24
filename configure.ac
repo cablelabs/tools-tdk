@@ -124,7 +124,7 @@ AC_ARG_ENABLE([client],
         [
           case "${enableval}" in
              yes) CLIENT=true
-                  SUBDIR_CLIENT="TR069_stub"
+                  SUBDIR_CLIENT="TR069_stub NetSrvMgr_stub"
                   TDKINTEGRATION_FLAGS="-DIPCLIENT" ;;
            no) CLIENT=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
@@ -232,6 +232,7 @@ AC_CONFIG_FILES([Makefile
          TDKIntegration_Stub/Makefile
          Mediaframework_stub/Makefile
          MediaStreamer_stub/Makefile
+	 NetSrvMgr_stub/Makefile
          OpenSourceComponent_Stub/Makefile
          TR069_stub/Makefile
          TRM_stub/Makefile
