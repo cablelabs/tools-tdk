@@ -22,6 +22,12 @@
 using namespace std;
 bool bBenchmarkEnabled;
 QApplication *app;
+
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+static VideoApplicationEventsService * pVideoApplicationEventsService = NULL;
+static VideoApplicationSignalListener *plistener = NULL;
+#endif 
+
 void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t len);
 
 #ifdef HAS_API_AVINPUT
@@ -59,6 +65,66 @@ void DisListener::onServiceEvent(const QString& event, ServiceParams params)
 }
 #endif
 
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+void VideoApplicationSignalListener::onServiceEvent(const QString& event, ServiceParams params)
+{
+	if (event == VideoApplicationEventsService::EVT_ON_START)
+	{
+        	DEBUG_PRINT(DEBUG_TRACE,"EVT_ON_START event receieved");
+    	}
+    	if (event == VideoApplicationEventsService::EVT_ON_COMPLETTE)
+    	{
+        	DEBUG_PRINT(DEBUG_TRACE,"EVT_ON_COMPLETTE event receieved");
+    	}
+    	if (event == VideoApplicationEventsService::EVT_ON_WATCHED)
+    	{
+        	DEBUG_PRINT(DEBUG_TRACE,"EVT_ON_WATCHED event receieved");
+    	}
+	app->exit();
+}
+
+bool startVideoApplicationEventsService(void)
+{
+        bool bReturn = false;
+        printf("Create new instance of VideoApplicationEventsService\n");
+        if (ServiceManager::getInstance()->doesServiceExist(VideoApplicationEventsService::SERVICE_NAME))
+        {
+                pVideoApplicationEventsService = dynamic_cast<VideoApplicationEventsService*>(ServiceManager::getInstance()->createService(VideoApplicationEventsService::SERVICE_NAME));
+                if (pVideoApplicationEventsService != NULL)
+                {
+                        printf("pVideoApplicationEventsService = %p\n", pVideoApplicationEventsService);
+                        bReturn = true;
+                }
+                else
+                {
+                        printf("Failed to create instance of VideoApplicationEventsService\n");
+                }
+        }
+        else
+        {
+                printf("Video application Service does not exist");
+        }
+
+        return bReturn;
+}
+
+void stopVideoApplicationEventsService(void)
+{
+        printf("Delete instance of VideoApplicationEventsService\n");
+        if (pVideoApplicationEventsService != NULL)
+        {
+                printf("Delete %p\n", pVideoApplicationEventsService);
+                delete pVideoApplicationEventsService;
+                pVideoApplicationEventsService = NULL;
+                printf("\nDeleted service successfully\n");
+        }
+        else
+        {
+                printf("ETV Service does not exist");
+        }
+}
+#endif
+
 
 bool sm_create(QString serviceName)
 {
@@ -82,9 +148,25 @@ bool sm_create(QString serviceName)
         }
         else
 #endif
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+        if (serviceName == VideoApplicationEventsService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createVideoApplicationEventsService;
+		serviceStruct.serviceName = serviceName;
+        }
+	else
+#endif
 		return registerStatus;
         registerStatus = ServiceManager::getInstance()->registerService(serviceName, serviceStruct);
 
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+        if (serviceName == VideoApplicationEventsService::SERVICE_NAME)
+        {
+		registerStatus = startVideoApplicationEventsService(); 
+		printf("*******************************create\n");
+		return registerStatus;
+        }
+#endif
 	return registerStatus;
 }
 
@@ -98,6 +180,18 @@ bool sm_event_register(QString serviceName, QString eventName)
         ServiceListener *listener=NULL;
 
 	DEBUG_PRINT(DEBUG_TRACE,"Registering event %s for the service %s \n", eventName.toUtf8().constData(), serviceName.toUtf8().constData());
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+        if(serviceName == VideoApplicationEventsService::SERVICE_NAME)
+        {
+		ptr_service = pVideoApplicationEventsService;
+                plistener = new VideoApplicationSignalListener();
+		listener = plistener;
+                if(!listener)
+                        return registerStatus;
+        }
+#else
+	ptr_service = ServiceManager::getInstance()->getGlobalService(serviceName);
+#endif
 
 #ifdef HAS_API_AVINPUT
 	if(eventName == AVInputService::EVENT_NAME_ON_AVINPUT_ACTIVE)
@@ -120,6 +214,22 @@ bool sm_event_register(QString serviceName, QString eventName)
                 listener = new DisListener();
                 if(!listener)
                         return registerStatus;
+        }
+	else
+#endif
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+        if(eventName == VideoApplicationEventsService::EVT_ON_START)
+        {
+                event_list.append(VideoApplicationEventsService::EVT_ON_START);
+		printf("EVT_ON_START\n");
+        }
+	else if(eventName == VideoApplicationEventsService::EVT_ON_COMPLETTE)
+        {
+                event_list.append(VideoApplicationEventsService::EVT_ON_COMPLETTE);
+        }
+	else if(eventName == VideoApplicationEventsService::EVT_ON_WATCHED)
+        {
+                event_list.append(VideoApplicationEventsService::EVT_ON_WATCHED);
         }
 	else
 #endif
@@ -163,6 +273,35 @@ void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, s
 		default:
 			break;
 	}
+}
+
+void trigger_event(unsigned char app_signal)
+{
+	QByteArray application_id(6, 0);
+	unsigned int locator_id = 0;
+	application_id[0] = 0x00;
+        application_id[1] = 0x00;
+        application_id[2] = 0x14;
+        application_id[3] = 0xd5;
+        application_id[4] = 0x00;
+        application_id[5] = 0x00;
+        sleep(10);
+        pVideoApplicationEventsService->setEnabled(true);
+        if( true == pVideoApplicationEventsService->isEnabled())
+        {
+                printf("Enabled event\n");
+        }
+        QVariantList AppArray;
+        QVariantList getAppArray;
+        QHash<QString,QVariant> AppDetails;
+        AppDetails["applicationName"] = "advertisement";
+        AppDetails["maxRandomDelay"] = 15;
+        AppDetails["filters"] = NULL;
+        AppArray << AppDetails;
+        pVideoApplicationEventsService->setApplications(AppArray);
+        printf("pVideoApplicationEventsService 2nd = %p\n", pVideoApplicationEventsService);
+
+	ServiceManagerNotifier::getInstance()->notifyEISSAppSignal(application_id, app_signal, locator_id);	
 }
 
 IARM_Result_t iarm_broadcast(QString eventName, QString eventParam)
@@ -245,10 +384,19 @@ int main(int argc, char* argv[])
 	{
 		DEBUG_PRINT(DEBUG_TRACE,"SM creation failed\n");
 		return FAIL;
-	}	
-
+	}
+	sleep(5);
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+	if (eventName ==  VideoApplicationEventsService::EVT_ON_START)
+		trigger_event(EISS_STATUS_ON_START);
+	else if (eventName == VideoApplicationEventsService::EVT_ON_COMPLETTE)
+		trigger_event(EISS_STATUS_ON_COMPLETE);
+	else if (eventName == VideoApplicationEventsService::EVT_ON_WATCHED)
+		trigger_event(EISS_STATUS_ON_WATCHED);
+#else
 	if( iarm_broadcast(eventName, eventParam) )
 		return FAIL;
+#endif
 
 	DEBUG_PRINT(DEBUG_TRACE,"Starting main loop\n");
 	int ret = app->exec();
