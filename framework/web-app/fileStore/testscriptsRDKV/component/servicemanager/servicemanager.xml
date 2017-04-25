@@ -243,6 +243,17 @@
         <function>TestMgr_SM_VideoApplicationEventsService_IsEnableEvent</function>
         <parameters/>
       </primitiveTest>
+      <primitiveTest name="SM_VideoApplicationEventsService_SetApplications" id=" " version="1">
+        <function>TestMgr_SM_VideoApplicationEventsService_SetApplications</function>
+        <parameters>
+          <parameter name="appString" value=""/>
+          <parameter name="count" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name="SM_VideoApplicationEventsService_GetApplications" id="" version="1">
+        <function>TestMgr_SM_VideoApplicationEventsService_GetApplications</function>
+        <parameters/>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>
