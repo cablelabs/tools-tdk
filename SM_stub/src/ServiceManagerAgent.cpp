@@ -2823,6 +2823,12 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent(IN cons
 }
 
 
+/***************************************************************************
+ *Function name : SM_VideoApplicationEventsService_SetApplications
+ *Description    : This function will set the Application Filter
+ *parameter [in]: req - appString - String corresponding to the application filter
+ *parameter [in]: req - count - Filter count
+ *****************************************************************************/
 bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_SetApplications---->entry\n");
@@ -2831,14 +2837,50 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications(IN co
         Service* ptrService = NULL;
         ServiceParams inParams, resultParams;
         QVariantList inList, appList;
-	QHash<QString,QVariant> appDetails;
+        QHash<QString,QVariant> appDetails;
 
-	appDetails["applicationName"] = req["applicationName"].asCString();
-	appDetails["maxRandomDelay"] = req["maxRandomDelay"].asInt();
-	appDetails["filters"] = req["filters"].asCString();
-	printf("APPLICATION NAME: %s\n", req["applicationName"].asCString());
-
-	appList << appDetails;
+        std::string appString = req["appString"].asCString();
+        int count  = req["count"].asInt();
+        char str[500] = {'\0'};
+        strcpy(str, appString.c_str());
+        printf("appString to cstring %s\n", str);
+        char * token = NULL;
+        char * paramList[30] = {NULL};
+        int i = 0, j=0;
+        token = strtok(str, ",");
+        while (token)
+        {
+                paramList[i] = token;
+                printf("TOKEN:%d -> %s\n",i, paramList[i]);
+                i++;
+                token = strtok(NULL, ",");
+        }
+        int length = i;
+        printf("length: %d\n",length);
+        printf("count: %d\n",count);
+        if (length == count*3)
+        {
+                while (count > 0)
+                {
+                        appDetails["applicationName"] = paramList[j++];
+                        appDetails["maxRandomDelay"] = paramList[j++];
+                        appDetails["filters"] = paramList[j++];
+                        printf("Parameters set\n");
+                        count--;
+                       appList << appDetails;
+                }
+        }
+        else
+        {
+                printf("Parameter parsing failed\n");
+                DEBUG_PRINT(DEBUG_TRACE,"Application set failed");
+                response["details"] = "Application set failed";
+                response["result"]="FAILURE";
+                return TEST_FAILURE;
+        }
+        DEBUG_PRINT(DEBUG_TRACE,"Video application events service supported\n");
+        response["result"] = "SUCCESS";
+        response["details"] = "Video application events service supported";
 
         if (ServiceManager::getInstance()->doesServiceExist(VideoApplicationEventsService::SERVICE_NAME))
         {
@@ -2867,7 +2909,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications(IN co
         }
         else
         {
-        	DEBUG_PRINT(DEBUG_TRACE,"Video application events service does not exist\n");
+                DEBUG_PRINT(DEBUG_TRACE,"Video application events service does not exist\n");
                 response["details"] = "Video application events service does not exist";
                 response["result"] = "FAILURE";
         }
@@ -2881,6 +2923,10 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications(IN co
         return TEST_FAILURE;
 }
 
+/***************************************************************************
+ *Function name : SM_VideoApplicationEventsService_GetApplications
+ *Descrption    : This function retrieves the Application Filter
+ *****************************************************************************/
 bool ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_GetApplications---->entry\n");
@@ -2899,25 +2945,25 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN co
                         bool status = resultParams["success"].toBool();
                         if(status)
                         {
-                                DEBUG_PRINT(DEBUG_TRACE,"applications retrieved successfully");
-				char appData[STR_DETAILS_200] = {'\0'};
-				QVariantList appArray;
-				QHash<QString,QVariant> appDetails;
-				QString appString = "[";
-				
-				appArray = resultParams["applications"].toList();
-				int  k = 0 ;
-				if(0 != appArray.size())
-				{
-					for(k = 0; k < appArray.size(); k++)
-    					{
-						appString += "{";
-        					appDetails = appArray.at(k).toHash();
-						sprintf(appData,"{\"applicationName\":%s, \"maxRandomDelay\":%d, \"filters\" : null}", appDetails["applicationName"].toString().toStdString().c_str(), appDetails["maxRandomDelay"].toInt());
-					}
-					appString += appData; 
-				}
-				appString += "]";
+                                DEBUG_PRINT(DEBUG_TRACE,"applications retrieved successfully\n");
+                                char appData[STR_DETAILS_200] = {'\0'};
+                                QVariantList appArray;
+                                QHash<QString,QVariant> appDetails;
+                                QString appString;
+
+                                appArray = resultParams["applications"].toList();
+                                int  k = 0 ;
+                                if(0 != appArray.size())
+                                {       appString = "";
+                                        for(k = 0; k < appArray.size(); k++)
+                                        {
+                                                appDetails = appArray.at(k).toHash();
+                                                sprintf(appData,"%s,%d,%s", appDetails["applicationName"].toString().toStdString().c_str(), appDetails["maxRandomDelay"].toInt(), appDetails["filters"].toString().toStdString().c_str());
+                                                printf("%s,%d,%s", appDetails["applicationName"].toString().toStdString().c_str(), appDetails["maxRandomDelay"].toInt(), appDetails["filters"].toString().toStdString().c_str());
+                                                appString += appData;
+                                                appString += ",";
+                                        }
+                                }
 
                                 response["details"] = appString.toUtf8().constData();
                                 response["result"]="SUCCESS";
@@ -2933,7 +2979,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN co
         }
         else
         {
-        	DEBUG_PRINT(DEBUG_TRACE,"Video application events service does not exist\n");
+                DEBUG_PRINT(DEBUG_TRACE,"Video application events service does not exist\n");
                 response["details"] = "Video application events service does not exist";
                 response["result"] = "FAILURE";
         }
@@ -2946,8 +2992,6 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN co
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_GetApplications---->exit\n");
         return TEST_FAILURE;
 }
-
-
 
 
 
