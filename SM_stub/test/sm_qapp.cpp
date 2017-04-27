@@ -163,7 +163,6 @@ bool sm_create(QString serviceName)
         if (serviceName == VideoApplicationEventsService::SERVICE_NAME)
         {
 		registerStatus = startVideoApplicationEventsService(); 
-		printf("*******************************create\n");
 		return registerStatus;
         }
 #endif
@@ -175,7 +174,6 @@ bool sm_event_register(QString serviceName, QString eventName)
         bool registerStatus = false;
         Service* ptr_service=NULL;
 
-	ptr_service = ServiceManager::getInstance()->getGlobalService(serviceName);
         QList<QString> event_list;
         ServiceListener *listener=NULL;
 
@@ -189,9 +187,9 @@ bool sm_event_register(QString serviceName, QString eventName)
                 if(!listener)
                         return registerStatus;
         }
-#else
-	ptr_service = ServiceManager::getInstance()->getGlobalService(serviceName);
+	else
 #endif
+		ptr_service = ServiceManager::getInstance()->getGlobalService(serviceName);
 
 #ifdef HAS_API_AVINPUT
 	if(eventName == AVInputService::EVENT_NAME_ON_AVINPUT_ACTIVE)
@@ -221,7 +219,6 @@ bool sm_event_register(QString serviceName, QString eventName)
         if(eventName == VideoApplicationEventsService::EVT_ON_START)
         {
                 event_list.append(VideoApplicationEventsService::EVT_ON_START);
-		printf("EVT_ON_START\n");
         }
 	else if(eventName == VideoApplicationEventsService::EVT_ON_COMPLETTE)
         {
@@ -299,7 +296,6 @@ void trigger_event(unsigned char app_signal)
         AppDetails["filters"] = NULL;
         AppArray << AppDetails;
         pVideoApplicationEventsService->setApplications(AppArray);
-        printf("pVideoApplicationEventsService 2nd = %p\n", pVideoApplicationEventsService);
 
 	ServiceManagerNotifier::getInstance()->notifyEISSAppSignal(application_id, app_signal, locator_id);	
 }
@@ -393,10 +389,10 @@ int main(int argc, char* argv[])
 		trigger_event(EISS_STATUS_ON_COMPLETE);
 	else if (eventName == VideoApplicationEventsService::EVT_ON_WATCHED)
 		trigger_event(EISS_STATUS_ON_WATCHED);
-#else
+	else	
+#endif
 	if( iarm_broadcast(eventName, eventParam) )
 		return FAIL;
-#endif
 
 	DEBUG_PRINT(DEBUG_TRACE,"Starting main loop\n");
 	int ret = app->exec();
