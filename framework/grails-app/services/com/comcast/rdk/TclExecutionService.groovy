@@ -122,7 +122,7 @@ class TclExecutionService {
 			def execName
 			def executionNameForCheck
 			def combinedScript  = [:]
-
+			boolean confPresent = true
 			Map deviceDetails = [:]
 			for(int i = 0; i < repeatCount; i++ ){
 				executionNameForCheck = null
@@ -158,6 +158,7 @@ class TclExecutionService {
 									validScript = true									
 								}
 								else{
+									confPresent = false
 									htmlData = "<br>"+deviceName +"  : No Config file is available with name Config_${deviceInstance?.stbName}.txt"
 								}
 
@@ -188,6 +189,8 @@ class TclExecutionService {
 									if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){
 										scriptInstance1.put('scriptName',script )
 										validScript = true
+									}else{
+										confPresent = false
 									}
 								/*scriptInstance1.put('scriptName',script )
 									 if(scriptInstance1){
@@ -224,6 +227,8 @@ class TclExecutionService {
 									if(Utility.isConfigFileExists(realPath, deviceInstance?.stbName)){
 										//scriptInstance1.put('scriptName',script )
 										validScript = true
+									}else{
+										confPresent = false
 									}
 								}								
 							}
@@ -458,9 +463,16 @@ class TclExecutionService {
 							}
 						}
 					}else{
-						if(!singleScript){
+
+
+						if(!confPresent){
+							htmlData = "<br>"+deviceName +"  : No Config file is available with name Config_${deviceInstance?.stbName}.txt"
+						}
+						else if(! singleScript){
 							htmlData = "<br>"+deviceName+ "  :  No valid script available to execute."
 						}
+
+
 						output.append(htmlData)
 					}
 				}
@@ -923,9 +935,7 @@ class TclExecutionService {
 									index = index+1
 								}
 							}
-							if(aborted && executionService.abortList.contains(exeId?.toString())){
-								executionService.abortList.remove(exeId?.toString())
-							}
+							
 							if(!aborted && pause && pendingScripts.size() > 0 ){
 								def exeInstance = Execution.findByName(execName)
 								executionService.savePausedExecutionStatus(exeInstance?.id)
@@ -938,7 +948,13 @@ class TclExecutionService {
 						Thread.sleep(6000)
 						
 					}
+					
+					if(aborted && executionService.abortList.contains(exeId?.toString())){
+						executionService.abortList.remove(exeId?.toString())
+					}
 				}
+				
+				
 			}
 
 			Execution executionInstance1 = Execution.findByName(execName)

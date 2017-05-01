@@ -1431,9 +1431,6 @@ class ExecutescriptService {
 									}
 								}
 							}
-							if(aborted && executionService.abortList.contains(exeId?.toString())){
-								executionService.abortList.remove(exeId?.toString())
-							}
 							if(!aborted && pause && pendingScripts.size() > 0 ){
 								def exeInstance = Execution.findByName(execName)
 								executionService.savePausedExecutionStatus(exeInstance?.id)
@@ -1444,6 +1441,9 @@ class ExecutescriptService {
 						}
 						output.append(htmlData)
 						Thread.sleep(6000)						
+					}
+					if(aborted && executionService.abortList.contains(exeId?.toString())){
+						executionService.abortList.remove(exeId?.toString())
 					}
 			}
 		}
