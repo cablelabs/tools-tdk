@@ -254,6 +254,75 @@
         <function>TestMgr_SM_VideoApplicationEventsService_GetApplications</function>
         <parameters/>
       </primitiveTest>
+      <primitiveTest id=" " name="SM_FP_Set_24_Hour_Clock" version="1">
+        <function>TestMgr_SM_FP_Set_24_Hour_Clock</function>
+        <parameters>
+          <parameter name="is24hour" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_FP_Is_24_Hour_Clock" version="1">
+        <function>TestMgr_SM_FP_Is_24_Hour_Clock</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest name="SM_FP_SetAPIVersion" id=" " version="1">
+        <function>TestMgr_SM_FP_SetAPIVersion</function>
+        <parameters>
+          <parameter name="apiVersion" value=""/>
+          <parameter name="apiVersion" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_FP_GetBrightness" version="1">
+        <function>TestMgr_SM_FP_GetBrightness</function>
+        <parameters>
+          <parameter name="LEDName" value="power_led"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_FP_SetBrightness" version="1">
+        <function>TestMgr_SM_FP_SetBrightness</function>
+        <parameters>
+          <parameter name="LEDBrightness" value="100"/>
+          <parameter name="LEDName" value="power_led"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_FP_SetLED" version="1">
+        <function>TestMgr_SM_FP_SetLED</function>
+        <parameters>
+          <parameter name="LEDBrightness" value="100"/>
+          <parameter name="LEDColorBlue" value="255"/>
+          <parameter name="LEDColorGreen" value="0"/>
+          <parameter name="LEDColorRed" value="0"/>
+          <parameter name="LEDName" value="power_led"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_FP_SetPreferences" version="1">
+        <function>TestMgr_SM_FP_SetPreferences</function>
+        <parameters>
+          <parameter name="LEDBrightness" value="100"/>
+          <parameter name="LEDColorBlue" value="255"/>
+          <parameter name="LEDColorGreen" value="0"/>
+          <parameter name="LEDColorRed" value="0"/>
+          <parameter name="LEDName" value="power_led"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_FP_GetPreferences" version="1">
+        <function>TestMgr_SM_FP_GetPreferences</function>
+        <parameters>
+          <parameter name="LEDName" value="power_led"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_FP_SetBlink" version="2">
+        <function>TestMgr_SM_FP_SetBlink</function>
+        <parameters>
+          <parameter name="LEDName" value=""/>
+          <parameter name="LEDBrightness" value=""/>
+          <parameter name="LEDColorRed" value=""/>
+          <parameter name="LEDColorBlue" value=""/>
+          <parameter name="LEDColorGreen" value=""/>
+          <parameter name="BlinkDuration" value=""/>
+          <parameter name="IterationCount" value="-1"/>
+          <parameter name="SequenceCount" value="2"/>
+        </parameters>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>

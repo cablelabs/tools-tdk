@@ -19,7 +19,7 @@
 
 QT += widgets network core gui
 DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
-DEFINES += USE_DEVICE_SETTINGS_SERVICE SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
+DEFINES += USE_DEVICE_SETTINGS_SERVICE HAS_FRONT_PANEL USE_DS SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
 DEFINES += QT_WEBKIT_LIB
 DEFINES += HAS_API_VIDEO_APPLICATION_EVENTS
 
@@ -46,6 +46,7 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/qt5/QtCore \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtGui \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKit \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKitWidgets \
+               ${RDK_PROJECT_ROOT_PATH}/servicemanager/include/helpers/ \
                ${STAGING_DIR_TARGET}/usr/include/qt5/include
 
 exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/intel/build/intel.pri) {
@@ -84,6 +85,13 @@ contains(DEFINES,HAS_API_HDMI_CEC) {
 LIBS += -lRCEC -lRCECOSHal -lRCECIARMBusHal
 }
 
+contains(DEFINES,HAS_FRONT_PANEL) {
+HEADERS += ../servicemanager/include/helpers/frontpanel.h \
+        ../servicemanager/include/services/frontpanelservice.h
+SOURCES += ../servicemanager/src/helpers/frontpanel.cpp \
+        ../servicemanager/src/services/frontpanelservice.cpp
+LIBS +=  -ludev -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata -lIARMBus -ldshalsrv -ldshalcli
+}
 contains(DEFINES,HAS_API_APPLICATION) {
 	HEADERS += ../servicemanager/include/services/applicationservice.h
 	SOURCES += ../servicemanager/src/services/applicationservice.cpp \

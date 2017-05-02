@@ -61,6 +61,34 @@ QString listToString(QVariantList conInfo)
         return details;
 }
 #endif
+
+#ifdef HAS_FRONT_PANEL
+static FrontPanelService *pFPService = NULL;
+ bool startFPService(void)
+ {
+         bool bReturn = false;
+         DEBUG_PRINT(DEBUG_TRACE,"Create new instance of Front Panel Service\n");
+         if (ServiceManager::getInstance()->doesServiceExist(FrontPanelService::SERVICE_NAME))
+         {
+               pFPService = dynamic_cast<FrontPanelService*>(ServiceManager::getInstance()->createService(FrontPanelService::SERVICE_NAME));
+               if (pFPService != NULL)
+               {
+                       DEBUG_PRINT(DEBUG_LOG,"pFPService = %p\n", pFPService);
+                       bReturn = true;
+               }
+               else
+               {
+                       DEBUG_PRINT(DEBUG_ERROR,"Failed to create instance of Front Panel Service\n");
+               }
+       }
+       else
+       {
+               DEBUG_PRINT(DEBUG_ERROR,"Front Panel Service does not exist");
+       }
+       return bReturn;
+ }
+ #endif
+
 #ifdef HAS_API_HDMI_CEC
 std::string rdkLogPath = getenv("RDK_LOG_PATH");
 std::string tdkPath = getenv("TDK_PATH");
@@ -247,6 +275,18 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent,"TestMgr_SM_VideoApplicationEventsService_IsEnableEvent");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications,"TestMgr_SM_VideoApplicationEventsService_SetApplications");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications,"TestMgr_SM_VideoApplicationEventsService_GetApplications");
+         /*Front Panel Service APIs*/
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_GetBrightness,"TestMgr_SM_FP_GetBrightness");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetBrightness,"TestMgr_SM_FP_SetBrightness");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetLED,"TestMgr_SM_FP_SetLED");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetAPIVersion,"TestMgr_SM_FP_SetAPIVersion");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetPreferences,"TestMgr_SM_FP_SetPreferences");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_GetPreferences,"TestMgr_SM_FP_GetPreferences");
+        /*set24hour API*/
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_Set_24_Hour_Clock,"TestMgr_SM_FP_Set_24_Hour_Clock");
+         /*is24hour API*/
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_Is_24_Hour_Clock,"TestMgr_SM_FP_Is_24_Hour_Clock");
+
 	return TEST_SUCCESS;
 }
 
@@ -450,6 +490,13 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
         {
                 DEBUG_PRINT(DEBUG_LOG,"\n%s create hdmicec handle\n", serviceName.toUtf8().constData());
                 registerStatus = startHdmiCecService();
+        }
+#endif
+
+#ifdef HAS_FRONT_PANEL
+        if (serviceName == FrontPanelService::SERVICE_NAME)
+        {
+                registerStatus = startFPService();
         }
 #endif
 
@@ -3031,6 +3078,468 @@ bool ServiceManagerAgent::SM_RunSMEvent_QtApp(IN const Json::Value& req, OUT Jso
         DEBUG_PRINT(DEBUG_TRACE, "QApp returned error \n");
         return TEST_FAILURE;
 }
+/***************************************************************************
+ *Function name : SM_FP_SetBrightness
+ *Descrption    : This will sets the brightness of the front panel LED..
+ *parameter [in]: req - name of the LED and Brightness value to be set.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_SetBrightness(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetBrightness ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+        FrontPanelService *ptr_service = pFPService;
+        if(ptr_service != NULL)
+        {
+                QString LEDName = QString::fromStdString(req["LEDName"].asCString());
+                int LEDBrightness = req["LEDBrightness"].asInt();
+                ServiceParams params, resultParams;
+                QVariantList list;
+                bool ReturnValue ;
+                DEBUG_PRINT(DEBUG_TRACE,"Calling setBrightness to LED : %s to brightness : %d\n",LEDName.toUtf8().constData(),LEDBrightness);
+                list.append(LEDName);
+                list.append(LEDBrightness);
+                params["params"]=list;
+                resultParams = ptr_service->callMethod("setBrightness", params);
+                ReturnValue = resultParams["success"].toBool();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setBrightness() call Success.\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="Front Panel Service setBrightness success";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setBrightness() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service setBrightness call failed";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+
+/***************************************************************************
+ *Function name : SM_FP_GetBrightness
+ *Descrption    : This will gets the brightness of the front panel LED..
+ *parameter [in]: req - name of the LED .
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_GetBrightness(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_GetBrightness ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+        FrontPanelService *ptr_service = pFPService;
+        if(ptr_service != NULL)
+        {
+                QString LEDName = QString::fromStdString(req["LEDName"].asCString());
+                ServiceParams params, resultParams;
+                QVariantList list;
+                bool ReturnValue ;
+                int LEDBrightness;
+                char *brightnessDetails = (char*)malloc(sizeof(char)*5);
+                memset(brightnessDetails , '\0', (sizeof(char)*5));
+                char BrightnessDetail[STR_DETAILS_20]= "Brightness:";
+                DEBUG_PRINT(DEBUG_TRACE,"Calling getBrightness to LED : %s \n",LEDName.toUtf8().constData());
+                list.append(LEDName);
+                params["params"]=list;
+                resultParams = ptr_service->callMethod("getBrightness", params);
+                ReturnValue = resultParams["success"].toBool();
+                LEDBrightness = resultParams["brightness"].toInt();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service getBrightness() call Success.\n");
+                        response["result"]="SUCCESS";
+                        sprintf(brightnessDetails , "%d",LEDBrightness);
+                        strcat(BrightnessDetail,brightnessDetails);
+                        response["details"]=BrightnessDetail;
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service getBrightness() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service getBrightness call failed";
+                }
+                free(brightnessDetails);
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+
+/***************************************************************************
+ *Function name : SM_FP_SetLED
+ *Descrption    : This will sets the color and Brightness of the front panel LED..
+ *parameter [in]: req - name of the LED and Brightness value to be set.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_SetLED(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetLED ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+        FrontPanelService *ptr_service = pFPService;
+        if(ptr_service != NULL)
+        {
+                QString LEDName = QString::fromStdString(req["LEDName"].asCString());
+                int LEDBrightness = req["LEDBrightness"].asInt();
+                int LEDColorRed = req["LEDColorRed"].asInt();
+                int LEDColorBlue = req["LEDColorBlue"].asInt();
+                int LEDColorGreen = req["LEDColorGreen"].asInt();
+                ServiceParams params, resultParams;
+                QVariantList list;
+                QVariantHash properties;
+                properties.insert("ledIndicator", LEDName);
+                properties.insert("brightness", LEDBrightness);
+                properties.insert("red",LEDColorRed);
+                properties.insert("blue",LEDColorBlue);
+                properties.insert("green",LEDColorGreen);
+                list.append(properties);
+
+                bool ReturnValue ;
+                DEBUG_PRINT(DEBUG_TRACE,"Calling setLED to LED : %s to brightness : %d\n",LEDName.toUtf8().constData(),LEDBrightness);
+                params["params"]=list;
+                resultParams = ptr_service->callMethod("setLED", params);
+                ReturnValue = resultParams["success"].toBool();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setLED() call Success.\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="Front Panel Service setLED success";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setLED() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service setLED call failed";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+/***************************************************************************
+ *Function name : SM_FP_SetAPIVersion
+ *Descrption    : This will check the functionality of getApiVersionNumber and
+                  setApiVersionNumber APIs.
+ *parameter [in]: req-  service_name-Name of the service.
+                        apiVersion - Parameter to be passed to callMethod API.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_SetAPIVersion ---->Entry\n");
+#ifdef HAS_FRONT_PANEL
+        FrontPanelService *ptr_service = pFPService;
+
+        if( &req["apiVersion"] == NULL)
+        {
+                response["result"]="FAILURE";
+                response["details"]=" apiVersion is NULL";
+                return TEST_FAILURE;
+        }
+        int setApiVersion=req["apiVersion"].asInt();
+        //ServiceParams params;
+        int getApiVersion=0;
+        char apiVersion[STR_DETAILS_20]= "API_VERSION:";
+        char *versionDetails = (char*)malloc(sizeof(char)*STR_DETAILS_20);
+        memset(versionDetails , '\0', (sizeof(char)*STR_DETAILS_20));
+        if(ptr_service != NULL)
+        {
+                getApiVersion =ptr_service->getApiVersionNumber();
+                if(setApiVersion==getApiVersion)
+                {
+                        response["result"]="SUCCESS";
+                        response["details"]="SAME_DATA_ALREADY_ENTERED";
+                        return TEST_SUCCESS;
+                }
+                /*set API version by calling setApiVersionNumber API*/
+                ptr_service->setApiVersionNumber(setApiVersion);
+                /*get API version by calling getApiVersionNumber API*/
+                getApiVersion =ptr_service->getApiVersionNumber();
+                sprintf(versionDetails,"%d",getApiVersion);
+                strcat(apiVersion,versionDetails);
+                DEBUG_PRINT(DEBUG_LOG,"Services:%s",apiVersion);
+                response["result"]="SUCCESS";
+                response["details"]=apiVersion;
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+        free(versionDetails);
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_FP_SetAPIVersion ---->Exit\n");
+        return TEST_SUCCESS;
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+
+}
+
+/***************************************************************************
+ *Function name : SM_FP_SetPreferences
+ *Descrption    : This will sets the color and Brightness of the front panel LED..
+ *parameter [in]: req - name of the LED and Brightness value to be set.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_SetPreferences(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetPreferences ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+        FrontPanelService *ptr_service = pFPService;
+        if(ptr_service != NULL)
+        {
+                std::string LEDName = req["LEDName"].asCString();
+                int LEDBrightness = req["LEDBrightness"].asInt();
+                int LEDColorRed = req["LEDColorRed"].asInt();
+                int LEDColorBlue = req["LEDColorBlue"].asInt();
+                int LEDColorGreen = req["LEDColorGreen"].asInt();
+                ServiceParams params, resultParams;
+                QVariantList list;
+                QVariantHash properties , setpref;
+                properties.insert("brightness", LEDBrightness);
+                properties.insert("red",LEDColorRed);
+                properties.insert("blue",LEDColorBlue);
+                properties.insert("green",LEDColorGreen);
+                setpref.insert(LEDName.c_str(),properties);
+                list.append(setpref);
+
+                bool ReturnValue ;
+                DEBUG_PRINT(DEBUG_TRACE,"Calling setPreferences to LED \n");
+                params["params"]=list;
+                resultParams = ptr_service->callMethod("setPreferences", params);
+                ReturnValue = resultParams["success"].toBool();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setPreferences() call Success.\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="Front Panel Service setPreferences success";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setPreferences() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service setPreferences call failed";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+/***************************************************************************
+ *Function name : SM_FP_GetPreferences
+ *Descrption    : This will sets the color and Brightness of the front panel LED..
+ *parameter [in]: req - name of the LED and Brightness value to be set.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_GetPreferences(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_GetPreferences ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+        FrontPanelService *ptr_service = pFPService;
+        if(ptr_service != NULL)
+        {
+                std::string LEDName = req["LEDName"].asCString();
+                char getprefdetails[STR_DETAILS_50] = {'\0'};
+                ServiceParams params, resultParams;
+                QVariantList list;
+                QVariantHash properties , getpref;
+
+                bool ReturnValue ;
+                DEBUG_PRINT(DEBUG_TRACE,"Calling getPreferences to LED \n");
+                params["params"]=list;
+                resultParams = ptr_service->callMethod("getPreferences", params);
+                ReturnValue = resultParams["success"].toBool();
+                getpref = resultParams["preferences"].toHash();
+                properties = getpref[LEDName.c_str()].toHash();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service getPreferences() call Success.\n");
+                        DEBUG_PRINT(DEBUG_TRACE,"LED:%s,Brightness:%d,Red:%d,Green:%d,Blue:%d",LEDName.c_str(),properties["brightness"].toInt(),properties["red"].toInt(),properties["green"].toInt(),properties["blue"].toInt());
+                        sprintf(getprefdetails,"LED:%s,Brightness:%d,Red:%d,Green:%d,Blue:%d",LEDName.c_str(),properties["brightness"].toInt(),properties["red"].toInt(),properties["green"].toInt(),properties["blue"].toInt());
+                        response["result"]="SUCCESS";
+                        response["details"]=getprefdetails;
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service getPreferences() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service getPreferences call failed";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+/***************************************************************************
+ *Function name : SM_FP_Set_24_Hour_Clock
+ *Descrption    : This will set 24hour clock..
+ *parameter [in]: req - bool .
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_Set_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_Set_24_Hour_Clock ---->Entry\n");
+#ifdef HAS_FRONT_PANEL
+        FrontPanelService *ptr_service = pFPService;
+        if(ptr_service != NULL)
+        {
+                bool is24hour= req["is24hour"].asInt();
+                if((is24hour==0) || (is24hour==1))
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Calling Front panel Service set24HourClock with value %d\n",is24hour);
+
+                        QVariantList list;
+                        ServiceParams params, resultParams;
+                        list.append(is24hour);
+                        params["params"] = list;
+                        bool  ReturnValue ;
+                        try
+                        {
+                                resultParams= ptr_service->callMethod("set24HourClock", params);
+                                ReturnValue = resultParams["success"].toBool();
+                                if (ReturnValue)
+                                {
+                                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service set24HourClock() call Success.\n");
+                                        response["result"]="SUCCESS";
+                                        response["details"]="Front Panel Service set24HourClock value call success";
+                                }
+                                else
+                                {
+                                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service set24HourClock() call Failure.\n");
+                                        response["result"]="FAILURE";
+                                        response["details"]="Front Panel Service set24HourClock call failed";
+                                }
+                        }
+                        catch(...)
+                        {
+                                 DEBUG_PRINT(DEBUG_ERROR,"Exception occured while calling set24HourClock \n");
+                                 response["result"]="FAILURE";
+                                response["details"]="Failed to call set24HourClock";
+                        }
+
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_ERROR,"Invalid parameters  is passed to set24HourClock \n");
+                        response["result"]="FAILURE";
+                        response["details"]="Failed to call set24HourClock";
+                }
+
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front Panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front Panel Service handler";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+
+
+#endif
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_Set_24_Hour_Clock ---->Exit\n");
+        return TEST_SUCCESS;
+}
+/***************************************************************************
+ *Function name : SM_FP_Is_24_Hour_Clock
+ *Descrption    : This will get current time format (whether 24hourclock is enabled/disabled)
+ *parameter [in]: none .
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_Is_24_Hour_Clock ---->Entry\n");
+#ifdef HAS_FRONT_PANEL
+        FrontPanelService *ptr_service = pFPService;
+        if(ptr_service != NULL)
+        {
+                QVariantList list;
+                ServiceParams params, resultParams;
+                params["params"] = list;
+                bool ReturnValue;
+           try
+           {
+                resultParams = ptr_service->callMethod("is24HourClock", params);
+                ReturnValue = resultParams["success"].toBool();
+                if(ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service is24HourClock() call success.\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="Front Panel Service is24HourClock success";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service is24HourClock() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service is24HourClock call failed";
+                }
+           }
+           catch(...)
+           {
+               DEBUG_PRINT(DEBUG_ERROR,"Exception occured while calling is24HourClock \n");
+               response["result"]="FAILURE";
+               response["details"]="Failed to call is24HourClock";
+          }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR, "Failed to create Front panel service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel service handler.";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_Is_24_Hour_Clock ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
 
 /**************************************************************************
  * Function Name: CreateObject
@@ -3122,6 +3631,17 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_VideoApplicationEventsService_IsEnableEvent");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_VideoApplicationEventsService_SetApplications");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_VideoApplicationEventsService_GetApplications");
+ /*Front Panel Service APIs*/
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_GetBrightness");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetBrightness");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetLED");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetAPIVersion");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetPreferences");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_GetPreferences");
+        /*Set24HourClock & is24Hour APIs*/
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_Set_24_Hour_Clock");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_Is_24_Hour_Clock");
+
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;
 }

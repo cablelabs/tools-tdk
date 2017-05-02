@@ -49,6 +49,8 @@ using namespace std;
 #endif
 #ifdef HAS_FRONT_PANEL
 #include "frontpanelservice.h"
+#include "frontPanelIndicator.hpp"
+#include "frontPanelConfig.hpp"
 #endif
 #ifdef HAS_STATE_OBSERVER
 #include "stateobserverservice.h"
@@ -201,6 +203,16 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		bool SM_VideoApplicationEventsService_IsEnableEvent(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_VideoApplicationEventsService_SetApplications(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_VideoApplicationEventsService_GetApplications(IN const Json::Value& req, OUT Json::Value& response);
+                 /*Front panel Service APIs*/
+                bool SM_FP_SetBrightness(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_FP_GetBrightness(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_FP_SetLED(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_FP_SetPreferences(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_FP_GetPreferences(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_FP_Set_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response);
+
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
 		
