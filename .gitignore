@@ -205,3 +205,5 @@ rmfApp_stub/src/*.o
 tdkRmfApp/Makefile.in
 tdkRmfApp/tdkRmfApp
 tdkRmfApp/*.o
+SM_stub/servicemanager/
+advancecomponents/
