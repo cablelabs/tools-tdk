@@ -62,7 +62,7 @@ E.g.: STEREO
 4.Device_Settings_Agent will set new stereo format to STEREO.
 5. Reboot the DUT.
 6.Device_Settings_Agent will get the current stereo format.
-7.Device_Settings_Agent will check the current stereo format with new stereo format set and expect the value to be SURROUND.
+7.Device_Settings_Agent will check the current stereo format with new stereo format set and expect the value to be STEREO.
 8.Device_Settings_Agent will return SUCCESS or FAILURE based on the result from the above step</automation_approch>
     <except_output>Checkpoint 1. Check the current stereo mode is present in the list of supported stereo modes.
 Checkpoint 2. Check the stereo mode before and after setting it.</except_output>
@@ -149,7 +149,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         	tdkTestObj.addParameter("port_name","SPDIF0");
                         	tdkTestObj.addParameter("get_only",1);
                         	expectedresult="SUCCESS"
-                        	stereomode="SURROUND"
+                        	stereomode="STEREO"
                         	tdkTestObj.executeTestCase(expectedresult);
                         	actualresult = tdkTestObj.getResult();
                         	stereomodedetails = tdkTestObj.getResultDetails();
@@ -159,10 +159,10 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 	#comparing stereo modes before and after setting
                                 	if stereomode in stereomodedetails:
                                         	tdkTestObj.setResultStatus("SUCCESS");
-                                        	print "SUCCESS: SURROUND Mode set for SPDIF after Reboot";
+                                        	print "SUCCESS: STEREO Mode set for SPDIF after Reboot";
                                 	else:
                                         	tdkTestObj.setResultStatus("FAILURE");
-                                        	print "FAILURE: SURROUND Mode not set for SPDIF after Reboot";
+                                        	print "FAILURE: STEREO Mode not set for SPDIF after Reboot";
                         	else:
                                 	tdkTestObj.setResultStatus("FAILURE");
                                	 	print "FAILURE :Application failed to get the Stereomode for SPDIF";

@@ -100,66 +100,71 @@ if "SUCCESS" in loadmodulestatus.upper() :
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE :Failed to get supported stereo modes";
 
-                #calling DS_SetStereoMode to get and set the stereo modes
-                tdkTestObj = obj.createTestStep('DS_SetStereoMode');
-                tdkTestObj.addParameter("port_name","SPDIF0");
-                tdkTestObj.addParameter("get_only",0);
                 stereomode="PASSTHRU";
-                tdkTestObj.addParameter("stereo_mode",stereomode);
-                expectedresult="SUCCESS"
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                stereomodedetails = tdkTestObj.getResultDetails();
-                print stereomodedetails
-                #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
-                if expectedresult not in actualresult:
-                        print "FAILURE: Application Failed to set and get the PASSTHRU mode to SPDIF";
-                        tdkTestObj.setResultStatus("FAILURE");
-                else:
-                        if stereomode in stereomodedetails:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "SUCCESS: PASSTHRU Mode set for SPDIF";
-                                print "Rebooting the box to check the stereo mode persistence";
-                                obj.initiateReboot();
+		if stereomode in stereomodedetails:
+	                #calling DS_SetStereoMode to get and set the stereo modes
+        	        tdkTestObj = obj.createTestStep('DS_SetStereoMode');
+                	tdkTestObj.addParameter("port_name","SPDIF0");
+	                tdkTestObj.addParameter("get_only",0);
+        	        tdkTestObj.addParameter("stereo_mode",stereomode);
+                	expectedresult="SUCCESS"
+	                tdkTestObj.executeTestCase(expectedresult);
+        	        actualresult = tdkTestObj.getResult();
+                	stereomodedetails = tdkTestObj.getResultDetails();
+	                print stereomodedetails
+        	        #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
+                	if expectedresult not in actualresult:
+                        	print "FAILURE: Application Failed to set and get the PASSTHRU mode to SPDIF";
+	                        tdkTestObj.setResultStatus("FAILURE");
+			else:
+                	        if stereomode in stereomodedetails:
+                        	        tdkTestObj.setResultStatus("SUCCESS");
+                                	print "SUCCESS: PASSTHRU Mode set for SPDIF";
+	                                print "Rebooting the box to check the stereo mode persistence";
+        	                        obj.initiateReboot();
                                 
                         
-                                #calling Device Settings - initialize API
-                                tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
-                                expectedresult="SUCCESS"
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize 
-                                if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        #calling DS_SetStereoMode to get and set the stereo modes
-                                        tdkTestObj = obj.createTestStep('DS_SetStereoMode');
-                                        tdkTestObj.addParameter("port_name","SPDIF0");
-                                        tdkTestObj.addParameter("get_only",1);
-                                        stereomode="PASSTHRU";
-                                        tdkTestObj.addParameter("stereo_mode",stereomode);
-                                        expectedresult="SUCCESS"
-                                        tdkTestObj.executeTestCase(expectedresult);
-                                        actualresult = tdkTestObj.getResult();
-                                        stereomodedetails = tdkTestObj.getResultDetails();
-                                        print stereomodedetails
-                                        #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
-                                        if expectedresult not in actualresult:
-                                                print "FAILURE: Application Failed to get the SURROUND mode to SPDIF";
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                        else:
-                                                if stereomode in stereomodedetails:
-                                                        tdkTestObj.setResultStatus("SUCCESS");
-                                                        print "SUCCESS: PASSTHRU Mode set for SPDIF";
-                                                else:
-                                                        tdkTestObj.setResultStatus("FAILURE");
-                                                        print "FAILURE: PASSTHRU Mode not set for SPDIF";
-                                else:
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                        print "FAILURE: Device Setting Initialize failed";
+                	                #calling Device Settings - initialize API
+                        	        tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
+                                	expectedresult="SUCCESS"
+	                                tdkTestObj.executeTestCase(expectedresult);
+        	                        actualresult = tdkTestObj.getResult();
+                	                #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize 
+                        	        if expectedresult in actualresult:
+                                	        tdkTestObj.setResultStatus("SUCCESS");
+                                        	#calling DS_SetStereoMode to get and set the stereo modes
+	                                        tdkTestObj = obj.createTestStep('DS_SetStereoMode');
+        	                                tdkTestObj.addParameter("port_name","SPDIF0");
+                	                        tdkTestObj.addParameter("get_only",1);
+                        	                stereomode="PASSTHRU";
+                                	        tdkTestObj.addParameter("stereo_mode",stereomode);
+                                        	expectedresult="SUCCESS"
+	                                        tdkTestObj.executeTestCase(expectedresult);
+        	                                actualresult = tdkTestObj.getResult();
+                	                        stereomodedetails = tdkTestObj.getResultDetails();
+                        	                print stereomodedetails
+                                	        #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
+                                        	if expectedresult not in actualresult:
+                                                	print "FAILURE: Application Failed to get the SURROUND mode to SPDIF";
+	                                                tdkTestObj.setResultStatus("FAILURE");
+        	                                else:
+                	                                if stereomode in stereomodedetails:
+                        	                                tdkTestObj.setResultStatus("SUCCESS");
+                                	                        print "SUCCESS: PASSTHRU Mode set for SPDIF";
+                                        	        else:
+                                                	        tdkTestObj.setResultStatus("FAILURE");
+                                                        	print "FAILURE: PASSTHRU Mode not set for SPDIF";
+	                                else:
+        	                                tdkTestObj.setResultStatus("FAILURE");
+                	                        print "FAILURE: Device Setting Initialize failed";
                                                                                                     
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "FAILURE: PASSTHRU Mode not set for SPDIF";
+                        	else:
+                                	tdkTestObj.setResultStatus("FAILURE");
+	                                print "FAILURE: PASSTHRU Mode not set for SPDIF";
+
+		else:
+            	  	tdkTestObj.setResultStatus("FAILURE");
+	        	print "FAILURE: PASSTHRU Mode not supported for SPDIF";
 
                 #calling DS_ManagerDeInitialize to DeInitialize API 
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
