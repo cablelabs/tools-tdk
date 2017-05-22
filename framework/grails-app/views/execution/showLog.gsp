@@ -136,6 +136,8 @@ function hideParameters(k){
 		<g:link action="exportToExcel" params="[id:"${executionInstance?.id}"]" >Download Raw Report(Excel)</g:link>		
 		<br>
 		<g:link action="exportConsolidatedToExcel" params="[id:"${executionInstance?.id}"]" >Download Consolidated Report(Excel)</g:link>
+		<br>
+		<g:link action="downloadLogs" params="[id:"${executionInstance?.id}"]" >Download Execution Logs(Zip)</g:link>
 		
 		</td>		
 	</tr>		

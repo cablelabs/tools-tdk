@@ -317,4 +317,7 @@ public final class Constants
    	public static final String TM_CONFIG_FILE= "/fileStore/tm.config";
 	public static final String TFTP_MECHANISM= "tftp";
 	public static final String REST_MECHANISM= "REST";
+	public static final String FILE_NOT_FOUND= "File not found.";
+	public static final String DEFAULT    = "Default";
+	public static final String NO_LOGS    = "No logs available.";
 }

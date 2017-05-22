@@ -85,6 +85,12 @@ class ExecutionController {
 	 * Injects the excelExportService
 	 */
 	def excelExportService
+	
+	/**
+	 * Injects the service for downloading logs in Zip format.
+	 */
+	
+	def logZipService
 
 	public static volatile Object  lock = new Object()
 	private static int execIdCounter = 0
@@ -104,7 +110,9 @@ class ExecutionController {
 	public static final String EXPORT_SHEET_NAME 			= "Execution_Results"
 	public static final String EXPORT_FILENAME 				= "ExecutionResults-"
 	public static final String EXPORT_EXCEL_FORMAT 			= "excel"
+	public static final String EXPORT_ZIP_FORMAT 			= "zip"
 	public static final String EXPORT_EXCEL_EXTENSION 		= "xls"
+	public static final String EXPORT_ZIP_EXTENSION 		= "zip"
 	public static final String MARK_ALL_ID1 				= "markAll1"
 	public static final String MARK_ALL_ID2 				= "markAll2"
 	public static final String UNDEFINED					= "undefined"
@@ -3589,6 +3597,27 @@ class ExecutionController {
 		}
 		jsonObjMap.put("type",type)
 		render jsonObjMap as JSON
+	}
+	
+	
+	/*To handle the complete log download request*/
+	def downloadLogs(){
+		String executionId = params?.id
+		try {
+			Execution exec = Execution.get(executionId)
+			String fileName = exec?.name
+			if(exec){
+				params.format = EXPORT_ZIP_FORMAT
+				params.extension = EXPORT_ZIP_EXTENSION
+				response.contentType = grailsApplication.config.grails.mime.types[params.format]
+				fileName = fileName?.replaceAll(" ","_")
+				response.setHeader("Content-Type", "application/zip")
+				response.setHeader("Content-disposition", "attachment; filename=ExecutionLogs_"+ fileName +".${params.extension}")
+				logZipService.zipLogs(getRealPath() , response.outputStream , executionId )
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 	}
 	
 }
