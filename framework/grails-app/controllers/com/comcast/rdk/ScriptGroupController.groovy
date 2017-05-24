@@ -3128,7 +3128,7 @@ class ScriptGroupController {
 
 						}
 					}else if(scriptGroup?.category?.toString().equals(RDKB_TCL)){
-						if(!(tclScriptList?.toString()?.contains(script?.toString()))){
+						if(!(tclScriptList?.toString()?.contains(script?.toString())) && !scriptService?.totalTclScriptList?.contains(script)){
 							removeList.add(script)
 						}
 					}
