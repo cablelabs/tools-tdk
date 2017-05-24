@@ -22,6 +22,8 @@
 #------------------------------------------------------------------------------
 # Methods
 #------------------------------------------------------------------------------
+import os
+import sys
 
 def getInstanceNumber(paramName,index):
                 try:
@@ -31,3 +33,32 @@ def getInstanceNumber(paramName,index):
                 except:
                         return 0
                 return instanceNumber
+
+def readtdkbConfigFile(self):
+
+# Reads config file and returns the value.
+
+# Syntax      : OBJ.readtdkbConfigFile()
+# Description : Reads config file and returns the value.
+# Parameters  : configFile - Name of config file.
+# Return Value: value given in the config file
+
+        configFile = self.realpath + "fileStore/" + "tdkb.config"
+        print "Configuration File Found : ", configFile
+        sys.stdout.flush()
+
+        # Checking if file exists
+        fileCheck = os.path.isfile(configFile)
+        if (fileCheck):
+                for line in open(configFile).readlines():
+                        if "HOST_NAME" in line:
+                                HostName=line.rsplit(None, 1)[-1];
+                                print "Host name is %s" %HostName;
+        else:
+                print "Configuration File does not exist."
+                sys.stdout.flush()
+                exit()
+
+        return HostName;
+
+########## End of Function ##########
