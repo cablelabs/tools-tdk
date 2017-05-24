@@ -25,6 +25,8 @@
 #include "rdktestagentintf.h"
 
 #include "wifiSrvMgrIarmIf.h"
+#include "libIBus.h"
+#include "libIBusDaemon.h"
 
 #define IN
 #define OUT
@@ -38,44 +40,25 @@
  */
 #define WIFI_MGR_PARAM_LIST_BUFFER_SIZE  10000
 #define WIFI_MGR_PARAM_BUFFER_SIZE 100
-#define MAX_WIFI_STATUS_CODE     7
-#define MAX_WIFI_LNF_STATUS_CODE 7
+#define WIFI_MAX_DATA_LEN           8192
+#define WIFI_MAX_STATUS_CODE     7
+#define WIFI_MAX_LNF_STATUS_CODE 7
 #define WIFI_SSID_SIZE		33
 
 using namespace std;
-#if 0
-enum {
-    NETSRVMGR_GET_CURRENT_STATE = 1,
-    NETSRVMGR_GET_LAF_STATE = 2,
-    NETSRVMGR_SET_ENABLED = 3,
-    NETSRVMGR_GET_PAIRED_SSID = 4,
-    NETSRVMGR_CONNECT = 5,
-    NETSRVMGR_INITIATE_WPS_PAIRING = 6,
-    NETSRVMGR_SAVE_SSID = 7,
-    NETSRVMGR_CLEAR_SSID = 8,
-    NETSRVMGR_IS_PAIRED = 9,
-    NETSRVMGR_GET_CONNECTED_SSID = 10,
-    NETSRVMGR__GET_AVAILABLE_SSIDS = 11,
-    NETSRVMGR_GET_RADIO_PROPS = 12,
-    NETSRVMGR_GET_RADIO_STATS_PROPS = 13,
-    NETSRVMGR_GET_SSID_PROPS = 14,
-    NETSRVMGR_GET_END_POINT_PROPS =15
-};
-#endif
-
 
 class RDKTestAgent;
 class NetSrvMgrAgent : public RDKTestStubInterface
 {
 private:
-    string aWifiStatus[MAX_WIFI_LNF_STATUS_CODE] = {"Wifi Uninstalled",
+    string aWifiStatus[WIFI_MAX_STATUS_CODE] = {"Wifi Uninstalled",
 			   "Wifi disabled",
 			   "Wifi disconnected",
 			   "Wifi pairing",
 			   "Wifi connecting",
 			   "Wifi connected",
 			   "Wifi failed"};
-    string aWifiLAFStatus[MAX_WIFI_LNF_STATUS_CODE] = {"LNF Uninitialised",
+    string aWifiLAFStatus[WIFI_MAX_LNF_STATUS_CODE] = {"LNF Uninitialised",
 			    "LNF in progress",
 			    "LNF connected",
 			    "LNF connected to private network",
@@ -106,6 +89,7 @@ public:
     bool NetSrvMgrAgent_WifiMgr_GetLAFState (IN const Json::Value& req, OUT Json::Value& response);
     bool NetSrvMgrAgent_WifiMgr_GetPairedSSID (IN const Json::Value& req, OUT Json::Value& response);
     bool NetSrvMgrAgent_WifiMgr_SetEnabled (IN const Json::Value& req, OUT Json::Value& response);
+    bool NetSrvMgrAgent_WifiMgr_SetGetParameters (IN const Json::Value& req, OUT Json::Value& response);
 };
 
 extern "C" NetSrvMgrAgent* CreateObject();

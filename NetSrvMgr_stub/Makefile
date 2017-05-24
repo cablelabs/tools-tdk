@@ -71,7 +71,7 @@ INCLUDES  +=    -I$(RDK_BUILD_DIR)/iarmbus/core/include \
 
 LDOPTS    += 	-L $(IMAGE_PATH)/usr/lib -L $(IMAGE_PATH)/usr/local/lib
 CC        := 	g++
-TARGETLIB := 	linetsrvmgrbstub.so
+TARGETLIB := 	libnetsrvmgrbstub.so
 SOURCES   := 	$(SRC_DIR)/*.cpp
 
 #
