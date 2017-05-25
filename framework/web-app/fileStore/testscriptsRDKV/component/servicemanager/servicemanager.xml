@@ -323,6 +323,12 @@
           <parameter name="SequenceCount" value="2"/>
         </parameters>
       </primitiveTest>
+      <primitiveTest name="SM_DDS_GetConfiguration" id=" " version="1">
+        <function>TestMgr_SM_DDS_GetConfiguration</function>
+        <parameters>
+          <parameter name="names" value=""/>
+        </parameters>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>
