@@ -76,6 +76,9 @@ using namespace std;
 #ifdef HAS_API_AVINPUT
 #include "avinputservice.h"
 #endif
+#ifdef HAS_API_DEVICEDIAGNOSTICS
+#include "devicediagnosticsservice.h"
+#endif
 #ifdef HAS_API_SYSTEM
 #include "systemservice.h"
 #endif
@@ -203,6 +206,8 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		bool SM_VideoApplicationEventsService_IsEnableEvent(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_VideoApplicationEventsService_SetApplications(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_VideoApplicationEventsService_GetApplications(IN const Json::Value& req, OUT Json::Value& response);
+		/*DeviceDiagnosticsService APIs*/
+		bool SM_DDS_GetConfiguration(IN const Json::Value& req, OUT Json::Value& response);
                  /*Front panel Service APIs*/
                 bool SM_FP_SetBrightness(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_FP_GetBrightness(IN const Json::Value& req, OUT Json::Value& response);

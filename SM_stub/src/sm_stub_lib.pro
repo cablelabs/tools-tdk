@@ -22,6 +22,7 @@ DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
 DEFINES += USE_DEVICE_SETTINGS_SERVICE HAS_FRONT_PANEL USE_DS SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
 DEFINES += QT_WEBKIT_LIB
 DEFINES += HAS_API_VIDEO_APPLICATION_EVENTS
+DEFINES += HAS_API_DEVICEDIAGNOSTICS
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -125,3 +126,9 @@ contains(DEFINES,HAS_API_VIDEO_APPLICATION_EVENTS) {
 	HEADERS += ../servicemanager/include/services/videoapplicationeventsservice.h 
 	SOURCES += ../servicemanager/src/services/videoapplicationeventsservice.cpp
 }
+
+contains(DEFINES,HAS_API_DEVICEDIAGNOSTICS) {
+    	HEADERS += ../servicemanager/include/services/devicediagnosticsservice.h
+	SOURCES += ../servicemanager/src/services/devicediagnosticsservice.cpp
+}
+

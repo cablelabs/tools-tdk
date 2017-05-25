@@ -275,6 +275,8 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent,"TestMgr_SM_VideoApplicationEventsService_IsEnableEvent");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications,"TestMgr_SM_VideoApplicationEventsService_SetApplications");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications,"TestMgr_SM_VideoApplicationEventsService_GetApplications");
+        /*Device Diagnistics Service APIs*/
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DDS_GetConfiguration,"TestMgr_SM_DDS_GetConfiguration");
          /*Front Panel Service APIs*/
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_GetBrightness,"TestMgr_SM_FP_GetBrightness");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetBrightness,"TestMgr_SM_FP_SetBrightness");
@@ -467,6 +469,12 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
         else if (serviceName == HdmiCecService::SERVICE_NAME)
         {
                 serviceStruct.createFunction = &createHdmiCecService;
+        }
+#endif
+#ifdef HAS_API_DEVICEDIAGNOSTICS
+        else if (serviceName == DeviceDiagnosticsService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createDeviceDiagnosticsService;
         }
 #endif
 #ifdef HAS_API_APPLICATION
@@ -3040,6 +3048,77 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN co
         return TEST_FAILURE;
 }
 
+/***************************************************************************
+ *Function name : SM_DDS_GetConfiguration
+ *Descrption    : This function will get the configuration values for the TR-181 objects
+ *parameter [in]: req - names -List of objects whose configuration values to be retrieved
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_DDS_GetConfiguration(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_DDS_GetConfiguration---->Entry\n");
+
+#ifdef HAS_API_DEVICEDIAGNOSTICS
+        Service* ptrService = NULL;
+        QVariantList nameList;
+        std::string names = req["names"].asCString();
+        char str[500] = {'\0'};
+        strcpy(str, names.c_str());
+        char * token = NULL;
+        token = strtok(str, ",");
+        while (token)
+        {
+                printf("TOKEN IS:%s\n",token);
+                nameList << token;
+                token = strtok(NULL, ",");
+        }
+        if (ServiceManager::getInstance()->doesServiceExist(DeviceDiagnosticsService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(DeviceDiagnosticsService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+			QVariantList inList, deviceDiagnosticsResult;
+        		ServiceParams inParams, resultParams;
+			QString deviceDiagnosticsinfo;
+                        
+			inList.insert(0,nameList);
+                        inParams["params"] = inList;
+
+                        resultParams = ptrService->callMethod("getConfiguration", inParams);
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Get configuration success");
+				deviceDiagnosticsResult = resultParams["parameters"].toList();
+				deviceDiagnosticsinfo = listToString(deviceDiagnosticsResult);
+				DEBUG_PRINT(DEBUG_TRACE,"Device Diagnostics Info: \n %s \n",deviceDiagnosticsinfo.toUtf8().constData());
+                        	response["details"] = deviceDiagnosticsinfo.toUtf8().constData();
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Get configuration failed");
+                                response["details"] = "Get configuration failed";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Device Diagnostic Service does not exist\n");
+                response["details"] = "Device Diagnostic Service does not exist";
+                response["result"] = "FAILURE";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Device Diagnostic Service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Device Diagnostic Service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_DDS_GetConfiguration---->Exit\n");
+        return TEST_FAILURE;
+}
+
 
 
 /***************************************************************************
@@ -3631,6 +3710,8 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_VideoApplicationEventsService_IsEnableEvent");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_VideoApplicationEventsService_SetApplications");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_VideoApplicationEventsService_GetApplications");
+	/*Device Diagnostics Service APIs*/
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_DDS_GetConfiguration");
  /*Front Panel Service APIs*/
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_GetBrightness");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetBrightness");
