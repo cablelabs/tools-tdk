@@ -19,4 +19,4 @@
 
 RDK Test Development Kit
 
-Version : M-47
+Version : M-48
