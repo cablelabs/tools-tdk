@@ -46,19 +46,21 @@ def readtdkbConfigFile(self):
         configFile = self.realpath + "fileStore/" + "tdkb.config"
         print "Configuration File Found : ", configFile
         sys.stdout.flush()
+        HostName="";
 
         # Checking if file exists
         fileCheck = os.path.isfile(configFile)
         if (fileCheck):
                 for line in open(configFile).readlines():
                         if "HOST_NAME" in line:
-                                HostName=line.rsplit(None, 1)[-1];
+                                HostName=line.split("=")[1].strip();
                                 print "Host name is %s" %HostName;
+                if HostName == "":
+                    return "NULL"
         else:
                 print "Configuration File does not exist."
                 sys.stdout.flush()
                 exit()
-
         return HostName;
 
 ########## End of Function ##########
