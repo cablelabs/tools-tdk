@@ -1250,6 +1250,25 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
         //retHNSrcValue = pSource->getMediaTime(mediaTime);
         //cout<<"Return of get Media time "<<retHNSrcValue<<endl;
         //cout<<" Media time Value "<<mediaTime<<endl;
+        retHNSrcValue = pSource->pause();
+        if(RMF_RESULT_SUCCESS != retHNSrcValue)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "HNSource pause failed";
+                DEBUG_PRINT(DEBUG_ERROR, "HNSource pause failed %ld\n",retHNSrcValue);
+
+                retMPSinkValue = pSink->term();
+                retHNSrcValue = pSource->term();
+
+                delete pSink;
+                delete pSource;
+                #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
+                return TEST_FAILURE;
+        }
+        DEBUG_PRINT(DEBUG_TRACE, "Passed Hnsrc pause\n");
 
 	retHNSrcValue = pSource->close();
 	if(RMF_RESULT_SUCCESS != retHNSrcValue)
