@@ -76,13 +76,10 @@ obj.configureTestCase(ip,port,'DS_setSURROUND_PASSTHRUFormat_8005_5');
 
 loadmodulestatus =obj.getLoadModuleResult();
 
-
 if "SUCCESS" in loadmodulestatus.upper():
         #Set the module loading status
         obj.setLoadModuleStatus("SUCCESS");
         
-
-
         #calling Device Settings - initialize API
         tdkTestObj = obj.createTestStep('DS_ManagerInitialize');
         expectedresult="SUCCESS"
@@ -125,79 +122,87 @@ if "SUCCESS" in loadmodulestatus.upper():
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
                                         print "FAILURE :Failed to get supported stereo modes";
-
-                                #calling DS_SetStereoMode to get and set the stereo modes
-                                tdkTestObj = obj.createTestStep('DS_SetStereoMode');
-                                tdkTestObj.addParameter("port_name",aopport);
-                                tdkTestObj.addParameter("get_only",0);
+                                
                                 stereomode="SURROUND";
-                                tdkTestObj.addParameter("stereo_mode",stereomode);
-                                expectedresult="SUCCESS"
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                stereomodedetails = tdkTestObj.getResultDetails();
-                                print stereomodedetails
-                                #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
-                                if expectedresult not in actualresult:
-                                        print "FAILURE: Application Failed to set and get the ",stereomode ," mode to " , aopport;
-                                        tdkTestObj.setResultStatus("FAILURE");
-                                else:
-                                        if stereomode in stereomodedetails:
-                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                print "SUCCESS: ",stereomode ," Mode set for ",aopport;
-                                                #calling DS_SetStereoMode to get and set the stereo modes
-                                                tdkTestObj = obj.createTestStep('DS_SetStereoMode');
-                                                tdkTestObj.addParameter("port_name",aopport);
-                                                tdkTestObj.addParameter("get_only",0);
-                                                stereomode="PASSTHRU";
-                                                tdkTestObj.addParameter("stereo_mode",stereomode);
-                                                expectedresult="SUCCESS"
-                                                tdkTestObj.executeTestCase(expectedresult);
-                                                actualresult = tdkTestObj.getResult();
-                                                stereomodedetails = tdkTestObj.getResultDetails();
-                                                print stereomodedetails
-                                                #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
-                                                if expectedresult not in actualresult:
-                                                        print "FAILURE: Application Failed to set and get the ",stereomode ," mode to ",aopport;
-                                                        tdkTestObj.setResultStatus("FAILURE");
-                                                else:
-                                                        if stereomode in stereomodedetails:
-                                                                tdkTestObj.setResultStatus("SUCCESS");
-                                                                print "SUCCESS: ",stereomode ," Mode set for ",aopport;
+                                if stereomode in stereomodedetails:
+                                        #calling DS_SetStereoMode to get and set the stereo modes
+                                        tdkTestObj = obj.createTestStep('DS_SetStereoMode');
+                                        tdkTestObj.addParameter("port_name",aopport);
+                                        tdkTestObj.addParameter("get_only",0);
+                                        tdkTestObj.addParameter("stereo_mode",stereomode);
+                                        expectedresult="SUCCESS"
+                                        tdkTestObj.executeTestCase(expectedresult);
+                                        actualresult = tdkTestObj.getResult();
+                                        currentstereomodedetails = tdkTestObj.getResultDetails();
+                                        print currentstereomodedetails
+                                        #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
+                                        if expectedresult not in actualresult:
+                                                print "FAILURE: Application Failed to set and get the ",stereomode ," mode to " , aopport;
+                                                tdkTestObj.setResultStatus("FAILURE");
+                                        else:
+                                                if stereomode in currentstereomodedetails:
+                                                        tdkTestObj.setResultStatus("SUCCESS");
+                                                        print "SUCCESS: ",stereomode ," Mode set for ",aopport;
+                                                        stereomode="PASSTHRU";
+                                                        if stereomode in stereomodedetails:  
                                                                 #calling DS_SetStereoMode to get and set the stereo modes
                                                                 tdkTestObj = obj.createTestStep('DS_SetStereoMode');
                                                                 tdkTestObj.addParameter("port_name",aopport);
                                                                 tdkTestObj.addParameter("get_only",0);
-                                                                stereomode="SURROUND";
                                                                 tdkTestObj.addParameter("stereo_mode",stereomode);
                                                                 expectedresult="SUCCESS"
                                                                 tdkTestObj.executeTestCase(expectedresult);
                                                                 actualresult = tdkTestObj.getResult();
-                                                                stereomodedetails = tdkTestObj.getResultDetails();
-                                                                print stereomodedetails
+                                                                currentstereomodedetails = tdkTestObj.getResultDetails();
+                                                                print currentstereomodedetails
                                                                 #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
                                                                 if expectedresult not in actualresult:
                                                                         print "FAILURE: Application Failed to set and get the ",stereomode ," mode to ",aopport;
                                                                         tdkTestObj.setResultStatus("FAILURE");
                                                                 else:
-                                                                        if stereomode in stereomodedetails:
+                                                                        if stereomode in currentstereomodedetails:
                                                                                 tdkTestObj.setResultStatus("SUCCESS");
                                                                                 print "SUCCESS: ",stereomode ," Mode set for ",aopport;
+                                                                                #calling DS_SetStereoMode to get and set the stereo modes
+                                                                                tdkTestObj = obj.createTestStep('DS_SetStereoMode');
+                                                                                tdkTestObj.addParameter("port_name",aopport);
+                                                                                tdkTestObj.addParameter("get_only",0);
+                                                                                stereomode="SURROUND";
+                                                                                tdkTestObj.addParameter("stereo_mode",stereomode);
+                                                                                expectedresult="SUCCESS"
+                                                                                tdkTestObj.executeTestCase(expectedresult);
+                                                                                actualresult = tdkTestObj.getResult();
+                                                                                currentstereomodedetails = tdkTestObj.getResultDetails();
+                                                                                print currentstereomodedetails
+                                                                                #Check for SUCCESS/FAILURE return value of DS_SetStereoMode
+                                                                                if expectedresult not in actualresult:
+                                                                                        print "FAILURE: Application Failed to set and get the ",stereomode ," mode to ",aopport;
+                                                                                        tdkTestObj.setResultStatus("FAILURE");
+                                                                                else:
+                                                                                        if stereomode in stereomodedetails:
+                                                                                                tdkTestObj.setResultStatus("SUCCESS");
+                                                                                                print "SUCCESS: ",stereomode ," Mode set for ",aopport;
+                                                                                        else:
+                                                                                                tdkTestObj.setResultStatus("FAILURE");
+                                                                                                print "FAILURE: ",stereomode ," Mode not set for ",aopport;
+
                                                                         else:
                                                                                 tdkTestObj.setResultStatus("FAILURE");
                                                                                 print "FAILURE: ",stereomode ," Mode not set for ",aopport;
-
                                                         else:
                                                                 tdkTestObj.setResultStatus("FAILURE");
-                                                                print "FAILURE: ",stereomode ," Mode not set for ",aopport;
+                                                                print "FAILURE: ",stereomode ," Mode not supported for ",aopport;
+                                                else:
+                                                        tdkTestObj.setResultStatus("FAILURE");
+                                                        print "FAILURE: ",stereomode ," Mode not set for ",aopport;
+                                else:
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        print "FAILURE: ",stereomode ," Mode not supported for ",aopport;
 
-                                        else:
-                                                tdkTestObj.setResultStatus("FAILURE");
-                                                print "FAILURE: ",stereomode ," Mode not set for ",aopport;
                 else :
                     print "Display device not connected. Skipping testcase"
 
-                #calling DS_ManagerDeInitialize to DeInitialize API 
+                #calling DS_ManagerDeInitialize to DeInitialize  API 
                 tdkTestObj = obj.createTestStep('DS_ManagerDeInitialize');
                 expectedresult="SUCCESS"
                 tdkTestObj.executeTestCase(expectedresult);
