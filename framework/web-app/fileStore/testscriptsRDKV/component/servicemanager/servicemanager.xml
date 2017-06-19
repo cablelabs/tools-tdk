@@ -218,6 +218,10 @@
           <parameter name="portName" value="portName"/>
         </parameters>
 	</primitiveTest>
+	<primitiveTest id="" name="SM_DisplaySetting_GetSupportedAudioPorts" version="1">
+          <function>TestMgr_SM_GetSupportedAudioPorts</function>
+          <parameters/>
+        </primitiveTest>
 	<primitiveTest name="SM_DisplaySetting_SetSoundMode" id=" " version="1">
         <function>TestMgr_SM_SetSoundMode</function>
         <parameters>
