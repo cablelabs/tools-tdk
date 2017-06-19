@@ -17,62 +17,57 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
-<xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <id/>
   <version>1</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_DDS_GetConfiguration_CM_Status82_13</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id> </primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
+  <primitive_test_id/>
   <primitive_test_name>SM_DDS_GetConfiguration</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
   <synopsis>Checks if the service manager wrapper for TR-181 returns the correct value for CM Status (82)</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
+  <groups_id/>
   <execution_time>2</execution_time>
-  <!--  -->
   <long_duration>false</long_duration>
-  <!--  -->
   <advanced_script>false</advanced_script>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
   <test_cases>
-    <test_case_id></test_case_id>
-    <test_objective></test_objective>
-    <test_type></test_type>
-    <test_setup></test_setup>
-    <pre_requisite></pre_requisite>
-    <api_or_interface_used></api_or_interface_used>
-    <input_parameters></input_parameters>
-    <automation_approch></automation_approch>
-    <except_output></except_output>
-    <priority></priority>
-    <test_stub_interface></test_stub_interface>
-    <test_script></test_script>
-    <skipped></skipped>
-    <release_version></release_version>
-    <remarks></remarks>
+    <test_case_id>CT_17739_13</test_case_id>
+    <test_objective>Checks if the service manager wrapper for TR-181 returns the correct value for CM Status (82)</test_objective>
+    <test_type>Positive</test_type>
+    <test_setup>XG1-V3	</test_setup>
+    <pre_requisite>HostIF should be enabled</pre_requisite>
+    <api_or_interface_used>bool registerService(const QString&amp; , ServiceStruct )
+Service* getGlobalService(const QString&amp; serviceName) virtual ServiceParams callMethod(const QString&amp; method,const ServiceParams&amp; params)
+bool unregisterService(const QString&amp;)</api_or_interface_used>
+    <input_parameters>registerService : Qstring-serviceName, ServiceStruct - serviceStruct (function ptr)
+GetGlobalService: const Qstring â&#128;&#147; serviceName                                
+CallMethod : const QString - "getConfiguration" ,const ServiceParams - bool
+UnregisterService : Qstring-serviceName</input_parameters>
+    <automation_approch>1. TM loads the Service_Manager_Agent via the test agent.
+2.Service_Manager_Agent will register "org.rdk.DeviceDiagnostics_1" with ServiceManager component.
+3.On Success of registerService , Service_Manager_Agent will invoke "getConfiguration" API to get the value of the object "Device.X_RDKCENTRAL-COM_DocsIf.docsIf3CmStatus_82".
+4. TM invokes snmpget method using snmp library to get the value of corresponding OID.
+5. TM will check if the values are same and return SUCCESS/FAILURE status.
+6.Service_Manager_Agent will deregister the given service from ServiceManager component.</automation_approch>
+    <except_output>Checkpoint 1.Check the return value of API for success status.
+Checkpoint 2. Check the value retrieved using API is same as the value retrieved using snmp command.</except_output>
+    <priority>High</priority>
+    <test_stub_interface>libservicemanagerstub.so</test_stub_interface>
+    <test_script>SM_DDS_GetConfiguration_CM_Status82_13</test_script>
+    <skipped>No</skipped>
+    <release_version/>
+    <remarks/>
   </test_cases>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
