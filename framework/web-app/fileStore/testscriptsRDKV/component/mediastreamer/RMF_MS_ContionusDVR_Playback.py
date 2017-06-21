@@ -27,7 +27,7 @@
   <status>FREE</status>
   <synopsis>This script test the Dvr playback via streaming Interface by continuous channel change every 10 seconds. Test Case Id: CT_RMFStreamer_19</synopsis>
   <groups_id/>
-  <execution_time>10</execution_time>
+  <execution_time>18</execution_time>
   <long_duration>false</long_duration>
   <remarks/>
   <skip>false</skip>
@@ -78,11 +78,25 @@ ip = <ipaddress>
 port = <port>
 
 obj.configureTestCase(ip,port,'RMF_MS_ContionusDVRPlayback_28');
+loadModuleStatus = obj.getLoadModuleResult();
+print "Load Module Status :  %s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
 
-#Get the result of connection with test component and STB
-result =obj.getLoadModuleResult();
-print "RMFStreamer module  %s" %result;
-if "SUCCESS" in result.upper():
+if "FAILURE" in loadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediastreamer","2.0");
+                obj.configureTestCase(ip,port,'RMF_MS_ContionusDVRPlayback_28');
+                #Get the result of connection with test component and STB
+                loadModuleStatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadModuleStatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
+if "SUCCESS" in loadModuleStatus.upper():
          obj.setLoadModuleStatus("SUCCESS");
          print "RmfStreamer load successful";
          #Prmitive test case which associated to this Script

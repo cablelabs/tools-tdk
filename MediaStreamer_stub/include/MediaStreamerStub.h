@@ -43,6 +43,8 @@
 #define IN
 #define OUT
 #define CMAF_MAX_NAME_LEN 64
+#define PRE_REQUISITE_LOG_PATH "logs/Mediastreamer_testmodule_prereq_details.log"
+#define PRE_REQUISITE_FILE "scripts/mediastreamer_test_module_pre-script.sh"
 
 #define TEST_SUCCESS true
 #define TEST_FAILURE false 

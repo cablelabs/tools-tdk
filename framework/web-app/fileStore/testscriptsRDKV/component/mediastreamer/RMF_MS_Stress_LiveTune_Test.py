@@ -27,7 +27,7 @@
   <status>FREE</status>
   <synopsis>This script tests Requesting multiple Web interface request for Live tune.Test Case ID:CT_Mediastreamer_14</synopsis>
   <groups_id/>
-  <execution_time>5</execution_time>
+  <execution_time>15</execution_time>
   <long_duration>false</long_duration>
   <remarks/>
   <skip>false</skip>
@@ -79,10 +79,25 @@ port = <port>
 obj.configureTestCase(ip,port,'RMFMS_Stress_LiveTune_Test_24');
 
 #Get the result of connection with test component and STB
-loadmodulestatus =obj.getLoadModuleResult();
-print "Mediaastreamer module loading status :%s" %loadmodulestatus;
-#Check for SUCCESS/FAILURE of Mediastreamer module
-if "SUCCESS" in loadmodulestatus.upper():
+loadModuleStatus = obj.getLoadModuleResult();
+print "Load Module Status :  %s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
+
+if "FAILURE" in loadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediastreamer","2.0");
+                obj.configureTestCase(ip,port,'RMFMS_Stress_LiveTune_Test_24');
+                #Get the result of connection with test component and STB
+                loadModuleStatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadModuleStatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
+if "SUCCESS" in loadModuleStatus.upper():
         #Set the module loading status
         obj.setLoadModuleStatus("SUCCESS");
 
