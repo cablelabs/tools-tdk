@@ -97,23 +97,29 @@ OID : 1.3.6.1.4.1.17270.9225.1.4.1.6"
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
 import snmplib;
+from trm import getMaxTuner;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("snmp","1");
+trmObj = tdklib.TDKScriptingLibrary("trm","2.0");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
 obj.configureTestCase(ip,port,'SNMP_getTunerNum');
+trmObj.configureTestCase(ip,port,'SNMP_getTunerNum');
 
 #Get the result of connection with test component and STB
-loadmodulestatus =obj.getLoadModuleResult();
-print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus;
+loadmodulestatus1 =obj.getLoadModuleResult();
+loadmodulestatus2 =trmObj.getLoadModuleResult();
+
+print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus1;
 
 
-if "SUCCESS" in loadmodulestatus.upper():
+if "SUCCESS" in loadmodulestatus1.upper() and "SUCCESS" in loadmodulestatus2.upper():
     obj.setLoadModuleStatus("SUCCESS");
+    trmObj.setLoadModuleStatus("SUCCESS");
     #Prmitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('SNMP_GetCommString');
     actResponse =snmplib.SnmpExecuteCmd(tdkTestObj, "snmpwalk", "-v 2c", "1.3.6.1.4.1.17270.9225.1.4.1.6", ip);
@@ -121,20 +127,21 @@ if "SUCCESS" in loadmodulestatus.upper():
     #Logic for verification will be done in the next iteration
     if "SNMPv2-SMI" in actResponse:
         noTuner=actResponse.split("\"")[1].strip();
-        if noTuner !='0':
+        tdkTestObj.setResultStatus("SUCCESS");
+        print "TEST STEP 1:Execute snmpwalk to get number of tuners connected to the host";
+        print "EXPECTED RESULT 1: snmpwalk should get number of tuners connected to the host";
+        print "ACTUAL RESULT 1: %s" %actResponse;
+        #Get the result of execution
+        print "[TEST EXECUTION RESULT] : SUCCESS :Number of tuners connected to the host = %s" %noTuner ;
+        #Get the tuner number using TRM module
+        trmResponse=getMaxTuner(obj,'SUCCESS');
+            
+        if trmResponse== int(noTuner):
                 tdkTestObj.setResultStatus("SUCCESS");
-                print "TEST STEP 1:Execute snmpwalk to get number of tuners connected to the host";
-                print "EXPECTED RESULT 1: snmpwalk should get number of tuners connected to the host";
-                print "ACTUAL RESULT 1: %s" %actResponse;
-                #Get the result of execution
-                print "[TEST EXECUTION RESULT] : SUCCESS :Number of tuners connected to the host = %s" %noTuner ;
+                print "[TEST EXECUTION RESULT] : SUCCESS : Number of tuners from snmpwalk same as getMaxTuner = %s" %noTuner ;
         else:
                 tdkTestObj.setResultStatus("FAILURE");
-                details = tdkTestObj.getResultDetails();
-                print "TEST STEP 1:Execute snmpwalk to get number of tuners connected to the host";
-                print "EXPECTED RESULT 1: snmpwalk should get number of tuners connected to the host";
-                print "ACTUAL RESULT 1: %s" %actResponse;
-                print "[TEST EXECUTION RESULT] : No tuners connected";
+                print "[TEST EXECUTION RESULT] : FAILURE : Number of tuners from snmpwalk not same as getMaxTuner = %s" %noTuner ;
 
     else:
         tdkTestObj.setResultStatus("FAILURE");
@@ -144,6 +151,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         print "ACTUAL RESULT 1: %s" %actResponse;
         print "[TEST EXECUTION RESULT] : FAILURE to get number of tuners";
     obj.unloadModule("snmp");
+    trmObj.unloadModule("trm");
 else:
         print "FAILURE to load snmp module";
         obj.setLoadModuleStatus("FAILURE");
