@@ -329,6 +329,14 @@
           <parameter name="names" value=""/>
         </parameters>
       </primitiveTest>
+      <primitiveTest id=" " name="SM_Generic_CallMethod" version="1">
+        <function>TestMgr_SM_Generic_CallMethod</function>
+        <parameters>
+          <parameter name="method_name" value="NULL"/>
+          <parameter name="params" value="NULL"/>
+          <parameter name="service_name" value="NULL"/>
+        </parameters>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>

@@ -28,6 +28,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <json/json.h>
+#include <json/value.h>
+#include <QByteArray>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 #include "servicemanager.h"
@@ -131,6 +136,7 @@ using namespace std;
 #define STR_DETAILS_50  50
 #define STR_DETAILS_100 100
 #define STR_DETAILS_200 200
+#define SM_MIN_RESULT_PARAMS 1
 
 class RDKTestAgent;
 class ServiceManagerAgent : public RDKTestStubInterface
@@ -218,6 +224,9 @@ class ServiceManagerAgent : public RDKTestStubInterface
                 bool SM_FP_Set_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response);
 
+		/* Generic Stub for callMethod*/
+		bool SM_Generic_CallMethod (IN const Json::Value& req, OUT Json::Value& response);
+			
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
 		

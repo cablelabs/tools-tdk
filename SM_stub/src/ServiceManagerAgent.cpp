@@ -18,6 +18,203 @@
 */
 
 #include "ServiceManagerAgent.h"
+
+Json::Value variantToJson (QVariant qData);
+Json::Value convertQHashToJson (QVariant qHash) ;
+QVariantList objectToList (Json::Value jData);
+
+/******************************************************************************
+ *Function name : qListToJson
+ *Description   : Function to convert QVariantList elements to corresponding 
+ *                Json array
+ *Input         : qList - QVariantList to be converted to json array
+ *Return        : Returns the resultant json array
+ *******************************************************************************/
+Json::Value qListToJson (QVariantList qList) {
+
+        DEBUG_PRINT (DEBUG_TRACE, "qListToJson --->Entry\n");
+	Json::Value jArray;
+        int itr;
+        for (itr = 0;itr < qList.size();itr++) {
+                if ((QVariant::Hash == qList[itr].type()) || (QVariant::Map == qList[itr].type())) {
+		        jArray[itr] = convertQHashToJson (qList[itr]);
+                }
+                else if (QVariant::List == qList[itr].type()) {
+			jArray[itr] = qListToJson (qList[itr].toList());
+
+                }
+                else {
+			jArray[itr] = variantToJson (qList[itr]);
+                }
+		
+        }
+
+        DEBUG_PRINT (DEBUG_TRACE, "qListToJson --->Exit\n");
+	return jArray;
+}
+
+/******************************************************************************
+ *Function name : convertQHashToJson
+ *Description   : Function to check the QVariant data(QHash/QMap) and convert it
+ *                to json object
+ *Input         : qHash - QVariant data to be converted to json object
+ *Return        : Returns the resultant json object
+ *******************************************************************************/
+Json::Value convertQHashToJson (QVariant qHash) {
+
+	DEBUG_PRINT (DEBUG_TRACE, "convertQHashToJson --->Entry\n");
+
+	Json::Value qObject;
+        QVariantHash::const_iterator itr = qHash.toHash().constBegin();
+	QVariantHash::const_iterator endItr = qHash.toHash().constEnd();
+	if (qHash.type() == QVariant::Map) {
+                QVariantMap::const_iterator itr = qHash.toMap().constBegin();
+		QVariantMap::const_iterator endItr = qHash.toMap().constEnd();
+        }
+
+	for ( ; itr != endItr; itr++) {
+		if (QVariant::List == itr.value().type()) {
+			qObject[itr.key().toStdString()] = qListToJson (itr.value().toList());
+		    }
+		    else if ((QVariant::Hash == itr.value().type()) && (QVariant::Map == itr.value().type())){
+			qObject[itr.key().toStdString()] = convertQHashToJson (itr.value());
+		    }
+		    else {
+			qObject[itr.key().toStdString()] = variantToJson (itr.value());
+		    }
+	}
+
+	DEBUG_PRINT (DEBUG_TRACE, "convertQHashToJson --->Exit\n");
+	return qObject;
+}
+
+/******************************************************************************
+ *Function name : convertToValue
+ *Description   : Function to check the Json::Value type and convert it to
+ *                QVariant
+ *Input         : jData - Json::Value data to be converted to QVariant
+ *Return        : Returns the resultant QVariant
+ *******************************************************************************/
+QVariant convertToValue (Json::Value jData) {
+
+	DEBUG_PRINT (DEBUG_TRACE, "convertToValue --->Entry\n");
+	QVariant jValue;
+	if (jData.isString()) {
+		jValue = jData.asCString();
+	}
+	else if (jData.isBool()) {
+		jValue = jData.asBool();
+	}
+	else if (jData.isInt()) {
+		jValue = jData.asInt();
+	}
+	else if (jData.isUInt()) {
+		jValue = jData.asUInt();
+	}
+	else if (jData.isDouble()) {
+		jValue = jData.asDouble();
+	}
+
+	DEBUG_PRINT (DEBUG_TRACE, "convertToValue --->Exit\n");
+	return jValue;
+        
+}
+
+/******************************************************************************
+ *Function name : arrayToList
+ *Description   : Function to check the Json array elements type and convert it to
+ *                QVariantList
+ *Input         : jData - Json array to be converted to QVariantList
+ *Return        : Returns the resultant QVariantList
+ *******************************************************************************/
+QVariantList arrayToList (Json::Value jData) {
+
+	DEBUG_PRINT (DEBUG_TRACE, "arrayToList --->Entry\n");
+	QVariantList qList;
+	int itr;
+	for (itr = 0;itr < jData.size();itr++) {
+		if (jData[itr].isObject()) {
+			qList << objectToList (jData[itr]);
+		}
+		else if (jData[itr].isArray()) {
+			qList << arrayToList (jData[itr]);
+		}
+		else {
+			qList << convertToValue (jData[itr]);
+		}
+	}
+	
+	DEBUG_PRINT (DEBUG_TRACE, "arrayToList --->Exit\n");
+	return qList;
+}
+/******************************************************************************
+ *Function name : objectToList
+ *Description   : Function to check the Json object and convert it to
+ *                QVariantList
+ *Input         : jData - Json object to be converted to QVariantList
+ *Return        : Returns the resultant QVariantList
+ *******************************************************************************/
+QVariantList objectToList (Json::Value jData) {
+
+	DEBUG_PRINT (DEBUG_TRACE, "objectToList --->Entry\n");
+	QVariantList qList;
+	QVariantHash qHash;
+	string key;
+	qHash.clear();
+	foreach (key, jData.getMemberNames()) {
+		if (jData.get(key, Json::Value()).isString()) {
+			qHash.insert(key.c_str(), jData.get(key, Json::Value()).asCString());
+		}
+		else if (jData.get(key, Json::Value()).isInt()) {
+			qHash.insert(key.c_str(), jData.get(key, Json::Value()).asInt());
+		}
+	 	else if (jData.get(key, Json::Value()).isBool()) {
+			qHash.insert(key.c_str(), jData.get(key, Json::Value()).asBool());
+		}
+		else if (jData.get(key, Json::Value()).isDouble()) {
+			qHash.insert(key.c_str(), jData.get(key, Json::Value()).asDouble());
+		}
+		else if (jData.get(key, Json::Value()).isArray()) {
+			qHash.insert(key.c_str(), arrayToList (jData.get(key, Json::Value())));
+		}
+		else if (jData.get(key, Json::Value()).isNull()) {
+			qHash.insert(key.c_str(), QVariant());
+		}
+	}
+		qList << qHash;
+	
+	DEBUG_PRINT (DEBUG_TRACE, "objectToList --->Exit\n");
+	return qList;
+}
+/******************************************************************************
+ *Function name : variantToJson
+ *Description   : Function to check the QVariant data type and convert it to
+ *                json value
+ *Input         : qData - QVariant data to be converted to json value
+ *Return        : Returns the resultant json value
+ *******************************************************************************/
+Json::Value variantToJson (QVariant qData) {
+
+	Json::Value jValue;
+	DEBUG_PRINT (DEBUG_TRACE, "variantToJson --->Entry\n");
+
+        if (QVariant::String == qData.type()) {
+        	jValue = qData.toString().toStdString();
+	}
+        else if (QVariant::Int == qData.type()) {
+		 jValue = qData.toInt();
+        }
+        else if (QVariant::Bool == qData.type()) {
+		jValue = qData.toBool();
+        }
+	else if(QVariant::ByteArray == qData.type()) {
+		jValue = qData.toByteArray().data();
+	}
+	
+	DEBUG_PRINT (DEBUG_TRACE, "variantToJson --->Exit\n");
+	return jValue;
+}
+
 #ifdef HAS_API_APPLICATION
 QString listToString(QVariantList conInfo);
 
@@ -288,6 +485,10 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_Set_24_Hour_Clock,"TestMgr_SM_FP_Set_24_Hour_Clock");
          /*is24hour API*/
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_Is_24_Hour_Clock,"TestMgr_SM_FP_Is_24_Hour_Clock");
+        /*
+         *Generic Stub for callMethod APIs
+         */
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_Generic_CallMethod, "TestMgr_SM_Generic_CallMethod");
 
 	return TEST_SUCCESS;
 }
@@ -3619,6 +3820,119 @@ bool ServiceManagerAgent::SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT 
         return TEST_SUCCESS;
 }
 
+/***************************************************************************
+ *Function name : SM_Generic_CallMethod
+ *Descrption    : A Generic Stub function for invoking callMethod for all
+ *		  services
+ *parameter [in]: Servicename : name of the service to be invoked
+ *                methodName : API to be invoked
+ *		  parameters : List of parameters to be passed to the service
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req, 
+						 OUT Json::Value& response) {
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_Generic_CallMethod ---->Entry\n");
+
+        bool ReturnValue = TEST_FAILURE;
+	string serviceName, methodName;
+	QVariantList qList;
+	Service *ptrService = NULL;
+	QVariantHash::iterator itr, successPos;
+	ServiceParams inputParams, outputParams;
+	       
+        if ((NULL == &req["service_name"]) || (NULL == &req["method_name"])) {
+		response["result"]="FAILURE";
+		response["details"]="Invalid Parameters";
+                return TEST_FAILURE;
+        }
+
+        serviceName = req["service_name"].asCString();
+        methodName = req["method_name"].asCString();
+
+#ifdef HAS_API_HDMI_CEC
+	if (QString::fromStdString(serviceName) == HdmiCecService::SERVICE_NAME) {
+		ptrService = pHdmiService;
+	}
+        else
+#endif   
+#ifdef HAS_FRONT_PANEL
+          if (QString::fromStdString(serviceName) == FrontPanelService::SERVICE_NAME) {
+		ptrService = pFPService;
+	}
+	else
+#endif
+        {
+		ptrService = ServiceManager::getInstance()->getGlobalService (QString::fromStdString(serviceName)); 
+	}
+        if (NULL != ptrService) {
+
+	   if (NULL != &req["params"] && !req["params"].empty()) {
+		if (req["params"].isArray()) {
+			qList.insert(0, arrayToList (req["params"]));
+		}
+		else if (req["params"].isObject()) {
+			qList.insert(0, objectToList(req["params"]));
+		}
+		else {
+			qList.insert(0, convertToValue(req["params"]));
+		}
+ 		inputParams["params"] = qList;
+	   }
+           try {
+		/*
+		 *Call the Service manager calllMethod API
+		 */
+                outputParams = ptrService->callMethod(QString::fromStdString(methodName), inputParams);
+                ReturnValue = (outputParams["success"].isNull())?TEST_FAILURE:outputParams["success"].toBool();
+                if ((outputParams.isEmpty()) || ((TEST_FAILURE == ReturnValue) && !(outputParams["success"].isNull()))) {
+                        DEBUG_PRINT (DEBUG_TRACE,"%s call Failure.\n", methodName.c_str());
+                        response["result"] = "FAILURE";
+                        response["details"] = methodName + " call failed";
+                }
+                else {
+                        DEBUG_PRINT (DEBUG_TRACE,"%s call success.\n", methodName.c_str());
+                        response["result"] = "SUCCESS";
+			if ((outputParams.contains("success")) && (outputParams.size() > SM_MIN_RESULT_PARAMS)) { 
+				/*
+				 *Skip success field
+				 */ 
+				itr = outputParams.begin();
+				successPos = outputParams.find("success");
+				if (successPos !=  outputParams.end()) {
+				    if (outputParams.end() != outputParams.erase(successPos)) {
+				    	itr = outputParams.erase (successPos);
+				    }
+				}
+				if ((QVariant::Hash == itr.value().type()) || (QVariant::Map == itr.value().type())) {
+                        		response["details"] = convertQHashToJson (itr.value());
+				}
+				else if (QVariant::List == itr.value().type()) {	
+				    response["details"] = qListToJson (itr.value().toList());
+				}
+				else {
+				    response["details"] = variantToJson (itr.value());
+				}
+			}
+			else {
+				response["details"] =  methodName + " call success";
+			}
+                }
+           }
+           catch(...) {
+               DEBUG_PRINT (DEBUG_ERROR,"Exception occured while calling %s\n", methodName.c_str());
+               response["result"] = "FAILURE";
+               response["details"] = "Failed to call " + methodName;
+          }
+        }
+        else {
+                DEBUG_PRINT (DEBUG_ERROR, "Failed to create %s service handler.\n", serviceName.c_str());
+                response["result"] = "FAILURE";
+                response["details"] = "Failed to create " + serviceName + " service handler.";
+        }
+
+        DEBUG_PRINT (DEBUG_TRACE,"SM_Generic_CallMethod ---->Exit\n");
+        return TEST_SUCCESS;
+}
 
 /**************************************************************************
  * Function Name: CreateObject
@@ -3722,6 +4036,7 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
         /*Set24HourClock & is24Hour APIs*/
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_Set_24_Hour_Clock");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_Is_24_Hour_Clock");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_Generic_CallMethod");
 
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;
