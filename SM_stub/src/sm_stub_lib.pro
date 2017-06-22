@@ -23,6 +23,8 @@ DEFINES += USE_DEVICE_SETTINGS_SERVICE HAS_FRONT_PANEL USE_DS SCREEN_CAPTURE ENA
 DEFINES += QT_WEBKIT_LIB
 DEFINES += HAS_API_VIDEO_APPLICATION_EVENTS
 DEFINES += HAS_API_DEVICEDIAGNOSTICS
+DEFINES += HAS_API_HOME_NETWORKING
+DEFINES += USE_LSB
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -132,3 +134,7 @@ contains(DEFINES,HAS_API_DEVICEDIAGNOSTICS) {
 	SOURCES += ../servicemanager/src/services/devicediagnosticsservice.cpp
 }
 
+contains(DEFINES,HAS_API_HOME_NETWORKING) {
+        HEADERS += ../servicemanager/include/services/homenetworkingservice.h
+        SOURCES += ../servicemanager/src/services/homenetworkingservice.cpp
+}

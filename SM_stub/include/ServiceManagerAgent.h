@@ -168,6 +168,13 @@ class ServiceManagerAgent : public RDKTestStubInterface
 		bool SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_HN_SetDeviceName(IN const Json::Value& req, OUT Json::Value& response);
+		bool SM_HN_IsMDVREnabled(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_HN_IsVPOPEnabled(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_HN_GetDeviceName(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_HN_IsUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_HN_SetUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_HN_IsVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_HN_SetVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response);
 		// DisplaySettings Service callMethod APIs
 		bool SM_DisplaySetting_SetZoomSettings(IN const Json::Value& req, OUT Json::Value& response);
 		bool SM_DisplaySetting_SetCurrentResolution(IN const Json::Value& req, OUT Json::Value& response);

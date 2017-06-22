@@ -428,6 +428,13 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_EnableMDVR,"TestMgr_SM_HN_EnableMDVR");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_EnableVPOP,"TestMgr_SM_HN_EnableVPOP");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_SetDeviceName,"TestMgr_SM_HN_SetDeviceName");
+	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_IsVPOPEnabled,"TestMgr_SM_HN_IsVPOPEnabled");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_IsMDVREnabled,"TestMgr_SM_HN_IsMDVREnabled");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_GetDeviceName,"TestMgr_SM_HN_GetDeviceName");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_IsUpnpEnabled,"TestMgr_SM_HN_IsUpnpEnabled");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_SetUpnpEnabled,"TestMgr_SM_HN_SetUpnpEnabled");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_IsVidiPathEnabled,"TestMgr_SM_HN_IsVidiPathEnabled");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_HN_SetVidiPathEnabled,"TestMgr_SM_HN_SetVidiPathEnabled");
 	// DisplaySettings Service callMethod APIs
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings,"TestMgr_SM_DisplaySetting_SetZoomSettings");
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution,"TestMgr_SM_DisplaySetting_SetCurrentResolution");
@@ -988,77 +995,126 @@ bool ServiceManagerAgent::SM_CreateService(IN const Json::Value& req, OUT Json::
 }
 
 /***************************************************************************
- *Function name : SM_HN_EnableMDVR 
- *Descrption    : This function will check the functionality of callMethod API with 
-		  METHOD_HN_SET_MDVR_ENABLED and METHOD_HN_IS_MDVR_ENABLED method as
-		  parameters.
+ *Function name : SM_HN_EnableMDVR
+ *Descrption    : This function will enable/disable MDVR staus.
  *parameter [in]: req-  enable - Parameter to be passed to callMethod API.
- *****************************************************************************/ 
+ *****************************************************************************/
 bool ServiceManagerAgent::SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableMDVR ---->Entry\n");
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableMDVR ---->Entry\n");
 
 #ifdef HAS_API_HOME_NETWORKING
         if(&req["enable"]==NULL)
         {
-		response["result"]="FAILURE";
-		response["details"]="enable value is NULL";
+                response["result"]="FAILURE";
+                response["details"]="enable value is NULL";
                 return TEST_FAILURE;
         }
-	int enable=req["enable"].asInt();
-	bool enable_flag=false;
-	ServiceParams params,resultParams;
-	char enableDetail[STR_DETAILS_20]= "Enable:";
-	QVariantList list;
-	Service* ptr_service=NULL;
-	if(enable==1)
-	{
-		enable_flag= true;
-	}
-	else if(enable==0)
-	{
-		enable_flag=false;
-	}	
-	else
-	{
-		DEBUG_PRINT(DEBUG_ERROR,"\nEnter enable/disable in 'enable' field\n");
-		response["result"]="FAILURE";
-		response["details"]="Enter 'enable' field correctly";
-		return TEST_FAILURE;
-	}
+        int enable=req["enable"].asInt();
+        ServiceParams inParams,resultParams;
+        QVariantList list;
+        Service* ptrService=NULL;
 
-	/*Calling getGlobalService API to get the service instance*/
-	ptr_service = ServiceManager::getInstance()->getGlobalService(HOME_NETWORKING_SERVICE_NAME);
-	if(ptr_service != NULL)
-	{
-		char *mdvrDetails = (char*)malloc(sizeof(char)*5);
-		memset(mdvrDetails , '\0', (sizeof(char)*5));
-		list.append(enable_flag);
-		params["params"] = list;
-		/*Enabling MDVR by calling callMethod with METHOD_HN_SET_MDVR_ENABLED*/
-		ptr_service->callMethod(METHOD_HN_SET_MDVR_ENABLED,params); 
-		/*Checking MDVR by calling callMethod with METHOD_HN_IS_MDVR_ENABLED*/
-		resultParams=ptr_service->callMethod(METHOD_HN_IS_MDVR_ENABLED,params);
-		sprintf(mdvrDetails,"%d",resultParams["enabled"].toBool());
-		strcat(enableDetail,mdvrDetails);
-		DEBUG_PRINT(DEBUG_LOG,"%s",enableDetail);
-		free(mdvrDetails);
-		response["result"]="SUCCESS";
-		response["details"]=enableDetail;
-	}
-	else
-	{
-		response["result"]="FAILURE";
-		DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
-	}
+        if (ServiceManager::getInstance()->doesServiceExist(HomeNetworkingService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(HomeNetworkingService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        list.append(enable);
+                        inParams["params"] = list;
+
+                        /*Enabling MDVR by calling callMethod with METHOD_HN_SET_MDVR_ENABLED*/
+                        resultParams = ptrService->callMethod(METHOD_HN_SET_MDVR_ENABLED,inParams);
+
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Set Enable MDVR success");
+                                response["details"] = "Set Enable MDVR success";
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Set Enable MDVR failed");
+                                response["details"] = "Set Enable MDVR failed";
+                                response["result"]="FAILURE";
+                        }
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"getGlobalService failed\n");
+                        response["details"] = "getGlobalService failed";
+                        response["result"] = "FAILURE";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Home Networking service does not exist\n");
+                response["details"] = "Home Networking service does not exist";
+                response["result"] = "FAILURE";
+        }
+
 #else
-	response["result"]="FAILURE";
-	response["details"]="Home Networking Service unsupported";
+        DEBUG_PRINT(DEBUG_TRACE,"Home networking Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="Home Networking Service unsupported";
 #endif
-	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableMDVR ---->Exit\n");
-	return TEST_SUCCESS;	
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableMDVR ---->Exit\n");
+        return TEST_SUCCESS;
 }
 
+/***************************************************************************
+ *Function name : SM_HN_IsMDVREnabled
+ *Descrption    : This function will check if MDVR status is enabled/disabled.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HN_IsMDVREnabled(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_IsMDVREnabled ---->Entry\n");
+
+#ifdef HAS_API_HOME_NETWORKING
+        Service* ptrService = NULL;
+        ServiceParams inParams, resultParams;
+        if (ServiceManager::getInstance()->doesServiceExist(HomeNetworkingService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(HomeNetworkingService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        /*Checking MDVR by calling callMethod with METHOD_HN_IS_MDVR_ENABLED*/
+                        resultParams=ptrService->callMethod(METHOD_HN_IS_MDVR_ENABLED,inParams);
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                char enableStatus[STR_DETAILS_20] = {'\0'};
+                                DEBUG_PRINT(DEBUG_TRACE,"MDVR enable status retrieved");
+                                sprintf(enableStatus,"%d",resultParams["enabled"].toBool());
+                                response["details"] = enableStatus;
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Failed to retrieve MDVR enable status");
+                                response["details"] = "Failed to retrieve MDVR enable status";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Home networking service does not exist\n");
+                response["details"] = "Home networking service does not exist";
+                response["result"] = "FAILURE";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Home networking service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Home networking service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HN_IsMDVREnabled---->exit\n");
+        return TEST_FAILURE;
+}
 
 /***************************************************************************
  *Function name : SM_HN_EnableVPOP 
@@ -1129,6 +1185,338 @@ bool ServiceManagerAgent::SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::
 #endif
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableVPOP ---->Exit\n");
 	return TEST_SUCCESS;	
+}
+
+/***************************************************************************
+ *Function name : SM_HN_IsVPOPEnabled
+ *Descrption    : This function will check if VPOP status is enabled/disabled.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HN_IsVPOPEnabled(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_IsVPOPEnabled ---->Entry\n");
+
+#ifdef HAS_API_HOME_NETWORKING
+        Service* ptrService = NULL;
+        ServiceParams inParams, resultParams;
+        if (ServiceManager::getInstance()->doesServiceExist(HomeNetworkingService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(HomeNetworkingService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        resultParams=ptrService->callMethod(METHOD_HN_IS_VPOP_ENABLED,inParams);
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                char enableStatus[STR_DETAILS_20] = {'\0'};
+                                DEBUG_PRINT(DEBUG_TRACE,"VPOP enable status retrieved");
+                                sprintf(enableStatus,"%d",resultParams["enabled"].toBool());
+                                response["details"] = enableStatus;
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Failed to retrieve VPOP enable status");
+                                response["details"] = "Failed to retrieve VPOP enable status";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Home networking service does not exist\n");
+                response["details"] = "Home networking service does not exist";
+                response["result"] = "FAILURE";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Home networking service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Home networking service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HN_IsVPOPEnabled---->exit\n");
+        return TEST_FAILURE;
+}
+
+/***************************************************************************
+ *Function name : SM_HN_SetVidiPathEnabled
+ *Descrption    : This function will enable/disable Vidi path
+ *parameter [in]: req - enable - value corresponding Vidi path enable/disable
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HN_SetVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HN_SetVidiPathEnabled---->Entry\n");
+
+#ifdef HAS_API_HOME_NETWORKING
+        Service* ptrService = NULL;
+        ServiceParams inParams, resultParams;
+        QVariantList inList;
+        bool valueToSetEnabled = req["enable"].asInt();
+        if (ServiceManager::getInstance()->doesServiceExist(HOME_NETWORKING_SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(HOME_NETWORKING_SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        inList.append(valueToSetEnabled);
+                        inParams["params"] = inList;
+
+                        resultParams = ptrService->callMethod(METHOD_HN_SET_VIDI_PATH_ENABLED, inParams);
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Set Vidi Enable success");
+                                response["details"] = "Set Vidi Enable success";
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Set Vidi Enable failed");
+                                response["details"] = "Set Vidi Enable failed";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Home Networking Service does not exist\n");
+                response["details"] = "Home networking Service does not exist";
+                response["result"] = "FAILURE";
+        }
+
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Home Networking Service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Home Networking not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HN_SetVidiPathEnabled---->Exit\n");
+        return TEST_FAILURE;
+}
+
+/***************************************************************************
+ *Function name : SM_HN_IsVidiPathEnabled
+ *Descrption    : This function will check if VidiPath is enabled/disabled
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HN_IsVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HN_IsVidiPathEnabled---->Entry\n");
+
+#ifdef HAS_API_HOME_NETWORKING
+        Service* ptrService = NULL;
+        ServiceParams inParams, resultParams;
+        if (ServiceManager::getInstance()->doesServiceExist(HOME_NETWORKING_SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(HOME_NETWORKING_SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        resultParams = ptrService->callMethod(METHOD_HN_IS_VIDI_PATH_ENABLED, inParams);
+                        bool status = resultParams["success"].toBool();
+                        printf("ENABLE STATUS: %d\n", status);
+                        if(status)
+                        {
+                                char enableStatus[STR_DETAILS_20] = {'\0'};
+                                DEBUG_PRINT(DEBUG_TRACE,"Vidi path enable status retrieved");
+                                sprintf(enableStatus,"%d",resultParams["enabled"].toBool());
+                                response["details"] = enableStatus;
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Failed to retrieve Vidi path enable data");
+                                response["details"] = "Failed to retrieve vidi path enable data";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Home networking service does not exist\n");
+                response["details"] = "Home networking service does not exist";
+                response["result"] = "FAILURE";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Home networking service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Home networking service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HN_IsVidiPathEnabled---->exit\n");
+        return TEST_FAILURE;
+}
+
+/***************************************************************************
+ *Function name : SM_HN_SetUpnpEnabled
+ *Descrption    : This function will enable/disable the upnp status.
+ *parameter [in]: req-  enable - Parameter to be passed to callMethod API.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HN_SetUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_SetUpnpEnabled ---->Entry\n");
+
+#ifdef HAS_API_HOME_NETWORKING
+        if(&req["enable"]==NULL)
+        {
+                response["result"]="FAILURE";
+                response["details"]="enable value is NULL";
+                return TEST_FAILURE;
+        }
+        int enable=req["enable"].asInt();
+        ServiceParams inParams,resultParams;
+        QVariantList list;
+        Service* ptrService=NULL;
+
+        if (ServiceManager::getInstance()->doesServiceExist(HomeNetworkingService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(HomeNetworkingService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        list.append(enable);
+                        inParams["params"] = list;
+
+                        /*Enabling Upnp by calling callMethod with METHOD_HN_SET_UPNP_ENABLED*/
+                        resultParams = ptrService->callMethod(METHOD_HN_SET_UPNP_ENABLED, inParams);
+
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Set Enable Upnp success");
+                                response["details"] = "Set Enable Upnp success";
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Set Enable Upnp failed");
+                                response["details"] = "Set Enable Upnp failed";
+                                response["result"]="FAILURE";
+                        }
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"getGlobalService failed\n");
+                        response["details"] = "getGlobalService failed";
+                        response["result"] = "FAILURE";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Home Networking service does not exist\n");
+                response["details"] = "Home Networking service does not exist";
+                response["result"] = "FAILURE";
+        }
+
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Home networking Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="Home Networking Service unsupported";
+#endif
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_SetUpnpEnabled ---->Exit\n");
+        return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : SM_HN_IsUpnpEnabled
+ *Descrption    : This function will check if Upnp status is enabled/disabled.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HN_IsUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_IsUpnpEnabled ---->Entry\n");
+
+#ifdef HAS_API_HOME_NETWORKING
+        Service* ptrService = NULL;
+        ServiceParams inParams, resultParams;
+        if (ServiceManager::getInstance()->doesServiceExist(HomeNetworkingService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(HomeNetworkingService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        /*Checking Upnp by calling callMethod with METHOD_HN_IS_UPNP_ENABLED*/
+                        resultParams=ptrService->callMethod(METHOD_HN_IS_UPNP_ENABLED,inParams);
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                char enableStatus[STR_DETAILS_20] = {'\0'};
+                                DEBUG_PRINT(DEBUG_TRACE,"Upnp enable status retrieved");
+                                sprintf(enableStatus,"%d",resultParams["enabled"].toBool());
+                                response["details"] = enableStatus;
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Failed to retrieve Upnp enable status");
+                                response["details"] = "Failed to retrieve Upnp enable status";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Home networking service does not exist\n");
+                response["details"] = "Home networking service does not exist";
+                response["result"] = "FAILURE";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Home networking service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Home networking service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HN_IsUpnpEnabled---->exit\n");
+        return TEST_SUCCESS;
+}
+
+/***************************************************************************
+ *Function name : SM_HN_GetDeviceName
+ *Descrption    : This function will retrieve the device name
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_HN_GetDeviceName(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_GetDeviceName ---->Entry\n");
+
+#ifdef HAS_API_HOME_NETWORKING
+        Service* ptrService = NULL;
+        ServiceParams inParams, resultParams;
+        if (ServiceManager::getInstance()->doesServiceExist(HomeNetworkingService::SERVICE_NAME))
+        {
+                ptrService = (ServiceManager::getInstance()->getGlobalService(HomeNetworkingService::SERVICE_NAME));
+                if (ptrService != NULL)
+                {
+                        resultParams=ptrService->callMethod(METHOD_HN_GET_DEVICE_NAME,inParams);
+                        bool status = resultParams["success"].toBool();
+                        if(status)
+                        {
+                                char deviceNameDetail[STR_DETAILS_200]= "";
+                                sprintf(deviceNameDetail,"%s",resultParams["deviceName"].toString().toUtf8().constData());
+                                DEBUG_PRINT(DEBUG_LOG,"%s",deviceNameDetail);
+                                response["details"] = deviceNameDetail;
+                                response["result"]="SUCCESS";
+                                return TEST_SUCCESS;
+                        }
+                        else
+                        {
+                                DEBUG_PRINT(DEBUG_TRACE,"Failed to retrieve device name details");
+                                response["details"] = "Failed to retrieve device name details";
+                                response["result"]="FAILURE";
+                        }
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_TRACE,"Home networking service does not exist\n");
+                response["details"] = "Home networking service does not exist";
+                response["result"] = "FAILURE";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"Home networking service not supported\n");
+        response["result"] = "FAILURE";
+        response["details"] = "Home networking service not supported";
+#endif
+
+        DEBUG_PRINT(DEBUG_TRACE,"SM_HN_GetDeviceName---->exit\n");
+        return TEST_FAILURE;
 }
 
 
@@ -3980,6 +4368,13 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_EnableMDVR");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_EnableVPOP");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_SetDeviceName");
+	ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_GetDeviceName");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_IsVPOPEnabled");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_IsMDVREnabled");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_IsUpnpEnabled");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_SetUpnpEnabled");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_IsVidiPathEnabled");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_HN_SetVidiPathEnabled");
 	// DisplaySettings Service callMethod APIs
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_DisplaySetting_SetZoomSettings");
 	ptrAgentObj->UnregisterMethod("TestMgr_SM_DisplaySetting_SetCurrentResolution");
