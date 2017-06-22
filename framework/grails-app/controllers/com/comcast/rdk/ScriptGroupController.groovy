@@ -667,6 +667,142 @@ class ScriptGroupController {
 		[ primitiveTestList : lis, category: params?.category,uniqueId:uniqueId]
 	}
 
+
+
+	/**
+	 * Method to get the details of the Suite to be created
+	 * @return
+	 */
+	def getSuiteDetails()
+	{
+		def moduleList = []
+		def moduleListRDKV = []
+		def moduleListRDKB = []
+		ArrayList<String> scriptGroupList = new ArrayList<String>();
+		int moduleListSizeRDKV 
+		int moduleListSizeRDKB
+		
+		moduleListRDKV = Module.findAllByCategory(Category.RDKV)
+		moduleListRDKB = Module.findAllByCategory(Category.RDKB)
+		moduleListRDKB.remove(Module.findByName('tcl'))
+		
+		scriptGroupList = ScriptGroup.findAll ()
+		
+
+		 moduleListSizeRDKV = moduleListRDKV.size()
+	
+		 moduleListSizeRDKB = moduleListRDKB.size()
+		 
+		[moduleListSizeRDKV:moduleListSizeRDKV,moduleListSizeRDKB :moduleListSizeRDKB ,moduleListRDKV :moduleListRDKV ,moduleListRDKB :moduleListRDKB ,scriptGroupList:scriptGroupList]
+	}
+	
+
+	def saveCustomGrp()
+	{
+		def testSuiteName = params.name
+		def boxType =  BoxType.findById(params?.boxname)
+		def rdkVersions = RDKVersions.findById(params?.RDKVersionsName)
+		def countVariable = 0
+		def moduleInstance
+		def moduleSelectList = []
+		def scriptFileList =[]
+		def scriptModuleList
+		def dirName
+		def fileName
+		def script
+		def scriptGroupInstance = new ScriptGroup()
+		def errorList = []
+		
+		
+		if(ScriptGroup.findByName(params?.name))
+		{
+			println "TestSuite name is already in use. Please use a different name."
+			flash.message = "TestSuite name is already in use. Please use a different name."
+			render("Duplicate Script Name not allowed. Try Again.")
+		}
+		else
+		{ 
+			/* To get the Selected Modules*/
+			if(params?.listCount)
+			{ // to delete record(s) from list.gsp
+				for (iterateVariable in params?.listCount)
+				{
+					countVariable++
+					if(params?.("chkbox"+countVariable) == KEY_ON)
+					{
+	
+						def idDb = params?.("id"+countVariable).toLong()			
+						moduleInstance = Module.get(idDb)
+						if (moduleInstance) 
+						{
+							moduleSelectList<<moduleInstance
+						}
+						
+					}
+					
+				}
+			
+				}
+			
+			def category = boxType.category.toString()
+			if(moduleSelectList.size()== 0)
+			{
+				flash.message = "No modules Selected"
+				
+			}
+		
+			scriptModuleList = scriptService.getScriptsMap(request.getRealPath("/"), category)
+				
+			scriptModuleList = scriptModuleList?scriptModuleList:[:]
+			for (module in moduleSelectList)
+			{
+				def scriptValue = scriptModuleList.get(module.toString()) 
+			
+				scriptValue.each {scriptValueObj->
+					
+					dirName = module.toString()
+					fileName = scriptValueObj
+		
+					script = scriptService.getMinimalScript(getRealPath(),dirName,fileName, category)
+					
+					if(script?.boxTypes?.contains( boxType) && script?.rdkVersions?.contains(rdkVersions))
+					{
+								
+						scriptFileList<<ScriptFile.findByScriptName(script?.name)				
+					
+					}
+				}
+						
+			}
+			if(scriptFileList.size()== 0)
+			{
+				flash.message = "No script with given condition. Suite not created"
+				render("No script with given condition. Suite not created")
+				
+				
+			}
+			else
+			{
+						
+				scriptGroupInstance.name = testSuiteName
+				scriptGroupInstance.groups = utilityService.getGroup()
+				scriptGroupInstance.category = category
+				scriptGroupInstance.scriptList = scriptFileList
+				if (!scriptGroupInstance.save(flush: true))
+				 {
+					 flash.message = "Script Not Saved"
+					println "not saved"
+				}
+				 else{
+					 flash.message = "Test Suite Created Successfully "
+					 render("Test Suite Created Successfully ")
+				 }
+			}
+		}
+		redirect(action: "list")
+	}
+
+
 	/**
 	 * Edit Script
 	 * @return
@@ -3863,4 +3999,3 @@ class ScriptGroupController {
 		render status as JSON
 	}
 }
-
