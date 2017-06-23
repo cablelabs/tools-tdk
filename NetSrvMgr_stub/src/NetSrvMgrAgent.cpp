@@ -26,7 +26,40 @@ extern "C" {
 #include "libIARMCore.h"
 }
 #endif
+/***************************************************************************
+ *Function name : readLogFile
+ *Description   : Helper API to check if a log pattern is found in the file specified
+ *Input         : Filename - Name of file where the log has to be searched
+ *                parameter - pattern to be searched in the log file
+ *Output        : true if pattern is found
+ *                false if pattern not found or filename does not exist
+ *****************************************************************************/
+bool readLogFile (const char *filename, const string parameter) {
 
+    DEBUG_PRINT (DEBUG_TRACE, "readLogFile --->Entry\n"); 
+    string line;
+    bool retVal = TEST_FAILURE;	
+    ifstream logFile (filename);
+    if (logFile.is_open ()) {
+        while (logFile.good ()) {
+            getline (logFile,line);
+            if (line.find (parameter) != string::npos) {
+                DEBUG_PRINT (DEBUG_LOG,"Parameter found: %s\n",line.c_str ());
+                logFile.close ();
+		retVal = TEST_SUCCESS;
+                return retVal;
+            }
+        }
+        logFile.close ();
+        DEBUG_PRINT (DEBUG_ERROR,"Error! No Log found for parameter %s\n", parameter.c_str());
+    }
+    else {
+        DEBUG_PRINT (DEBUG_ERROR,"Unable to open file %s\n", filename);
+    }
+
+    DEBUG_PRINT (DEBUG_TRACE, "readLogFile --->Entry\n"); 
+    return retVal;
+}
 /******************************************************************************
  *Function name : setParameters
  *Description   : Helper API to check the methodName to be invoked
@@ -414,6 +447,7 @@ bool NetSrvMgrAgent::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAg
     ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetPairedSSID, "TestMgr_NetSrvMgr_WifiMgrGetPairedSSID");
     ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetEnabled, "TestMgr_NetSrvMgr_WifiMgrSetEnabled");
     ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetGetParameters, "TestMgr_NetSrvMgr_WifiMgrSetGetParameters");
+    ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent, "TestMgr_NetSrvMgrAgent_WifiMgr_BroadcastEvent");
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent Initialization Exit\n");
 
@@ -430,9 +464,41 @@ bool NetSrvMgrAgent::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAg
 std::string NetSrvMgrAgent::testmodulepre_requisites() {
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgr testmodule pre_requisites --> Entry\n");
-
+#if 1
+    string g_tdkPath = getenv("TDK_PATH");
+    string NM_testmodule_PR_cmd, NM_testmodule_PR_log,line;
+    ifstream logfile;
+    NM_testmodule_PR_cmd= g_tdkPath + "/" + PRE_REQUISITE_FILE;
+    NM_testmodule_PR_log= g_tdkPath + "/" + PRE_REQUISITE_LOG_PATH;
+    string pre_req_chk= "source " + NM_testmodule_PR_cmd;
+    try {
+            system((char *)pre_req_chk.c_str());
+    }
+    catch(...) {
+            DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of pre-requisite script\n");
+            DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+            return "FAILURE<DETAILS>Exception occured execution of pre-requisite script";
+    }
+    logfile.open(NM_testmodule_PR_log.c_str());
+    if(logfile.is_open()) {
+        	if(getline(logfile,line)>0) {
+                    logfile.close();
+                    DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites set\n");
+                    DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Exit\n");
+                    return line;
+            }
+            logfile.close();
+            DEBUG_PRINT(DEBUG_ERROR,"\nPre-Requisites not set\n");
+            return "FAILURE<DETAILS>Proper result is not found in the log file";
+    }
+    else {
+    	DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the log file.\n");
+            return "FAILURE<DETAILS>Unable to open the log file";
+    }
+#endif
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgr testmodule pre_requisites --> Exit\n");
-    return "SUCCESS";
+    
+    return "SUCCESS<DETAILS>SUCCESS";
 }
 
 /***************************************************************************
@@ -926,7 +992,146 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetGetParameters(IN const Json::Valu
     DEBUG_PRINT(DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_SetGetParameters -->Exit\n");
     return TEST_SUCCESS;
 }
-/****ee********************************************************************
+/***************************************************************************
+Function name : NetSrvMgrAgent_WifiMgr_SaveSSID
+
+Arguments     : Input argument - SSID : SSID to be saved for future sessions
+		                 Passphrase : Passphrase for saved SSID
+                Output argument is "SUCCESS" or "FAILURE"
+
+Description   : Save an SSID for future sessions
+****************************************************************************/
+
+bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value& req, OUT Json::Value& response) {
+
+    DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_BroadcastEvent --->Entry\n");
+
+    try {
+	    
+	IARM_Result_t iarmResult = IARM_RESULT_SUCCESS;
+	bool retVal;
+	char *owner;
+	//IARM_EventId_t  eventId;
+	int eventId = 0;
+	string eventLog;
+	void* eventData;
+	int eventDataSize = 0;
+	//IARM_Bus_WiFiSrvMgr_Param_t param;
+	if ((NULL == &req["owner"]) || (NULL == &req["event_id"]) || (NULL == &req["event_log"])){
+
+            DEBUG_PRINT (DEBUG_ERROR, "Owner and event name cannot be NULL\n");
+            response["result"] = "FAILURE";
+            response["details"] = "Invalid parameters";
+        }
+	else {
+	    owner = (char*)req["owner"].asCString();
+	    eventId = req["event_id"].asInt();
+	    eventLog = req["event_log"].asString();
+	
+	    /*
+	     *Assign the event data as per the owner and event ID
+	     */
+	    if (0 == strcmp(owner, IARM_BUS_AUTHSERVICE_NAME)) {
+		switch (eventId) {
+		    case IARM_BUS_AUTHSERVICE_EVENT_SWITCH_TO_PRIVATE: {
+			IARM_BUS_AuthService_EventData_t* param = (IARM_BUS_AuthService_EventData_t*)malloc(sizeof(IARM_BUS_AuthService_EventData_t));
+        	   	memset (param, 0, sizeof (IARM_BUS_AuthService_EventData_t));
+
+			param->value = req["value"].asInt();
+        		eventData = (void*)param;
+        		eventDataSize= sizeof (IARM_BUS_AuthService_EventData_t);
+		    }
+		    break;
+        	    default:
+            	    break;
+        	}
+	    }
+	    else if (0 == strcmp(owner, IARM_BUS_IRMGR_NAME)) {
+		switch (eventId) {
+                    case IARM_BUS_IRMGR_EVENT_IRKEY: {
+			IARM_Bus_IRMgr_EventData_t* param = (IARM_Bus_IRMgr_EventData_t*)malloc(sizeof(IARM_Bus_IRMgr_EventData_t));
+                        memset (param, 0, sizeof (IARM_Bus_IRMgr_EventData_t));
+
+			param->data.irkey.keyCode = req["key_code"].asInt();
+			param->data.irkey.keyType = req["key_type"].asInt();
+			param->data.irkey.isFP = req["isFP"].asInt();
+			eventData = (void*)param;
+                        eventDataSize= sizeof (IARM_Bus_IRMgr_EventData_t);
+		    }
+		    break;
+                    default:
+                    break;
+                }
+	    }
+	    else if (0 == strcmp(owner, IARM_BUS_NM_SRV_MGR_NAME)) {
+		switch (eventId) {
+                    case IARM_BUS_NETWORK_MANAGER_EVENT_SWITCH_TO_PRIVATE: {
+			IARM_BUS_NetworkManager_EventData_t* param = (IARM_BUS_NetworkManager_EventData_t*)malloc(sizeof(IARM_BUS_NetworkManager_EventData_t));
+                        memset (param, 0, sizeof (IARM_BUS_NetworkManager_EventData_t));
+			 	
+			param->value = req["value"].asInt();
+                        eventData = (void*)param;
+                        eventDataSize= sizeof (IARM_BUS_NetworkManager_EventData_t);
+		    }
+		    break;
+		    case IARM_BUS_NETWORK_MANAGER_EVENT_STOP_LNF_WHILE_DISCONNECTED: {
+			bool* param = (bool*)malloc(sizeof(bool));
+        		
+			*param = req["value"].asInt();
+			eventData = (void*)param;
+                        eventDataSize= sizeof (bool);
+		    }
+                    break;
+                    /*case IARM_BUS_NETWORK_MANAGER_EVENT_AUTO_SWITCH_TO_PRIVATE_ENABLED: {
+                        bool* param = (bool*)malloc(sizeof(bool));
+
+                        *param = req["value"].asInt();
+                        eventData = (void*)param;
+                        eventDataSize= sizeof (bool);
+                    }
+                    break;*/
+		    default:
+                    break;
+                } 
+	    }
+	
+	    iarmResult = IARM_Bus_BroadcastEvent(owner, (IARM_EventId_t)eventId, eventData, eventDataSize);
+	    if (IARM_RESULT_SUCCESS != iarmResult) {
+
+		DEBUG_PRINT (DEBUG_ERROR, "IARM_Bus_BroadcastEvent failed\n");
+		response["result"] = "FAILURE";
+		response["details"] = "IARM_Bus_BroadcastEvent failed";
+ 	    }
+	    else {
+		retVal = readLogFile(NM_LOG_FILE, eventLog);
+	        if (TEST_SUCCESS == retVal) {
+	            response["result"] = "SUCCESS";
+	            response["details"] = "Event received by NetSrv manager";
+	        }
+	        else {
+	            response["result"] = "FAILURE";
+	            response["details"] = "Event not received by NetSrv manager";
+	        }
+	    }
+	}
+	/*
+	 * Free Allocated memory
+	 */
+    	free (eventData);
+    }
+    catch(...) {
+
+       	DEBUG_PRINT (DEBUG_ERROR, "Exception Caught in NetSrvMgrAgent_WifiMgr_BroadcastEvent\n");
+
+        response["details"]= "Exception Caught in NetSrvMgrAgent_WifiMgr_BroadcastEvent";
+        response["result"]= "FAILURE";
+    }
+
+    DEBUG_PRINT(DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_BroadcastEvent -->Exit\n");
+    return TEST_SUCCESS;
+}
+
+/************************************************************************
 Function Name   : CreateObject
 
 Arguments       : NULL
@@ -960,6 +1165,7 @@ bool NetSrvMgrAgent::cleanup (IN const char* szVersion, IN RDKTestAgent *ptrAgen
     ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrGetPairedSSID");
     ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrSetEnabled");
     ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrSetGetParameters");
+    ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgrAgent_WifiMgr_BroadcastEvent");
 
     return TEST_SUCCESS;
 }

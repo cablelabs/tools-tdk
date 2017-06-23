@@ -66,6 +66,9 @@ INCLUDES  +=    -I./include \
 
 INCLUDES  +=    -I$(RDK_BUILD_DIR)/iarmbus/core/include \
                 -I$(RDK_BUILD_DIR)/iarmbus/core \
+                -I$(RDK_BUILD_DIR)/iarmbus/ \
+                -I$(RDK_BUILD_DIR)/iarmmgrs/ir \
+                -I$(RDK_BUILD_DIR)/authservice/include/ \
                 -I$(RDK_BUILD_DIR)/netsrvmgr/generic/src/services/wifi/include \
                 -I$(RDK_BUILD_DIR)/netsrvmgr/generic/src/main/include 
 
