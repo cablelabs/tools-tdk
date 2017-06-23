@@ -198,20 +198,31 @@ class ExecutescriptService {
 		}
 		Date execEndDate = new Date()
 		def execEndTime =  execEndDate.getTime()
-		def timeDifference = ( execEndTime - executionStartTime  ) / 60000;
-		
-		String timeDiff =  String.valueOf(timeDifference)
-		String singleScriptExecTime = String.valueOf(timeDifference)
-		
-		BigDecimal myVal1
-		if(resultArray[0]){
-			myVal1= new BigDecimal (resultArray[0]) + new BigDecimal (timeDiff)
+		// time difference for single script in seconds
+		def timeDifference = ( execEndTime - executionStartTime  ) / 1000;
+		String timeDiff =  String.valueOf(timeDifference)	
+		String singleScriptExecTime = timeDifference
+		try
+		{
+			def cumulativeTime
+			if(resultArray){
+				cumulativeTime = calculateTotalExecutiontime(resultArray[0], timeDiff)
+			}else{
+				cumulativeTime = calculateTotalExecutiontime(resultArray, timeDiff)
+			}
+			timeDiff = convertExecutionTimeFormat(cumulativeTime )
+			singleScriptExecTime = convertExecutionTimeFormat((new BigDecimal (singleScriptExecTime)))
+			if(singleScriptExecTime.contains(".") ){
+				int index = singleScriptExecTime.indexOf(".")
+				if((index + 3) < singleScriptExecTime.length() ){
+					singleScriptExecTime = singleScriptExecTime.substring(0, index+3);
+				}
+			}
 		}
-		else{
-			myVal1 =  new BigDecimal (timeDiff)
+		catch (Exception e) {
+			e.printStackTrace()
 		}
-						
-		timeDiff =  String.valueOf(myVal1)
+		
 		
 		if(executionService.abortList.contains(executionInstance?.id?.toString())){
 			
@@ -351,24 +362,60 @@ class ExecutescriptService {
 		}
 		Date endTime = new Date()
 		try {
-		def totalTimeTaken = (endTime?.getTime() - startTime?.getTime()) / 60000
-//		totalTimeTaken = totalTimeTaken?.round(2)
-		
+			def totalTimeTaken = (endTime?.getTime() - startTime?.getTime()) / 1000
+	//		totalTimeTaken = totalTimeTaken?.round(2)
 			executionService.updateExecutionTime(totalTimeTaken?.toString(), executionResultId)
-			BigDecimal totalVal
-			if(totalTimeArray[0]){
-				totalVal= new BigDecimal (totalTimeArray[0]) + new BigDecimal (totalTimeTaken)
-			}
-			else{
-				totalVal =  new BigDecimal (totalTimeTaken)
-			}
-			
-			timeDiff =  String.valueOf(totalVal)
-			executionService.updateTotalExecutionTime(timeDiff?.toString(), executionId)
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
 		return htmlData
+	}
+	
+	/**
+	* The function for getting the cummulative time for execution  in seconds
+	* @param totalExecutionTime
+	* @param scriptExecutionTime
+	* @return totalExecTime
+	*/
+			
+	def calculateTotalExecutiontime(def totalExecutionTime , def scriptExecutionTime)
+	{
+
+		BigDecimal totalExecTime
+		if(totalExecutionTime){
+			def totalTime =  Double.parseDouble(totalExecutionTime);
+			def minPart = (long) totalTime
+			def decimalPart = totalTime - minPart;
+			totalExecTime = ((new BigDecimal (minPart))*60) + new BigDecimal (scriptExecutionTime) + ((new BigDecimal (decimalPart))*100)
+		}
+		else{
+			totalExecTime =  new BigDecimal (scriptExecutionTime)
+
+		}
+		return totalExecTime
+	}
+
+	/**
+	 * The function for getting the execution time mm.ss format
+	 * @param executionTime
+	 * @return timeDiff
+	 */
+	def convertExecutionTimeFormat(def executionTime)
+	{
+		BigDecimal timeCount = 60.00;
+		BigDecimal mintVal = 0
+		BigDecimal secVal = 0
+		if(executionTime>timeCount){
+			mintVal =(int)  executionTime/timeCount
+			secVal =  executionTime.remainder(timeCount)
+			
+		}
+		else{
+			secVal = executionTime
+		}
+		executionTime =mintVal+(secVal/100)
+		def timeDiff =  String.valueOf(executionTime)
+		return timeDiff
 	}
 			
 			/**
@@ -1035,6 +1082,35 @@ class ExecutescriptService {
 		}
 	}
 
+	
+	/**
+	 * To calculate the total execution time and updating the data base 
+	 * @param execName
+	 * @param startExecutionTime
+	 * @param endExecutionTime
+	*/
+	def executionTimeCalculation(String execName, Date startExecutionTime, Date endExecutionTime)
+	{
+		try
+		{	
+			def totalSecTime 
+			Execution executionInstance1 = Execution.findByName(execName)
+			def totalTimeArray = Execution.executeQuery("select a.realExecutionTime from Execution a where a.name = :exName",[exName: execName])	
+			def execTimeDiff = (endExecutionTime.getTime() - startExecutionTime.getTime())/1000;
+			/* Calculating and formatting the total execution time */
+			if(totalTimeArray){
+				totalSecTime = calculateTotalExecutiontime(totalTimeArray[0], execTimeDiff )
+			}else{
+				totalSecTime = calculateTotalExecutiontime(totalTimeArray, execTimeDiff )
+			}
+			def execTimeDifference = convertExecutionTimeFormat(totalSecTime )
+			executionService.updateTotalExecutionTime(execTimeDifference ?.toString(), executionInstance1?.id)
+		}catch (Exception e) {
+			println  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+
 	/**
 	 * Execute scripts on Device
 	 * @param execName
@@ -1059,7 +1135,10 @@ class ExecutescriptService {
 		boolean pause = false
 		def htmlData = ""
 		Device deviceInstance
+		Execution executionInstance1 = Execution.findByName(execName)
+		def executionResultId = executionInstance1?.id
 		def deviceId
+		
 		try{
 			
 		def scriptInstance
@@ -1073,9 +1152,7 @@ class ExecutescriptService {
 		int scriptCounter = 0
 		def isMultiple = TRUE
 		List pendingScripts = []
-		
-		
-		
+
 		if(groupType == TEST_SUITE){
 			scriptCounter = 0
 			boolean skipStatus = false
@@ -1187,6 +1264,7 @@ class ExecutescriptService {
 				}
 				if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString())) && !pause){
 					executionStarted = true
+					def startExecutionTime = new Date()
 					try {
 						htmlData = executeScript(execName, executionDevice, scriptObj, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics, executionName, isMultiple,null,isLogReqd, category)
 
@@ -1196,13 +1274,15 @@ class ExecutescriptService {
 					}
 					output.append(htmlData)
 					Thread.sleep(6000)
+					def endExecutionTime = new Date()
+					executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 				}else{
 				
 					if(!aborted && (devStatus.equals(Status.NOT_FOUND.toString()) ||  devStatus.equals(Status.HANG.toString()))){
 						pause = true
 					}
 
-					if(!aborted && pause) {						
+					if(!aborted && pause) {
 						try {
 							pendingScripts.add(scriptObj)
 							def execInstance
@@ -1282,8 +1362,10 @@ class ExecutescriptService {
 				def moduleName= scriptService.scriptMapping.get(scripts)
 				def script1 = scriptService.getScript(realPath,moduleName, scripts, category)
 				isMultiple = FALSE
+				def startExecutionTime = new Date()
 				try {
 					htmlData = executeScript(execName, executionDevice, script1, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics,executionName,isMultiple,null,isLogReqd, category)
+					
 				def exeInstance = Execution.findByName(execName)
 				if(executionService.abortList.contains(exeInstance?.id?.toString())){
 					aborted = true
@@ -1292,6 +1374,8 @@ class ExecutescriptService {
 				} catch (Exception e) {
 					e.printStackTrace()
 				}
+				def endExecutionTime = new Date()
+				executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 				output.append(htmlData)
 			}
 			else{
@@ -1363,6 +1447,7 @@ class ExecutescriptService {
 						if(scriptCounter == scriptGrpSize){
 							isMultiple = FALSE
 						}
+						def startExecutionTime = new Date()
 						try {
 							// This code for issue fix . while  selecting multiple script the  box is not up then the pending script not executed
 							aborted = executionService.abortList.contains(exeId?.toString())							
@@ -1439,8 +1524,12 @@ class ExecutescriptService {
 						} catch (Exception e) {
 							e.printStackTrace()
 						}
+			
+						
 						output.append(htmlData)
-						Thread.sleep(6000)						
+						Thread.sleep(6000)
+						def endExecutionTime = new Date()
+						executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 					}
 					if(aborted && executionService.abortList.contains(exeId?.toString())){
 						executionService.abortList.remove(exeId?.toString())
@@ -1448,7 +1537,8 @@ class ExecutescriptService {
 			}
 		}
 
-		Execution executionInstance1 = Execution.findByName(execName)
+		
+		
 		if(!pause){
 			executionService.saveExecutionStatus(aborted, executionInstance1?.id)
 		}
