@@ -341,6 +341,46 @@
           <parameter name="service_name" value="NULL"/>
         </parameters>
       </primitiveTest>
+      <primitiveTest id="" name="SM_HN_IsMDVREnabled" version="1">
+        <function>TestMgr_SM_HN_IsMDVREnabled</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HN_SetUpnpEnabled" version="1">
+        <function>TestMgr_SM_HN_SetUpnpEnabled</function>
+        <parameters>
+          <parameter name="enable" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="SM_HN_SetVidiPathEnabled" version="1">
+        <function>TestMgr_SM_HN_SetVidiPathEnabled</function>
+        <parameters>
+          <parameter name="enable" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HN_IsVidiPathEnabled" version="1">
+        <function>TestMgr_SM_HN_IsVidiPathEnabled</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HN_IsUpnpEnabled" version="1">
+        <function>TestMgr_SM_HN_IsUpnpEnabled</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HN_GetDeviceName" version="1">
+        <function>TestMgr_SM_HN_GetDeviceName</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_HN_IsVPOPEnabled" version="1">
+        <function>TestMgr_SM_HN_IsVPOPEnabled</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="SM_AVInputService_GetNumberOfInputs" version="1">
+        <function>TestMgr_SM_AVInputService_GetNumberOfInputs</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest name="SM_AVInputService_GetCurrentVideoMode" id="" version="1">
+        <function>TestMgr_SM_AVInputService_GetCurrentVideoMode</function>
+        <parameters/>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>
