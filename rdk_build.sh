@@ -78,7 +78,7 @@ while true; do
   case "$1" in
     -h | --help ) usage; exit 0 ;;
     -v | --verbose ) set -x ;;
-    --enable ) ENABLE_TDK=1 ;;
+    --enable ) ENABLE_TDK=0;;
     -- ) shift; break;;
     * ) break;;
   esac
