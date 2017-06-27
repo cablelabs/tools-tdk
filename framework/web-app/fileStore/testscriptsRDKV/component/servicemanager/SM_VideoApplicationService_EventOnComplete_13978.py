@@ -98,7 +98,7 @@ smObj.setLoadModuleStatus(smLoadStatus.upper());
 if "SUCCESS" in smLoadStatus.upper():
         tdkTestObj = smObj.createTestStep('SM_RunSMEvent_QtApp');
         service_name = "org.openrdk.videoApplicationEvents_1"
-        event_name = "onComplette"
+        event_name = "onComplete"
         event_param = 1
         expectedresult = "SUCCESS";
         ret = servicemanager.RunSMEvent(smObj, service_name, event_name, event_param);
