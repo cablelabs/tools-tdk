@@ -27,7 +27,7 @@
   <status>FREE</status>
   <synopsis>This script tests Requesting Web interface for Live tune.Test Case ID:CT_Mediastreamer_12</synopsis>
   <groups_id/>
-  <execution_time>1</execution_time>
+  <execution_time>10</execution_time>
   <long_duration>false</long_duration>
   <remarks/>
   <skip>false</skip>
@@ -70,7 +70,6 @@ import tdklib;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("mediastreamer","2.0");
-
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
@@ -78,10 +77,25 @@ port = <port>
 obj.configureTestCase(ip,port,'RMF_MS_LiveTune_Request');
 
 #Get the result of connection with test component and STB
-loadmodulestatus =obj.getLoadModuleResult();
-print "Mediaastreamer module loading status :%s" %loadmodulestatus;
-#Check for SUCCESS/FAILURE of Mediastreamer module
-if "SUCCESS" in loadmodulestatus.upper():
+loadModuleStatus = obj.getLoadModuleResult();
+print "Load Module Status :  %s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
+
+if "FAILURE" in loadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediastreamer","2.0");
+                obj.configureTestCase(ip,port,'RMF_MS_LiveTune_Request');
+                #Get the result of connection with test component and STB
+                loadModuleStatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadModuleStatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
+if "SUCCESS" in loadModuleStatus.upper():
         #Set the module loading status
         obj.setLoadModuleStatus("SUCCESS");
 

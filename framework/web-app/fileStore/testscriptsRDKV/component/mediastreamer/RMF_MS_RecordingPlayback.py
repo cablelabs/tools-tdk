@@ -28,7 +28,7 @@
   <synopsis>This scripts test the  Requesting  Recorded content playback via streaming Interface.
 Test case Id: CT_RMFStreamer_17</synopsis>
   <groups_id/>
-  <execution_time>5</execution_time>
+  <execution_time>12</execution_time>
   <long_duration>false</long_duration>
   <remarks/>
   <skip>false</skip>
@@ -78,12 +78,25 @@ ip = <ipaddress>
 port = <port>
  
 obj.configureTestCase(ip,port,'RMF_MS_RecordingPlayback_26');
+loadModuleStatus = obj.getLoadModuleResult();
+print "Load Module Status :  %s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
 
-#Get the result of connection with test component and STB
-result =obj.getLoadModuleResult();
-print "RMFStreamer module :  %s" %result;
+if "FAILURE" in loadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediastreamer","2.0");
+                obj.configureTestCase(ip,port,'RMF_MS_RecordingPlayback_26');
+                #Get the result of connection with test component and STB
+                loadModuleStatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadModuleStatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
 
-if "SUCCESS" in result.upper():
+if "SUCCESS" in loadModuleStatus.upper():
          obj.setLoadModuleStatus("SUCCESS");
          print "RmfStreamer load successful";
 
@@ -109,7 +122,6 @@ if "SUCCESS" in result.upper():
               #fetch recording id from list matchList.
               recordID = matchList[1]
         
-              #url = 'http://169.254.224.174:8080/vldms/dvr?rec_id=' + recordID[:-1] + '&0&play_speed=1.00&time_pos=0.00'
               url = "http://"+ streamDetails.getGatewayIp() + ":8080/vldms/dvr?rec_id=" + recordID[:-1]; 
               print "The Play DVR Url Requested: %s"%url
               tdkTestObj.addParameter("VideostreamURL",url);
@@ -137,7 +149,7 @@ if "SUCCESS" in result.upper():
 
          else:
                print "No Matching recordings list found"
-               obj.unloadModule("mediastreamer");
+         obj.unloadModule("mediastreamer");
 else:
          print "Failed to RmfStreamer module";
          obj.setLoadModuleStatus("FAILURE");

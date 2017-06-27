@@ -55,8 +55,11 @@ void soc_init(int , char *, int );
 
 using namespace std;
 
+char *rdkLogP = getenv("RDK_LOG_PATH");
+char *tdkP = getenv("TDK_PATH");
+string rdkLogPath = "NULL";
+string tdkPath = "NULL";
 string g_tdkPath = getenv("TDK_PATH");
-
 /*************************************************************************
 Function name: MediaStreamerAgent::MediaStreamerAgent
 
@@ -77,12 +80,66 @@ MediaStreamerAgent::MediaStreamerAgent()
  *****************************************************************************/
 std::string MediaStreamerAgent::testmodulepre_requisites()
 {
-    /*	#ifdef USE_SOC_INIT
-            //Initialize SOC
-            soc_init(1, "tdk_agent", 1);
-            #endif
-    */
-    return "SUCCESS";
+        DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Entry\n");
+        ifstream logfile;
+        string MS_testmodule_PR_cmd, MS_testmodule_PR_log,line;
+        MS_testmodule_PR_cmd= g_tdkPath + "/" + PRE_REQUISITE_FILE;
+        MS_testmodule_PR_log= g_tdkPath + "/" + PRE_REQUISITE_LOG_PATH;
+        string pre_req_chk= "source "+MS_testmodule_PR_cmd;
+	/*Check for the environment variable set or not */
+	if(rdkLogP == NULL)
+	{
+		DEBUG_PRINT(DEBUG_ERROR,"\nEnvironment variable not set for RDK_LOG_PATH\n");
+		return "FAILURE<DETAILS>Environment variable not set for \"RDK_LOG_PATH\"";
+	}
+	else
+	{
+		rdkLogPath.assign(rdkLogP);		
+		DEBUG_PRINT(DEBUG_TRACE,"\n RDK_LOG_PATH=%s\n",rdkLogPath.c_str());
+	}
+	
+	if(tdkP == NULL)
+	{
+		DEBUG_PRINT(DEBUG_ERROR,"\nEnvironment variable not set for TDK_PATH\n");
+		return "FAILURE<DETAILS>Environment variable not set for \"TDK_PATH\"";
+	}
+	else
+	{
+		tdkPath.assign(tdkP);		
+		DEBUG_PRINT(DEBUG_TRACE,"\n TDK_PATH=%s\n",tdkPath.c_str());
+	}
+	
+        try
+        {
+                system((char *)pre_req_chk.c_str());
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured execution of pre-requisite script\n");
+                DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
+                return "FAILURE<DETAILS>Exception occured execution of pre-requisite script";
+        }
+        logfile.open(MS_testmodule_PR_log.c_str());
+        if(logfile.is_open())
+        {
+                if(getline(logfile,line))
+                {
+                        logfile.close();
+                        DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites set\n");
+                        DEBUG_PRINT(DEBUG_TRACE, "testmodulepre_requisites --> Exit\n");
+                        return line;
+                }
+                logfile.close();
+                DEBUG_PRINT(DEBUG_ERROR,"\nPre-Requisites not set\n");
+                return "FAILURE<DETAILS>Proper result is not found in the log file";
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"\nUnable to open the log file.\n");
+                return "FAILURE<DETAILS>Unable to open the log file";
+        }
+	
+	return "SUCCESS<DETAILS>SUCCESS";
 }
 
 /***************************************************************************

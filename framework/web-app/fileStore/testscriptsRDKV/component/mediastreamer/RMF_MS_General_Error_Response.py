@@ -28,7 +28,7 @@
   <synopsis>This test is to simulate General Error response for curl request
 Test Case ID: CT_MediaStreamer_20</synopsis>
   <groups_id/>
-  <execution_time>3</execution_time>
+  <execution_time>10</execution_time>
   <long_duration>false</long_duration>
   <remarks/>
   <skip>false</skip>
@@ -79,11 +79,26 @@ port = <port>
 obj.configureTestCase(ip,port,'RMFMS_Without_StreamInit_23');
 
 #Get the result of connection with test component and STB
-loadmodulestatus =obj.getLoadModuleResult();
-print "Mediaastreamer module loading status :%s" %loadmodulestatus;
-#Check for SUCCESS/FAILURE of Mediastreamer module
-if "SUCCESS" in loadmodulestatus.upper():
-        #Set the module loading status
+loadModuleStatus = obj.getLoadModuleResult();
+print "Load Module Status :  %s" %loadModuleStatus;
+loadmoduledetails = obj.getLoadModuleDetails();
+print "Load Module Details : %s" %loadmoduledetails;
+
+if "FAILURE" in loadModuleStatus.upper():
+        if "RMF_STREAMER_NOT_RUNNING" in loadmoduledetails:
+                print "rmfStreamer is not running. Rebooting STB"
+                obj.initiateReboot();
+                #Reload Test component to be tested
+                obj = tdklib.TDKScriptingLibrary("mediastreamer","2.0");
+                obj.configureTestCase(ip,port,'RMFMS_Without_StreamInit_23');
+                #Get the result of connection with test component and STB
+                loadModuleStatus = obj.getLoadModuleResult();
+                print "Re-Load Module Status :  %s" %loadModuleStatus;
+                loadmoduledetails = obj.getLoadModuleDetails();
+                print "Re-Load Module Details : %s" %loadmoduledetails;
+
+if "SUCCESS" in loadModuleStatus.upper():        
+	#Set the module loading status
         obj.setLoadModuleStatus("SUCCESS");
 
         print "Mediastreamer module loaded successfully";
