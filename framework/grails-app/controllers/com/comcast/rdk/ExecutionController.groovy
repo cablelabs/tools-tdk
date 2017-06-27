@@ -1411,6 +1411,15 @@ class ExecutionController {
 		}
 		render(template: "agentConsoleLog", model: [agentConsoleFileData : agentConsoleFileData])
 	}
+	
+	/**
+	 * Method to fetch the execution details
+	 * @return
+	 */
+	def getExecutionDetails(){
+		def exRes = ExecutionResult.get(params?.execResId)
+		render(template: "executionDetails", model: [executionResultInstance : exRes])
+	}
 
 	def showLogFiles(){
 
@@ -1443,7 +1452,7 @@ class ExecutionController {
 
 		executionDeviceList.each { executionDevice ->
 			ArrayList executionList = new ArrayList(executionDevice.executionresults);
-			executionResultMap.put(executionDevice, executionList)
+//			executionResultMap.put(executionDevice, executionList)
 
 			listStatusCount = executedbService.getStatusList(executionInstance,executionDevice,executionList.size().toString())
 

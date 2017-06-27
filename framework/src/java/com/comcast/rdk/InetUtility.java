@@ -94,7 +94,7 @@ public class InetUtility {
 							}
 							if ((ipType.equals(Constants.IPV4_INTERFACE) && InetAddressValidator.getInstance().isValidInet4Address(hostAddr))
 									|| (ipType.equals(Constants.IPV6_INTERFACE) && address instanceof Inet6Address && StringUtils.countOccurrencesOf(hostAddr,Constants.COLON) > 4)) {
-								if (!address.isLoopbackAddress()) {
+								if (!address.isLoopbackAddress() && !address.isLinkLocalAddress()) {
 									ipAddress = hostAddr;
 									if (ipType.equals(Constants.IPV4_INTERFACE)) {
 										TM_IPV4_ADDRESS = ipAddress;

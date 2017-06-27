@@ -106,6 +106,8 @@ public class DeviceStatusUpdater {
 			}
 		}
 		
+		String ipV6Address = InetUtility.getIPAddress(configFile, Constants.IPV6_INTERFACE)
+		
 		List childDeviceList = []
 		deviceList?.each{ dev ->
 			def device
@@ -124,12 +126,17 @@ public class DeviceStatusUpdater {
 							device = Device.findByIdAndStbName(dev?.id,devName)
 						}
 
+						def tmIP = ipAddress
+						if(ipV6Address != null && device.getCategory() == Category.RDKV &&InetUtility.isIPv6Address(device?.stbIp)){
+							tmIP = ipV6Address
+						}
+						
 						String[] cmd = [
 							PYTHON_COMMAND,
 							filePath,
 							devIp,
 							port,
-							ipAddress,
+							tmIP,
 							devName
 						]
 						Runnable statusUpdator = new StatusUpdaterTask(cmd, device, deviceStatusService,executescriptService,grailsApplication);
@@ -204,13 +211,22 @@ public class DeviceStatusUpdater {
 			}
 		}
 
+		String ipV6Address = InetUtility.getIPAddress(configFile, Constants.IPV6_INTERFACE)
+		
 		int port = Integer.parseInt(device?.statusPort)
+		
+		
+		def tmIP = ipAddress
+		if(ipV6Address != null && device.getCategory() == Category.RDKV &&InetUtility.isIPv6Address(device?.stbIp)){
+			tmIP = ipV6Address
+		}
+		
 		String[] cmd = [
 			PYTHON_COMMAND,
 			filePath,
 			device?.stbIp,
 			port,
-			ipAddress,
+			tmIP,
 			device?.stbName
 		]
 

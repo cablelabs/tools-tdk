@@ -27,10 +27,12 @@ function viewOnClick(me,k,i)
 { 
   if(document.getElementById('allmessages'+k+'_'+i).style.display == 'none') {
     document.getElementById('allmessages'+k+'_'+i).style.display = '';
+    document.getElementById('alllogs'+k+'_'+i).style.display = '';
     $('#expander'+k+'_'+i).text('Hide');  
   }
   else {
     document.getElementById('allmessages'+k+'_'+i).style.display = 'none';
+    document.getElementById('alllogs'+k+'_'+i).style.display = 'none';
     $('#expander'+k+'_'+i).text('Details');    
   }
   return false;
@@ -331,7 +333,7 @@ function hideParameters(k){
 		</td>
 		--%>
 		<td colspan="2">
-		<g:each in="${executionresults.get(executionDeviceInstance)}" status="i"  var="executionResultInstance">
+		<g:each in="${executionDeviceInstance.executionresults}" status="i"  var="executionResultInstance">
 		
 			<table>
 				<%-- <tr class="scripthead">
@@ -345,40 +347,14 @@ function hideParameters(k){
 					<td style="width:10%;font-weight: bold;">Test Script </td>
 					<td style="width:50%"><g:link controller="scriptGroup" action="exportScriptData" id="${executionResultInstance?.script}" target="_blank" >${executionResultInstance?.script} </g:link> </td>					
 					<td style="width:10%;font-weight: bold;">Status</td>
-					<td style="width:10%;">${executionResultInstance?.status}</td>					
-					<td style="width:10%;"><a href="#" id="expander${k}_${i}" onclick="this.innerHTML='Hide';viewOnClick(this,${k},${i}); return false;">Details</a></td>
+					<td style="width:10%;">${executionResultInstance?.status}</td>		
+					<td style="width:10%;"><g:remoteLink id="expander${k}_${i}" action="getExecutionDetails" update="allmessages${k}_${i}" onSuccess="this.innerHTML='Hide';viewOnClick(this,${k},${i}); return false;" params="[execResId : "${executionResultInstance?.id}"]" >Details</g:remoteLink>	</td>		
 				</tr>
-				<tbody id="allmessages${k}_${i}"  style="display: none;">
-				<tr>
-					<td class="tdhead">TimeTaken(min) </td>
-					<td colspan="4">${executionResultInstance?.executionTime}</td>					
-				</tr>
-				<g:each in="${executionResultInstance.executemethodresults}"  var="executionResultMthdsInstance">
-				<tr class="fnhead">
-					<td>Function Name</td>
-					<td colspan="4">${executionResultMthdsInstance?.functionName}</td>				
-				</tr>
-				<tr>
-					<td>ExpectedResult</td>
-					<td colspan="4">${executionResultMthdsInstance?.expectedResult}</td>				
-				</tr>
-				<tr>
-					<td>ActualResult</td>
-					<td colspan="4">${executionResultMthdsInstance?.actualResult}</td>				
-				</tr>
-				<tr>
-					<td>Status</td>
-					<td colspan="4">${executionResultMthdsInstance?.status}</td>				
-				</tr>
-				</g:each>
-				<tr>
-					<td>Log Data <br>
-					<g:link action ="showExecutionResult" params="[execResult : "${executionResultInstance?.id}"]" target="_blank"> Log link </g:link> </td>
-					<td colspan="6"><div style="overflow : auto; height : 180px;">${executionResultInstance?.executionOutput}</div></td>				
-				</tr>
-				
-				<tr>
-					<td>Agent Console Log		
+			<tbody id="allmessages${k}_${i}"  style="display: none;">
+			</tbody>
+			<tbody id="alllogs${k}_${i}"  style="display: none;">
+			<tr>
+			<td>Agent Console Log		
 					
 					</td>	
 					<td colspan="4">
@@ -430,16 +406,8 @@ function hideParameters(k){
 						<div id="testCrashSucc${k}_${i}"></div>		
 					</td>					
 				</tr>
-				<%--<tr>
-					<td></td>
-					<td colspan="4">
-						<div id="testCrashSucc${k}_${i}"></div>						
-					</td>	
-				</tr>
-
-				--%></tbody>
+			</tbody>
 			</table>
-			
 			<g:if test="${executionResultInstance.performance}">
 			<table>
 						<tr class="scripthead" style=" background:#DFDFDF;">
