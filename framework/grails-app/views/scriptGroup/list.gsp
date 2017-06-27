@@ -541,6 +541,7 @@
 						value="Test Suites Clean Up" onFailure="testSuitesCleanUpFailure()"
 						onSuccess="testSuitesCleanUpSuccess()" /></li>
 					<li id="update_scriptgrp"><img src="../images/refresh.gif" height="15px" width="15px"/>Update Test Suite</li>
+<li id="create_customgrp"><img src="../images/add_new.png" height="15px" width="15px"/> Create Custom Test suite </li>
 	        	</ul>
 	        </div>
 			<div class="contextMenu" id="scriptgrp_childs_menu">
@@ -560,5 +561,6 @@
 	
 </body>
 </html>
+
 
 

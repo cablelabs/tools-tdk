@@ -98,6 +98,11 @@ $(document).ready(function() {
 				hideAllSearchoptions();
 				createScriptGrpForm('RDKB_TCL');
 			},
+			'create_customgrp' : function(node) {
+				hideUpload();
+				hideAllSearchoptions();
+				getSuiteDetails();
+			},
 			'upload_scriptGroup' : function(node) {	
 				showUploadOption();
 			},
@@ -563,6 +568,14 @@ function createScriptGrpForm(category) {
 	$("#responseDiv123").show()
 	checkAnyEditingScript();
 	$.get('create', {category:category},function(data) { $("#responseDiv").html(data); });
+}
+
+function getSuiteDetails() {	
+	$("#list-scriptDetails").hide();
+	$("#list-scriptDetails1").hide();
+	$("#responseDiv123").show()
+	
+	$.get('getSuiteDetails',function(data) { $("#responseDiv").html(data); });
 }
 
 /**
