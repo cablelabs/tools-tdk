@@ -23,9 +23,9 @@ AM_CPPFLAGS = ${COPTS} -std=c++0x -fPIC -DGCC4_XXX -g
 INCLUDES = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmbus \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/iarmmgrs/ir \
-           -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/authservice/include/ \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/netsrvmgr/generic/src/services/wifi/include \
            -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/rdk/netsrvmgr/generic/src/main/include 
+           
 
 AM_CXXFLAGS = -I${top_srcdir}/NetSrvMgr_stub/include -I${top_srcdir}/agent/include $(IARM_CFLAGS)
 

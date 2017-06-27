@@ -30,7 +30,7 @@
 #include "libIBus.h"
 #include "irMgr.h"
 #include "libIBusDaemon.h"
-#include "authserviceIARM.h"
+//#include "authserviceIARM.h"
 
 #define IN
 #define OUT
