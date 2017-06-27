@@ -42,7 +42,7 @@
           <parameter name="enable" value="0"/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name="NetSrvMgr_WifiMgr_SetGetParameters" id=" " version="1">
+      <primitiveTest id=" " name="NetSrvMgr_WifiMgr_SetGetParameters" version="1">
         <function>TestMgr_NetSrvMgr_WifiMgrSetGetParameters</function>
         <parameters>
           <parameter name="enable" value="0"/>
@@ -51,6 +51,18 @@
           <parameter name="passphrase" value="NULL"/>
           <parameter name="security_mode" value="0"/>
           <parameter name="ssid" value="NULL"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name="NetSrvMgrAgent_WifiMgr_BroadcastEvent" id=" " version="1">
+        <function>TestMgr_NetSrvMgrAgent_WifiMgr_BroadcastEvent</function>
+        <parameters>
+          <parameter name="event_id" value="0"/>
+          <parameter name="event_log" value="NULL"/>
+          <parameter name="isFP" value="0"/>
+          <parameter name="key_code" value="0"/>
+          <parameter name="key_type" value="0"/>
+          <parameter name="owner" value="NULL"/>
+          <parameter name="value" value="0"/>
         </parameters>
       </primitiveTest>
     </primitiveTests>
