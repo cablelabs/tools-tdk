@@ -99,6 +99,8 @@ TestManager GUI will publish the result as PASS in Execution/Console page of Tes
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
 import snmplib;
+import datetime;
+import subprocess;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("snmp","1");
@@ -118,14 +120,22 @@ if "SUCCESS" in loadmodulestatus.upper():
     #Prmitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('SNMP_GetCommString');
     snmpResponse =snmplib.SnmpExecuteCmd(tdkTestObj, "snmpwalk", "-v 2c", ".1.3.6.1.4.1.17270.9225.1.4.1.20", ip);
-
+    proc = subprocess.Popen(["date"], stdout=subprocess.PIPE, shell=True);
+    (out, err) = proc.communicate();
+    print "date cmd:", out;
+    cmdDate = out.split(" UTC ");
+    cmdDate1 = cmdDate[0];
+    cmdDatesplit =cmdDate1.split(" ");
+        
     if "SNMPv2-SMI" in snmpResponse:
         actResponse =snmpResponse.split('\"')[1].replace("\"","");
-        if actResponse !='0':
+        actDate =actResponse.split(" ");
+        print actDate;
+        if set(cmdDatesplit).issubset(set(actDate)):
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "TEST STEP 1:Execute snmpwalk to get the current system time";
                 print "EXPECTED RESULT 1: snmpwalk should get the current system time";
-                print "ACTUAL RESULT 1: %s" %actResponse;
+                print "ACTUAL RESULT 1:SUCCESS: %s" %actResponse;
                 #Get the result of execution
                 print "[TEST EXECUTION RESULT] : Current System Time = %s" %actResponse ;
         else:
@@ -133,7 +143,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                 details = tdkTestObj.getResultDetails();
                 print "TEST STEP 1:Execute snmpwalk to get the current system time";
                 print "EXPECTED RESULT 1: snmpwalk should get the current system time";
-                print "ACTUAL RESULT 1: %s" %actResponse;
+                print "ACTUAL RESULT 1:FAILURE: %s" %actResponse;
                 print "[TEST EXECUTION RESULT] : %s" %actResponse;
         
     else:
