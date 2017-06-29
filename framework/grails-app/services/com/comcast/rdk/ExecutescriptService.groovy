@@ -895,8 +895,10 @@ class ExecutescriptService {
 									}catch (Exception e){
 										e.getMessage()
 									}
+									
 									if(scriptInstance){
 										if(executionService.validateScriptBoxTypes(scriptInstance,deviceInstance)){
+										   	def startExecutionTime = new Date()
 											//aborted = executionService.abortList.contains(exeId?.toString())
 											aborted = executionService.abortList?.toString().contains(executionName?.id?.toString())
 											if(!aborted && !(deviceStatus?.toString().equals(Status.NOT_FOUND.toString()) || deviceStatus?.toString().equals(Status.HANG.toString())) && !pause){
@@ -954,8 +956,11 @@ class ExecutescriptService {
 												}
 
 											}
+											def endExecutionTime = new Date()
+											executionTimeCalculation(newExecName,startExecutionTime,endExecutionTime)
 										}
 									}
+									
 								}
 							}
 							try {
@@ -1800,6 +1805,8 @@ class ExecutescriptService {
 									}
 								}
 								if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()))&& !pause){
+									
+									def startExecutionTime = new Date()
 									// ISSUE FIX related to restart execution not happening append category at the end.
 									if(!tclScript){
 										htmlData = executeScript(exResult?.execution?.name, execDevice, script1 , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple,exResult,execution?.isStbLogRequired, scriptFile.category?.toString())
@@ -1810,7 +1817,13 @@ class ExecutescriptService {
 									output.append(htmlData)
 									if(!thirdParyExecution){
 										Thread.sleep(6000)
+										if(!tclScript)
+										{
+											def endExecutionTime = new Date()
+											executionTimeCalculation(exResult?.execution?.name,startExecutionTime,endExecutionTime)
+										}
 									}
+									
 								}else{
 									if(!aborted){
 										pause = true
@@ -2129,10 +2142,13 @@ class ExecutescriptService {
 				}
 				
 				if(!aborted && !devStatus.equals(Status.NOT_FOUND.toString()) && !pause){
+					def startExecutionTime = new Date()
 					executionStarted = true
 					htmlData = executeScript(execName, executionDevice, scriptObj, deviceInstance, url, filePath, realPath, isBenchMark, isSystemDiagnostics, executionName, isMultiple,null,isLogReqd)
 					output.append(htmlData)
 					Thread.sleep(6000)
+					def endExecutionTime = new Date()
+					executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 				}else{
 					if(!aborted && devStatus.equals(Status.NOT_FOUND.toString())){
 						pause = true
