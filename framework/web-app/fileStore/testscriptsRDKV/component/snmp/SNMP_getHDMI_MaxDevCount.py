@@ -100,7 +100,7 @@ import tdklib;
 import snmplib;
 
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("snmp","1");
+obj = tdklib.TDKScriptingLibrary("snmp","2");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -115,12 +115,18 @@ if "SUCCESS" in loadmodulestatus.upper():
     obj.setLoadModuleStatus("SUCCESS");
     #Prmitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('SNMP_GetCommString');
-    actResponse =snmplib.SnmpExecuteCmd(tdkTestObj, "snmpwalk", "-v 2c", "1.3.6.1.4.1.4491.2.3.1.1.1.2.4.1.1.23", ip);
+    expectedresult="SUCCESS"
+    tdkTestObj.executeTestCase(expectedresult);
+    actualresult = tdkTestObj.getResult();
+    commString = tdkTestObj.getResultDetails();
+    print "[SNMP_GetCommString RESULT] : %s" %actualresult;
+    print "Community String: %s" %commString;
+    actResponse =snmplib.SnmpExecuteCmd("snmpwalk",commString, "-v 2c", "1.3.6.1.4.1.4491.2.3.1.1.1.2.4.1.1.23", ip);
     
     #Logic for verification will be done in the next iteration
     if "SNMPv2-SMI" in actResponse:
-        devCount=actResponse.split(": ")[1].strip();
-        if devCount!='0':
+        devCount=actResponse.split(" ")[-1].strip();
+        if int(devCount)>=0:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "TEST STEP 1:Execute snmpwalk to get maximum number of HDMI devices this device can support";
                 print "EXPECTED RESULT 1: snmpwalk should get the maximum number of HDMI devices this device can support";

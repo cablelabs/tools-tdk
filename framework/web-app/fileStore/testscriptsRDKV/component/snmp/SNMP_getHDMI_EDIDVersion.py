@@ -101,7 +101,7 @@ import tdklib;
 import snmplib;
 
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("snmp","1");
+obj = tdklib.TDKScriptingLibrary("snmp","2");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -117,8 +117,14 @@ if "SUCCESS" in loadmodulestatus.upper():
     obj.setLoadModuleStatus("SUCCESS");
     #Prmitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('SNMP_GetCommString');
-    snmpResponse =snmplib.SnmpExecuteCmd(tdkTestObj, "snmpwalk", "-v 2c", ".1.3.6.1.4.1.4491.2.3.1.1.1.2.4.1.1.25", ip);
-    actResponse =snmpResponse.split('=')[1];
+    expectedresult="SUCCESS"
+    tdkTestObj.executeTestCase(expectedresult);
+    actualresult = tdkTestObj.getResult();
+    commString = tdkTestObj.getResultDetails();
+    print "[SNMP_GetCommString RESULT] : %s" %actualresult;
+    print "Community String: %s" %commString;
+    snmpResponse =snmplib.SnmpExecuteCmd("snmpwalk",commString, "-v 2c", ".1.3.6.1.4.1.4491.2.3.1.1.1.2.4.1.1.25", ip);
+    actResponse =snmpResponse.split(' ')[-1];
 
     #Logic for verification will be done in the next iteration  
     if "0.0" not in actResponse:

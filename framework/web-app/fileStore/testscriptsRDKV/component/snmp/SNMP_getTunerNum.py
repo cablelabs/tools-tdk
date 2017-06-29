@@ -100,7 +100,7 @@ import snmplib;
 from trm import getMaxTuner;
 
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("snmp","1");
+obj = tdklib.TDKScriptingLibrary("snmp","2");
 trmObj = tdklib.TDKScriptingLibrary("trm","2.0");
 
 #IP and Port of box, No need to change,
@@ -114,17 +114,23 @@ trmObj.configureTestCase(ip,port,'SNMP_getTunerNum');
 loadmodulestatus1 =obj.getLoadModuleResult();
 loadmodulestatus2 =trmObj.getLoadModuleResult();
 
-print "[LIB LOAD STATUS]  :  %s" %loadmodulestatus1;
+print "[SNMP LIB LOAD STATUS]  :  %s" %loadmodulestatus1;
+print "[TRM LIB LOAD STATUS]  :  %s" %loadmodulestatus2;
 
-
-if "SUCCESS" in loadmodulestatus1.upper() and "SUCCESS" in loadmodulestatus2.upper():
+if "SUCCESS" in loadmodulestatus1.upper()and "SUCCESS" in loadmodulestatus2.upper():
     obj.setLoadModuleStatus("SUCCESS");
     trmObj.setLoadModuleStatus("SUCCESS");
     #Prmitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('SNMP_GetCommString');
-    actResponse =snmplib.SnmpExecuteCmd(tdkTestObj, "snmpwalk", "-v 2c", "1.3.6.1.4.1.17270.9225.1.4.1.6", ip);
+    expectedresult="SUCCESS"
+    tdkTestObj.executeTestCase(expectedresult);
+    actualresult = tdkTestObj.getResult();
+    commString = tdkTestObj.getResultDetails();
+    print "[SNMP_GetCommString RESULT] : %s" %actualresult;
+    print "Community String: %s" %commString;
+    actResponse =snmplib.SnmpExecuteCmd("snmpwalk",commString, "-v 2c", "1.3.6.1.4.1.17270.9225.1.4.1.6", ip);
 
-    #Logic for verification will be done in the next iteration
+    #Checking if the value obtained from snmp and trm are the same
     if "SNMPv2-SMI" in actResponse:
         noTuner=actResponse.split("\"")[1].strip();
         tdkTestObj.setResultStatus("SUCCESS");

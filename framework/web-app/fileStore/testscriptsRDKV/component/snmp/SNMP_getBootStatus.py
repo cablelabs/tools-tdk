@@ -21,7 +21,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SNMP_getBootStatus</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -59,24 +59,20 @@
   </rdk_versions>
   <test_cases>
     <test_case_id>CT_SNMP_01</test_case_id>
-    <test_objective>To get boot status of the host using snmpget command
-</test_objective>
+    <test_objective>To get boot status of the host using snmpget command</test_objective>
     <test_type>Positive</test_type>
     <test_setup>XG1</test_setup>
     <pre_requisite></pre_requisite>
-    <api_or_interface_used>GetCommString()
-</api_or_interface_used>
+    <api_or_interface_used>GetCommString()</api_or_interface_used>
     <input_parameters>"SnmpMethod : snmpwalk
 SnmpVersion : v2c
-OID : 1.3.6.1.4.1.4491.2.3.1.1.4.5.6"
-</input_parameters>
+OID : 1.3.6.1.4.1.4491.2.3.1.1.4.5.6"</input_parameters>
     <automation_approch>"1.TM will load the snmp_protocolagent via Test agent
 2.From python script, invoke SnmpExecuteCmd function in snmplib to get the value of given OID
 3. GetCommString function in the SNMP stub  will be called from snmplib to get the community string.
 4.Responses from the snmplib and executecmd will be logged in Script log.
 6. Validation of  the result is done within the python script and send the result status to Test Manager.
-7.Test Manager will publish the result in GUI as PASS/FAILURE based on the response from snmplib"
-</automation_approch>
+7.Test Manager will publish the result in GUI as PASS/FAILURE based on the response from snmplib"</automation_approch>
     <except_output>"CheckPoint 1:
 Response of snmp command should be logged in the script log
 
@@ -84,16 +80,15 @@ CheckPoint 2:
 Stub and lib function result should be success and should see corresponding log in the script log
 
 CheckPoint 3:
-TestManager GUI will publish the result as PASS in Execution/Console page of Test Manager"
-</except_output>
+TestManager GUI will publish the result as PASS in Execution/Console page of Test Manager"</except_output>
     <priority>High</priority>
-    <test_stub_interface>libsnmpstub.so
-</test_stub_interface>
+    <test_stub_interface>libsnmpstub.so</test_stub_interface>
     <test_script>SNMP_getBootStatus</test_script>
     <skipped>No</skipped>
     <release_version>M48</release_version>
     <remarks></remarks>
   </test_cases>
+  <script_tags />
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
@@ -101,7 +96,7 @@ import tdklib;
 import snmplib;
 
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("snmp","1");
+obj = tdklib.TDKScriptingLibrary("snmp","2");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
@@ -117,7 +112,13 @@ if "SUCCESS" in loadmodulestatus.upper():
     obj.setLoadModuleStatus("SUCCESS");
     #Prmitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('SNMP_GetCommString');
-    snmpResponse =snmplib.SnmpExecuteCmd(tdkTestObj, "snmpwalk", "-v 2c", ".1.3.6.1.4.1.4491.2.3.1.1.4.5.6", ip);
+    expectedresult="SUCCESS"
+    tdkTestObj.executeTestCase(expectedresult);
+    actualresult = tdkTestObj.getResult();
+    commString = tdkTestObj.getResultDetails();
+    print "[SNMP_GetCommString RESULT] : %s" %actualresult;
+    print "Community String: %s" %commString;
+    snmpResponse =snmplib.SnmpExecuteCmd("snmpwalk",commString, "-v 2c", ".1.3.6.1.4.1.4491.2.3.1.1.4.5.6", ip);
     actResponse =snmpResponse.split('=')[1];
 
     #Logic for verification will be done in the next iteration
