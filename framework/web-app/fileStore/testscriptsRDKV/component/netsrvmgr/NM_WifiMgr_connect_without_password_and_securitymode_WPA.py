@@ -21,7 +21,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>9</version>
+  <version>10</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>NM_WifiMgr_connect_without_password_and_securitymode_WPA</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -148,11 +148,12 @@ if "SUCCESS" in iarmLoadStatus.upper():
                                         tdkTestObj.addParameter("method_name", "connect");
                                         #Get Wifi configuration file
                                         wifiConfigFile = netsrvObj.realpath+'fileStore/wificredential.config'
-                                        configParser = ConfigParser.ConfigParser()
+                                        configParser = ConfigParser.RawConfigParser()
                                         configParser.read(r'%s' % wifiConfigFile)
                                         ssid = configParser.get('wifi-config', 'ssid')
+                                        security = configParser.getint('wifi-config', 'security')
                                         tdkTestObj.addParameter("ssid", ssid);
-                                        tdkTestObj.addParameter("security_mode", 1);
+                                        tdkTestObj.addParameter("security_mode", security);
                                         expectedresult="FAILURE"
                         	        tdkTestObj.executeTestCase(expectedresult);
 
