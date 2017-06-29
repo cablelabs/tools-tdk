@@ -17,13 +17,17 @@
 # limitations under the License.
 ##########################################################################
 NMCONFIG_PATH=/etc
-CONF_FILE=netsrvmgr.conf
 TARGET_PATH=/opt
 LOG_PATH=$TDK_PATH/logs
+NMLOG_PATH=$TARGET_PATH/logs
+CONF_FILE=netsrvmgr.conf
+NM_LOG_FILE=netsrvmgr.log
 LOGFILE=netsrvmgr_testmodule_prereq_details.log
 mkdir -p $LOG_PATH
-#removing old configuring status from the opt
+#removing old pre_requisite log from the opt
 rm $LOG_PATH/$LOGFILE
+#removing old netsrvmgr.log file from /opt
+rm $NMLOG_PATH/$NM_LOG_FILE
 
 #Function to copy the /etc/netsrvmgr.conf to /opt
 copy_netsrvconfig(){
@@ -65,22 +69,22 @@ copy_netsrvconfig(){
                 fi
         fi
 }
+
 imagename=`cat /version.txt|grep imagename:|cut -d: -f 2`
 echo $imagename
 ls $TARGET_PATH/$CONF_FILE
 if [ $? == 0 ]; then
-	
-	cat $TARGET_PATH/$CONF_FILE|grep "imagename="$imagename && cat $TARGET_PATH/$CONF_FILE|grep "disableWpsXRE=1"
+
+        cat $TARGET_PATH/$CONF_FILE|grep "imagename="$imagename && cat $TARGET_PATH/$CONF_FILE|grep "disableWpsXRE=1"
         if [ $? == 0 ]; then
-        	echo "Proper netsrvmgr is present"
+                echo "Proper netsrvmgr is present"
                 touch $LOG_PATH/$LOGFILE
                 echo  "SUCCESS" > $LOG_PATH/$LOGFILE
         else
-        	#need to copy the latest netsrvmgr.conf file
+                #need to copy the latest netsrvmgr.conf file
                 copy_netsrvconfig
         fi
 else
          #need to copy netsrvmgr.conf since its not found in /opt
          copy_netsrvconfig
 fi
-

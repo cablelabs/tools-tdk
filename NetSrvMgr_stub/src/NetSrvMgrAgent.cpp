@@ -41,15 +41,21 @@ bool readLogFile (const char *filename, const string parameter) {
     bool retVal = TEST_FAILURE;	
     ifstream logFile (filename);
     if (logFile.is_open ()) {
-        while (logFile.good ()) {
-            getline (logFile,line);
+        while (logFile && getline (logFile,line)) {
+            if (0 == line.length()) {
+                continue;
+            }
             if (line.find (parameter) != string::npos) {
                 DEBUG_PRINT (DEBUG_LOG,"Parameter found: %s\n",line.c_str ());
+                logFile.clear ();
+                logFile.seekg (0, ios::beg);
                 logFile.close ();
-		retVal = TEST_SUCCESS;
+                retVal = TEST_SUCCESS;
                 return retVal;
             }
         }
+        logFile.clear ();
+        logFile.seekg (0, ios::beg);
         logFile.close ();
         DEBUG_PRINT (DEBUG_ERROR,"Error! No Log found for parameter %s\n", parameter.c_str());
     }
@@ -1031,7 +1037,7 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value
 	    /*
 	     *Assign the event data as per the owner and event ID
 	     */
-	    if (0 == strcmp(owner, IARM_BUS_AUTHSERVICE_NAME)) {
+	    /*if (0 == strcmp(owner, IARM_BUS_AUTHSERVICE_NAME)) {
 		switch (eventId) {
 		    case IARM_BUS_AUTHSERVICE_EVENT_SWITCH_TO_PRIVATE: {
 			IARM_BUS_AuthService_EventData_t* param = (IARM_BUS_AuthService_EventData_t*)malloc(sizeof(IARM_BUS_AuthService_EventData_t));
@@ -1046,7 +1052,8 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value
             	    break;
         	}
 	    }
-	    else if (0 == strcmp(owner, IARM_BUS_IRMGR_NAME)) {
+	    else*/
+            if (0 == strcmp(owner, IARM_BUS_IRMGR_NAME)) {
 		switch (eventId) {
                     case IARM_BUS_IRMGR_EVENT_IRKEY: {
 			IARM_Bus_IRMgr_EventData_t* param = (IARM_Bus_IRMgr_EventData_t*)malloc(sizeof(IARM_Bus_IRMgr_EventData_t));
@@ -1082,14 +1089,14 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value
                         eventDataSize= sizeof (bool);
 		    }
                     break;
-                    /*case IARM_BUS_NETWORK_MANAGER_EVENT_AUTO_SWITCH_TO_PRIVATE_ENABLED: {
+                    case IARM_BUS_NETWORK_MANAGER_EVENT_AUTO_SWITCH_TO_PRIVATE_ENABLED: {
                         bool* param = (bool*)malloc(sizeof(bool));
 
                         *param = req["value"].asInt();
                         eventData = (void*)param;
                         eventDataSize= sizeof (bool);
                     }
-                    break;*/
+                    break;
 		    default:
                     break;
                 } 
@@ -1103,6 +1110,10 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value
 		response["details"] = "IARM_Bus_BroadcastEvent failed";
  	    }
 	    else {
+              	/*
+                 *Delay for broadcast event msg to be updated
+                 */
+              	sleep (7);
 		retVal = readLogFile(NM_LOG_FILE, eventLog);
 	        if (TEST_SUCCESS == retVal) {
 	            response["result"] = "SUCCESS";
