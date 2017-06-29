@@ -21,12 +21,16 @@
 #define __NETSRVMGR_STUB_H__
 
 #include <json/json.h>
+#include <fstream>
+#include <sstream>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 
 #include "wifiSrvMgrIarmIf.h"
 #include "libIBus.h"
+#include "irMgr.h"
 #include "libIBusDaemon.h"
+#include "authserviceIARM.h"
 
 #define IN
 #define OUT
@@ -44,6 +48,14 @@
 #define WIFI_MAX_STATUS_CODE     7
 #define WIFI_MAX_LNF_STATUS_CODE 7
 #define WIFI_SSID_SIZE		33
+
+/*
+ *Macros for Wifi Mgr EventHandling
+ */
+#define PRE_REQUISITE_LOG_PATH "logs/netsrvmgr_testmodule_prereq_details.log"
+#define PRE_REQUISITE_FILE "scripts/netsrvmgr_test_module_pre-script.sh"
+#define NM_LOG_FILE 	 "/opt/logs/netsrvmgr.log"
+
 
 using namespace std;
 
@@ -90,6 +102,7 @@ public:
     bool NetSrvMgrAgent_WifiMgr_GetPairedSSID (IN const Json::Value& req, OUT Json::Value& response);
     bool NetSrvMgrAgent_WifiMgr_SetEnabled (IN const Json::Value& req, OUT Json::Value& response);
     bool NetSrvMgrAgent_WifiMgr_SetGetParameters (IN const Json::Value& req, OUT Json::Value& response);
+    bool NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value& req, OUT Json::Value& response);
 };
 
 extern "C" NetSrvMgrAgent* CreateObject();
