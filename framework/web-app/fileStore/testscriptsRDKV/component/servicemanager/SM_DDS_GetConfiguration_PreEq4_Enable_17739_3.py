@@ -120,11 +120,16 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
                         resultDetails = resultDetails.rstrip('; ')
                         print resultDetails;
                         configTokens = resultDetails.split(";");
+			print configTokens;
                         configDict = {};
-                        for index in range(len(configTokens)):
-                                if index%2 == 0:
-                                        configDict[configTokens[index]] = configTokens[index+1];
-                        tdkTestObj.setResultStatus("SUCCESS");
+			if len(configTokens) == (len(nameList) * 2):
+	                        for index in range(len(configTokens)):
+        	                        if index%2 == 0:
+                	                        configDict[configTokens[index]] = configTokens[index+1];
+                        	tdkTestObj.setResultStatus("SUCCESS");
+			else:
+                        	tdkTestObj.setResultStatus("FAILURE");
+				print "Response is empty";
 
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
@@ -156,18 +161,33 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
                                         print "ECM IP: %s" %ecmIp;
                                         snmpOid = [".1.3.6.1.2.1.10.127.1.1.2.1.19.4"];
                                         status = "SUCCESS";
-                                        for index in range(len(snmpOid)):
-                                                tdkTestObj = snmpObj.createTestStep('SNMP_GetCommString');
-                                                actResponse =snmplib.SnmpExecuteCmd(tdkTestObj, "snmpget", "-v 2c", snmpOid[index], ecmIp);
-                                                print "SNMP response is %s" %actResponse;
-                                                snmpValue = actResponse.split(": ");
-                                                if configDict[nameList[index]].strip() != snmpValue[-1].strip():
-                                                        status = "FAILURE";
-                                                        print "The values are not equal";
-                                                        break;
-                                        tdkTestObj.setResultStatus(status);
-                                        if status == "SUCCESS":
-                                                print "Values are equal";
+                                        tdkTestObj = snmpObj.createTestStep('SNMP_GetCommString');
+                                        expectedresult="SUCCESS";
+                                        tdkTestObj.executeTestCase(expectedresult);
+                                        actualresult = tdkTestObj.getResult();
+                                        if expectedresult in actualresult:
+                                                commString = tdkTestObj.getResultDetails();
+                                                print "Community String is %s" %commString;
+
+                                                for index in range(len(snmpOid)):
+                                                        actResponse =snmplib.SnmpExecuteCmd("snmpget", commString, "-v 2c", snmpOid[index], ecmIp);
+                                                        print "SNMP response is %s" %actResponse;
+                                                        snmpValue = actResponse.split(": ");
+                                                        print snmpValue[-1].strip();
+							if configDict:
+                                	                        if configDict[nameList[index]].strip() != snmpValue[-1].strip():
+									status = "FAILURE";
+                                  	                         	print "The values are not equal";
+                                                                	break;
+							else:
+								print "TR-181 values not available for comparison";
+								status = "FAILURE";
+                                                tdkTestObj.setResultStatus(status);
+                                                if status == "SUCCESS":
+                                                        print "Values are equal";
+                                        else:
+                                                print "Failed to get community string";
+                                                tdkTestObj.setResultStatus("FAILURE");
 
                                 else:
                                         print "Failed to get ECM IP";
@@ -181,4 +201,4 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
         smObj.unloadModule("servicemanager");
         snmpObj.unloadModule("snmp");
 else:
-         print "Module loading failed";
+	print "Module loading failed";
