@@ -19,20 +19,54 @@
 
 #include "ServiceManagerAgent.h"
 
-Json::Value variantToJson (QVariant qData);
 Json::Value convertQHashToJson (QVariant qHash) ;
-QVariantList objectToList (Json::Value jData);
+QVariantList convertObjectToQList (Json::Value jData);
 
 /******************************************************************************
- *Function name : qListToJson
+ *Function name : convertQVariantToJson
+ *Description   : Function to check the QVariant data type and convert it to
+ *                json value
+ *Input         : qData - QVariant data to be converted to json value
+ *Return        : Returns the resultant json value
+ *******************************************************************************/
+Json::Value convertQVariantToJson (QVariant qData) {
+
+	Json::Value jValue;
+	DEBUG_PRINT (DEBUG_TRACE, "convertQVariantToJson --->Entry\n");
+
+        if (QVariant::String == qData.type()) {
+        	jValue = qData.toString().toStdString();
+	}
+        else if (QVariant::Int == qData.type()) {
+		 jValue = qData.toInt();
+        }
+        else if (QVariant::Bool == qData.type()) {
+		jValue = qData.toBool();
+        }
+	else if(QVariant::ByteArray == qData.type()) {
+		jValue = qData.toByteArray().data();
+	}
+  	else if(QVariant::Double == qData.type()) {
+                jValue = qData.toDouble();
+        }
+        else if(QMetaType::Float == qData.type()) {
+                jValue = qData.toFloat();
+        }
+	
+	DEBUG_PRINT (DEBUG_TRACE, "convertQVariantToJson --->Exit\n");
+	return jValue;
+}
+
+/******************************************************************************
+ *Function name : convertQListToJson
  *Description   : Function to convert QVariantList elements to corresponding 
  *                Json array
  *Input         : qList - QVariantList to be converted to json array
  *Return        : Returns the resultant json array
  *******************************************************************************/
-Json::Value qListToJson (QVariantList qList) {
+Json::Value convertQListToJson (QVariantList qList) {
 
-        DEBUG_PRINT (DEBUG_TRACE, "qListToJson --->Entry\n");
+        DEBUG_PRINT (DEBUG_TRACE, "convertQListToJson --->Entry\n");
 	Json::Value jArray;
         int itr;
         for (itr = 0;itr < qList.size();itr++) {
@@ -40,16 +74,16 @@ Json::Value qListToJson (QVariantList qList) {
 		        jArray[itr] = convertQHashToJson (qList[itr]);
                 }
                 else if (QVariant::List == qList[itr].type()) {
-			jArray[itr] = qListToJson (qList[itr].toList());
+			jArray[itr] = convertQListToJson (qList[itr].toList());
 
                 }
                 else {
-			jArray[itr] = variantToJson (qList[itr]);
+			jArray[itr] = convertQVariantToJson (qList[itr]);
                 }
 		
         }
 
-        DEBUG_PRINT (DEBUG_TRACE, "qListToJson --->Exit\n");
+        DEBUG_PRINT (DEBUG_TRACE, "convertQListToJson --->Exit\n");
 	return jArray;
 }
 
@@ -74,13 +108,13 @@ Json::Value convertQHashToJson (QVariant qHash) {
 
 	for ( ; itr != endItr; itr++) {
 		if (QVariant::List == itr.value().type()) {
-			qObject[itr.key().toStdString()] = qListToJson (itr.value().toList());
+			qObject[itr.key().toStdString()] = convertQListToJson (itr.value().toList());
 		    }
 		    else if ((QVariant::Hash == itr.value().type()) && (QVariant::Map == itr.value().type())){
 			qObject[itr.key().toStdString()] = convertQHashToJson (itr.value());
 		    }
 		    else {
-			qObject[itr.key().toStdString()] = variantToJson (itr.value());
+			qObject[itr.key().toStdString()] = convertQVariantToJson (itr.value());
 		    }
 	}
 
@@ -89,15 +123,15 @@ Json::Value convertQHashToJson (QVariant qHash) {
 }
 
 /******************************************************************************
- *Function name : convertToValue
+ *Function name : convertValueToQVariant
  *Description   : Function to check the Json::Value type and convert it to
  *                QVariant
  *Input         : jData - Json::Value data to be converted to QVariant
  *Return        : Returns the resultant QVariant
  *******************************************************************************/
-QVariant convertToValue (Json::Value jData) {
+QVariant convertValueToQVariant (Json::Value jData) {
 
-	DEBUG_PRINT (DEBUG_TRACE, "convertToValue --->Entry\n");
+	DEBUG_PRINT (DEBUG_TRACE, "convertValueToQVariant --->Entry\n");
 	QVariant jValue;
 	if (jData.isString()) {
 		jValue = jData.asCString();
@@ -115,48 +149,48 @@ QVariant convertToValue (Json::Value jData) {
 		jValue = jData.asDouble();
 	}
 
-	DEBUG_PRINT (DEBUG_TRACE, "convertToValue --->Exit\n");
+	DEBUG_PRINT (DEBUG_TRACE, "convertValueToQVariant --->Exit\n");
 	return jValue;
         
 }
 
 /******************************************************************************
- *Function name : arrayToList
+ *Function name : convertArrayToQList
  *Description   : Function to check the Json array elements type and convert it to
  *                QVariantList
  *Input         : jData - Json array to be converted to QVariantList
  *Return        : Returns the resultant QVariantList
  *******************************************************************************/
-QVariantList arrayToList (Json::Value jData) {
+QVariantList convertArrayToQList (Json::Value jData) {
 
-	DEBUG_PRINT (DEBUG_TRACE, "arrayToList --->Entry\n");
+	DEBUG_PRINT (DEBUG_TRACE, "convertArrayToQList --->Entry\n");
 	QVariantList qList;
 	int itr;
 	for (itr = 0;itr < jData.size();itr++) {
 		if (jData[itr].isObject()) {
-			qList << objectToList (jData[itr]);
+			qList << convertObjectToQList (jData[itr]);
 		}
 		else if (jData[itr].isArray()) {
-			qList << arrayToList (jData[itr]);
+			qList << convertArrayToQList (jData[itr]);
 		}
 		else {
-			qList << convertToValue (jData[itr]);
+			qList << convertValueToQVariant (jData[itr]);
 		}
 	}
 	
-	DEBUG_PRINT (DEBUG_TRACE, "arrayToList --->Exit\n");
+	DEBUG_PRINT (DEBUG_TRACE, "convertArrayToQList --->Exit\n");
 	return qList;
 }
 /******************************************************************************
- *Function name : objectToList
+ *Function name : convertObjectToQList
  *Description   : Function to check the Json object and convert it to
  *                QVariantList
  *Input         : jData - Json object to be converted to QVariantList
  *Return        : Returns the resultant QVariantList
  *******************************************************************************/
-QVariantList objectToList (Json::Value jData) {
+QVariantList convertObjectToQList (Json::Value jData) {
 
-	DEBUG_PRINT (DEBUG_TRACE, "objectToList --->Entry\n");
+	DEBUG_PRINT (DEBUG_TRACE, "convertObjectToQList --->Entry\n");
 	QVariantList qList;
 	QVariantHash qHash;
 	string key;
@@ -175,45 +209,18 @@ QVariantList objectToList (Json::Value jData) {
 			qHash.insert(key.c_str(), jData.get(key, Json::Value()).asDouble());
 		}
 		else if (jData.get(key, Json::Value()).isArray()) {
-			qHash.insert(key.c_str(), arrayToList (jData.get(key, Json::Value())));
+			qHash.insert(key.c_str(), convertArrayToQList (jData.get(key, Json::Value())));
 		}
 		else if (jData.get(key, Json::Value()).isNull()) {
 			qHash.insert(key.c_str(), QVariant());
 		}
 	}
-		qList << qHash;
+	qList << qHash;
 	
-	DEBUG_PRINT (DEBUG_TRACE, "objectToList --->Exit\n");
+	DEBUG_PRINT (DEBUG_TRACE, "convertObjectToQList --->Exit\n");
 	return qList;
 }
-/******************************************************************************
- *Function name : variantToJson
- *Description   : Function to check the QVariant data type and convert it to
- *                json value
- *Input         : qData - QVariant data to be converted to json value
- *Return        : Returns the resultant json value
- *******************************************************************************/
-Json::Value variantToJson (QVariant qData) {
 
-	Json::Value jValue;
-	DEBUG_PRINT (DEBUG_TRACE, "variantToJson --->Entry\n");
-
-        if (QVariant::String == qData.type()) {
-        	jValue = qData.toString().toStdString();
-	}
-        else if (QVariant::Int == qData.type()) {
-		 jValue = qData.toInt();
-        }
-        else if (QVariant::Bool == qData.type()) {
-		jValue = qData.toBool();
-        }
-	else if(QVariant::ByteArray == qData.type()) {
-		jValue = qData.toByteArray().data();
-	}
-	
-	DEBUG_PRINT (DEBUG_TRACE, "variantToJson --->Exit\n");
-	return jValue;
-}
 
 #ifdef HAS_API_APPLICATION
 QString listToString(QVariantList conInfo);
@@ -4225,7 +4232,7 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
 	string serviceName, methodName;
 	QVariantList qList;
 	Service *ptrService = NULL;
-	QVariantHash::iterator itr, successPos;
+	QVariantHash::iterator itr, successPos, nextPos;
 	ServiceParams inputParams, outputParams;
 	       
         if ((NULL == &req["service_name"]) || (NULL == &req["method_name"])) {
@@ -4256,13 +4263,13 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
 
 	   if (NULL != &req["params"] && !req["params"].empty()) {
 		if (req["params"].isArray()) {
-			qList.insert(0, arrayToList (req["params"]));
+			qList.insert(0, convertArrayToQList (req["params"]));
 		}
 		else if (req["params"].isObject()) {
-			qList.insert(0, objectToList(req["params"]));
+			qList.insert(0, convertObjectToQList(req["params"]));
 		}
 		else {
-			qList.insert(0, convertToValue(req["params"]));
+			qList.insert(0, convertValueToQVariant(req["params"]));
 		}
  		inputParams["params"] = qList;
 	   }
@@ -4280,29 +4287,35 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
                 else {
                         DEBUG_PRINT (DEBUG_TRACE,"%s call success.\n", methodName.c_str());
                         response["result"] = "SUCCESS";
-			if ((outputParams.contains("success")) && (outputParams.size() > SM_MIN_RESULT_PARAMS)) { 
+			if ((outputParams.contains("success")) && (outputParams.size() == SM_MIN_RESULT_PARAMS)) { 
+				response["details"] =  methodName + " call success";
+			}
+			else {
 				/*
 				 *Skip success field
 				 */ 
 				itr = outputParams.begin();
 				successPos = outputParams.find("success");
 				if (successPos !=  outputParams.end()) {
-				    if (outputParams.end() != outputParams.erase(successPos)) {
-				    	itr = outputParams.erase (successPos);
+				    if (successPos == itr) {
+					nextPos = outputParams.erase(successPos);					
+					if (outputParams.end() != nextPos) {
+				    		itr = nextPos;
+					}
+				    }
+				    else {
+					outputParams.erase (successPos);
 				    }
 				}
 				if ((QVariant::Hash == itr.value().type()) || (QVariant::Map == itr.value().type())) {
                         		response["details"] = convertQHashToJson (itr.value());
 				}
 				else if (QVariant::List == itr.value().type()) {	
-				    response["details"] = qListToJson (itr.value().toList());
+				    response["details"] = convertQListToJson (itr.value().toList());
 				}
 				else {
-				    response["details"] = variantToJson (itr.value());
+				    response["details"] = convertQVariantToJson (itr.value());
 				}
-			}
-			else {
-				response["details"] =  methodName + " call success";
 			}
                 }
            }

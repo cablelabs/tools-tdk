@@ -732,7 +732,7 @@ class PrimitiveTestCase:
 
 		if key in self.result:
 			resultIndex = self.result.find(key) + len(key+"\":\"")
-			message = self.result[resultIndex:]
+			message = self.result[(resultIndex-1):]
 			message = message[:(message.find("TDK__#@$00_"))]
 			message = message.strip("\"}")
 			message = message.strip("\",\"")
