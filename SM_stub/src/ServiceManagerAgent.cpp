@@ -4229,13 +4229,17 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
         DEBUG_PRINT(DEBUG_TRACE,"SM_Generic_CallMethod ---->Entry\n");
 
         bool ReturnValue = TEST_FAILURE;
+  	int count = 0;
+        int listPos = 0;
+        Json::Value jsonValue;
+        Json::ValueIterator paramsItr;
 	string serviceName, methodName;
 	QVariantList qList;
 	Service *ptrService = NULL;
-	QVariantHash::iterator itr, successPos, nextPos;
+	QVariantHash::iterator successPos;
 	ServiceParams inputParams, outputParams;
 	       
-        if ((NULL == &req["service_name"]) || (NULL == &req["method_name"])) {
+        if ((NULL == &req["service_name"]) || (NULL == &req["method_name"]) || (NULL == &req["inputCount"])) {
 		response["result"]="FAILURE";
 		response["details"]="Invalid Parameters";
                 return TEST_FAILURE;
@@ -4243,6 +4247,7 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
 
         serviceName = req["service_name"].asCString();
         methodName = req["method_name"].asCString();
+  	count = req["inputCount"].asInt();
 
 #ifdef HAS_API_HDMI_CEC
 	if (QString::fromStdString(serviceName) == HdmiCecService::SERVICE_NAME) {
@@ -4261,18 +4266,30 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
 	}
         if (NULL != ptrService) {
 
-	   if (NULL != &req["params"] && !req["params"].empty()) {
-		if (req["params"].isArray()) {
-			qList.insert(0, convertArrayToQList (req["params"]));
-		}
-		else if (req["params"].isObject()) {
-			qList.insert(0, convertObjectToQList(req["params"]));
-		}
-		else {
-			qList.insert(0, convertValueToQVariant(req["params"]));
-		}
- 		inputParams["params"] = qList;
-	   }
+           if (SM_MIN_PARAMS == count) {
+                jsonValue = req["params"];
+           }
+           else if (count > SM_MIN_PARAMS) {
+                paramsItr = req["params"].begin();
+                jsonValue = *(paramsItr);
+           }
+           for (  ;count > 0;count--, listPos++) {
+                if (jsonValue.isArray()) {
+                        qList.insert(listPos, convertArrayToQList (jsonValue));
+                }
+                else if (jsonValue.isObject()) {
+                        qList.insert(listPos, convertObjectToQList(jsonValue));
+                }
+                else {
+                        qList.insert(listPos, convertValueToQVariant(jsonValue));
+                }
+                if (count > SM_MIN_PARAMS) {
+                        paramsItr++;
+                        jsonValue = *(paramsItr);
+                }
+           }
+           inputParams["params"] = qList;
+          
            try {
 		/*
 		 *Call the Service manager calllMethod API
@@ -4287,36 +4304,37 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
                 else {
                         DEBUG_PRINT (DEBUG_TRACE,"%s call success.\n", methodName.c_str());
                         response["result"] = "SUCCESS";
-			if ((outputParams.contains("success")) && (outputParams.size() == SM_MIN_RESULT_PARAMS)) { 
+			if ((outputParams.contains("success")) && (outputParams.size() == SM_MIN_PARAMS)) { 
 				response["details"] =  methodName + " call success";
 			}
 			else {
-				/*
-				 *Skip success field
-				 */ 
-				itr = outputParams.begin();
-				successPos = outputParams.find("success");
-				if (successPos !=  outputParams.end()) {
-				    if (successPos == itr) {
-					nextPos = outputParams.erase(successPos);					
-					if (outputParams.end() != nextPos) {
-				    		itr = nextPos;
-					}
-				    }
-				    else {
-					outputParams.erase (successPos);
-				    }
-				}
-				if ((QVariant::Hash == itr.value().type()) || (QVariant::Map == itr.value().type())) {
-                        		response["details"] = convertQHashToJson (itr.value());
-				}
-				else if (QVariant::List == itr.value().type()) {	
-				    response["details"] = convertQListToJson (itr.value().toList());
-				}
-				else {
-				    response["details"] = convertQVariantToJson (itr.value());
-				}
-			}
+                                /*
+                                 *Skip success field
+                                 */
+                                successPos = outputParams.find("success");
+                                if (successPos !=  outputParams.end()) {
+                                    outputParams.erase (successPos);
+                                }
+                                listPos = 0;
+                                foreach (QVariant value, outputParams) {
+                                    if ((QVariant::Hash == value.type()) || (QVariant::Map == value.type())) {
+                                        jsonValue = convertQHashToJson (value);
+                                    }
+                                    else if (QVariant::List == value.type()) {
+                                        jsonValue = convertQListToJson (value.toList());
+                                    }
+                                    else {
+                                        jsonValue = convertQVariantToJson (value);
+                                    }
+                                    if (outputParams.size() > SM_MIN_PARAMS) {
+                                        response["details"][listPos] = jsonValue;
+                                        listPos++;
+                                    }
+                                    else {
+                                        response["details"] = jsonValue;
+                                    }
+                                }
+                        }
                 }
            }
            catch(...) {

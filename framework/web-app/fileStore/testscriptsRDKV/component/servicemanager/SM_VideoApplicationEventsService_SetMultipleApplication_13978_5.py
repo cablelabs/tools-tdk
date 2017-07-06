@@ -21,7 +21,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>11</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_VideoApplicationEventsService_SetMultipleApplication_13978_5</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -72,10 +72,12 @@
     <release_version></release_version>
     <remarks></remarks>
   </test_cases>
+  <script_tags />
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
+import json;
 import servicemanager;
 
 #Test component to be tested
@@ -97,44 +99,56 @@ if "SUCCESS" in smLoadStatus.upper():
 
         if "SUCCESS" in register:
                 #Prmitive test case which associated to this Script
-                tdkTestObj = smObj.createTestStep('SM_VideoApplicationEventsService_SetApplications');
-                appString = "advertisement,15,NULL,buy_this1,5,NULL,buy_this2,10,NULL";
-                count = 3;
+                tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
+                inputList = []
+                inputValue = {"applicationName": "advertisement", "maxRandomDelay": 15, "filters": None}
+                inputList.append(inputValue.copy())
+                inputValue = {"applicationName": "buy_this1", "maxRandomDelay": 5, "filters": None}
+                inputList.append(inputValue.copy())
+                inputValue = {"applicationName": "buy_this2", "maxRandomDelay": 10, "filters": None}
+                inputList.append(inputValue.copy())
                 expectedresult = "SUCCESS";
-                tdkTestObj.addParameter("appString",appString);
-                tdkTestObj.addParameter("count",count);
+                tdkTestObj.addParameter("service_name", serviceName);
+                tdkTestObj.addParameter("method_name", "setApplications");
+                tdkTestObj.addParameter("params", inputList);
+                tdkTestObj.addParameter("inputCount", 1);
                 tdkTestObj.executeTestCase(expectedresult);
                 #Get the result of execution
                 actualresult = tdkTestObj.getResult();
-                print "[TEST EXECUTION RESULT] : %s" %actualresult;
                 if expectedresult in actualresult:
-                        print "Application set successfully";
+                        print "Application set successfully\n";
                         tdkTestObj.setResultStatus("SUCCESS");
-                else:
-                        print "Application set failed";
-                        tdkTestObj.setResultStatus("FAILURE");
+                        #Prmitive test case which associated to this Script
+                        tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
+                        expectedresult = "SUCCESS";
+                        tdkTestObj.addParameter("service_name", serviceName);
+                        tdkTestObj.addParameter("method_name", "getApplications");
+                        tdkTestObj.executeTestCase(expectedresult);
+                        #Get the result of execution
+                        actualresult = tdkTestObj.getResult();
+                        if expectedresult in actualresult:
+                                print "Application retrieved successfully";
+                                resultDetails = tdkTestObj.getResultDetails();
+                                outputList = json.loads(resultDetails);
+                                print "RESULT DETAILS: %s" %outputList;
+                                print "INPUTLIST: %s" %inputList;
+                                if inputList == outputList:
+                                        print "Application Values are same\n";
+                                        tdkTestObj.setResultStatus("SUCCESS");
+                                else:
+                                        actualresult = "FAILURE";
+                                        print "Application Values are not same\n";
+                                        tdkTestObj.setResultStatus("FAILURE");
 
-                #Prmitive test case which associated to this Script
-                tdkTestObj = smObj.createTestStep('SM_VideoApplicationEventsService_GetApplications');
-                expectedresult = "SUCCESS";
-                tdkTestObj.executeTestCase(expectedresult);
-                #Get the result of execution
-                actualresult = tdkTestObj.getResult();
-                if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        print "Application retrieved successfully";
-                        resultDetails = tdkTestObj.getResultDetails();
-                        print "RESULT DETAILS: %s" %resultDetails;
-                        print "APPSTRING: %s" %appString;
-                        if resultDetails == appString:
-                                print "Strings are equal";
                         else:
-                                print "Strings are not equal";
-
+                                print "Application retrieval failed\n";
+                                tdkTestObj.setResultStatus("FAILURE");
                 else:
-                        print "Application retrieval failed";
+                        print "Application set failed\n";
                         tdkTestObj.setResultStatus("FAILURE");
 
+                print "[TEST EXECUTION RESULT] : %s" %actualresult;
+                
                 unregister = servicemanager.unRegisterService(smObj,serviceName);
         smObj.unloadModule("servicemanager");
 else:

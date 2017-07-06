@@ -21,7 +21,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>1</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_VideoApplicationEventsService_CheckRandomDelay_13978_8</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -72,10 +72,12 @@
     <release_version></release_version>
     <remarks></remarks>
   </test_cases>
+  <script_tags />
 </xml>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
-import tdklib; 
+import tdklib;
+import json; 
 import servicemanager;
 
 #Test component to be tested
@@ -97,55 +99,61 @@ if "SUCCESS" in smLoadStatus.upper():
 
         if "SUCCESS" in register:
                 #Prmitive test case which associated to this Script
-                tdkTestObj = smObj.createTestStep('SM_VideoApplicationEventsService_SetApplications');
+                tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
                 maxRandDelay = 0;
-                appString = "advertisement,0,NULL";
-                count = 1;
+                inputList = []
+                inputValue = {"applicationName": "advertisement", "maxRandomDelay": maxRandDelay, "filters": None}
+                inputList.append(inputValue.copy())
                 expectedresult = "SUCCESS";
-                tdkTestObj.addParameter("appString",appString);
-                tdkTestObj.addParameter("count",count);
+                tdkTestObj.addParameter("service_name", serviceName);
+                tdkTestObj.addParameter("method_name", "setApplications");
+                tdkTestObj.addParameter("params", inputList);
+                tdkTestObj.addParameter("inputCount", 1);
                 tdkTestObj.executeTestCase(expectedresult);
                 #Get the result of execution
                 actualresult = tdkTestObj.getResult();
+                if expectedresult in actualresult:
+                        print "Application set successfully\n";
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        #Prmitive test case which associated to this Script
+                        tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
+                        expectedresult = "SUCCESS";
+                        tdkTestObj.addParameter("service_name", serviceName);
+                        tdkTestObj.addParameter("method_name", "getApplications");
+                        tdkTestObj.executeTestCase(expectedresult);
+                        #Get the result of execution
+                        actualresult = tdkTestObj.getResult();
+                        if expectedresult in actualresult:
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                print "Application retrieved successfully";
+                                resultDetails = tdkTestObj.getResultDetails();
+                                outputList = json.loads(resultDetails);
+                                print "RESULT DETAILS: %s" %outputList;
+                                print "INPUTLIST: %s" %inputList;
+                                logpath = "/opt/TDK/logs/AgentConsole.log";
+                                filepath = tdkTestObj.transferLogs( logpath, "false" );
+                                agentlog = open(filepath,'r');
+                                actualresult = 'FAILURE';
+                                for line in iter(agentlog):
+                                        if ('Delay calculated' in line):
+                                                randDelay = int(line.split('-')[1].strip());
+                                                print "Random Delay Calulated is:%d" %randDelay;
+                                                if randDelay == 0 :
+                                                        print "Random Delay correct\n";
+                                                        actualresult = 'SUCCESS';
+                                                else:
+                                                        print "Random Delay not correct\n";
+                                                break;
+                                tdkTestObj.setResultStatus(actualresult);
+
+                        else:
+                                print "Application retrieval failed\n";
+                                tdkTestObj.setResultStatus("FAILURE");
+                else:
+                        print "Application set failed\n";
+                        tdkTestObj.setResultStatus("FAILURE");
+
                 print "[TEST EXECUTION RESULT] : %s" %actualresult;
-                if expectedresult in actualresult:
-                        print "Application set successfully";
-                        tdkTestObj.setResultStatus("SUCCESS");
-                else:
-                        print "Application set failed";
-                        tdkTestObj.setResultStatus("FAILURE");
-
-                #Prmitive test case which associated to this Script
-                tdkTestObj = smObj.createTestStep('SM_VideoApplicationEventsService_GetApplications');
-                expectedresult = "SUCCESS";
-                tdkTestObj.executeTestCase(expectedresult);
-                #Get the result of execution
-                actualresult = tdkTestObj.getResult();
-                if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        print "Application retrieved successfully";
-                        resultDetails = tdkTestObj.getResultDetails();
-                        print "RESULT DETAILS: %s" %resultDetails;
-                        print "APPSTRING: %s" %appString;
-                        logpath = "/opt/TDK/logs/AgentConsole.log";
-                        filepath = tdkTestObj.transferLogs( logpath, "false" );
-                        agentlog = open(filepath,'r');
-                        status = 'FAILURE';
-                        for line in iter(agentlog):
-                                if ('Delay calculated' in line):
-                                        randDelay = int(line.split('-')[1].strip());
-                                        print "Random Delay Calulated is:%d" %randDelay;
-                                        if randDelay ==0 :
-                                                print "Random Delay correct";
-                                                status = 'SUCCESS';
-                                        else:
-                                                print "Random Delay not correct";
-                                        break;
-                        tdkTestObj.setResultStatus(status);
-
-                else:
-                        print "Application retrieval failed";
-                        tdkTestObj.setResultStatus("FAILURE");
 
                 unregister = servicemanager.unRegisterService(smObj,serviceName);
         smObj.unloadModule("servicemanager");

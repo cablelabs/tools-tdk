@@ -136,7 +136,7 @@ using namespace std;
 #define STR_DETAILS_50  50
 #define STR_DETAILS_100 100
 #define STR_DETAILS_200 200
-#define SM_MIN_RESULT_PARAMS 1
+#define SM_MIN_PARAMS 1
 
 class RDKTestAgent;
 class ServiceManagerAgent : public RDKTestStubInterface

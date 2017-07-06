@@ -17,26 +17,44 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version="1.0" encoding="UTF-8"?><xml>
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
   <id>1523</id>
-  <version>1</version>
+  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+  <version>5</version>
+  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_DeviceSetting_GetDeviceInfo</name>
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>646</primitive_test_id>
+  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>SM_DeviceSetting_GetDeviceInfo</primitive_test_name>
+  <!--  -->
   <primitive_test_version>0</primitive_test_version>
+  <!--  -->
   <status>FREE</status>
+  <!--  -->
   <synopsis>To verify get device info on deviceSettingService
 Test Case ID: 	CT_Service Manager_26</synopsis>
-  <groups_id/>
+  <!--  -->
+  <groups_id />
+  <!--  -->
   <execution_time>2</execution_time>
+  <!--  -->
   <long_duration>false</long_duration>
-  <remarks/>
+  <!--  -->
+  <advanced_script>false</advanced_script>
+  <!-- execution_time is the time out time for test execution -->
+  <remarks></remarks>
+  <!-- Reason for skipping the tests if marked to skip -->
   <skip>false</skip>
+  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
+    <!--  -->
   </rdk_versions>
   <test_cases>
     <test_case_id>CT_Service Manager_26</test_case_id>
@@ -53,7 +71,7 @@ DeviceSettingService::callMethod("getDeviceInfo")</api_or_interface_used>
 5.Service_Manager_Agent will deregister a given service from ServiceManager component.
 6. Service_Manager_Agent will check getdeviceinfo status and return SUCCESS/FAILURE status.</automation_approch>
     <except_output>Checkpoint 1.Check the return value of APIs for success status.</except_output>
-    <priority>High </priority>
+    <priority>High</priority>
     <test_stub_interface>libservicemanagerstub.so
 1.TestMgr_SM_RegisterService
 2.TestMgr_SM_DeviceSetting_GetDeviceInfo
@@ -61,10 +79,10 @@ DeviceSettingService::callMethod("getDeviceInfo")</api_or_interface_used>
     <test_script>SM_DeviceSetting_GetDeviceInfo</test_script>
     <skipped>No</skipped>
     <release_version>M21</release_version>
-    <remarks/>
+    <remarks></remarks>
   </test_cases>
+  <script_tags />
 </xml>
-
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
@@ -99,19 +117,26 @@ if "SUCCESS" in loadmodulestatus.upper():
                 print "SUCCESS: Registered %s with serviceManager"%service_name
 
                 #Call GetDeviceInfo API
-                tdkTestObj = obj.createTestStep('SM_DeviceSetting_GetDeviceInfo');
+                tdkTestObj = obj.createTestStep('SM_Generic_CallMethod');
+                inputList = ["ecm_ip","boxIP", "estb_ip","macAddress","estb_mac","ecm_mac","ethernet_mac","MODEL_NUM","imageVersion","BUILD_TYPE","DAC_INIT_TIMESTAMP","downloadIP"]
                 expectedresult="SUCCESS"
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                serviceDetail = tdkTestObj.getResultDetails();
-                print "[TEST EXECUTION DETAILS] : %s"%serviceDetail;
-                #Check for SUCCESS/FAILURE return value of SM_DeviceSetting_GetDeviceInfo
-                if expectedresult in actualresult:
-                        print "SUCCESS: GetDeviceInfo successful";
-                        tdkTestObj.setResultStatus("SUCCESS");
-                else:
-                        print "FAILURE: GetDeviceInfo failure";
-                        tdkTestObj.setResultStatus("FAILURE");
+                tdkTestObj.addParameter("service_name", service_name);
+                tdkTestObj.addParameter("method_name", "getDeviceInfo");
+                for param in inputList:
+                        tdkTestObj.addParameter("params", param);
+                    	tdkTestObj.addParameter("inputCount", 1);
+                        tdkTestObj.executeTestCase(expectedresult);
+                        #Get the result of execution
+                        actualresult = tdkTestObj.getResult();
+                        if expectedresult in actualresult:
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                deviceInfo = tdkTestObj.getResultDetails();
+                                print "%s : %s\n" %(param, deviceInfo);
+                        else:
+                                print "%s retrieval failed\n" %deviceInfo;
+                                tdkTestObj.setResultStatus("FAILURE");
+                                break;
+                print "[TEST EXECUTION RESULT] : %s" %actualresult;
 
                 #Call ServiceManger - UnregisterService API
                 tdkTestObj = obj.createTestStep('SM_UnRegisterService');

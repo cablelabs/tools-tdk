@@ -1,18 +1,27 @@
-#  ============================================================================
-#  COMCAST C O N F I D E N T I A L AND PROPRIETARY
-#  ============================================================================
-#  This file (and its contents) are the intellectual property of Comcast.  It may
-#  not be used, copied, distributed or otherwise  disclosed in whole or in part
-#  without the express written permission of Comcast.
-#  ============================================================================
-#  Copyright (c) 2014 Comcast. All rights reserved.
-#  ===========================================================================
+##########################################################################
+# If not stated otherwise in this file or this component's Licenses.txt
+# file the following copyright and licenses apply:
+#
+# Copyright 2016 RDK Management
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+##########################################################################
 '''
 <?xml version='1.0' encoding='utf-8'?>
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>8</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_VideoApplicationEventsService_SetEnable_13978_1</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -31,6 +40,8 @@
   <execution_time>2</execution_time>
   <!--  -->
   <long_duration>false</long_duration>
+  <!--  -->
+  <advanced_script>false</advanced_script>
   <!-- execution_time is the time out time for test execution -->
   <remarks></remarks>
   <!-- Reason for skipping the tests if marked to skip -->
@@ -69,6 +80,7 @@
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
+import json;
 import servicemanager;
 
 #Test component to be tested
@@ -91,10 +103,13 @@ if "SUCCESS" in smLoadStatus.upper():
 
         if "SUCCESS" in register:
                 #Prmitive test case which associated to this Script
-                tdkTestObj = smObj.createTestStep('SM_VideoApplicationEventsService_SetEnable');
-                valueToSetEnabled = 1;
+                tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
+                valueToSetEnabled = True;
                 expectedresult = "SUCCESS";
-                tdkTestObj.addParameter("valueToSetEnabled",valueToSetEnabled);
+                tdkTestObj.addParameter("service_name", serviceName);
+                tdkTestObj.addParameter("method_name", "setEnabled");
+                tdkTestObj.addParameter("params", valueToSetEnabled);
+                tdkTestObj.addParameter("inputCount", 1);
                 tdkTestObj.executeTestCase(expectedresult);
                 #Get the result of execution
                 actualresult = tdkTestObj.getResult();
@@ -102,27 +117,34 @@ if "SUCCESS" in smLoadStatus.upper():
                         resultDetails = tdkTestObj.getResultDetails();
                         print "Event enabling status: %s\n" %resultDetails;
                         #Prmitive test case which associated to this Script
-                        tdkTestObj = smObj.createTestStep('SM_VideoApplicationEventsService_IsEnableEvent');
+                        tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
                         expectedresult = "SUCCESS";
+                        tdkTestObj.addParameter("service_name", serviceName);
+                        tdkTestObj.addParameter("method_name", "isEnabled");
                         tdkTestObj.executeTestCase(expectedresult);
                         #Get the result of execution
                         actualresult = tdkTestObj.getResult();
                         if expectedresult in actualresult:
                                 tdkTestObj.setResultStatus("SUCCESS");
                                 resultDetails = tdkTestObj.getResultDetails();
-                                if valueToSetEnabled == int(resultDetails):
+                                valueOfIsEnabled = json.loads(resultDetails);
+                                print "ResultDetails : ", valueOfIsEnabled;
+                                if valueToSetEnabled == valueOfIsEnabled:
                                         tdkTestObj.setResultStatus("SUCCESS");
                                         print "Video application event service enabled successfully\n";
                                 else:
+                                        actualresult = "FAILURE";
                                         tdkTestObj.setResultStatus("FAILURE");
-                                        print "video application ervice event enabling failed\n";
+                                        print "video application service event enabling failed\n";
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "Failed to check event enable status\n";
 
                 else:
-                        print "Failed to set event enable status";
+                        print "Failed to set event enable status\n";
                         tdkTestObj.setResultStatus("FAILURE");
+                print "[TEST EXECUTION RESULT] : %s" %actualresult;
+
                 unregister = servicemanager.unRegisterService(smObj,serviceName);
         smObj.unloadModule("servicemanager");
 else:

@@ -339,6 +339,7 @@
           <parameter name="method_name" value="NULL"/>
           <parameter name="params" value="NULL"/>
           <parameter name="service_name" value="NULL"/>
+          <parameter name="inputCount" value="0"/>
         </parameters>
       </primitiveTest>
       <primitiveTest id="" name="SM_HN_IsMDVREnabled" version="1">
