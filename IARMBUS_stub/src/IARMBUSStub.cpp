@@ -409,12 +409,12 @@ bool IARMBUSAgent::IARMBUSAgent_IsConnected(IN const Json::Value& req, OUT Json:
 		response["result"]="SUCCESS";
 		if(isregistered==0)
 		{
-			DEBUG_PRINT(DEBUG_LOG,"\nRegistered\n");
+			DEBUG_PRINT(DEBUG_LOG,"\nNot Registered\n");
 			response["details"]="Process_Not_Registered";
 		}
 		else if(isregistered==1)
 		{
-			DEBUG_PRINT(DEBUG_LOG,"\nNot Registered\n");
+			DEBUG_PRINT(DEBUG_LOG,"\nRegistered\n");
 			response["details"]="Process_Registered";
 		}
 		else
