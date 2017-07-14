@@ -504,6 +504,8 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
          */
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_Generic_CallMethod, "TestMgr_SM_Generic_CallMethod");
 
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_ExecuteCmd, "TestMgr_SM_ExecuteCmd");
+
 	return TEST_SUCCESS;
 }
 
@@ -4354,6 +4356,56 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
 }
 
 /**************************************************************************
+ * Function name : ServiceManagerAgent::SM_ExecuteCmd()
+ *
+ * Arguments     : Input arguments are command to execute in box
+ *
+ * Description   : This will execute linux commands in box
+ * ***************************************************************************/
+bool ServiceManagerAgent::SM_ExecuteCmd(IN const Json::Value& request, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "SM_ExecuteCmd ---> Entry\n");
+        string fileinfo = request["command"].asCString();
+        FILE *fp = NULL;
+        char readRespBuff[BUFF_LENGTH];
+        string popenBuff;
+
+        /*Frame the command  */
+        string path = "";
+        path.append(fileinfo);
+
+        DEBUG_PRINT(DEBUG_TRACE, "Command Request Framed: %s\n",path.c_str());
+
+        fp = popen(path.c_str(),"r");
+
+        /*Check for popen failure*/
+        if(fp == NULL)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "popen() failure";
+                DEBUG_PRINT(DEBUG_ERROR, "popen() failure for %s\n", path.c_str());
+
+                return TEST_FAILURE;
+        }
+
+        /*copy the response to a buffer */
+        while(fgets(readRespBuff,sizeof(readRespBuff),fp) != NULL)
+        {
+                popenBuff += readRespBuff;
+        }
+
+        pclose(fp);
+
+        DEBUG_PRINT(DEBUG_TRACE, "\n\nResponse: %s\n",popenBuff.c_str());
+        response["result"] = "SUCCESS";
+        response["details"] = popenBuff;
+        DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
+        DEBUG_PRINT(DEBUG_TRACE, "SM_ExecuteCmd -->Exit\n");
+        return TEST_SUCCESS;
+
+}
+
+/**************************************************************************
  * Function Name: CreateObject
  * Description	: This function will be used to create a new object for the
  *		  class "ServiceManagerAgent".
@@ -4463,6 +4515,7 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_Set_24_Hour_Clock");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_Is_24_Hour_Clock");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_Generic_CallMethod");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_ExecuteCmd");
 
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;

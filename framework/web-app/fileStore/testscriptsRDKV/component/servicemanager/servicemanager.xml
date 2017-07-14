@@ -382,6 +382,12 @@
         <function>TestMgr_SM_AVInputService_GetCurrentVideoMode</function>
         <parameters/>
       </primitiveTest>
+      <primitiveTest name="SM_ExecuteCmd" id=" " version="1">
+        <function>TestMgr_SM_ExecuteCmd</function>
+        <parameters>
+          <parameter name="command" value=""/>
+        </parameters>
+      </primitiveTest>
     </primitiveTests>
   </module>
 </xml>

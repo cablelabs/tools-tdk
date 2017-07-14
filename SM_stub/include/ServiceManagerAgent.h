@@ -128,6 +128,7 @@ using namespace std;
 #define IN
 #define OUT
 
+#define BUFF_LENGTH 512
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
 
@@ -233,6 +234,8 @@ class ServiceManagerAgent : public RDKTestStubInterface
 
 		/* Generic Stub for callMethod*/
 		bool SM_Generic_CallMethod (IN const Json::Value& req, OUT Json::Value& response);
+
+                bool SM_ExecuteCmd (IN const Json::Value& req, OUT Json::Value& response);
 			
 
 		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
