@@ -110,7 +110,7 @@ Json::Value convertQHashToJson (QVariant qHash) {
 		if (QVariant::List == itr.value().type()) {
 			qObject[itr.key().toStdString()] = convertQListToJson (itr.value().toList());
 		    }
-		    else if ((QVariant::Hash == itr.value().type()) && (QVariant::Map == itr.value().type())){
+		    else if ((QVariant::Hash == itr.value().type()) || (QVariant::Map == itr.value().type())){
 			qObject[itr.key().toStdString()] = convertQHashToJson (itr.value());
 		    }
 		    else {
@@ -210,6 +210,9 @@ QVariantList convertObjectToQList (Json::Value jData) {
 		}
 		else if (jData.get(key, Json::Value()).isArray()) {
 			qHash.insert(key.c_str(), convertArrayToQList (jData.get(key, Json::Value())));
+		}
+		else if (jData.get(key, Json::Value()).isObject()) {
+			qHash.insert(key.c_str(), convertObjectToQList (jData.get(key, Json::Value())));
 		}
 		else if (jData.get(key, Json::Value()).isNull()) {
 			qHash.insert(key.c_str(), QVariant());
