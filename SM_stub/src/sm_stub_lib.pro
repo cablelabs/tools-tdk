@@ -17,9 +17,9 @@
 # limitations under the License.
 ##########################################################################
 
-QT += widgets network core gui
+QT += widgets network core gui concurrent
 DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
-DEFINES += USE_DEVICE_SETTINGS_SERVICE HAS_FRONT_PANEL USE_DS SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
+DEFINES += USE_IARMBUS USE_IARM_BUS WAREHOUSE_API ENABLE_HDCP_PROFILE USE_DEVICE_SETTINGS_SERVICE HAS_FRONT_PANEL USE_DS SCREEN_CAPTURE ENABLE_WEBSOCKET_SERVICE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
 DEFINES += QT_WEBKIT_LIB
 DEFINES += HAS_API_VIDEO_APPLICATION_EVENTS
 DEFINES += HAS_API_DEVICEDIAGNOSTICS
@@ -39,6 +39,7 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/ccec/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/osal/include/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmbus/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmmgrs/sysmgr
+INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/iarmmgrs-hal/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds-rpc/
 INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/rdk/ds-hal/
@@ -50,6 +51,8 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/qt5/QtCore \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKit \
                ${STAGING_DIR_TARGET}/usr/include/qt5/QtWebKitWidgets \
                ${RDK_PROJECT_ROOT_PATH}/servicemanager/include/helpers/ \
+	       ${RDK_PROJECT_ROOT_PATH}/iarmmgrs/generic/hal/include/ \
+	       ${RDK_PROJECT_ROOT_PATH}/iarmbus/core/include/ \
                ${STAGING_DIR_TARGET}/usr/include/qt5/include
 
 exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/intel/build/intel.pri) {
@@ -105,6 +108,15 @@ contains(DEFINES,USE_DISPLAY_SETTINGS) {
 	SOURCES += ../servicemanager/src/services/displaysettingsservice.cpp
 }
 
+contains(DEFINES,WAREHOUSE_API) {
+HEADERS += ../servicemanager/include/services/warehouseservice.h
+SOURCES += ../servicemanager/src/services/warehouseservice.cpp
+}
+
+contains(DEFINES,ENABLE_HDCP_PROFILE) {
+    SOURCES += ../servicemanager/src/services/hdcpprofileservice.cpp
+    HEADERS += ../servicemanager/include/services/hdcpprofileservice.h
+}
 contains(DEFINES,HAS_API_AVINPUT) {
 	HEADERS += ../servicemanager/include/abstractservice.h \
                    $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/avinputservice.h

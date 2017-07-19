@@ -498,6 +498,7 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetAPIVersion,"TestMgr_SM_FP_SetAPIVersion");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetPreferences,"TestMgr_SM_FP_SetPreferences");
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_GetPreferences,"TestMgr_SM_FP_GetPreferences");
+        ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_SetBlink,"TestMgr_SM_FP_SetBlink");
         /*set24hour API*/
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_FP_Set_24_Hour_Clock,"TestMgr_SM_FP_Set_24_Hour_Clock");
          /*is24hour API*/
@@ -589,6 +590,13 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
                 serviceStruct.createFunction = &createFrontPanelService;
         }
 #endif
+#ifdef ENABLE_HDCP_PROFILE
+        else if (serviceName == HdcpProfileService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createHdcpProfileService;
+        }
+#endif
+
 #ifdef HAS_API_SYSTEM
         else if (serviceName == SYSTEM_SERVICE_NAME)
         {
@@ -4095,6 +4103,106 @@ bool ServiceManagerAgent::SM_FP_GetPreferences(IN const Json::Value& req, OUT Js
 #endif
 }
 /***************************************************************************
+ *Function name : SM_FP_SetBlink
+ *Descrption    : This will sets the Blink pattern of the front panel LED..
+ *parameter [in]: req - name of the LED and Brightness value to be set.
+ *****************************************************************************/
+bool ServiceManagerAgent::SM_FP_SetBlink(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetBlink ---->Entry\n");
+
+#ifdef HAS_FRONT_PANEL
+        FrontPanelService *ptr_service = pFPService;
+        if(ptr_service != NULL)
+        {
+                std::string LEDName = req["LEDName"].asCString();
+                std::string LEDBrightness = req["LEDBrightness"].asCString();
+                std::string LEDColorRed = req["LEDColorRed"].asCString();
+                std::string LEDColorBlue = req["LEDColorBlue"].asCString();
+                std::string LEDColorGreen = req["LEDColorGreen"].asCString();
+                std::string BlinkDuration = req["BlinkDuration"].asCString();
+                std::string delimiter = ",";
+                int iterationcount = req["IterationCount"].asInt();
+                int sequencecount = req["SequenceCount"].asInt();
+                ServiceParams params, resultParams;
+                QVariantList Blinklist,patternlist;
+                QVariantHash blinkinfo , pattern[sequencecount];
+                blinkinfo.insert("ledIndicator", LEDName.c_str());
+                blinkinfo.insert("iterations",iterationcount);
+                size_t pos = 0;
+                std::string token;
+                int brightness, red, green, blue,duration;
+                for (int i = 0; i < sequencecount ;  i++)
+                {
+                        token = LEDBrightness.substr(0, LEDBrightness.find(delimiter));
+                        std::cout << token << std::endl;
+                        LEDBrightness.erase(0, LEDBrightness.find(delimiter) + delimiter.length());
+                        stringstream convert(token);
+                        convert>>brightness;
+                        pattern[i].insert("brightness",brightness);
+                        token = LEDColorRed.substr(0, LEDColorRed.find(delimiter));
+                        std::cout << token << std::endl;
+                        LEDColorRed.erase(0, LEDColorRed.find(delimiter) + delimiter.length());
+                        stringstream convert1(token);
+                        convert1>>red;
+                        pattern[i].insert("red",red);
+                        token = LEDColorGreen.substr(0, LEDColorGreen.find(delimiter));
+                        std::cout << token << std::endl;
+                        LEDColorGreen.erase(0, LEDColorGreen.find(delimiter) + delimiter.length());
+                        stringstream convert2(token);
+                        convert2>>green;
+                        pattern[i].insert("green",green);
+                        token = LEDColorBlue.substr(0, LEDColorBlue.find(delimiter));
+                        std::cout << token << std::endl;
+                        LEDColorBlue.erase(0, LEDColorBlue.find(delimiter) + delimiter.length());
+                        stringstream convert3(token);
+                        convert3>>blue;
+                        pattern[i].insert("blue",blue);
+                        token = BlinkDuration.substr(0, BlinkDuration.find(delimiter));
+                        std::cout << token << std::endl;
+                        BlinkDuration.erase(0, BlinkDuration.find(delimiter) + delimiter.length());
+                        stringstream convert4(token);
+                        convert4>>duration;
+                        pattern[i].insert("duration",duration);
+                        patternlist << pattern[i];
+                        DEBUG_PRINT(DEBUG_TRACE,"duration:%d,Brightness:%d,Red:%d,Green:%d,Blue:%d",duration,brightness,red,green,blue);
+                }
+                blinkinfo.insert("pattern",patternlist);
+                Blinklist.append(blinkinfo);
+                bool ReturnValue ;
+                DEBUG_PRINT(DEBUG_TRACE,"Calling setBlink to LED \n");
+                params["params"]=Blinklist;
+                resultParams = ptr_service->callMethod("setBlink", params);
+                ReturnValue = resultParams["success"].toBool();
+                if (ReturnValue)
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setBlink() call Success.\n");
+                        response["result"]="SUCCESS";
+                        response["details"]="Front Panel Service setBlink success";
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_TRACE,"Front Panel Service setBlink() call Failure.\n");
+                        response["result"]="FAILURE";
+                        response["details"]="Front Panel Service setBlink call failed";
+                }
+        }
+        else
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Failed to create Front panel Service handler.\n");
+                response["result"]="FAILURE";
+                response["details"]="Failed to create Front panel Service handler.";
+        }
+#else
+        DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
+        response["result"]="FAILURE";
+        response["details"]="FP Service not supported";
+#endif
+}
+
+
+                                                                                                       
+/***************************************************************************
  *Function name : SM_FP_Set_24_Hour_Clock
  *Descrption    : This will set 24hour clock..
  *parameter [in]: req - bool .
@@ -4514,6 +4622,8 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetAPIVersion");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetPreferences");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_GetPreferences");
+        ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_SetBlink");
+
         /*Set24HourClock & is24Hour APIs*/
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_Set_24_Hour_Clock");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_Is_24_Hour_Clock");

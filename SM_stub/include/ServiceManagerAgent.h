@@ -52,6 +52,9 @@ using namespace std;
 #ifdef ENABLE_WEBSOCKET_SERVICE
 #include "websocketservice.h"
 #endif
+#ifdef ENABLE_HDCP_PROFILE
+#include "hdcpprofileservice.h"
+#endif
 #ifdef HAS_FRONT_PANEL
 #include "frontpanelservice.h"
 #include "frontPanelIndicator.hpp"
@@ -229,6 +232,8 @@ class ServiceManagerAgent : public RDKTestStubInterface
                 bool SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_FP_SetPreferences(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_FP_GetPreferences(IN const Json::Value& req, OUT Json::Value& response);
+                bool SM_FP_SetBlink(IN const Json::Value& req, OUT Json::Value& response);
+
                 bool SM_FP_Set_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response);
                 bool SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response);
 
