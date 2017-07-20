@@ -97,7 +97,7 @@ if "SUCCESS" in loadmodulestatus.upper() and "SUCCESS" in loadmodulestatus1.uppe
                             LEDColorBlue = -200;
                             LEDColorGreen = -100;
                             LEDBrightness = -20;
-                            expectedresult="FAILURE"
+                            expectedresult="SUCCESS"
                             tdkTestObj.addParameter("LEDName","power_led");
                             tdkTestObj.addParameter("LEDColorRed",LEDColorRed);
                             tdkTestObj.addParameter("LEDColorBlue",LEDColorBlue);
@@ -112,9 +112,6 @@ if "SUCCESS" in loadmodulestatus.upper() and "SUCCESS" in loadmodulestatus1.uppe
                                     print "SUCCESS: Application Failed to execute SM_FP_SetPreferences API";
                                     print details;
                                     tdkTestObj.setResultStatus("SUCCESS");
-
-                            else:
-                                    tdkTestObj.setResultStatus("FAILURE");
                                     tdkTestObj = obj.createTestStep('SM_FP_GetPreferences');
                                     expectedresult="SUCCESS"
                                     
@@ -129,6 +126,9 @@ if "SUCCESS" in loadmodulestatus.upper() and "SUCCESS" in loadmodulestatus1.uppe
                                             tdkTestObj.setResultStatus("FAILURE");
                                             print "FAILURE: Application Failed to execute SM_FP_GetPreferences API";
                                             print details;
+
+                            else:
+                                    tdkTestObj.setResultStatus("FAILURE");
                                     print "FAILURE: Application successfully executes SM_FP_SetPreferences API";
                             # calling SM_UnRegisterService to unregister service
                             tdkTestObj = obj.createTestStep('SM_UnRegisterService');
