@@ -18,6 +18,7 @@
 -->
 <%@ page import="com.comcast.rdk.Module" %>
 
+<
 <!DOCTYPE html>
 <html>
 	<head>
@@ -41,7 +42,6 @@
 		        alert("Execution TimeOut Updated");
 		        return false;
 		      }
-			   
 		</script>
 	</head>
 	<body>
@@ -82,7 +82,7 @@
 				<%-- CGRTS - 426 --%>
 				<li class="fieldcontain">
 					<span id="name-label" class="property-label"><g:message code="module.name.label" default="Logs FileNames" />&emsp;</span>			
-					<span class="property-value" aria-labelledby="name-label"><g:fieldValue bean="${moduleInstance}" field="logFileNames"/></span>					
+					<span class="property-value" aria-labelledby="name-label"><g:fieldValue bean="${moduleInstance}" field="stbLogFiles"/></span>					
 				</li>
 				
 				
@@ -107,17 +107,21 @@
 						<th  align="left">Function Name</th>					
 					</tr>
 				</thead>
-				<tbody>				
+				<tbody>	
 					<g:each in="${functionInstanceList}" status="i" var="functionInstance">				
 						<tr>										
-							<td align="center"><g:checkBox name="${functionInstance?.id}" value="${false}"  /></td>
-							<td>${fieldValue(bean: functionInstance, field: "name")}</td>    				
+							<td align="center">
+								<g:checkBox class ="funSelect" name="${functionInstance?.id}" value="${false}"  /></td>
+							<td id="functionSelect">${fieldValue(bean: functionInstance, field: "name")}</td>    				
 						</tr>
 					</g:each>					
 				</tbody>
 			</table><br>
+			<g:hiddenField name="id" value="${moduleInstance?.id}" />
 			<g:hiddenField name="category" id="category" value="${category }"/>
-			<span class="buttons"><g:actionSubmit class="delete" action="deleteFunction" value="Delete Function/s" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span> 			
+			<span class="buttons"><g:actionSubmit class="delete" action="deleteFunction" value="Delete Selected Function/s" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
+			&nbsp;&nbsp;<span class="buttons" ><g:actionSubmit id="downloadxml" class="download" action="downloadSelectedXml" value="Download the Module XML with selected functions"  onclick="return confirm('${message(code:  'Do you want to download module xml with selected functions?')}');"/></span> 			 			
+			
 			</g:form>
 			</g:if>
 			<br>	<br>	
@@ -152,19 +156,19 @@
 			</g:if>
 			<br>
 			<g:form>	
-			
-			
-				<fieldset class="buttons">
+			<fieldset class="buttons">
 					<g:hiddenField name="id" value="${moduleInstance?.id}" />
 					<%--<g:link class="edit" action="edit" id="${moduleInstance?.id}"><g:message code="default.button.edit.label" default="Edit" /></g:link>
 					--%>
 					<g:hiddenField name="category" id="category" value="${category }"/>
-					<g:actionSubmit class="delete" action="delete" value="${message(code: 'default.button.delete.label', default: 'Delete Module')}" onclick="return confirm('It will delete all tests and scripts within this module. Do you want to continue?');" />
+					
+					<g:actionSubmit class="delete" action="delete" value="${message(code: 'Delete Module')}" onclick="return confirm('It will delete all tests and scripts within this module. Do you want to continue?');" />
 					<%--<g:actionSubmit class="delete" action="deleteParameterType" value="Delete Selected Parameter/s" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" />
-					--%>
-<g:actionSubmit class="download" action="downloadXml" value= "Download Module XML" onclick="return confirm('Do you want to download module xml ?');"/>
-					</fieldset>
+					--%>	
+					<g:actionSubmit class="download" action="downloadXml" value= "Download Module XML" onclick="return confirm('Do you want to download module xml ?');"/>			
+				</fieldset>
 			</g:form>
+		
 		</div>
 	</body>
 </html>

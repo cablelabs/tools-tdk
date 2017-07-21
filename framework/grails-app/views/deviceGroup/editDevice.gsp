@@ -40,7 +40,10 @@
 					<span class="buttons"><g:actionSubmit class="save" action="updateDevice" value="${message(code: 'default.button.update.label', default: 'Update')}" /></span>
 					<span class="buttons"><g:actionSubmit class="delete" action="deviceDelete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
 					<g:if test="${deviceInstance?.category?.toString()?.equals('RDKV')}">
-						<span class="buttons"><g:actionSubmit class="download" action="downloadDeviceXml" value= "Download"/> </span> 
+						<span class="buttons"><g:actionSubmit class="download" action="downloadRDKVDeviceXml" value= "Download"/> </span> 
+					</g:if>
+					<g:if test="${deviceInstance?.category?.toString()?.equals('RDKB')}">
+						<span class="buttons"><g:actionSubmit class="download" action="downloadRDKBDeviceXml" value= "Download"/> </span> 
 					</g:if>
 			</g:if>			
 			</div>

@@ -23,12 +23,13 @@ import static com.comcast.rdk.Constants.*
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.FutureTask
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -278,6 +279,7 @@ class ScriptexecutionService {
 				}
 				
 				if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()) || devStatus.equals(Status.TDK_DISABLED.toString())) && !pause){
+					def startExecutionTime = new Date()
 					try {
 						executionStarted = true
 								def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple, isBenchMark,isSystemDiagnostics,isLogReqd,rerun, category)
@@ -291,6 +293,8 @@ class ScriptexecutionService {
 					} catch (Exception e) {
 						e.printStackTrace()
 					}
+					def endExecutionTime = new Date()
+					executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 				}else{
 					if(!aborted && (devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()) || devStatus.equals(Status.TDK_DISABLED.toString()))){
 						pause = true
@@ -694,7 +698,7 @@ class ScriptexecutionService {
 			Device deviceInstance, final String url, final String filePath, final String realPath, final String isMultiple, final String isBenchMark,final String  isSystemDiagnostics, final String isLogReqd, final String rerun, final String category ) {
 	
 		String htmlData = ""
-
+		Date startTime = new Date()
 		String scriptData = convertScriptFromHTMLToPython(scriptInstance.scriptContent)
 		 
 		String stbIp = STRING_QUOTES + deviceInstance.stbIp + STRING_QUOTES
@@ -877,21 +881,34 @@ class ScriptexecutionService {
 		Date execEndDate = new Date()
 		def execEndTime =  execEndDate.getTime()
 
-		def timeDifference = ( execEndTime - executionStartTime  ) / 60000;
+		def timeDifference = ( execEndTime - executionStartTime  ) / 1000;
 
 		String timeDiff =  String.valueOf(timeDifference)
 		
 		def resultArray = Execution.executeQuery("select a.executionTime from Execution a where a.name = :exName",[exName: executionName])
 		
-		BigDecimal myVal1
-		if(resultArray[0]){
-			myVal1= new BigDecimal (resultArray[0]) + new BigDecimal (timeDiff)
+		String singleScriptExecTime = timeDifference
+		try
+		{
+			def cumulativeTime
+			if(resultArray){
+				cumulativeTime = calculateTotalExecutiontime(resultArray[0], timeDiff)
+			}else{
+				cumulativeTime = calculateTotalExecutiontime(resultArray, timeDiff)
+			}
+			timeDiff = convertExecutionTimeFormat(cumulativeTime )
+			singleScriptExecTime = convertExecutionTimeFormat((new BigDecimal (singleScriptExecTime)))
+			if(singleScriptExecTime.contains(".") ){
+				int index = singleScriptExecTime.indexOf(".")
+				if((index + 3) < singleScriptExecTime.length() ){
+					singleScriptExecTime = singleScriptExecTime.substring(0, index+3);
+				}
+			}
 		}
-		else{
-			myVal1 =  new BigDecimal (timeDiff)
+		catch (Exception e) {
+			e.printStackTrace()
 		}
-						
-		timeDiff =  String.valueOf(myVal1)
+		
 	
 		
 	   /* if(outputData) {
@@ -914,7 +931,7 @@ class ScriptexecutionService {
 			}	
 			
 			
-			executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
+			executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),singleScriptExecTime)
 			Thread.sleep(5000)
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 			def absolutePath = layoutFolder.absolutePath
@@ -939,7 +956,7 @@ class ScriptexecutionService {
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 				String outputData1 = htmlData
-				executionService.updateExecutionResults(outputData1,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
+				executionService.updateExecutionResults(outputData1,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),singleScriptExecTime)
 			}
 			else{
 				if((timeDifference >= scriptInstance.executionTime) && (scriptInstance.executionTime != 0))	{
@@ -955,12 +972,12 @@ class ScriptexecutionService {
 						ScriptExecutor scriptExecutor = new ScriptExecutor()
 						def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 						htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
-						executionService.updateExecutionResultsTimeOut(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
+						executionService.updateExecutionResultsTimeOut(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),singleScriptExecTime)
 						Thread.sleep(6000)
 						executionService.callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 				}else{
 					try {
-						executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
+						executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),singleScriptExecTime)
 						Thread.sleep(5000)
 						File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 						def absolutePath = layoutFolder.absolutePath
@@ -986,10 +1003,92 @@ class ScriptexecutionService {
 				}
 			}
 		}
-		
+		Date endTime = new Date()
+		try {
+			def totalTimeTaken = (endTime?.getTime() - startTime?.getTime()) / 1000
+	//		totalTimeTaken = totalTimeTaken?.round(2)
+			executionService.updateExecutionTime(totalTimeTaken?.toString(), executionResultId)
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
 		
 		return htmlData
 	}
+			/**
+			 * The function for getting the cumulative time for execution  in seconds
+			 * @param totalExecutionTime
+			 * @param scriptExecutionTime
+			 * @return totalExecTime
+			 */
+					 
+			 def calculateTotalExecutiontime(def totalExecutionTime , def scriptExecutionTime)
+			 {
+		 
+				 BigDecimal totalExecTime
+				 if(totalExecutionTime){
+					 def totalTime =  Double.parseDouble(totalExecutionTime);
+					 def minPart = (long) totalTime
+					 def decimalPart = totalTime - minPart;
+					 totalExecTime = ((new BigDecimal (minPart))*60) + new BigDecimal (scriptExecutionTime) + ((new BigDecimal (decimalPart))*100)
+				 }
+				 else{
+					 totalExecTime =  new BigDecimal (scriptExecutionTime)
+		 
+				 }
+				 return totalExecTime
+			 }
+		 
+			 /**
+			  * The function for getting the execution time mm.ss format
+			  * @param executionTime
+			  * @return timeDiff
+			  */
+			 def convertExecutionTimeFormat(def executionTime)
+			 {
+				 BigDecimal timeCount = 60.00;
+				 BigDecimal mintVal = 0
+				 BigDecimal secVal = 0
+				 if(executionTime>timeCount){
+					 mintVal =(int)  executionTime/timeCount
+					 secVal =  executionTime.remainder(timeCount)
+					 
+				 }
+				 else{
+					 secVal = executionTime
+				 }
+				 executionTime =mintVal+(secVal/100)
+				 def timeDiff =  String.valueOf(executionTime)
+				 return timeDiff
+			 }
+			 
+			 
+			 /**
+			  * To calculate the total execution time and updating the data base
+			  * @param execName
+			  * @param startExecutionTime
+			  * @param endExecutionTime
+			 */
+			 def executionTimeCalculation(String execName, Date startExecutionTime, Date endExecutionTime)
+			 {
+				 try
+				 {
+					 def totalSecTime
+					 Execution executionInstance1 = Execution.findByName(execName)
+					 def totalTimeArray = Execution.executeQuery("select a.realExecutionTime from Execution a where a.name = :exName",[exName: execName])
+					 def execTimeDiff = (endExecutionTime.getTime() - startExecutionTime.getTime())/1000;
+					 /* Calculating and formatting the total execution time */
+					 if(totalTimeArray){
+						 totalSecTime = calculateTotalExecutiontime(totalTimeArray[0], execTimeDiff )
+					 }else{
+						 totalSecTime = calculateTotalExecutiontime(totalTimeArray, execTimeDiff )
+					 }
+					 def execTimeDifference = convertExecutionTimeFormat(totalSecTime )
+					 executionService.updateTotalExecutionTime(execTimeDifference ?.toString(), executionInstance1?.id)
+				 }catch (Exception e) {
+					 println  " Error"+e.getMessage()
+					 e.printStackTrace()
+				 }
+			 }
 			
 	/**
 	 * Method to call the script executor to execute the script

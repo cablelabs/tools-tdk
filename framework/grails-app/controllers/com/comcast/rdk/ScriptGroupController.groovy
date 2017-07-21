@@ -724,7 +724,7 @@ class ScriptGroupController {
 		{ 
 			/* To get the Selected Modules*/
 			if(params?.listCount)
-			{ // to delete record(s) from list.gsp
+			{ 
 				for (iterateVariable in params?.listCount)
 				{
 					countVariable++
@@ -765,8 +765,10 @@ class ScriptGroupController {
 		
 					script = scriptService.getMinimalScript(getRealPath(),dirName,fileName, category)
 					
-					if(script?.boxTypes?.contains( boxType) && script?.rdkVersions?.contains(rdkVersions))
+					//Include long duration scripts only if the check box for long duration is selected			
+					if(script?.boxTypes?.contains( boxType) && script?.rdkVersions?.contains(rdkVersions) && (params.longDuration=="on" || !script?.longDuration))
 					{
+				
 								
 						scriptFileList<<ScriptFile.findByScriptName(script?.name)				
 					

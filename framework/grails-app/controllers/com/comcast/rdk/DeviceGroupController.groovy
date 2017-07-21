@@ -1522,10 +1522,10 @@ class DeviceGroupController {
 		render deviceObj
 	}
 	/**
-	 * Function is used to download the device details as the .xml file 
+	 * Function is used to download the RDKV device details as the .xml file 
 	 * @return
 	 */
-	def downloadDeviceXml(){			
+	def downloadRDKVDeviceXml(){			
 		def deviceInstance = Device?.findById(params?.id)
 		if(deviceInstance){
 			def streamsDetails = [:]
@@ -1621,16 +1621,90 @@ class DeviceGroupController {
 			redirect(action:"list")
 		}
 	}	
+	
 	/**
-	 * Function is used to upload xml file, extract the content and create new device
+	 * Function is used to download the RDKB device details as the .xml file
 	 * @return
 	 */
-	def uploadDevice(){
+	
+	def downloadRDKBDeviceXml(){
+		def deviceInstance = Device?.findById(params?.id)
+		if(deviceInstance){
+			
+			def writer = new StringWriter()
+			def xml = new MarkupBuilder(writer)
+			String deviceData
+			try{
+				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
+				xml.xml(){
+					xml.device(){
+						mkp.yield "\r\n  "
+						mkp.comment "Unique name for the Device"
+						xml.gateway_name(deviceInstance?.stbName)
+						mkp.yield "\r\n  "
+						mkp.comment "Unique IP for the Device "
+						xml.gateway_ip(deviceInstance?.stbIp)
+						
+						mkp.yield "\r\n  "
+						mkp.comment " BoxType for Device  "
+						xml.box_type(deviceInstance?.boxType)
+						mkp.yield "\r\n  "
+						mkp.comment "BoxManufacture for the Device"
+						xml.box_manufacture(deviceInstance?.boxManufacturer)
+						mkp.yield "\r\n  "
+						mkp.comment "SoC vendour for the Device"
+						xml.soc_vendour(deviceInstance?.soCVendor)
+						// Issue fix - category
+						mkp.yield "\r\n  "
+						mkp.comment "Category for the Device"
+						xml.category(deviceInstance?.category)
+						
+						
+							if(deviceInstance?.serialNo){
+								mkp.yield "\r\n  "
+								mkp.comment "Serial Number for the Device"
+								xml.serial_no(deviceInstance?.serialNo)
+							}else{
+								mkp.yield "\r\n  "
+								mkp.comment "Serial Number for the Device"
+								xml.serial_no("")
+							}
+						
+					}
+				}
+				deviceData= writer.toString()
+			} catch(Exception e){
+				println  "ERROR "+e.getMessage()
+				e.printStackTrace()
+			}
+			/* Downloading the XML File*/
+			if(deviceData){
+				params.format = "text"
+				params.extension = "xml"
+				response.setHeader("Content-Type", "application/octet-stream;")
+				response.setHeader("Content-Disposition", "attachment; filename=\""+ deviceInstance?.toString()+".xml\"")
+				//response.setHeader("Content-Length", ""+deviceData.length())
+				response.outputStream << deviceData.getBytes()
+			}else{
+				flash.message = "Download failed due to device information not available."
+				redirect(action: "list")
+			}
+		}else{
+			flash.message ="Device does not exist"
+			redirect(action:"list")
+		}
+	}
+	
+	/**
+	 * Function is used to upload xml file, extract the content and create new RDKV device
+	 * @return
+	 */
+	def uploadRDKVDevice(){
 		String xmlContent=""
 		def data = null
 		def node
 		def uploadedFile = request.getFile('file')
-		if( uploadedFile.originalFilename.endsWith(".xml")) {
+		if( uploadedFile?.originalFilename?.endsWith(".xml")) {
 			String fileName = uploadedFile?.originalFilename?.replace(".xml","")
 			if(Device.findByStbName(fileName.trim())){
 				flash.message="Device with name "+ fileName +" already exists"
@@ -1752,6 +1826,122 @@ class DeviceGroupController {
 										e.printStackTrace()
 									}
 								}
+							}
+							}else{
+							flash.message =" XML tags not in correct format "
+							}
+						}catch(Exception e){
+							flash.message =" Device not saved "
+						}
+					}else{
+						flash.message ="File content is empty"
+					}
+				}
+			}
+		}else{
+			flash.message="Error, The file extension is not in .xml format"
+		}
+
+		redirect(action:"list")
+		return
+	}
+	
+	/**
+	 * Function is used to upload xml file, extract the content and create new RDKB device
+	 * @return
+	 */
+	
+	def uploadRDKBDevice(){
+		String xmlContent=""
+		def data = null
+		def node
+		def uploadedFile = request.getFile('file')
+		if( uploadedFile?.originalFilename?.endsWith(".xml")) {
+			String fileName = uploadedFile?.originalFilename?.replace(".xml","")
+			if(Device.findByStbName(fileName.trim())){
+				flash.message="Device with name "+ fileName +" already exists"
+			}else{
+				
+				/*Reading the XML file */
+				InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
+				def fileContent = reader?.readLines()
+				if(fileContent){
+					fileContent?.each{ xmlData->
+						xmlContent += xmlData +"\n"
+					}
+					/* Saving the details given in the file*/
+					if(fileContent && fileContent.size() > 0){
+						try{
+							XmlParser parser = new XmlParser();
+							node = parser.parseText(xmlContent)
+							if(node){
+							def deviceName =  node?.device?.gateway_name?.text()?.trim()
+							def  deviceIp =node?.device?.gateway_ip?.text()?.trim()
+							String boxType = node?.device?.box_type?.text()?.trim()
+							def socVendor = node?.device?.soc_vendour?.text()?.trim()
+							def boxManufacture = node?.device.box_manufacture?.text()?.trim()
+							def serialno = node?.device?.serial_no?.text()?.trim()
+							def category = node?.device?.category?.text()?.trim()
+							def boxTypeObj = BoxType.findByNameAndCategory(boxType,Utility.getCategory(category))
+							def boxManufactureObj = BoxManufacturer.findByNameAndCategory(boxManufacture,Utility.getCategory(category))
+							def socVendorObj = SoCVendor.findByNameAndCategory(socVendor,Utility.getCategory(category))
+							//Checking if all the necessary inputs are given in the file
+							if(!boxType){
+								flash.message ="BoxType should not be empty "
+							}else if(!boxTypeObj){
+								flash.message= " No valid boxtype available with name"
+							}else if(Device.findByStbName(deviceName)){
+								flash.message= " Device name is already exists "
+							}else if(!deviceName){
+								flash.message= "Device should not be empty "
+							}else if(!deviceIp){
+								flash.message="Device IP should not be empty"
+							}else if(deviceIp && Device.findByStbIp(deviceIp)){
+								flash.message="Device IP already exist"
+							}else if(!socVendor){
+								flash.message="SOC Vendour should not be empty "
+							}else if(socVendor && !SoCVendor.findByName(socVendor)){
+								flash.message= " No valid soc vendour available with name"
+							}else if(!boxManufacture){
+								flash.message= "Box manufacture should not be empty "
+							}else if(boxManufacture && !BoxManufacturer.findByName(boxManufacture)){
+								flash.message=" No valid box manufacture available with name"
+							}else if(category && !Utility.getCategory(category)){
+								flash.message=" No valid  category name available with name"
+							}
+							else if(!serialno){
+								flash.message=" Serial number should not be empty"
+							}
+							else{
+								
+								
+									try{
+										/* Creating a new Device with the given details */
+										Device deviceInstance = new Device()
+										deviceInstance.stbName = deviceName
+										deviceInstance.stbIp = deviceIp
+										deviceInstance.soCVendor = socVendorObj
+										deviceInstance.boxType=boxTypeObj
+										deviceInstance.boxManufacturer =boxManufactureObj
+										deviceInstance.category= Utility.getCategory(category)
+										deviceInstance.serialNo= serialno
+										//deviceInstance.groups=utilityService.getGroup()
+										
+										if(deviceInstance.save(flush:true)){
+											
+											devicegroupService.saveToDeviceGroup(deviceInstance)
+											
+											flash.message=" Device saved successfully"
+										}else{
+											flash.message=" Device not saved"
+										}
+
+									}catch (Exception e){
+									flash.message =" XML tags not in correct format "
+										println "ERROR"+e.getMessage()
+										e.printStackTrace()
+									}
+								
 							}
 							}else{
 							flash.message =" XML tags not in correct format "

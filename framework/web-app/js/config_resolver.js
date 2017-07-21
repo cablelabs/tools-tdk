@@ -35,7 +35,10 @@ $(document).ready(function() {
 				createDevice("RDKB");
 			},
 			'upload_device':function(node){
-				uploadDevice();
+				uploadRDKVDevice();
+			},
+			'upload_device_RDKB':function(node){
+				uploadRDKBDevice();
 			}
 		}
 	});
@@ -56,12 +59,19 @@ $(document).ready(function() {
 	var decider_id = $("#decider").val();
 });
 
+
+
 /**
  * Function shows the upload device page option  
  */
-function uploadDevice(){
+function uploadRDKVDevice(){
 	$("#responseDiv").hide();
 	$("#up_load").show();
+}
+
+function uploadRDKBDevice(){
+	$("#responseDiv").hide();
+	$("#up_load_rdkb").show();
 }
 
 function upload(){
@@ -109,6 +119,7 @@ function upload(){
 function hideUploadOption(){
 	$("#responseDiv").show();
 	$("#up_load").hide();
+	$("#up_load_rdkb").hide();
 }
 
 function createDevice(category) {

@@ -208,7 +208,7 @@
 							style="width: 950px; height: 900px; display: none">
 							<br> <br> <br> <br>
 							<g:form method="POST" controller="deviceGroup"
-								action="uploadDevice" enctype="multipart/form-data">
+								action="uploadRDKVDevice" enctype="multipart/form-data">
 								<label> <b><g:message code="deviceGroup.name.label"
 											default="Select the device XML file" /></b>
 								</label>
@@ -216,7 +216,25 @@
 								<input class="uploadFile" type="file" name="file" />
 								&emsp;&emsp;
 								<g:actionSubmit class="buttons" style="width : 100px; "
-									action="uploadDevice" value="Upload" />
+									action="uploadRDKVDevice" value="Upload" />
+
+							</g:form>
+						</div>
+					</td>	
+					<td>
+						<div class="contextMenu" id="up_load_rdkb" align="center"
+							style="width: 950px; height: 900px; display: none">
+							<br> <br> <br> <br>
+							<g:form method="POST" controller="deviceGroup"
+								action="uploadRDKBDevice" enctype="multipart/form-data">
+								<label> <b><g:message code="deviceGroup.name.label"
+											default="Select the device XML file" /></b>
+								</label>
+								&emsp;
+								<input class="uploadFile" type="file" name="file" />
+								&emsp;&emsp;
+								<g:actionSubmit class="buttons" style="width : 100px; "
+									action="uploadRDKBDevice" value="Upload" />
 
 							</g:form>
 						</div>
@@ -362,6 +380,7 @@
 	          		<li id="add_device"><img src="../images/add_new.png" height="15px" width="15px"/>Add New RDK-V Device</li>
 	          		<li id="add_deviceB"><img src="../images/add_new.png" height="15px" width="15px"/>Add New RDK-B Device</li>
 	          		<li id="upload_device"><img src="../images/reorder_up.png" height="15px" width="15px" /> Upload RDK-V Device</li>
+	          		<li id="upload_device_RDKB"><img src="../images/reorder_up.png" height="15px" width="15px" /> Upload RDK-B Device</li>
 	        	</ul>
 	        </div>
 			<div class="contextMenu" id="childs_menu_device">

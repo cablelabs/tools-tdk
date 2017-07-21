@@ -282,7 +282,7 @@ class ExecutionController {
 		String queryString
 		String jobName = KEY_JOB+System.currentTimeMillis().toString()
 		String triggerName = KEY_TIGGER+System.currentTimeMillis().toString()
-
+		
 		List<String> scriptList = new ArrayList<String>()
 		String scheduleDate = (params?.testdate).toString()
 		java.util.Date date = new SimpleDateFormat(SCHEDULE_DATEFORMAT).parse(scheduleDate)
@@ -337,42 +337,52 @@ class ExecutionController {
 						.forJob(jobName)
 						.build();
 			}
-			try{
-				quartzScheduler.scheduleJob(job, trigger)
+			def jobSheduled = JobDetails?.findAllByDeviceAndStartDate( params?.deviceId,startDate)
+			//To avoid scheduling if the device already scheduled for that time
+			if(jobSheduled)
+			{
+				render message(code: 'Another test execution is scheduled in this device for the specified time.')
+				return	
 			}
-			catch(Exception qEx){
-				render message(code: 'schedule.invalid.dates')
-				return
-			}
+			else{
+				
+				try{
+					quartzScheduler.scheduleJob(job, trigger)
+				}
+				catch(Exception qEx){
+					render message(code: 'schedule.invalid.dates')
+					return
+				}
+			
+				int repeatCount = (params?.repeatCount).toInteger()
 
-			int repeatCount = (params?.repeatCount).toInteger()
 
-
-			JobDetails jobDetails = new JobDetails()
-			jobDetails.jobName = jobName
-			jobDetails.triggerName = triggerName
-			jobDetails.script = scriptList
-			jobDetails.scriptGroup = params?.scriptGroup
-			jobDetails.device = params?.deviceId
-			jobDetails.deviceGroup = null
-			jobDetails.realPath = getRealPath()
-			jobDetails.appUrl = getApplicationUrl()
-			jobDetails.filePath = "${request.getRealPath('/')}//fileStore"
-			jobDetails.queryString = queryString
-			jobDetails.startDate = startDate
-			jobDetails.endDate = endDate
-			jobDetails.oneTimeScheduleDate = date
-			jobDetails.isSystemDiagnostics = params?.isSystemDiagnostics
-			jobDetails.isBenchMark = params?.isBenchMark
-			jobDetails.isStbLogRequired=params?.isStbLogRequired
-			jobDetails.rerun = params?.rerun
-			jobDetails.repeatCount = repeatCount
-			jobDetails.rerunOnFailure= FALSE
-			jobDetails.groups = utilityService.getGroup()
-			jobDetails.category = Utility.getCategory(params?.category)
-			if(!jobDetails.save(flush:true)){
-				jobDetails.errors.each{
-					println "error : "+it
+				JobDetails jobDetails = new JobDetails()
+				jobDetails.jobName = jobName
+				jobDetails.triggerName = triggerName
+				jobDetails.script = scriptList
+				jobDetails.scriptGroup = params?.scriptGroup
+				jobDetails.device = params?.deviceId
+				jobDetails.deviceGroup = null
+				jobDetails.realPath = getRealPath()
+				jobDetails.appUrl = getApplicationUrl()
+				jobDetails.filePath = "${request.getRealPath('/')}//fileStore"
+				jobDetails.queryString = queryString
+				jobDetails.startDate = startDate
+				jobDetails.endDate = endDate
+				jobDetails.oneTimeScheduleDate = date
+				jobDetails.isSystemDiagnostics = params?.isSystemDiagnostics
+				jobDetails.isBenchMark = params?.isBenchMark
+				jobDetails.isStbLogRequired=params?.isStbLogRequired
+				jobDetails.rerun = params?.rerun
+				jobDetails.repeatCount = repeatCount
+				jobDetails.rerunOnFailure= FALSE
+				jobDetails.groups = utilityService.getGroup()
+				jobDetails.category = Utility.getCategory(params?.category)
+				if(!jobDetails.save(flush:true)){
+					jobDetails.errors.each{
+						println "error : "+it
+					}
 				}
 			}
 			def jobDetailList = JobDetails.findAllByGroupsOrGroupsIsNull(utilityService.getGroup())

@@ -21,7 +21,8 @@
 <%@ page import="com.comcast.rdk.Script"%>
 <%@ page import="com.comcast.rdk.User" %>
   <g:javascript library="jquery"/>
-<style type="text/css" media="screen"></style>
+<style type="text/css" media="screen">
+</style>
 <script type="text/javascript">
 window.onload = $(function(){
 	$("#rdkB").hide();
@@ -113,9 +114,9 @@ function checkChecked(moduleSelect,scriptGroupList,newScriptName)
 
 
 		<div class="contextMenu" style="padding: 20px; margin-left:1%; width: 950px;">
-				<table style="width: 60%">
-					<tr>
-						<td>
+				<table style="width: 80%">
+					<tr >
+						<td width = "40%" >
 							<label for="name">
 								<g:message code="scriptGroup.name.label" default="Name" />
 								<span class="required-indicator">*</span>
@@ -123,17 +124,19 @@ function checkChecked(moduleSelect,scriptGroupList,newScriptName)
 							<g:textField id= "scriptName" name="name" required=""  style="width: 240px"/>
 						</td>
 					</tr>
+				</table>
+				<table >
 					<tr>
-						<td>
+						<td width = "30%">
 							<br><br>
-							<div id="boxType">
+							<div id="boxType" >
 								<label>Select Box Type</label> &nbsp;&nbsp;
 								<g:select id="boxTypeId" name="boxname" from="${com.comcast.rdk.BoxType.findAllByCategory(Category.RDKV)}" 
 												noSelection="['' : 'Please Select']" optionKey="id"
 												required="" value="" class="many-to-one" />
 							</div>				
 						</td>
-						<td>
+						<td width = "30%">
 							<br><br>
 							<div id="rdkVersion">
 								<label>Select RDK Version</label> &nbsp;&nbsp;
@@ -141,7 +144,14 @@ function checkChecked(moduleSelect,scriptGroupList,newScriptName)
 												noSelection="['' : 'Please Select']" optionKey="id"
 												required="" value="" class="many-to-one" />
 							</div>		
-						</td>				
+						</td>
+						<td width = "30%" >
+							<br><br>
+							
+							<label>Include Long Duration Scripts</label> &nbsp;&nbsp;
+							<g:checkBox id="longDuration" name="longDuration" checked="false" onmouseover ="long duration test will be included only if selected" />
+
+			 			</td>					
 					</tr>
 				</table>								
 				<br><br>			
@@ -208,9 +218,9 @@ function checkChecked(moduleSelect,scriptGroupList,newScriptName)
 		<g:form action="saveCustomGrp" id="searchForm" name="searchForm" 
 		method="POST" onsubmit="return confirm('Test Suite creation takes some time');">
 			<div class="contextMenu" style="padding: 20px; margin-left:1%; width: 950px;">						
-				<table style="width: 60%">
+				<table style="width: 80%">
 					<tr>
-						<td>
+						<td width = "40%">
 							<label for="name">
 								<g:message code="scriptGroup.name.label" default="Name" />
 									<span class="required-indicator">*</span>
@@ -218,8 +228,10 @@ function checkChecked(moduleSelect,scriptGroupList,newScriptName)
 							<g:textField id= "scriptNameB" name="name" required=""  style="width: 240px"/>
 						</td>
 					</tr>
+				</table>
+				<table>
 					<tr>
-						<td>
+						<td width = "30%">
 							<br><br>
 							<div id="boxType">
 								<label>Select Box Type</label> &nbsp;&nbsp;
@@ -228,7 +240,7 @@ function checkChecked(moduleSelect,scriptGroupList,newScriptName)
 									required="" value="" class="many-to-one" />
 							</div>										
 						</td>
-						<td>
+						<td width = "30%">
 							<br><br>
 							<div id="rdkVersion">
 								<label>Select RDK Version</label> &nbsp;&nbsp;
@@ -236,7 +248,16 @@ function checkChecked(moduleSelect,scriptGroupList,newScriptName)
 									noSelection="['' : 'Please Select']" optionKey="id"
 									required="" value="" class="many-to-one" />
 							</div>										
-						</td>						
+						</td>	
+						
+						<td width = "30%">
+							<br><br>
+							
+							<label>Include Long Duration Scripts</label> &nbsp;&nbsp;
+							<g:checkBox id="longDuration" name="longDuration" checked="false" onmouseover ="long duration test will be included only if selected" />
+			 	
+			 			</td>	
+			 							
 					</tr>
 				</table>								
 				<br><br>
@@ -288,14 +309,14 @@ function checkChecked(moduleSelect,scriptGroupList,newScriptName)
 						</tbody>
 
 					</table>
-				</div>
+				
 				<br>
 				<br>
 				<g:if test="${SecurityUtils.getSubject().hasRole('ADMIN')}" >
 					<g:actionSubmit value="Create" action="saveCustomGrp"
 					 onclick=" return checkChecked('searchForm','${scriptGroupList }',document.getElementById('scriptNameB').value);"/>
 				</g:if>
-			
+			</div>
 		</g:form>	
  	 </div> 
 

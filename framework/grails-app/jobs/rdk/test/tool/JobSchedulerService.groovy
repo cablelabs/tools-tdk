@@ -23,10 +23,12 @@ import java.io.InputStream;
 import java.net.URLConnection;
 import java.text.DateFormat
 import java.text.SimpleDateFormat
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher
+
 import groovy.sql.Sql
 
 import org.quartz.Job
@@ -91,6 +93,34 @@ class JobSchedulerService implements Job{
 		}
 	}
 
+	/**
+	 * To calculate the total execution time and updating the data base
+	 * @param execName
+	 * @param startExecutionTime
+	 * @param endExecutionTime
+	*/
+	def executionTimeCalculation(String execName, Date startExecutionTime, Date endExecutionTime)
+	{
+		try
+		{
+			def totalSecTime
+			Execution executionInstance1 = Execution.findByName(execName)
+			def totalTimeArray = Execution.executeQuery("select a.realExecutionTime from Execution a where a.name = :exName",[exName: execName])
+			def execTimeDiff = (endExecutionTime.getTime() - startExecutionTime.getTime())/1000;
+			/* Calculating and formatting the total execution time */
+			if(totalTimeArray){
+				totalSecTime = calculateTotalExecutiontime(totalTimeArray[0], execTimeDiff )
+			}else{
+				totalSecTime = calculateTotalExecutiontime(totalTimeArray, execTimeDiff )
+			}
+			def execTimeDifference = convertExecutionTimeFormat(totalSecTime )
+			updateTotalExecutionTime(execTimeDifference ?.toString(), executionInstance1?.id)
+		}catch (Exception e) {
+			println  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+	
 	/**
 	 * Method to execute the script
 	 * @param executionName
@@ -488,6 +518,8 @@ class JobSchedulerService implements Job{
 										}
 
 										if(!aborted && !(deviceStatus.equals(Status.NOT_FOUND.toString()) || deviceStatus.equals(Status.HANG.toString())) && !pause){
+											
+											def startExecutionTime = new Date()
 											if(category != Category.RDKB_TCL) {
 												htmlData = executeScript(execName, executionDevice, scriptObj , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark,jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple, category)
 											}
@@ -505,6 +537,8 @@ class JobSchedulerService implements Job{
 											}
 											output.append(htmlData)
 											Thread.sleep(6000)
+											def endExecutionTime = new Date()
+											executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 										}else{
 
 											if(!aborted && (deviceStatus.equals(Status.NOT_FOUND.toString()) ||  deviceStatus.equals(Status.HANG.toString()))){
@@ -594,6 +628,7 @@ class JobSchedulerService implements Job{
 											catgory = jobDetails?.category
 										}
 										isMultiple = FALSE
+										def startExecutionTime = new Date()
 										if(category != Category.RDKB_TCL){
 											def moduleName= ScriptService.scriptMapping.get(scripts)
 											scriptInstance = getScript(realpath,moduleName, scripts, category)
@@ -641,6 +676,8 @@ class JobSchedulerService implements Job{
 											//	scriptInstance.put('scriptName',scripts)
 											htmlData = executeTclScript(execName, executionDevice, scriptInstance , deviceInstance , url, filePath, realpath, jobDetails?.isBenchMark, jobDetails?.isSystemDiagnostics,jobDetails?.isStbLogRequired,executionName,isMultiple, catgory,combinedScript)
 										}
+										def endExecutionTime = new Date()
+										executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 										output.append(htmlData)
 									}
 									else{
@@ -763,6 +800,7 @@ class JobSchedulerService implements Job{
 											if(scriptCounter == scriptGrpSize){
 												isMultiple = FALSE
 											}
+											def startExecutionTime = new Date()
 											aborted = ExecutionService.abortList.contains(exeId?.toString())
 											if(!aborted && !pause)
 											{
@@ -854,6 +892,8 @@ class JobSchedulerService implements Job{
 											}
 											output.append(htmlData)
 											Thread.sleep(6000)
+											def endExecutionTime = new Date()
+											executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 										}
 									}
 								}
@@ -1167,6 +1207,7 @@ class JobSchedulerService implements Job{
 								}
 								//	if(executionResult.category != Category.RDKB_TCL){
 								//	if(validateScriptBoxTypes(scriptInstance,deviceInstance)){
+								def startExecutionTime = new Date()
 								if(validScript){
 									Execution exec = Execution.findByName(newExecName)
 									aborted = ExecutionService.abortList?.toString().contains(exec?.id?.toString())
@@ -1246,6 +1287,8 @@ class JobSchedulerService implements Job{
 										htmlData = executeTclScript(newExecName, executionDevice, scrip, deviceInstance, url, filePath, realPath,isBenchMark,isSystemDiagnostics,islogReqd,uniqueExecutionName,isMultiple,executionResult.category )
 									}
 								}
+								def endExecutionTime = new Date()
+								executionTimeCalculation(newExecName,startExecutionTime,endExecutionTime)
 							}
 							//}
 							// stopping log transfer
@@ -1375,7 +1418,7 @@ class JobSchedulerService implements Job{
 	def String executeScript(final String executionName, final ExecutionDevice executionDevice, final def scriptInstance,
 			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String isLogReqd,final String uniqueExecutionName,final String isMultiple, def category) {
 		String htmlData = ""
-
+		Date startTime = new Date()
 		String scriptData = convertScriptFromHTMLToPython(scriptInstance.scriptContent)
 
 		String stbIp = STRING_QUOTES + deviceInstance.stbIp + STRING_QUOTES
@@ -1486,19 +1529,32 @@ class JobSchedulerService implements Job{
 		}
 		Date execEndDate = new Date()
 		def execEndTime =  execEndDate.getTime()
-		def timeDifference = ( execEndTime - execStartTime  ) / 60000;
+		def timeDifference = ( execEndTime - execStartTime  ) / 1000;
 		String timeDiff =  String.valueOf(timeDifference)
 		def resultArray = Execution.executeQuery("select a.executionTime from Execution a where a.name = :exName",[exName: executionName])
-		BigDecimal myVal1
-		if(resultArray[0]){
-			myVal1= new BigDecimal (resultArray[0]) + new BigDecimal (timeDiff)
+		String singleScriptExecTime = timeDifference
+		try
+		{
+			def cumulativeTime
+			if(resultArray){
+				cumulativeTime = calculateTotalExecutiontime(resultArray[0], timeDiff)
+			}else{
+				cumulativeTime = calculateTotalExecutiontime(resultArray, timeDiff)
+			}
+			timeDiff = convertExecutionTimeFormat(cumulativeTime )
+			singleScriptExecTime = convertExecutionTimeFormat((new BigDecimal (singleScriptExecTime)))
+			println singleScriptExecTime
+			if(singleScriptExecTime.contains(".") ){
+				int index = singleScriptExecTime.indexOf(".")
+				if((index + 3) < singleScriptExecTime.length() ){
+					singleScriptExecTime = singleScriptExecTime.substring(0, index+3);
+				}
+			}
 		}
-		else{
-			myVal1 =  new BigDecimal (timeDiff)
+		catch (Exception e) {
+			e.printStackTrace()
 		}
-
-		timeDiff =  String.valueOf(myVal1)
-		String singleScriptExecTime = String.valueOf(timeDifference)
+		
 
 		if(ExecutionService.abortList.contains(executionInstance?.id?.toString())){
 			resetAgent(deviceInstance,TRUE)
@@ -1507,7 +1563,7 @@ class JobSchedulerService implements Job{
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 			}
-			updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
+			updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 			Thread.sleep(4000)
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 			def absolutePath = layoutFolder.absolutePath
@@ -1532,7 +1588,7 @@ class JobSchedulerService implements Job{
 			if(htmlData.contains("SCRIPTEND#!@~")){
 				htmlData = htmlData.replaceAll("SCRIPTEND#!@~","")
 				String outputData = htmlData
-				updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
+				updateExecutionResults(outputData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 			}
 			else{
 				if((timeDifference >= execTime) && (execTime != 0))	{
@@ -1549,11 +1605,11 @@ class JobSchedulerService implements Job{
 					def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 					callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 					htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
-					updateExecutionResultsTimeOut(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
+					updateExecutionResultsTimeOut(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 					Thread.sleep(4000)
 				}else{
 					try {
-						updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,timeDifference.toString())
+						updateExecutionResultsError(htmlData,executionResultId,executionId,executionDevice?.id,timeDiff,singleScriptExecTime)
 						Thread.sleep(4000)
 						File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 						def absolutePath = layoutFolder.absolutePath
@@ -1625,11 +1681,67 @@ class JobSchedulerService implements Job{
 		//new File("${realPath}/logs//consolelog//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
 		logTransfer1(deviceInstance,logTransferFilePath1,logTransferFileName1 ,realPath, executionId,executionDevice?.id, executionResultId,url)
 		if(isLogReqd?.toString()?.equals("true")){
-			transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId,realPath,url)
+			
+		transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+executionDevice?.id,""+executionResultId,realPath,url)
+		}
+		Date endTime = new Date()
+		try {
+			def totalTimeTaken = (endTime?.getTime() - startTime?.getTime()) / 1000
+	//		totalTimeTaken = totalTimeTaken?.round(2)
+			updateExecutionTime(totalTimeTaken?.toString(), executionResultId)
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
 		return htmlData
 	}
 
+			/**
+			 * The function for getting the cumulative time for execution  in seconds
+			 * @param totalExecutionTime
+			 * @param scriptExecutionTime
+			 * @return totalExecTime
+			 */
+					 
+			 def calculateTotalExecutiontime(def totalExecutionTime , def scriptExecutionTime)
+			 {
+		 
+				 BigDecimal totalExecTime
+				 if(totalExecutionTime){
+					 def totalTime =  Double.parseDouble(totalExecutionTime);
+					 def minPart = (long) totalTime
+					 def decimalPart = totalTime - minPart;
+					 totalExecTime = ((new BigDecimal (minPart))*60) + new BigDecimal (scriptExecutionTime) + ((new BigDecimal (decimalPart))*100)
+				 }
+				 else{
+					 totalExecTime =  new BigDecimal (scriptExecutionTime)
+		 
+				 }
+				 return totalExecTime
+			 }
+		 
+			 /**
+			  * The function for getting the execution time mm.ss format
+			  * @param executionTime
+			  * @return timeDiff
+			  */
+			 def convertExecutionTimeFormat(def executionTime)
+			 {
+				 println "in convert"
+				 BigDecimal timeCount = 60.00;
+				 BigDecimal mintVal = 0
+				 BigDecimal secVal = 0
+				 if(executionTime>timeCount){
+					 mintVal =(int)  executionTime/timeCount
+					 secVal =  executionTime.remainder(timeCount)
+					 
+				 }
+				 else{
+					 secVal = executionTime
+				 }
+				 executionTime =mintVal+(secVal/100)
+				 def timeDiff =  String.valueOf(executionTime)
+				 return timeDiff
+			 }
 
 	/**
 	 * Function For Tranfer the performance related file using tftp
@@ -1906,20 +2018,32 @@ class JobSchedulerService implements Job{
 
 		Date execEndDate = new Date()
 		def execEndTime =  execEndDate.getTime()
-		def timeDifference = ( execEndTime - executionStartTime  ) / 60000;
+		def timeDifference = ( execEndTime - executionStartTime  ) / 1000;
 
 		String timeDiff =  String.valueOf(timeDifference)
 		String singleScriptExecTime = String.valueOf(timeDifference)
 
-		BigDecimal myVal1
-		if(resultArray[0]){
-			myVal1= new BigDecimal (resultArray[0]) + new BigDecimal (timeDiff)
+		try
+		{
+			def cumulativeTime
+			if(resultArray){
+				cumulativeTime = calculateTotalExecutiontime(resultArray[0], timeDiff)
+			}else{
+				cumulativeTime = calculateTotalExecutiontime(resultArray, timeDiff)
+			}
+			timeDiff = convertExecutionTimeFormat(cumulativeTime )
+			singleScriptExecTime = convertExecutionTimeFormat((new BigDecimal (singleScriptExecTime)))
+			if(singleScriptExecTime.contains(".") ){
+				int index = singleScriptExecTime.indexOf(".")
+				if((index + 3) < singleScriptExecTime.length() ){
+					singleScriptExecTime = singleScriptExecTime.substring(0, index+3);
+				}
+			}
 		}
-		else{
-			myVal1 =  new BigDecimal (timeDiff)
+		catch (Exception e) {
+			e.printStackTrace()
 		}
-
-		timeDiff =  String.valueOf(myVal1)
+		
 		if(ExecutionService.abortList.contains(executionInstance?.id?.toString())){
 			resetAgent(deviceInstance,TRUE)
 		}else if(Utility.isFail(htmlData) ){
@@ -2028,19 +2152,9 @@ class JobSchedulerService implements Job{
 		}
 		Date endTime = new Date()
 		try {
-			def totalTimeTaken = (endTime?.getTime() - startTime?.getTime()) / 60000
-
-			//	updateExecutionTime(totalTimeTaken?.toString(), executionResultId)
-			BigDecimal totalVal
-			if(totalTimeArray[0]){
-				totalVal= new BigDecimal (totalTimeArray[0]) + new BigDecimal (totalTimeTaken)
-			}
-			else{
-				totalVal =  new BigDecimal (totalTimeTaken)
-			}
-
-			timeDiff =  String.valueOf(totalVal)
-			//	updateTotalExecutionTime(timeDiff?.toString(), executionId)
+			def totalTimeTaken = (endTime?.getTime() - startTime?.getTime()) / 1000
+	//		totalTimeTaken = totalTimeTaken?.round(2)
+			updateExecutionTime(totalTimeTaken?.toString(), executionResultId)
 		} catch (Exception e) {
 			e.printStackTrace()
 		}
@@ -2539,7 +2653,10 @@ class JobSchedulerService implements Job{
 		}
 		return scriptStatus
 	}
-
+	public void updateExecutionTime(final String totalTime, final long executionResultId){
+		ExecutionResult.executeUpdate("update ExecutionResult c set c.totalExecutionTime = :time where c.id = :execId",
+				[time: totalTime, execId: executionResultId])
+	}
 	public void updateExecutionResults(final String outputData, final long executionResultId, final long executionId, final long executionDeviceId,
 			final String timeDiff, final String singleScriptExecTime){
 
@@ -2550,7 +2667,11 @@ class JobSchedulerService implements Job{
 		ExecutionDevice.executeUpdate("update ExecutionDevice c set c.executionTime = :newTime where c.id = :execDevId",
 				[newTime: timeDiff, execDevId: executionDeviceId.toLong()])
 	}
-
+	
+	public void updateTotalExecutionTime(final String totalTime, final long executionId){
+		Execution.executeUpdate("update Execution c set c.realExecutionTime = :time where c.id = :execId",
+				[time: totalTime, execId: executionId])
+	}
 	/**
 	 * Method to update the execution report for each test script execution.
 	 * This method will update the ExecutionResult and Execution tables with new execution output.

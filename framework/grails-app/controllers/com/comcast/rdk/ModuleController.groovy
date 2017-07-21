@@ -40,29 +40,29 @@ import com.comcast.rdk.Category
 class ModuleController {
 
 	def utilityService
-    def moduleService
+	def moduleService
 	
 	def rootPath = null
-    static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
+	static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
 
-    def index() {
-        redirect(action: "list", params: params)
-    }
+	def index() {
+		redirect(action: "list", params: params)
+	}
 	
-    /**
-     * List modules
-     * @param max
-     * @return
-     */
-    def list(Integer max) {
-        params.max = Math.min(max ?: 10, 100)
+	/**
+	 * List modules
+	 * @param max
+	 * @return
+	 */
+	def list(Integer max) {
+		params.max = Math.min(max ?: 10, 100)
 		def groupsInstance = utilityService.getGroup()
 		def category = getCategory(params?.category)
 	
 		def moduleInstanceList = getModuleList(groupsInstance, params)
 		def moduleInstanceListCnt = getModuleCount(groupsInstance, category)
-        [moduleInstanceList: moduleInstanceList, moduleInstanceTotal: moduleInstanceListCnt, category:params?.category]
-    }
+		[moduleInstanceList: moduleInstanceList, moduleInstanceTotal: moduleInstanceListCnt, category:params?.category]
+	}
 
 	def crashlog(){
 		//def moduleInstanceList = Module.findAllByGroupsOrGroupsIsNull(utilityService.getGroup(), [order: 'asc', sort: 'name'])
@@ -77,10 +77,10 @@ class ModuleController {
 	 */
 	def getFileList(){
 		Module module = Module.findById(params?.moduleid)
-		render(template:"crashfilelist", model:[ crashfiles : module?.logFileNames])		
+		render(template:"crashfilelist", model:[ crashfiles : module?.logFileNames])
 	}
 	
-	def saveCrashLogs(){		
+	def saveCrashLogs(){
 		List lst = []
 		if(params?.logFileNames){
 			if((params?.logFileNames) instanceof String){
@@ -91,22 +91,22 @@ class ModuleController {
 					if(StringUtils.hasText(logfilename)){
 						lst.add(logfilename)
 					}
-				}				
+				}
 			}
-			Module module = Module.findById(params?.module.id)			
+			Module module = Module.findById(params?.module.id)
 			module.logFileNames = lst
 			if(module.save(flush:true)){
 				flash.message = "Updated Log Files to the Module "+module?.name
 			}
 			else{
 				flash.message = "Error in saving. Please retry "
-			}			
-		}				
-		redirect(action: "crashlog", params:[category:params?.category])		
+			}
+		}
+		redirect(action: "crashlog", params:[category:params?.category])
 	}
 	/**
 	 * Function transfer the moduleList to the view page
-	 *   
+	 *
 	 */
 	def logFileNames(){
 		def moduleInstanceList = getModuleList(utilityService.getGroup(), params)
@@ -119,7 +119,7 @@ class ModuleController {
 	 */
 	def getLogList(){
 		Module module = Module.findById(params?.moduleid)
-		render(template:"configureStbLogs", model:[ stbLogFiles : module?.stbLogFiles])	
+		render(template:"configureStbLogs", model:[ stbLogFiles : module?.stbLogFiles])
 	}
 	
 	/**
@@ -141,7 +141,7 @@ class ModuleController {
 				}
 			}
 			Module module = Module.findById(params?.module.id)
-			module.stbLogFiles = lst 
+			module.stbLogFiles = lst
 			if(module.save(flush:true)){
 				flash.message = "Updated Log Files to the Module "+module?.name
 			}
@@ -158,9 +158,9 @@ class ModuleController {
 	
 	
 	
-    def configuration() {    
-        // Redirect to show page without any parameters
-    }
+	def configuration() {
+		// Redirect to show page without any parameters
+	}
 	
 	def setExecutionWaitTime(final int executiontime, final String moduleName){
 //		def c = Script.createCriteria()
@@ -174,20 +174,20 @@ class ModuleController {
 //		scriptList.each{script ->
 //			script.executionTime = executiontime
 //			script.save(flush:true)
-//		}		
+//		}
 	}
 	
-    /**
-     * Create Module, Function and parameter types
-     * @return
-     */
-    def create() {  
-		def modules = getModuleList(utilityService.getGroup(), params) 
-        [moduleInstance: new Module(params), functionInstance : new Function(params), parameterTypeInstance : new ParameterType(params),category:params?.category, modules:modules]
-    }
+	/**
+	 * Create Module, Function and parameter types
+	 * @return
+	 */
+	def create() {
+		def modules = getModuleList(utilityService.getGroup(), params)
+		[moduleInstance: new Module(params), functionInstance : new Function(params), parameterTypeInstance : new ParameterType(params),category:params?.category, modules:modules]
+	}
 	
 	/**
-	 * create  function 
+	 * create  function
 	 */
 	def createFunction(){
 		def modules = getModuleList(utilityService.getGroup(), params)
@@ -196,15 +196,15 @@ class ModuleController {
 		
 	}
 	/**
-	 * Create parameters 
+	 * Create parameters
 	 */
 	def createParameter(){
 		def modules = getModuleList(utilityService.getGroup(), params)
 		[parameterTypeInstance  : new ParameterType(params),  category:params?.category , modules:modules]
 		
 	}
-    def save() {
-          /*   def moduleInstance = new Module(params)
+	def save() {
+		  /*   def moduleInstance = new Module(params)
 		moduleInstance.groups = utilityService.getGroup()
 		Category category = getCategory(params?.category)
 		def savedEntity = true
@@ -233,8 +233,8 @@ class ModuleController {
 			render(view: "create", model: [category: params?.category])
 			return
 		}
-        flash.message = message(code: 'default.created.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
-        redirect(action: "create",  params:[category:params?.category])*/
+		flash.message = message(code: 'default.created.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
+		redirect(action: "create",  params:[category:params?.category])*/
 		def module  = Module?.findByName(params.name)
 		if(module){
 			flash.message ="${params?.name} module name is alredy exist "
@@ -248,12 +248,12 @@ class ModuleController {
 			}
 		}
 		redirect(action: "create", params:[category:params?.category])
-    }
-    /**
-     * Save function corresponding to the selected modules
-     * @return
-     */
-    def saveFunction() {/*
+	}
+	/**
+	 * Save function corresponding to the selected modules
+	 * @return
+	 */
+	def saveFunction() {/*
 		Function.withTransaction { status ->
 			def functionInstance = new Function(params)
 			if (!functionInstance.save(flush: true)) {
@@ -272,18 +272,18 @@ class ModuleController {
 				flash.message = message(code: 'default.not.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
 			}
 		}
-        redirect(action: "create", params:[category:params?.category])
-    */
+		redirect(action: "create", params:[category:params?.category])
+	*/
 	def functionInstance = new Function(params)
 	Function.withTransaction { status ->
-		try{			
+		try{
 			if (!functionInstance.save(flush: true)) {
 				flash.message = message(code: 'default.not.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
 				return
 			}else{
 			flash.message = message(code: 'default.created.message', args: [message(code: 'function.label', default: 'Function'), functionInstance.name])
 			}
-		}		
+		}
 		catch(Exception e){
 			status.setRollbackOnly()
 			e.printStackTrace()
@@ -292,21 +292,21 @@ class ModuleController {
 	}
 	redirect(action: "createFunction", params:[category:params?.category])
 	}
-    
-    /**
-     * Save parameter corresponding to the selected modules
-     * and functions
-     * @return
-     */
-    def saveParameter() {/*
+	
+	/**
+	 * Save parameter corresponding to the selected modules
+	 * and functions
+	 * @return
+	 */
+	def saveParameter() {/*
 		ParameterType.withTransaction{ status ->
-	        def parameterTypeInstance = new ParameterType(params)
-	        if (!parameterTypeInstance.save(flush: true)) {
+			def parameterTypeInstance = new ParameterType(params)
+			if (!parameterTypeInstance.save(flush: true)) {
 				def map = create()
 				map.put('parameterTypeInstance', parameterTypeInstance)
-	            render(view: "create", model:map)
-	            return
-	        }
+				render(view: "create", model:map)
+				return
+			}
 			def result = moduleService.addParameter(params, getRootPath(), getCategory(params?.category))
 			if(result.success){
 				flash.message = message(code: 'default.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])
@@ -317,24 +317,24 @@ class ModuleController {
 			}
 		}
 		redirect(action: "create", params:[category:params?.category])
-    */
+	*/
 			try{
 				def parameterTypeInstance = new ParameterType(params)
-				if (!parameterTypeInstance.save(flush: true)) {				
+				if (!parameterTypeInstance.save(flush: true)) {
 					flash.message = message(code: 'default.not.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])
-				render(view: "create", model:['parameterTypeInstance': parameterTypeInstance, category: params?.category])				
+				render(view: "create", model:['parameterTypeInstance': parameterTypeInstance, category: params?.category])
 					return
-				}else{				
-				flash.message = message(code: 'default.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])				
-				}		
+				}else{
+				flash.message = message(code: 'default.created.message', args: [message(code: 'parameterType.label', default: 'ParameterType'), parameterTypeInstance.name])
+				}
 			}catch(Exception e){
 				e.printStackTrace()
 				println "ERROR "+e.getMessage()
-			}	
+			}
 		redirect(action: "createParameter", params:[category:params?.category])
 		}
 	def updateTimeOut(){
-		try{			
+		try{
 			Module moduleInstance = Module.findById(params?.moduleId)
 			moduleInstance.executionTime = Integer.parseInt(params?.timeout)
 			if(moduleInstance.save(flush:true)){
@@ -343,131 +343,131 @@ class ModuleController {
 			}
 			else{
 				render "TimeOut not updated. Try Again!!"
-			}			
+			}
 		}catch(Exception e){
-		}		
+		}
 	}
 	
 
-    /**
-     * Show Modules, Functions and Parameters
-     * @param id
-     * @return
-     */
-    def show(Long id) {                
-        def moduleInstance = Module.get(id)
-        def functionInstance
-        def parameterInstance
-        def parameteInstanceList = []
-        if (!moduleInstance) {
-            flash.message = message(code: 'default.not.found.message', args: [message(code: 'module.label', default: 'Module'), id])
-            redirect(action: "list")
-            return
-        }
-        else{
-            functionInstance = Function.findAllByModule( moduleInstance )  
-            def parameterTypeTnstance
-            functionInstance.each{ fn ->
-                parameterInstance = ParameterType.findAllByFunction(fn)
-                parameterInstance.each{ parameter ->                    
-                    parameterTypeTnstance = ParameterType.get( parameter.id )
-                    parameteInstanceList.add(parameterTypeTnstance)
-                }                
-            }                 
-        }
-        [params : params , moduleInstance : moduleInstance, functionInstanceList : functionInstance, functionInstanceCount : functionInstance.size(), parameteInstanceList : parameteInstanceList, parameteInstanceListTotal : parameteInstanceList.size(), category:moduleInstance?.category]
-    }
+	/**
+	 * Show Modules, Functions and Parameters
+	 * @param id
+	 * @return
+	 */
+	def show(Long id) {
+		def moduleInstance = Module.get(id)
+		def functionInstance
+		def parameterInstance
+		def parameteInstanceList = []
+		if (!moduleInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'module.label', default: 'Module'), id])
+			redirect(action: "list")
+			return
+		}
+		else{
+			functionInstance = Function.findAllByModule( moduleInstance )
+			def parameterTypeTnstance
+			functionInstance.each{ fn ->
+				parameterInstance = ParameterType.findAllByFunction(fn)
+				parameterInstance.each{ parameter ->
+					parameterTypeTnstance = ParameterType.get( parameter.id )
+					parameteInstanceList.add(parameterTypeTnstance)
+				}
+			}
+		}
+		[params : params , moduleInstance : moduleInstance, functionInstanceList : functionInstance, functionInstanceCount : functionInstance.size(), parameteInstanceList : parameteInstanceList, parameteInstanceListTotal : parameteInstanceList.size(), category:moduleInstance?.category]
+	}
 
 
-    /**
-     * TODO : If required
-     * @param id
-     * @return
-     */
-    def edit(Long id) {
-        def moduleInstance = Module.get(id)
-        if (!moduleInstance) {
-            flash.message = message(code: 'default.not.found.message', args: [message(code: 'module.label', default: 'Module'), id])
-            redirect(action: "list")
-            return
-        }
+	/**
+	 * TODO : If required
+	 * @param id
+	 * @return
+	 */
+	def edit(Long id) {
+		def moduleInstance = Module.get(id)
+		if (!moduleInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'module.label', default: 'Module'), id])
+			redirect(action: "list")
+			return
+		}
 
-        [moduleInstance: moduleInstance]
-    }
+		[moduleInstance: moduleInstance]
+	}
 
-    /**
-     * TODO : If required
-     * @param id
-     * @return
-     */
-    def update(Long id, Long version) {
-        def moduleInstance = Module.get(id)
-        if (!moduleInstance) {
-            flash.message = message(code: 'default.not.found.message', args: [message(code: 'module.label', default: 'Module'), id])
-            redirect(action: "list")
-            return
-        }
+	/**
+	 * TODO : If required
+	 * @param id
+	 * @return
+	 */
+	def update(Long id, Long version) {
+		def moduleInstance = Module.get(id)
+		if (!moduleInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'module.label', default: 'Module'), id])
+			redirect(action: "list")
+			return
+		}
 
-        if (version != null) {
-            if (moduleInstance.version > version) {
-                moduleInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
-                          [message(code: 'module.label', default: 'Module')] as Object[],
-                          "Another user has updated this Module while you were editing")
-                render(view: "edit", model: [moduleInstance: moduleInstance])
-                return
-            }
-        }
+		if (version != null) {
+			if (moduleInstance.version > version) {
+				moduleInstance.errors.rejectValue("version", "default.optimistic.locking.failure",
+						  [message(code: 'module.label', default: 'Module')] as Object[],
+						  "Another user has updated this Module while you were editing")
+				render(view: "edit", model: [moduleInstance: moduleInstance])
+				return
+			}
+		}
 
-        moduleInstance.properties = params
+		moduleInstance.properties = params
 
-        if (!moduleInstance.save(flush: true)) {
-            render(view: "edit", model: [moduleInstance: moduleInstance])
-            return
-        }
+		if (!moduleInstance.save(flush: true)) {
+			render(view: "edit", model: [moduleInstance: moduleInstance])
+			return
+		}
 
-        flash.message = message(code: 'default.updated.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
-        redirect(action: "show", id: moduleInstance.id)
-    }
+		flash.message = message(code: 'default.updated.message', args: [message(code: 'module.label', default: 'Module'), moduleInstance.name])
+		redirect(action: "show", id: moduleInstance.id)
+	}
 
-    /**
-     * Deletes the module and the corresponding
-     * functions and parameters
-     * @param id
-     * @return
-     */
-    def delete(Long id) {
-        def moduleInstance = Module.get(id)
-        if (!moduleInstance) {
-            flash.message = message(code: 'default.not.found.message', args: [message(code: 'module.label', default: 'Module'),  moduleInstance.name])
-            redirect(action: "list")
-            return
-        }
-        try { 
-            def path=request.getSession().getServletContext().getRealPath("")
-            moduleService.deleteFunctionandParameters(moduleInstance, getCategory(params?.category), path)
+	/**
+	 * Deletes the module and the corresponding
+	 * functions and parameters
+	 * @param id
+	 * @return
+	 */
+	def delete(Long id) {
+		def moduleInstance = Module.get(id)
+		if (!moduleInstance) {
+			flash.message = message(code: 'default.not.found.message', args: [message(code: 'module.label', default: 'Module'),  moduleInstance.name])
+			redirect(action: "list")
+			return
+		}
+		try {
+			def path=request.getSession().getServletContext().getRealPath("")
+			moduleService.deleteFunctionandParameters(moduleInstance, getCategory(params?.category), path)
 			
-			           
-            moduleInstance.delete(flush: true)
-            flash.message = message(code: 'default.deleted.message', args: [message(code: 'module.label', default: 'Module'),  moduleInstance.name])
-            redirect(action: "list", params:[category:params?.category])
-        }
-        catch (DataIntegrityViolationException e) {
-            flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'module.label', default: 'Module'),  moduleInstance.name])
-            redirect(action: "show", id: id, params:[category:params?.category])
-        }
-    }
-    
+					   
+			moduleInstance.delete(flush: true)
+			flash.message = message(code: 'default.deleted.message', args: [message(code: 'module.label', default: 'Module'),  moduleInstance.name])
+			redirect(action: "list", params:[category:params?.category])
+		}
+		catch (DataIntegrityViolationException e) {
+			flash.message = message(code: 'default.not.deleted.message', args: [message(code: 'module.label', default: 'Module'),  moduleInstance.name])
+			redirect(action: "show", id: id, params:[category:params?.category])
+		}
+	}
+	
    
-    
-    /**
-     * Deletes the selected function/s
-     */
-    def deleteFunction = {
-        Function functionInstance
+	
+	/**
+	 * Deletes the selected function/s
+	 */
+	def deleteFunction = {
+		Function functionInstance
 		def unDeletedList = []
 		def fnList = []
 		def selectedFunctions = params.findAll { it.value == KEY_ON }
-        try{
+		try{
 			selectedFunctions.each{
 				def key = it.key
 				try {
@@ -484,19 +484,19 @@ class ModuleController {
 						catch (org.springframework.dao.DataIntegrityViolationException e) {
 							unDeletedList.add(functionInstance?.name)
 							
-						}	
+						}
 						resultstatus.flush()
 					}
 				} catch (Exception e) {
 					unDeletedList.add(functionInstance?.name)
 				}
-			}        
+			}
 			flash.message = "Function/s deleted"
-        }      
-        catch (Exception e) {
-            log.trace e.printStackTrace()
-            flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), unDeletedList.toString() ])}"
-        }
+		}
+		catch (Exception e) {
+			log.trace e.printStackTrace()
+			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), unDeletedList.toString() ])}"
+ 		}
 		if(unDeletedList.size() > 0){
 			flash.message = "${message(code: 'default.not.deleted.message', args: [message(code: 'function.label', default: 'Function'), unDeletedList.toString() ])}"
 		}
@@ -504,12 +504,12 @@ class ModuleController {
 	//	if(!fnList.isEmpty()){
 	//		moduleService.removeFunction(params, getRootPath(), getCategory(params?.category), fnList)
 	//	}
-        redirect(action: "show", id : params?.moduleid, params:[category:params?.category])    
-    }
-    
-    /**
-     * Deletes the selected parameter/s
-     */
+		redirect(action: "show", id : params?.moduleid, params:[category:params?.category])
+	} 
+
+	/**
+	 * Deletes the selected parameter/s
+	 */
 	def deleteParameterType = {
 		def parameterTypeInstance
 		def unDeletedList = []
@@ -518,7 +518,7 @@ class ModuleController {
 		try{
 			selectedParameters.each{
 				def key = it.key
-				try {					
+				try {
 					ParameterType.withTransaction { resultstatus ->
 						parameterTypeInstance = ParameterType.findById(key)
 						paramsList.add(parameterTypeInstance?.name)
@@ -552,28 +552,28 @@ class ModuleController {
 	//		moduleService.removeParameters(params, getRootPath(),getCategory(params?.category), paramsList)
 	//	}
 		redirect(action: "show", id : params?.moduleid, params:[category:params?.category])
+	}		
+	
+	/**
+	 * Get the functions under the specific modules
+	 * @return
+	 */
+	def getFunctions() {
+		if(! params.moduleId) {
+			render "No module id found"
+			return
+		}
+		
+		def module = Module.get(params.moduleId as Long)
+		
+		if(! module) {
+			render "No module found with id : ${params.moduleId}"
+			return
+		}
+		
+		def functions = Function.findAllByModule(module)
+		render functions as JSON
 	}
-    
-    /**
-     * Get the functions under the specific modules 
-     * @return
-     */
-    def getFunctions() {
-        if(! params.moduleId) {
-            render "No module id found"
-            return
-        }
-        
-        def module = Module.get(params.moduleId as Long)
-        
-        if(! module) {
-            render "No module found with id : ${params.moduleId}"
-            return
-        }
-        
-        def functions = Function.findAllByModule(module)
-        render functions as JSON
-    }
 	
 	/**
 	 * REST method to get the time out values configured for  modules
@@ -648,6 +648,109 @@ class ModuleController {
 	private String getRootPath(){
 		return request.getSession().getServletContext().getRealPath(Constants.FILE_SEPARATOR)
 	}
+	
+	
+	/**
+	 * Function for download module details as XML with selected functions
+	 * @return
+	 */
+	
+	def downloadSelectedXml(){
+		Function functionInstance 
+		def unDeletedList = []
+		def functions = []
+		def selectedFunctions = params.findAll { it.value == KEY_ON }
+		
+		try{
+			selectedFunctions.each{
+				def key = it.key
+				try {
+					Function.withTransaction { resultstatus ->
+						functionInstance = Function.findById(key)
+						functions.add(functionInstance)
+						
+						resultstatus.flush()
+					}
+				} catch (Exception e) {
+					
+				}
+			}
+		
+		}
+		catch (Exception e) {
+			log.trace e.printStackTrace()
+			
+		}
+		def moduleName  = Module?.findById(params?.id)
+		String moduleData = ""
+		def writer = new StringWriter()
+		def xml = new MarkupBuilder(writer)
+		if(moduleName){
+			try{
+				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
+				xml.xml(){
+				xml.module(){
+					mkp.yield "\r\n  "
+					mkp.comment "Module Name "
+					xml.moduleName(moduleName)
+					mkp.yield "\r\n  "
+					mkp.comment "Category of the module "
+					xml.category(params.category)
+					mkp.yield "\r\n  "
+					mkp.comment "Excecution time out of module"
+					xml.executionTimeOut(moduleName?.executionTime)
+					mkp.yield "\r\n  "
+					mkp.comment "Excecution time out of module"
+					xml.testGroup(moduleName?.testGroup)
+					mkp.yield "\r\n  "
+					mkp.comment "Logs File Names of module"
+					xml.logFileNames(moduleName?.stbLogFiles)
+					mkp.yield "\r\n  "
+					mkp.comment "Crash File Names of the module"
+					xml.crashFileNames(moduleName?.logFileNames)
+					if(functions){
+						mkp.yield "\r\n  "
+						mkp.comment "Total functions corresponding module "
+						xml.functions(){
+							functions?.each{ funName ->
+								xml.function(name:funName?.toString())
+							}
+						}
+						mkp.yield "\r\n  "
+						mkp.comment "Total parameters corresponding module "
+						xml.parameters(){
+							functions?.each{ funName ->
+								def parameterInstance =  ParameterType?.findAllByFunction(funName)
+								if(parameterInstance){
+									parameterInstance?.each{ parameterName->
+										xml.parameter(funName:funName,parameterName:parameterName,parameterType:parameterName?.parameterTypeEnum ,range:parameterName?.rangeVal)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			moduleData = writer?.toString()
+			}catch(Exception e){
+				println " ERROR "+ e.printStackTrace()
+			}
+			if(moduleData){
+				params.format = "text"
+				params.extension = "xml"
+				response.setHeader("Content-Type", "application/octet-stream;")
+				response.setHeader("Content-Disposition", "attachment; filename=\""+ moduleName?.toString()+"-module.xml\"")
+				response.outputStream << moduleData.getBytes()
+			}else{
+				flash.message = "Download failed as XML file was not created.Try again."
+				redirect(action: "show")
+			}
+		}else{
+			flash.message ="Module does not exist"
+			redirect(action:"show")
+		}
+	}
+	
 	
 	/**
 	 * Function for download module details as XML
@@ -724,13 +827,16 @@ class ModuleController {
 			redirect(action:"show")
 		}
 	}
+	
+
+
 	/**
 	 * Function for uploading the module details
 	 * @return
 	 */
-	def uploadModule(){					
+	def uploadModule(){
 			def category
-			def uploadedFile = request?.getFile("file")			
+			def uploadedFile = request?.getFile("file")
 			if( uploadedFile?.originalFilename?.endsWith(".xml")) {
 				InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
 				def fileContent = reader?.readLines()
@@ -774,7 +880,7 @@ class ModuleController {
 							}else if(testGrpStatus?.toString()?.equals("false")){
 								flash.message =	"The test group value is invalid "
 							}else{
-							 	int newExcutionTimeOut =Integer?.parseInt(node?.module?.executionTimeOut?.text()?.trim())
+								 int newExcutionTimeOut =Integer?.parseInt(node?.module?.executionTimeOut?.text()?.trim())
 								if(logFileNames){
 									logFileNames = logFileNames?.toString()?.replace("[", "")
 									logFileNames = logFileNames?.toString()?.replace("]", "")
@@ -880,8 +986,8 @@ class ModuleController {
 				}
 			}else{
 				flash.message="Error, The file extension is not in .xml format"
-			}	
-			redirect(action:"list", params:[category:params?.category])				
+			}
+			redirect(action:"list", params:[category:params?.category])
 	}
 	
 }
