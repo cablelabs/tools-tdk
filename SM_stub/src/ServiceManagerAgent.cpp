@@ -633,7 +633,7 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
                 serviceStruct.createFunction = &createWarehouseService;
         }
 #endif
-#ifdef USE_STORAGE_MANAGER_API
+#if defined(USE_STORAGE_MANAGER_API) || defined(USE_RDK_STORAGE_MANAGER_V2)
         else if(serviceName == StorageManagerService::SERVICE_NAME)
         {
                 serviceStruct.createFunction = &createStorageManagerService;

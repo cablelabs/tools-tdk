@@ -96,8 +96,8 @@ using namespace std;
 #if defined(ENABLE_VREX_SERVICE)
 #include "vrexmanagerservice.h"
 #endif
-#ifdef USE_STORAGE_MANAGER_API
-#include "storagemanagerapi.h"
+#if defined(USE_STORAGE_MANAGER_API) || defined(USE_RDK_STORAGE_MANAGER_V2)
+#include "storagemanagerservice.h"
 #endif
 #ifdef HAS_API_HDMI_CEC
 #include "hdmicecservice.h"

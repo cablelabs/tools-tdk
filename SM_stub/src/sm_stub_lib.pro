@@ -25,6 +25,7 @@ DEFINES += HAS_API_VIDEO_APPLICATION_EVENTS
 DEFINES += HAS_API_DEVICEDIAGNOSTICS
 DEFINES += HAS_API_HOME_NETWORKING
 DEFINES += USE_LSB
+DEFINES += USE_RDK_STORAGE_MANAGER_V2
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -150,3 +151,10 @@ contains(DEFINES,HAS_API_HOME_NETWORKING) {
         HEADERS += ../servicemanager/include/services/homenetworkingservice.h
         SOURCES += ../servicemanager/src/services/homenetworkingservice.cpp
 }
+
+contains(DEFINES, USE_RDK_STORAGE_MANAGER_V2) {
+	LIBS += -lrdkstmgr
+        HEADERS += ../servicemanager/include/services/storagemanagerservice.h
+        SOURCES += ../servicemanager/src/services/storagemanagerservice.cpp
+}
+
