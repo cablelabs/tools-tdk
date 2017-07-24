@@ -52,6 +52,9 @@ Json::Value convertQVariantToJson (QVariant qData) {
         else if(QMetaType::Float == qData.type()) {
                 jValue = qData.toFloat();
         }
+	else if(QVariant::LongLong == qData.type()) {
+                jValue = qData.toLongLong();
+	}
 	
 	DEBUG_PRINT (DEBUG_TRACE, "convertQVariantToJson --->Exit\n");
 	return jValue;
