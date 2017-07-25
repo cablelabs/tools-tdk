@@ -26,6 +26,8 @@ DEFINES += HAS_API_DEVICEDIAGNOSTICS
 DEFINES += HAS_API_HOME_NETWORKING
 DEFINES += USE_LSB
 DEFINES += USE_RDK_STORAGE_MANAGER_V2
+DEFINES += HAS_API_SYSTEM USE_IARMBUS ENABLE_SYSTEM_6 ENABLE_SYSTEM_7 HAS_API_POWERSTATE ENABLE_SYSTEM_8 ENABLE_SYSTEM_9
+DEFINES += ENABLE_SYSTEM_10 ENABLE_SYSTEM_11
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -54,7 +56,8 @@ INCLUDEPATH += ${STAGING_DIR_TARGET}/usr/include/qt5/QtCore \
                ${RDK_PROJECT_ROOT_PATH}/servicemanager/include/helpers/ \
 	       ${RDK_PROJECT_ROOT_PATH}/iarmmgrs/generic/hal/include/ \
 	       ${RDK_PROJECT_ROOT_PATH}/iarmbus/core/include/ \
-               ${STAGING_DIR_TARGET}/usr/include/qt5/include
+               ${STAGING_DIR_TARGET}/usr/include/qt5/include \
+               ${STAGING_DIR_TARGET}/usr/include/qt5/QtConcurrent/
 
 exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/intel/build/intel.pri) {
         INCLUDEPATH += ${SM_STUB_ROOT_PATH}/servicemanager/platform/intel/include/helpers/
@@ -157,4 +160,9 @@ contains(DEFINES, USE_RDK_STORAGE_MANAGER_V2) {
         HEADERS += ../servicemanager/include/services/storagemanagerservice.h
         SOURCES += ../servicemanager/src/services/storagemanagerservice.cpp
 }
-
+contains(DEFINES,HAS_API_SYSTEM) {
+        HEADERS += ../servicemanager/include/services/systemservice.h \
+                   ../servicemanager/include/helpers/powerstate.h
+        SOURCES += ../servicemanager/src/services/systemservice.cpp \
+                   ../servicemanager/src/helpers/powerstate.cpp
+}
