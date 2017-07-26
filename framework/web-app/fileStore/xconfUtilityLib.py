@@ -142,6 +142,8 @@ def GetPlatformProperties(obj, param):
 
 def getFirmwareDetails(obj):
 
+    actualresult, suffix = GetPlatformProperties(obj, "FW_NAME_SUFFIX")
+
     tdkTestObj = obj.createTestStep('ExecuteCmd');
     #Parsing the JENKINS_JOB details
     tdkTestObj.addParameter("command","cat /version.txt |grep JENKINS_JOB |cut -d= -f 2");
@@ -166,21 +168,21 @@ def getFirmwareDetails(obj):
                      print "Enabled SEARCH_MASTER_IN_JENKINS"
                      FirmwareVersion=getLatestTDKBuild(JENKINS_JOB)
                      print "Got Latest Master Image Name ",FirmwareVersion
-                     FirmwareFilename =FirmwareVersion+'_signed.bin'
+		     FirmwareFilename =FirmwareVersion + suffix
                      print "Latest Master FirmwareFilename is ",FirmwareFilename;
              else:
                      print "Diabled SEARCH_MASTER_IN_JENKINS"
                      #Searching Latest Stable2 image in Jenkins
                      FirmwareVersion=getLatestTDKBuild(JENKINS_JOB,'stable2')
                      print "Got Latest Stable2 Image Name ",FirmwareVersion
-                     FirmwareFilename =FirmwareVersion+'_signed.bin'
+		     FirmwareFilename =FirmwareVersion + suffix
                      print "Latest Stable2 FirmwareFilename is ",FirmwareFilename;
         else:
             print "Disabled AUTO_SEARCH_IN_JENKINS"
             JENKINS_JOB=JENKINS_JOB.replace("-","_")
             exec ("FirmwareVersion=%s"%(JENKINS_JOB))
             print "Success :Got FirmwareVersion",FirmwareVersion
-            FirmwareFilename =FirmwareVersion+'_signed.bin'
+	    FirmwareFilename =FirmwareVersion + suffix
             print "FirmwareFilename is ",FirmwareFilename;
 
         return(FirmwareVersion, FirmwareFilename);
@@ -254,10 +256,12 @@ def getXCONFServerConfigCmd(obj, FirmwareVersion, FirmwareFilename, Protocol):
 
 def getCurrentFirmware(obj):
 
+    actualresult,suffix = GetPlatformProperties(obj, "FW_NAME_SUFFIX")
+
     ###get details of the current firmware in the device
     expectedresult = "SUCCESS"
     tdkTestObj = obj.createTestStep('ExecuteCmd');
-    tdkTestObj.addParameter("command","cat /version.txt | grep -i imagename | cut -d= -f 2 | tr \"\n\" \" \"");
+    tdkTestObj.addParameter("command","cat /version.txt | grep -i imagename | cut -c 11- | tr \"\n\" \" \"");
     tdkTestObj.executeTestCase("SUCCESS");
 
     actualresult = tdkTestObj.getResult();
@@ -271,7 +275,7 @@ def getCurrentFirmware(obj):
         print "[TEST EXECUTION RESULT] : SUCCESS";
 
         FirmwareVersion = details;
-        FirmwareFilename =FirmwareVersion+'_signed.bin'
+	FirmwareFilename =FirmwareVersion + suffix
 	return (FirmwareVersion, FirmwareFilename);
     else:
         tdkTestObj.setResultStatus("FAILURE");
