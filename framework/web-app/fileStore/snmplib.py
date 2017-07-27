@@ -67,7 +67,7 @@ def SnmpExecuteCmd(snmpMethod,communityString,snmpVersion,OID,ipAddress):
         # Return Value : Console output of the snmp command
 
         if "." in ipAddress:
-                cmd=snmpMethod + ' -OQ -Ir ' + snmpVersion + ' -c ' + communityString + ' ' + ipAddress + ' ' +  OID
+                cmd=snmpMethod + ' ' + snmpVersion + ' -c ' + communityString + ' ' + ipAddress + ' ' +  OID
         else:
                 cmd=snmpMethod + ' -c ' + communityString + ' ' + snmpVersion + ' udp6:['+ ipAddress + '] ' + OID
 
@@ -151,5 +151,26 @@ def getIPAddress(obj):
         ipAddress = ipAddress.replace("\\n", "");
         print "IP Address:", ipAddress
         return ipAddress;
+
+        ########## End of Function ##########
+
+def getMACAddress(obj):
+
+        # Create an object for getMACAddress
+
+        # Syntax      : OBJ.getMACAddress()
+        # Description : Get the MAC Address for SNMP
+        # Parameters  : sysObj - Object for the module loaded
+        # Return Value: Return the MAC Address
+
+        cmd="sh %s/tdk_platform_utility.sh getCMMACAddress" %TDK_PATH
+        print "Request for CM MAC Address:", cmd
+        tdkTestObj = obj.createTestStep('ExecuteCmd');
+        tdkTestObj.addParameter("command", cmd)
+        tdkTestObj.executeTestCase("SUCCESS");
+        MACAddress = tdkTestObj.getResultDetails();
+        MACAddress = MACAddress.replace("\\n", "");
+        print "MAC Address:", MACAddress
+        return MACAddress;
 
         ########## End of Function ##########
