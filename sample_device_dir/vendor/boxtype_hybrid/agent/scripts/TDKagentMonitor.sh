@@ -29,7 +29,7 @@ do
    then 
        echo "TDK agent monitor crashed.. Box going for Reboot.."
        echo $(date) >> $TDK_PATH/monitorcrash.log
-       sleep 10 && reboot 
+       sleep 10 && /rebootNow.sh -s TDKagentRecovery 
    fi
    sleep 5
 

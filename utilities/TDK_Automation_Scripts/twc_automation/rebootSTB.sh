@@ -19,7 +19,7 @@
 #!/usr/bin/expect
 set timeout -1
 set PROMPT "#"
-set REBOOT "reboot\r"
+set REBOOT "sh /rebootNow.sh -s TDK_Automation_Scripts \r"
 spawn telnet [lindex $argv 0]
 expect "'^]'."
 send "\r"

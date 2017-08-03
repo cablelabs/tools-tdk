@@ -35,7 +35,7 @@ if [ $? == 0 ]; then
 		ls $TDK_PATH/scripts/mediaframework_test_module_pre-script.sh
 		if [ $? == 0 ]; then
 			sh $TDK_PATH/scripts/mediaframework_test_module_pre-script.sh
-			reboot
+			/rebootNow.sh -s StartTDK
 		else
 			echo "Pre requisites for mediaframework is not set"	
 		fi
@@ -50,7 +50,7 @@ else
 		ls $TDK_PATH/scripts/mediaframework_test_module_pre-script.sh
 		if [ $? == 0 ]; then
 			sh $TDK_PATH/scripts/mediaframework_test_module_pre-script.sh
-		        reboot
+		        /rebootNow.sh -s StartTDK
 	       	else
 		       echo "Pre requisites for mediaframework is not set"
 		fi       
