@@ -110,22 +110,11 @@ if "SUCCESS" in loadmodulestatus.upper() and "SUCCESS" in loadmodulestatus1.uppe
                             if expectedresult in actualresult:
                                     print "SUCCESS: Application succesfully executes SM_FP_SetLED API";
                                     print brightnessdetails;
-                                    tdkTestObj = obj.createTestStep('SM_FP_GetBrightness');
-                                    expectedresult="SUCCESS"
-                                    
-                                    tdkTestObj.executeTestCase(expectedresult);
-                                    actualresult= tdkTestObj.getResult();
-                                    brightnessdetails= tdkTestObj.getResultDetails();
-                                    #Check for SUCCESS/FAILURE return value of SM_DisplaySetting_SetbrightnessSettings
-                                    if expectedresult in actualresult and str(setbrightness) in brightnessdetails:
-                                            print "SUCCESS: Application succesfully executes SM_FP_GetBrightness API";
-                                            tdkTestObj.setResultStatus("SUCCESS");
-                                            print brightnessdetails;
-                                            dsobj.initiateReboot();
-                                            obj.resetConnectionAfterReboot();
-                                            result = devicesettings.dsManagerInitialize(dsobj)
-                                            #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
-                                            if "SUCCESS" in result.upper():
+                                    dsobj.initiateReboot();
+                                    obj.resetConnectionAfterReboot();
+                                    result = devicesettings.dsManagerInitialize(dsobj)
+                                    #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
+                                    if "SUCCESS" in result.upper():
                                                         #calling ServiceManger - registerService API
                                                         tdkTestObj = obj.createTestStep('SM_RegisterService');
                                                         expectedresult="SUCCESS"
@@ -147,26 +136,9 @@ if "SUCCESS" in loadmodulestatus.upper() and "SUCCESS" in loadmodulestatus1.uppe
                                                                 apiversiondetail =tdkTestObj.getResultDetails();
                                                                 print "[EXECUTION DETAILS] APi Version : %s"%apiversiondetail;
                                                                 print "Registered Service:%s" %serviceName;
-                                                                tdkTestObj = obj.createTestStep('SM_FP_GetBrightness');
-                                                                expectedresult="SUCCESS"
-                                                                
-                                                                tdkTestObj.executeTestCase(expectedresult);
-                                                                actualresult= tdkTestObj.getResult();
-                                                                brightnessdetails= tdkTestObj.getResultDetails();
-                                                                #Check for SUCCESS/FAILURE return value of SM_DisplaySetting_SetbrightnessSettings
-                                                                if expectedresult in actualresult and str(setbrightness) in brightnessdetails:
-                                                                        print "SUCCESS: Application succesfully retains the value after Reboot SM_FP_GetBrightness API";
-                                                                        tdkTestObj.setResultStatus("SUCCESS");
-                                                                        print brightnessdetails;
-                                                                else:
-                                                                        tdkTestObj.setResultStatus("FAILURE");
-                                                                        print "FAILURE: Application Failed to execute SM_FP_GetBrightness API";
                                                         else:
                                                                 tdkTestObj.setResultStatus("FAILURE");
                                                                 print "FAILURE: Application failed to register a service";
-                                    else:
-                                            tdkTestObj.setResultStatus("FAILURE");
-                                            print "FAILURE: Application Failed to execute SM_FP_GetBrightness API";
                             else:
                                     tdkTestObj.setResultStatus("FAILURE");
                                     print "FAILURE: Application Failed to execute SM_FP_SetLED API";
