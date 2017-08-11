@@ -73,6 +73,7 @@ Checkpoint 2. Check the value retrieved using API is same as the value retrieved
 import tdklib; 
 import servicemanager;
 import snmplib;
+import sys;
 
 #Test component to be tested
 smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
@@ -132,6 +133,10 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Failed to get TR-181 value\n";
+			unregister = servicemanager.unRegisterService(smObj,serviceName);
+                        smObj.unloadModule("servicemanager");
+                        snmpObj.unloadModule("snmp");
+                        sys.exit();
 
                 unregister = servicemanager.unRegisterService(smObj,serviceName);
 

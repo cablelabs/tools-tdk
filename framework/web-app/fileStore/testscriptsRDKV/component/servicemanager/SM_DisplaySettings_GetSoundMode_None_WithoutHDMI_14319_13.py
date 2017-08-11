@@ -135,7 +135,7 @@ if "SUCCESS" in result.upper():
                 tdkTestObj = obj.createTestStep('SM_DisplaySetting_GetSoundMode');
                 expectedresult="SUCCESS"
 
-                portName = "SPDIF0";
+                portName = "";
                 tdkTestObj.addParameter("portName", portName);
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
@@ -147,27 +147,6 @@ if "SUCCESS" in result.upper():
                         tdkTestObj.setResultStatus("SUCCESS");
                 else:
                         print "FAILURE: GetSoundMode() failure";
-                        tdkTestObj.setResultStatus("FAILURE");
-
-                portName = "";
-                tdkTestObj.addParameter("portName", portName);
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                serviceDetail_none = tdkTestObj.getResultDetails();
-                print "[TEST EXECUTION DETAILS] soundmode is: %s"%serviceDetail_none;
-                #Check for SUCCESS/FAILURE return value of SM_DeviceSetting_GetAppInfo
-                if expectedresult in actualresult:
-                        print "SUCCESS: GetSoundMode(SPDIF) successful";
-                        tdkTestObj.setResultStatus("SUCCESS");
-
-			if serviceDetail_spdif==serviceDetail_none :
-	                        print "SUCCESS: GetSoundMode(SPDIF)==GetSoundMode()";
-        	                tdkTestObj.setResultStatus("SUCCESS");
-			else:
-                                print "FAILURE: GetSoundMode(SPDIF)!=GetSoundMode()";
-                                tdkTestObj.setResultStatus("FAILURE");
-                else:
-                        print "FAILURE: GetSoundMode(SPDIF) failure";
                         tdkTestObj.setResultStatus("FAILURE");
 
                 #Call ServiceManger - UnregisterService API

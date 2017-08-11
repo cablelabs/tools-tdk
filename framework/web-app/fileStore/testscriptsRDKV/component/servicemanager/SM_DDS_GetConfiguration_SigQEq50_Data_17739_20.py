@@ -25,7 +25,7 @@
   <primitive_test_name>SM_DDS_GetConfiguration</primitive_test_name>
   <primitive_test_version>1</primitive_test_version>
   <status>FREE</status>
-  <synopsis>Checks if the service manager wrapper for TR-181 returns the correct value for Pre-equalization data for the down stream channel 50</synopsis>
+  <synopsis>Checks if the service manager wrapper for TR-181 returns non empty value for Pre-equalization data for the down stream channel 50</synopsis>
   <groups_id/>
   <execution_time>2</execution_time>
   <long_duration>false</long_duration>
@@ -40,7 +40,7 @@
   </rdk_versions>
   <test_cases>
     <test_case_id>CT_17739_20</test_case_id>
-    <test_objective>Checks if the service manager wrapper for TR-181 returns the correct value for Pre-equalization data for the down stream channel 50</test_objective>
+    <test_objective>Checks if the service manager wrapper for TR-181 returns non empty value for Pre-equalization data for the down stream channel 50</test_objective>
     <test_type>Positive</test_type>
     <test_setup>XG1-V3	</test_setup>
     <pre_requisite>HostIF should be enabled</pre_requisite>
@@ -54,11 +54,10 @@ UnregisterService : Qstring-serviceName</input_parameters>
     <automation_approch>1. TM loads the Service_Manager_Agent via the test agent.
 2.Service_Manager_Agent will register "org.rdk.DeviceDiagnostics_1" with ServiceManager component.
 3.On Success of registerService , Service_Manager_Agent will invoke "getConfiguration" API to get the value of the object "Device.X_RDKCENTRAL-COM_DocsIf.docsIfSigQEqualizationData_50".
-4. TM invokes snmpget method using snmp library to get the value of corresponding OID.
-5. TM will check if the values are same and return SUCCESS/FAILURE status.
-6.Service_Manager_Agent will deregister the given service from ServiceManager component.</automation_approch>
+4. TM will check if the value is non empty and return SUCCESS/FAILURE status.
+5.Service_Manager_Agent will deregister the given service from ServiceManager component.</automation_approch>
     <except_output>Checkpoint 1.Check the return value of API for success status.
-Checkpoint 2. Check the value retrieved using API is same as the value retrieved using snmp command.</except_output>
+Checkpoint 2. Check the value retrieved using API is non empty.</except_output>
     <priority>High</priority>
     <test_stub_interface>libservicemanagerstub.so</test_stub_interface>
     <test_script>SM_DDS_GetConfiguration_SigQEq50_Data_17739_20</test_script>
@@ -72,18 +71,15 @@ Checkpoint 2. Check the value retrieved using API is same as the value retrieved
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
 import servicemanager;
-import snmplib;
 
 #Test component to be tested
 smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
-snmpObj = tdklib.TDKScriptingLibrary("snmp","1");
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
 smObj.configureTestCase(ip,port,'SM_DDS_GetConfiguration_SigQEq50_Data_17739_20');
-snmpObj.configureTestCase(ip,port,'SM_DDS_GetConfiguration_SigQEq50_Data_17739_20');
 
 
 #Get the result of connection with test component and STB
@@ -91,12 +87,8 @@ smLoadStatus =smObj.getLoadModuleResult();
 print "[SM LIB LOAD STATUS]  :  %s" %smLoadStatus;
 smObj.setLoadModuleStatus(smLoadStatus);
 
-#Get the result of connection with test component and STB
-snmpLoadStatus =snmpObj.getLoadModuleResult();
-print "[SNMP LIB LOAD STATUS]  :  %s" %snmpLoadStatus;
-snmpObj.setLoadModuleStatus(snmpLoadStatus);
 
-if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
+if "SUCCESS" in smLoadStatus.upper():
         serviceName = "org.rdk.DeviceDiagnostics_1";
         #Register Service
         register = servicemanager.registerService(smObj,serviceName);
@@ -104,26 +96,21 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
                 #Prmitive test case which associated to this Script
                 tdkTestObj = smObj.createTestStep('SM_DDS_GetConfiguration');
                 names = "Device.X_RDKCENTRAL-COM_DocsIf.docsIfSigQEqualizationData_50";
-                nameList = names.split(',');
                 expectedresult = "SUCCESS";
                 tdkTestObj.addParameter("names",names);
+		print "Getting configuration data for %s" %names;
 
                 #Execute the test case in STB
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
                 if expectedresult in actualresult:
                         resultDetails = tdkTestObj.getResultDetails();
-                        resultDetails = resultDetails.replace(" name: ","").lstrip('[');
-                        resultDetails = resultDetails.replace(" value: ","").rstrip(']');
-                        resultDetails = resultDetails.rstrip('; ')
-                        print resultDetails;
-                        configTokens = resultDetails.split(";");
-                        configDict = {};
-			print configTokens;
-                        if len(configTokens) == (len(nameList) * 2):
-                                for index in range(len(configTokens)):
-                                        if index%2 == 0:
-                                                configDict[configTokens[index]] = configTokens[index+1];
+			if resultDetails:
+	                        resultDetails = resultDetails.replace(" name: ","").lstrip('[');
+        	                resultDetails = resultDetails.replace(" value: ","").rstrip(']');
+                	        resultDetails = resultDetails.rstrip('; ');
+				print "Received response";
+                        	print resultDetails;
                                 tdkTestObj.setResultStatus("SUCCESS");
                         else:
                                 tdkTestObj.setResultStatus("FAILURE");
@@ -135,72 +122,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
 
                 unregister = servicemanager.unRegisterService(smObj,serviceName);
 
-                dsServiceName="deviceSettingService";
-                #Register Service
-                register = servicemanager.registerService(smObj,dsServiceName);
-                if "SUCCESS" in register:
-                        #Call GetDeviceInfo API
-                        tdkTestObj = smObj.createTestStep('SM_DeviceSetting_GetDeviceInfo');
-                        expectedresult="SUCCESS"
-                        tdkTestObj.executeTestCase(expectedresult);
-                        actualresult = tdkTestObj.getResult();
-                        #Check for SUCCESS/FAILURE return value of SM_DeviceSetting_GetDeviceInfo
-                        if expectedresult in actualresult:
-                                print "SUCCESS: GetDeviceInfo successful";
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                serviceDetail = tdkTestObj.getResultDetails();
-                                tokens = serviceDetail.split(" ");
-                                ecmIp = "";
-                                for index in range(len(tokens)):
-                                        if "ecm_ip" in tokens[index]:
-                                                ecmIp = tokens[index+1];
-                                                break;
-                                if ecmIp != "":
-                                        print "ECM IP: %s" %ecmIp;
-                                        snmpOid = [".1.3.6.1.2.1.10.127.1.1.4.1.7.50"];
-                                        status = "SUCCESS";
-					tdkTestObj = snmpObj.createTestStep('SNMP_GetCommString');
-                                        expectedresult="SUCCESS";
-                                        tdkTestObj.executeTestCase(expectedresult);
-                                        actualresult = tdkTestObj.getResult();
-                                        if expectedresult in actualresult:
-                                                commString = tdkTestObj.getResultDetails();
-                                                print "Community String is %s" %commString;
-
-                                                for index in range(len(snmpOid)):
-                                                        actResponse =snmplib.SnmpExecuteCmd("snmpget", commString, "-v 2c", snmpOid[index], ecmIp);
-                                                        print "SNMP response is %s" %actResponse;
-                                                        snmpValue = actResponse.split(": ");
-                                                        print snmpValue[-1].strip();
-
-                                                        if configDict:
-                                                                preeqData = configDict[nameList[index]].strip();
-                                                                preeqData = preeqData.strip("\\\"").strip();
-                                                                if preeqData != snmpValue[-1].strip().replace("\n", "\\n"):
-                                                                        status = "FAILURE";
-                                                                        print "The values are not equal";
-                                                                        break;
-                                                        else:
-                                                                print "TR-181 values not available for comparison";
-                                                                status = "FAILURE";
-                                                tdkTestObj.setResultStatus(status);
-                                                if status == "SUCCESS":
-                                                        print "Values are equal";
-                                        else:
-                                                print "Failed to get community string";
-                                                tdkTestObj.setResultStatus("FAILURE");
-
-                                else:
-                                        print "Failed to get ECM IP";
-                                        tdkTestObj.setResultStatus("FAILURE");
-
-                        else:
-                                print "FAILURE: GetDeviceInfo failure";
-                                tdkTestObj.setResultStatus("FAILURE");
-                        unregister = servicemanager.unRegisterService(smObj,dsServiceName);
-
         smObj.unloadModule("servicemanager");
-        snmpObj.unloadModule("snmp");
 else:
          print "Module loading failed";
 

@@ -144,7 +144,6 @@ if "SUCCESS" in result.upper():
                 #calling SM_GetSupportedAudioModes
                 tdkTestObj = obj.createTestStep('SM_GetSupportedAudioModes');
                 expectedresult="SUCCESS"
-		expectedModes = "STEREO Dolby Digital 5.1"
                 portName = "SPDIF0";
                 tdkTestObj.addParameter("portName", portName);
                 tdkTestObj.executeTestCase(expectedresult);
@@ -153,12 +152,8 @@ if "SUCCESS" in result.upper():
                 print "[TEST EXECUTION DETAILS] supported modes are: %s"%serviceDetail;		
                 #Check for SUCCESS/FAILURE return value of SM_DeviceSetting_GetAppInfo
                 if expectedresult in actualresult:
-			if expectedModes==serviceDetail:
-	                        print "SUCCESS: GetSupportedModes successful";
-        	                tdkTestObj.setResultStatus("SUCCESS");
-			else:
-	                        print "FAILURE: GetSupportedModes failure";
-        	                tdkTestObj.setResultStatus("FAILURE")
+			print "SUCCESS: GetSupportedModes successful";
+        	        tdkTestObj.setResultStatus("SUCCESS");
                 else:
                         print "FAILURE: GetSupportedModes failure";
                         tdkTestObj.setResultStatus("FAILURE");

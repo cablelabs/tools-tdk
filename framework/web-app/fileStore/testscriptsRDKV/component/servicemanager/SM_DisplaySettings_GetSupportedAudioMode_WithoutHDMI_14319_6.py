@@ -149,28 +149,6 @@ if "SUCCESS" in result.upper():
                         print "FAILURE: GetSupportedModes(HDMI) failure";
                         tdkTestObj.setResultStatus("FAILURE");
 
-                portName = "";
-                tdkTestObj.addParameter("portName", portName);
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                serviceDetail_none = tdkTestObj.getResultDetails();
-                print "[TEST EXECUTION DETAILS] supported modes are: %s"%serviceDetail_none;
-                #Check for SUCCESS/FAILURE return value of SM_DeviceSetting_GetAppInfo
-                if expectedresult in actualresult:
-                        print "SUCCESS: GetSupportedModes() successful";
-                        tdkTestObj.setResultStatus("SUCCESS");
-
-			if serviceDetail_hdmi==serviceDetail_none :
-	                        print "SUCCESS: GetSupportedModes(HDMI)=GetSupportedModes()";
-        	                tdkTestObj.setResultStatus("SUCCESS");
-			else:
-                                print "FAILURE: GetSupportedModes(HDMI)!=GetSupportedModes()";
-                                tdkTestObj.setResultStatus("FAILURE");
-                else:
-                        print "FAILURE: GetSupportedModes() failure";
-                        tdkTestObj.setResultStatus("FAILURE");
-
-
                 #Call ServiceManger - UnregisterService API
                 tdkTestObj = obj.createTestStep('SM_UnRegisterService');
                 expectedresult="SUCCESS"

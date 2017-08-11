@@ -74,6 +74,7 @@ Checkpoint 2. Check the value retrieved using API is same as the value retrieved
 import tdklib; 
 import servicemanager;
 import snmplib;
+import sys;
 
 #Test component to be tested
 smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
@@ -104,7 +105,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
         if "SUCCESS" in register:
                 #Prmitive test case which associated to this Script
                 tdkTestObj = smObj.createTestStep('SM_DDS_GetConfiguration');
-                names = "Device.X_RDKCENTRAL-COM_DocsIf.docsIfUpChannelWidth_80,Device.X_RDKCENTRAL-COM_DocsIf.docsIfUpChannelWidth_81,Device.X_RDKCENTRAL-COM_DocsIf.docsIfUpChannelWidth_82";
+                names = "Device.X_RDKCENTRAL-COM_DocsIf.docsIfUpChannelWidth_80,Device.X_RDKCENTRAL-COM_DocsIf.docsIfUpChannelWidth_81";
                 nameList = names.split(',');
                 expectedresult = "SUCCESS";
                 tdkTestObj.addParameter("names",names);
@@ -133,6 +134,10 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Failed to get TR-181 value\n";
+			unregister = servicemanager.unRegisterService(smObj,serviceName);
+                        smObj.unloadModule("servicemanager");
+                        snmpObj.unloadModule("snmp");
+                        sys.exit();
 
                 unregister = servicemanager.unRegisterService(smObj,serviceName);
 
@@ -158,7 +163,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
                                                 break;
                                 if ecmIp != "":
                                         print "ECM IP: %s" %ecmIp;
-                                        snmpOid = [".1.3.6.1.2.1.10.127.1.1.2.1.3.80",".1.3.6.1.2.1.10.127.1.1.2.1.3.81",".1.3.6.1.2.1.10.127.1.1.2.1.3.82"];
+                                        snmpOid = [".1.3.6.1.2.1.10.127.1.1.2.1.3.80",".1.3.6.1.2.1.10.127.1.1.2.1.3.81"];
                                         status = "SUCCESS";
 					tdkTestObj = snmpObj.createTestStep('SNMP_GetCommString');
                                         expectedresult="SUCCESS";
@@ -171,7 +176,10 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
                                                 for index in range(len(snmpOid)):
                                                         actResponse =snmplib.SnmpExecuteCmd("snmpget", commString, "-v 2c", snmpOid[index], ecmIp);
                                                         print "SNMP response is %s" %actResponse;
-                                                        snmpValue = actResponse.split(": ");
+							if "No Such Object available" in actResponse:
+                                                                snmpValue = actResponse.split("= ");
+                                                        else:
+	                                                        snmpValue = actResponse.split(": ");
                                                         print snmpValue[-1].strip();
                                                         if configDict:
                                                                 if configDict[nameList[index]].strip() != snmpValue[-1].strip():
