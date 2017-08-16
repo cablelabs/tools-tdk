@@ -20,7 +20,7 @@
 #include "ServiceManagerAgent.h"
 
 Json::Value convertQHashToJson (QVariant qHash) ;
-QVariantList convertObjectToQList (Json::Value jData);
+QVariantHash convertObjectToQList (Json::Value jData);
 
 /******************************************************************************
  *Function name : convertQVariantToJson
@@ -28,7 +28,7 @@ QVariantList convertObjectToQList (Json::Value jData);
  *                json value
  *Input         : qData - QVariant data to be converted to json value
  *Return        : Returns the resultant json value
- *******************************************************************************/
+ ******************************************************************************/
 Json::Value convertQVariantToJson (QVariant qData) {
 
 	Json::Value jValue;
@@ -66,7 +66,7 @@ Json::Value convertQVariantToJson (QVariant qData) {
  *                Json array
  *Input         : qList - QVariantList to be converted to json array
  *Return        : Returns the resultant json array
- *******************************************************************************/
+ ******************************************************************************/
 Json::Value convertQListToJson (QVariantList qList) {
 
         DEBUG_PRINT (DEBUG_TRACE, "convertQListToJson --->Entry\n");
@@ -96,7 +96,7 @@ Json::Value convertQListToJson (QVariantList qList) {
  *                to json object
  *Input         : qHash - QVariant data to be converted to json object
  *Return        : Returns the resultant json object
- *******************************************************************************/
+ ******************************************************************************/
 Json::Value convertQHashToJson (QVariant qHash) {
 
 	DEBUG_PRINT (DEBUG_TRACE, "convertQHashToJson --->Entry\n");
@@ -189,12 +189,11 @@ QVariantList convertArrayToQList (Json::Value jData) {
  *Description   : Function to check the Json object and convert it to
  *                QVariantList
  *Input         : jData - Json object to be converted to QVariantList
- *Return        : Returns the resultant QVariantList
+ *Return        : Returns the resultant QVariantHash
  *******************************************************************************/
-QVariantList convertObjectToQList (Json::Value jData) {
+QVariantHash convertObjectToQList (Json::Value jData) {
 
 	DEBUG_PRINT (DEBUG_TRACE, "convertObjectToQList --->Entry\n");
-	QVariantList qList;
 	QVariantHash qHash;
 	string key;
 	qHash.clear();
@@ -221,10 +220,9 @@ QVariantList convertObjectToQList (Json::Value jData) {
 			qHash.insert(key.c_str(), QVariant());
 		}
 	}
-	qList << qHash;
 	
 	DEBUG_PRINT (DEBUG_TRACE, "convertObjectToQList --->Exit\n");
-	return qList;
+	return qHash;
 }
 
 
