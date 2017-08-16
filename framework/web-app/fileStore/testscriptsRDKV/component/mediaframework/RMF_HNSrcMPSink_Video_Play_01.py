@@ -180,7 +180,8 @@ if Expected_Result in loadModuleStatus.upper():
 									if Expected_Result in result.upper():
 
 	                                                                       result=Create_and_ExecuteTestStep('RMF_Element_GetState',obj,Expected_Result,src_parameter,src_element);
-
+                                                #Pause the HNSRC-->MPSINK pipeline
+                                                result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
                                                 #Close the Hnsrc Element
                                                 result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,Expected_Result,src_parameter,src_element);
                                         #Terminating the MPSink Element

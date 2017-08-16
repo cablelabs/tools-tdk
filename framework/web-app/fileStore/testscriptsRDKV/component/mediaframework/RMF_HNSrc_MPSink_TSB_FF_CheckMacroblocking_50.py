@@ -8,29 +8,49 @@
 # Copyright (c) 2016 RDK Management, LLC. All rights reserved.
 # ============================================================================
 '''
-<?xml version="1.0" encoding="UTF-8"?><xml>
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
   <id>1648</id>
-  <version>10</version>
+  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+  <version>11</version>
+  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>RMF_HNSrc_MPSink_TSB_FF_CheckMacroblocking_50</name>
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>494</primitive_test_id>
+  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>RMF_Element_Create_Instance</primitive_test_name>
+  <!--  -->
   <primitive_test_version>1</primitive_test_version>
+  <!--  -->
   <status>FREE</status>
+  <!--  -->
   <synopsis>Objective: RMF_HNSRC_MPSink –After 5 mins of tsb, Do FF from the middle of buffer to the live point. And make sure no freeze while approaching the live point.
 Test CaseID: CT_RMF_HNSRC_MPSink_50
 Test Type: Positive.</synopsis>
-  <groups_id/>
+  <!--  -->
+  <groups_id />
+  <!--  -->
   <execution_time>10</execution_time>
+  <!--  -->
   <long_duration>false</long_duration>
-  <remarks/>
+  <!--  -->
+  <advanced_script>false</advanced_script>
+  <!-- execution_time is the time out time for test execution -->
+  <remarks></remarks>
+  <!-- Reason for skipping the tests if marked to skip -->
   <skip>false</skip>
+  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
+    <!--  -->
     <box_type>Emulator-HYB</box_type>
+    <!--  -->
     <box_type>Terminal-RNG</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
+    <!--  -->
   </rdk_versions>
   <test_cases>
     <test_case_id>CT_RMF_HNSRC_MPSink_50</test_case_id>
@@ -82,9 +102,9 @@ CheckPoint 2. Check the Audio and Video quality using CheckAudioStatus.sh and Ch
   </test_cases>
   <script_tags>
     <script_tag>BASIC</script_tag>
+    <!--  -->
   </script_tags>
 </xml>
-
 '''
 import tdklib;
 import mediaframework;
@@ -138,7 +158,7 @@ def Create_and_ExecuteTestStep(teststep, testobject, expectedresult,parameternam
     print "Status of "+ teststep+":  %s" %result;
     print "Details of "+ teststep+":  %s" %details;
     if teststep == "RMF_Element_Getmediatime":
-	if "SUCCESS" in result.upper():	
+	if "SUCCESS" in result.upper():
 	        Mediatime=details.split(":");
 	        print Mediatime[1];
     if teststep == "RMF_Element_Getspeed":
@@ -237,6 +257,9 @@ if Expected_Result in loadModuleStatus.upper():
                                                 	                                                        else:
                                                         	                                                        print "failed"
                                                                 	                                                tdkTestObj.setResultStatus("FAILURE");
+                                                                	                                #Pause the video before pipeline closure
+                                                                	                                result=Create_and_ExecuteTestStep('RMF_Element_Pause',obj,Expected_Result,src_parameter,src_element);
+
 
                                                 #Close the Hnsrc Element
                                                 result=Create_and_ExecuteTestStep('RMF_Element_Close',obj,Expected_Result,src_parameter,src_element);
