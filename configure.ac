@@ -124,7 +124,7 @@ AC_ARG_ENABLE([client],
         [
           case "${enableval}" in
              yes) CLIENT=true
-                  SUBDIR_CLIENT="TR069_stub NetSrvMgr_stub"
+                  SUBDIR_CLIENT="TR069_stub NetSrvMgr_stub MocaHal_stub"
                   TDKINTEGRATION_FLAGS="-DIPCLIENT" ;;
            no) CLIENT=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
@@ -240,5 +240,6 @@ AC_CONFIG_FILES([Makefile
          XUPNP_stub/Makefile
          DTCP_stub/Makefile
          tdkRmfApp/Makefile
-         SNMP_stub/Makefile])
+         SNMP_stub/Makefile
+         MocaHal_stub/Makefile])
 AC_OUTPUT
