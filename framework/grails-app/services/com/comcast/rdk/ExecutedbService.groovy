@@ -237,7 +237,24 @@ class ExecutedbService {
 		}
 		return deleteCount
 	}
-
+	
+	/**
+	 * Function to format execution time
+	 */
+	def executionTimeFormat ( def executionTime )
+	{
+		try {
+			if(executionTime.contains(".") ){
+					int index = executionTime.indexOf(".")
+					if((index + 3) < executionTime.length() ){
+						executionTime = executionTime?.substring(0, index+3);
+					}
+				}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+		return 	executionTime
+	}
 
 	/**
 	 * Function to create data in excel format for execution result
@@ -289,7 +306,7 @@ class ExecutedbService {
 			deviceName = executionDeviceInstance?.device
 			deviceIp = executionDeviceInstance?.deviceIp
 			executionTime = executionDeviceInstance?.executionTime
-
+			executionTime = executionTimeFormat ( executionTime )
 			executionDeviceId = executionDeviceInstance?.id
 			filePath = "${realPath}//logs//version//${executionInstance?.id}//${executionDeviceId?.toString()}//${executionDeviceId?.toString()}_version.txt"
 
@@ -482,7 +499,7 @@ class ExecutedbService {
 			deviceName = executionDeviceInstance?.device
 			deviceIp = executionDeviceInstance?.deviceIp
 			executionTime = executionDeviceInstance?.executionTime
-
+			executionTime = executionTimeFormat ( executionTime )
 			executionDeviceId = executionDeviceInstance?.id
 			filePath = "${realPath}//logs//version//${executionInstance?.id}//${executionDeviceId?.toString()}//${executionDeviceId?.toString()}_version.txt"
 			if(filePath){
@@ -936,7 +953,7 @@ class ExecutedbService {
 			deviceName = executionDeviceInstance?.device
 			deviceIp = executionDeviceInstance?.deviceIp
 			executionTime = executionDeviceInstance?.executionTime
-
+			executionTime = executionTimeFormat ( executionTime )
 			executionDeviceId = executionDeviceInstance?.id
 			filePath = "${realPath}//logs//version//${executionInstance?.id}//${executionDeviceId?.toString()}//${executionDeviceId?.toString()}_version.txt"
 			if(filePath){
