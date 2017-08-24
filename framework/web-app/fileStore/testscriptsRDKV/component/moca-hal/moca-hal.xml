@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <module name="moca-hal" testGroup="Component">
+    <primitiveTests>
+      <primitiveTest id="" name="MocaHal_GetMoCALinkUp" version="1">
+        <function>TestMgr_MocaHal_GetMoCALinkUp</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="MocaHal_GetEnabled" version="1">
+        <function>TestMgr_MocaHal_GetEnabled</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="MocaHal_SetEnabled" version="2">
+        <function>TestMgr_MocaHal_SetEnabled</function>
+        <parameters>
+          <parameter name="enable" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="MocaHal_GetLOF" version="1">
+        <function>TestMgr_MocaHal_GetLOF</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="MocaHal_GetFrequencyMask" version="1">
+        <function>TestMgr_MocaHal_GetFrequencyMask</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="MocaHal_GetSupportedFrequencies" version="1">
+        <function>TestMgr_MocaHal_GetSupportedFrequencies</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="MocaHal_GetHighestSupportedMoCAVersion" version="1">
+        <function>TestMgr_MocaHal_GetHighestSupportedMoCAVersion</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="MocaHal_GetMac" version="1">
+        <function>TestMgr_MocaHal_GetMac</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="MocaHal_GetName" version="1">
+        <function>TestMgr_MocaHal_GetName</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="MocaHal_GetMoCAVersion" version="1">
+        <function>TestMgr_MocaHal_GetMoCAVersion</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="MocaHal_GetNumNodes" version="1">
+        <function>TestMgr_MocaHal_GetNumNodes</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="MocaHal_GetSupportedModes" version="1">
+        <function>TestMgr_MocaHal_GetSupportedModes</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest name="MocaHal_GetMode" id="" version="1">
+        <function>TestMgr_MocaHal_GetMode</function>
+        <parameters/>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>
