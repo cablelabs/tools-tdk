@@ -1365,6 +1365,7 @@ class ScriptGroupController {
 				scriptgroupService.saveToDefaultGroups(script,sObject, boxTypes, params?.category)
 				scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[], params?.category)
 				scriptService?.updateScriptsFromTestProfile(script,sObject, params.category)
+				scriptService.createDefaultGroupWithoutOS(sObject,script, params?.category)
 				scriptService.updateAdvScriptMap(params?.name?.trim(), dirname, Utility.getCategory(params?.category), isAdvanced)
 				def sName = params?.name
 				render(message(code: 'default.created.message', args: [
@@ -3182,6 +3183,7 @@ class ScriptGroupController {
 							scriptgroupService.saveToScriptGroups(script,sObject, category)
 							scriptgroupService.saveToDefaultGroups(script,sObject, boxTypeList,category)
 							scriptgroupService.updateScriptsFromScriptTag(script,sObject,[],[],category)
+							scriptService.createDefaultGroupWithoutOS(sObject,script, params?.category)
 							scriptService?.updateScriptsFromTestProfile(script,sObject,category)
 							flash.message =" Script uploaded successfully"
 						}catch(Exception e){

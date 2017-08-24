@@ -78,9 +78,6 @@ class ScriptgroupService {
 
 					if(!sObject.getLongDuration()){
 						names.add(vers?.toString()+"_"+bType?.name)
-						if(module?.testGroup != TestGroup.OpenSource){
-							names.add(vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE)
-						}
 						removeScriptFromScriptGroup(scriptInstance, vers?.toString()+"_"+bType?.name+"_LD")
 					}else{
 
@@ -146,7 +143,7 @@ class ScriptgroupService {
 	 * Method to save the script to a script group, according to the library chosen for the script
 	 * Creates two types of script groups.
 	 * 1: Based on Test group of selected library.
-	 * 2: Based on the boxType of script.     
+	 * 2: Based on the boxType of script.
 	 * @param scriptInstance
 	 * @param boxTypeList
 	 * @return
@@ -157,15 +154,7 @@ class ScriptgroupService {
 		def moduleName = scriptInstance?.moduleName
 		def module = Module.findByName(moduleName)
 		String groupName = module?.testGroup?.toString() + KEY_GROUP
-		createOrUpdateScriptGroups(scriptInstance, groupName, category)
-
-		boxTypeList.each { boxType ->
-			BoxType box = BoxType.findById(boxType?.id);
-			if(box){
-				groupName = box?.name + KEY_GROUP
-				createOrUpdateScriptGroups(scriptInstance, groupName, category)
-			}
-		}
+	
 
 		//		 String groupName = scriptInstance.primitiveTest.module.testGroup.toString() + KEY_GROUP
 
@@ -449,9 +438,9 @@ class ScriptgroupService {
 
 			else{
 				/**
-				 * Selecting scriptGroups based on whether selected script exists 
-				 * in the script group's and status of the ScriptGroup is Allocated. 
-				 * In this case the script cannot be deleted. 
+				 * Selecting scriptGroups based on whether selected script exists
+				 * in the script group's and status of the ScriptGroup is Allocated.
+				 * In this case the script cannot be deleted.
 				 */
 				def scriptAllocated = ScriptGroup.where {
 					scriptList { id == scriptFile.id } && status == Status.ALLOCATED.toString()
@@ -635,6 +624,7 @@ class ScriptgroupService {
 
 	def removeFromScriptList(def final vers , def final bType , def final scriptInstance){
 		def groupNames  = [
+			bType?.name + KEY_GROUP,bType?.name + KEY_GROUP+ "_LD",
 			vers?.toString()+"_"+bType?.name,
 			vers?.toString()+"_"+bType?.name+Constants.NO_OS_SUITE,
 			vers?.toString()+"_"+bType?.name+"_LD"
@@ -728,7 +718,7 @@ class ScriptgroupService {
 						removeFromScriptTagList(tag, bt, scriptInstance, category)
 					}
 				}
-			}		
+			}
 
 			sObject?.getBoxTypes()?.each{ bType ->
 
@@ -746,8 +736,8 @@ class ScriptgroupService {
 						def scriptGrpInstance = ScriptGroup.findByNameAndCategory(name,category)
 						if(!scriptGrpInstance){
 							scriptGrpInstance = new ScriptGroup()
-							scriptGrpInstance.name = name							
-							scriptGrpInstance?.category = category							
+							scriptGrpInstance.name = name
+							scriptGrpInstance?.category = category
 							scriptGrpInstance.save()
 						}
 						if(scriptGrpInstance && !scriptGrpInstance?.scriptList?.contains(scriptInstance)){
