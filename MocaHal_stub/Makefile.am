@@ -28,6 +28,6 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
 
 lib_LTLIBRARIES = libmocahalstub.la
 libmocahalstub_la_SOURCES = src/MocaHalAgent.cpp
-libmocahalstub_la_LIBADD = -lrdkmocahalsoc -lrdkmocahal
 libmocahalstub_la_includedir = ${includedir}
+libmocahalstub_la_LIBADD = $(MOCAHAL_LIBS)
 libmocahalstub_la_include_HEADERS = ${top_srcdir}/MocaHal_stub/include/MocaHalAgent.h
