@@ -2831,7 +2831,6 @@ class ExecutionController {
 	 * 		7) Rerun 
 	 * @return
 	 */
-
 	def repeatExecution(){	
 		try{
 			int execCnt = 0
@@ -2842,36 +2841,43 @@ class ExecutionController {
 				int executionCount=0
 				int execCount = 0
 				int testCount = 0
+				def repeatCount
 				def newExecutionName
 				def executionList = Execution?.findAll()
 				if(Execution?.findByName(execName1?.toString())){
-					if(execName1?.toString().contains("_") &&  !(execName1?.toString()?.contains("_RERUN"))){
-						def execNameSplitList = execName1.toString().tokenize("_")
-						executionCount =Integer.parseInt(execNameSplitList[1])
+					def tempExecName = execName1?.toString()
+					def executionDevice = executionInstance?.device	
+					if(execName1?.toString()?.contains(executionDevice))
+					{
+						tempExecName = execName1?.toString()?.substring(executionDevice.length())
+					}
+					
+					if(tempExecName?.contains("_"))
+					{
+						
+						def namePart = execName1?.substring(0,execName1.lastIndexOf("_") )
+						executionCount = getExecutionCountFromName(execName1)
 						executionCount++
-						newExecutionName =  execNameSplitList[0]+"_"+executionCount
-						//if(executionList?.toString().contains(newExecutionName?.toString())){
+						newExecutionName = namePart + "_"+executionCount
 						if(Execution?.findByName(newExecutionName?.toString())){
-							executionList?.each { exName ->
-								if(exName?.toString().contains(execNameSplitList[0]?.toString())){
-									execCount++
-								}
+							def execList = Execution?.findAllByNameLike(namePart+"%", [order: "desc"])
+							if(execList && execList?.size() > 0){
+								executionCount = getExecutionCountFromName(execList?.get(0)?.name)
+								executionCount++
+								newExecutionName = namePart+"_"+(executionCount)
 							}
-							newExecutionName = execNameSplitList[0]+"_"+(execCount)
-						}else{
-							newExecutionName =newExecutionName
 						}
-					}else{
+					}	
+					else{
 						newExecutionName = execName1 +"_"+1
 						//if(executionList?.toString().contains(newExecutionName?.toString())){
 						if(Execution.findByName(newExecutionName.toString())){
-							def lastExecname  = executionList.find{ it  ->
-								it?.toString().contains(execName1?.toString())
+							def execList = Execution?.findAllByNameLike(execName1+"_%" , [order: "desc"])
+							if(execList && execList?.size() > 0){
+								executionCount = getExecutionCountFromName(execList?.get(0)?.name)
+								executionCount++
+								newExecutionName = execName1 +"_"+executionCount
 							}
-							def newExecNameList = lastExecname.toString().tokenize("_")
-							execCnt = Integer.parseInt(newExecNameList[1])
-							execCnt++
-							newExecutionName = execName1+"_"+(execCnt)
 						}else{
 							newExecutionName = newExecutionName
 						}
@@ -3012,6 +3018,26 @@ class ExecutionController {
 		}
 		redirect( view:"create")
 	}
+	
+	/**
+	 * Function for getting the next repeat count
+	 * @return executionCount
+	 */
+	def getExecutionCountFromName(String execName){
+		int executionCount = 0
+		if(execName?.toString()?.contains("_")){
+			def countPart = execName?.substring(execName.lastIndexOf("_") + 1, execName.length())
+			if(countPart){
+				try {
+					executionCount =Integer.parseInt(countPart)
+				} catch (Exception e) {
+					e.printStackTrace()
+				}
+			}
+		}
+		return executionCount
+	}
+	
 	/**
 	 * Function for rerun on failure option in the show log page 
 	 * Execute failure scripts according to the test suite which user selection.

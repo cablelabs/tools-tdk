@@ -247,13 +247,24 @@ $(document).ready(function() {
 					<div style="width: 100%; overflow: auto;">
 						<g:select name="filter" id="filter" from="${['RDKB','RDKV', 'RDKB_TCL']}" noSelection="['All':'All']" value="${category }" onchange="loadXMLDoc()"/>
 							<div style="width: 96%; overflow: auto; text-align: right; vertical-align: top;">
-							<g:form controller="execution">
-								<g:textField name="searchName" id="searchId" value="" />
+							<script>						
+								$(document).bind("keypress", function (e) {    									
+									if (e.keyCode == 13) 
+									{        									
+										$("#searchSubmit").click();
+        								return false;
+    								}
+								});
+								</script>
+
+								<g:form controller="execution">
+									<g:textField name="searchName" id="searchId" value="" />
 								<span class="buttons"><g:submitToRemote
 										after="hideExectionHistory();" before="showSpinner();"
-										onSuccess="hideSpinner();" class="find"
+										onSuccess="hideSpinner();" class="find" id="searchSubmit"
 										action="searchExecutionList" update="searchResultDiv"
 										value="Search" /></span>
+
 								<img src="../images/more.png" title="Advanced Search"
 									onclick="displayAdvancedSearch();"></img>
 								<span id="spinner1" style="display: none;"> <img id="sss"

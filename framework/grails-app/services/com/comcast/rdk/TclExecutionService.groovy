@@ -22,12 +22,14 @@ import static com.comcast.rdk.Constants.*
 import grails.util.Holders
 import groovy.sql.Sql
 
+import java.util.Date;
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 import org.springframework.util.StringUtils
+
 import com.comcast.rdk.Utility
 
 class TclExecutionService {
@@ -498,6 +500,35 @@ class TclExecutionService {
 		return htmlData
 	}
 
+	/**
+	 * To calculate the total execution time and updating the data base
+	 * @param execName
+	 * @param startExecutionTime
+	 * @param endExecutionTime
+	*/
+	def executionTimeCalculation(String execName, Date startExecutionTime, Date endExecutionTime)
+	{
+		try
+		{
+			def totalSecTime
+			Execution executionInstance1 = Execution.findByName(execName)
+			def totalTimeArray = Execution.executeQuery("select a.realExecutionTime from Execution a where a.name = :exName",[exName: execName])
+			def execTimeDiff = (endExecutionTime.getTime() - startExecutionTime.getTime())/1000;
+			/* Calculating and formatting the total execution time */
+			if(totalTimeArray){
+				totalSecTime = calculateTotalExecutiontime(totalTimeArray[0], execTimeDiff )
+			}else{
+				totalSecTime = calculateTotalExecutiontime(totalTimeArray, execTimeDiff )
+			}
+			def execTimeDifference = convertExecutionTimeFormat(totalSecTime )
+			executionService.updateTotalExecutionTime(execTimeDifference ?.toString(), executionInstance1?.id)
+		}catch (Exception e) {
+			println  " Error"+e.getMessage()
+			e.printStackTrace()
+		}
+	}
+	
+	
 	def executescriptsOnDevice(String execName, String device, ExecutionDevice executionDevice, def scripts, def scriptGrp,
 			def executionName, def filePath, def realPath, def groupType, def url, def isBenchMark, def isSystemDiagnostics, def rerun,def isLogReqd, def category) {
 		boolean aborted = false
@@ -626,7 +657,8 @@ class TclExecutionService {
 						}
 					}
 					if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString())) && !pause){
-						executionStarted = true						
+						executionStarted = true	
+						def startExecutionTime = new Date()
 						try {
 							def combainedTcl = [:]
 							//combainedTcl?.put("scriptName","")
@@ -646,6 +678,8 @@ class TclExecutionService {
 						}
 						output.append(htmlData)
 						Thread.sleep(6000)
+						def endExecutionTime = new Date()
+						executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 					}else{
 						if(!aborted && (devStatus.equals(Status.NOT_FOUND.toString()) ||  devStatus.equals(Status.HANG.toString()))){
 							pause = true
@@ -759,7 +793,7 @@ class TclExecutionService {
 							}
 						}
 					}	
-									
+					def startExecutionTime = new Date()
 					isMultiple = FALSE
 					try { 						
 						htmlData = executeScript(execName, executionDevice, script1, deviceInstance, url, filePath, realPath, isBenchMark,
@@ -772,6 +806,8 @@ class TclExecutionService {
 					} catch (Exception e) {
 						e.printStackTrace()
 					}
+					def endExecutionTime = new Date()
+					executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 					output.append(htmlData)
 				}
 				else{
@@ -856,6 +892,7 @@ class TclExecutionService {
 						if(scriptCounter == scriptGrpSize){
 							isMultiple = FALSE
 						}
+						def startExecutionTime = new Date()
 						try {							
 							aborted = executionService.abortList.contains(exeId?.toString())
 							devStatus = DeviceStatusUpdater.fetchDeviceStatus(grailsApplication, deviceInstance)
@@ -921,6 +958,7 @@ class TclExecutionService {
 												executionResult.deviceIdString = deviceInstanceObj?.id?.toString()
 												executionResult.status = PENDING
 												executionResult.dateOfExecution = new Date()
+												executionResult.category = Utility.getCategory(category)
 												if(! executionResult.save(flush:true)) {
 												}
 												resultstatus.flush()
@@ -946,6 +984,8 @@ class TclExecutionService {
 						}
 						output.append(htmlData)
 						Thread.sleep(6000)
+						def endExecutionTime = new Date()
+						executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 						
 					}
 					
@@ -1110,20 +1150,31 @@ class TclExecutionService {
 
 		Date execEndDate = new Date()
 		def execEndTime =  execEndDate.getTime()
-		def timeDifference = ( execEndTime - executionStartTime  ) / 60000;
-
-		String timeDiff =  String.valueOf(timeDifference)
-		String singleScriptExecTime = String.valueOf(timeDifference)
-
-		BigDecimal myVal1
-		if(resultArray[0]){
-			myVal1= new BigDecimal (resultArray[0]) + new BigDecimal (timeDiff)
+		// time difference for single script in seconds
+		def timeDifference = ( execEndTime - executionStartTime  ) / 1000;
+		String timeDiff =  String.valueOf(timeDifference)	
+		String singleScriptExecTime = timeDifference
+		try
+		{
+			def cumulativeTime
+			if(resultArray){
+				cumulativeTime = calculateTotalExecutiontime(resultArray[0], timeDiff)
+			}else{
+				cumulativeTime = calculateTotalExecutiontime(resultArray, timeDiff)
+			}
+			timeDiff = convertExecutionTimeFormat(cumulativeTime )
+			singleScriptExecTime = convertExecutionTimeFormat((new BigDecimal (singleScriptExecTime)))
+			if(singleScriptExecTime.contains(".") ){
+				int index = singleScriptExecTime.indexOf(".")
+				if((index + 3) < singleScriptExecTime.length() ){
+					singleScriptExecTime = singleScriptExecTime.substring(0, index+3);
+				}
+			}
 		}
-		else{
-			myVal1 =  new BigDecimal (timeDiff)
+		catch (Exception e) {
+			e.printStackTrace()
 		}
-
-		timeDiff =  String.valueOf(myVal1)
+		
 		if(executionService.abortList.contains(executionInstance?.id?.toString())){
 			executescriptService.resetAgent(deviceInstance,TRUE)
 		}else if(Utility.isFail(htmlData) ){
@@ -1231,25 +1282,64 @@ class TclExecutionService {
 			}
 		}
 		Date endTime = new Date()
-		try {
-			def totalTimeTaken = (endTime?.getTime() - startTime?.getTime()) / 60000
-
+	try {
+			def totalTimeTaken = (endTime?.getTime() - startTime?.getTime()) / 1000
+	//		totalTimeTaken = totalTimeTaken?.round(2)
 			executionService.updateExecutionTime(totalTimeTaken?.toString(), executionResultId)
-			BigDecimal totalVal
-			if(totalTimeArray[0]){
-				totalVal= new BigDecimal (totalTimeArray[0]) + new BigDecimal (totalTimeTaken)
-			}
-			else{
-				totalVal =  new BigDecimal (totalTimeTaken)
-			}
-
-			timeDiff =  String.valueOf(totalVal)
-			executionService.updateTotalExecutionTime(timeDiff?.toString(), executionId)
-		} catch (Exception e) {
+		}
+		 catch (Exception e) {
 			e.printStackTrace()
 		}
 		return htmlData
 	}
+			
+			
+			/**
+			 * The function for getting the cumulative time for execution  in seconds
+			 * @param totalExecutionTime
+			 * @param scriptExecutionTime
+			 * @return totalExecTime
+			 */
+
+			def calculateTotalExecutiontime(def totalExecutionTime , def scriptExecutionTime)
+			{
+		
+				BigDecimal totalExecTime
+				if(totalExecutionTime){
+					def totalTime =  Double.parseDouble(totalExecutionTime);
+					def minPart = (long) totalTime
+					def decimalPart = totalTime - minPart;
+					totalExecTime = ((new BigDecimal (minPart))*60) + new BigDecimal (scriptExecutionTime) + ((new BigDecimal (decimalPart))*100)
+				}
+				else{
+					totalExecTime =  new BigDecimal (scriptExecutionTime)
+		
+				}
+				return totalExecTime
+			}
+		
+			/**
+			 * The function for getting the execution time mm.ss format
+			 * @param executionTime
+			 * @return timeDiff
+			 */
+			def convertExecutionTimeFormat(def executionTime)
+			{
+				BigDecimal timeCount = 60.00;
+				BigDecimal mintVal = 0
+				BigDecimal secVal = 0
+				if(executionTime>timeCount){
+					mintVal =(int)  executionTime/timeCount
+					secVal =  executionTime.remainder(timeCount)
+					
+				}
+				else{
+					secVal = executionTime
+				}
+				executionTime =mintVal+(secVal/100)
+				def timeDiff =  String.valueOf(executionTime)
+				return timeDiff
+			}
 
 	def readScriptContent(String filename){
 		File file = new File(filename)
@@ -1401,6 +1491,7 @@ class TclExecutionService {
 									Thread.sleep(6000)
 									if(Utility.isTclScriptExists(realPath, scriptNameTcl)){
 										scriptInstance.put('scriptName', scriptNameTcl)
+										def startExecutionTime = new Date()
 										//aborted = executionService.abortList.contains(exeId?.toString())
 										aborted = executionService.abortList?.toString().contains(executionName?.id?.toString())
 										if(!aborted && !(deviceStatus?.toString().equals(Status.NOT_FOUND.toString()) || deviceStatus?.toString().equals(Status.HANG.toString())) && !pause){
@@ -1458,6 +1549,8 @@ class TclExecutionService {
 												}
 											}
 										}
+										def endExecutionTime = new Date()
+										executionTimeCalculation(newExecName,startExecutionTime,endExecutionTime)
 									}
 								}
 							}
@@ -1609,6 +1702,8 @@ class TclExecutionService {
 				}
 
 				if(!aborted && !(devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()) || devStatus.equals(Status.TDK_DISABLED.toString())) && !pause){
+					
+					def startExecutionTime = new Date()
 					try {
 						executionStarted = true
 						def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple, isBenchMark,isSystemDiagnostics,isLogReqd,rerun, category)
@@ -1622,6 +1717,8 @@ class TclExecutionService {
 					} catch (Exception e) {
 						e.printStackTrace()
 					}
+					def endExecutionTime = new Date()
+					executionTimeCalculation(execName,startExecutionTime,endExecutionTime )
 				}else{
 					if(!aborted && (devStatus.equals(Status.NOT_FOUND.toString()) || devStatus.equals(Status.HANG.toString()) || devStatus.equals(Status.TDK_DISABLED.toString()))){
 						pause = true
@@ -1760,7 +1857,7 @@ class TclExecutionService {
 
 
 		String htmlData = ""
-
+		Date startTime = new Date()
 		def deviceInstance1 = Device.findById(deviceInstance.id,[lock: true])
 
 		def executionInstance = Execution.findByName(executionName,[lock: true])
@@ -1875,21 +1972,35 @@ class TclExecutionService {
 		Date execEndDate = new Date()
 		def execEndTime =  execEndDate.getTime()
 
-		def timeDifference = ( execEndTime - executionStartTime  ) / 60000;
+		def timeDifference = ( execEndTime - executionStartTime  ) / 1000;
 
 		String timeDiff =  String.valueOf(timeDifference)
 
 		def resultArray = Execution.executeQuery("select a.executionTime from Execution a where a.name = :exName",[exName: executionName])
 
-		BigDecimal myVal1
-		if(resultArray[0]){
-			myVal1= new BigDecimal (resultArray[0]) + new BigDecimal (timeDiff)
+		String singleScriptExecTime = timeDifference
+		try
+		{
+			def cumulativeTime
+			if(resultArray){
+				cumulativeTime = calculateTotalExecutiontime(resultArray[0], timeDiff)
+			}else{
+				cumulativeTime = calculateTotalExecutiontime(resultArray, timeDiff)
+			}
+			timeDiff = convertExecutionTimeFormat(cumulativeTime )
+			singleScriptExecTime = convertExecutionTimeFormat((new BigDecimal (singleScriptExecTime)))
+			if(singleScriptExecTime.contains(".") ){
+				int index = singleScriptExecTime.indexOf(".")
+				if((index + 3) < singleScriptExecTime.length() ){
+					singleScriptExecTime = singleScriptExecTime.substring(0, index+3);
+				}
+			}
 		}
-		else{
-			myVal1 =  new BigDecimal (timeDiff)
+		catch (Exception e) {
+			e.printStackTrace()
 		}
-
-		timeDiff =  String.valueOf(myVal1)
+		
+	
 
 
 		/* if(outputData) {
@@ -1904,7 +2015,7 @@ class TclExecutionService {
 			if(isLogReqd){
 				executescriptService.transferSTBLog('tcl', deviceInstance,""+executionId,""+execDeviceId,""+executionResultId)
 			}
-			executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
+			executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),singleScriptExecTime)
 			Thread.sleep(5000)
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callResetAgent.py").file
 			def absolutePath = layoutFolder.absolutePath
@@ -1938,17 +2049,25 @@ class TclExecutionService {
 			ScriptExecutor scriptExecutor = new ScriptExecutor()
 			def resetExecutionData = scriptExecutor.executeScript(cmd,1)
 			htmlData = htmlData +"\nScript timeout\n"+ resetExecutionData
-			executionService.updateExecutionResultsTimeOut(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
+			executionService.updateExecutionResultsTimeOut(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),singleScriptExecTime)
 			Thread.sleep(6000)
 			executionService.callRebootOnAgentResetFailure(resetExecutionData, deviceInstance)
 
 		}
 		else{
 			String outputData1 = htmlData
-			executionService.updateExecutionResults(outputData1,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),timeDifference.toString())
+			executionService.updateExecutionResults(outputData1,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),singleScriptExecTime)
 			executionService.updateTclExecutionResults( [execId: executionInstance?.id,  resultData: 'SUCCESS',  execResult:executionResult?.id,
 				expectedResult:null,  resultStatus :'SUCCESS', testCaseName : scriptInstance?.scriptName,  execDevice:executionDeviceInstance?.id, statusData:'SUCCESS',
-				outputData:outputData, timeDiff:timeDiff, singleScriptExecTime:timeDifference.toString() ])
+				outputData:outputData, timeDiff:timeDiff, singleScriptExecTime:singleScriptExecTime ])
+		}
+		Date endTime = new Date()
+		try {
+			def totalTimeTaken = (endTime?.getTime() - startTime?.getTime()) / 1000
+	//		totalTimeTaken = totalTimeTaken?.round(2)
+			executionService.updateExecutionTime(totalTimeTaken?.toString(), executionResultId)
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
 		return htmlData
 	}

@@ -1816,12 +1816,10 @@ class ExecutescriptService {
 									}
 									output.append(htmlData)
 									if(!thirdParyExecution){
-										Thread.sleep(6000)
-										if(!tclScript)
-										{
-											def endExecutionTime = new Date()
-											executionTimeCalculation(exResult?.execution?.name,startExecutionTime,endExecutionTime)
-										}
+										Thread.sleep(6000)										
+										def endExecutionTime = new Date()
+										executionTimeCalculation(exResult?.execution?.name,startExecutionTime,endExecutionTime)
+										
 									}
 									
 								}else{
