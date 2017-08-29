@@ -897,7 +897,8 @@ class ExecutescriptService {
 									}
 									
 									if(scriptInstance){
-										if(executionService.validateScriptBoxTypes(scriptInstance,deviceInstance)){
+										String rdkVersion = executionService.getRDKBuildVersion(deviceInstance) 
+										if(executionService.validateScriptBoxTypes(scriptInstance,deviceInstance) && executionService.validateScriptRDKVersions(scriptInstance,rdkVersion) ){
 										   	def startExecutionTime = new Date()
 											//aborted = executionService.abortList.contains(exeId?.toString())
 											aborted = executionService.abortList?.toString().contains(executionName?.id?.toString())
