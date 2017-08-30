@@ -21,7 +21,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_Generic_HDCP_GetStatus_Reboot_persist_16902_2</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -52,18 +52,6 @@
     <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
-    <box_type>Hybrid-5</box_type>
-    <!--  -->
-    <box_type>Emulator-HYB</box_type>
-    <!--  -->
-    <box_type>Terminal-RNG</box_type>
-    <!--  -->
-    <box_type>IPClient-4</box_type>
-    <!--  -->
-    <box_type>Emulator-Client</box_type>
-    <!--  -->
-    <box_type>IPClient-Wifi</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
@@ -92,15 +80,13 @@
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
 import devicesettings;
-import servicemanager;
-#import getImageName;
 
 #IP and Port of box, No need to change,
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
 
-dsObj = tdklib.TDKScriptingLibrary("devicesettings","1.2");
+dsObj = tdklib.TDKScriptingLibrary("devicesettings","2.0");
 dsObj.configureTestCase(ip,port,'CT_SM_HDCP_GetStatus_18902_1');
 
 result = dsObj.getLoadModuleResult();
@@ -123,18 +109,18 @@ else:
         exit()
 
 #Test component to be tested
-obj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
+smobj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
 
-obj.configureTestCase(ip,port,'CT_SM_HDCP_GetStatus_18902_1');
+smobj.configureTestCase(ip,port,'CT_SM_HDCP_GetStatus_18902_1');
 
 #Get the result of connection with test component and STB
-result =obj.getLoadModuleResult();
+result =smobj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %result;
 if "SUCCESS" in result.upper():
         #Set the module loading status
-        obj.setLoadModuleStatus("SUCCESS");
+        smobj.setLoadModuleStatus("SUCCESS");
 
-        tdkTestObj = obj.createTestStep('SM_RegisterService');
+        tdkTestObj = smobj.createTestStep('SM_RegisterService');
         expectedresult = "SUCCESS"
         service_name = "com.comcast.HDCPProfile"
         tdkTestObj.addParameter("service_name",service_name);
@@ -147,7 +133,7 @@ if "SUCCESS" in result.upper():
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "SUCCESS: Registered %s with serviceManager"%service_name
 
-                tdkTestObj = obj.createTestStep('SM_Generic_CallMethod');
+                tdkTestObj = smobj.createTestStep('SM_Generic_CallMethod');
                 expectedresult="SUCCESS"
 
                 tdkTestObj.addParameter("service_name", service_name);
@@ -156,6 +142,7 @@ if "SUCCESS" in result.upper():
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
                 serviceDetail = tdkTestObj.getResultDetails();
+                result1=actualresult;
                 print "[TEST EXECUTION DETAILS] supported ports are: %s"%serviceDetail;
                 #Check for SUCCESS/FAILURE return value of SM_DisplaySetting_SetSoundMode
                 if expectedresult in actualresult:
@@ -165,11 +152,11 @@ if "SUCCESS" in result.upper():
                         print "FAILURE: getHDCPStatus failure";
                         tdkTestObj.setResultStatus("FAILURE");
                 dsObj.initiateReboot();
-                obj.resetConnectionAfterReboot();
+                smobj.resetConnectionAfterReboot();
                 result = devicesettings.dsManagerInitialize(dsObj)
                 #Check for SUCCESS/FAILURE return value of DS_ManagerInitialize
                 if "SUCCESS" in result:
-                    tdkTestObj = obj.createTestStep('SM_RegisterService');
+                    tdkTestObj = smobj.createTestStep('SM_RegisterService');
                     expectedresult = "SUCCESS"
                     service_name = "com.comcast.HDCPProfile"
                     tdkTestObj.addParameter("service_name",service_name);
@@ -181,13 +168,14 @@ if "SUCCESS" in result.upper():
                     if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "SUCCESS: Registered %s with serviceManager"%service_name
-                        tdkTestObj = obj.createTestStep('SM_Generic_CallMethod');
+                        tdkTestObj = smobj.createTestStep('SM_Generic_CallMethod');
                         expectedresult="SUCCESS"
                         tdkTestObj.addParameter("service_name", service_name);
                         tdkTestObj.addParameter("method_name", "getHDCPStatus");
                         tdkTestObj.executeTestCase(expectedresult);
                         actualresult = tdkTestObj.getResult();
                         serviceDetail = tdkTestObj.getResultDetails();
+                        result2=actualresult;
                         print "[TEST EXECUTION DETAILS]: %s"%serviceDetail;
                         if expectedresult in actualresult:
                             print "SUCCESS: getHDCPStatus successful";
@@ -198,10 +186,14 @@ if "SUCCESS" in result.upper():
                     else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "FAILURE: Failed to Register service %s"%service_name
+                    if result1 in result2:
+                        print "Success: Both the values are same";
+                    else:
+                        print "Failure: Values are not matching after reboot";
                 
                 
                 #Call ServiceManger - UnregisterService API
-                tdkTestObj = obj.createTestStep('SM_UnRegisterService');
+                tdkTestObj = smobj.createTestStep('SM_UnRegisterService');
                 expectedresult="SUCCESS"
                 tdkTestObj.addParameter("service_name",service_name);
                 tdkTestObj.executeTestCase(expectedresult);
@@ -219,11 +211,11 @@ if "SUCCESS" in result.upper():
                 tdkTestObj.setResultStatus("FAILURE");
                 print "FAILURE: Failed to register service %s"%service_name;
         #Unload the servicemanager module
-        obj.unloadModule("servicemanager");
+        smobj.unloadModule("servicemanager");
 else:
         print"Load module failed";
         #Set the module loading status
-        obj.setLoadModuleStatus("FAILURE");
+        smobj.setLoadModuleStatus("FAILURE");
 
 result = devicesettings.dsManagerDeInitialize(dsObj)
 dsObj.unloadModule("devicesettings");
