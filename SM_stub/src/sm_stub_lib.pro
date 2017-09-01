@@ -37,7 +37,6 @@ DEFINES += ENABLE_SYSTEM_10 ENABLE_SYSTEM_11
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
-        isQtModuleAvailable(websockets): DEFINES += ENABLE_WEBSOCKET_SERVICE
         qtHaveModule(webkit) {
                 DEFINES += QT_WEBKIT_LIB
         }
