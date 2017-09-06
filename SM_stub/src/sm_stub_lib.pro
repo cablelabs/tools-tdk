@@ -16,6 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
+RDK_PROJECT_ROOT_PATH=$$(RDK_PROJECT_ROOT_PATH)
+isEmpty(RDK_PROJECT_ROOT_PATH) {
+    message("RDK_PROJECT_ROOT_PATH not set")
+    RDK_PROJECT_ROOT_PATH = ../
+
+}
+
 
 QT += widgets network core gui concurrent
 DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
@@ -93,6 +100,7 @@ exists(../../platform/SM_stub/broadcom.pri) : include(../../platform/SM_stub/bro
 SOURCES += ServiceManagerAgent.cpp
 
 contains(DEFINES,HAS_API_HDMI_CEC) {
+        INCLUDEPATH += $${RDK_PROJECT_ROOT_PATH}/hdmicec/ccec/include/ccec/
 	HEADERS += ../servicemanager/include/services/hdmicecservice.h
 	SOURCES += ../servicemanager/src/services/hdmicecservice.cpp
 LIBS += -lRCEC -lRCECOSHal -lRCECIARMBusHal
