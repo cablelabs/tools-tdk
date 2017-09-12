@@ -2132,6 +2132,41 @@ class DeviceGroupController {
 		}
 		render status as JSON
 	}
+	
+	/**
+	 * REST API to fetch the device details using device name or device ip
+	 */
+	def getDeviceDetails(String deviceName , String deviceIp){
+		Map status = [:]
+		BoxType bType = null
+
+		try {
+			Device dev = null
+			if(deviceName){
+				dev = Device?.findByStbName(deviceName)
+			}else if (deviceIp){
+				dev = Device?.findByStbIp(deviceIp)
+			}
+			
+			if(dev){
+				status.put("status", "SUCCESS")
+				status.put("devicename", dev?.stbName)
+				status.put("deviceip", dev?.stbIp)
+				status.put("category", dev?.category?.toString())
+				bType = dev?.getBoxType()
+				status.put("boxtype", bType?.getName())
+			}else{
+				status.put("status", "FAILURE")
+				status.put("remarks", "No valid device found with provided data")
+			}
+
+
+		} catch (Exception e) {
+			status.put("status", "FAILURE")
+			e.printStackTrace()
+		}
+		render status as JSON
+	}
 }
 
 
