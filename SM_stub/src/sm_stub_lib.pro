@@ -172,7 +172,9 @@ contains(DEFINES, USE_RDK_STORAGE_MANAGER_V2) {
 }
 contains(DEFINES,HAS_API_SYSTEM) {
         HEADERS += ../servicemanager/include/services/systemservice.h \
-                   ../servicemanager/include/helpers/powerstate.h
+                   ../servicemanager/include/helpers/powerstate.h \
+		   ../servicemanager/include/helpers/timezonetester.h
         SOURCES += ../servicemanager/src/services/systemservice.cpp \
-                   ../servicemanager/src/helpers/powerstate.cpp
+                   ../servicemanager/src/helpers/powerstate.cpp \
+		   ../servicemanager/src/helpers/timezonetester.cpp
 }
