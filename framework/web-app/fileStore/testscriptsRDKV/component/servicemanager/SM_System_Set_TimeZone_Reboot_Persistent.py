@@ -114,7 +114,8 @@ if "SUCCESS" in smLoadStatus.upper():
             tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
             expectedresult="SUCCESS"
             methodName="setTimeZoneDST"
-            settimeZone="{\"AKST\", \"US/Alaska\", AKST_RAWOFFSET, 1}"
+	    #Giving the input in the format "std offset dst [offset],start[/time],end[/time]" as per GNU specification
+            settimeZone="EST+5EDT,M9.3.3/11,M9.3.3/56"
             tdkTestObj.addParameter("service_name", serviceName);
             tdkTestObj.addParameter("method_name", methodName);
             tdkTestObj.addParameter("params",settimeZone);

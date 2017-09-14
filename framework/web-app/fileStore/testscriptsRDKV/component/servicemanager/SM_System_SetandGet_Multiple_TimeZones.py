@@ -158,20 +158,24 @@ if "SUCCESS" in smLoadStatus.upper():
         actualresult = tdkTestObj3.getResult();
         if expectedresult in actualresult:
             print "Set the API version %s succesfully" % apiVersion
-            #Setting the time zone as US/Hawaii
-            settimeZone="{\"HST11\", \"US/Hawaii\", HST_RAWOFFSET, 1}"
+
+	    #Giving the input in the format "std offset" as per GNU specification
+            settimeZone="EST+5:30:12"
             setandgetTimeZone(settimeZone);         
          
-            #Setting the time zone as US/Alaska
-            settimeZone="{\"AKST\", \"US/Alaska\", AKST_RAWOFFSET, 1}"
+	    #Giving the input in the format "std offset dst [offset],start[/time],end[/time]" as per GNU specification
+	    #DST Start and End in "Mm.w.d" format
+            settimeZone="EST+12EDT+09:12:23,M10.1.2/+12,M12.3.4/+5"
             setandgetTimeZone(settimeZone);
           
-            #Setting the time zone as US/Pacific
-            settimeZone="{\"PST08\", \"US/Pacific\", PST_RAWOFFSET, 1}"
+	    #Giving the input in the format "std offset dst [offset],start[/time],end[/time]" as per GNU specification
+	    #DST Start and End in "Jn" and "Mm.w.d" format
+            settimeZone="IST-2IDT+00:00:00,J234/+26,M10.5.0/-12"
             setandgetTimeZone(settimeZone);
      
-            #Setting the time zone as US/Mountain
-            settimeZone="{\"MST07\",\"US/Mountain\", MST_RAWOFFSET, 1}"
+	    #Giving the input in the format "std offset dst [offset],start[/time],end[/time]" as per GNU specification
+	    #DST Start and End in "n" format
+            settimeZone="IST-24IDT+12:34:56,124/+10,237/+167"
             setandgetTimeZone(settimeZone);
        
         else:
