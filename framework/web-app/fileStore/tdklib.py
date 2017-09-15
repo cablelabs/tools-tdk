@@ -1561,7 +1561,7 @@ class TDKScriptingLibrary:
         # Create an object for getDeviceBoxType
 
         # Syntax      : OBJ.getDeviceBoxType()
-        # Description : Create an object of Device Box Type
+        # Description : Get the device box type configured in test manager
         # Parameters  : None
         # Return Value: Return the box type
 
@@ -1575,6 +1575,28 @@ class TDKScriptingLibrary:
 
                  sys.stdout.flush()
                  return boxType['boxtype']
+
+        ########## End of Function ##########
+
+        def getDeviceDetails(self):
+
+        # Create an object for getDeviceDetails
+
+        # Syntax      : OBJ.getDeviceDetails()
+        # Description : Get the details of the device configured in test manager
+        # Parameters  : None
+        # Return Value: Return the device details like IP,Name,MAC,BoxType etc
+
+                 url = self.url + '/deviceGroup/getDeviceDetails?deviceIp='+self.IP
+                 response = urllib.urlopen(url).read()
+                 if 'SUCCESS' in response:
+                        deviceDetails = json.loads(response)
+                 else:
+                        print "#TDK_@error-ERROR : Unable to get Device Details from REST !!!"
+                        exit()
+
+                 sys.stdout.flush()
+                 return deviceDetails
 
         ########## End of Function ##########
 
