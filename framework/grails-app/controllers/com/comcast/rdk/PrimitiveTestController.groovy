@@ -517,12 +517,17 @@ class PrimitiveTestController {
 
 	}
 
-
-	public static boolean isFloat(String number){
+	
+	/**
+	 * Method to check whether the string is a float
+	 * @param number
+	 * @return
+	 */
+	public static boolean isFloat(String inputString){
 		def status = true
 		try
 		{
-			Float.parseFloat(number);
+			Float.parseFloat(inputString);
 		}
 		catch(NumberFormatException e)
 		{
@@ -531,29 +536,36 @@ class PrimitiveTestController {
 		return status
 	}
 
-	public static boolean isInteger(String str) {
-		if (str == null) {
-			return false;
-		}
-		int length = str.length();
-		if (length == 0) {
-			return false;
-		}
-		int i = 0;
-		if (str.charAt(0) == '-') {
-			if (length == 1) {
-				return false;
+	
+	/**
+	 * Method to check whether the string is an integer
+	 * @param str
+	 * @return
+	 */
+	public static boolean isInteger(String inputString) {
+
+		def isInteger = true
+		int length = inputString?.length();
+		if (length > 0) {
+			int i = 0;
+			if (inputString?.charAt(i) == '-') {
+				if (length == 1) {
+					isInteger = false;
+				}
+				i = 1;
 			}
-			i = 1;
-		}
-		for (; i < length; i++) {
-			char c = str.charAt(i);
-			if (c <= '/' || c >= ':') {
-				return false;
+			for (; i < length; i++) {
+				char c = inputString?.charAt(i);
+				if (c <= '/' || c >= ':') {
+					isInteger = false;
+				}
 			}
+		}else{
+			isInteger = false;
 		}
-		return true;
+		return isInteger;
 	}
+
 
 	/**
 	 * Returns JSON data
