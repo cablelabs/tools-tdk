@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2016 RDK Management
+# Copyright 2017 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-SUBDIRS = agent IARMBUS_stub DS_stub ClosedCaption_stub RDKLogger_stub TDKIntegration_Stub \
-OpenSourceComponent_Stub XUPNP_stub $(SUBDIR_HYBRID) $(SUBDIR_CLIENT) $(PLUGIN_SRC) $(SUBDIR_CLIENT_XI3V2) $(SUBDIR_XG1V3) $(SUBDIR_XI5) \
-$(SUBDIR_CLIENT_XI5)
-DIST_SUBDIRS = @SUBDIRS@
+ACLOCAL_AMFLAGS = -Im4 --install
 
-distcleancheck_listfiles = *-libtool
+AM_CPPFLAGS = -g -Wall -std=c++0x -DGCC4_XXX \
+              -DDEBUG_CONF_FILE="\"$(CONFIG_PREFIX)debug.ini\"" \
+              -DSYSTEMD_JOURNAL \
+              -fPIC ${COPTS}
+
+AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
+              -I${top_srcdir}/Bluetooth_stub/include -I${top_srcdir}/agent/include
+
+lib_LTLIBRARIES = libbluetoothstub.la
+libbluetoothstub_la_SOURCES = src/BluetoothAgent.cpp
+libbluetoothstub_la_includedir = ${includedir}
+libbluetoothstub_la_LIBADD = $(BLUETOOTH_LIBS)
+
+libbluetoothstub_la_include_HEADERS = ${top_srcdir}/Bluetooth_stub/include/BluetoothAgent.h

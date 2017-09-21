@@ -241,5 +241,6 @@ AC_CONFIG_FILES([Makefile
          DTCP_stub/Makefile
          tdkRmfApp/Makefile
          SNMP_stub/Makefile
-         MocaHal_stub/Makefile])
+         MocaHal_stub/Makefile
+         Bluetooth_stub/Makefile])
 AC_OUTPUT
