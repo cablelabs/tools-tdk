@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xml>
+  <module name="bluetooth" testGroup="Component">
+    <primitiveTests>
+      <primitiveTest id="" name="Bluetooth_GetNumberOfAdapters" version="1">
+        <function>TestMgr_Bluetooth_GetNumberOfAdapters</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="Bluetooth_GetAdapterName" version="1">
+        <function>TestMgr_Bluetooth_GetAdapterName</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="Bluetooth_SetAdapterName" version="1">
+        <function>TestMgr_Bluetooth_SetAdapterName</function>
+        <parameters>
+          <parameter name="name" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="Bluetooth_GetAdapterPowerStatus" version="1">
+        <function>TestMgr_Bluetooth_GetAdapterPowerStatus</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="Bluetooth_SetAdapterPowerStatus" version="1">
+        <function>TestMgr_Bluetooth_SetAdapterPowerStatus</function>
+        <parameters>
+          <parameter name="powerstatus" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="Bluetooth_IsAdapterDiscoverable" version="1">
+        <function>TestMgr_Bluetooth_IsAdapterDiscoverable</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="Bluetooth_SetAdapterDiscoverable" version="1">
+        <function>TestMgr_Bluetooth_SetAdapterDiscoverable</function>
+        <parameters>
+          <parameter name="discoverablestatus" value=""/>
+          <parameter name="timeout" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="Bluetooth_StartDeviceDiscovery" version="1">
+        <function>TestMgr_Bluetooth_StartDeviceDiscovery</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="Bluetooth_StopDeviceDiscovery" version="1">
+        <function>TestMgr_Bluetooth_StopDeviceDiscovery</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest name="Bluetooth_GetDiscoveredDevices" id="" version="1">
+        <function>TestMgr_Bluetooth_GetDiscoveredDevices</function>
+        <parameters/>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>
