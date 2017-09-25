@@ -74,17 +74,24 @@ function uploadRDKBDevice(){
 	$("#up_load_rdkb").show();
 }
 
-function upload(){
+/**
+ * function to upload the  Python TDKB E2E/TCL device config file 
+ */
+function uploadConfig(){
 	var gateway = document.getElementById('stbName').value;
+	
+	var configType = $('input:radio[name=configType]:checked').val();
+	
 	var ip = document.getElementById('stbIp').value;
 	if((gateway != null) && (ip != null)){
 		gateway = gateway.trim();
 		ip = ip.trim();
 		if((gateway !== '') && (ip !== '')){
-			var elem = new FormData(document.forms.namedItem('tclForm'));
+			var elem = new FormData(document.forms.namedItem('uploadForm'));
 			elem.append('gatewayName', gateway);
 			elem.append('ip', ip);
-			 var url="uploadTclConfiguration";
+			elem.append('configType', configType);
+			 var url="uploadConfiguration";
 		     $.ajax({
 		         url:url,
 		         type:'POST',
@@ -94,6 +101,7 @@ function upload(){
 		         success:function (response) {
 		        	 if(response !== 'Upload failed'){
 		        		 $('#uploadForm').hide();
+		        		 $('#toggleOptions').hide();
 		        		 $('#uploadStatus').text(response).css({'color':'green'});
 		        	 }
 		        	 else{
@@ -172,7 +180,5 @@ function ValidateIPaddress1()
 		return false;  
 	}  
 } 
-
-
 
 

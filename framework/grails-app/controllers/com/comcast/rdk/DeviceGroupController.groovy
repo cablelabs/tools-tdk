@@ -1963,23 +1963,44 @@ class DeviceGroupController {
 	}
 	
 	/**
-	 * Function  used to upload RDKB device configuration for tcl script execution . 
+	 * Function  used to upload RDKB device configuration for python/tcl script execution . 
 	 * @return
 	 */
 	
-	def uploadTclConfiguration(){
+	def uploadConfiguration(){
 		def message = 'Upload failed'
+		
 		def realPath = request.getSession().getServletContext().getRealPath(FILE_SEPARATOR)
-		def filePath =  realPath+"fileStore"+FILE_SEPARATOR+FileStorePath.RDKTCL.value()+FILE_SEPARATOR
+
+		def configType = params.configType?.trim()
+
+		def filePath
+		boolean tclConfig = false
+
+		if(configType == TCL_DEVICE_CONFIG){
+			tclConfig = true
+			filePath =  realPath+FILESTORE+FILE_SEPARATOR+FileStorePath.RDKTCL.value()+FILE_SEPARATOR
+		}else{
+			filePath =  realPath+FILESTORE+FILE_SEPARATOR+TDKB_DEVICE_CONFIG+FILE_SEPARATOR
+		}
+
 		def gatewayName = params.gatewayName?.trim()
 		def deviceIp = params.ip?.trim()
-		if(gatewayName){
-			filePath = filePath + 'Config_'+gatewayName+".txt"
+		if(gatewayName && filePath){
+			
+			if(tclConfig){
+				filePath = filePath + 'Config_'+gatewayName+TXT_EXTN
+			}else{
+				filePath = filePath + gatewayName+CONFIG_EXTN
+			}
+			
 			try{
-				def f =  request.getFile('tclConfigFile')				
+				def f =  request.getFile('configFile')
 				if(!f.empty){
 					def content = readFromStream(f, realPath)
-					content = content + "\ndeviceIp  "+deviceIp
+					if(tclConfig){
+						content = content + "\ndeviceIp  "+deviceIp
+					}
 					Utility.writeContentToFile(content, filePath)
 					message = 'File uploaded successfully'
 				}
@@ -2167,6 +2188,57 @@ class DeviceGroupController {
 		}
 		render status as JSON
 	}
+	
+	/**
+	 * REST API
+	 * Function  used to upload RDKB device configuration for TDKB E2E python script execution .
+	 * @return
+	 */
+		def uploadE2EConfig(){
+		JsonObject deviceObj = new JsonObject()
+		def realPath = request.getSession().getServletContext().getRealPath(FILE_SEPARATOR)
+		def filePath = realPath+FILESTORE+FILE_SEPARATOR+TDKB_DEVICE_CONFIG+FILE_SEPARATOR
+		def deviceName = params.deviceName?.trim()
+		if(deviceName){
+			Device dev = Device?.findByStbName(deviceName)
+			if(dev){
+				filePath = filePath + deviceName+CONFIG_EXTN
+				try{
+					def configFile =  request?.getFile('configFile')
+					if(configFile){
+						if(!configFile?.empty){
+							def content = readFromStream(configFile, realPath)
+							Utility.writeContentToFile(content, filePath)
+							deviceObj.addProperty(STATUS_C,SUCCESS)
+							deviceObj.addProperty(REMARKS_C,"File uploaded successfully ")
+						}else{
+							deviceObj.addProperty(STATUS_C,FAILURE)
+							deviceObj.addProperty(REMARKS_C,"File content is empty ")
+						}
+					}else{
+						deviceObj.addProperty(STATUS_C,FAILURE)
+						deviceObj.addProperty(REMARKS_C,"configFile missing ")
+					}
+				}
+				catch(Exception e){
+					deviceObj.addProperty(STATUS_C,FAILURE)
+					deviceObj.addProperty(REMARKS_C,"Config file upload failed ")
+					println e.getMessage()
+				}
+			}else{
+				deviceObj.addProperty(STATUS_C,FAILURE)
+				deviceObj.addProperty(REMARKS_C,"No device found with name "+deviceName)
+			}
+		}
+		else{
+			deviceObj.addProperty(STATUS_C,FAILURE)
+			deviceObj.addProperty(REMARKS_C,'deviceName missing')
+		}
+		render deviceObj
+	}
+		
+	
+	
 }
 
 

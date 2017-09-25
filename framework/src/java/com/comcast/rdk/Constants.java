@@ -320,4 +320,11 @@ public final class Constants
 	public static final String FILE_NOT_FOUND= "File not found.";
 	public static final String DEFAULT    = "Default";
 	public static final String NO_LOGS    = "No logs available.";
+	public static final String TDKB_DEVICE_CONFIG    = "tdkbDeviceConfig";
+	public static final String PY_DEVICE_CONFIG  	 = "PythonE2E";
+	public static final String TCL_DEVICE_CONFIG     = "TCLE2E";
+	public static final String TXT_EXTN     = ".txt";
+	public static final String CONFIG_EXTN     = ".config";
+	
+	
 }

@@ -34,6 +34,10 @@ public class Utility{
 	}
 
 	public static void writeContentToFile(String content, String fileName){
+		
+		File fileObj = new File(fileName);
+		fileObj?.getParentFile()?.mkdirs();
+		
 		BufferedWriter writer = new BufferedWriter(new FileWriter(new File(fileName)))
 		writer.write(content)
 		writer.close()

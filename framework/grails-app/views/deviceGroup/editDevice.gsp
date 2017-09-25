@@ -22,48 +22,63 @@
 
 	<g:if test= "${deviceInstance}">
 	<div id="edit-device" class="content scaffold-edit" role="main">
-		<h1>Device &nbsp;${deviceInstance?.stbName}</h1>
+		<h1>
+			Device &nbsp;${deviceInstance?.stbName}
+		</h1>
 
-		<g:form method="post" controller="deviceGroup" >
+		<g:form method="post" controller="deviceGroup">
 			<g:hiddenField name="id" value="${deviceInstance?.id}" />
 			<g:hiddenField name="version" value="${deviceInstance?.version}" />
 			<input type="hidden" name="url" id="url" value="${url}">
-			<fieldset class="form">				
-				<g:render template="formDevice"/>							
-			</fieldset>			
-			<div id="streamdiv">			
-				<g:render template="streamlistedit"/>
-			</div>			
-			<br>
-			<div style="width : 90%;text-align: center;">
-			<g:if test="${flag != 'STATIC'}" >								
-					<span class="buttons"><g:actionSubmit class="save" action="updateDevice" value="${message(code: 'default.button.update.label', default: 'Update')}" /></span>
-					<span class="buttons"><g:actionSubmit class="delete" action="deviceDelete" value="${message(code: 'default.button.delete.label', default: 'Delete')}" formnovalidate="" onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
-					<g:if test="${deviceInstance?.category?.toString()?.equals('RDKV')}">
-						<span class="buttons"><g:actionSubmit class="download" action="downloadRDKVDeviceXml" value= "Download"/> </span> 
-					</g:if>
-					<g:if test="${deviceInstance?.category?.toString()?.equals('RDKB')}">
-						<span class="buttons"><g:actionSubmit class="download" action="downloadRDKBDeviceXml" value= "Download"/> </span> 
-					</g:if>
-			</g:if>			
+			<fieldset class="form">
+				<g:render template="formDevice" />
+			</fieldset>
+			<div id="streamdiv">
+				<g:render template="streamlistedit" />
 			</div>
-		</g:form>
-		<!--  New feature for upload configuration file -->	
-		<div id="uploadTclConfig">
-				<g:if test="${category?.toString()?.equals('RDKB')}">
-					<div style="padding-left: 17%; padding-top: 2%;" id="uploadForm">
-
-						<g:form enctype="multipart/form-data" name="tclForm">
-			Update Configuration file (<span style="color: #C00;">TCL Execution *</span>) <input
-								type="file" name="tclConfigFile" id="file" />
-							<input type="button" value="UPLOAD" onclick="upload()" />
-						</g:form>
-					</div>
+			<br>
+			<div style="width: 90%; text-align: center;">
+				<g:if test="${flag != 'STATIC'}">
+					<span class="buttons"><g:actionSubmit class="save"
+							action="updateDevice"
+							value="${message(code: 'default.button.update.label', default: 'Update')}" /></span>
+					<span class="buttons"><g:actionSubmit class="delete"
+							action="deviceDelete"
+							value="${message(code: 'default.button.delete.label', default: 'Delete')}"
+							formnovalidate=""
+							onclick="return confirm('${message(code: 'default.button.delete.confirm.message', default: 'Are you sure?')}');" /></span>
+					<g:if
+						test="${deviceInstance?.category?.toString()?.equals('RDKV')}">
+						<span class="buttons"><g:actionSubmit class="download"
+								action="downloadRDKVDeviceXml" value="Download" /> </span>
+					</g:if>
+					<g:if
+						test="${deviceInstance?.category?.toString()?.equals('RDKB')}">
+						<span class="buttons"><g:actionSubmit class="download"
+								action="downloadRDKBDeviceXml" value="Download" /> </span>
+					</g:if>
 				</g:if>
 			</div>
-			<div style="padding-left:17%;padding-top:2%;" id="uploadStatus"></div>	
+		</g:form>
+
+		<div>
+			<g:if test="${category?.toString()?.equals('RDKB')}">
+				<div style="padding-left: 33%; padding-top: 2%;" id="toggleOptions">
+					<input type="radio" name="configType" value="PythonE2E" checked>Python
+					E2E&nbsp;&nbsp; <input type="radio" name="configType"
+						value="TCLE2E">TCL E2E
+				</div>
+				<div style="padding-left: 17%; padding-top: 1%;" id="uploadConfig">
+					<g:form enctype="multipart/form-data" name="uploadForm">Upload Configuration file <input
+							type="file" name="configFile" id="file" />
+						<input type="button" value="UPLOAD" onclick="uploadConfig()" />
+					</g:form>
+				</div>
+				<div style="padding-left: 17%; padding-top: 2%;" id="uploadStatus"></div>
+			</g:if>
+		</div>
 	</div>
-	
-	
-	</g:if>
+
+
+</g:if>
 	
