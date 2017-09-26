@@ -26,7 +26,7 @@ isEmpty(RDK_PROJECT_ROOT_PATH) {
 
 QT += widgets network core gui concurrent
 DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
-DEFINES += USE_IARMBUS USE_IARM_BUS WAREHOUSE_API ENABLE_HDCP_PROFILE USE_DEVICE_SETTINGS_SERVICE HAS_FRONT_PANEL USE_DS SCREEN_CAPTURE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
+DEFINES += LOGGING_PREFERENCE_MASK USE_IARMBUS USE_IARM_BUS WAREHOUSE_API ENABLE_HDCP_PROFILE USE_DEVICE_SETTINGS_SERVICE HAS_FRONT_PANEL USE_DS SCREEN_CAPTURE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
 DEFINES += HAS_API_VIDEO_APPLICATION_EVENTS
 DEFINES += HAS_API_DEVICEDIAGNOSTICS
 DEFINES += HAS_API_HOME_NETWORKING
@@ -130,6 +130,10 @@ SOURCES += ../servicemanager/src/services/warehouseservice.cpp
 contains(DEFINES,ENABLE_HDCP_PROFILE) {
     SOURCES += ../servicemanager/src/services/hdcpprofileservice.cpp
     HEADERS += ../servicemanager/include/services/hdcpprofileservice.h
+}
+contains(DEFINES,LOGGING_PREFERENCE_MASK) {
+    SOURCES += ../servicemanager/src/services/loggingpreferencesservice.cpp
+    HEADERS += ../servicemanager/include/services/loggingpreferencesservice.h
 }
 contains(DEFINES,HAS_API_AVINPUT) {
 	HEADERS += ../servicemanager/include/abstractservice.h \

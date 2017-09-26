@@ -55,6 +55,9 @@ using namespace std;
 #ifdef ENABLE_HDCP_PROFILE
 #include "hdcpprofileservice.h"
 #endif
+#ifdef LOGGING_PREFERENCE_MASK
+#include "loggingpreferencesservice.h"
+#endif
 #ifdef HAS_FRONT_PANEL
 #include "frontpanelservice.h"
 #include "frontPanelIndicator.hpp"

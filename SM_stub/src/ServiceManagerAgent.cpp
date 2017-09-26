@@ -597,7 +597,12 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
                 serviceStruct.createFunction = &createHdcpProfileService;
         }
 #endif
-
+#ifdef LOGGING_PREFERENCE_MASK
+        else if (serviceName == LoggingPreferencesService::SERVICE_NAME)
+        {
+                serviceStruct.createFunction = &createLoggingPreferencesService;
+        }
+#endif
 #ifdef HAS_API_SYSTEM
         else if (serviceName == SYSTEM_SERVICE_NAME)
         {
