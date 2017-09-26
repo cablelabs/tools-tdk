@@ -69,10 +69,61 @@ function hideOptions(){
 }
 
 
+/**
+ *Function to show status bar chart based module pass %
+ */
+function showStatusBarChart(data, barColors) {
 
+	$("#showChart").hide();
+	$("#hideChart").show();	
+	$("#bar-chart").show();
 
+	var plot3 = $.jqplot('bar-chart', [ data ], {
+		title : 'Modulewise Pass%',
+		seriesColors : barColors,
+		seriesDefaults : {
+			renderer : $.jqplot.BarRenderer,
+			pointLabels : {
+				show : true
+			},
+			rendererOptions : {
+				varyBarColor : true,
+				barWidth : 15
+			}
+		},
+		axes : {
+			xaxis : {
+				renderer : $.jqplot.CategoryAxisRenderer,
+				labelOptions : {
+					fontSize : '10pt'
+				},
+				tickOptions : {
+					angle : -45
+				},
+				tickRenderer:$.jqplot.CanvasAxisTickRenderer
+			},
+			yaxis : {
+				max : 100,
+				min : 0,
+				label : 'Pass%',
+				labelOptions : {
+					fontSize : '10pt',
+					angle: -90
+				},
+				labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+			}
+		}
+	});
+}
 
-
+/**
+ *Function to hide chart
+ */
+function hideChart(){
+	$("#showChart").show();
+	$("#hideChart").hide();	
+	$("#bar-chart").hide();	
+}
 
 
 /**

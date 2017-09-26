@@ -22,6 +22,30 @@
 <%@ page import="com.comcast.rdk.Performance"%>
 <%@ page import="com.comcast.rdk.DeviceDetails"%>
 <%@ page import="com.comcast.rdk.Device"%>
+<link rel="stylesheet"
+	href="${resource(dir:'css',file:'jquery.jqplot.min.css')}" />
+<link rel="stylesheet"
+	href="${resource(dir:'css',file:'shCoreDefault.min.css')}" />
+<link rel="stylesheet"
+	href="${resource(dir:'css',file:'shThemejqPlot.min.css')}" />
+<title>Trends</title>
+<g:javascript library="chart/jquery.jqplot.min" />
+<g:javascript library="chart/shCore.min" />
+<g:javascript library="chart/shBrushJScript.min" />
+<g:javascript library="chart/shBrushXml.min" />
+<g:javascript library="chart/jqplot.barRenderer.min" />
+<g:javascript library="chart/jqplot.categoryAxisRenderer.min" />
+<g:javascript library="chart/jqplot.pointLabels.min" />
+<g:javascript library="chart/jqplot.canvasTextRenderer.min" />
+<g:javascript library="chart/jqplot.canvasAxisLabelRenderer.min" />
+<g:javascript library="chart/jqplot.canvasAxisTickRenderer.min" />
+<g:javascript library="jquery.more" />
+<g:javascript library="select2" />
+<g:javascript library="chartview" />
+<link rel="stylesheet"
+	href="${resource(dir:'css',file:'jquery-ui.css')}" type="text/css" />
+<link rel="stylesheet" href="${resource(dir:'css',file:'select2.css')}"
+	type="text/css" />
 <head>
 <script type='text/javascript'>
 function viewOnClick(me,k,i)
@@ -384,6 +408,16 @@ function hideParameters(k){
 	
 </table>	
 </g:each>
+<div>
+		<g:if test="${executionInstance?.scriptGroup}">
+			<span id="showChart"><a href="#"
+				onclick="showStatusBarChart(${chartModuleDataList},${barColors});">Show
+					Charts</a></span>
+			<span id="hideChart" style="display: none;"><a href="#"
+				onclick="hideChart()">Hide</a></span>
+			<div id="bar-chart"></div>
+		</g:if>
+	</div>
 </g:if>
 <g:else>
 <div>

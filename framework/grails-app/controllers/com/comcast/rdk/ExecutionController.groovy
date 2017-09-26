@@ -2701,6 +2701,9 @@ class ExecutionController {
 		def detailDataMap = executedbService.prepareDetailMap(executionInstance,request.getRealPath('/'))
 
 		def tDataMap = [:]
+		def  chartModuleDataList = []
+		def barColors = []
+		
 		int total = 0
 		detailDataMap?.keySet()?.each { k ->
 			Map mapp = detailDataMap?.get(k)
@@ -2717,25 +2720,33 @@ class ExecutionController {
 					tStatusCounter = tStatusCounter + statusCounter
 					tDataMap.put(status, tStatusCounter)
 				}
-
-
 			}
+			
+			int na = 0
+			if(mapp?.keySet().contains("N/A")){
+				na = mapp?.get("N/A")
+			}
+			
 			mapp.put("Executed", tCount)
 			def success = mapp?.get("SUCCESS")
 			if(success){
 				int rate = 0
 				if(tCount > 0){
-					int na = 0
 					if(mapp?.keySet().contains("N/A")){
 						na = mapp?.get("N/A")
 					}
 					rate = ((success * 100)/(tCount - na))
 				}
 				mapp.put("passrate",rate)
-
+				def statusData = []
+				statusData.add("'"+k+"'")
+				statusData.add(rate)
+				chartModuleDataList.add(statusData)
+				barColors.add("'"+getBarChartColors(rate)+"'")
 			}
 			total = total + tCount
 		}
+		
 		tDataMap.put("Executed", total)
 		int rate
 		if(tDataMap?.get("SUCCESS")){
@@ -2758,7 +2769,7 @@ class ExecutionController {
 			testGroup = script?.primitiveTest?.module?.testGroup
 		}
 
-		[statusResults : [:], executionInstance : executionInstance, executionDeviceInstanceList : executionDeviceList, testGroup : testGroup,executionresults:[:],detailDataMap:detailDataMap,tDataMap:tDataMap]
+		[statusResults : [:], executionInstance : executionInstance, executionDeviceInstanceList : executionDeviceList, testGroup : testGroup,executionresults:[:],detailDataMap:detailDataMap,tDataMap:tDataMap,chartModuleDataList:chartModuleDataList,barColors:barColors]
 
 	}
 
@@ -3155,6 +3166,7 @@ class ExecutionController {
 						lines?.each{
 							if(it?.toString()?.contains("imagename")){
 								imageNameDetails = it?.toString()
+								imageNameDetails = imageNameDetails.replace("=",":")
 							}
 						}
 						if(imageNameDetails){
@@ -3665,4 +3677,29 @@ class ExecutionController {
 		}
 	}
 	
+	
+	
+	/**
+	 * Method to define the bar color based on pass %
+	 */
+	def getBarChartColors(final def passPer){
+
+		def color ="#18c561"
+		try {
+			int perc = passPer
+			if ( perc == 100){
+				color = "#10bf4d"
+			}else if ( perc >=80 && perc < 100){
+				color = "#67e84d"
+			}else if ( perc >50 && perc < 80){
+				color = "#f19e0e"
+			}else if (perc <= 50){
+				color = "#f63c0a"
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+
+		return color
+	}
 }
