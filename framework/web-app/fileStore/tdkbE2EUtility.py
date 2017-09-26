@@ -28,6 +28,10 @@ import sys
 from pexpect import pxssh
 import ConfigParser
 import tdklib
+from time import sleep
+
+#Global variable to check whether login session is active
+isSessionActive = False
 
 def parseDeviceConfig(obj):
 
@@ -189,6 +193,7 @@ def executeCommand(command):
                 session.sendline(command)
                 session.prompt()
                 status=session.before
+		print "Command Output:%s" %status
 		status=status.strip()
 		if "OUTPUT:" in status:
 			status=status.split("OUTPUT:",1)[1]
@@ -214,17 +219,19 @@ def clientConnect(clientType):
 	
 	try:
 		status = "SUCCESS";
+		global isSessionActive;
         	print "Connect to %s machine" %clientType
 		global session
         	session = pxssh.pxssh(options={
                             "StrictHostKeyChecking": "no",
                             "UserKnownHostsFile": "/dev/null"})
+		#session.setwinsize(24, session.maxread)
                 if clientType == "WLAN":
-    			session.login(wlan_ip,wlan_username,wlan_password)
+    			isSessionActive = session.login(wlan_ip,wlan_username,wlan_password)
                 elif clientType == "LAN":
-			session.login(lan_ip,lan_username,lan_password)
+			isSessionActive = session.login(lan_ip,lan_username,lan_password)
                 elif clientType == "WAN":
-                        session.login(wan_ip,wan_username,wan_password)
+                        isSessionActive = session.login(wan_ip,wan_username,wan_password)
 		else:
 			status = "Invalid client type"
 	except Exception, e:
@@ -247,9 +254,16 @@ def clientDisconnect():
 # Return Value: SUCCESS/FAILURE
 
        	try:
+		global isSessionActive;
 		status = "SUCCESS"
-               	session.logout()
-		session.close()
+		if isSessionActive == True:
+			#command="sudo sh %s refresh_wifi_network" %(wlan_script)
+                        #executeCommand(command)
+                        #sleep(30);
+               		session.logout()
+			session.close()
+		else:
+			status = "No active session"
        	except Exception, e:
 		print e;
           	status = e;
@@ -375,6 +389,9 @@ def wlanConnectWifiSsid(ssidName,ssidPwd,wlanInterface):
 	try:
 		status = clientConnect("WLAN")
 		if status == "SUCCESS":
+			#command="sudo sh %s refresh_wifi_network" %(wlan_script)
+                        #executeCommand(command)
+			#sleep(30);
 			status = checkSsidAvailable(ssidName)
 			if ssidName in status:
 				status = wifiConnect(ssidName,ssidPwd)	
@@ -446,6 +463,101 @@ def getWlanIPAddress(wlanInterface):
 
 ########## End of Function ##########
 
+def getChannelNumber(ssidName):
+
+# getChannelNumber
+
+# Syntax      : getChannelNumber()
+# Description : Function to get the channel number of the WIFI connected
+# Parameters  : ssidName - SSID Name
+# Return Value: Returns the channel number
+
+        try:
+                if wlan_os_type == "UBUNTU":
+                        command="sudo sh %s get_channel_number %s" %(wlan_script,ssidName)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "Connected WIFI's channel number:%s" %status;
+        return status;
+
+########## End of Function ##########
+
+
+def getOperatingStandard(ssidName):
+
+# getOperatingStandard
+
+# Syntax      : getOperatingStandard()
+# Description : Function to get the operating standard of the WIFI connected
+# Parameters  : ssidName - SSID Name
+# Return Value: Returns the current operating standard
+
+        try:
+		operating_standard = ""
+                if wlan_os_type == "UBUNTU":
+                        command="sudo sh %s get_bit_rate %s" %(wlan_script,ssidName)
+                        status = executeCommand(command)
+			if status == "11":
+				operating_standard = "802.11b"
+			elif status == "54":
+				if ssidName == ssid_2ghz_name:
+					operating_standard = "802.11g"
+				else:
+					operating_standard = "802.11n"
+			elif status > "54":
+				operating_standard = "802.11n"
+			else:
+				operating_standard = "Invalid operating standard"
+				
+                else:
+                        operating_standard = "Only UBUNTU platform supported!!!"
+        except Exception, e:
+                print e;
+                operating_standard = e;
+
+        print "Connected WIFI's operating standard:%s" %operating_standard;
+        return operating_standard;
+
+########## End of Function ##########
+
+
+def getSecurityMode(ssidName):
+
+# getSecurityMode
+
+# Syntax      : getSecurityMode()
+# Description : Function to get the security mode of the WIFI connected
+# Parameters  : ssidName - SSID Name
+# Return Value: Returns the current security mode
+
+        try:
+                security_mode = ""
+                if wlan_os_type == "UBUNTU":
+                        command="sudo sh %s get_security_mode %s" %(wlan_script,ssidName)
+                        status = executeCommand(command)
+			print status
+                        if status == "WPA2":
+                                security_mode = "WPA2-Personal"
+                        elif status == "WPA1":
+                                security_mode = "WPA-Personal"
+                        else:
+                                security_mode = "Invalid security mode"
+
+                else:
+                        security_mode = "Only UBUNTU platform supported!!!"
+        except Exception, e:
+                print e;
+                security_mode = e;
+
+        print "Connected WIFI's security mode:%s" %security_mode;
+        return security_mode;
+
+########## End of Function ##########
 
 def checkIpRange(ip1,ip2):
 
@@ -548,15 +660,15 @@ def setMultipleParameterValues(obj,paramList):
 #             : paramList - List of parameter names
 # Return Value: SUCCESS/FAILURE
 
-    tdkTestObj = obj.createTestStep("tdkb_e2e_SetMultipleParams");
-    expectedresult="SUCCESS";
+	tdkTestObj = obj.createTestStep("tdkb_e2e_SetMultipleParams");
+    	
+	expectedresult="SUCCESS";
+	tdkTestObj.addParameter("paramList",paramList);
+	tdkTestObj.executeTestCase(expectedresult);
+	actualresult = tdkTestObj.getResult();
+	details = tdkTestObj.getResultDetails();
 
-    tdkTestObj.addParameter("paramList",paramList);
-    tdkTestObj.executeTestCase(expectedresult);
-    actualresult = tdkTestObj.getResult();
-    details = tdkTestObj.getResultDetails();
-
-    return (tdkTestObj,actualresult,details);
+	return (tdkTestObj,actualresult,details);
 
 ######### End of Function ##########
 
