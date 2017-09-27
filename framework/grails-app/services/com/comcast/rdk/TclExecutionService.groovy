@@ -1591,7 +1591,7 @@ class TclExecutionService {
 
 	def executeScriptGroup(ScriptGroup scriptGroup, final String boxType,  final String execName, final String execDeviceId,
 			Device deviceInstance, final String url, final String filePath, final String realPath, final String callbackUrl, final String imageName,
-			final String isBenchMark, final String isSystemDiagnostics, final String rerun, final String isLogReqd, final Category category){
+			final String isBenchMark, final String isSystemDiagnostics, final String rerun, final String isLogReqd, final String category){
 		Future<String> future =  executorService.submit( { executeScriptGrp(scriptGroup, boxType, execName, execDeviceId, deviceInstance,
 			url, filePath, realPath, callbackUrl, imageName, isBenchMark,isSystemDiagnostics,rerun,isLogReqd, category)} as Callable< String > )
 
@@ -1599,7 +1599,7 @@ class TclExecutionService {
 
 	def executeScriptGrp(ScriptGroup scriptGroup, final String boxType, final String execName, final String execDeviceId,
 			Device deviceInstance, final String url, final String filePath, final String realPath, final String callbackUrl, final String imageName,
-			final String isBenchMark, final String isSystemDiagnostics, final String rerun, final String isLogReqd, final Category category){
+			final String isBenchMark, final String isSystemDiagnostics, final String rerun, final String isLogReqd, final String category){
 		boolean aborted = false
 		boolean pause = false
 		try{
@@ -1679,6 +1679,7 @@ class TclExecutionService {
 			}
 			boolean executionStarted = false
 			List pendingScripts = []
+			int index = 0
 			validScripts.each{ scriptInstance ->
 				scriptCounter++
 				if(scriptCounter == scriptGrpSize){
@@ -1706,7 +1707,17 @@ class TclExecutionService {
 					def startExecutionTime = new Date()
 					try {
 						executionStarted = true
-						def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple, isBenchMark,isSystemDiagnostics,isLogReqd,rerun, category)
+						def combainedTcl = [:]
+							//combainedTcl?.put("scriptName","")
+							 if(scriptGroup?.scriptList?.size() ==  validScripts?.size()){
+								 if( !(scriptService?.totalTclScriptList?.toString()?.contains(scriptInstance?.scriptName?.toString())) && scriptService?.tclScriptsList?.toString()?.contains(scriptInstance?.scriptName?.toString())){
+									 combainedTcl?.put("scriptName", scriptGroup?.scriptList[index]?.toString())
+								 }else{
+								 	combainedTcl?.put("scriptName","")									
+								 }
+							 }
+							 index = index + 1
+						def htmlData = executeScripts(execName, execDeviceId, scriptInstance , deviceInstance , url, filePath, realPath, isMultiple, isBenchMark,isSystemDiagnostics,isLogReqd,rerun, category,combainedTcl)
 						if(isMultiple.equals("false")){
 							Execution.withTransaction {
 								Execution executionInstance = Execution.findByName(execName)
@@ -1853,7 +1864,7 @@ class TclExecutionService {
 
 	def String executeScripts(String executionName, String execDeviceId, def scriptInstance, Device deviceInstance, final String url, final String filePath,
 			final String realPath, final String isMultiple, final String isBenchMark,final String  isSystemDiagnostics, final String isLogReqd, final String rerun,
-			final Category category ) {
+			final String category ,final def combainedTcl) {
 
 
 		String htmlData = ""
@@ -1910,7 +1921,7 @@ class TclExecutionService {
 		def configFile = Utility.getConfigFilePath(realPath, deviceInstance.stbName)
 		String outData = null
 		try{
-			outData = executionService.executeTclScript(tclFile, configFile, execTime, executionName , scriptInstance.scriptName, Utility.getTclDir(realPath))
+			outData = executionService.executeTclScript(tclFile, configFile, execTime, executionName , scriptInstance.scriptName, Utility.getTclDir(realPath),combainedTcl.scriptName)
 		}
 		catch(Exception e){
 			println e.message
@@ -1954,13 +1965,13 @@ class TclExecutionService {
 			outData += scriptExecutor.executeScript(cmd,10)
 		}
 		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
-			executescriptService.transferSTBLog('tcl', deviceInstance,""+executionId,""+execDeviceId,""+executionResultId,url)
+			executescriptService.transferSTBLog('tcl', deviceInstance,""+executionId,""+execDeviceId,""+executionResultId, realPath,url)
 		}
 
 
 		def logTransferFilePath = "${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}//"
 		new File("${realPath}/logs//consolelog//${executionId}//${execDeviceId}//${executionResultId}").mkdirs()
-		executescriptService.logTransfer(deviceInstance,logTransferFilePath, logTransferFileName,url)
+		executescriptService.logTransfer(deviceInstance,logTransferFilePath, logTransferFileName,realPath, executionId,execDeviceId, executionResultId,url)
 
 
 		outData?.eachLine { line ->
@@ -2011,9 +2022,9 @@ class TclExecutionService {
 		if(executionService.abortList.contains(executionInstance?.id?.toString())){
 			executionService.resetAgent(deviceInstance,TRUE)
 		}	else if(Utility.isFail(htmlData)){
-			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,url)
+			executescriptService.logTransfer(deviceInstance,logTransferFilePath,logTransferFileName,realPath, executionId,execDeviceId, executionResultId,url)
 			if(isLogReqd){
-				executescriptService.transferSTBLog('tcl', deviceInstance,""+executionId,""+execDeviceId,""+executionResultId)
+				executescriptService.transferSTBLog('tcl', deviceInstance,""+executionId,""+execDeviceId,""+executionResultId, realPath,url)
 			}
 			executionService.updateExecutionResultsError(htmlData,executionResult?.id,executionInstance?.id,executionDeviceInstance?.id,timeDiff.toString(),singleScriptExecTime)
 			Thread.sleep(5000)

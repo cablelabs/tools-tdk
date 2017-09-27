@@ -74,22 +74,24 @@
 						<th>Value</th>
 					</tr>
 					<g:each in="${primitiveTest.parameters}" var="parameter">
-						<tr>
-							<td align="left">&emsp;&emsp;${parameter.parameterType.name}</td>
-							<td>${parameter.parameterType.parameterTypeEnum}</td>
-							<td>${parameter.parameterType.rangeVal}</td>
-							<td align="center">
-								<input type="text" name="value_${parameter.parameterType.id}" value="${parameter.value}">
-							</td>
-						</tr>
+						<g:if test="${parameter?.parameterType !=null}">
+							<tr>
+								<td align="left">&emsp;&emsp;${parameter?.parameterType?.name}</td>
+								<td>${parameter?.parameterType?.parameterTypeEnum}</td>
+								<td>${parameter?.parameterType?.rangeVal}</td>
+								<td align="center">
+									<input type="text" name="value_${parameter?.parameterType?.id}" value="${parameter?.value}">
+								</td>
+							</tr>
+						</g:if>
 					</g:each>
 					<g:each in="${newParams}" var="newparam">
 						<tr>
-							<td align="left">&emsp;&emsp;${newparam.name}</td>
-							<td>${newparam.parameterTypeEnum}</td>
-							<td>${newparam.rangeVal}</td>
+							<td align="left">&emsp;&emsp;${newparam?.name}</td>
+							<td>${newparam?.parameterTypeEnum}</td>
+							<td>${newparam?.rangeVal}</td>
 							<td align="center">
-								<input type="text" name="value_${newparam.id}" value="">
+								<input type="text" name="value_${newparam?.id}" value="">
 							</td>
 						</tr>
 					</g:each>
