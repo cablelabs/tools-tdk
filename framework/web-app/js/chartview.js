@@ -157,7 +157,7 @@ function setGroupColor (resultList )
         else if(value >50 && value <80 )
           colors.push("#f19e0e");
 	   else if(value >=80 && value <100 )
-          colors.push("67e84d");
+          colors.push("#67e84d");
 	   else
 		colors.push("#10bf4d");
 	});
