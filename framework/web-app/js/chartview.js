@@ -37,11 +37,15 @@ function showChart(){
 			showLineChart();	 
 		}
 	}
+
 }
+	
 /**
  * Compare result by device details 
  */
 function showChart1(){	
+		
+	
 	var checked_radio1 = $('input:radio[name=ChartType1]:checked').val();
 	if(checked_radio1 != undefined  ){
 		if(checked_radio1 == "BarChart" ){
@@ -125,14 +129,402 @@ function hideChart(){
 	$("#bar-chart").hide();	
 }
 
+/**
+ * Function for setting colour for bar
+ */
+
+function setColor (resultList )
+{
+	var colors = [] ;
+	var threshold = 1;
+	$.each(resultList , function(index, value){
+        if(value > threshold)
+          colors.push("green");
+        else
+          colors.push("red");
+	});
+    return colors
+}
+/**
+ * Function for setting colour for bar
+ */
+function setGroupColor (resultList )
+{
+	var colors = [] ;
+	$.each(resultList , function(index, value){
+        if(value <= 50)
+          colors.push("#f63c0a");
+        else if(value >50 && value <80 )
+          colors.push("#f19e0e");
+	   else if(value >=80 && value <100 )
+          colors.push("67e84d");
+	   else
+		colors.push("#10bf4d");
+	});
+    return colors
+}
+
+/**
+ * Function for getting module wise chart based on execution name
+ */
+function showNormalExecutionChart(){
+		
+		$( ".chartdivBoxtypeclass" ).empty();
+		$(".chartdivclass").empty();
+		$(".chartdivScriptclass").empty();
+		$( ".chartdivisionclass" ).empty();
+		var id = $("#normalexecname").val();
+		hideOptions();
+		if(id == "")
+		{ alert ('Please select an Execution Name');}
+		else{
+			var colors = [] ;
+			$.get('showNormalExecutionChart', {executionname : id}, function(data) {	
+					if(data.resultList.length  == 0  ){
+						alert(" No results to show");
+					}else{	
+						var labels = ["Result Status"]
+						colors = setGroupColor( data.resultList  )	;
+						plot2 = $.jqplot('chartdivision', [data.resultList ] , {
+							title:  "<b>" + " Execution Results of " + id +"</b>",
+							seriesColors:colors,
+							animate: true,
+							animateReplot: true,
+							seriesDefaults: {
+								renderer:$.jqplot.BarRenderer,
+								rendererOptions: {
+									barWidth: 10,
+									varyBarColor : true,
+	
+									animation: {
+										speed: 2500
+									},	
+								},
+								pointLabels: { show: true }
+							},
+							axes: {
+								xaxis: {
+									renderer: $.jqplot.CategoryAxisRenderer,
+									label:'Module Name',		                
+									ticks: data.moduleName ,
+									tickOptions:{
+										angle: -60
+									},
+									tickRenderer:$.jqplot.CanvasAxisTickRenderer
+								},
+	
+								yaxis: {
+									labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+									min:0,
+									max: 100, 
+									numberTicks: 11,
+									label:'Pass Percentage'
+								}
+							}
+					});
+				}
+			}	);
+		}	
+}
+
+
+/**
+ * Function for getting Script Group chart based on box type
+ */
+function showBoxTypeScriptGroupChart(){
+
+		
+		$( ".chartdivBoxtypeclass" ).empty();
+		$(".chartdivclass").empty();
+		$(".chartdivScriptclass").empty();
+		$( ".chartdivisionclass" ).empty();
+
+		var status = ["Failure", "Success"];
+		var id = $("#boxtype").val();
+		hideOptions();
+		var scriptgroup = $("#scriptgroupsname").val();
+		var resultcount = $("#resultGroupCounts").val();	
+		if(scriptgroup == null || scriptgroup.length == 0 )
+			{ alert ('please select a script group ');}
+		else if(id == "")
+			{ alert ('Please select a Box Type');}
+		else{
+			var colors = [] ;
+			$.get('showBoxTypeScriptGroupChart', {boxTypeId : id, scriptgroup : scriptgroup, resultCnt : resultcount} , function(data) {	
+					if(data.resultList.length  == 0  ){
+						alert(" No results to show");
+					}else{	
+						var labels = ["Result Status"]
+						colors = setGroupColor( data.resultList  )	;
+						plot2 = $.jqplot('chartdivisions', [data.resultList ] , {
+							title: "<b>" + data.resultList.length   +" Execution Results of " + scriptgroup + "</b>"  ,
+							seriesColors:colors,
+							animate: true,
+							animateReplot: true,
+							seriesDefaults: {
+								renderer:$.jqplot.BarRenderer,
+								rendererOptions: {
+									barWidth: 10,
+									varyBarColor : true,
+
+									animation: {
+										speed: 2500
+									},	
+								},
+								pointLabels: { show: true }
+							},
+							axes: {
+								xaxis: {
+									renderer: $.jqplot.CategoryAxisRenderer,
+									label:'Execution Name',		                
+									ticks: data.executionName ,
+									tickOptions:{
+										angle: -60
+									},
+									tickRenderer:$.jqplot.CanvasAxisTickRenderer
+								},
+
+								yaxis: {
+									labelRenderer: $.jqplot.CanvasAxisLabelRenderer,
+									min:0,
+									max: 100, 
+									numberTicks: 11,
+									label:'Pass Percentage'
+								}
+							}
+						});
+					}
+
+			});
+		}
+}
+
+/**
+ * Function for getting Script  chart based on box type
+ */
+function getBoxTypeScriptChartData()
+{
+	
+	$( ".chartdivBoxtypeclass" ).empty();
+	$(".chartdivclass").empty();
+	$(".chartdivScriptclass").empty();
+	$( ".chartdivisionclass" ).empty();
+
+	var status = ["Failure", "Success"];
+	var id = $("#boxtype").val();
+	hideOptions();
+	var script = $("#scriptname").val();
+	var resultcount = $("#resultCounts").val();	
+	if(script == null || script.length == 0 )
+		{ alert ('please select a script ');}
+	else if(id == "")
+		{ alert ('Please select a Box Type');}
+	else
+	{
+		var colors = [] ;
+		$.get('getBoxTypeScriptChartData', {boxTypeId : id, script : script, resultCnt : resultcount} , function(data) {	
+				if(data.resultList.length  == 0  ){
+					alert(" No results to show");
+				}else{	
+					
+					var labels = ["Result Status"]	
+					colors = setColor( data.resultList  )	
+					var plot2 = $.jqplot('chartdivBoxType1', [data.resultList ] , {	
+						title: "<b>" + data.resultList.length   +" Execution Results of " + script  + "</b>",
+						seriesColors:colors,
+						animate: true,
+						animateReplot: true,
+						series:[
+								{
+									showHighlight: false,
+									yaxis: 'yaxis',
+									rendererOptions: {
+										
+										animation: {
+											speed: 2500
+										},			                   
+									}
+								}, 
+								{
+									rendererOptions:{
+										animation: {
+											speed: 2000
+										}
+									}
+								}
+							   ],
+						seriesDefaults: {
+							renderer:$.jqplot.BarRenderer,
+							rendererOptions: {
+								
+								barWidth: 10,
+								varyBarColor : true,
+								animation: {
+									speed: 2500
+								}	
+							},
+							pointLabels: { show: false }
+						},
+
+						 axes: {
+								xaxis: {
+										renderer: $.jqplot.CategoryAxisRenderer,
+										label:'Execution Name',	
+										min:0,
+										ticks: data.executionName,
+										tickOptions:{
+											angle: -60
+										},
+										tickRenderer:$.jqplot.CanvasAxisTickRenderer
+									},
+								
+								yaxis: {
+										renderer: $.jqplot.CategoryAxisRenderer,
+										label:'Status',
+										min:0,
+										max: data.yCount, 
+										numberTicks: 11,
+										ticks: status,
+										tickRenderer:$.jqplot.CanvasAxisTickRenderer
+
+									}
+								},
+							   /* highlighter: {
+									show: true,
+									sizeAdjust: 15,
+									tooltipAxes: 'y',
+								},
+								cursor: {
+									show: true,
+									 tooltipLocation:'sw', 
+								}	*/				       
+					});	
+				 
+
+			}
+		} );
+	}
+}
+
+/**
+ * Function for getting Script  chart based on device
+ */
+function showScriptChart()
+{	
+	
+	$( ".chartdivBoxtypeclass" ).empty();
+	$(".chartdivclass").empty();
+	$(".chartdivScriptclass").empty();
+	$( ".chartdivisionclass" ).empty();
+;
+	var labels = ["Result Status"];
+	var status = ["Failure", "Success"];
+	var id = $("#device").val();
+	hideOptions();
+	var colors = [];
+	var script = $("#script").val();
+	if(id == "")
+		{ alert ('Please select a Device');}
+
+	if(script == "" )
+		{ alert ("please select a script ")}
+	else{
+		var resultcount = $("#resultcount").val();	
+		$.get('getScriptChartData', {deviceId : id, script : script, resultCnt : resultcount} , function(data) {	
+				if(data.resultList.length  == 0  ){
+					alert(" No results to show");
+				}else{	
+					colors = setColor( data.resultList  )						
+					var plot2 = $.jqplot('chartdivScript1', [data.resultList ] , {
+						title: "<b>" + data.resultList.length   +" Execution Results of " + script + "</b>" ,
+
+						seriesColors:colors,
+						animate: true,
+						animateReplot: true,
+						series:[
+								{
+									showHighlight: false,
+									yaxis: 'yaxis',
+									rendererOptions: {
+										animation: {
+											speed: 2500
+										},			                   
+									}
+								}, 
+								{
+									rendererOptions:{
+										animation: {
+											speed: 2000
+										}
+									}
+								}
+								],
+						seriesDefaults: {
+							renderer:$.jqplot.BarRenderer,
+							rendererOptions: {
+								barWidth: 10,
+								varyBarColor : true,
+								animation: {
+									speed: 2500
+								},	
+							},
+							pointLabels: { show: false }
+						},
+
+						axes: {
+								   xaxis: {
+										renderer: $.jqplot.CategoryAxisRenderer,
+										label:'Execution Name',	
+										min:0,
+										ticks: data.executionName,
+										tickOptions:{
+											angle: -60
+										},
+										tickRenderer:$.jqplot.CanvasAxisTickRenderer
+									},
+		
+									yaxis: {
+										renderer: $.jqplot.CategoryAxisRenderer,
+										label:'Status',
+										min:0,
+										max: data.yCount, 
+										numberTicks: 11,
+										ticks: status,
+																		tickRenderer:$.jqplot.CanvasAxisTickRenderer
+		
+									}
+								},
+							   /* highlighter: {
+									show: true,
+									sizeAdjust: 15,
+									tooltipAxes: 'y',
+								},
+								cursor: {
+									show: true,
+									 tooltipLocation:'sw', 
+								}	*/				       
+					});	
+					 
+				}
+		} );
+	}
+}
+
+
+
+
 
 /**
  * Plotting the bar chart  on the bases of the script group.
  */
 
 function showBarChart(){	
-	$( ".chartdivclass" ).empty();	
-	//$('#chartdiv div').html('');
+	
+	$( ".chartdivBoxtypeclass" ).empty();
+	$(".chartdivclass").empty();
+	$(".chartdivScriptclass").empty();
+	$( ".chartdivisionclass" ).empty();
+
 	var id = $("#devices").val();
 
 	var scriptGroup = $("#scriptGrp").val();
@@ -150,7 +542,7 @@ function showBarChart(){
 	var executionIds = $("#executionId").val();
 	var executionIdList = null
 
-	var checked_radio = $('input:radio[name=chartOption]:checked').val();
+	var checked_radio = $('input:radio[name=chartOptions]:checked').val();
 
 	if(checked_radio!=undefined)
 	{
@@ -163,6 +555,7 @@ function showBarChart(){
 			chartType = $("#chartType1").val();    
 		}
 	}
+	
 	// plotting the  graph for Execution Status  
 	if(chartType == "ExecutionStatus"){
 		hideOptions();
@@ -418,7 +811,12 @@ function showBarChart(){
  * Plotting the line chart. 
  */
 function showLineChart(){
-	$( ".chartdivclass" ).empty();	
+	
+	$( ".chartdivBoxtypeclass" ).empty();
+	$(".chartdivclass").empty();
+	$(".chartdivScriptclass").empty();
+	$( ".chartdivisionclass" ).empty();
+		
 	var id = $("#devices").val();
 	var scriptGroup = $("#scriptGrp").val();
 	var resultcount = $("#resultCount").val();
@@ -427,7 +825,7 @@ function showLineChart(){
 	var executionIds = $("#executionId").val();
 	var executionIdList = null
 	var type = null 
-	var checked_radio = $('input:radio[name=chartOption]:checked').val();
+	var checked_radio = $('input:radio[name=chartOptions]:checked').val();
 	if(checked_radio!=undefined){
 		if(checked_radio=="DeviceBased"){	    	
 			executionIdList = "";
@@ -440,7 +838,7 @@ function showLineChart(){
 	}
 	if(chartType == "ExecutionStatus"){
 		hideOptions();		
-		$.get('getStatusChartData1', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList,startIndex:startIndex,endIndex:endIndex}, function(data) {	
+		$.get('getStatusChartData1', {deviceId : id, scriptGroup : scriptGroup, resultCnt : resultcount, executionIds : executionIdList,startIndex:startIndex,endIndex:endIndex} , function(data) {	
 			if(data.execName.length  == 1  ){
 				alert(" Please select  more than one execution name");
 			}else{						
@@ -636,19 +1034,193 @@ function nextPreviousButtonDisplay(){
  */
 
 function showExecutionBased(){
-	$(".chartdivclass").empty();	
+	$("#normalexecutionsbased").hide();
+	$( ".chartdivBoxtypeclass" ).empty();
+	$(".chartdivclass").empty();
+	$(".chartdivScriptclass").empty();
+	$( ".chartdivisionclass" ).empty();
 	$("#executionbased").show();	
 	$("#devicebased").hide();
+	$("#scriptbased").hide();
+	$("#boxtypebased").hide();
+	$("#boxgroupbased").hide();
+	$("#boxscriptbased").hide();
+	$("#chartdiv").show();
 }
 /**
  * Function display the device based chart 
  */
 
 function showDeviceBased(){
+	$("#normalexecutionsbased").hide();
+	$( ".chartdivBoxtypeclass" ).empty();
+	$( ".chartdivisionclass" ).empty();
+	$(".chartdivScriptclass").empty();
 	$(".chartdivclass").empty();	
 	$("#executionbased").hide();	
-	$("#devicebased").show();		
+	$("#devicebased").show();	
+	$("#scriptbased").hide();
+	$("#boxtypebased").hide();
+	$("#boxgroupbased").hide();
+	$("#boxscriptbased").hide();
+	$("#chartdiv").show();
 }
+
+/**
+ * Function display the boxtype based section 
+ */
+
+function showBoxTypeBased(){
+	$('input[name=BoxOption][value=BoxScriptBased]').prop(
+						'checked', true);
+	$('input[name=BoxOption][value=BoxGroupBased]').prop(
+						'checked', false);
+	$("#boxtypebased").show();
+	$(".chartdivScriptclass").empty();
+	$( ".chartdivBoxtypeclass" ).empty();
+	$( ".chartdivisionclass" ).empty();
+	$(".chartdivclass").empty();
+	$("#normalexecutionsbased").hide();
+	$("#executionbased").hide();	
+	$("#devicebased").hide();	
+	$("#scriptbased").hide();
+	$("#scriptgroupbased").hide();	
+	
+	$("#boxgroupbased").hide();
+	$("#boxscriptbased").show();
+	$("#chartdiv").hide();
+
+}
+
+/**
+ * Function display the script based chart 
+ */
+function showScriptBased(){
+	$("#normalexecutionsbased").hide();
+	$( ".chartdivBoxtypeclass" ).empty();
+	$( ".chartdivisionclass" ).empty();
+	$(".chartdivclass").empty();
+	$(".chartdivScriptclass").empty();
+	$("#executionbased").hide();	
+	$("#devicebased").hide();	
+	$("#scriptbased").show();
+	$("#boxtypebased").hide();	
+	$("#boxgroupbased").hide();
+	$("#boxscriptbased").hide();
+	$("#chartdiv").hide();
+}
+/**
+ * Function display the execution based chart 
+ */
+function showNormalExecutionBased(){
+	
+	$("#normalexecutionsbased").show();
+	$( ".chartdivisionclass" ).empty();
+	$( ".chartdivBoxtypeclass" ).empty();
+	$(".chartdivclass").empty();
+	$(".chartdivScriptclass").empty();
+	$("#executionbased").hide();	
+	$("#devicebased").hide();	
+	$("#scriptbased").hide();
+	$("#scriptgroupbased").hide();	
+	$("#boxtypebased").hide();
+	$("#boxgroupbased").hide();
+	$("#boxscriptbased").hide();
+		
+}
+
+/**
+ * Function display the script based chart based on boxtype 
+ */
+function showBoxScriptBased()
+{
+	$( ".chartdivBoxtypeclass" ).empty();
+	$( ".chartdivisionclass" ).empty();
+	$(".chartdivScriptclass").empty();
+	$(".chartdivclass").empty();
+	$("#normalexecutionsbased").hide();	
+	$("#executionbased").hide();	
+	$("#devicebased").hide();	
+	$("#scriptbased").hide();
+	$("#boxtypebased").show();
+	$("#boxscriptbased").show();
+	$("#boxgroupbased").hide();
+	$("#chartdiv").hide();
+}
+/**
+ * Function display the script based chart based on boxtype 
+ */
+function showBoxGroupBased()
+{
+	$( ".chartdivBoxtypeclass" ).empty();
+	$( ".chartdivisionclass" ).empty();
+	$(".chartdivclass").empty();	
+	$(".chartdivScriptclass").empty();
+	$("#executionbased").hide();
+	$("#normalexecutionsbased").hide();	
+	$("#devicebased").hide();	
+	$("#scriptbased").hide();
+	$("#boxtypebased").show();
+	$("#boxgroupbased").show();
+	$("#boxscriptbased").hide();
+	$("#chartdiv").hide();
+}
+
+/**
+ * Function display the performance based section 
+ */
+function showPerformanceBased(){
+	$('input[name=chartOptions][value=ExecutionBased]').prop(
+						'checked', true);
+	$('input[name=chartOptions][value=DeviceBased]').prop(
+						'checked', false);
+	$("#performance").show();
+	$( ".chartdivisionclass" ).empty();
+	$("#normal").hide();
+	$("#normalexecutionsbased").hide();
+	$( ".chartdivBoxtypeclass" ).empty();
+	$(".chartdivclass").empty();
+	$(".chartdivScriptclass").empty();
+	$("#scriptbased").hide();
+	$("#boxgroupbased").hide();
+	$("#executionbased").show();	
+	$("#devicebased").hide();	
+	$("#scriptbased").hide();
+	$("#boxtypebased").hide();
+	$("#boxscriptbased").hide();
+		
+}
+
+/**
+ * Function display the normal based section 
+ */
+function showNormalBased(){
+	$('input[name=chartOption][value=ScriptBased]').prop(
+						'checked', false);
+	$('input[name=chartOption][value=BoxTypeBased]').prop(
+						'checked', true);
+	$('input[name=chartOption][value=NormalExecutionBased]').prop(
+						'checked', false);
+	$('input[name=BoxOption][value=BoxScriptBased]').prop(
+						'checked', true);
+	$( ".chartdivisionclass" ).empty();
+	$(".chartdivclass").empty();	
+	$( ".chartdivBoxtypeclass" ).empty();
+	$(".chartdivScriptclass").empty();
+	$("#normalexecutionsbased").hide();	
+	$("#executionbased").hide();	
+	$("#devicebased").hide();	
+	$("#scriptbased").hide();
+	$("#boxgroupbased").hide();
+	$("#normal").show();
+	$("#performance").hide();
+	$("#scriptbased").hide();
+	$("#boxtypebased").show();
+	$("#boxscriptbased").show();
+	
+}
+
+
 function updateValueOnCategoryChange(val){
 	$.get('getCategorySpecificList',{category:val}, function(data) { 
 		$("#categoricalDisplay").html(data);
@@ -1000,5 +1572,3 @@ function homePage(){
 	}
 
 }
-
-

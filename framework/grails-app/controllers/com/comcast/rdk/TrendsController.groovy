@@ -27,8 +27,11 @@ import grails.converters.JSON
  */
 
 class TrendsController {
+	def scriptService
 
 	def executionService
+	def utilityService
+	def executedbService
 	
 	def index() {
 	}
@@ -41,20 +44,38 @@ class TrendsController {
 
 		def category = params?.category
 		List<String> executionList = null
+		List<String> executionTotalList = null
+		def scripts = []
 		if(!category)
 			category = RDKV
+		scripts = scriptService.getScriptNameFileList(getRealPath(), category)
+		
+		def sList = scripts?.clone()
+		sList?.sort{a,b -> a?.scriptName <=> b?.scriptName}
 		//def c = Execution.createCriteria()
 		if(RDKV.equals(category.trim())){
 			executionList = Execution.executeQuery("select exe.name from Execution exe where exe.category=? and exe.isBenchMarkEnabled=? and exe.isSystemDiagnosticsEnabled=? and exe.scriptGroup is not null",
 					[Category.RDKV, true, true])
+				
+			executionTotalList = Execution.executeQuery("select exe.name from Execution exe where exe.category=? and exe.executionStatus!=? and exe.scriptGroup is not null and exe.name not like '%RERUN%' order by id desc  ",
+					[Category.RDKV,INPROGRESS_STATUS])
 		}
 		else{
-			executionList = Execution.executeQuery("select exe.name from Execution exe where exe.category!=? and exe.isBenchMarkEnabled=? and exe.isSystemDiagnosticsEnabled=? and exe.scriptGroup is not null",
+			executionList = Execution.executeQuery("select exe.name from Execution exe where exe.category!=? and exe.isBenchMarkEnabled=? and exe.isSystemDiagnosticsEnabled=? and exe.scriptGroup is not null  order by id desc",
 					[Category.RDKV, true, true])
+			executionTotalList = Execution.executeQuery("select exe.name from Execution exe where exe.category!=? and exe.executionStatus!= ? and exe.scriptGroup is not null",
+					[Category.RDKV,INPROGRESS_STATUS])
 		}
-		
-	
-		[executionList : executionList, category:category, startIndex:0,endIndex:8]
+		def groups =  utilityService.getGroup()? utilityService.getGroup() : null
+		def scriptGrp = ScriptGroup.withCriteria {
+			eq('category',Utility.getCategory(category))
+			or{
+				eq('groups',groups)
+				isNull('groups')
+			}
+			order('name')
+		}
+		[executionList : executionList, category:category, startIndex:0,endIndex:8, scriptList : sList, scriptGrpList : scriptGrp,executionTotalList :executionTotalList ]
 	}
 	
 	
@@ -75,11 +96,12 @@ class TrendsController {
 			executionList = getExecutionList(params?.scriptGroup,params?.deviceId,params?.resultCnt)
 		}
 		int scriptGrpSize
-		
+		int maxScriptGroupSize = 0
 		if(executionList){
 			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
 			
 			scriptGrpSize = scriptGroupInstance?.scriptList?.size()
+			
 			def executionSuccessList = []
 			def executionFailureList = []
 			def executionUndefinedList = []
@@ -92,7 +114,11 @@ class TrendsController {
 			executionList?.each{ execution ->
 				
 				populateChartData(execution)
-				
+				scriptGroupInstance = ScriptGroup.findByName(execution?.scriptGroup)
+			
+				scriptGrpSize = scriptGroupInstance?.scriptList?.size()
+				if(maxScriptGroupSize < scriptGrpSize)
+					maxScriptGroupSize = scriptGrpSize
 				executionSuccessResultList = ExecutionResult.findAllByExecutionAndStatus(execution,SUCCESS_STATUS)
 				executionFailureResultList = ExecutionResult.findAllByExecutionAndStatus(execution,FAILURE_STATUS)
 				//executionUndefinedResultList = ExecutionResult.findAllByExecutionAndStatus(execution,UNDEFINED_STATUS)
@@ -110,7 +136,7 @@ class TrendsController {
 			//listdate.add(executionUndefinedList)
 			listdate.add(executionNotExecutedList)
 		}
-		def mapData = [listdate:listdate, execName: executionList?.name, yCount : scriptGrpSize]
+		def mapData = [listdate:listdate, execName: executionList?.name, yCount : maxScriptGroupSize ]
 		render mapData as JSON
 	}
 	
@@ -118,6 +144,189 @@ class TrendsController {
 		//if(!executionInstance?.isPerformanceDone){
 			executionService.setPerformance(executionInstance,request.getRealPath('/'))
 		//}
+	}
+	/**
+	 * Function to get details of the execution result based on execution
+	 * @return
+	 */
+	def showNormalExecutionChart()
+	{
+		try
+		{
+
+			Execution execution = Execution.findByName(params?.executionname)
+			ScriptGroup  scriptgroup = ScriptGroup?.findByName(execution?.scriptGroup)
+			
+			List<String> moduleList = new ArrayList<String>();
+			List<Integer> resultList =  new ArrayList<Integer>();
+			if(execution?.executionStatus != ABORTED_STATUS && execution?.executionStatus != PAUSED)
+			{
+				def detailDataMap = executedbService.prepareDetailMap(execution,request.getRealPath('/'))
+				detailDataMap?.keySet()?.each { moduleName ->
+					Map statusMap = detailDataMap?.get(moduleName)
+					moduleList.add(moduleName)
+					int pendingCount = 0 
+					int successCount = 0
+					int notAppCount = 0
+					int rate = 0
+					int moduleSize = 0
+					statusMap?.keySet()?.each { status ->
+						moduleSize = moduleSize + statusMap?.get(status)
+					}
+					if( statusMap?.keySet()?.contains(SUCCESS_STATUS))
+						successCount = statusMap?.get(SUCCESS_STATUS)
+					if(statusMap?.keySet()?.contains(NOT_APPLICABLE_STATUS))
+						notAppCount = statusMap?.get(NOT_APPLICABLE_STATUS)
+					if(statusMap?.keySet()?.contains(PENDING))
+						pendingCount = statusMap?.get(PENDING)
+					if(moduleSize!=notAppCount)
+						rate = successCount*100/(moduleSize-notAppCount-pendingCount )
+					resultList.add(rate)
+				}
+			
+				
+			}			
+			def mapData = [moduleName :moduleList , resultList: resultList ]
+			render mapData as JSON				
+		}				
+		catch(Exception e){
+			e.printStackTrace()
+		}			
+				
+
+	}
+
+	/**
+	 * Function to get details of the execution result based on box type
+	 * @return
+	 */
+	def getBoxTypeScriptChartData()
+	{
+		try
+		{
+			BoxType boxType = BoxType.findById(params?.boxTypeId)
+			ScriptFile  script = ScriptFile?.findByScriptName(params?.script)
+			int countRes = Integer.parseInt(params?.resultCnt)
+			int fail_represent = 1
+			int success_represent = 2
+			int successCount = 0
+			int failureCount = 0
+			List<String> executionList = new ArrayList<String>();
+			List<Integer> resultList =  new ArrayList<Integer>(); 
+			def scriptDetails = scriptService.getMinimalScript(getRealPath(),script.moduleName,script.scriptName, script.category.toString())
+			def device = Device.findAllByBoxType(boxType)
+			device = device.collect { it.toString() }
+			def includeStatus = [SUCCESS_STATUS,FAILURE_STATUS]
+			if(scriptDetails?.boxTypes?.contains(boxType))
+			{
+				def executionResultList = ExecutionResult?.findAllByScriptAndDeviceInListAndStatusInList(script.scriptName,device,includeStatus,[max:countRes , offset: 0 ,sort: "id",  order: "desc"])
+				executionResultList.each { exeResult ->	
+					executionList.add(exeResult?.execution?.name)
+					if( exeResult?.status == SUCCESS_STATUS )
+					{
+						successCount++
+						resultList.add(success_represent)
+					}
+					if( exeResult?.status == FAILURE_STATUS )
+					{
+						failureCount++
+						resultList.add(fail_represent)
+					}	
+				}
+			}
+			def mapData = [executionName :executionList , resultList: resultList, yCount : success_represent, successCount:successCount, failureCount:failureCount ]
+			render mapData as JSON	
+		}
+		catch(Exception e){
+			e.printStackTrace()
+		}
+	}
+	/**
+	 * Function to get details of the execution result based on Script Group 
+	 * @return
+	 */
+	def showBoxTypeScriptGroupChart()
+	{
+	try
+		{
+			BoxType boxType = BoxType.findById(params?.boxTypeId)
+			ScriptGroup  scriptgroup = ScriptGroup?.findByName(params?.scriptgroup)
+			int countRes = Integer.parseInt(params?.resultCnt)
+			List<String> executionList = new ArrayList<String>();
+			List<Integer> resultList =  new ArrayList<Integer>(); 
+			int resultOffset = 0
+			def device = Device.findAllByBoxType(boxType)
+			device = device.collect { it.toString() }
+			def removeExecutionStatus = [ ABORTED_STATUS,PAUSED]
+			def executionLists = Execution?.findAllByScriptGroupAndNameNotLikeAndExecutionStatusNotInListAndDeviceInList(params?.scriptgroup,'%RERUN%',removeExecutionStatus,device ,[max: countRes , offset: 0,sort: "id",  order: "desc"])
+			executionLists.each { execution->
+				executionList.add(execution?.name)
+				def executionResultList = execution?.executionresults 
+				int successCount = 0
+				int notAppCount = 0
+				int groupSize = executionResultList.size() 
+				executionResultList.each { exeResult ->	
+					if(exeResult?.status == SUCCESS_STATUS)
+						successCount++		
+					if(exeResult?.status == NOT_APPLICABLE_STATUS)
+						notAppCount++
+				}
+				int rate = 0
+				if(groupSize!=notAppCount)
+					rate =successCount*100/(groupSize-notAppCount)
+				resultList.add(rate)		
+			}
+			def mapData = [executionName :executionList , resultList: resultList ]
+			render mapData as JSON	
+		}
+		catch(Exception e){
+			e.printStackTrace()
+		}
+	
+	}
+
+	def getRealPath(){
+		return request.getSession().getServletContext().getRealPath("/")
+	}
+
+	/**
+	 * Function to get details of the execution result based on Script
+	 * @return
+	 */
+	def getScriptChartData()
+	{
+		try 
+		{
+			
+			Device deviceInstance = Device.findById(params?.deviceId)
+			int countRes = Integer.parseInt(params?.resultCnt )
+			List<String> executionList = new ArrayList<String>();
+			List<Integer> resultList =  new ArrayList<Integer>();
+			int fail_represent = 1
+			int success_represent = 2
+			int successCount = 0
+			int failureCount = 0
+			def includeStatus = [SUCCESS_STATUS,FAILURE_STATUS]
+			def executionResultList = ExecutionResult?.findAllByDeviceAndStatusInListAndScript(deviceInstance.stbName,includeStatus,params?.script,[max:countRes , offset: 0,sort: "id",  order: "desc"])
+			executionResultList.each { exeResult->
+				executionList.add(exeResult?.execution.name)
+				if( exeResult?.status == SUCCESS_STATUS )
+				{
+					successCount++
+					resultList.add(success_represent)
+				}
+				if( exeResult?.status == FAILURE_STATUS )
+				{
+					failureCount++
+					resultList.add(fail_represent)
+				}
+			}
+			def mapData = [executionName :executionList , resultList: resultList, yCount : success_represent , successCount:successCount, failureCount:failureCount ]
+			render mapData as JSON
+		}
+		catch(Exception e){
+			e.printStackTrace()
+		}
 	}
 
 	/**
@@ -136,12 +345,10 @@ class TrendsController {
 			executionList = getExecutionList(params?.scriptGroup,params?.deviceId,params?.resultCnt)
 		}
 		if(executionList){
-			
 			ScriptGroup scriptGroupInstance = ScriptGroup.findByName(executionList[0]?.scriptGroup)
 			int scriptGrpSize = scriptGroupInstance?.scriptList?.size()	
 			def performanceList = []				
 			executionList.each{ execution ->
-				
 				populateChartData(execution)
 				Double timetotal = 0				
 				execution?.executionresults?.each{ execResult ->
@@ -865,7 +1072,7 @@ class TrendsController {
 		def executionNames=[]
 		int executionNameCount = 0
 		executionNameList.each { execName ->
-			if(executionNameCount <= countRes){
+			if(executionNameCount < countRes){
 				if(execName.scriptGroup.toString().equals(scriptGroupInstance?.toString()) && execName.device.toString().equals(deviceInstance?.toString())){
 					executionNames.add(execName)
 					executionNameCount++

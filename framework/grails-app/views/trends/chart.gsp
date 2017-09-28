@@ -1,3 +1,4 @@
+
 <!--
  If not stated otherwise in this file or this component's Licenses.txt file the
  following copyright and licenses apply:
@@ -20,6 +21,8 @@
 <%@ page import="com.comcast.rdk.Device"%>
 <%@ page import="com.comcast.rdk.ScriptGroup"%>
 <%@ page import="com.comcast.rdk.Execution"%>
+<%@ page import="com.comcast.rdk.ScriptFile"%>
+<%@ page import="com.comcast.rdk.BoxType"%>
 
 <html>
 <head>
@@ -56,14 +59,42 @@
 			function() {
 				$("#trendid").addClass("changecolor");
 				$("#executionId").select2();
-				var defaultValue = "ExecutionBased";
-				$('input[name=chartOption][value=ExecutionBased]').prop(
+				var defaultValue = "normal";
+				$('input[name=typeOption][value=Normal]').prop(
 						'checked', true);
+				$('input[name=chartOption][value=ScriptBased]').prop(
+						'checked', false);
+				$('input[name=chartOption][value=BoxTypeBased]').prop(
+						'checked', true);
+				$('input[name=chartOption][value=NormalExecutionBased]').prop(
+						'checked', false);
+				$('input[name=BoxOption][value=BoxScriptBased]').prop(
+						'checked', true);
+				$("#boxscriptbased").show();
 				$("#previous").hide();
+				$("#boxtypebased").show();
 				$("#next").hide();
 				$("#home").hide();
-			});
+				$("#scriptname").select2();
+				$("#normalexecname").select2();
+				$("#scriptgroupsname").select2();
+				$("#script").select2();
+				$("#device").select2();	
+				$("#boxgroupbased").select2();
+				$("#boxscriptbased").select2();
+				
+		
+	});
+
+
+
+	
 </script>
+<style>
+#script  option { 
+	width:250px;}
+</style>
+
 </head>
 <body>
 	<div id="chart1"></div>
@@ -84,7 +115,7 @@
 		</g:if>
 		<br>
 		<div style="width: 40%; overflow: auto; margin-bottom: 20px;">
-			<div style="float: left;">&emsp;&emsp;&emsp;&emsp;Choose the category of device :</div>
+			<div style="float: left;">&emsp;&emsp;&emsp;&emsp;Choose Category  :</div>
 			<div style="float: left; margin-left: 20px;">
 				<g:form controller="trends" action="chart">
 					<g:select name="category" from="['RDKV','RDKB']"
@@ -96,15 +127,49 @@
 			<div>
 				<g:hiddenField name="startIndex" value="${startIndex}" />
 				<g:hiddenField name="endIndex" value="${endIndex}" />
-				&emsp;&emsp;&emsp;&emsp; <input onclick="showExecutionBased();"
-					type="radio" name="chartOption" value="ExecutionBased"
-					checked="checked" />Compare Results by Execution Name &emsp;<input
-					onclick="showDeviceBased();" type="radio" name="chartOption"
-					value="DeviceBased" />Compare Results by Device Details
+				&emsp;&emsp;&emsp;&emsp;<input onclick="showNormalBased();"
+					type="radio" name="typeOption" value="Normal"
+					checked="checked" />Normal &emsp; &emsp;&emsp;&emsp;&emsp;<input onclick="showPerformanceBased();"
+					type="radio" name="typeOption" value="PerformanceBased"
+					/>Performance 						
+
 
 			</div>
-			<br />
-			<div id="executionbased">
+			<br /><br />
+			<div id = "normal" >
+					&emsp;&emsp;&emsp;&emsp;<input onclick="showBoxTypeBased();" type="radio" name="chartOption" value="BoxTypeBased" checked=true />Show Results by Box Type
+					&emsp;  <input onclick="showScriptBased();" type="radio" name="chartOption" value="ScriptBased"/>Show Results by Script
+					&emsp;  <input onclick="showNormalExecutionBased();" type="radio" name="chartOption" value="NormalExecutionBased" />Analyze execution
+			</div>
+			<div id = "performance" style="display: none;">
+					&emsp;&emsp;&emsp;&emsp;<input onclick="showExecutionBased();" type="radio" name="chartOptions" value="ExecutionBased" checked=true />Compare Results by Execution Name 
+					&emsp;<input onclick="showDeviceBased();" type="radio" name="chartOptions" value="DeviceBased" />Compare Results by Device Details&emsp; 
+			</div>
+
+			<br />	<br />
+			<div id="normalexecutionsbased" style="display: none;">
+				<table class="noClass" style="border: 1; border-color: black; " >
+					<tr >
+						<td style="vertical-align: middle;" >
+							&emsp;&emsp;&emsp;&emsp;Select the Execution Name				
+							&emsp;&emsp;&emsp;&emsp;<g:select id="normalexecname" name="normalexecname" style="height:200px;width:300px" noSelection="['' : 'Please Select']" from="${executionTotalList }" value="" class="many-to-one selectCombo"/>										
+							&emsp;&emsp;&emsp;&emsp;<g:submitToRemote class=" buttons" value="Show" onclick="showNormalExecutionChart();" before="showNormalExecutionChart();"/> <br>
+						</td>
+					</tr>
+				</table>
+				<table>
+					<tr>
+						<td style="width: 4%;">
+						</td>
+						<td style="width: 95%;">
+							<div class="chartdivisionclass" id="chartdivision" style="width: 80%; height: 600px;">
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div id="executionbased" style="display: none;">
 				<table class="noClass" style="border: 1; border-color: black;">
 					<tr>
 						<td style="vertical-align: top;">&emsp;&emsp;&emsp;&emsp;Select
@@ -199,16 +264,110 @@
 						</script>
 					</tr>
 				</table>
+				
 			</div>
+			
+			<div id="scriptbased" style="display: none;">
+				<table class="noClass" style="border: 1; border-color: black; width : 100%" >
+					<tr >
+						<td style="vertical-align: middle;">&emsp;&emsp;&emsp;&emsp;Device</td>
+						<td><g:select id="device" name="device" noSelection="['' : 'Please Select']"
+								from="${Device?.findAllByCategory(category)}" required=""
+								value="" optionKey="id" class="many-to-one selectCombo" /></td>
+						<td style="vertical-align: middle;" >&emsp;&emsp;&emsp;&emsp;Select Script</td>
+						<td ><g:select id="script" name="script" noSelection="['' : 'Please Select']"	style="height:200px;width:400px" from="${scriptList}" required="" value="" class="script"  /></td>	
+						<td style="vertical-align: middle;" >Result No's</td>
+						<td ><g:select id="resultcount" name="result.count" from="${2..10}" value="${count}" style="width:45px;" required="" /></td>
+						<td >&emsp;&emsp;&emsp;&emsp;<g:submitToRemote class=" buttons" value="Show"
+								onclick="showScriptChart();" before="showScriptChart();"/> <br></td>
+					 </tr>
+				</table>
+				<table>
+					<tr>
+					<td style="width: 4%;"></td>
+					<td style="width: 70%;">
+							<div class="chartdivBoxtypeclass" id="chartdivScript1" style="width: 100%; height: 500px;"></div>
+						</td><td style="width: 23%;">
+							<div class="chartdivBoxtypeclass" id="chartdivScript" style="width: 100%; height: 364px;"></div>
+						</td>
+					</tr>
+				</table>
+
+			
+			</div>
+			
+
+			<div id="boxtypebased" style="display: none;">
+				<table class="noClass" style="border: 1; border-color:black ;width:60%;  "   >
+					<tr >
+						<td style="vertical-align: middle;" >
+							&emsp;&emsp;&emsp;&emsp;Box Type &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+							<g:select id="boxtype" name="boxtype" noSelection="['' : 'Please Select']"	from="${BoxType?.findAllByCategory(category)}" required="" value="" optionKey="id" class="many-to-one " /></td>
+						<td>
+							&emsp;&emsp;&emsp;&emsp;<input onclick="showBoxScriptBased();" type="radio" name="BoxOption" value="BoxScriptBased" checked=true/>
+							&emsp;&emsp;Show Results by Script&emsp;</td><td>
+							<input onclick="showBoxGroupBased();" type="radio" name="BoxOption" value="BoxGroupBased" />
+							&emsp;&emsp;Show Results by Script Group&emsp;
+						</td>		
+					</tr>
+				</table>
+			</div>
+			<div id="boxscriptbased" style="display: none;">
+				<table class="noClass" style="border: 1; border-color: black;width:80%;  " >
+					<tr >
+						<td style="vertical-align: middle;" >
+							&emsp;&emsp;&emsp;&emsp;Select Script
+							&emsp;&emsp;&emsp;&emsp;<g:select id="scriptname" style="height:200px;width:400px" name="scriptname" noSelection="['' : 'Please Select']" from="${scriptList}" value="" class="many-to-one selectCombo"/></td>
+											
+						<td style="vertical-align: middle;" >Result No's</td>
+						<td ><g:select id="resultCounts" name="result.count"
+								from="${2..10}" value="${count}" style="width:45px;" required="" />
+						</td>
+						<td >&emsp;&emsp;&emsp;&emsp;<g:submitToRemote class=" buttons" value="Show"
+								onclick="showBoxTypeChart();" before="getBoxTypeScriptChartData();"/> <br></td>
+					</tr>
+				</table>
+				<table>
+				<tr>
+					<td style="width: 4%;"></td>
+					<td style="width: 70%;">
+						<div class="chartdivScriptclass" id="chartdivBoxType1" style="width: 100%; height: 500px;"></div>
+					</td>
+					<td style="width: 23%;">
+						<div class="chartdivScriptclass" id="chartdivBoxType" style="width: 100%; height: 364px;"></div>
+					</td>
+				</tr>
+			</table>
+			</div>
+
+			<div id="boxgroupbased" style="display: none;">
+				<table class="noClass" style="border: 1; border-color: black; width:60%; " >
+					<tr >
+						<td style="vertical-align: middle;" >&emsp;&emsp;&emsp;&emsp;Select Script Group																		&emsp;&emsp;&emsp;&emsp;<g:select id="scriptgroupsname" style="height:200px;width:200px" name="scriptgroupsname" noSelection="['' : 'Please Select']" from="${ scriptGrpList}" value="" class="many-to-one selectCombo"/></td>
+
+						<td style="vertical-align: middle;" >Result No's</td>
+						<td ><g:select id="resultGroupCounts" name="result.count"
+								from="${2..10}" value="${count}" style="width:45px;" required="" />
+						</td>
+						<td >&emsp;&emsp;&emsp;&emsp;<g:submitToRemote class=" buttons" value="Show"
+								onclick="showBoxTypeScriptGroupChart();" before="showBoxTypeScriptGroupChart();"/> <br></td>
+					</tr>
+				</table>
+				<table>
+					<tr><td style="width: 4%;"></td>
+						<td style="width: 95%;"><div class="chartdivisionclass" id="chartdivisions" style="width: 80%; height: 600px;"></div></td>
+					
+				</table>
+			</div>
+			<div class="chartdivclass" id="chartdiv" style="width: 100%; height: 600px;"></div>
+		
 		</g:if>
 		<g:else>
 			<script>
-				alert("Performance data not included in RDKB ");
+				alert("Feature currently not supported");
 			</script>
 		</g:else>
-		<div class="chartdivclass" id="chartdiv"
-			style="width: 100%; height: 600px;"></div>
+		
 	</div>
-
-</body>
+	</body>
 </html>

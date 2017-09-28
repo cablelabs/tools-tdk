@@ -1082,7 +1082,7 @@ class ScriptGroupController {
 		def scriptListRDKB  = scriptService.getScriptNameList(request.getRealPath("/"),RDKB)
 		String dirname
 		boolean isAdvanced = false
-		if(scriptListRDKV?.toString()?.contains(params?.name?.toString()) || scriptListRDKB?.toString()?.contains(params?.name?.toString())){
+		if(scriptListRDKV?.toString()?.contains(params?.name?.trim()?.toString()) || scriptListRDKB?.toString()?.contains(params?.name?.trim()?.toString())){
 			render("Duplicate Script Name not allowed. Try Again.")
 		}else if((!params?.ptest) || params?.ptest == "default" ){
 			render("Please select a valid primitive test !!!")
@@ -1346,7 +1346,7 @@ class ScriptGroupController {
 				def script = ScriptFile.findByScriptNameAndModuleName(params?.name?.trim(),ptest?.module?.name)
 				if(script == null){
 					script = new ScriptFile()
-					script.setScriptName(params?.name)
+					script.setScriptName(params?.name?.trim())
 					script.setModuleName(ptest?.module?.name)
 					script.category = Utility.getCategory(params?.category)
 					script.save(flush:true)
@@ -1384,8 +1384,15 @@ class ScriptGroupController {
 	 */
 	def updateScript(Long id, Long version) {
 		def scriptList = scriptService.getScriptNameList(request.getRealPath("/"), params?.category)
-
-		if (!scriptList?.contains(params?.prevScriptName?.trim())) {
+		def scriptFileList = ScriptFile.findAll()
+		String prevScriptName = params?.prevScriptName?.trim()
+		String newScriptName = params?.name?.trim()
+		if (prevScriptName != newScriptName && scriptFileList?.scriptName?.contains(newScriptName)) {
+			flash.message = "Duplicate Script Name not allowed. Try Again."
+			redirect(action: "list")
+			return
+		}
+		if (!scriptList?.contains(prevScriptName)) {
 			flash.message = message(code: 'default.not.found.message', args: [
 				message(code: 'script.label', default: 'Script'),
 				id
@@ -1496,7 +1503,7 @@ class ScriptGroupController {
 				xml.version(vers2)
 				mkp.yield "\r\n  "
 				mkp.comment "Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1"
-				xml.name(params?.name?.trim())
+				xml.name(newScriptName)
 				mkp.yield "\r\n  "
 				mkp.comment "If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension"
 				xml.primitive_test_id(ptest?.id)
@@ -1644,13 +1651,13 @@ class ScriptGroupController {
 			if(!dir.exists()){
 				dir.mkdirs()
 			}
-			File file = new File( testScriptPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+FILE_SEPARATOR+params?.name?.trim()+".py");
+			File file = new File( testScriptPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+FILE_SEPARATOR+newScriptName+".py");
 			boolean checkOldFile = false
 			
 			try {
 				if(!oldAdvStatus?.equals(isAdvanced)){
 					def oldPath = getTestScriptPath(catgry,oldAdvStatus)
-					File oldFile = new File( oldPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+FILE_SEPARATOR+params?.name?.trim()+".py")
+					File oldFile = new File( oldPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+FILE_SEPARATOR+newScriptName+".py")
 					if(oldFile?.exists()){
 						oldFile?.renameTo(file)
 					}
@@ -1679,9 +1686,9 @@ class ScriptGroupController {
 
 			//String data = "'''"+"\n"+writer.toString() +"\n"+"'''"+"\n"+params?.scriptArea
 			file.write(data)
-			if(params?.prevScriptName != params?.name && params?.prevScriptName?.trim() != params?.name?.trim()){
+			if(params?.prevScriptName != params?.name && prevScriptName != newScriptName){
 				//File file1 = new File( "${request.getRealPath('/')}//fileStore//testscripts/"+scriptsDirName1+"/"+dirname+"/"+params?.prevScriptName?.trim()+".py");
-				File file1 = new File( testScriptPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+FILE_SEPARATOR+params?.prevScriptName?.trim()+".py");
+				File file1 = new File( testScriptPath+FILE_SEPARATOR+scriptsDirName1+FILE_SEPARATOR+dirname+FILE_SEPARATOR+prevScriptName+".py");
 				if(file1.exists() ){
 					file1.delete()
 				}
@@ -1720,7 +1727,7 @@ class ScriptGroupController {
 		//		scriptInstance.properties = params
 		//
 		//		scriptgroupService.updateScriptsFromRDKVersionBoxTypeTestSuites(scriptInstance)
-		if(params?.prevScriptName != params?.name ){
+		if(prevScriptName != newScriptName ){
 			def sFile = ScriptFile.findByScriptName(params?.prevScriptName)
 			sFile.scriptName = params?.name
 			sFile.save()
@@ -1732,10 +1739,10 @@ class ScriptGroupController {
 			log.error "Error saving Script instance : ${params.name}"
 			return
 		}else{
-			def script = ScriptFile.findByScriptNameAndModuleName(params?.name?.trim(),ptest?.module?.name)
+			def script = ScriptFile.findByScriptNameAndModuleName(newScriptName,ptest?.module?.name)
 			if(script == null){
 				script = new ScriptFile()
-				script.setScriptName(params?.name)
+				script.setScriptName(newScriptName)
 				script.setModuleName(ptest?.module?.name)
 				script.setCategory(Utility.getCategory(params?.category))
 				script.save(flush:true)
@@ -1744,7 +1751,7 @@ class ScriptGroupController {
 			def sObject = new ScriptObject()
 			sObject.setBoxTypes(bTypes)
 			sObject.setRdkVersions(rdkVers)
-			sObject.setName(params?.name?.trim())
+			sObject.setName(newScriptName)
 			sObject.setModule(ptest?.module?.name)
 			sObject.setScriptFile(script)
 			sObject.setScriptTags(scrptTags)
@@ -1771,7 +1778,7 @@ class ScriptGroupController {
 				params.name
 			])
 			
-			scriptService.updateAdvScriptMap(params?.name?.trim(), dirname, Utility.getCategory(params?.category), isAdvanced)
+			scriptService.updateAdvScriptMap(newScriptName, dirname, Utility.getCategory(params?.category), isAdvanced)
 		}
 		def newid= params?.id
 		if(params?.id?.contains("@")){
@@ -3159,7 +3166,7 @@ class ScriptGroupController {
 							def script = ScriptFile.findByScriptNameAndModuleName(scriptName?.trim(),ptest?.module?.name)
 							if(script == null){
 								script = new ScriptFile()
-								script.setScriptName(scriptName)
+								script.setScriptName(scriptName?.trim())
 								script.setModuleName(ptest?.module?.name)
 								script.category = Utility.getCategory(category)
 								script.save(flush:true)
@@ -3175,7 +3182,7 @@ class ScriptGroupController {
 							sObject.setRdkVersions(rdkVersions)
 							sObject.setScriptTags(scrptTags)
 							sObject.setTestProfile(testProfile)
-							sObject.setName(scriptName)
+							sObject.setName(scriptName?.trim())
 							sObject.setModule(ptest?.module?.name)
 							sObject.setScriptFile(script)
 							sObject.setLongDuration(longDurationTest)
@@ -3324,7 +3331,7 @@ class ScriptGroupController {
 				def script = ScriptFile.findByScriptNameAndModuleName(params?.name?.trim(),'tcl')
 				if(script == null){
 					script = new ScriptFile()
-					script.setScriptName(params?.name)
+					script.setScriptName(params?.name?.trim())
 					script.setModuleName("tcl")
 					script.category = Utility.getCategory(params?.category)
 					script?.save(flush:true)
