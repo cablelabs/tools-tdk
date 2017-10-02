@@ -504,12 +504,7 @@ def getOperatingStandard(ssidName):
                         status = executeCommand(command)
 			if status == "11":
 				operating_standard = "802.11b"
-			elif status == "54":
-				if ssidName == ssid_2ghz_name:
-					operating_standard = "802.11g"
-				else:
-					operating_standard = "802.11n"
-			elif status > "54":
+			elif status >= "54":
 				operating_standard = "802.11n"
 			else:
 				operating_standard = "Invalid operating standard"
@@ -667,6 +662,8 @@ def setMultipleParameterValues(obj,paramList):
 	tdkTestObj.executeTestCase(expectedresult);
 	actualresult = tdkTestObj.getResult();
 	details = tdkTestObj.getResultDetails();
+	#This is a workaround added for emulator. This delay will be removed once RDKBEMU-498 is resolved
+	sleep(20)
 
 	return (tdkTestObj,actualresult,details);
 
