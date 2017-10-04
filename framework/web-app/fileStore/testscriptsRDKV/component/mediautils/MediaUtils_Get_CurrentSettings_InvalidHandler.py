@@ -22,7 +22,7 @@
   <version>1</version>
   <name>MediaUtils_Get_CurrentSettings_InvalidHandler</name>
   <primitive_test_id/>
-  <primitive_test_name>MediaUtils_Get_CurrentSettings</primitive_test_name>
+  <primitive_test_name>MediaUtils_Get_Current_Settings</primitive_test_name>
   <primitive_test_version>3</primitive_test_version>
   <status>FREE</status>
   <synopsis>This is a negative test trying to get current settings if audiocapture manager by passing invalid handler</synopsis>

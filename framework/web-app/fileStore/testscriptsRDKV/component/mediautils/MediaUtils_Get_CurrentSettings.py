@@ -22,7 +22,7 @@
   <version>1</version>
   <name>MediaUtils_Get_CurrentSettings</name>
   <primitive_test_id/>
-  <primitive_test_name>MediaUtils_Get_CurrentSettings</primitive_test_name>
+  <primitive_test_name>MediaUtils_Get_Current_Settings</primitive_test_name>
   <primitive_test_version>1</primitive_test_version>
   <status>FREE</status>
   <synopsis>To get the settings currently being used to capture data as part of the specific Audio capture context</synopsis>
