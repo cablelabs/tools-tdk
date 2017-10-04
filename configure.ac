@@ -107,7 +107,7 @@ AC_ARG_ENABLE([hybrid],
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub SNMP_stub"
+                  SUBDIR_HYBRID="TRM_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub SNMP_stub MediaUtils_stub"
                   AGENT_FLAGS=" -DPORT_FORWARD"
                   TDK_GST_LIBS=" -lgstreamer-$GST_MAJORMINOR -lgstbase-$GST_MAJORMINOR"
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc"
@@ -242,5 +242,6 @@ AC_CONFIG_FILES([Makefile
          tdkRmfApp/Makefile
          SNMP_stub/Makefile
          MocaHal_stub/Makefile
-         Bluetooth_stub/Makefile])
+         Bluetooth_stub/Makefile
+	 MediaUtils_stub/Makefile])
 AC_OUTPUT
