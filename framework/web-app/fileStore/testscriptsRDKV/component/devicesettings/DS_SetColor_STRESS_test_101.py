@@ -148,7 +148,7 @@ if "SUCCESS" in loadmodulestatus.upper():
                         actualresult = tdkTestObj.getResult();
                         colordetails = tdkTestObj.getResultDetails();
                         setColor = "%s" %color;
-                        list = ['255','65280','16711680','1677184','16747520']
+                        list = ['255','65280','16711680','16777184','16747520']
                         if expectedresult in actualresult:
                                 print "SUCCESS :Application successfully gets and sets the color";
                                 print "getColor %s" %colordetails;

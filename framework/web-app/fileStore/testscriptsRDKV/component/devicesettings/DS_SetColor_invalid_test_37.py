@@ -137,13 +137,13 @@ if "SUCCESS" in loadmodulestatus.upper():
                 actualresult = tdkTestObj.getResult();
                 colordetails = tdkTestObj.getResultDetails();
                 setColor = "%s" %color;
-                colorList = ['255','65280','16711680','1677184','16747520']
+                colorList = ['255','65280','16711680','16777184','16747520']
                 if expectedresult in actualresult:
                         print "SUCCESS :Failed to get and set the invalid color";
                         print "getColor %s" %colordetails;
                         #comparing the color before and after setting
                         print "Color to be verified: ",setColor;
-                        if setColor in colordetails:
+                        if list[int(setColor)] in colordetails :
                                 tdkTestObj.setResultStatus("FAILURE");
                                 print "SUCCESS: Both the colors are same";
                         else:

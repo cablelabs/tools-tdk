@@ -135,11 +135,12 @@ if "SUCCESS" in loadmodulestatus.upper():
                 actualresult = tdkTestObj.getResult();
                 colordetails = tdkTestObj.getResultDetails();
                 setColor = "%s" %color;
+                list = ['255','65280','16711680','16777184','16747520']
                 if expectedresult in actualresult:
                         print "SUCCESS :Application successfully gets and sets the red color";
                         print "getColor %s" %colordetails;
                         #comparing the color before and after setting
-                        if setColor in colordetails :
+                        if list[int(setColor)] in colordetails :
                                 tdkTestObj.setResultStatus("SUCCESS");
                                 print "SUCCESS: Both the colors are same";
                         else:
