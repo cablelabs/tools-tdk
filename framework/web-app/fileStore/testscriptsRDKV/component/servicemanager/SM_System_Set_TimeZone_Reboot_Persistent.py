@@ -79,10 +79,11 @@ Checkpoint 2.Check the timezones are set properly.</except_output>
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
 import servicemanager;
-
+import iarmbus;
 
 #Test component to be tested
 smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
+iarmObj = tdklib.TDKScriptingLibrary("iarmbus","2.0");
 
 
 #IP and Port of box, No need to change,
@@ -90,101 +91,141 @@ smObj = tdklib.TDKScriptingLibrary("servicemanager","2.0");
 ip = <ipaddress>
 port = <port>
 smObj.configureTestCase(ip,port,'SM_System_Set_TimeZone_Reboot_Persistent');
-
+iarmObj.configureTestCase(ip,port,'SM_System_Set_TimeZone_Reboot_Persistent');
 
 #Get the result of connection with test component and STB
 smLoadStatus =smObj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %smLoadStatus;
 smObj.setLoadModuleStatus(smLoadStatus.upper());
 
-if "SUCCESS" in smLoadStatus.upper():
-    serviceName = "systemService";
-    register = servicemanager.registerService(smObj,serviceName)
-    if "SUCCESS" in register:
-        tdkTestObj = smObj.createTestStep('SM_SetAPIVersion');
-        expectedresult = "SUCCESS"
-        apiVersion = 11;
-        tdkTestObj.addParameter("apiVersion",apiVersion);
-        tdkTestObj.addParameter("service_name",serviceName);
-        tdkTestObj.executeTestCase(expectedresult);
-        actualresult = tdkTestObj.getResult();
-        if expectedresult in actualresult:
-            tdkTestObj.setResultStatus("SUCCESS");
-            print "Set the API version %s succesfully" % apiVersion
-            tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
-            expectedresult="SUCCESS"
-            methodName="setTimeZoneDST"
-	    #Giving the input in the format "std offset dst [offset],start[/time],end[/time]" as per GNU specification
-            settimeZone="EST+5EDT,M9.3.3/11,M9.3.3/56"
-            tdkTestObj.addParameter("service_name", serviceName);
-            tdkTestObj.addParameter("method_name", methodName);
-            tdkTestObj.addParameter("params",settimeZone);
-            tdkTestObj.addParameter("inputCount", 1);
-            tdkTestObj.executeTestCase(expectedresult);
-            print "Calling method :",methodName
-            actualresult = tdkTestObj.getResult();
+iarmLoadStatus = iarmObj.getLoadModuleResult();
+print "[iarmbus LIB LOAD STATUS]  :  %s" %iarmLoadStatus;
+iarmObj.setLoadModuleStatus(iarmLoadStatus.upper());
 
-            if expectedresult in actualresult:
-                tdkTestObj.setResultStatus("SUCCESS");
-                print methodName, "call is successful with parameter" , settimeZone;
-                methodDetail = tdkTestObj.getResultDetails();
-                print methodName, ": Details :" ,methodDetail
+if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
+    #Calling IARM Bus Init
+    init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')
+    if "SUCCESS" in init:
+        connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
+        if "SUCCESS" in connect:
+	    serviceName = "systemService";
+	    register = servicemanager.registerService(smObj,serviceName)
+	    if "SUCCESS" in register:
+        	tdkTestObj = smObj.createTestStep('SM_SetAPIVersion');
+	        expectedresult = "SUCCESS"
+        	apiVersion = 11;
+	        tdkTestObj.addParameter("apiVersion",apiVersion);
+        	tdkTestObj.addParameter("service_name",serviceName);
+	        tdkTestObj.executeTestCase(expectedresult);
+        	actualresult = tdkTestObj.getResult();
+	        if expectedresult in actualresult:
+        	    tdkTestObj.setResultStatus("SUCCESS");
+	            print "Set the API version %s succesfully" % apiVersion
+        	    tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
+	            expectedresult="SUCCESS"
+        	    methodName="setTimeZoneDST"
+		    #Giving the input in the format "std offset dst [offset],start[/time],end[/time]" as per GNU specification
+        	    settimeZone="EST+5EDT,M9.3.3/11,M9.3.3/56"
+	            tdkTestObj.addParameter("service_name", serviceName);
+        	    tdkTestObj.addParameter("method_name", methodName);
+	            tdkTestObj.addParameter("params",settimeZone);
+        	    tdkTestObj.addParameter("inputCount", 1);
+	            tdkTestObj.executeTestCase(expectedresult);
+        	    print "Calling method :",methodName
+	            actualresult = tdkTestObj.getResult();
 
-                #Reboot the STB
-                smObj.initiateReboot();
+        	    if expectedresult in actualresult:
+                	tdkTestObj.setResultStatus("SUCCESS");
+	                print methodName, "call is successful with parameter" , settimeZone;
+        	        methodDetail = tdkTestObj.getResultDetails();
+                	print methodName, ": Details :" ,methodDetail
+	
+                        #Calling IARM_Bus_DisConnect API
+                        disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
+                        term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
 
-                print "Registering the System Service after reboot"
-                serviceName = "systemService";
-                register = servicemanager.registerService(smObj,serviceName)
-                if "SUCCESS" in register:
-                    #Getting the previously set time zone
-                    tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
-                    methodName="getTimeZoneDST"
-                    tdkTestObj.addParameter("service_name", serviceName);
-                    tdkTestObj.addParameter("method_name", methodName);
-                    tdkTestObj.executeTestCase(expectedresult);
-                    print "Calling method after reboot:",methodName
-                    actualresult = tdkTestObj.getResult();
+        	        #Reboot the STB
+                	smObj.initiateReboot();
+                        #Reset the connection after reboot
+                        iarmObj.resetConnectionAfterReboot();
 
-                    if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        print methodName, "call is successful";
-                        methodDetail = tdkTestObj.getResultDetails();
-                        print methodName, ": Get Details :" ,methodDetail
-                        gettimeZone = methodDetail.replace("\\","");
-                        if gettimeZone == settimeZone:
-                            tdkTestObj.setResultStatus("SUCCESS");
-                            print "Successfully gets the time zone as " ,settimeZone , "after reboot"
-                        else:
-                            print "Unable to get time zone as " , settimeZone, "after reboot"
-                            tdkTestObj.setResultStatus("FAILURE");
-                    else:
-                        print methodName, "call is NOT successful";
-                        tdkTestObj.setResultStatus("FAILURE");
+                        #Calling IARM Bus Init
+                        init=iarmbus.IARMBUS_Init(iarmObj,'SUCCESS')
+                        if "SUCCESS" in init:
+                            connect=iarmbus.IARMBUS_Connect(iarmObj,'SUCCESS')
+                            if "SUCCESS" in connect:
+                                print "Registering the System Service after reboot"
+        	        	serviceName = "systemService";
+	                 	register = servicemanager.registerService(smObj,serviceName)
+	 	                if "SUCCESS" in register:
+                                    tdkTestObj = smObj.createTestStep('SM_SetAPIVersion');
+                                    expectedresult = "SUCCESS"
+                                    apiVersion =11;
+                                    tdkTestObj.addParameter("apiVersion",apiVersion);
+                                    tdkTestObj.addParameter("service_name",serviceName);
+                                    tdkTestObj.executeTestCase(expectedresult);
+                                    actualresult = tdkTestObj.getResult();
+                                    if expectedresult in actualresult:
+                                        tdkTestObj.setResultStatus("SUCCESS");
+                                        print "Set the API version %s succesfully" % apiVersion
+                      		        tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod'); 
+		                        methodName="getTimeZoneDST"
+        		                tdkTestObj.addParameter("service_name", serviceName);
+                		        tdkTestObj.addParameter("method_name", methodName);
+	                	        tdkTestObj.executeTestCase(expectedresult);
+	        	                print "Calling method after reboot:",methodName
+        	        	        actualresult = tdkTestObj.getResult();
+
+	        	                if expectedresult in actualresult:
+        	        	            tdkTestObj.setResultStatus("SUCCESS");
+                	        	    print methodName, "call is successful";
+	                        	    methodDetail = tdkTestObj.getResultDetails();
+		                            print methodName, ": Get Details :" ,methodDetail
+        		                    gettimeZone = methodDetail.replace("\\","");
+                		            if gettimeZone == settimeZone:
+                        		        tdkTestObj.setResultStatus("SUCCESS");
+		                                print "Successfully gets the time zone as " ,settimeZone , "after reboot"
+        		                    else:
+                		                print "Unable to get time zone as " , settimeZone, "after reboot"
+                        		        tdkTestObj.setResultStatus("FAILURE");
+		                        else:
+        		                    print methodName, "call is NOT successful";
+                		            tdkTestObj.setResultStatus("FAILURE");
+				    else:
+					print "Unable to set the API Version " , apiVersion
+					tdkTestObj.setResultStatus("FAILURE");
+	        	        else:
+        	        	    print "Unable to register the System service"
+		                    tdkTestObj.setResultStatus("FAILURE");
+            	    else:
+ 	                print methodName, "call is NOT successful with parameter" , settimeZone;
+          	        tdkTestObj.setResultStatus("FAILURE");
                 else:
-                    print "Unable to register the System service"
+                    print "Unable to set the API version"
                     tdkTestObj.setResultStatus("FAILURE");
+
+                #Unregister System service
+                print "Unregistering the System Service"
+                unregister = servicemanager.unRegisterService(smObj,serviceName);
+
+                #Calling IARM_Bus_DisConnect API
+                disconnect=iarmbus.IARMBUS_DisConnect(iarmObj,'SUCCESS')
+                term=iarmbus.IARMBUS_Term(iarmObj,'SUCCESS')
+
             else:
-                print methodName, "call is NOT successful with parameter" , settimeZone;
-                tdkTestObj.setResultStatus("FAILURE");
-        else:
-            print "Unable to set the API version"
-            tdkTestObj.setResultStatus("FAILURE");
+                print "Unable to register the System service"
+        	tdkTestObj.setResultStatus("FAILURE");
 
-        #Unregister System service
-        print "Unregistering the System Service"
-        unregister = servicemanager.unRegisterService(smObj,serviceName);
+	    #Unloading service manager module
+	    smObj.unloadModule("servicemanager");
+            #Unloading iarmbus module^M
+            iarmObj.unloadModule("iarmbus");
 
-    else:
-        print "Unable to register the System service"
-        tdkTestObj.setResultStatus("FAILURE");
-
-    #Unloading service manager module
-    smObj.unloadModule("servicemanager");
 else:
     print "Failed to load service manager module\n";
     #Set the module loading status
     smObj.setLoadModuleStatus("FAILURE");
+    iarmObj.setLoadModuleStatus("FAILURE");
 
 
 
