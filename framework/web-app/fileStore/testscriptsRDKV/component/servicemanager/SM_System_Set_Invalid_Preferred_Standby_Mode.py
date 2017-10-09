@@ -120,6 +120,7 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                     tdkTestObj.addParameter("service_name", serviceName);
                     tdkTestObj.addParameter("method_name", methodName);
                     tdkTestObj.addParameter("params",standByMode);
+                    tdkTestObj.addParameter("inputCount", 1);
                     tdkTestObj.executeTestCase(expectedresult);
                     print "Calling method :",methodName
                     actualresult = tdkTestObj.getResult();

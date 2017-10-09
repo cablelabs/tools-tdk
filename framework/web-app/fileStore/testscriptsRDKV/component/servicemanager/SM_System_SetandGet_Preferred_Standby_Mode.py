@@ -131,52 +131,50 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in iarmLoadStatus.upper():
                         print methodName, "call is successful";
                         standbyModes = tdkTestObj.getResultDetails();
                         print methodName, ": Details :" , standbyModes
-                    else:
-                        print methodName, "call is NOT successful";
-                        tdkTestObj.setResultStatus("FAILURE");
-
-                    standbyModes = json.loads(standbyModes);
-                    for mode in range(len(standbyModes)):
-                        tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
-                        methodName="setPreferredStandbyMode"
-                        tdkTestObj.addParameter("service_name", serviceName);
-                        tdkTestObj.addParameter("method_name", methodName);
-                        tdkTestObj.addParameter("params",standbyModes[mode]);
-                        tdkTestObj.addParameter("inputCount", 1);
-                        tdkTestObj.executeTestCase(expectedresult);
-                        print "Calling method :",methodName
-                        actualresult = tdkTestObj.getResult();
-                        if expectedresult in actualresult:
-                            tdkTestObj.setResultStatus("SUCCESS");
-                            print methodName, "call is successful with parameter",standbyModes[mode] ;
-                            methodDetail = tdkTestObj.getResultDetails();
-                            print methodName, ": Details :" ,methodDetail
-
+                        standbyModes = json.loads(standbyModes);
+                        for mode in range(len(standbyModes)):
                             tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
-                            methodName="getPreferredStandbyMode"
+                            methodName="setPreferredStandbyMode"
                             tdkTestObj.addParameter("service_name", serviceName);
                             tdkTestObj.addParameter("method_name", methodName);
+                            tdkTestObj.addParameter("params",standbyModes[mode]);
+                            tdkTestObj.addParameter("inputCount", 1);
                             tdkTestObj.executeTestCase(expectedresult);
                             print "Calling method :",methodName
                             actualresult = tdkTestObj.getResult();
-
                             if expectedresult in actualresult:
-                                print methodName, "call is successful";
-                                standbyMode = tdkTestObj.getResultDetails();
-                                print methodName, ": Details :" ,standbyMode
-                                if standbyMode == standbyModes[mode]:
-                                    tdkTestObj.setResultStatus("SUCCESS");
-                                    print "Preferred Standby Mode is successfully set as" ,standbyMode
-                                else:
-                                    tdkTestObj.setResultStatus("FAILURE");
-                                    print "Unable to set Preferred Standby Mode as" ,standbyMode
-                            else:
-                                print methodName, "call is NOT successful";
-                                tdkTestObj.setResultStatus("FAILURE");
-                        else:
-                            print methodName, "call is NOT successful with parameter",standbyModes[mode];
-                            tdkTestObj.setResultStatus("FAILURE");
+                                tdkTestObj.setResultStatus("SUCCESS");
+                                print methodName, "call is successful with parameter",standbyModes[mode] ;
+                                methodDetail = tdkTestObj.getResultDetails();
+                                print methodName, ": Details :" ,methodDetail
 
+                                tdkTestObj = smObj.createTestStep('SM_Generic_CallMethod');
+                                methodName="getPreferredStandbyMode"
+                                tdkTestObj.addParameter("service_name", serviceName);
+                                tdkTestObj.addParameter("method_name", methodName);
+                                tdkTestObj.executeTestCase(expectedresult);
+                                print "Calling method :",methodName
+                                actualresult = tdkTestObj.getResult();
+
+                                if expectedresult in actualresult:
+                                    print methodName, "call is successful";
+                                    standbyMode = tdkTestObj.getResultDetails();
+                                    print methodName, ": Details :" ,standbyMode
+                                    if standbyMode == standbyModes[mode]:
+                                        tdkTestObj.setResultStatus("SUCCESS");
+                                        print "Preferred Standby Mode is successfully set as" ,standbyMode
+                                    else:
+                                        tdkTestObj.setResultStatus("FAILURE");
+                                        print "Unable to set Preferred Standby Mode as" ,standbyMode
+                                else:
+                                    print methodName, "call is NOT successful";
+                                    tdkTestObj.setResultStatus("FAILURE");
+                            else:
+                                print methodName, "call is NOT successful with parameter",standbyModes[mode];
+                                tdkTestObj.setResultStatus("FAILURE");
+                    else:
+                        print methodName, "call is NOT successful";
+                        tdkTestObj.setResultStatus("FAILURE");
                 else:
                     tdkTestObj.setResultStatus("FAILURE"); 
                     print "Unable to set the API Version " , apiVersion
