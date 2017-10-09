@@ -76,6 +76,13 @@ get_security_mode()
         echo "OUTPUT:$value"
 }
 
+#Ping to a network
+ping_to_network()
+{
+        value="$(ping -I $var2 -c 3 $var3 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
 # Refresh the wifi network of the WLAN client
 refresh_wifi_network()
 {
@@ -109,6 +116,8 @@ case $event in
         get_bit_rate;;
    "get_security_mode")
         get_security_mode;;
+   "ping_to_network")
+        ping_to_network;;
    "refresh_wifi_network")
         refresh_wifi_network;;
    *) echo "Invalid Argument passed";;

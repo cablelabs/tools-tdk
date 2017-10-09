@@ -171,6 +171,9 @@ def parseDeviceConfig(obj):
 		global connection_timeout
        		connection_timeout = config.get(deviceConfig, "CONNECTION_TIMEOUT")
 
+                global network_ip
+                network_ip = config.get(deviceConfig, "NETWORK_IP")
+
 	except Exception, e:
 		print e;
 		status = "Failed to parse the device specific configuration file"
@@ -414,6 +417,31 @@ def wlanConnectWifiSsid(ssidName,ssidPwd,wlanInterface):
 
 ######### End of Function ##########
 
+def wlanIsSSIDAvailable(ssidName):
+
+# wlanIsSSIDAvailable
+
+# Syntax      : wlanIsSSIDAvailable()
+# Description : Function to check if SSID is available in wifi client
+# Parameters  : ssidName - SSID Name
+# Return Value: SUCCESS/FAILURE
+
+        try:
+                status = clientConnect("WLAN")
+                if status == "SUCCESS":
+                        status = checkSsidAvailable(ssidName)
+                        if ssidName in status:
+                                return "SUCCESS"
+                        else:
+                                return "FAILURE"
+                else:
+                        return "Failed to connect to wlan client"
+        except Exception, e:
+                print e;
+                return e;
+
+
+######### End of Function ##########
 
 def wlanDisconnectWifiSsid(wlanInterface):
 
@@ -669,6 +697,36 @@ def setMultipleParameterValues(obj,paramList):
 
 ######### End of Function ##########
 
+def verifyNetworkConnectivity(network_ip,connectivityType,Interface):
+
+# verifyNetworkConnectivity
+
+# Syntax      : verifyNetworkConnectivity()
+# Description : Function to check if the internet is accessible or not
+# Parameters  : network_ip: destination ip(eg: google.com)
+#		connectivityType : PING/WGET_HTTP/WGET_HTTPS
+#		Interface : ethernet/wifi interface name
+# Return Value: Returns the status of ping operation
+
+        try:
+                if wlan_os_type == "UBUNTU":
+			if connectivityType == "PING":
+                            command="sudo sh %s ping_to_network %s %s" %(wlan_script,Interface,network_ip)
+                        elif connectivityType == "WGET_HTTP":
+                            command="sudo sh %s wget_http_network %s %s" %(wlan_script,Interface,network_ip)
+                        elif connectivityType == "WGET_HTTPS":
+                            command="sudo sh %s wget_https_network %s %s" %(wlan_script,Interface,network_ip)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "Status of ping operation:%s" %status;
+        return status;
+
+########## End of Function ##########
 
 def postExecutionCleanup():
 
