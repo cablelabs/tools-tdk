@@ -107,7 +107,7 @@ AC_ARG_ENABLE([hybrid],
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub SNMP_stub MediaUtils_stub"
+                  SUBDIR_HYBRID="TRM_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub SNMP_stub"
                   AGENT_FLAGS=" -DPORT_FORWARD"
                   TDK_GST_LIBS=" -lgstreamer-$GST_MAJORMINOR -lgstbase-$GST_MAJORMINOR"
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc"
@@ -161,6 +161,21 @@ AC_ARG_ENABLE([quemux86mc],
            ],
          [echo "client build is enable"])
 AM_CONDITIONAL([QEMUX86MC], [test x$QEMUX86MC = xtrue])
+
+
+AC_ARG_ENABLE([mediautils],
+         AS_HELP_STRING([--enable-mediautils],[enable mediautils (default is no)]),
+         [
+           case "${enableval}" in
+              yes) MEDIAUTILS=true
+                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" MediaUtils_stub"],
+                          [echo box type not specified]) ;;
+             no) MEDIAUTILS=false ;;
+            *) AC_MSG_ERROR([bad value ${enableval} for --enable-mediautils ]) ;;
+             esac
+            ],
+           [echo "mediautils component is not enabled"])
+AM_CONDITIONAL([MEDIAUTILS], [test x$MEDIAUTILS = xtrue])
 
 AC_ARG_ENABLE([trace],
               AS_HELP_STRING([--enable-trace],[enable trace (default is no)]),
