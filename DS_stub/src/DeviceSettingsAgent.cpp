@@ -419,11 +419,46 @@ void DeviceSettingsAgent::FPI_setColor(IN const Json::Value& req, OUT Json::Valu
 	char colorDetails[20];
 	int color=req["color"].asInt();
 	int colorid;
+        int colorSetId;
+        int colorMatchId;
+
 
 	try
 	{
 		/*Creating object for Color*/
-		device::FrontPanelIndicator::Color c(color);
+                switch(color)
+                {
+                    case 0: //blue
+                      colorSetId = device::FrontPanelIndicator::Color::kBlue;
+                      colorMatchId=255;
+                      break;
+                    case 1: //green
+                      colorSetId = device::FrontPanelIndicator::Color::kGreen;
+                      colorMatchId=65280;
+                      break;
+                    case 2: //red
+                      colorSetId = device::FrontPanelIndicator::Color::kRed;
+                      colorMatchId=16711680;
+                      break;
+                    case 3: //yellow
+                      colorSetId = device::FrontPanelIndicator::Color::kYellow;
+                      colorMatchId=16777184;
+                      break;
+                    case 4: //orange
+                      colorSetId = device::FrontPanelIndicator::Color::kOrange;
+                      colorMatchId=16747520;
+                      break;
+                    case 5: //white
+                      colorSetId = device::FrontPanelIndicator::Color::kWhite;
+                      colorMatchId=16777215;
+                      break;
+                    default:
+                      colorSetId = device::FrontPanelIndicator::Color::kMax;
+                      colorMatchId=6;
+                      break;
+               }
+                DEBUG_PRINT(DEBUG_LOG,"\nColorSetId retrieved is:%d\n",colorSetId);
+                device::FrontPanelIndicator::Color c(colorSetId);
 		/*calling setcolor*/
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling setColor\n");
 		DEBUG_PRINT(DEBUG_LOG,"\ncolor to set:%d\n",color);
@@ -432,7 +467,7 @@ void DeviceSettingsAgent::FPI_setColor(IN const Json::Value& req, OUT Json::Valu
 		DEBUG_PRINT(DEBUG_LOG,"\nCalling getColor\n");
 		colorid = device::FrontPanelIndicator::getInstance(indicator_name).getColor();
 		DEBUG_PRINT(DEBUG_LOG,"\ncolor id retrieved is:%d\n",colorid);
-		if (c == colorid)
+		if (colorMatchId == colorid)
 			response["result"]= "SUCCESS";
 		else
 			response["result"]= "FAILURE";
@@ -4224,7 +4259,7 @@ void DeviceSettingsAgent::VR_isInterlaced(IN const Json::Value& req, OUT Json::V
 
         try
         {
-                char details[512]={'\0'};
+                char details[2048]={'\0'};
                 std::string portName=req["port_name"].asCString();
 		//Get video port instance
 		device::VideoOutputPort vPort = device::Host::getInstance().getVideoOutputPort(portName);
