@@ -140,16 +140,15 @@ if "SUCCESS" in loadmodulestatus.upper() and "SUCCESS" in iarmLoadStatus.upper()
 					tdkTestObj.setResultStatus("SUCCESS");
 		                        resultDetails = tdkTestObj.getResultDetails();
                 		        tsbCapacity = json.loads(resultDetails);
-		                        print "TSBCapacity : ", tsbCapacity;
-					print tsbCapacity*1024;
+		                        print "TSBCapacity in KB: ", tsbCapacity;
 					tdkTestObj = smObj.createTestStep('SM_ExecuteCmd');
 				        tdkTestObj.addParameter("command",'grep -rn FEATURE.DVR.TSB.RESERVEDSPACE \'/etc/rmfconfig.ini\' | cut -d \'=\' -f 2');
             				tdkTestObj.executeTestCase(expectedresult);
 			            	actualresult = tdkTestObj.getResult();
             				if expectedresult in actualresult:
                 				tsbReservedSpace = tdkTestObj.getResultDetails().rstrip('\\n');
-						print tsbReservedSpace;
-						if tsbCapacity*1024 == long(tsbReservedSpace):
+						print "TSB Reserved space in KB : ", long(tsbReservedSpace)/1024;
+						if tsbCapacity <= long(tsbReservedSpace)/1024:
 							print "TSB Capacity retrieved correctly";
 							tdkTestObj.setResultStatus("SUCCESS");
 						else:

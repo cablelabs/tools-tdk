@@ -120,22 +120,12 @@ if "SUCCESS" in loadmodulestatus.upper() and "SUCCESS" in iarmLoadStatus.upper()
                                         resultDetails = tdkTestObj.getResultDetails();
                                         tsbCapacityMinutes = json.loads(resultDetails);
                                         print "TSBCapacityMinutes : ", tsbCapacityMinutes;
-                                        tdkTestObj = smObj.createTestStep('SM_ExecuteCmd');
-                                        tdkTestObj.addParameter("command",'grep -rn dvr.info.tsb.maxDuration \'/etc/rmfconfig.ini\' | cut -d \'=\' -f 2');
-                                        tdkTestObj.executeTestCase(expectedresult);
-                                        actualresult = tdkTestObj.getResult();
-                                        if expectedresult in actualresult:
-                                                tsbMinutes = tdkTestObj.getResultDetails().strip().strip('\\n');
-                                                print "TSBCapacityMinutes in seconds:%ld" %long(tsbMinutes);
-                                                if tsbCapacityMinutes*60 == long(tsbMinutes):
-                                                        print "TSB Capacity Minutes retrieved correctly";
-                                                        tdkTestObj.setResultStatus("SUCCESS");
-                                                else:
-                                                        print "TSB Capacity Minutes retrieved not correct";
-                                                        tdkTestObj.setResultStatus("FAILURE");
+                                        if tsbCapacityMinutes > 0:
+                                        	print "TSB Capacity Minutes retrieved correctly";
+                                                tdkTestObj.setResultStatus("SUCCESS");
                                         else:
+                                        	print "TSB Capacity Minutes retrieved not correct";
                                                 tdkTestObj.setResultStatus("FAILURE");
-                                                print "ExecuteCmd call is NOT successful";
                                 else:
                                         tdkTestObj.setResultStatus("FAILURE");
                                         print "Failed to get TSBCapacityMinutes \n";
