@@ -102,7 +102,7 @@ function showStatusBarChart(data, barColors) {
 					fontSize : '10pt'
 				},
 				tickOptions : {
-					angle : -45
+					angle : -20
 				},
 				tickRenderer:$.jqplot.CanvasAxisTickRenderer
 			},
@@ -193,7 +193,7 @@ function showNormalExecutionChart(){
 							seriesDefaults: {
 								renderer:$.jqplot.BarRenderer,
 								rendererOptions: {
-									barWidth: 10,
+									barWidth: 25,
 									varyBarColor : true,
 	
 									animation: {
@@ -208,7 +208,7 @@ function showNormalExecutionChart(){
 									label:'Module Name',		                
 									ticks: data.moduleName ,
 									tickOptions:{
-										angle: -60
+										angle: -20
 									},
 									tickRenderer:$.jqplot.CanvasAxisTickRenderer
 								},
@@ -264,7 +264,7 @@ function showBoxTypeScriptGroupChart(){
 							seriesDefaults: {
 								renderer:$.jqplot.BarRenderer,
 								rendererOptions: {
-									barWidth: 10,
+									barWidth: 25,
 									varyBarColor : true,
 
 									animation: {
@@ -279,7 +279,7 @@ function showBoxTypeScriptGroupChart(){
 									label:'Execution Name',		                
 									ticks: data.executionName ,
 									tickOptions:{
-										angle: -60
+										angle: -20
 									},
 									tickRenderer:$.jqplot.CanvasAxisTickRenderer
 								},
@@ -357,7 +357,7 @@ function getBoxTypeScriptChartData()
 							renderer:$.jqplot.BarRenderer,
 							rendererOptions: {
 								
-								barWidth: 10,
+								barWidth: 25,
 								varyBarColor : true,
 								animation: {
 									speed: 2500
@@ -373,7 +373,7 @@ function getBoxTypeScriptChartData()
 										min:0,
 										ticks: data.executionName,
 										tickOptions:{
-											angle: -60
+											angle: -20
 										},
 										tickRenderer:$.jqplot.CanvasAxisTickRenderer
 									},
@@ -462,7 +462,7 @@ function showScriptChart()
 						seriesDefaults: {
 							renderer:$.jqplot.BarRenderer,
 							rendererOptions: {
-								barWidth: 10,
+								barWidth: 25,
 								varyBarColor : true,
 								animation: {
 									speed: 2500
@@ -478,7 +478,7 @@ function showScriptChart()
 										min:0,
 										ticks: data.executionName,
 										tickOptions:{
-											angle: -60
+											angle: -20
 										},
 										tickRenderer:$.jqplot.CanvasAxisTickRenderer
 									},
