@@ -36,6 +36,11 @@
 #define TEST_FAILURE false
 
 #define DEVICE_NAME_BUFFER 10
+#define DISCOVERED_DEVICE_BUFFER 30
+#define PAIRED_DEVICE_BUFFER 10
+#define CONNECTED_DEVICE_BUFFER 10
+#define DEVICE_HANDLE_BUFFER 20
+#define DEVICE_PROPERTIES_BUFFER 100
 
 using namespace std;
 
@@ -66,7 +71,13 @@ class BluetoothAgent : public RDKTestStubInterface
                 bool Bluetooth_StartDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response);
                 bool Bluetooth_StopDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response);
                 bool Bluetooth_GetDiscoveredDevices(IN const Json::Value& req, OUT Json::Value& response);
-                
+                bool Bluetooth_ConnectToDevice(IN const Json::Value& req, OUT Json::Value& response);
+                bool Bluetooth_DisconnectFromDevice(IN const Json::Value& req, OUT Json::Value& response);
+                bool Bluetooth_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response);
+                bool Bluetooth_PairDevice(IN const Json::Value& req, OUT Json::Value& response);
+                bool Bluetooth_UnpairDevice(IN const Json::Value& req, OUT Json::Value& response);
+                bool Bluetooth_GetPairedDevices(IN const Json::Value& req, OUT Json::Value& response);
+                bool Bluetooth_GetDeviceProperties(IN const Json::Value& req, OUT Json::Value& response);            
                
 };
         extern "C" BluetoothAgent* CreateObject();
