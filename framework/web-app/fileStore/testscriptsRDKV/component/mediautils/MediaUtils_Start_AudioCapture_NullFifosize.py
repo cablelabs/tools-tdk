@@ -113,71 +113,84 @@ obj.setLoadModuleStatus(loadStatus.upper());
 
 if "SUCCESS" in loadStatus.upper():
         tdkTestObj = obj.createTestStep('MediaUtils_ExecuteCmd');
-        tdkTestObj.addParameter("command","/opt/tdkplayer.sh > /dev/null 2>&1 &" );
+        tdkTestObj.addParameter("command","source /opt/TDK/StartTDK.sh > /dev/null 2>&1 &");
         expectedresult = "SUCCESS"
         tdkTestObj.executeTestCase(expectedresult);
         actualresult = tdkTestObj.getResult();
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
-                print "MediaUtils_ExecuteCmd call is Successful";
-                tdkTestObj = obj.createTestStep('MediaUtils_AudioCapture_Open');
-                expectedresult="SUCCESS"
-                #Execute the test case in STB^M^M
-                tdkTestObj.executeTestCase(expectedresult);
-                actualresult = tdkTestObj.getResult();
-                if expectedresult in actualresult:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        print "MediaUtils_AudioCapture_Open call : SUCCESS";
-                        tdkTestObj = obj.createTestStep('MediaUtils_AudioCaptureStart');
-                        tdkTestObj.addParameter("paramBufferReady","READY");
-			tdkTestObj.addParameter("paramFifosize","NULL");
-                        tdkTestObj.addParameter("paramHandle","VALID");
-                        expectedresult="FAILURE"
-                        tdkTestObj.executeTestCase(expectedresult);
+                print "MediaUtils_ExecuteCmd call is successful";
+                tdkTestObj = obj.createTestStep('MediaUtils_ExecuteCmd');
+                streamDetails = tdkTestObj.getStreamDetails('02');
+                print "OCAPID: ",streamDetails.getOCAPID();
+                tdkTestObj.addParameter("command","tdkRmfApp play  -l ocap://"+streamDetails.getOCAPID()+" > /dev/null 2>&1 &");
+	        expectedresult = "SUCCESS"
+        	tdkTestObj.executeTestCase(expectedresult);
+	        actualresult = tdkTestObj.getResult();
+        	if expectedresult in actualresult:
+                	tdkTestObj.setResultStatus("SUCCESS");
+	                print "MediaUtils_ExecuteCmd call is Successful";
+        	        tdkTestObj = obj.createTestStep('MediaUtils_AudioCapture_Open');
+                	expectedresult="SUCCESS"
+	                #Execute the test case in STB^M^M
+        	        tdkTestObj.executeTestCase(expectedresult);
+                	actualresult = tdkTestObj.getResult();
+	                if expectedresult in actualresult:
+        	                tdkTestObj.setResultStatus("SUCCESS");
+                	        print "MediaUtils_AudioCapture_Open call : SUCCESS";
+                        	tdkTestObj = obj.createTestStep('MediaUtils_AudioCaptureStart');
+	                        tdkTestObj.addParameter("paramBufferReady","READY");
+				tdkTestObj.addParameter("paramFifosize","NULL");
+                	        tdkTestObj.addParameter("paramHandle","VALID");
+                        	expectedresult="FAILURE"
+	                        tdkTestObj.executeTestCase(expectedresult);
 
-                        time.sleep(120);
+        	                time.sleep(120);
 
-                        actualresult = tdkTestObj.getResult();
-                        print "EXPECTED RESULT : FAILURE";
-                        print "ACTUAL RESULT : ", actualresult;
-                        if expectedresult in actualresult:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "MediaUtils_AudioCaptureStart call NOT SUCCESSFUL when Fifosize is zero";
+                	        actualresult = tdkTestObj.getResult();
+                        	print "EXPECTED RESULT : FAILURE";
+	                        print "ACTUAL RESULT : ", actualresult;
+        	                if expectedresult in actualresult:
+                	                tdkTestObj.setResultStatus("SUCCESS");
+                        	        print "MediaUtils_AudioCaptureStart call NOT SUCCESSFUL when Fifosize is zero";
 
-                        else:
-                                print "MediaUtils_AudioCaptureStart call is SUCCESSFUL when Fifosize is zero";
-                                tdkTestObj.setResultStatus("FAILURE");
-                                tdkTestObj = obj.createTestStep('MediaUtils_AudioCaptureStop');
-                                expectedresult="SUCCESS"
-                                tdkTestObj.addParameter("paramHandle","VALID");
-                                tdkTestObj.executeTestCase(expectedresult);
-                                actualresult = tdkTestObj.getResult();
-                                if expectedresult in actualresult:
-                                        tdkTestObj.setResultStatus("SUCCESS");
-                                        print "MediaUtils_AudioCaptureStop call : SUCCESS";
-                                else:
-                                        print "MediaUtils_AudioCaptureStop call : FAILURE";
-                                        tdkTestObj.setResultStatus("FAILURE");
+	                        else:
+        	                        print "MediaUtils_AudioCaptureStart call is SUCCESSFUL when Fifosize is zero";
+                	                tdkTestObj.setResultStatus("FAILURE");
+                        	        tdkTestObj = obj.createTestStep('MediaUtils_AudioCaptureStop');
+                                	expectedresult="SUCCESS"
+	                                tdkTestObj.addParameter("paramHandle","VALID");
+        	                        tdkTestObj.executeTestCase(expectedresult);
+                	                actualresult = tdkTestObj.getResult();
+                        	        if expectedresult in actualresult:
+                                	        tdkTestObj.setResultStatus("SUCCESS");
+                                        	print "MediaUtils_AudioCaptureStop call : SUCCESS";
+	                                else:
+        	                                print "MediaUtils_AudioCaptureStop call : FAILURE";
+                	                        tdkTestObj.setResultStatus("FAILURE");
 
-                        tdkTestObj = obj.createTestStep('MediaUtils_AudioCapture_Close');
-                        expectedresult="SUCCESS"
-                        tdkTestObj.addParameter("paramHandle","VALID");
-                        #Execute the test case in STB^M^M
-                        tdkTestObj.executeTestCase(expectedresult);
-                        actualresult = tdkTestObj.getResult();
-                        if expectedresult in actualresult:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "MediaUtils_AudioCapture_Close : SUCCESS";
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "MediaUtils_AudioCapture_Close : FAILURE";
+                        	tdkTestObj = obj.createTestStep('MediaUtils_AudioCapture_Close');
+	                        expectedresult="SUCCESS"
+        	                tdkTestObj.addParameter("paramHandle","VALID");
+                	        #Execute the test case in STB^M^M
+                        	tdkTestObj.executeTestCase(expectedresult);
+	                        actualresult = tdkTestObj.getResult();
+        	                if expectedresult in actualresult:
+                	                tdkTestObj.setResultStatus("SUCCESS");
+                        	        print "MediaUtils_AudioCapture_Close : SUCCESS";
+	                        else:
+        	                        tdkTestObj.setResultStatus("FAILURE");
+                	                print "MediaUtils_AudioCapture_Close : FAILURE";
 
+	                else:
+        	                tdkTestObj.setResultStatus("FAILURE");
+                	        print "MediaUtils_AudioCapture_Open call : FAILURE "
                 else:
+                        print "ExecuteCmd call is NOT successful";
                         tdkTestObj.setResultStatus("FAILURE");
-                        print "MediaUtils_AudioCapture_Open call : FAILURE "
         else:
-                print "ExecuteCmd call is NOT successful";
-                tdkTestObj.setResultStatus("FAILURE");
+       	        print "ExecuteCmd call is NOT successful";
+               	tdkTestObj.setResultStatus("FAILURE");
 
         #Unloading mediautils module^M
         obj.unloadModule("mediautils");
