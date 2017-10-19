@@ -34,6 +34,12 @@ wifi_ssid_connect()
 	printf "OUTPUT:$value"
 }
 
+# Connect to the WIFI SSID with security mode None
+wifi_ssid_connect_openSecurity()
+{
+        value="$(nmcli device wifi connect $var2 | tr -cd [:print:])"
+        printf "OUTPUT:$value"
+}
 # Disconnect from the WIFI SSID
 wifi_ssid_disconnect()
 {
@@ -76,10 +82,30 @@ get_security_mode()
         echo "OUTPUT:$value"
 }
 
-#Ping to a network
+#Verify ping to a network
 ping_to_network()
 {
-        value="$(ping -I $var2 -c 3 $var3 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        route_add_cmd="$(sudo ip route add $var2 via $var4 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        ping_cmd="$(ping -I $var3 -c 3 $var2 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        route_del_cmd="$(sudo ip route delete $var2 via $var4 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        if [ $route_add_cmd = "SUCCESS" ] && [ $ping_cmd = "SUCCESS" ]  && [ $route_del_cmd = "SUCCESS" ]; then
+                echo "OUTPUT:SUCCESS"
+        else
+                echo "OUTPUT:FAILURE"
+        fi
+}
+
+#To send http request to a network
+wget_http_network()
+{
+        value="$(wget --bind-address=$var2 -q --tries=1 -T 60 http://$var3:$var4 && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
+#To send https request to a network
+wget_https_network()
+{
+        value="$(wget --bind-address=$var2 -q --tries=1 -T 60 https://$var3:$var4 --no-check-certificate && echo "SUCCESS" || echo "FAILURE")"
         echo "OUTPUT:$value"
 }
 
@@ -102,6 +128,8 @@ var4=$4
 case $event in
    "wifi_ssid_connect")
         wifi_ssid_connect;;
+   "wifi_ssid_connect_openSecurity")
+        wifi_ssid_connect_openSecurity;;
    "wifi_ssid_disconnect")
         wifi_ssid_disconnect;;
    "get_wlan_ip_address")
@@ -118,6 +146,10 @@ case $event in
         get_security_mode;;
    "ping_to_network")
         ping_to_network;;
+   "wget_http_network")
+        wget_http_network;;
+   "wget_https_network")
+        wget_https_network;;
    "refresh_wifi_network")
         refresh_wifi_network;;
    *) echo "Invalid Argument passed";;

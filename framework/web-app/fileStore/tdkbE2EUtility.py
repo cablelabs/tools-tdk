@@ -174,6 +174,24 @@ def parseDeviceConfig(obj):
                 global network_ip
                 network_ip = config.get(deviceConfig, "NETWORK_IP")
 
+                global http_port
+                http_port = config.get(deviceConfig, "HTTP_PORT")
+
+                global http_ip
+                http_ip = config.get(deviceConfig, "HTTP_IP")
+
+                global https_port
+                https_port = config.get(deviceConfig, "HTTPS_PORT")
+
+                global https_ip
+                https_ip = config.get(deviceConfig, "HTTPS_IP")
+
+                global cm_ip_type
+                cm_ip_type = config.get(deviceConfig, "CM_IP_TYPE")
+                
+                global cm_ip
+                cm_ip = config.get(deviceConfig, "CM_IP")
+
 	except Exception, e:
 		print e;
 		status = "Failed to parse the device specific configuration file"
@@ -302,7 +320,7 @@ def checkSsidAvailable(ssidName):
 ########## End of Function ##########
 
 
-def wifiConnect(ssidName,ssidPwd):
+def wifiConnect(ssidName,ssidPwd,securityType):
 
 # wifiConnect
 
@@ -310,11 +328,15 @@ def wifiConnect(ssidName,ssidPwd):
 # Description : Function to connect to the WIFI SSID from the WLAN client
 # Parameters  : ssidName - SSID Name
 #		ssidPwd - SSID password
+#		securityType - Protected/Open security mode
 # Return Value: SUCCESS/FAILURE
 
 	try:
 		if wlan_os_type == "UBUNTU":
-			command="sudo sh %s wifi_ssid_connect %s %s" %(wlan_script,ssidName,ssidPwd)
+			if securityType == "Protected":
+				command="sudo sh %s wifi_ssid_connect %s %s" %(wlan_script,ssidName,ssidPwd)
+			else:
+				command="sudo sh %s wifi_ssid_connect_openSecurity %s" %(wlan_script,ssidName)
 			status = executeCommand(command)
 		else:
 			status = "Only UBUNTU platform supported!!!"
@@ -378,7 +400,7 @@ def wifiDisconnect(wlanInterface):
 ######### End of Function ##########
 
 
-def wlanConnectWifiSsid(ssidName,ssidPwd,wlanInterface):
+def wlanConnectWifiSsid(ssidName,ssidPwd,wlanInterface,securityType= "Protected"):
 
 # wlanConnectWifiSsid
 
@@ -387,6 +409,7 @@ def wlanConnectWifiSsid(ssidName,ssidPwd,wlanInterface):
 # Parameters  : ssidName - SSID Name
 #		ssidPwd - SSID password
 #		wlanInterface - wlan interface name
+#		securityType - Protected/Open security mode
 # Return Value: SUCCESS/FAILURE
 
 	try:
@@ -397,7 +420,7 @@ def wlanConnectWifiSsid(ssidName,ssidPwd,wlanInterface):
 			#sleep(30);
 			status = checkSsidAvailable(ssidName)
 			if ssidName in status:
-				status = wifiConnect(ssidName,ssidPwd)	
+				status = wifiConnect(ssidName,ssidPwd,securityType)	
 				if wlan_2ghz_ssid_connect_status in status or wlan_5ghz_ssid_connect_status in status:
 					status = getConnectedSsidName(wlanInterface)
 					if ssidName in status:
@@ -491,6 +514,36 @@ def getWlanIPAddress(wlanInterface):
 
 ########## End of Function ##########
 
+def getLanIPAddress(lanInterface):
+
+# getLanIPAddress
+
+# Syntax      : getLanIPAddress()
+# Description : Function to get the current ip address of the Lan client after connecting to it
+# Parameters  : lanInterface - lan interface name
+# Return Value: status - IP Address of the LAN client
+
+        try:
+                status = clientConnect("LAN")
+                if status == "SUCCESS":
+
+                        if wlan_os_type == "UBUNTU":
+                                command="sudo sh %s get_lan_ip_address %s %s" %(lan_script,lanInterface,lan_inet_address)
+                                status = executeCommand(command)
+                        else:
+                                status = "Only UBUNTU platform supported!!!"
+                else:
+                        return "Failed to connect to lan client"
+
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "LAN IP Address after connecting to LAN client:%s" %status;
+        return status;
+
+########## End of Function ##########
+
 def getChannelNumber(ssidName):
 
 # getChannelNumber
@@ -568,6 +621,8 @@ def getSecurityMode(ssidName):
                                 security_mode = "WPA2-Personal"
                         elif status == "WPA1":
                                 security_mode = "WPA-Personal"
+			elif status == "--":
+                                security_mode = "Open"
                         else:
                                 security_mode = "Invalid security mode"
 
@@ -697,7 +752,7 @@ def setMultipleParameterValues(obj,paramList):
 
 ######### End of Function ##########
 
-def verifyNetworkConnectivity(network_ip,connectivityType,Interface):
+def verifyNetworkConnectivity(network_ip,connectivityType,interface,gateway_ip,wlan_ip):
 
 # verifyNetworkConnectivity
 
@@ -705,25 +760,30 @@ def verifyNetworkConnectivity(network_ip,connectivityType,Interface):
 # Description : Function to check if the internet is accessible or not
 # Parameters  : network_ip: destination ip(eg: google.com)
 #		connectivityType : PING/WGET_HTTP/WGET_HTTPS
-#		Interface : ethernet/wifi interface name
+#		interface : ethernet/wifi interface name
+# 		wlan_ip : ip address of wifi interface in wifi client
 # Return Value: Returns the status of ping operation
 
         try:
-                if wlan_os_type == "UBUNTU":
-			if connectivityType == "PING":
-                            command="sudo sh %s ping_to_network %s %s" %(wlan_script,Interface,network_ip)
-                        elif connectivityType == "WGET_HTTP":
-                            command="sudo sh %s wget_http_network %s %s" %(wlan_script,Interface,network_ip)
-                        elif connectivityType == "WGET_HTTPS":
-                            command="sudo sh %s wget_https_network %s %s" %(wlan_script,Interface,network_ip)
-                        status = executeCommand(command)
+                status = clientConnect("WLAN")
+                if status == "SUCCESS":
+                	if wlan_os_type == "UBUNTU":
+				if connectivityType == "PING":
+                	            command="sudo sh %s ping_to_network %s %s %s" %(wlan_script,interface,network_ip,gateway_ip)
+                	        elif connectivityType == "WGET_HTTP":
+                	            command="sudo sh %s wget_http_network %s %s %s" %(wlan_script,wlan_ip,network_ip,http_port)
+                	        elif connectivityType == "WGET_HTTPS":
+                	            command="sudo sh %s wget_https_network %s %s %s" %(wlan_script,wlan_ip,network_ip,https_port)
+                	        status = executeCommand(command)
+                	else:
+                	        status = "Only UBUNTU platform supported!!!"
                 else:
-                        status = "Only UBUNTU platform supported!!!"
+                        return "Failed to connect to wlan client"
         except Exception, e:
                 print e;
                 status = e;
 
-        print "Status of ping operation:%s" %status;
+        print "Status of verifyNetworkConnectivity:%s" %status;
         return status;
 
 ########## End of Function ##########
