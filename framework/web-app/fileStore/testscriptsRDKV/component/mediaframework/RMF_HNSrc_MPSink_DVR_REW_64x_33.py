@@ -211,7 +211,7 @@ if expected_Result in loadModuleStatus.upper():
                                                                  #Play the HNSRC-->MPSINK pipeline
                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Play',obj,Expected_Result,play_parameter_name,play_parameter_value);
                                                                 if Expected_Result in result.upper():
-                                                                        time.sleep(120);
+                                                                        time.sleep(230);
                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
                                                                         if Expected_Result in result.upper():
                                                                                 initialmediatime=Mediatime[1]
@@ -220,7 +220,7 @@ if expected_Result in loadModuleStatus.upper():
                                                                                 if Expected_Result in result.upper():
                                                                                         result=Create_and_ExecuteTestStep('RMF_Element_Getspeed',obj,Expected_Result,src_parameter,src_element);
                                                                                         if Expected_Result in result.upper():
-                                                                                                time.sleep(5);
+                                                                                                time.sleep(2);
                                                                                                 result=Create_and_ExecuteTestStep('RMF_Element_Getmediatime',obj,Expected_Result,src_parameter,src_element);
 												if Expected_Result in result.upper():
                                                                                            	     Mediaspeed[1]=float(Mediaspeed[1]);
