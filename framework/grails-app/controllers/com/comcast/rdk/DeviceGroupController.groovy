@@ -1997,7 +1997,7 @@ class DeviceGroupController {
 			try{
 				def f =  request.getFile('configFile')
 				if(!f.empty){
-					def content = readFromStream(f, realPath)
+					def content = readFromStream(f, realPath,tclConfig)
 					if(tclConfig){
 						content = content + "\ndeviceIp  "+deviceIp
 					}
@@ -2015,7 +2015,7 @@ class DeviceGroupController {
 		render message
 	}
 	/**
-	 * Function for selecting  TclSocketExecutor/  WebPAClient as per the user requirement. 
+	 * Function for reading the config file and in case of TCL execution selecting  TclSocketExecutor/  WebPAClient as per the user requirement. 
 	 * - If the execution is done directly at the box from Test Manager, TclSocketExecutor is used 
 	 * - If the user needs WebPA, WebPAClient can be added
 	 * @param request
@@ -2023,7 +2023,7 @@ class DeviceGroupController {
 	 * @return
 	 */
 	
-	def readFromStream(def request, def path){
+	def readFromStream(def request, def path,boolean appendClasspath){
 		BufferedReader reader = new BufferedReader(new InputStreamReader(request.getInputStream()))
 		StringBuilder builder = new StringBuilder()
 		String t = null
@@ -2031,11 +2031,13 @@ class DeviceGroupController {
 			builder.append(t).append('\n')
 		}
 		reader.close()
-		def jarPath = path + JAR_PATH
-		def classPath = path + CLASS_PATH
-		builder.append('class  ').append(SOCKET_CLIENT).append('\n')
-		def separator = getSeparator()
-		builder.append('classPath ').append(jarPath).append(separator).append(classPath).append('\n')
+		if(appendClasspath){
+			def jarPath = path + JAR_PATH
+			def classPath = path + CLASS_PATH
+			builder.append('class  ').append(SOCKET_CLIENT).append('\n')
+			def separator = getSeparator()
+			builder.append('classPath ').append(jarPath).append(separator).append(classPath).append('\n')
+		}
 		builder.toString()
 	}
 	/**
@@ -2084,7 +2086,7 @@ class DeviceGroupController {
 					def tclFile =  request?.getFile('tclConfigFile')
 					if(tclFile){
 						if(!tclFile?.empty){
-							def content = readFromStream(tclFile, realPath)
+							def content = readFromStream(tclFile, realPath,true)
 							content = content + "\ndeviceIp  "+dev?.stbIp
 							Utility.writeContentToFile(content, filePath)
 							deviceObj.addProperty(STATUS_C,SUCCESS)
@@ -2207,7 +2209,7 @@ class DeviceGroupController {
 					def configFile =  request?.getFile('configFile')
 					if(configFile){
 						if(!configFile?.empty){
-							def content = readFromStream(configFile, realPath)
+							def content = readFromStream(configFile, realPath,false)
 							Utility.writeContentToFile(content, filePath)
 							deviceObj.addProperty(STATUS_C,SUCCESS)
 							deviceObj.addProperty(REMARKS_C,"File uploaded successfully ")
