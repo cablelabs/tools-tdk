@@ -861,6 +861,7 @@ class ExecutescriptService {
 								executionDevice.dateOfExecution = new Date()
 								executionDevice.status = UNDEFINED_STATUS
 								executionDevice.category = Utility.getCategory(category)
+								executionDevice.buildName = executionService.getBuildName( deviceInstance?.stbName )
 								executionDevice.save(flush:true)
 							}
 							executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort,appUrl)
@@ -899,7 +900,7 @@ class ExecutescriptService {
 									if(scriptInstance){
 										String rdkVersion = executionService.getRDKBuildVersion(deviceInstance) 
 										if(executionService.validateScriptBoxTypes(scriptInstance,deviceInstance) && executionService.validateScriptRDKVersions(scriptInstance,rdkVersion) ){
-										   	def startExecutionTime = new Date()
+											def startExecutionTime = new Date()
 											//aborted = executionService.abortList.contains(exeId?.toString())
 											aborted = executionService.abortList?.toString().contains(executionName?.id?.toString())
 											if(!aborted && !(deviceStatus?.toString().equals(Status.NOT_FOUND.toString()) || deviceStatus?.toString().equals(Status.HANG.toString())) && !pause){
@@ -1954,6 +1955,7 @@ class ExecutescriptService {
 					executionDevice.device = deviceInstance?.stbName
 					executionDevice.deviceIp = deviceInstance?.stbIp
 					executionDevice.status = UNDEFINED_STATUS
+					executionDevice.buildName = executionService.getBuildName( deviceInstance?.stbName )
 					executionDevice.save(flush:true)
 				}
 			}

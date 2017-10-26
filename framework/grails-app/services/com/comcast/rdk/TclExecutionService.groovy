@@ -345,6 +345,7 @@ class TclExecutionService {
 										executionDevice.deviceIp = deviceInstance?.stbIp
 										executionDevice.status = UNDEFINED_STATUS
 										executionDevice.category = Category.RDKB_TCL
+										executionDevice.buildName = executionService.getBuildName( deviceInstance?.stbName )
 										executionDevice.save(flush:true)
 									}
 									catch(Exception e){
@@ -1430,6 +1431,7 @@ class TclExecutionService {
 								executionDevice.dateOfExecution = new Date()
 								executionDevice.status = UNDEFINED_STATUS
 								executionDevice.category = Utility.getCategory(category)
+								executionDevice.buildName = executionService.getBuildName( deviceInstance?.stbName )
 								executionDevice.save(flush:true)
 							}
 							executionService.executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort,appUrl)

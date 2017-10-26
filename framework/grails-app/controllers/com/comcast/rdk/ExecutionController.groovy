@@ -789,6 +789,7 @@ class ExecutionController {
 												executionDevice.dateOfExecution = new Date()
 												executionDevice.device = deviceInstance?.stbName
 												executionDevice.deviceIp = deviceInstance?.stbIp
+												executionDevice.buildName = executionService.getBuildName( deviceInstance?.stbName )
 												executionDevice.status = UNDEFINED_STATUS
 												executionDevice.category = category
 												if(executionDevice.save(flush:true)){
@@ -1110,7 +1111,8 @@ class ExecutionController {
 								}
 							}else{
 								def scriptGroup = ScriptGroup.findById(params?.scriptGrp,[lock: true])
-								String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);								try{
+								String rdkVersion = executionService.getRDKBuildVersion(deviceInstance);								
+								try{
 									scriptGroup?.scriptList?.each{ script ->
 
 										def scriptInstance1 = scriptService.getMinimalScript(getRealPath(),script?.moduleName, script?.scriptName, params?.category)
@@ -1246,6 +1248,7 @@ class ExecutionController {
 												executionDevice.deviceIp = deviceInstance?.stbIp
 												executionDevice.status = UNDEFINED_STATUS
 												executionDevice.category = Utility.getCategory(params?.category)
+												executionDevice.buildName = executionService.getBuildName( deviceInstance?.stbName )
 												executionDevice.save(flush:true)
 											}
 											catch(Exception e){
@@ -2570,6 +2573,7 @@ class ExecutionController {
 							executionDevice.dateOfExecution = new Date()
 							executionDevice.device = deviceInstance?.stbName
 							executionDevice.deviceIp = deviceInstance?.stbIp
+							executionDevice.buildName = executionService.getBuildName( deviceInstance?.stbName )
 							executionDevice.status = UNDEFINED_STATUS
 							executionDevice.category = category
 							if(executionDevice.save(flush:true)){
@@ -3409,6 +3413,7 @@ class ExecutionController {
 										executionDevice.device = deviceInstance?.stbName
 										executionDevice.deviceIp = deviceInstance?.stbIp
 										executionDevice.status = UNDEFINED_STATUS
+										executionDevice.buildName = executionService.getBuildName( deviceInstance?.stbName )
 										//executionDevice.category = moduleInstance?.category
 										executionDevice.category =Utility.getCategory(newCategory?.toString())
 										if(executionDevice.save(flush:true)){

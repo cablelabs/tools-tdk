@@ -34,8 +34,7 @@ import java.util.Properties;
 import java.util.concurrent.FutureTask
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-
-
+import com.google.gson.JsonObject
 /**
  * Service class for the Execution domain.
  * @author sreejasuma, praveenkp
@@ -789,6 +788,50 @@ class ExecutionService {
 		}		
 	}
     
+	
+	/**
+	 * For getting the image name on a particular device
+	 * - Accessing the getimagename_cmndline file
+	 * - send command through TM ( python getimagename_cmndline.py Device_IP_Address PortNumber )
+	 * @param stbName
+	 * @return buildName
+	 */
+	 
+	 
+	def getBuildName(String stbName){
+		String buildName
+		JsonObject jsonOutData = new JsonObject()
+		Device device = Device.findByStbName(stbName)
+		if(device){
+			try{
+				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//getimagename_cmndline.py").file
+				def absolutePath = layoutFolder.absolutePath
+				String[] cmd = [
+					PYTHON_COMMAND,
+					absolutePath,
+					device.stbIp,
+					device.stbPort
+				]
+				ScriptExecutor scriptExecutor = new ScriptExecutor()
+				def outputData = scriptExecutor.executeScript(cmd,1)
+				if(outputData && !(outputData?.toString()?.contains("METHOD_NOT_FOUND") || outputData?.toString()?.contains("AGENT_NOT_FOUND") )){
+					buildName = outputData.toString()?.trim()
+				}
+				else{
+					buildName =  "Image name not available"
+					
+				}
+			}catch(Exception e ){
+				println  "ERROR "+ e.getMessage()
+				buildName =  "Image name not available"
+				
+			}
+		}else{
+			buildName =  "Image name not available"
+		}
+		return buildName
+	}
+	
 	
 	def parseAndSaveDeviceDetails(Device device, def filePath){
 

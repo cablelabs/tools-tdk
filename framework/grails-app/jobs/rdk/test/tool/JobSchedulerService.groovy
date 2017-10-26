@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher
+import com.google.gson.JsonObject
 
 import groovy.sql.Sql
 
@@ -357,6 +358,7 @@ class JobSchedulerService implements Job{
 										executionDevice.deviceIp = deviceInstance?.stbIp
 										executionDevice.status = UNDEFINED_STATUS
 										executionDevice.category = category
+										executionDevice.buildName = getBuildName( deviceInstance?.stbName )
 										executionDevice.save(flush:true)
 										if(! executionDevice.save(flush:true)) {
 											log.error "Error saving Execution instance : ${execution.errors}"
@@ -1139,6 +1141,7 @@ class JobSchedulerService implements Job{
 								executionDevice.dateOfExecution = new Date()
 								executionDevice.status = UNDEFINED_STATUS
 								executionDevice.category = execution.category
+								executionDevice.buildName = getBuildName( deviceInstance?.stbName )
 								executionDevice.save(flush:true)
 							}
 							executeVersionTransferScript(realPath, filePath, newExecName, executionDevice?.id, deviceInstance.stbName, deviceInstance?.logTransferPort,url)
@@ -1396,7 +1399,50 @@ class JobSchedulerService implements Job{
 		catch(Exception ex){
 		}
 	}
-
+	
+	/**
+	 * For getting the image name on a particular device
+	 * - Accessing the getimagename_cmndline file
+	 * - send command through TM ( python getimagename_cmndline.py Device_IP_Address PortNumber )
+	 * @param stbName
+	 * @return buildName
+	 */
+	def getBuildName(String stbName){
+		String buildName
+		JsonObject jsonOutData = new JsonObject()
+		Device device = Device.findByStbName(stbName)
+		if(device){
+			try{
+				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//getimagename_cmndline.py").file
+				println layoutFolder
+				def absolutePath = layoutFolder.absolutePath
+				String[] cmd = [
+					PYTHON_COMMAND,
+					absolutePath,
+					device.stbIp,
+					device.stbPort
+				]
+				ScriptExecutor scriptExecutor = new ScriptExecutor()
+				def outputData = scriptExecutor.executeScript(cmd,1)
+				if(outputData && !(outputData?.toString()?.contains("METHOD_NOT_FOUND") || outputData?.toString()?.contains("AGENT_NOT_FOUND") )){
+					buildName = outputData.toString()?.trim()
+				}
+				else{
+					buildName =  "Image name not available"
+					
+				}
+			}catch(Exception e ){
+				println  "ERROR "+ e.getMessage()
+				buildName =  "Image name not available"
+				
+			}
+		}else{
+			buildName =  "Image name not available"
+		}
+		return buildName
+	}
+	
+	
 	/**
 	 * Method to call the script executor to execute the script
 	 * @param executionData

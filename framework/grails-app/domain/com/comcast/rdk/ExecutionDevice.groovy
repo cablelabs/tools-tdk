@@ -52,6 +52,11 @@ class ExecutionDevice {
 	Date dateOfExecution
 	
 	/**
+	 * Build name of the executed device
+	 */
+	String buildName 
+	
+	/**
 	 * Start time of execution
 	 */
 	String executionTime
@@ -72,6 +77,7 @@ class ExecutionDevice {
         device(nullable:false, blank:false)
 		execution(nullable:false, blank:false)
 		dateOfExecution(nullable:true, blank:true)
+		buildName(nullable:true, blank:true)
 		executionTime(nullable:true, blank:true)
 		status(nullable:false, blank:false)
 		deviceIp(nullable:false, blank:false)
