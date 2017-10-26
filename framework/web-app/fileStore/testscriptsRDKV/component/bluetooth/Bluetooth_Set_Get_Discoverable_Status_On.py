@@ -80,42 +80,6 @@ ip = <ipaddress>
 port = <port>
 bluetoothObj.configureTestCase(ip,port,'Bluetooth_Set_Get_Discoverable_Status_On');
 
-def setDiscoverableStatus(discoverableStatus):
-    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_SetAdapterDiscoverable');
-    timeout = "100"
-    tdkTestObj.addParameter("discoverablestatus",int(discoverableStatus))
-    tdkTestObj.addParameter("timeout",int(timeout))
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedresult);
-    actualresult = tdkTestObj.getResult();
-    if actualresult == expectedresult:
-        tdkTestObj.setResultStatus("SUCCESS");
-        print "Bluetooth_SetAdapterDiscoverable API Call is Successfull with status value as " , discoverableStatus ,"and timeout is " ,timeout
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
-        print "Bluetooth_SetAdapterDiscoverable API Call is NOT Successfull with status value as " , discoverableStatus , "and timeout is " ,timeout
-
-def isAdapterDiscoverable(currentValue):
-    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_IsAdapterDiscoverable')
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedresult);
-    actualresult = tdkTestObj.getResult();
-    discoverable = tdkTestObj.getResultDetails();
-    print "RESULT : Bluetooth_IsAdapterDiscoverable : " , actualresult
-    print "DETAILS : Bluetooth_IsAdapterDiscoverable : " , discoverable
-    if actualresult == expectedresult:
-        tdkTestObj.setResultStatus("SUCCESS");
-        print "Bluetooth_IsAdapterDiscoverable API Call is Success"
-        if discoverable == currentValue:
-            tdkTestObj.setResultStatus("SUCCESS");
-            print "Discoverable status changed to " , discoverable , "successfully"
-        else:
-            tdkTestObj.setResultStatus("FAILURE");
-            print "Discoverable status NOT changed to " , discoverable , "successfully"
-    else:
-        print "Bluetooth_IsAdapterDiscoverable API Call is Failure"
-        tdkTestObj.setResultStatus("FAILURE");
-
 #Get the result of connection with test component and STB
 bluetoothLoadStatus =bluetoothObj.getLoadModuleResult();
 print "[LIB LOAD STATUS]  :  %s" %bluetoothLoadStatus;
@@ -127,7 +91,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
     print "Set the Bluetooth Discoverable status to ON (1)"
     discoverableStatus = "1"
     tdkTestObj = bluetoothObj.createTestStep('Bluetooth_SetAdapterDiscoverable');
-    timeout = "100"
+    timeout = "30"
     tdkTestObj.addParameter("discoverablestatus",int(discoverableStatus))
     tdkTestObj.addParameter("timeout",int(timeout))
     #Execute the test case in STB

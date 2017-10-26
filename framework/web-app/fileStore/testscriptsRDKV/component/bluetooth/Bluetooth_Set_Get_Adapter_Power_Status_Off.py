@@ -87,10 +87,11 @@ def setAdapterPowerStatus(adapterPowerStatus):
     actualresult = tdkTestObj.getResult();
     if actualresult == expectedresult:
         tdkTestObj.setResultStatus("SUCCESS");
-        print "Bluetooth_SetAdapterPowerStatus API Call is Successfull with value as " , adapterPowerStatus
+        return "SUCCESS"
     else:
         tdkTestObj.setResultStatus("FAILURE");
-        print "Bluetooth_SetAdapterPowerStatus API Call is NOT Successfull with value as " ,adapterPowerStatus
+        return "FAILURE"
+
 def getAdapterPowerStatus(currentValue):
     tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterPowerStatus');
     #Execute the test case in STB
@@ -104,13 +105,14 @@ def getAdapterPowerStatus(currentValue):
         print "Bluetooth_GetAdapterPowerStatus API Call is Success"
         if adapterPower == currentValue:
             tdkTestObj.setResultStatus("SUCCESS");
-            print "Bluetooth Adapter Power Status set to " , adapterPower , "successfully"
+            return "SUCCESS"
         else:
             tdkTestObj.setResultStatus("FAILURE");
-            print "Bluetooth Adapter Power Status NOT set to " , adapterPower
+            return "FAILURE"
     else:
         tdkTestObj.setResultStatus("FAILURE");
         print "Bluetooth_GetAdapterPowerStatus API Call is Failure"
+        return "FAILURE"
 
 #Get the result of connection with test component and STB
 bluetoothLoadStatus =bluetoothObj.getLoadModuleResult();
@@ -121,16 +123,31 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
    
    expectedresult="SUCCESS"
    print "Set Bluetooth Adapter Power Status as OFF (0)"
-   powerStatus = "0";
-   setAdapterPowerStatus(powerStatus);
-   print "Check whether the power status is set to OFF (0)"
-   getAdapterPowerStatus(powerStatus);
-   powerStatus = "1";
-   print "Revert the power status to ON (1)"
-   setAdapterPowerStatus(powerStatus)
-   print "Check whether the power status is set to ON (1)"
-   getAdapterPowerStatus(powerStatus);
-
+   powerStatusOff = "0";
+   returnValue = setAdapterPowerStatus(powerStatusOff);
+   if returnValue in expectedresult:
+       print "Bluetooth_SetAdapterPowerStatus API Call is Successfull with value as " , powerStatusOff
+       print "Check whether the power status is set to OFF (0)"
+       returnValue = getAdapterPowerStatus(powerStatusOff);
+       if returnValue in expectedresult:
+           print "Bluetooth Adapter Power Status set to " , powerStatusOff , "successfully" 
+           powerStatusOn = "1";
+           print "Revert the power status to ON (1)"
+           returnValue = setAdapterPowerStatus(powerStatusOn)
+           if returnValue in expectedresult:
+               print "Bluetooth_SetAdapterPowerStatus API Call is Successfull with value as " , powerStatusOn
+               print "Check whether the power status is set to ON (1)"
+               returnValue = getAdapterPowerStatus(powerStatusOn);
+               if returnValue in expectedresult:
+                   print "Bluetooth Adapter Power Status set to " , powerStatusOn , "successfully"
+               else:
+                   print "Bluetooth Adapter Power Status NOT set to " , powerStatusOn
+           else:
+               print "Bluetooth_SetAdapterPowerStatus API Call is NOT Successfull with value as " , powerStatusOn
+       else:
+           print "Bluetooth Adapter Power Status NOT set to " , powerStatusOff , "successfully"
+   else:
+       print "Bluetooth_SetAdapterPowerStatus API Call is Successfull with value as " , powerStatusOff
 
    bluetoothObj.unloadModule("bluetooth");
 

@@ -89,10 +89,10 @@ def setAdapterName(adapterName):
     actualresult = tdkTestObj.getResult();
     if actualresult == expectedresult:
         tdkTestObj.setResultStatus("SUCCESS");
-        print "Bluetooth_SetAdapterName API Call is Successfull with name as " , adapterName
+        return "SUCCESS"
     else:
         tdkTestObj.setResultStatus("FAILURE");
-        print "Bluetooth_SetAdapterName API Call is NOT Successfull with name as " ,adapterName
+        return "FAILURE"
 
 def checkAdapterName(adapterName):
     tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterName');
@@ -106,12 +106,9 @@ def checkAdapterName(adapterName):
         tdkTestObj.setResultStatus("SUCCESS");
         if adapterName == adapterNameAfter:
             tdkTestObj.setResultStatus("SUCCESS");
-            print "Adapter name successfully set to " , adapterName
-            print "Revert the adapter name to the previous value " , adapterNameBefore
             return "SUCCESS"
         else:   
             tdkTestObj.setResultStatus("FAILURE");
-            print "Adapter name NOT set to " ,adapterName
             return "FAILURE"
     else:
         tdkTestObj.setResultStatus("FAILURE");
@@ -131,45 +128,50 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
    #Execute the test case in STB
    tdkTestObj.executeTestCase(expectedresult);
    actualresult = tdkTestObj.getResult();
-   global adapterNameBefore
    adapterNameBefore = tdkTestObj.getResultDetails();
-   print "RESULT : Bluetooth_GetAdapterName : " , actualresult
-   print "DETAILS : Bluetooth_GetAdapterName : " , adapterNameBefore
-   print "Adapter name before changing is " , adapterNameBefore
+   if actualresult == expectedresult:
+       tdkTestObj.setResultStatus("SUCCESS");
+       print "RESULT : Bluetooth_GetAdapterName : " , actualresult
+       print "DETAILS : Bluetooth_GetAdapterName : " , adapterNameBefore
+       print "Adapter name before changing is " , adapterNameBefore
 
-   print "Set the adapter name to tdk"
-   adapterName = "tdk"
-   setAdapterName(adapterName)
-
-   print "Check the adapter name " ,adapterName, " is set successfully or not"
-   output = checkAdapterName(adapterName) 
-   if "SUCCESS" in output:
-       #Reboot the STB
-       bluetoothObj.initiateReboot();
+       print "Set the adapter name to tdk"
+       adapterName = "tdk"
+       returnValue = setAdapterName(adapterName)
+       if returnValue in expectedresult:
+           print "Bluetooth_SetAdapterName API Call is Successfull with name as " , adapterName
+           print "Check the adapter name " ,adapterName, " is set successfully or not"
+           returnValue = checkAdapterName(adapterName) 
+           if returnValue in expectedresult:
+               print "Adapter name successfully set to " , adapterName
+               #Reboot the STB
+               bluetoothObj.initiateReboot();
  
-       tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterName');
-       #Execute the test case in STB
-       tdkTestObj.executeTestCase(expectedresult);
-       actualresult = tdkTestObj.getResult();
-       adapterNameAfter = tdkTestObj.getResultDetails();
-       if actualresult == expectedresult:
-           print "Bluetooth_GetAdapterName API Call is Successfull"      
-           if adapterName == adapterNameAfter:
-               tdkTestObj.setResultStatus("SUCCESS");
-               print "Adapter name " ,adapterName ,"successfully persisted "
-           else:   
-               tdkTestObj.setResultStatus("FAILURE");
-               print "Adapter name " ,adapterName , "NOT Persisted"
+               tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterName');
+               #Execute the test case in STB
+               tdkTestObj.executeTestCase(expectedresult);
+               actualresult = tdkTestObj.getResult();
+               adapterNameAfter = tdkTestObj.getResultDetails();
+               print "RESULT : Bluetooth_GetAdapterName after reboot : " , actualresult
+               print "DETAILS : Bluetooth_GetAdapterName after reboot: " , adapterNameAfter
+               if actualresult == expectedresult:
+                   print "Bluetooth_GetAdapterName API Call is Successfull"      
+                   if adapterName == adapterNameAfter:
+                       tdkTestObj.setResultStatus("SUCCESS");
+                       print "Adapter name " ,adapterName ,"successfully persisted "
+                   else:   
+                       tdkTestObj.setResultStatus("FAILURE");
+                       print "Adapter name " ,adapterName , "NOT Persisted"
+               else:
+                   tdkTestObj.setResultStatus("FAILURE");
+                   print "Bluetooth_GetAdapterName API Call is NOT Successfull"
+           else:
+               print "Adapter name NOT set to " , adapterName
        else:
-           tdkTestObj.setResultStatus("FAILURE");
-           print "Bluetooth_GetAdapterName API Call is NOT Successfull"
-     
-       print "Revert the adapter name to the previous value " , adapterNameBefore
-       setAdapterName(adapterNameBefore)
-
+           print "Bluetooth_SetAdapterName API Call is NOT Successfull with name as " ,adapterName
    else:
        tdkTestObj.setResultStatus("FAILURE");
-       print "Unable to set Adapter name as " ,adapterName
+       print "Bluetooth_GetAdapterName call is FAILURE"
   
    bluetoothObj.unloadModule("bluetooth");
 

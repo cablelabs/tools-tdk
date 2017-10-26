@@ -101,20 +101,6 @@ ip = <ipaddress>
 port = <port>
 bluetoothObj.configureTestCase(ip,port,'Bluetooth_Discoverable_Off_List_Discovered_Devices');
 
-def getDiscoverableStatus():
-    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_IsAdapterDiscoverable');
-    #Execute the test case in STB
-    tdkTestObj.executeTestCase(expectedresult);
-    actualresult = tdkTestObj.getResult();
-    discoverableStatus = tdkTestObj.getResultDetails();
-    if actualresult == expectedresult:
-        tdkTestObj.setResultStatus("SUCCESS");
-        print "Bluetooth_IsAdapterDiscoverable Call is Successfull"
-        return discoverableStatus
-    else:
-        tdkTestObj.setResultStatus("FAILURE");
-        print "Bluetooth_IsAdapterDiscoverable Call is NOT Successfull"
-
 def getPowerStatus():
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterPowerStatus');
    #Execute the test case in STB
@@ -136,10 +122,10 @@ def startDeviceDiscovery():
    actualresult = tdkTestObj.getResult();
    if actualresult == expectedresult:
        tdkTestObj.setResultStatus("SUCCESS");
-       print "Bluetooth_StartDeviceDiscovery call is SUCCESS"
+       return "SUCCESS"
    else:
        tdkTestObj.setResultStatus("FAILURE");
-       print "Bluetooth_StartDeviceDiscovery call is FAILURE"
+       return "FAILURE"
 
 def stopDeviceDiscovery():
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StopDeviceDiscovery');
@@ -148,25 +134,24 @@ def stopDeviceDiscovery():
    actualresult = tdkTestObj.getResult();
    if actualresult == expectedresult:
        tdkTestObj.setResultStatus("SUCCESS");
-       print "Bluetooth_StopDeviceDiscovery call is SUCCESS"
+       return "SUCCESS"
    else: 
        tdkTestObj.setResultStatus("FAILURE");
-       print "Bluetooth_StopDeviceDiscovery call is FAILURE"
+       return "FAILURE"
 
 def getDiscoveredDevices():
+   discoveredDevicesList = []
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetDiscoveredDevices');
    #Execute the test case in STB
    tdkTestObj.executeTestCase(expectedresult);
    actualresult = tdkTestObj.getResult();
    discoveredDevicesList = tdkTestObj.getResultDetails();
-   print "Discovered Device List" , discoveredDevicesList.split(';')[:-1]
    if actualresult == expectedresult:
        tdkTestObj.setResultStatus("SUCCESS");
-       print "Bluetooth_GetDiscoveredDevices call is SUCCESS"
-       return tdkTestObj,discoveredDevicesList
+       return "SUCCESS",tdkTestObj,discoveredDevicesList
    else:
        tdkTestObj.setResultStatus("FAILURE");
-       print "Bluetooth_GetDiscoveredDevices call is FAILURE"
+       return "FAILURE",tdkTestObj,discoveredDevicesList
 
 #Get the result of connection with test component and STB
 bluetoothLoadStatus =bluetoothObj.getLoadModuleResult();
@@ -201,33 +186,6 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
            print "Bluetooth_SetAdapterPowerStatus call is FAILURE"
    else:
        print "Bluetooth adapter is already ON"
-                 
-   print "Get the Bluetooth discoverable status"
-   discoverableStatusBefore = getDiscoverableStatus()
-   if discoverableStatusBefore != "1":
-       print "Bluetooth discoverable status is OFF"
-       print  "Turn ON the Bluetooth discoverable status"
-       tdkTestObj = bluetoothObj.createTestStep('Bluetooth_SetAdapterDiscoverable');
-       tdkTestObj.addParameter("discoverablestatus",1);
-       tdkTestObj.addParameter("timeout",100);
-       #Execute the test case in STB
-       tdkTestObj.executeTestCase(expectedresult);
-       actualresult = tdkTestObj.getResult();
-       if actualresult == expectedresult:
-           tdkTestObj.setResultStatus("SUCCESS");
-           print "Bluetooth_SetAdapterDiscoverable call is SUCCESS"
-           discoverableStatusAfter = getDiscoverableStatus()
-           if  discoverableStatusAfter == "1":
-               tdkTestObj.setResultStatus("SUCCESS");
-               print "Bluetooth Discoverable status changed to ON successfully"
-           else:
-               tdkTestObj.setResultStatus("FAILURE");
-               print "Unable to set the Bluetooth Discoverable status as ON"
-       else:
-           tdkTestObj.setResultStatus("FAILURE");
-           print "Bluetooth_SetAdapterDiscoverable call is FAILURE"
-   else:
-       print "Bluetooth discoverable status is already ON"
 
    print "Set the client device as discoverable before starting the discovery in DUT"
    commandList = ['bluetoothctl','discoverable on','quit'] 
@@ -238,39 +196,71 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
    else:
        print "Discoverable enabled Client Device Name" , bluetoothlib.deviceName
        print "Starting the device discovery in DUT"
-       startDeviceDiscovery()
+       returnValue = startDeviceDiscovery()
        print "Wait for 30 seconds to disover the available devices"
        sleep(30);
-       print "Stop the device discovery"
-       stopDeviceDiscovery()
-       tdkTestObj,discoveredDevicesList = getDiscoveredDevices()
-       if str(bluetoothlib.deviceName) in discoveredDevicesList.split(';')[:-1]:
-           tdkTestObj.setResultStatus("SUCCESS");
-           print "Client device is successfully discovered in DUT" 
-           print "Set the client device as NOT discoverable before starting the discovery in DUT"
-           commandList = ['bluetoothctl','discoverable off','quit'] 
-           output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
-           if "FAILURE" in output:
-                tdkTestObj.setResultStatus("FAILURE");
-                print "Connecting to client device got failed"
-           else:
-               print "Discoverable Disabled in Client Device" , bluetoothlib.deviceName
-               print "Starting the device discovery in DUT"
-               startDeviceDiscovery()
-               print "Wait for 30 seconds to disover the available devices"
-               sleep(30);
-               print "Stop the device discovery"
-               stopDeviceDiscovery()
-               tdkTestObj,discoveredDevicesList = getDiscoveredDevices()
-               if str(bluetoothlib.deviceName) not in discoveredDevicesList.split(';')[:-1]:
-                   tdkTestObj.setResultStatus("SUCCESS");
-                   print "Client device name is removed from discovered devices list in DUT"
+       if returnValue in expectedresult:
+           print "Bluetooth_StartDeviceDiscovery call is SUCCESS"
+           print "Stop the device discovery"
+           returnValue = stopDeviceDiscovery()
+           if returnValue in expectedresult:
+               print "Bluetooth_StopDeviceDiscovery call is SUCCESS"
+               returnValue,tdkTestObj,discoveredDevicesList = getDiscoveredDevices()
+               if returnValue in expectedresult:
+                   print "Bluetooth_GetDiscoveredDevices call is SUCCESS"
+                   discoveredDevicesList = discoveredDevicesList.split(';')[:-1]
+                   print "Discovered Devices List" , discoveredDevicesList
+                   deviceNameList=[]
+                   for devices in range(len(discoveredDevicesList)):  
+                       deviceNameList.append(discoveredDevicesList[devices].split(':')[0])
+                   if str(bluetoothlib.deviceName) in deviceNameList :
+                       tdkTestObj.setResultStatus("SUCCESS");
+                       print "Client device is successfully discovered in DUT" 
+                       print "Set the client device as NOT discoverable before starting the discovery in DUT"
+                       commandList = ['bluetoothctl','discoverable off','quit'] 
+                       output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
+                       if "FAILURE" in output:
+                           tdkTestObj.setResultStatus("FAILURE");
+                           print "Connecting to client device got failed"
+                       else:
+                           print "Discoverable Disabled in Client Device" , bluetoothlib.deviceName
+                           print "Starting the device discovery in DUT"
+                           returnValue = startDeviceDiscovery()
+                           print "Wait for 30 seconds to disover the available devices"
+                           sleep(30);
+                           if returnValue in expectedresult:
+                               print "Bluetooth_StartDeviceDiscovery call is SUCCESS"
+                               print "Stop the device discovery"
+                               returnValue = stopDeviceDiscovery()
+                               if returnValue in expectedresult:
+                                   print "Bluetooth_StartDeviceDiscovery call is SUCCESS"
+                                   returnValue,tdkTestObj,discoveredDevicesList = getDiscoveredDevices()
+                                   if returnValue in expectedresult:
+                                       print "Bluetooth_GetDiscoveredDevices call is SUCCESS"
+                                       discoveredDevicesList = discoveredDevicesList.split(';')[:-1]
+                                       print "Discovered Devices List After setting the client devices as undiscoverable" , discoveredDevicesList
+                                       deviceNameList=[]
+                                       for devices in range(len(discoveredDevicesList)):
+                                           deviceNameList.append(discoveredDevicesList[devices].split(':')[0])
+                                       if str(bluetoothlib.deviceName) not in deviceNameList:
+                                           tdkTestObj.setResultStatus("SUCCESS");
+                                           print "Client device name is removed from discovered devices list in DUT"
+                                       else:
+                                           tdkTestObj.setResultStatus("FAILURE");
+                                           print "Client device name is NOT removed from discovered devices list in DUT"
+                               else:
+                                   print "Bluetooth_GetDiscoveredDevices call is FAILURE"
+                           else:
+                               print "Bluetooth_StopDeviceDiscovery call is FAILURE"
+                   else:
+                       tdkTestObj.setResultStatus("FAILURE");
+                       print "Client device is NOT discovered in DUT"
                else:
-                   tdkTestObj.setResultStatus("FAILURE");
-                   print "Client device name is NOT removed from discovered devices list in DUT"
+                   print "Bluetooth_GetDiscoveredDevices call is FAILURE"
+           else:
+               print "Bluetooth_StartDeviceDiscovery call is FAILURE"
        else:
-           tdkTestObj.setResultStatus("FAILURE");
-           print "Client device is NOT discovered in DUT" 
+           print "Bluetooth_StartDeviceDiscovery call is FAILURE"
 
    bluetoothObj.unloadModule("bluetooth");
 

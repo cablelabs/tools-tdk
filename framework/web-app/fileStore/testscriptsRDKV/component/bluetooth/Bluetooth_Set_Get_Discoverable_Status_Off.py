@@ -79,9 +79,8 @@ ip = <ipaddress>
 port = <port>
 bluetoothObj.configureTestCase(ip,port,'Bluetooth_Set_Get_Discoverable_Status_Off');
 
-def setDiscoverableStatus(discoverableStatus):
+def setDiscoverableStatus(discoverableStatus,timeout):
     tdkTestObj = bluetoothObj.createTestStep('Bluetooth_SetAdapterDiscoverable');
-    timeout = "100"
     tdkTestObj.addParameter("discoverablestatus",int(discoverableStatus))
     tdkTestObj.addParameter("timeout",int(timeout))
     #Execute the test case in STB
@@ -89,10 +88,10 @@ def setDiscoverableStatus(discoverableStatus):
     actualresult = tdkTestObj.getResult();
     if actualresult == expectedresult:
         tdkTestObj.setResultStatus("SUCCESS");
-        print "Bluetooth_SetAdapterDiscoverable API Call is Successfull with status value as " , discoverableStatus ,"and timeout is " ,timeout
+        return "SUCCESS"
     else:
         tdkTestObj.setResultStatus("FAILURE");
-        print "Bluetooth_SetAdapterDiscoverable API Call is NOT Successfull with status value as " , discoverableStatus , "and timeout is " ,timeout
+        return "FAILURE"
 
 def isAdapterDiscoverable(currentValue):
     tdkTestObj = bluetoothObj.createTestStep('Bluetooth_IsAdapterDiscoverable')
@@ -107,13 +106,14 @@ def isAdapterDiscoverable(currentValue):
         print "Bluetooth_IsAdapterDiscoverable API Call is Success"
         if discoverable == currentValue:
             tdkTestObj.setResultStatus("SUCCESS");
-            print "Discoverable status changed to " , discoverable , "successfully"
+            return "SUCCESS"
         else:
             tdkTestObj.setResultStatus("FAILURE");
-            print "Discoverable status NOT changed to " , discoverable , "successfully"
+            return "FAILURE"
     else:
         print "Bluetooth_IsAdapterDiscoverable API Call is Failure"
         tdkTestObj.setResultStatus("FAILURE");
+        return "FAILURE"
 
 #Get the result of connection with test component and STB
 bluetoothLoadStatus =bluetoothObj.getLoadModuleResult();
@@ -124,15 +124,32 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
  
     expectedresult="SUCCESS"
     print "Set the Bluetooth Discoverable status to ON (1)"
-    discoverable = "1"
-    setDiscoverableStatus(discoverable)
-    print "Check whether the Discoverable status is set to ON (1)" 
-    isAdapterDiscoverable(discoverable)
-    print "Change the Discoverable status to OFF (0)"
-    discoverable = "0"
-    setDiscoverableStatus(discoverable)
-    print "Check whether the Discoverable status is set to OFF (0)"
-    isAdapterDiscoverable(discoverable)
+    discoverableOn = "1"
+    timeout = "30"
+    returnValue = setDiscoverableStatus(discoverableOn,timeout)
+    if returnValue in expectedresult:
+        print "Bluetooth_SetAdapterDiscoverable API Call is Successfull with status value as " , discoverableOn ,"and timeout is " ,timeout
+        print "Check whether the Discoverable status is set to ON (1)" 
+        returnValue = isAdapterDiscoverable(discoverableOn)
+        if returnValue in expectedresult:
+            print "Discoverable status changed to " , discoverableOn , "successfully"
+            print "Change the Discoverable status to OFF (0)"
+            discoverableOff = "0"
+            returnValue = setDiscoverableStatus(discoverableOff,timeout)
+            if returnValue in expectedresult:
+                print "Bluetooth_SetAdapterDiscoverable API Call is Successfull with status value as " , discoverableOff ,"and timeout is " ,timeout
+                print "Check whether the Discoverable status is set to OFF (0)"
+                returnValue = isAdapterDiscoverable(discoverableOff)
+                if returnValue in expectedresult:
+                    print "Discoverable status changed to " , discoverableOff , "successfully"
+                else:
+                    print "Discoverable status NOT changed to " , discoverableOff
+            else:
+                print "Bluetooth_SetAdapterDiscoverable API Call is NOT Successfull with status value as " , discoverableOff ,"and timeout is " ,timeout
+        else:
+            print "Discoverable status NOT changed to " , discoverableOn
+    else:
+        print "Bluetooth_SetAdapterDiscoverable API Call is NOT Successfull with status value as " , discoverableOn ,"and timeout is " ,timeout
 
     bluetoothObj.unloadModule("bluetooth");
 
