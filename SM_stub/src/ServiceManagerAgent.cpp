@@ -747,6 +747,11 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
 
 bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json::Value& response)
 {
+	DEBUG_PRINT(DEBUG_TRACE,"\nSM_RegisterService ---->Skipping the registration as it is handled in Service Manager itself. \n");
+        /*
+        Skipping the service registration due to recent changes (RDKTT-661). If required we will enable later
+        */
+        #if 0
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_RegisterService ---->Entry\n");
 	char stringDetails[STR_DETAILS_50] = {'\0'};
 	bool register_service=false;
@@ -779,6 +784,10 @@ bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_RegisterService ---->Exit\n");
 	return TEST_SUCCESS;	
+	#endif
+	response["result"]="SUCCESS"; 
+	response["details"]="registration skipped";
+	return TEST_SUCCESS;
 }
 
 /***************************************************************************
@@ -789,6 +798,11 @@ bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json
 
 bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Json::Value& response)
 {
+	 DEBUG_PRINT(DEBUG_TRACE,"\nSM_UnRegisterService ---->Skipping the unregistration as it is handled in Service Manager itself. \n");
+        /*
+        Skipping the service registration due to recent changes (RDKTT-661). If required we will enable later
+        */
+        #if 0
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_UnRegisterService ---->Entry\n");
 
 	char stringDetails[STR_DETAILS_50] = {'\0'};
@@ -824,6 +838,10 @@ bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Js
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_UnRegisterService ---->Exit\n");
 	return TEST_SUCCESS;	
+	#endif
+	response["result"]="SUCCESS"; 
+	response["details"]="un register skipped";
+	return TEST_SUCCESS;  
 }
 
 

@@ -362,8 +362,9 @@ int main(int argc, char* argv[])
 		DEBUG_PRINT(DEBUG_TRACE,"not enough arguments \n");
 		return FAIL;
 	}
-	registerStatus = sm_create(serviceName);
-
+	//registerStatus = sm_create(serviceName);
+	//Commenting the registration part as not required  (RDKTT-661)
+        registerStatus = true;
 	if(registerStatus)
 	{
 		DEBUG_PRINT(DEBUG_TRACE,"SM create success\n");
