@@ -109,6 +109,13 @@ wget_https_network()
         echo "OUTPUT:$value"
 }
 
+# To get the MAC address of the wlan client
+get_wlan_mac()
+{
+        value="$(ifconfig $var2 | grep HWaddr | awk '{ print $5 }')"
+        echo "OUTPUT:$value"
+}
+
 # Refresh the wifi network of the WLAN client
 refresh_wifi_network()
 {
@@ -150,6 +157,8 @@ case $event in
         wget_http_network;;
    "wget_https_network")
         wget_https_network;;
+   "get_wlan_mac")
+        get_wlan_mac;; 
    "refresh_wifi_network")
         refresh_wifi_network;;
    *) echo "Invalid Argument passed";;

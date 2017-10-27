@@ -25,6 +25,32 @@ get_lan_ip_address()
         echo "OUTPUT:$value"
 }
 
+telnetToClient()
+{
+         value="$({
+sleep 2
+echo $var3
+sleep 2
+echo $var4
+sleep 1
+echo exit
+} | telnet $var2 | tr "\n" " ")"
+        echo "OUTPUT:$value"
+}
+
+ftpToClient()
+{
+value="$(SERVER=$var2
+USER=$var3
+PASSW=$var4
+
+ftp -v -n $SERVER <<END_OF_SESSION
+user $USER $PASSW
+END_OF_SESSION
+)"
+echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -35,5 +61,9 @@ var3=$3
 case $event in
    "get_lan_ip_address")
         get_lan_ip_address;;
+   "telnetToClient")
+        telnetToClient;;
+   "ftpToClient")
+        ftpToClient;;
    *) echo "Invalid Argument passed";;
 esac

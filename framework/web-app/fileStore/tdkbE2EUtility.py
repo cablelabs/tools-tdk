@@ -102,6 +102,9 @@ def parseDeviceConfig(obj):
                 global wlan_5ghz_ssid_disconnect_status
                 wlan_5ghz_ssid_disconnect_status = config.get(deviceConfig, "WLAN_5GHZ_SSID_DISCONNECT_STATUS")
 
+                global lan_os_type
+                lan_os_type = config.get(deviceConfig, 'LAN_OS_TYPE')
+
         	global lan_ip
         	lan_ip = config.get(deviceConfig, "LAN_IP")
 
@@ -191,6 +194,15 @@ def parseDeviceConfig(obj):
                 
                 global cm_ip
                 cm_ip = config.get(deviceConfig, "CM_IP")
+
+                global ssid_invalid_name
+                ssid_invalid_name = config.get(deviceConfig, "SSID_INVALID_NAME")
+
+                global ssid_invalid_pwd
+                ssid_invalid_pwd = config.get(deviceConfig, "SSID_INVALID_PWD")
+
+                global wlan_invalid_interface
+                wlan_invalid_interface = config.get(deviceConfig, "WLAN_INVALID_INTERFACE")
 
 	except Exception, e:
 		print e;
@@ -385,11 +397,16 @@ def wifiDisconnect(wlanInterface):
 # Return Value: SUCCESS/FAILURE
 
 	try:
+            status = clientConnect("WLAN")
+            if status == "SUCCESS":
 		if wlan_os_type == "UBUNTU":
         		command="sudo sh %s wifi_ssid_disconnect %s" %(wlan_script,wlanInterface)
 			status = executeCommand(command)
                 else:
                         status = "Only UBUNTU platform supported!!!"
+	    else:
+                return "Failed to connect to wlan client"
+
         except Exception, e:
 		print e;
                 status = e;
@@ -430,7 +447,7 @@ def wlanConnectWifiSsid(ssidName,ssidPwd,wlanInterface,securityType= "Protected"
 				else:
 					return "Failed to connect to wifi ssid"
 			else:
-				return "Failed to list the available SSIDs"
+				return "Couldn't find the SSID in available SSIDs list"
 		else:
 			return "Failed to connect to wlan client"
 	except Exception, e:
@@ -540,6 +557,31 @@ def getLanIPAddress(lanInterface):
                 status = e;
 
         print "LAN IP Address after connecting to LAN client:%s" %status;
+        return status;
+
+########## End of Function ##########
+
+def getWlanMACAddress(wlanInterface):
+
+# getWlanMACAddress
+
+# Syntax      : getWlanMACAddress()
+# Description : Function to get the MAC address of the wlan client on the given interface
+# Parameters  : wlanInterface - wlan interface name
+# Return Value: status - MAC Address of the WLAN client
+
+        try:
+                if wlan_os_type == "UBUNTU":
+                        command="sudo sh %s get_wlan_mac %s" %(wlan_script,wlanInterface)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "WLAN MAC Address after connecting to WIFI:%s" %status;
         return status;
 
 ########## End of Function ##########
@@ -785,6 +827,77 @@ def verifyNetworkConnectivity(network_ip,connectivityType,interface,gateway_ip,w
 
         print "Status of verifyNetworkConnectivity:%s" %status;
         return status;
+
+########## End of Function ##########
+
+def ftpToClient(clientType,network_ip):
+
+# ftpToClient
+
+# Syntax      : ftpToClient()
+# Description : Function to connect to the client machine via ftp
+# Parameters  : network_ip: destination ip
+#               clientType : FTP to LAN/WLAN
+# Return Value: Returns the status of ftp connection
+
+        try:
+                status = clientConnect("LAN")
+                if status == "SUCCESS":
+                        if lan_os_type == "UBUNTU":
+                                if clientType == "WLAN":
+                                    command="sudo sh %s ftpToClient %s %s %s" %(lan_script,network_ip,wlan_username,wlan_password)
+				elif clientType == "LAN":
+                                    command="sudo sh %s ftpToClient %s %s %s" %(wlan_script,network_ip,lan_username,lan_password)
+                                else:
+                                    return "Invalid clientType"
+                                status = executeCommand(command)
+                                if "230 Login successful" in status:
+                                    status = "SUCCESS"
+                                else:
+                                    status = "FAILURE"
+                        else:
+                                status = "Only UBUNTU platform supported!!!"
+                else:
+                        return "Failed to connect to wlan client"
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "Status of ftpToClient:%s" %status;
+        return status;
+
+########## End of Function ##########
+
+def telnetToClient(scriptName, ip, user, password):
+
+# telnetToClient
+
+# Syntax      : telnetToClient()
+# Description : Function to do a telnet from one client to another
+# Parameters  : scriptName : lanscript or wlanscript
+#		ip  :  telnet ip
+#		user : username for telnet
+#		password  :   telnet login password	
+# Return Value: SUCCESS/FAILURE
+
+        try:
+                if wlan_os_type == "UBUNTU":
+                        command="sudo sh %s telnetToClient %s %s %s" %(scriptName, ip, user, password)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+                        return status
+
+        except Exception, e:
+                print e;
+                status = e;
+                return status
+
+        print "Telnet connection status is : %s" %status;
+        if "Connected to" not in status and "No route to host" in status or "Unable to connect to remote host" in status:
+                return "FAILURE"
+        else:
+                return "SUCCESS"
 
 ########## End of Function ##########
 
