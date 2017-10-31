@@ -400,8 +400,12 @@ def wifiDisconnect(wlanInterface):
             status = clientConnect("WLAN")
             if status == "SUCCESS":
 		if wlan_os_type == "UBUNTU":
-        		command="sudo sh %s wifi_ssid_disconnect %s" %(wlan_script,wlanInterface)
-			status = executeCommand(command)
+                        status = getConnectedSsidName(wlanInterface)
+                        if ssid_2ghz_name in status or ssid_5ghz_name in status:
+                                command="sudo sh %s wifi_ssid_disconnect %s" %(wlan_script,wlanInterface)
+                                status = executeCommand(command)
+                        else:
+                                print "SSID is already disconnected"
                 else:
                         status = "Only UBUNTU platform supported!!!"
 	    else:
@@ -794,31 +798,32 @@ def setMultipleParameterValues(obj,paramList):
 
 ######### End of Function ##########
 
-def verifyNetworkConnectivity(network_ip,connectivityType,interface,gateway_ip,wlan_ip):
+
+def verifyNetworkConnectivity(dest_ip,connectivityType,source_ip,gateway_ip):
 
 # verifyNetworkConnectivity
 
 # Syntax      : verifyNetworkConnectivity()
 # Description : Function to check if the internet is accessible or not
-# Parameters  : network_ip: destination ip(eg: google.com)
-#		connectivityType : PING/WGET_HTTP/WGET_HTTPS
-#		interface : ethernet/wifi interface name
-# 		wlan_ip : ip address of wifi interface in wifi client
+# Parameters  : dest_ip - IP to which ping/http/https should reach
+#               connectivityType - PING/HTTP/HTTPS
+#               source_ip - Ip from which ping/http/https to be placed
+#               gateway_ip - Gateway IP address
 # Return Value: Returns the status of ping operation
 
         try:
                 status = clientConnect("WLAN")
                 if status == "SUCCESS":
-                	if wlan_os_type == "UBUNTU":
-				if connectivityType == "PING":
-                	            command="sudo sh %s ping_to_network %s %s %s" %(wlan_script,interface,network_ip,gateway_ip)
-                	        elif connectivityType == "WGET_HTTP":
-                	            command="sudo sh %s wget_http_network %s %s %s" %(wlan_script,wlan_ip,network_ip,http_port)
-                	        elif connectivityType == "WGET_HTTPS":
-                	            command="sudo sh %s wget_https_network %s %s %s" %(wlan_script,wlan_ip,network_ip,https_port)
-                	        status = executeCommand(command)
-                	else:
-                	        status = "Only UBUNTU platform supported!!!"
+                        if wlan_os_type == "UBUNTU":
+                                if connectivityType == "PING":
+                                    command="sudo sh %s ping_to_network %s %s %s" %(wlan_script,source_ip,dest_ip,gateway_ip)
+                                elif connectivityType == "WGET_HTTP":
+                                    command="sudo sh %s wget_http_network %s %s %s" %(wlan_script,source_ip,dest_ip,http_port)
+                                elif connectivityType == "WGET_HTTPS":
+                                    command="sudo sh %s wget_https_network %s %s %s" %(wlan_script,source_ip,dest_ip,https_port)
+                                status = executeCommand(command)
+                        else:
+                                status = "Only UBUNTU platform supported!!!"
                 else:
                         return "Failed to connect to wlan client"
         except Exception, e:
@@ -829,6 +834,7 @@ def verifyNetworkConnectivity(network_ip,connectivityType,interface,gateway_ip,w
         return status;
 
 ########## End of Function ##########
+
 
 def ftpToClient(clientType,network_ip):
 
@@ -868,21 +874,25 @@ def ftpToClient(clientType,network_ip):
 
 ########## End of Function ##########
 
-def telnetToClient(scriptName, ip, user, password):
+
+def telnetToClient(clientType,dest_ip):
 
 # telnetToClient
 
 # Syntax      : telnetToClient()
 # Description : Function to do a telnet from one client to another
-# Parameters  : scriptName : lanscript or wlanscript
-#		ip  :  telnet ip
-#		user : username for telnet
-#		password  :   telnet login password	
+# Parameters  : clientType : WLAN/LAN
+#               dest_ip  : IP to which telnet should happen
 # Return Value: SUCCESS/FAILURE
 
         try:
                 if wlan_os_type == "UBUNTU":
-                        command="sudo sh %s telnetToClient %s %s %s" %(scriptName, ip, user, password)
+                        if clientType == "WLAN":
+                                command="sudo sh %s telnetToClient %s %s %s" %(lan_script,dest_ip,wlan_username,wlan_password)
+                        elif clientType == "LAN":
+                                command="sudo sh %s telnetToClient %s %s %s" %(wlan_script,dest_ip,lan_username,lan_password)
+                        else:
+                                    return "Invalid argument"
                         status = executeCommand(command)
                 else:
                         status = "Only UBUNTU platform supported!!!"
@@ -900,6 +910,32 @@ def telnetToClient(scriptName, ip, user, password):
                 return "SUCCESS"
 
 ########## End of Function ##########
+
+
+def getWlanAccessPoint(wlanInterface):
+
+# getWlanAccessPoint
+
+# Syntax      : getWlanAccessPoint()
+# Description : Function to get the AccessPoint of the wlan client on the given interface
+# Parameters  : wlanInterface - wlan interface name
+# Return Value: status - Access Point of the WLAN client
+
+        try:
+                if wlan_os_type == "UBUNTU":
+                        command="sudo sh %s get_wlan_accesspoint %s" %(wlan_script,wlanInterface)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "WLAN Access Point after connecting to WIFI:%s" %status;
+        return status;
+
+######### End of Function ##########
 
 def postExecutionCleanup():
 

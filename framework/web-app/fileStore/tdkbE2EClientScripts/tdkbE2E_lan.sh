@@ -18,6 +18,7 @@
 # limitations under the License.
 ##########################################################################
 #
+
 # Get the IP address of the LAN after connecting to it
 get_lan_ip_address()
 {
@@ -25,6 +26,7 @@ get_lan_ip_address()
         echo "OUTPUT:$value"
 }
 
+# Telnet to the client devices
 telnetToClient()
 {
          value="$({
@@ -38,6 +40,7 @@ echo exit
         echo "OUTPUT:$value"
 }
 
+# FTP to the client devices
 ftpToClient()
 {
 value="$(SERVER=$var2

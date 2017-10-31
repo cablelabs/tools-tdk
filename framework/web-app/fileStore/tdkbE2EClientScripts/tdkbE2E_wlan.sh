@@ -123,6 +123,42 @@ refresh_wifi_network()
         echo "OUTPUT:$value"
 }
 
+
+# Telnet to the client devices
+telnetToClient()
+{
+         value="$({
+sleep 2
+echo $var3
+sleep 2
+echo $var4
+sleep 1
+echo exit
+} | telnet $var2 | tr "\n" " ")"
+        echo "OUTPUT:$value"
+}
+
+# FTP to the client devices
+ftpToClient()
+{
+value="$(SERVER=$var2
+USER=$var3
+PASSW=$var4
+
+ftp -v -n $SERVER <<END_OF_SESSION
+user $USER $PASSW
+END_OF_SESSION
+)"
+echo "OUTPUT:$value"
+}
+
+# To get the Access point of the wlan client
+get_wlan_accesspoint()
+{
+        value="$(iwconfig $var2 | grep "Access Point" | awk '{ print $6 }')"
+        echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -161,6 +197,12 @@ case $event in
         get_wlan_mac;; 
    "refresh_wifi_network")
         refresh_wifi_network;;
+   "telnetToClient")
+        telnetToClient;;
+   "ftpToClient")
+        ftpToClient;;
+   "get_wlan_accesspoint")
+        get_wlan_accesspoint;;
    *) echo "Invalid Argument passed";;
 esac
 
