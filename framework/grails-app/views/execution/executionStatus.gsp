@@ -230,7 +230,12 @@ function hideParameters(k){
 			<span id="fulltext${k}" style="display:none;">${fileContents}&emsp; </span>
 		</g:if>		
 		<g:else>
-			<b>Unable to fetch Device Details</b>
+			<g:if test="${executionDeviceInstance.buildName && executionDeviceInstance.buildName != "Image name not available" }">
+				<b>${executionDeviceInstance.buildName }</b>
+			</g:if>
+			<g:else>
+				<b>Unable to fetch Device Details</b>
+			</g:else>
 		</g:else>
 		</td>				
 	</tr>

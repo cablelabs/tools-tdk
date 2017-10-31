@@ -151,9 +151,20 @@ function showLogs(k){
            		
        	 	}
 		 %>	
-		<span id="firstfourlines${k}">${firstfourLine} &emsp; <g:link  onclick="showFulltextDeviceDetails(${k}); return false;"><b><i>Show More</i></b></g:link></span>
-		<span id="fulltext${k}" style="display:none;">${fileContents}&emsp; <g:link onclick="showMintextDeviceDetails(${k}); return false;"><b><i>Show Less</i></b></g:link></span>		
-		</td>				
+		<g:if test="${!(fileContents.isEmpty())}">
+				<span id="showlessdd${k}" style="display:none;"><g:link onclick="showMintextDeviceDetails(${k}); return false;"><b><i>Show Less</i></b></g:link></span><br>
+				<span id="firstfourlines${k}">${firstfourLine} &emsp; <g:link  onclick="showFulltextDeviceDetails(${k}); return false;"><b><i>Show More</i></b></g:link></span>
+				<span id="fulltext${k}" style="display:none;">${fileContents}&emsp; </span>
+		</g:if>		
+		<g:else>
+			<g:if test="${executionDeviceInstance.buildName && executionDeviceInstance.buildName != "Image name not available" }">
+					<b>${executionDeviceInstance.buildName }</b>
+				</g:if>
+				<g:else>
+					<b>Unable to fetch Device Details</b>
+				</g:else>
+		</g:else>	
+		</td>		
 	</tr>
 	<tr class="odd">
 		<th>Test Group</th>
