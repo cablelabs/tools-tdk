@@ -898,7 +898,7 @@ def telnetToClient(clientType,dest_ip):
                 return status
 
         print "Telnet connection status is : %s" %status;
-        if "Connected to" not in status and "No route to host" in status or "Unable to connect to remote host" in status:
+        if "Connected to" not in status or "No route to host" in status or "Unable to connect to remote host" in status:
                 return "FAILURE"
         else:
                 return "SUCCESS"
