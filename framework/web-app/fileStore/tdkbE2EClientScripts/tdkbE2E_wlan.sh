@@ -82,10 +82,23 @@ get_security_mode()
         echo "OUTPUT:$value"
 }
 
+# Refresh the wifi network of the WLAN client
+refresh_wifi_network()
+{
+        wifi_off="$(nmcli radio wifi off > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        wifi_on="$(nmcli radio wifi on > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        if [ $wifi_off = "SUCCESS" ] && [ $wifi_on = "SUCCESS" ]; then
+                echo "OUTPUT:SUCCESS"
+        else
+                echo "OUTPUT:FAILURE"
+        fi
+}
+
 #Verify ping to a network
 ping_to_network()
 {
         route_add_cmd="$(sudo ip route add $var2 via $var4 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+	sleep 10
         ping_cmd="$(ping -I $var3 -c 3 $var2 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
         route_del_cmd="$(sudo ip route delete $var2 via $var4 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
         if [ $route_add_cmd = "SUCCESS" ] && [ $ping_cmd = "SUCCESS" ]  && [ $route_del_cmd = "SUCCESS" ]; then
@@ -116,13 +129,30 @@ get_wlan_mac()
         echo "OUTPUT:$value"
 }
 
-# Refresh the wifi network of the WLAN client
-refresh_wifi_network()
+# To delete the saved wifi connection in the wlan client
+delete_saved_wifi_connections()
 {
-        value="$(nmcli radio wifi off;nmcli radio wifi on)"
-        echo "OUTPUT:$value"
-}
+        ls_2ghz="$(ls /etc/NetworkManager/system-connections/$var2*)"
+        ls_5ghz="$(ls /etc/NetworkManager/system-connections/$var3*)"
 
+        if  echo $ls_2ghz | grep -q $var2 ; then
+                wifi_2ghz="$(rm /etc/NetworkManager/system-connections/$var2* && echo "SUCCESS" || echo "FAILURE")"
+        else
+                wifi_2ghz="SUCCESS"
+        fi
+
+        if echo $ls_5ghz | grep -q $var3; then
+                wifi_5ghz="$(rm /etc/NetworkManager/system-connections/$var3* && echo "SUCCESS" || echo "FAILURE")"
+        else
+                wifi_5ghz="SUCCESS"
+        fi
+
+        if [ $wifi_2ghz = "SUCCESS" ] && [ $wifi_5ghz = "SUCCESS" ]; then
+                echo "OUTPUT:SUCCESS"
+        else
+                echo "OUTPUT:FAILURE"
+        fi
+}
 
 # Telnet to the client devices
 telnetToClient()
@@ -187,6 +217,8 @@ case $event in
         get_bit_rate;;
    "get_security_mode")
         get_security_mode;;
+   "refresh_wifi_network")
+        refresh_wifi_network;;
    "ping_to_network")
         ping_to_network;;
    "wget_http_network")
@@ -195,8 +227,8 @@ case $event in
         wget_https_network;;
    "get_wlan_mac")
         get_wlan_mac;; 
-   "refresh_wifi_network")
-        refresh_wifi_network;;
+   "delete_saved_wifi_connections")
+        delete_saved_wifi_connections;;
    "telnetToClient")
         telnetToClient;;
    "ftpToClient")

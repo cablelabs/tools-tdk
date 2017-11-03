@@ -180,14 +180,8 @@ def parseDeviceConfig(obj):
                 global http_port
                 http_port = config.get(deviceConfig, "HTTP_PORT")
 
-                global http_ip
-                http_ip = config.get(deviceConfig, "HTTP_IP")
-
                 global https_port
                 https_port = config.get(deviceConfig, "HTTPS_PORT")
-
-                global https_ip
-                https_ip = config.get(deviceConfig, "HTTPS_IP")
 
                 global cm_ip_type
                 cm_ip_type = config.get(deviceConfig, "CM_IP_TYPE")
@@ -405,7 +399,7 @@ def wifiDisconnect(wlanInterface):
                                 command="sudo sh %s wifi_ssid_disconnect %s" %(wlan_script,wlanInterface)
                                 status = executeCommand(command)
                         else:
-                                print "SSID is already disconnected"
+                                status = "SSID is already disconnected"
                 else:
                         status = "Only UBUNTU platform supported!!!"
 	    else:
@@ -436,9 +430,9 @@ def wlanConnectWifiSsid(ssidName,ssidPwd,wlanInterface,securityType= "Protected"
 	try:
 		status = clientConnect("WLAN")
 		if status == "SUCCESS":
-			#command="sudo sh %s refresh_wifi_network" %(wlan_script)
-                        #executeCommand(command)
-			#sleep(30);
+			command="sudo sh %s refresh_wifi_network" %(wlan_script)
+                        executeCommand(command)
+			sleep(20);
 			status = checkSsidAvailable(ssidName)
 			if ssidName in status:
 				status = wifiConnect(ssidName,ssidPwd,securityType)	
@@ -499,7 +493,7 @@ def wlanDisconnectWifiSsid(wlanInterface):
 
 	try:
         	status = wifiDisconnect(wlanInterface)
-        	if wlan_2ghz_ssid_disconnect_status in status or wlan_5ghz_ssid_disconnect_status in status:
+        	if wlan_2ghz_ssid_disconnect_status in status or wlan_5ghz_ssid_disconnect_status in status or "SSID is already disconnected" in status:
 			return "SUCCESS"
 		else:
                 	return "Failed to disconnect from wifi ssid"
@@ -667,7 +661,7 @@ def getSecurityMode(ssidName):
                                 security_mode = "WPA2-Personal"
                         elif status == "WPA1":
                                 security_mode = "WPA-Personal"
-			elif status == "--":
+			elif status == "--" or status == "":
                                 security_mode = "Open"
                         else:
                                 security_mode = "Invalid security mode"
@@ -937,6 +931,35 @@ def getWlanAccessPoint(wlanInterface):
 
 ######### End of Function ##########
 
+def deleteSavedWifiConnections():
+
+# deleteSavedWifiConnections
+
+# Syntax      : deleteSavedWifiConnections()
+# Description : Function to delete the saved wifi connections
+# Parameters  : None
+# Return Value: SUCCESS/FAILURE
+
+        try:
+                status = clientConnect("WLAN")
+                if status == "SUCCESS":
+                        if wlan_os_type == "UBUNTU":
+                                command="sudo sh %s delete_saved_wifi_connections %s %s" %(wlan_script,ssid_2ghz_name,ssid_5ghz_name)
+                                status = executeCommand(command)
+                        else:
+                                status = "Only UBUNTU platform supported!!!"
+                else:
+                        return "Failed to connect to wlan client"
+
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "Delete saved wifi connections:%s" %status;
+        return status;
+
+######### End of Function ##########
+
 def postExecutionCleanup():
 
 # postExecutionCleanup
@@ -946,6 +969,9 @@ def postExecutionCleanup():
 # Parameters  : None
 # Return Value: None
 
+        wifiDisconnect(wlan_2ghz_interface);
+        wifiDisconnect(wlan_5ghz_interface);
+        deleteSavedWifiConnections();
 	clientDisconnect();
 
 ######### End of Function ##########
