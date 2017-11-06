@@ -467,6 +467,9 @@ def wlanIsSSIDAvailable(ssidName):
         try:
                 status = clientConnect("WLAN")
                 if status == "SUCCESS":
+                        command="sudo sh %s refresh_wifi_network" %(wlan_script)
+                        executeCommand(command)
+                        sleep(20);
                         status = checkSsidAvailable(ssidName)
                         if ssidName in status:
                                 return "SUCCESS"

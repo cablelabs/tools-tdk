@@ -132,8 +132,8 @@ get_wlan_mac()
 # To delete the saved wifi connection in the wlan client
 delete_saved_wifi_connections()
 {
-        ls_2ghz="$(ls /etc/NetworkManager/system-connections/$var2*)"
-        ls_5ghz="$(ls /etc/NetworkManager/system-connections/$var3*)"
+        ls_2ghz="$(find /etc/NetworkManager/system-connections/ | grep $var2*)"
+        ls_5ghz="$(find /etc/NetworkManager/system-connections/ | grep $var3*)"
 
         if  echo $ls_2ghz | grep -q $var2 ; then
                 wifi_2ghz="$(rm /etc/NetworkManager/system-connections/$var2* && echo "SUCCESS" || echo "FAILURE")"
