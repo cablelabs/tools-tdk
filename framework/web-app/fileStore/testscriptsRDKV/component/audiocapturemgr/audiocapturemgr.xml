@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><xml>
+  <module name="audiocapturemgr" testGroup="Component">
+    <primitiveTests>
+      <primitiveTest id="" name="AudioCaptureMgr_Session_Close" version="1">
+        <function>TestMgr_AudioCaptureMgr_Session_Close</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="AudioCaptureMgr_Session_Open" version="1">
+        <function>TestMgr_AudioCaptureMgr_Session_Open</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="AudioCaptureMgr_GetSessionDetails" version="1">
+        <function>TestMgr_AudioCaptureMgr_GetSessionDetails</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id=" " name="AudioCaptureMgr_GetDefaultAudioProperties" version="4">
+        <function>TestMgr_AudioCaptureMgr_GetDefaultAudioProperties</function>
+        <parameters>
+          <parameter name="session" value="VALID"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="AudioCaptureMgr_GetAudioProperties" version="3">
+        <function>TestMgr_AudioCaptureMgr_GetAudioProperties</function>
+        <parameters>
+          <parameter name="session" value="VALID"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="AudioCaptureMgr_SetAudioProperties" version="5">
+        <function>TestMgr_AudioCaptureMgr_SetAudioProperties</function>
+        <parameters>
+          <parameter name="delay" value="-1"/>
+          <parameter name="fifoSize" value="-1"/>
+          <parameter name="threshold" value="-1"/>
+          <parameter name="session" value="VALID"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="AudioCaptureMgr_GetOutputProperties" version="1">
+        <function>TestMgr_AudioCaptureMgr_GetOutputProperties</function>
+        <parameters>
+          <parameter name="session" value="VALID"/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id="" name="AudioCaptureMgr_Stop" version="1">
+        <function>TestMgr_AudioCaptureMgr_Stop</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="AudioCaptureMgr_Start" version="1">
+        <function>TestMgr_AudioCaptureMgr_Start</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest name="AudioCaptureMgr_ExecuteCmd" id=" " version="2">
+        <function>TestMgr_AudioCaptureMgr_ExecuteCmd</function>
+        <parameters>
+          <parameter name="command" value="NULL"/>
+        </parameters>
+      </primitiveTest>
+    </primitiveTests>
+  </module>
+</xml>
