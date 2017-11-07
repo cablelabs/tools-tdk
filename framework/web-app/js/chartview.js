@@ -1567,6 +1567,70 @@ function showBuildGroupBased()
 	$("#buildgroupbased").show();
 }
 
+/**
+ * This function to show the type of result required
+ */
+function submitNormalChartType()
+{
+	var chartType =$("#chartOption").val();
+	
+	if( chartType == 'Show Results by Box Type')
+	{
+		showBoxTypeBased();
+	}
+	else if( chartType == 'Show Results by Device')
+	{
+		showScriptBased();
+	}
+	else if( chartType == 'Analyze execution')
+	{
+		showNormalExecutionBased();
+	}
+	else if( chartType == 'Show Results by Build Name')
+	{
+		showBuildNameBased();
+	}
+	
+}
+
+/**
+ * This function to show the type of result required
+ */
+function submitPerformanceChartType()
+{
+	var chartType =$("#chartOptions").val();
+	
+	if (chartType == 'Compare Results by Execution Name')
+	{
+		showExecutionBased();
+	}
+	else if (chartType == 'Compare Results by Device Details')
+	{
+		showDeviceBased();
+	}
+	
+}
+
+/**
+ * This function to show the type of result required
+ */
+function submitChartCategory()
+{
+	var typeOption =$("#typeOption").val();
+	
+	if( typeOption == 'Normal')
+	{
+		showNormalBased();
+	}
+	else if( typeOption == 'Performance')
+	{
+		showPerformanceBased();
+	}
+	
+	
+}
+
+
 function updateValueOnCategoryChange(val){
 	$.get('getCategorySpecificList',{category:val}, function(data) { 
 		$("#categoricalDisplay").html(data);
