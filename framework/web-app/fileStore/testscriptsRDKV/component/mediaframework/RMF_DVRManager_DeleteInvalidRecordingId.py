@@ -38,6 +38,7 @@ TestCase ID: CT_RMF_DVRMgr_19</synopsis>
   <skip>false</skip>
   <!--  -->
   <box_types>
+    <box_type>RPI-HYB</box_type>
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>

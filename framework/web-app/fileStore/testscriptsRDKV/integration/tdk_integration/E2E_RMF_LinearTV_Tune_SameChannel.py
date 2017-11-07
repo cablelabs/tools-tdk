@@ -24,6 +24,7 @@ E2E_LinearTV_09</synopsis>
   <remarks/>
   <skip>false</skip>
   <box_types>
+    <box_type>RPI-HYB</box_type>
     <box_type>IPClient-3</box_type>
     <box_type>IPClient-4</box_type>
     <box_type>Emulator-Client</box_type>

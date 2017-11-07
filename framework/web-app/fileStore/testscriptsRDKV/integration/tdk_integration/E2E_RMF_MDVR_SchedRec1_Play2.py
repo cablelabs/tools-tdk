@@ -24,6 +24,7 @@ Test Case Id: CT_MDVR_10</synopsis>
   <remarks>This test causes the RMFStreamer to crash and reboot the box. This is a bug in RDK.</remarks>
   <skip>true</skip>
   <box_types>
+    <box_type>RPI-HYB</box_type>
     <box_type>Hybrid-1</box_type>
     <box_type>Emulator-HYB</box_type>
   </box_types>

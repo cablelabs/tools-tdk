@@ -25,6 +25,7 @@ Test Type: Negative</synopsis>
   <remarks>HNSink Api setHNSinkProperties() failing with segmentation fault. Need to raise the RDKTT ticket.</remarks>
   <skip>true</skip>
   <box_types>
+    <box_type>RPI-HYB</box_type>
     <box_type>Hybrid-1</box_type>
     <box_type>Emulator-HYB</box_type>
   </box_types>

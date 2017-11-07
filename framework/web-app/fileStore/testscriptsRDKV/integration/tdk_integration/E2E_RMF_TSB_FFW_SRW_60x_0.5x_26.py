@@ -24,6 +24,7 @@ Test case ID - E2E_RMF_TSB_26</synopsis>
   <remarks/>
   <skip>false</skip>
   <box_types>
+    <box_type>RPI-HYB</box_type>
     <box_type>Hybrid-1</box_type>
     <box_type>Emulator-HYB</box_type>
     <box_type>Terminal-RNG</box_type>
