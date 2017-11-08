@@ -25,7 +25,6 @@
 
 /* Application Includes */
 #include "rdktestagentintf.h"
-
 /* Constants */
 #define DEVICE_FREE 0
 #define DEVICE_BUSY 1
@@ -47,7 +46,8 @@
                       RPC methods to do some operations in the box.
  
  **************************************************************************************/
-class RpcMethods
+//class RpcMethods
+class RpcMethods : public AbstractServer<RpcMethods>
 {
 	
     public:
@@ -71,36 +71,75 @@ class RpcMethods
         static std::string sm_strConsoleLogPath;
 
         /* Constructor */
-        RpcMethods (RDKTestAgent *pAgent)
+        RpcMethods(TcpSocketServer &ptrStatusServer) : AbstractServer <RpcMethods>(ptrStatusServer)
         {
-            m_pAgent = pAgent;
+           
+         //this->bindAndAddMethod(Procedure("executeTestCase", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCExecuteTestCase);
+         this->bindAndAddMethod(Procedure("getStatus", PARAMS_BY_NAME, JSON_STRING,"managerIP",JSON_STRING,"boxName",JSON_STRING,NULL), &RpcMethods::RPCGetStatus);
+         this->bindAndAddMethod(Procedure("loadModule", PARAMS_BY_NAME, JSON_STRING,"execID",JSON_STRING,"deviceID",JSON_STRING,"testcaseID",JSON_STRING,"execDevID",JSON_STRING,"resultID",JSON_STRING,"param1",JSON_STRING,"performanceBenchMarkingEnabled",JSON_STRING,"performanceSystemDiagnosisEnabled",JSON_STRING,NULL), &RpcMethods::RPCLoadModule);
+         this->bindAndAddMethod(Procedure("unloadModule", PARAMS_BY_NAME, JSON_STRING,"param1",JSON_STRING,"ScriptSuiteEnabled",JSON_STRING,NULL), &RpcMethods::RPCUnloadModule);
+         this->bindAndAddMethod(Procedure("enableReboot", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCEnableReboot);
+         this->bindAndAddMethod(Procedure("restorePreviousState", PARAMS_BY_NAME, JSON_STRING,"execID",JSON_STRING,"deviceID",JSON_STRING,"testcaseID",JSON_STRING,"execDevID",JSON_STRING,"resultID",JSON_STRING,NULL), &RpcMethods::RPCRestorePreviousState);
+         this->bindAndAddMethod(Procedure("getHostStatus", PARAMS_BY_NAME, JSON_STRING,"managerIP",JSON_STRING,"boxName",JSON_STRING,NULL), &RpcMethods::RPCGetHostStatus);
+         this->bindAndAddMethod(Procedure("callEnableTDK", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCCallEnableTDK);
+         this->bindAndAddMethod(Procedure("callDisableTDK", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCCallDisableTDK);
+         this->bindAndAddMethod(Procedure("resetAgent", PARAMS_BY_NAME, JSON_STRING,"enableReset",JSON_STRING,NULL), &RpcMethods::RPCResetAgent);
+         this->bindAndAddMethod(Procedure("rebootBox", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCRebootBox);
+         this->bindAndAddMethod(Procedure("getRDKVersion", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCGetRDKVersion);
+         this->bindAndAddMethod(Procedure("getAgentConsoleLogPath", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCGetAgentConsoleLogPath);
+         this->bindAndAddMethod(Procedure("performanceSystemDiagnostics", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCPerformanceSystemDiagnostics);
+         this->bindAndAddMethod(Procedure("performanceBenchMarking", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCPerformanceBenchMarking);
+         this->bindAndAddMethod(Procedure("executeLoggerScript", PARAMS_BY_NAME, JSON_STRING,"argument",JSON_STRING,NULL), &RpcMethods::RPCExecuteLoggerScript);
+         this->bindAndAddMethod(Procedure("removeLogs", PARAMS_BY_NAME, JSON_STRING,"argument",JSON_STRING,NULL), &RpcMethods::RPCRemoveLogs);
+         this->bindAndAddMethod(Procedure("PushLog", PARAMS_BY_NAME, JSON_STRING,"STBfilename",JSON_STRING,"TMfilename",JSON_STRING,NULL), &RpcMethods::RPCPushLog);
+         this->bindAndAddMethod(Procedure("uploadLog", PARAMS_BY_NAME, JSON_STRING,"STBfilename",JSON_STRING,"TMfilename",JSON_STRING,"logUploadURL",JSON_STRING,NULL), &RpcMethods::RPCUploadLog);
+         this->bindAndAddMethod(Procedure("getImageName", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCGetImageName);
+         this->bindAndAddMethod(Procedure("executeTestCase", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCExecuteTestCase);
+         
+         //this->bindAndAddMethod(Procedure("executeTestCase", PARAMS_BY_NAME, JSON_STRING,"params",JSON_STRING,"method",JSON_STRING,NULL), &RpcMethods::RPCExecuteTestCase);
+
+
+         /* Below methods are applicable only for Gateway boxes */
+         #ifdef PORT_FORWARD
+
+         this->bindAndAddMethod(Procedure("getConnectedDevices", PARAMS_BY_NAME, JSON_STRING,NULL), &RpcMethods::RPCGetConnectedDevices);
+         this->bindAndAddMethod(Procedure("setClientRoute", PARAMS_BY_NAME, JSON_STRING,"MACaddr",JSON_STRING,"agentPort",JSON_STRING,"statusPort",JSON_STRING,"logTransferPort",JSON_STRING,"agentMonitorPort",JSON_STRING,NULL), &RpcMethods::RPCSetClientRoute);
+         this->bindAndAddMethod(Procedure("getClientMocaIpAddress", PARAMS_BY_NAME, JSON_STRING,"MACaddr",JSON_STRING,NULL), &RpcMethods::RPCGetClientMocaIpAddress);
+
+        #endif /* End of PORT_FORWARD */  
+
         }
+        
 
-        bool RPCLoadModule (const Json::Value& request, Json::Value& response);
-        bool RPCUnloadModule (const Json::Value& request, Json::Value& response);
-        bool RPCEnableReboot (const Json::Value& request, Json::Value& response);
-        bool RPCRestorePreviousState (const Json::Value& request, Json::Value& response);
-        bool RPCGetHostStatus (const Json::Value& request, Json::Value& response);
-        bool RPCCallEnableTDK(const Json::Value& request, Json::Value& response);
-        bool RPCCallDisableTDK(const Json::Value& request, Json::Value& response);
-        bool RPCResetAgent (const Json::Value& request, Json::Value& response);
-        bool RPCRebootBox (const Json::Value& request, Json::Value& response);
-        bool RPCGetRDKVersion (const Json::Value& request, Json::Value& response);
-        bool RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Value& response);
-        bool RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response);
-        bool RPCPerformanceBenchMarking (const Json::Value& request, Json::Value& response);
-        bool RPCExecuteLoggerScript (const Json::Value& request, Json::Value& response);
-	bool RPCRemoveLogs (const Json::Value& request, Json::Value& response);
-	bool RPCPushLog (const Json::Value& request, Json::Value& response);
-	bool RPCUploadLog (const Json::Value& request, Json::Value& response);
-	bool RPCGetImageName (const Json::Value& request, Json::Value& response);
 
-        /* Below methods are applicable only for Gateway boxes */
+	void RPCExecuteTestCase (const Json::Value& request, Json::Value& response);
+        void RPCGetStatus (const Json::Value& request, Json::Value& response);
+        void RPCLoadModule (const Json::Value& request, Json::Value& response);
+        void RPCUnloadModule (const Json::Value& request, Json::Value& response);
+        void RPCEnableReboot (const Json::Value& request, Json::Value& response);
+        void RPCRestorePreviousState (const Json::Value& request, Json::Value& response);
+        void RPCGetHostStatus (const Json::Value& request, Json::Value& response);
+        void RPCCallEnableTDK(const Json::Value& request, Json::Value& response);
+        void RPCCallDisableTDK(const Json::Value& request, Json::Value& response);
+        void RPCResetAgent (const Json::Value& request, Json::Value& response);
+        void RPCRebootBox (const Json::Value& request, Json::Value& response);
+        void RPCGetRDKVersion (const Json::Value& request, Json::Value& response);
+        void RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Value& response);
+        void RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response);
+        void RPCPerformanceBenchMarking (const Json::Value& request, Json::Value& response);
+        void RPCExecuteLoggerScript (const Json::Value& request, Json::Value& response);
+	void RPCRemoveLogs (const Json::Value& request, Json::Value& response);
+	void RPCPushLog (const Json::Value& request, Json::Value& response);
+	void RPCUploadLog (const Json::Value& request, Json::Value& response);
+	void RPCGetImageName (const Json::Value& request, Json::Value& response);
+        
+
+	/* Below methods are applicable only for Gateway boxes */
         #ifdef PORT_FORWARD
 
-        bool RPCGetConnectedDevices (const Json::Value& request, Json::Value& response);
-        bool RPCSetClientRoute (const Json::Value& request, Json::Value& response);
-        bool RPCGetClientMocaIpAddress (const Json::Value& request, Json::Value& response);
+        void RPCGetConnectedDevices (const Json::Value& request, Json::Value& response);
+        void RPCSetClientRoute (const Json::Value& request, Json::Value& response);
+        void RPCGetClientMocaIpAddress (const Json::Value& request, Json::Value& response);
 
         #endif /* End of PORT_FORWARD */
 

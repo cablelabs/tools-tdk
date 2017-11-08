@@ -23,6 +23,7 @@
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <curl/curl.h>
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 
 #ifdef RDK_BR_2DOT0
 #include "mediaplayersink.h"
@@ -46,9 +47,28 @@ using namespace std;
 #define NUMBER_OCAPID 10
 
 class RDKTestAgent;
-class MediaStreamerAgent : public RDKTestStubInterface
+class MediaStreamerAgent : public RDKTestStubInterface , public AbstractServer<MediaStreamerAgent>
 {
 	public:
+
+	        MediaStreamerAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <MediaStreamerAgent>(ptrRpcServer)
+	        {
+        	   this->bindAndAddMethod(Procedure("TestMgr_MediaStreamer_LiveTune_Request", PARAMS_BY_NAME, JSON_STRING,"ocapId",JSON_STRING,NULL), &MediaStreamerAgent::MediaStreamerAgent_LiveTune_Request);
+	           this->bindAndAddMethod(Procedure("TestMgr_MediaStreamer_Recording_Request", PARAMS_BY_NAME, JSON_STRING,"recordingId",JSON_STRING,NULL), &MediaStreamerAgent::MediaStreamerAgent_Recording_Request);
+	           this->bindAndAddMethod(Procedure("TestMgr_MediaStreamer_Recorded_Urls", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaStreamerAgent::MediaStreamerAgent_Recorded_Urls);
+        	   this->bindAndAddMethod(Procedure("TestMgr_MediaStreamer_Recorded_Metadata", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaStreamerAgent::MediaStreamerAgent_Recorded_Metadata);
+
+        	   this->bindAndAddMethod(Procedure("TestMgr_MediaStreamer_Live_Playback", PARAMS_BY_NAME, JSON_STRING,"ocapId",JSON_STRING,NULL), &MediaStreamerAgent::MediaStreamerAgent_Live_Playback);
+	           this->bindAndAddMethod(Procedure("TestMgr_MediaStreamer_Recording_Playback", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaStreamerAgent::MediaStreamerAgent_Recording_Playback);
+	           this->bindAndAddMethod(Procedure("TestMgr_MediaStreamer_DVR_Trickplay", PARAMS_BY_NAME, JSON_STRING,"PlaySpeed",JSON_STRING,"timePosition",JSON_STRING,NULL), &MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay);
+
+		   #ifdef RDK_BR_2DOT0
+        	  
+		   this->bindAndAddMethod(Procedure("TestMgr_RMFStreamer_InterfaceTesting", PARAMS_BY_NAME, JSON_STRING,"URL",JSON_STRING,"errorCode",JSON_INTEGER,"videoStreamingURL",JSON_STRING,"errorDescription",JSON_STRING,NULL), &MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting); 
+        	   this->bindAndAddMethod(Procedure("TestMgr_RMFStreamer_Player", PARAMS_BY_NAME, JSON_STRING,"play_time", JSON_INTEGER,"VideostreamURL",JSON_STRING,NULL), &MediaStreamerAgent::RMFStreamerAgent_Player);
+		   #endif
+        	}
+
 		void* MediaStreamerAgenthandle;
 
 		/*Constuctor*/
@@ -63,23 +83,23 @@ class MediaStreamerAgent : public RDKTestStubInterface
 			RECORDING_URL_METADATA    //for recording metadata			   
 		};
 		/*inherited functions*/
-		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);		
-		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
+		bool initialize(IN const char* szVersion);		
+		bool cleanup(IN const char* szVersion);
 		std::string testmodulepre_requisites();
                 bool testmodulepost_requisites();
 
 		/*MediaStreamerAgent Wrapper functions*/
-	        bool MediaStreamerAgent_LiveTune_Request(IN const Json::Value& request, OUT Json::Value& response);
-		bool MediaStreamerAgent_Recording_Request(IN const Json::Value& request, OUT Json::Value& response);
-		bool MediaStreamerAgent_Recorded_Urls(IN const Json::Value& request, OUT Json::Value& response);
-		bool MediaStreamerAgent_Recorded_Metadata(IN const Json::Value& request, OUT Json::Value& response);
-		bool MediaStreamerAgent_Live_Playback(IN const Json::Value& request, OUT Json::Value& response);	
-		bool MediaStreamerAgent_Recording_Playback(IN const Json::Value& request, OUT Json::Value& response);
-		bool MediaStreamerAgent_Live_Trickplay(IN const Json::Value& request, OUT Json::Value& response);
-		bool MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& request, OUT Json::Value& response);
+	        void MediaStreamerAgent_LiveTune_Request(IN const Json::Value& request, OUT Json::Value& response);
+		void MediaStreamerAgent_Recording_Request(IN const Json::Value& request, OUT Json::Value& response);
+		void MediaStreamerAgent_Recorded_Urls(IN const Json::Value& request, OUT Json::Value& response);
+		void MediaStreamerAgent_Recorded_Metadata(IN const Json::Value& request, OUT Json::Value& response);
+		void MediaStreamerAgent_Live_Playback(IN const Json::Value& request, OUT Json::Value& response);	
+		void MediaStreamerAgent_Recording_Playback(IN const Json::Value& request, OUT Json::Value& response);
+		void MediaStreamerAgent_Live_Trickplay(IN const Json::Value& request, OUT Json::Value& response);
+		void MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& request, OUT Json::Value& response);
 #ifdef RDK_BR_2DOT0
-		bool RMFStreamerAgent_InterfaceTesting(IN const Json::Value& request, OUT Json::Value& response);
-		bool RMFStreamerAgent_Player(IN const Json::Value& request, OUT Json::Value& response);
+		void RMFStreamerAgent_InterfaceTesting(IN const Json::Value& request, OUT Json::Value& response);
+		void RMFStreamerAgent_Player(IN const Json::Value& request, OUT Json::Value& response);
 #endif
 		
 		
@@ -95,6 +115,6 @@ class MediaStreamerAgent : public RDKTestStubInterface
 		string frameURL(string playurl, string play_speed, string time_position);
 };
 
-	extern "C" MediaStreamerAgent* CreateObject();
+//	extern "C" MediaStreamerAgent* CreateObject();
 
 #endif //__MEDIASTREAMER_Stub

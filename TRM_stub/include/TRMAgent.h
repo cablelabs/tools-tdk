@@ -25,6 +25,7 @@
 #include "rdktestagentintf.h"
 #include <sstream>
 #include "TRMAgentHelper.h"
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 
 #define IN
 #define OUT
@@ -37,32 +38,42 @@
 using namespace std;
 
 class RDKTestAgent;
-class TRMAgent : public RDKTestStubInterface
+class TRMAgent : public RDKTestStubInterface , public AbstractServer<TRMAgent>
 {
 public:
-    //Constructor
-    TRMAgent();
 
+    TRMAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <TRMAgent>(ptrRpcServer)
+    {
+        this->bindAndAddMethod(Procedure("TestMgr_TRM_GetMaxTuners", PARAMS_BY_NAME, JSON_STRING,NULL), &TRMAgent::TRMAgent_GetMaxTuners);
+        this->bindAndAddMethod(Procedure("TestMgr_TRM_GetAllTunerIds", PARAMS_BY_NAME, JSON_STRING,NULL), &TRMAgent::TRMAgent_GetAllTunerIds);
+        this->bindAndAddMethod(Procedure("TestMgr_TRM_GetAllTunerStates", PARAMS_BY_NAME, JSON_STRING,NULL), &TRMAgent::TRMAgent_GetAllTunerStates);
+        this->bindAndAddMethod(Procedure("TestMgr_TRM_GetAllReservations", PARAMS_BY_NAME, JSON_STRING,"deviceNo",JSON_INTEGER,NULL), &TRMAgent::TRMAgent_GetAllReservations);
+        this->bindAndAddMethod(Procedure("TestMgr_TRM_GetVersion", PARAMS_BY_NAME, JSON_STRING,NULL), &TRMAgent::TRMAgent_GetVersion);
+        this->bindAndAddMethod(Procedure("TestMgr_TRM_TunerReserveForRecord", PARAMS_BY_NAME,JSON_STRING,"deviceNo",JSON_INTEGER,"recordingId",JSON_STRING,"locator",JSON_STRING,"duration",JSON_INTEGER,"startTime",JSON_INTEGER,"hot",JSON_INTEGER,"selectOnConflict",JSON_INTEGER,"token",JSON_STRING,NULL), &TRMAgent::TRMAgent_TunerReserveForRecord);
+        this->bindAndAddMethod(Procedure("TestMgr_TRM_TunerReserveForLive", PARAMS_BY_NAME, JSON_STRING,"deviceNo",JSON_INTEGER,"locator",JSON_STRING,"duration",JSON_INTEGER,"startTime",JSON_INTEGER,"selectOnConflict",JSON_INTEGER,"token",JSON_STRING,NULL), &TRMAgent::TRMAgent_TunerReserveForLive);
+        this->bindAndAddMethod(Procedure("TestMgr_TRM_ReleaseTunerReservation", PARAMS_BY_NAME, JSON_STRING,"activity",JSON_INTEGER,"locator",JSON_STRING,"deviceNo",JSON_INTEGER,NULL), &TRMAgent::TRMAgent_ReleaseTunerReservation);
+        this->bindAndAddMethod(Procedure("TestMgr_TRM_ValidateTunerReservation", PARAMS_BY_NAME, JSON_STRING,"activity",JSON_INTEGER,"locator",JSON_STRING,"deviceNo",JSON_INTEGER,NULL), &TRMAgent::TRMAgent_ValidateTunerReservation);
+        this->bindAndAddMethod(Procedure("TestMgr_TRM_CancelRecording", PARAMS_BY_NAME, JSON_STRING,"locator",JSON_STRING,NULL), &TRMAgent::TRMAgent_CancelRecording);
+    }
     //Inherited functions
-    bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
-
-    bool cleanup(const char*, RDKTestAgent*);
+    bool initialize(IN const char* szVersion);
+    bool cleanup(IN const char* szVersion);
     string testmodulepre_requisites();
     bool testmodulepost_requisites();
 
     //TRMAgent Wrapper functions
-    bool TRMAgent_GetMaxTuners(IN const Json::Value& req, OUT Json::Value& response);
-    bool TRMAgent_GetAllTunerIds(IN const Json::Value& req, OUT Json::Value& response);
-    bool TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::Value& response);
-    bool TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::Value& response);
-    bool TRMAgent_GetVersion(IN const Json::Value& req, OUT Json::Value& response);
-    bool TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Json::Value& response);
-    bool TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json::Value& response);
-    bool TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT Json::Value& response);
-    bool TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT Json::Value& response);
-    bool TRMAgent_CancelRecording(IN const Json::Value& req, OUT Json::Value& response);
+    void TRMAgent_GetMaxTuners(IN const Json::Value& req, OUT Json::Value& response);
+    void TRMAgent_GetAllTunerIds(IN const Json::Value& req, OUT Json::Value& response);
+    void TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::Value& response);
+    void TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::Value& response);
+    void TRMAgent_GetVersion(IN const Json::Value& req, OUT Json::Value& response);
+    void TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Json::Value& response);
+    void TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json::Value& response);
+    void TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT Json::Value& response);
+    void TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT Json::Value& response);
+    void TRMAgent_CancelRecording(IN const Json::Value& req, OUT Json::Value& response);
 
 };
-extern "C" TRMAgent* CreateObject();
+//extern "C" TRMAgent* CreateObject(); sarves
 
 #endif //__TRM_STUB_H__

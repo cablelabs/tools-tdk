@@ -37,7 +37,7 @@
 #include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <jsonrpc/jsonrpc.h>
+//#include <jsonrpc/jsonrpc.h> sarves
 #include <execinfo.h>
 
 /* Application Includes */
@@ -77,9 +77,10 @@ pthread_t deviceStatusThreadId;
 pthread_t deviceDetailsThreadId;
 pthread_t crashDetailsThreadId;
 pthread_t agentExecuterThreadId;
-
-Json::Rpc::TcpServer go_Server (ANY_ADDR, RDK_TEST_AGENT_PORT);
-
+//sarves
+//Json::Rpc::TcpServer go_Server (ANY_ADDR, RDK_TEST_AGENT_PORT);
+TcpSocketServer go_Server(ANY_ADDR, RDK_TEST_AGENT_PORT);
+extern RDKTestAgent *m_pAgent;
 /* Structure to hold process details */
 struct sProcessInfo 
 {
@@ -638,10 +639,12 @@ void* ReportCrash (void*)
 void *CheckStatus (void *)
 {
     DEBUG_PRINT (DEBUG_TRACE, "\nStarting Device Status Monitoring..\n");
+    //Json::Rpc::TcpServer o_Status (ANY_ADDR, RDK_DEVICE_STATUS_PORT);
+    //RpcMethods o_RpcMethods (NULL);
+    TcpSocketServer go_Status(ANY_ADDR, RDK_DEVICE_STATUS_PORT);
+    RpcMethods o_Status(go_Status);
 
-    Json::Rpc::TcpServer o_Status (ANY_ADDR, RDK_DEVICE_STATUS_PORT);
-    RpcMethods o_RpcMethods (NULL);
-
+#if 0
     if (!networking::init())
     {
         DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Network initialization failed \n");
@@ -651,13 +654,14 @@ void *CheckStatus (void *)
     {
         DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Bind failed \n");
     }
-
-    if (!o_Status.Listen())
+#endif
+    if (!o_Status.StartListening())
     {
         DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Listen failed \n");
     }
 
     /* Registering methods to status server */
+#if 0
     o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetHostStatus, std::string("getHostStatus")));
     o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCCallEnableTDK, std::string("callEnableTDK")));
     o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCCallDisableTDK, std::string("callDisableTDK")));
@@ -670,18 +674,19 @@ void *CheckStatus (void *)
     o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetConnectedDevices, std::string("getConnectedDevices")));
     #endif /* End of PORT_FORWARD  */
 		
+#endif	
     while (s_bAgentRun)
     {
         /* Status server waiting indefinitely */
-        o_Status.WaitMessage(1000);
+        //do nothing
+        //o_Status.WaitMessage(1000);
     }
 
     /* clean up and exit */
     DEBUG_PRINT (DEBUG_TRACE, "\nExiting Device Status Monitoring..\n");
-    o_Status.Close();
-    networking::cleanup();
+    //o_Status.Close();
+    //networking::cleanup();
     pthread_exit (NULL);
-	
 } /* End of CheckStatus */
 
 
@@ -798,7 +803,7 @@ int Agent()
     std::string strFilePath;
     int nReturnValue = RETURN_SUCCESS;
     int nCrashReportStatus = RETURN_SUCCESS;
-
+#if 0
     if (!networking::init())
     {
         DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Networking initialization failed \n");
@@ -831,10 +836,14 @@ int Agent()
     {
         DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Error signal SIGABRT will not be handled \n");
     }
-
+#endif
     /* Create AgentObj */
-    RDKTestAgent o_Agent(&go_Server);
-
+    //RDKTestAgent o_Agent(&go_Server); sarves
+    //RDKTestAgent o_Agent(go_Server);
+    RpcMethods o_Agent(go_Server);
+    //m_pAgent=&o_Agent;
+    
+#if 0
     if (!go_Server.Bind())
     {
         DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Test Agent Bind failed \n");
@@ -842,8 +851,9 @@ int Agent()
         return RETURN_FAILURE;   // Returns failure if Bind failed
         
     }
-
-    if (!go_Server.Listen())
+#endif
+    //if (!go_Server.Listen()) sarves
+    if (!o_Agent.StartListening())
     {
         DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Test Agent Listen failed \n");
 		
@@ -851,8 +861,8 @@ int Agent()
         
     }
 
-    RpcMethods o_RpcMethods(&o_Agent);
-	
+    //RpcMethods o_RpcMethods(&o_Agent);
+#if 0
     /* Registering RPC methods to server */
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCLoadModule, std::string("LoadModule")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCUnloadModule, std::string("UnloadModule")));
@@ -864,10 +874,15 @@ int Agent()
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCPerformanceSystemDiagnostics, std::string("PerformanceSystemDiagnostics")));
     go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetImageName, std::string("getImageName")));
 
+    go_Server.bindAndAddMethod(Procedure("RPCLoadModule", PARAMS_BY_NAME, JSON_STRING,
+                                         "execID", JSON_STRING, NULL),
+                           &RpcMethods::RPCLoadModule);
+
+#endif
     /* To set route to client devices. For gateway boxes only */
     #ifdef PORT_FORWARD
 
-    go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetClientMocaIpAddress, std::string("getClientMocaIpAddress")));	
+//    go_Server.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetClientMocaIpAddress, std::string("getClientMocaIpAddress")));	
 
 
     size_t nPos = 0;
@@ -896,6 +911,7 @@ int Agent()
             DEBUG_PRINT (DEBUG_LOG, "\nSetting route for %s \n",strClientMACAddr.c_str());
             pszCommand = new char[strCommand.length() + 1];
             strcpy (pszCommand, strCommand.c_str());
+            DEBUG_PRINT (DEBUG_LOG, "\nCommand is  %s \n",strCommand.c_str());
             system (pszCommand); // Executing port forward script
             o_gClientDeviceMap.insert (std::make_pair (strClientMACAddr, pszCommand));
         }
@@ -950,7 +966,7 @@ int Agent()
             waitpid (-1, NULL, WNOHANG | WUNTRACED);
 					
             /* Server waiting indefinitely */
-            go_Server.WaitMessage (1000);
+            //go_Server.WaitMessage (1000); sarves
         }
         catch(...)
         {
@@ -961,8 +977,8 @@ int Agent()
     }
 
     /* cleanup and exit */
-    go_Server.Close();
-    networking::cleanup();
+//    go_Server.Close(); sarves
+//    networking::cleanup(); sarves
     pthread_join (deviceStatusThreadId, NULL);
 
     /* To set route to client devices. For gateway boxes only */
@@ -1052,7 +1068,6 @@ int AgentMonitor (char **pProcessName, int nProcessNameSize)
     struct sProcessInfo *pProcessInfo;
 
     DEBUG_PRINT (DEBUG_LOG, "\nStarting Agent Monitoring..\n");
-
     /* Populating structure members for process info */
     pProcessInfo = (struct sProcessInfo*) malloc (sizeof (struct sProcessInfo) );
     pProcessInfo -> pProcessName = pProcessName;
@@ -1070,9 +1085,13 @@ int AgentMonitor (char **pProcessName, int nProcessNameSize)
     }
 
     /* Create AgentMonitorObj */
-    Json::Rpc::TcpServer o_Monitor (ANY_ADDR, RDK_AGENT_MONITOR_PORT);
-    RpcMethods o_RpcMethods (NULL);
+    //Json::Rpc::TcpServer o_Monitor (ANY_ADDR, RDK_AGENT_MONITOR_PORT);
+    //RpcMethods o_RpcMethods (NULL);
+    TcpSocketServer go_Monitor(ANY_ADDR, RDK_AGENT_MONITOR_PORT); 
+    //RDKTestAgent o_Monitor(go_Monitor);
+    RpcMethods o_Monitor(go_Monitor);
 
+#if 0
     if (!networking::init())
     {
         std::cerr << "Alert!!! Agent Monitoring Network initialization failed \n";
@@ -1089,7 +1108,8 @@ int AgentMonitor (char **pProcessName, int nProcessNameSize)
         
     }
 
-    if (!o_Monitor.Listen())
+#endif
+    if (!o_Monitor.StartListening())
     {
         DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Agent Monitoring Listen failed \n");
 
@@ -1097,6 +1117,7 @@ int AgentMonitor (char **pProcessName, int nProcessNameSize)
 		
     }
 
+#if 0
     /* Registering methods to agent monitor */
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCResetAgent, std::string("ResetAgent")));
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCPushLog, std::string("PushLog")));
@@ -1104,7 +1125,7 @@ int AgentMonitor (char **pProcessName, int nProcessNameSize)
     /* TO DO : Below rpc to be removed from agent monitor. Retaining so that it wont break Test Manager logic */
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetRDKVersion, std::string("GetRDKVersion")));
     o_Monitor.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetAgentConsoleLogPath, std::string("GetAgentConsoleLogPath")));	
-
+#endif
     /* Starting a thread for agent execution */
     nReturnValue = pthread_create (&agentExecuterThreadId, NULL, AgentExecuter, (void *)(pProcessInfo));
     if(nReturnValue != RETURN_SUCCESS)
@@ -1120,16 +1141,15 @@ int AgentMonitor (char **pProcessName, int nProcessNameSize)
         waitpid (-1, NULL, WNOHANG | WUNTRACED);
 		
         /* server waiting indefinitely */
-        o_Monitor.WaitMessage(1000);
+        //o_Monitor.WaitMessage(1000); sarves
     }
 
     /* clean up and exit */
     DEBUG_PRINT (DEBUG_LOG, "\nExiting Agent Monitoring..\n");
-    o_Monitor.Close();
-    networking::cleanup();
+    //o_Monitor.Close();
+    //networking::cleanup(); sarves
     free (pProcessInfo);
     pProcessInfo = NULL;
-
     return RETURN_SUCCESS;
 
 } /* End of AgentMonitor */

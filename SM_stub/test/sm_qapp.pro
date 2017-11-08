@@ -70,7 +70,7 @@ LIBS += -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10
 }
 
 LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
-LIBS += -lservicemanager -lds -ldshalcli -lIARMBus -ljsoncpp -ljsonrpc-cpp
+LIBS += -lservicemanager -lds -ldshalcli -lIARMBus -ljsoncpp -ljsonrpccpp-server -ljsonrpccpp-common -ljsonrpccpp-client
 
 #non-yocto env variables
 exists(../../platform/SM_stub/intel.pri) : include(../../platform/SM_stub/intel.pri)

@@ -130,12 +130,12 @@ bool iarmMgrStatus(char *ownerName )
 }
 
 /*This is a constructor function for IARMBUSAgent class*/
-
+#if 0
 IARMBUSAgent::IARMBUSAgent()
 {
 	DEBUG_PRINT(DEBUG_LOG,"IARMBUSAgent Initialized\n");
 }
-
+#endif
 
 /***************************************************************************
  *Function name	: initialize
@@ -144,9 +144,10 @@ IARMBUSAgent::IARMBUSAgent()
  *  		  script
  *****************************************************************************/ 
 
-bool IARMBUSAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool IARMBUSAgent::initialize(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent Initialize\n");
+#if 0
 	/*Register stub function for callback*/
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_Init, "TestMgr_IARMBUS_Init");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_Term, "TestMgr_IARMBUS_Term");
@@ -172,6 +173,7 @@ bool IARMBUSAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgent
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::GetLastReceivedEventPerformanceDetails, "TestMgr_IARMBUS_GetLastReceivedEventPerformanceDetails");
 	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::RegisterMultipleEventHandlers, "TestMgr_IARMBUS_RegisterMultipleEventHandlers");
 		
+#endif
 	return TEST_SUCCESS;
 
 }
@@ -271,7 +273,7 @@ char* getResult(int retval,char *resultDetails)
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ***************************************************************************/
 
-bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_Init --->Entry\n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -280,7 +282,8 @@ bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value&
 	memset(resultDetails , '\0', (sizeof(char)*16));
 	if(&req["Process_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		DEBUG_PRINT(DEBUG_LOG,"FAILURE:Process_name is NULL\n");		
+		return;
 	}
 	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_Init directly from IARMBUSAgent_Init\n");
 	/*Calling IARMBUS API IARM_Bus_Init with json req as parameter*/
@@ -292,7 +295,7 @@ bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value&
 
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_Init --->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -302,7 +305,7 @@ bool IARMBUSAgent::IARMBUSAgent_Init(IN const Json::Value& req, OUT Json::Value&
  * @param [in] req- None
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ***************************************************************************/
-bool IARMBUSAgent::IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_Term --->Entry\n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -320,7 +323,7 @@ bool IARMBUSAgent::IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value&
 	response["details"]=resultDetails;
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_Term --->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -331,7 +334,7 @@ bool IARMBUSAgent::IARMBUSAgent_Term(IN const Json::Value& req, OUT Json::Value&
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ***************************************************************************/	
 
-bool IARMBUSAgent::IARMBUSAgent_BusConnect(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_BusConnect(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusConnect --->Entry\n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -347,7 +350,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusConnect(IN const Json::Value& req, OUT Json::
 	response["details"]=resultDetails;
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusConnect --->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -358,7 +361,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusConnect(IN const Json::Value& req, OUT Json::
  * @param [in] req-None 
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ***************************************************************************/
-bool IARMBUSAgent::IARMBUSAgent_BusDisconnect(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_BusDisconnect(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusDisconnect --->Entry\n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -374,7 +377,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusDisconnect(IN const Json::Value& req, OUT Jso
 	response["details"]=resultDetails;
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusDisconnect --->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -386,7 +389,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusDisconnect(IN const Json::Value& req, OUT Jso
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  *****************************************************************************/	
 
-bool IARMBUSAgent::IARMBUSAgent_IsConnected(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_IsConnected(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBus_IsConnected --->Entry \n");
 	int isregistered;
@@ -397,7 +400,7 @@ bool IARMBUSAgent::IARMBUSAgent_IsConnected(IN const Json::Value& req, OUT Json:
 	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_IsConnected from IARMBus_IsConnected \n");
 	if(&req["member_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	/*Calling IARM API IARM_Bus_IsConnected */
@@ -445,7 +448,7 @@ bool IARMBUSAgent::IARMBUSAgent_IsConnected(IN const Json::Value& req, OUT Json:
 	free(resultDetails);	
 	/*Need to fill the response with isregistered variable*/
 	DEBUG_PRINT(DEBUG_TRACE,"IARM_Bus_IsConnected --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -457,7 +460,7 @@ bool IARMBUSAgent::IARMBUSAgent_IsConnected(IN const Json::Value& req, OUT Json:
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ****************************************************************************/	
 
-bool IARMBUSAgent::IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RequestResource --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -466,7 +469,7 @@ bool IARMBUSAgent::IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT J
 	memset(resultDetails , '\0', (sizeof(char)*16));
 	if(&req["resource_type"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	int ResrcType_int=req["resource_type"].asInt(); 
 
@@ -481,7 +484,7 @@ bool IARMBUSAgent::IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT J
 			DEBUG_PRINT(DEBUG_LOG,"\n\nIARM_Bus_RegisterCall - FAILED \n");
 			response["result"]=getResult(retval,resultDetails);
 			response["details"]=resultDetails;
-			return TEST_FAILURE;
+			return;
 		}
 	}
 
@@ -494,7 +497,7 @@ bool IARMBUSAgent::IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT J
 	response["details"]=resultDetails;
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RequestResource --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -507,7 +510,7 @@ bool IARMBUSAgent::IARMBUSAgent_RequestResource(IN const Json::Value& req, OUT J
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ****************************************************************************/	
 
-bool IARMBUSAgent::IARMBUSAgent_ReleaseResource(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_ReleaseResource(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_ReleaseResource --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -516,7 +519,7 @@ bool IARMBUSAgent::IARMBUSAgent_ReleaseResource(IN const Json::Value& req, OUT J
 	memset(resultDetails , '\0', (sizeof(char)*16));
 	if(&req["resource_type"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	int ResrcType_int=req["resource_type"].asInt(); 
 
@@ -529,7 +532,7 @@ bool IARMBUSAgent::IARMBUSAgent_ReleaseResource(IN const Json::Value& req, OUT J
 	response["details"]=resultDetails;
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_ReleaseResource --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -538,7 +541,7 @@ bool IARMBUSAgent::IARMBUSAgent_ReleaseResource(IN const Json::Value& req, OUT J
  *
  ***************************************************************************/
 
-bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"get_LastReceivedEventDetails --->Entry \n");
 
@@ -603,7 +606,7 @@ bool IARMBUSAgent::get_LastReceivedEventDetails(IN const Json::Value& req, OUT J
 	memset(&(LastEvent) , '\0', (sizeof(char)*20));
 	memset(g_ManagerName , '\0', (sizeof(char)*20));
 	DEBUG_PRINT(DEBUG_TRACE,"get_LastReceivedEventDetails --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -1160,7 +1163,7 @@ void _evtHandler(const char *owner, IARM_EventId_t eventId, void *data, size_t l
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ***************************************************************************/	
 
-bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterEventHandler --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -1169,7 +1172,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, 
 	memset(resultDetails , '\0', (sizeof(char)*16));
 	if(&req["event_id"]==NULL || &req["owner_name"]==NULL || &req["evt_handler"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	int eventId=req["event_id"].asInt();
@@ -1197,7 +1200,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, 
 	response["details"]=resultDetails;
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterEventHandler --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -1209,7 +1212,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEventHandler(IN const Json::Value& req, 
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ***************************************************************************/	
 
-bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_UnRegisterEventHandler --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -1218,7 +1221,7 @@ bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req
 	memset(resultDetails , '\0', (sizeof(char)*16));
 	if(&req["event_id"]==NULL || &req["owner_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	int eventId=req["event_id"].asInt();
 	char *ownerName=(char*)req["owner_name"].asCString();
@@ -1237,7 +1240,7 @@ bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req
 	response["details"]=resultDetails;
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_UnRegisterEventHandler --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -1249,7 +1252,7 @@ bool IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler(IN const Json::Value& req
  *
  *****************************************************************************/
 
-bool IARMBUSAgent::IARMBUSAgent_GetContext(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_GetContext(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_GetContext --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_INVALID_STATE;
@@ -1266,7 +1269,7 @@ bool IARMBUSAgent::IARMBUSAgent_GetContext(IN const Json::Value& req, OUT Json::
 	response["details"]=resultDetails;
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_GetContext --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
@@ -1279,7 +1282,7 @@ bool IARMBUSAgent::IARMBUSAgent_GetContext(IN const Json::Value& req, OUT Json::
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ***************************************************************************/	
 
-bool IARMBUSAgent::IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterCall --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -1289,7 +1292,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json
 	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterCall from IARMBUSAgent_RegisterCall \n");
 	if(&req["owner_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	char *ownerName=(char*)req["owner_name"].asCString();
 
@@ -1307,7 +1310,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json
 	REGISTERCALLSTATUS = 1;
 
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterCall --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -1319,7 +1322,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterCall(IN const Json::Value& req, OUT Json
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ***************************************************************************/
 
-bool IARMBUSAgent::IARMBUSAgent_RegisterEvent(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_RegisterEvent(IN const Json::Value& req, OUT Json::Value& response)
 {
 
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterEvent --->Entry \n");
@@ -1330,7 +1333,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEvent(IN const Json::Value& req, OUT Jso
 	DEBUG_PRINT(DEBUG_LOG,"calling IARM_Bus_RegisterEvent from IARMBUSAgent_RegisterEvent \n");
 	if(&req["max_event"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	int maxevent=req["max_event"].asInt();
 	/*Calling IARMBUS API IARM_Bus_RegisterEvent  */
@@ -1341,7 +1344,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEvent(IN const Json::Value& req, OUT Jso
 	response["details"]=resultDetails;
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RegisterEvent --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -1358,7 +1361,7 @@ bool IARMBUSAgent::IARMBUSAgent_RegisterEvent(IN const Json::Value& req, OUT Jso
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ***************************************************************************/	
 
-bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BroadcastEvent --->Entry \n");
 	IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -1368,7 +1371,7 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
 	if(&req["event_id"]==NULL ||&req["owner_name"]==NULL || &req["keyType"]==NULL || &req["keyCode"]==NULL || 
 	   &req["newState"]==NULL ||&req["resource_type"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	int eventId=req["event_id"].asInt();
 	char *ownerName=(char*)req["owner_name"].asCString();
@@ -1435,7 +1438,7 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
 	response["details"]=resultDetails;
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BroadcastEvent --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -1453,7 +1456,7 @@ bool IARMBUSAgent::IARMBUSAgent_BroadcastEvent(IN const Json::Value& req, OUT Js
  *
  ***************************************************************************/	
 
-bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Value& response)
 {
 
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusCall --->Entry \n");
@@ -1464,7 +1467,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
         if(&req["method_name"]==NULL ||&req["owner_name"]==NULL || &req["set_timeout"]==NULL || &req["newState"]==NULL ||
            &req["resource_type"]==NULL ||&req["testapp_API0_data"]==NULL ||&req["testapp_API1_data"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	char *ownerName=(char*)req["owner_name"].asCString();
 	char *methodName=(char*)req["method_name"].asCString();
@@ -1811,7 +1814,7 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
 
 	free(resultDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_BusCall --->Exit \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -1820,12 +1823,12 @@ bool IARMBUSAgent::IARMBUSAgent_BusCall(IN const Json::Value& req, OUT Json::Val
  different types of events,Requesting and releasing resources.
 
  ***************************************************************************/
-bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"InvokeSecondApplication --->Entry \n");
         if (&req["appname"]==NULL)
         {
-                return TEST_FAILURE;
+                return;
         }
 
 	const char* appname=(char*)req["appname"].asCString();
@@ -1862,7 +1865,7 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
 			DEBUG_PRINT(DEBUG_ERROR,"Exception occured during system call\n");
 			DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
 			response["result"]="FAILURE";
-			return TEST_FAILURE;
+			return;
 		}
 	}
 	else
@@ -1877,19 +1880,19 @@ bool IARMBUSAgent::InvokeSecondApplication(IN const Json::Value& req, OUT Json::
 			DEBUG_PRINT(DEBUG_ERROR,"Exception occured during system call\n");
 			DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
 			response["result"]="FAILURE";
-			return TEST_FAILURE;
+			return ;
 		}
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"InvokeSecondApplication --->Exit \n");
 	response["result"]="SUCCESS";
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
  * Function Name : SyncSecondApplication
  * Description	 : RPC method to sync second application
 ***************************************************************************/
-bool IARMBUSAgent::SyncSecondApplication(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::SyncSecondApplication(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SyncSecondApplication --->Entry \n");
 	syncCount = syncCount+1;
@@ -1913,7 +1916,7 @@ bool IARMBUSAgent::SyncSecondApplication(IN const Json::Value& req, OUT Json::Va
 
         DEBUG_PRINT(DEBUG_TRACE,"SyncSecondApplication --->Exit \n");
         response["result"]="SUCCESS";
-	return TEST_SUCCESS;
+	return;
 }
 
 
@@ -2246,7 +2249,7 @@ void _evtHandlerRept3(const char *owner, IARM_EventId_t eventId, void *data, siz
  *Function name	: RegisterMultipleEventHandlers
  *Descrption	: RegisterMultipleEventHandlers wrapper function will be used to Register multiple event handler for single event
  *******************************************************************************************************/ 
-bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_LOG,"Entering %s function", __func__);
 
@@ -2257,7 +2260,7 @@ bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT 
 
 	if( &req["event_id"]==NULL ||&req["owner_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	/* Get the request details*/
@@ -2282,7 +2285,7 @@ bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT 
 		strcpy(details, "IARM_Bus_RegisterEventHandler() FAILED");
 		response["result"]="FAILURE";
 		response["details"]=details;
-		return "FAILURE";
+		return;
 	}
 
 	gRegisteredEventCount++;
@@ -2298,7 +2301,7 @@ bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT 
 		strcpy(details, "IARM_Bus_RegisterEventHandler() FAILED");
 		response["result"]="FAILURE";
 		response["details"]=details;
-		return "FAILURE";
+		return;
 	}
 
 	gRegisteredEventCount++;
@@ -2314,7 +2317,7 @@ bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT 
 		strcpy(details, "IARM_Bus_RegisterEventHandler() FAILED");
 		response["result"]="FAILURE";
 		response["details"]=details;
-		return "FAILURE";
+		return;
 	}
 
 	DEBUG_PRINT(DEBUG_LOG,"Releasing Resource...\n");
@@ -2327,11 +2330,11 @@ bool IARMBUSAgent::RegisterMultipleEventHandlers(IN const Json::Value& req, OUT 
 	response["result"]="SUCCESS";
 	response["details"]=details;
 	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
-        return true;
+        return;
 }
 
 
-bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json::Value& response)
 {
 	char details[512];
 	memset(details, '\0', sizeof(512));
@@ -2343,7 +2346,7 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
 		strcpy(details, "Invalid Parameters-check owner_name, event_id, evttxappname");
 		response["result"]="FAILURE";
 		response["details"]=details;
-		return TEST_FAILURE;
+		return;
 	}
 
 	pid_t idChild = vfork();
@@ -2439,14 +2442,14 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
 		DEBUG_PRINT(DEBUG_LOG,"failed fork\n");
 		response["result"]="FAILURE";
 		response["details"]="second application Execution failed";
-		return false;
+		return;
 	}
 
 	sprintf(details, "%s Successfully Executed", __func__);
 	response["details"]=details;
 	response["result"]="SUCCESS";
 	DEBUG_PRINT(DEBUG_LOG,"Exiting %s function", __func__);
-	return true;	
+	return;	
 
 }
 
@@ -2457,7 +2460,7 @@ bool IARMBUSAgent::InvokeEventTransmitterApp(IN const Json::Value& req, OUT Json
  ***************************************************************************/
 
 
-bool IARMBUSAgent::GetLastReceivedEventPerformanceDetails(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::GetLastReceivedEventPerformanceDetails(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_LOG,"%s --->Entry \n", __func__);
 	char details[400]="Event Details:";
@@ -2558,7 +2561,7 @@ bool IARMBUSAgent::GetLastReceivedEventPerformanceDetails(IN const Json::Value& 
 	free(KeyTimedetails1);
 
 	DEBUG_PRINT(DEBUG_LOG,"%s --->Exit \n", __func__);
-	return true;
+	return;
 }
 
 /**************************************************************************
@@ -2570,7 +2573,7 @@ bool IARMBUSAgent::GetLastReceivedEventPerformanceDetails(IN const Json::Value& 
  * @param [out] response- filled with SUCCESS or FAILURE based on the return value of IARMBUS API.
  ***************************************************************************/
 
-bool IARMBUSAgent::IARMBUSAgent_RemoveEventHandler(IN const Json::Value& req, OUT Json::Value& response)
+void IARMBUSAgent::IARMBUSAgent_RemoveEventHandler(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RemoveEventHandler --->Entry \n");
         IARM_Result_t retval=IARM_RESULT_SUCCESS;
@@ -2580,7 +2583,7 @@ bool IARMBUSAgent::IARMBUSAgent_RemoveEventHandler(IN const Json::Value& req, OU
         if(&req["event_id"]==NULL || &req["owner_name"]==NULL || &req["evt_handler"]==NULL)
         {
 		DEBUG_PRINT(DEBUG_ERROR,"NULL param passed \n");
-                return TEST_FAILURE;
+                return;
         }
 
         int eventId=req["event_id"].asInt();
@@ -2621,7 +2624,7 @@ bool IARMBUSAgent::IARMBUSAgent_RemoveEventHandler(IN const Json::Value& req, OU
         response["details"]=resultDetails;
         free(resultDetails);
         DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent_RemoveEventHandler --->Exit \n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -2631,9 +2634,9 @@ bool IARMBUSAgent::IARMBUSAgent_RemoveEventHandler(IN const Json::Value& req, OU
  *
  **************************************************************************/
 
-extern "C" IARMBUSAgent* CreateObject()
+extern "C" IARMBUSAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-	return new IARMBUSAgent();
+	return new IARMBUSAgent(ptrtcpServer);
 }
 
 /**************************************************************************
@@ -2642,8 +2645,9 @@ extern "C" IARMBUSAgent* CreateObject()
  *
  **************************************************************************/
 
-bool IARMBUSAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool IARMBUSAgent::cleanup(IN const char* szVersion)
 {
+#if 0
 	DEBUG_PRINT(DEBUG_LOG,"IARMBUSAgent shutting down\n");
 	if(ptrAgentObj==NULL)
 	{
@@ -2673,6 +2677,7 @@ bool IARMBUSAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_InvokeEventTransmitterApp");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_GetLastReceivedEventPerformanceDetails");
 	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RegisterMultipleEventHandlers");
+#endif
 	
 	/* TWC-change : ReInitialize variable*/
 	REGISTERCALLSTATUS = 0;

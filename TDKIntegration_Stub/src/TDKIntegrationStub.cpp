@@ -137,9 +137,10 @@ Arguments     : IN const char*,IN RDKTestAgent
 Description   : Register the callback function of TDKIntegrationStub
  ***************************************************************************/
 
-bool TDKIntegrationStub::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool TDKIntegrationStub::initialize(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_LOG,"TDKIntegrationTest Initialized");
+#if 0
 #ifdef HYBRID
 #ifdef RDK_BR_1DOT3
 	/*Register stub function for callback*/
@@ -185,6 +186,7 @@ bool TDKIntegrationStub::initialize(IN const char* szVersion,IN RDKTestAgent *pt
 	/* E2E RF Video */
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_ChannelChange, "TestMgr_RF_Video_ChannelChange");
 	ptrAgentObj->RegisterMethod(*this,&TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult, "TestMgr_MDVR_GetResult");
+#endif
 #endif
 	return TEST_SUCCESS;
 }
@@ -404,7 +406,7 @@ Arguments     : IN const Json::Value,OUT Json::Value
 
 Description   : Send the T2pmsg for tuning to the Videoproxy and get the response in the T2ptuningresponse.txt
  ***************************************************************************/
-bool TDKIntegrationStub::TDKIntegrationT2pTuning(IN const Json::Value& request, OUT Json::Value& response)
+void TDKIntegrationStub::TDKIntegrationT2pTuning(IN const Json::Value& request, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::TDKIntegrationT2pTuning--Entry\n");
 	string ocapid, line;
@@ -424,7 +426,7 @@ bool TDKIntegrationStub::TDKIntegrationT2pTuning(IN const Json::Value& request, 
 		DEBUG_PRINT(DEBUG_ERROR,"\nSystem command is failed on executing T2pTuning.sh  \n");
 		response["result"]="FAILURE";
 		response["details"]="FAILURE:System command is failed on executing T2pTuning.sh";
-		return TEST_FAILURE;
+		return;
 	}
 	char cwd[1024];
 	string syscwd;
@@ -466,7 +468,7 @@ bool TDKIntegrationStub::TDKIntegrationT2pTuning(IN const Json::Value& request, 
 		response["result"] = "SUCCESS";
 		response["details"]="SUccess:Successfully got the error response";
 		response["log-path"] = g_tdkPath+ "t2ptuneresponse.txt";
-		return TEST_SUCCESS;	
+		return;	
 	}
 	else
 	{
@@ -475,10 +477,10 @@ bool TDKIntegrationStub::TDKIntegrationT2pTuning(IN const Json::Value& request, 
 		response["details"]="FAILURE:Generic error Not OK";
 		//response["log-path"]=syscwd+"t2ptuneresponse.txt";
 		response["log-path"] = g_tdkPath+"t2ptuneresponse.txt";
-		return TEST_FAILURE;	
+		return;	
 	}
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::TDKIntegrationT2pTuning--Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::TDKIntegrationT2pTrickplay
@@ -487,7 +489,7 @@ Arguments     : IN const Json::Value,OUT Json::Value
 
 Description   : Changes the trick play rate and captures the log in /t2ptrickmoderesponse.txt and sends to the TestFramework. 
  ***************************************************************************/
-bool TDKIntegrationStub::TDKIntegrationT2pTrickplay(IN const Json::Value& request, OUT Json::Value& response)
+void TDKIntegrationStub::TDKIntegrationT2pTrickplay(IN const Json::Value& request, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegration::TDKIntegrationT2pTrickplay--Entry\n");
 	int errorResponse = 0;
@@ -509,7 +511,7 @@ bool TDKIntegrationStub::TDKIntegrationT2pTrickplay(IN const Json::Value& reques
 		DEBUG_PRINT(DEBUG_ERROR,"\nsystem command is failed on executing T2pTrickMode.sh \n");
 		response["result"] = "FAILURE";
 		response["details"] = "FAILURE:System command is failed on executing T2pTrickMode.sh";
-		return TEST_FAILURE;
+		return;
 	}
 	if(getcwd(cwd, sizeof(cwd)) == NULL)
 	{
@@ -554,10 +556,10 @@ bool TDKIntegrationStub::TDKIntegrationT2pTrickplay(IN const Json::Value& reques
 		response["details"] = "FAILURE:Generic error not OK";
 		//response["log-path"]=syscwd+"t2ptrickmoderesponse.txt";
 		response["log-path"] = g_tdkPath+"t2ptrickmoderesponse.txt";
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegration::TDKIntegrationT2pTrickplay--Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 #endif
 #endif
@@ -571,7 +573,7 @@ Description   : Receving the Requesturl from Test Manager and sends the URL to t
 Recorded Url List.
 Returns the FilePath of Recorded Urls List captured
  ***************************************************************************/
-bool TDKIntegrationStub::E2EStubGetRecURLS(IN const Json::Value& request, OUT Json::Value& response)
+void TDKIntegrationStub::E2EStubGetRecURLS(IN const Json::Value& request, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2EStubGetRecURLS--Entry\n");
 	FILE *ErrorCheck;
@@ -585,7 +587,7 @@ bool TDKIntegrationStub::E2EStubGetRecURLS(IN const Json::Value& request, OUT Js
                 response["details"] = "Error on popen()";
                 DEBUG_PRINT(DEBUG_ERROR, "Error on popen()\n");
 
-                return TEST_FAILURE;
+                return;
         }
         char buffer[128] = {'\0'};
 
@@ -604,7 +606,7 @@ bool TDKIntegrationStub::E2EStubGetRecURLS(IN const Json::Value& request, OUT Js
                 response["details"] = "Failed to fetch streaming ip";
                 DEBUG_PRINT(DEBUG_ERROR, "Failed to fetch streaming ip\n");
 
-                return TEST_FAILURE;
+                return;
         }
 
         resultip = ip;
@@ -629,14 +631,14 @@ bool TDKIntegrationStub::E2EStubGetRecURLS(IN const Json::Value& request, OUT Js
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n system command is failed on executing Curl  \n");
 		response["result"]="FAILURE";
-		return TEST_FAILURE;
+		return;
 	}
 	sysRetValScript=system("source recordedurlscript.sh >Recordedlistmod.txt");
 	if(sysRetValScript!=0)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n system command is failed on executing script \n");
 		response["result"]="FAILURE";
-		return TEST_FAILURE;
+		return;
 	}
 	if(getcwd(cwd, sizeof(cwd))==NULL)
 	{
@@ -662,10 +664,10 @@ bool TDKIntegrationStub::E2EStubGetRecURLS(IN const Json::Value& request, OUT Js
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\n Recordedlistmod.txt is not created \n");
 		response["result"]="FAILURE";
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2EStubGetRecURLS--Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2EStubPlayURL
@@ -675,7 +677,7 @@ Arguments     : IN const Json::Value,OUT Json::Value
 Description   : Play the URL with the Mediaplayer.captured log is
 return back to the TestFramework
  ****************************************************************************/
-bool TDKIntegrationStub::E2EStubPlayURL(IN const Json::Value& request, OUT Json::Value& response)
+void TDKIntegrationStub::E2EStubPlayURL(IN const Json::Value& request, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2EStubPlayURL--Entry\n");
 	int sysRetValScript, errorResponse = 0;
@@ -693,14 +695,14 @@ bool TDKIntegrationStub::E2EStubPlayURL(IN const Json::Value& request, OUT Json:
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\nsystem command is failed on executing mplayerscript \n");
 		response["result"] = "FAILURE";
-		return TEST_FAILURE;
+		return;
 	}
 	sysRetValScript = system("cat e2emplayerlog.txt >> e2emplayerappend.txt");
 	if(sysRetValScript!=0)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\nsystem command is failed on appending mplayer log \n");
 		response["result"] = "FAILURE";
-		return TEST_FAILURE;
+		return;
 	}
 	ifstream fileInput;
 	// open file to playPattern
@@ -721,13 +723,13 @@ bool TDKIntegrationStub::E2EStubPlayURL(IN const Json::Value& request, OUT Json:
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\ne2emplayerlog.txt is not found\n");
 		response["result"] = "FAILURE";
-		return TEST_FAILURE;
+		return;
 	}
 	if(getcwd(cwd, sizeof(cwd))== NULL)
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\nGetcwd returns NULL\n");
 		response["result"] = "FAILURE";
-		return TEST_FAILURE;
+		return;
 	}
 	else if(strcmp(cwd,"/")==0)
 	{
@@ -744,11 +746,11 @@ bool TDKIntegrationStub::E2EStubPlayURL(IN const Json::Value& request, OUT Json:
 	else
 	{
 		response["result"] = "FAILURE";
-		return TEST_FAILURE;
+		return;
 	}
 	response["log-path"] = syscwd+"e2emplayerappend.txt";
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2EStubPlayURL--Entry\n");
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ELinearTVstubGetURL
@@ -758,7 +760,7 @@ Arguments     : IN const Json::Value,OUT Json::Value
 Description   : Send the URL to the Mediastreamer get the valid URL in the Json Response.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ELinearTVstubGetURL(IN const Json::Value& request, OUT Json::Value& response)
+void TDKIntegrationStub::E2ELinearTVstubGetURL(IN const Json::Value& request, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ELinearTVstubcb--Entry\n");
 	CURL *curl;
@@ -779,7 +781,7 @@ bool TDKIntegrationStub::E2ELinearTVstubGetURL(IN const Json::Value& request, OU
                 response["details"] = "Error on popen()";
                 DEBUG_PRINT(DEBUG_ERROR, "Error on popen()\n");
 
-                return TEST_FAILURE;
+                return;
         }
         char buffer[128] = {'\0'};
 
@@ -798,7 +800,7 @@ bool TDKIntegrationStub::E2ELinearTVstubGetURL(IN const Json::Value& request, OU
                 response["details"] = "Failed to fetch streaming ip";
                 DEBUG_PRINT(DEBUG_ERROR, "Failed to fetch streaming ip\n");
 
-                return TEST_FAILURE;
+                return;
         }
 
         resultip = ip;
@@ -831,7 +833,7 @@ bool TDKIntegrationStub::E2ELinearTVstubGetURL(IN const Json::Value& request, OU
 		fprintf(stderr, "curl_easy_perform() failed: %s \n",curl_easy_strerror(curlResponse));
 		response["result"]="FAILURE";
 		response["details"]="Curl API failed";
-		return false;
+		return;
 	}
 	curl_easy_cleanup(curl);
 	ifstream file("jsonfile.json");
@@ -851,10 +853,10 @@ bool TDKIntegrationStub::E2ELinearTVstubGetURL(IN const Json::Value& request, OU
 		//Filling json response with FAILURE status and error message
 		response["result"]="FAILURE";
 		response["details"]="Response of Json is failed";
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2EStubPlayURL--Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ELinearTVstubPlayURL
@@ -864,7 +866,7 @@ Arguments     : IN const Json::Value,OUT Json::Value
 Description   : Play the URL with the Mediaplayer.captured log is
 return back to the TestFramework
  ***************************************************************************/
-bool TDKIntegrationStub::E2ELinearTVstubPlayURL(IN const Json::Value& request, OUT Json::Value& response)
+void TDKIntegrationStub::E2ELinearTVstubPlayURL(IN const Json::Value& request, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ELinearTVStubPlayURL--Entry\n");
 	int errorResponse=0;
@@ -888,7 +890,7 @@ bool TDKIntegrationStub::E2ELinearTVstubPlayURL(IN const Json::Value& request, O
 	{
 		DEBUG_PRINT(DEBUG_ERROR,"\nsystem command is failed on executing mplayerscript \n");
 		response["result"]="FAILURE";
-		return TEST_FAILURE;
+		return;
 	}
 
 	if(getcwd(cwd, sizeof(cwd))==NULL)
@@ -930,10 +932,10 @@ bool TDKIntegrationStub::E2ELinearTVstubPlayURL(IN const Json::Value& request, O
 		DEBUG_PRINT(DEBUG_ERROR,"\nURL is Not Played n");
 		response["result"] = "FAILURE";
 		response["log-path"] = g_tdkPath+"t2ptuneresponse.txt";
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ELinearTVStubPlayURL--Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 #endif
 #ifdef RMFAGENT
@@ -948,7 +950,7 @@ Arguments     : Input argument is Playback URL, mime, Json object. Output argume
 
 Description   : Helper function to initialize, open HnSrc and MpSink component.
  ****************************************************************************/
-int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
+void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, " Entered into %s\n",__FUNCTION__);
  	#ifdef USE_SOC_INIT
@@ -968,7 +970,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 		response["details"] = "HNSource instance creation failed";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource instance creation failed\n");
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	if(pSink == NULL)
@@ -977,7 +979,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 		response["details"] = "MPSink instance creation failed";
 		DEBUG_PRINT(DEBUG_ERROR, "MPSink instance creation failed\n");
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->init();
@@ -987,7 +989,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 		response["details"] = "HNSource initialization failed";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource initialization failed %ld\n",retHNSrcValue);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc init\n");
 
@@ -1009,7 +1011,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
                  }
                         response["result"] = "FAILURE";
                         response["details"] = token;
-                        return TEST_FAILURE;
+                        return;
         }
 
 	
@@ -1166,7 +1168,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource open failed %ld\n",retHNSrcValue);
 
 		pSource->term();
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc open\n");
 	/* TuningTime */
@@ -1181,7 +1183,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 		//Source close and terminate before exiting.
 		pSource->close();
 		pSource->term();
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed MP Sink init\n");
 	retMPSinkValue = pSink->setVideoRectangle(X_VALUE, Y_VALUE, WIDTH, HEIGHT, 0);
@@ -1195,7 +1197,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 		pSource->term();
 		//Sink terminate
 		pSink->term();
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed MP Sink set video rectangle\n");
 	retMPSinkValue = pSink->setSource(pSource);
@@ -1209,7 +1211,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 		pSource->term();
 		//Sink terminate
 		pSink->term();
-		return TEST_FAILURE;
+		return;
 	}
 	
 	/*FIX for RDKTT-124 ticket*/
@@ -1219,7 +1221,7 @@ int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 
 	DEBUG_PRINT(DEBUG_TRACE, "Passed MP Sink setSource\n");
 	DEBUG_PRINT(DEBUG_TRACE, "Passed %s\n",__FUNCTION__);
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : close_Term_HNSrc_MPSink
@@ -1259,7 +1261,7 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
         DEBUG_PRINT(DEBUG_TRACE, "Passed Hnsrc pause\n");
 
@@ -1279,7 +1281,7 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
         	// Uninitialize SOC
         	soc_uninit();
         	#endif
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed Hnsrc close\n");
 
@@ -1297,7 +1299,7 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
         	soc_uninit();
         	#endif
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed MPSink term\n");
 
@@ -1314,7 +1316,7 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
         	// Uninitialize SOC
         	soc_uninit();
         	#endif
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed Hnsrc term\n");
 
@@ -1328,7 +1330,7 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
         #endif
 
 
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -1511,7 +1513,7 @@ Arguments     : Input argument is Playback URL. Output argument is "SUCCESS" or 
 
 Description   :Sends the URL to HYBRID to playback the video. URL can be Linear TV or DVR URL.
  **************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 	string url = req["playUrl"].asCString();
@@ -1519,7 +1521,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	modurl=url;
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(modurl.c_str(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_ERROR, "After init_open_HNsrc_MPsink------------------\n");
 	
@@ -1576,7 +1578,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed %ld\n",retHNSrcValue);
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc play\n");
 #if 0
@@ -1609,7 +1611,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed current state not playing.\n");
 
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	int checkcount=0;
 	bool checkresult=true;
@@ -1628,7 +1630,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		response["result"] = "FAILURE";
 		response["details"] = "Video playback encountered an error";
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 
 	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS) && curSpeed == 1.0 )
@@ -1636,14 +1638,14 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 		response["result"] = "FAILURE";
 		response["details"] = "Audio playback encountered an error";
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(30);
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 #if 0
@@ -1665,7 +1667,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& req
 	response["details"] = "Playback Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Playback Successful \n");
 
-	return TEST_SUCCESS;
+	//return TEST_SUCCESS;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Play_Pause
@@ -1676,24 +1678,24 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And does Play and Pause on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_Pause(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_Pause(IN const Json::Value& req, OUT Json::Value& response)
 {
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	if(TEST_FAILURE == playPause(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Pause_Play
@@ -1704,14 +1706,14 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And does Pause and Play on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Pause_Play(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Pause_Play(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 	string url = req["playUrl"].asCString();
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	retHNSrcValue = pSource->play();
 	sleep(5);
@@ -1728,7 +1730,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Pause_Play(IN const Json::Value& req, OUT J
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	cout << "LOG Line:" << __LINE__ << " : Passed HNSrc play \n";
 	/*Query the current speed */
@@ -1751,7 +1753,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Pause_Play(IN const Json::Value& req, OUT J
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	sleep(5);
 
@@ -1765,7 +1767,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Pause_Play(IN const Json::Value& req, OUT J
 		response["details"] = "HNSource setSpeed failed";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource  setSpeed failed %ld\n",retHNSrcValue);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(5);
@@ -1779,21 +1781,21 @@ bool TDKIntegrationStub::E2ERMFAgent_Pause_Play(IN const Json::Value& req, OUT J
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(40);
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Pause Play is Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Pause Play Successful \n");
 
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_FF_FR
@@ -1804,13 +1806,13 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And does Play and can perform trickplay(forward/rewind in different rate) on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_FF_FR(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_FF_FR(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -1827,7 +1829,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_FF_FR(IN const Json::Value& 
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed %ld\n",retHNSrcValue);
 
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc play\n");
 
@@ -1842,25 +1844,25 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_FF_FR(IN const Json::Value& 
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	sleep(40);
 	float changeSpeed = req["speed"].asFloat();
 	if(TEST_FAILURE == changePlaySpeed(changeSpeed,response))
 	{
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "changePlaySpeed success.\n");
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	response["result"] = "SUCCESS";
 	response["details"] = "DVR Trickplay Fast Forward/Rewind Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "DVR Trickplay Fast Forward/Rewind Successful \n");
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point
@@ -1871,7 +1873,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And does Play still the end of recording and can perform trickplay(rewind in different rate) on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 	string url = req["playUrl"].asCString();
@@ -1879,7 +1881,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN con
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "TrickPlay RewindSpeed: %f\n",changeSpeed);
 
@@ -1898,7 +1900,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN con
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 
@@ -1922,7 +1924,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN con
 		response["result"] = "FAILURE";
 		response["details"] = "HNSource play failed current state not playing.\n";
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	sleep(20);
 
@@ -1937,7 +1939,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN con
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	retHNSrcValue = pSource->setSpeed(changeSpeed);
 	if(RMF_RESULT_SUCCESS != retHNSrcValue)
@@ -1947,7 +1949,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN con
 		response["result"] = "FAILURE";
 		response["details"] = "HNSource setSpeed failed";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource  setSpeed failed %ld\n",retHNSrcValue);
-		return TEST_FAILURE;
+		return;
 	}
 	sleep(5);
 
@@ -1962,19 +1964,19 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN con
 		response["details"] = "HNSource failed to change speed";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource failed to change speed\n");
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Rewind from end point Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Rewind from end point Successful \n");
 
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play
@@ -1985,18 +1987,18 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And does Play, pause and play on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	if(TEST_FAILURE == playPause(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -2013,7 +2015,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play(IN const Json::Value& req, 
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed %ld\n",retHNSrcValue);
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 
@@ -2028,17 +2030,17 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play(IN const Json::Value& req, 
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(20);
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_Repeat
@@ -2049,7 +2051,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And does Play, pause and play repeat the sequence multiple times on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_Repeat(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_Repeat(IN const Json::Value& req, OUT Json::Value& response)
 {
 	int repeatCount = req["rCount"].asInt();
 
@@ -2057,7 +2059,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_Repeat(IN const Json::Value
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	for(int repeat = 0;repeat < repeatCount; repeat++)
@@ -2072,20 +2074,20 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_Repeat(IN const Json::Value
 			details = ss.str();
 			response["details"] = details;
 
-			return TEST_FAILURE;
+			return;
 		}
 		DEBUG_PRINT(DEBUG_TRACE, " Success: %d repeatation\n",repeat + 1);
 	}
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "DVR Play Pause Play Repeat Successful";
 	DEBUG_PRINT(DEBUG_TRACE, "DVR Play Pause Play Repeat Successful\n");
 
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Skip_Forward_Play
@@ -2096,7 +2098,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Skips forward number of seconds on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_Play(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Skip_Forward_Play(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -2108,7 +2110,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_Play(IN const Json::Value& req
 	DEBUG_PRINT(DEBUG_TRACE, "Number of repeatation: %d\n",numberOfRepeatation);
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -2126,7 +2128,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_Play(IN const Json::Value& req
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 
@@ -2140,7 +2142,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_Play(IN const Json::Value& req
 		DEBUG_PRINT(DEBUG_TRACE, "HNSource play failed current state not playing.\n");
 
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 
 	for (int repeat = 0; repeat < numberOfRepeatation; repeat++ )
@@ -2157,7 +2159,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_Play(IN const Json::Value& req
 
 			close_Term_HNSrc_MPSink(response);
 
-			return TEST_FAILURE;
+			return;
 		}
 		DEBUG_PRINT(DEBUG_TRACE, " Success: %d repeatation\n",repeat + 1);
 		sleep(5);
@@ -2167,13 +2169,13 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_Play(IN const Json::Value& req
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Skip forward from starting of video Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Skip forward from starting of video Successful \n");
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_Middle
@@ -2184,7 +2186,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Skips forward number of seconds on the video being played when time position is half the total duration.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_Middle(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_Middle(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -2197,7 +2199,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_Middle(IN const Json::Val
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -2215,7 +2217,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_Middle(IN const Json::Val
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 
@@ -2231,7 +2233,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_Middle(IN const Json::Val
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	/*FIXME: Don't no the Duration of the video. So, assuming middle of the video as 25 seconds.*/
 	sleep(25);
@@ -2246,7 +2248,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_Middle(IN const Json::Val
 			response["details"] = details;
 			DEBUG_PRINT(DEBUG_ERROR, "HNSource setMediaTime failed and in repeatation %d.\n",repeat + 1);
 			close_Term_HNSrc_MPSink(response);
-			return TEST_FAILURE;
+			return ;
 		}
 		DEBUG_PRINT(DEBUG_TRACE, " Success: %d repeatation\n",repeat + 1);
 		sleep(5);
@@ -2254,12 +2256,12 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_Middle(IN const Json::Val
 	sleep(30);
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	response["result"] = "SUCCESS";
 	response["details"] = "Skip forward from middle of video Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Skip forward from middle of video Successful \n");
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_End
@@ -2270,7 +2272,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Skips forward number of seconds on the video being played when time position is equal to the total duration.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_End(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_End(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -2280,7 +2282,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_End(IN const Json::Value&
 	DEBUG_PRINT(DEBUG_TRACE, "Number of seconds to skip: %f\n",mediaTime);
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -2297,7 +2299,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_End(IN const Json::Value&
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed %ld\n",retHNSrcValue);
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 
@@ -2313,7 +2315,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_End(IN const Json::Value&
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	/*FIXME: Don't no the Duration of the video. So, assuming end of the video as 40 seconds.*/
@@ -2322,21 +2324,21 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_End(IN const Json::Value&
 	if (TEST_FAILURE == skipNumberOfSeconds(mediaTime,SKIP_FORWARD,response))
 	{
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(20);
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Skip forward from end of video Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Skip forward from end of video Successful \n");
 
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -2348,7 +2350,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Skips Backward number of seconds on the video being played when time position is equal to the total duration.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_End(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_End(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -2361,7 +2363,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_End(IN const Json::Value
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	retHNSrcValue = pSource->play();
 	sleep(5);
@@ -2378,7 +2380,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_End(IN const Json::Value
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 
@@ -2394,7 +2396,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_End(IN const Json::Value
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	/*FIXME: Don't no the Duration of the video. So, assuming end of the video as 40 seconds.*/
 	sleep(40);
@@ -2413,7 +2415,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_End(IN const Json::Value
 
 			close_Term_HNSrc_MPSink(response);
 
-			return TEST_FAILURE;
+			return;
 		}
 		DEBUG_PRINT(DEBUG_TRACE, " Success: %d repeatation\n",repeat + 1);
 		sleep(5);
@@ -2423,13 +2425,13 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_End(IN const Json::Value
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Skip backward from end of video Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Skip backward from end of video Successful \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -2441,7 +2443,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Skips Backward number of seconds on the video being played when time position is half to the total duration.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Middle(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Middle(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -2452,7 +2454,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Middle(IN const Json::Va
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -2469,7 +2471,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Middle(IN const Json::Va
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 
@@ -2485,7 +2487,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Middle(IN const Json::Va
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 
@@ -2495,20 +2497,20 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Middle(IN const Json::Va
 	if (TEST_FAILURE == skipNumberOfSeconds(mediaTime,SKIP_BACKWARD,response))
 	{
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	sleep(30);
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Skip Backward from middle of video Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Skip Backward from middle of video Successful \n");
 
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -2520,7 +2522,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Skips Backward number of seconds on the video that is being started playing.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Starting(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Starting(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -2530,7 +2532,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Starting(IN const Json::
 	DEBUG_PRINT(DEBUG_TRACE, "Number of seconds to skip: %f\n",mediaTime);
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -2548,7 +2550,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Starting(IN const Json::
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 
@@ -2565,28 +2567,28 @@ bool TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Starting(IN const Json::
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	if (TEST_FAILURE == skipNumberOfSeconds(mediaTime,SKIP_BACKWARD,response))
 	{
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(40);
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Skip backward from starting of video Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Skip backward from starting of video Successful \n");
 
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Play_Rewind_Forward
@@ -2597,7 +2599,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Play for sometime, do rewind and forward for the given trickplay speed on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_Rewind_Forward(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_Rewind_Forward(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -2610,7 +2612,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Rewind_Forward(IN const Json::Value& r
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -2627,7 +2629,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Rewind_Forward(IN const Json::Value& r
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed %ld\n",retHNSrcValue);
 
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 
@@ -2643,7 +2645,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Rewind_Forward(IN const Json::Value& r
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(20);
@@ -2653,7 +2655,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Rewind_Forward(IN const Json::Value& r
 	{
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Rewind success passed \n");
 
@@ -2661,20 +2663,20 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Rewind_Forward(IN const Json::Value& r
 	if(TEST_FAILURE == changePlaySpeed(forwardPlaySpeed,response))
 	{
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Forward success passed \n");
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Play rewind forward Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Play rewind forward Successful");
 
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind
@@ -2685,7 +2687,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Play for sometime, do forward and rewind for the given trickplay speed on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -2697,7 +2699,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& r
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -2715,7 +2717,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& r
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 	RMFState curState, pendingState;
@@ -2729,7 +2731,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& r
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(20);
@@ -2739,7 +2741,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& r
 	{
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Forward success Passed \n");
 
@@ -2748,19 +2750,19 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& r
 	{
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Rewind success Passed \n");
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	response["result"] = "SUCCESS";
 	response["details"] = "Play forward rewind Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Play forward rewind Successful");
 
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play
@@ -2771,7 +2773,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Play for sometime, do forward or rewind followed by pause and play on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -2782,7 +2784,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value&
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -2800,7 +2802,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value&
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc play \n");
 
@@ -2812,7 +2814,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value&
 		response["details"] = "HNSource play failed current state not playing.\n";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed current state not playing.\n");
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	sleep(20);
 
@@ -2820,7 +2822,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value&
 	if(TEST_FAILURE == changePlaySpeed(trickPlaySpeed,response))
 	{
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Forward/Rewind success passed\n");
 	/*pause it for sometime */
@@ -2838,14 +2840,14 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value&
 		response["details"] = "HNSource pause failed current state not paused.\n";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource pause failed current state not paused.\n");
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return ;
 	}
 	/*Play it in normal speed 1.0*/
 	float normalSpeed = 1.0;
 	if(TEST_FAILURE == changePlaySpeed(normalSpeed,response))
 	{
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Setting to normal speed success passed \n");
 	sleep(10);
@@ -2856,17 +2858,17 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value&
 		response["details"] = "HNSource play failed current state not playing.\n";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed current state not playing.\n");
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Play forward/Rewind pause play Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Play forward/Rewind pause play Successful");
-	return TEST_SUCCESS;
+	return ;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_Play_Pause_FF_FR
@@ -2877,7 +2879,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Play for sometime, do pause and do forward/rewind on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_FF_FR(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_Pause_FF_FR(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -2888,7 +2890,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_FF_FR(IN const Json::Value& req,
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -2906,7 +2908,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_FF_FR(IN const Json::Value& req,
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	cout << "LOG Line:" << __LINE__ << " : Passed HNSrc play \n";
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
@@ -2920,7 +2922,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_FF_FR(IN const Json::Value& req,
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(20);
@@ -2943,27 +2945,27 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_FF_FR(IN const Json::Value& req,
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	/*Forward/Rewind it for some time*/
 	if(TEST_FAILURE == changePlaySpeed(trickPlaySpeed,response))
 	{
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return ;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Forward/Rewind success Passed \n");
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Play pause forward/Rewind Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Play pause forward/Rewind Successful");
 
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -2975,7 +2977,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Play for sometime, do pause, play and skip forward/backward for the given number of seconds on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 	string url = req["playUrl"].asCString();
@@ -2989,7 +2991,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -3007,7 +3009,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, " Passed HNSrc play\n");
 
@@ -3021,7 +3023,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(20);
@@ -3044,7 +3046,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	retHNSrcValue = pSource->play();
 	sleep(5);
@@ -3061,7 +3063,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "playing in normal speed success passed \n");
 
@@ -3081,7 +3083,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 			response["details"] = details;
 			DEBUG_PRINT(DEBUG_ERROR, "HNSource setMediaTime failed and in repeatation %d.\n",repeat + 1);
 			close_Term_HNSrc_MPSink(response);
-			return TEST_FAILURE;
+			return;
 		}
 		sleep(15);
 
@@ -3098,7 +3100,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 
 			close_Term_HNSrc_MPSink(response);
 
-			return TEST_FAILURE;
+			return;
 		}
 		DEBUG_PRINT(DEBUG_TRACE, " Success: %d repeatation\n",repeat + 1);
 		sleep(15);
@@ -3107,13 +3109,13 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value&
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Play pause play Skip Forward/Backward Successful";
 	DEBUG_PRINT(DEBUG_TRACE, "Play pause play Skip Forward/Backward Successful \n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -3125,7 +3127,7 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Play for sometime, do forward/rewind for the given trickplay speed and skip forward/backward number of seconds given on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
@@ -3146,7 +3148,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req,
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -3164,7 +3166,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req,
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc play \n");
 
@@ -3178,7 +3180,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req,
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	sleep(15);
 
@@ -3187,7 +3189,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req,
 	{
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "changePlaySpeed forward success passed \n");
 
@@ -3198,7 +3200,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req,
 	{
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "changePlaySpeed backward success passed \n");
 
@@ -3220,7 +3222,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req,
 
 			close_Term_HNSrc_MPSink(response);
 
-			return TEST_FAILURE;
+			return;
 		}
 		sleep(15);
 
@@ -3237,7 +3239,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req,
 
 			close_Term_HNSrc_MPSink(response);
 
-			return TEST_FAILURE;
+			return;
 		}
 		DEBUG_PRINT(DEBUG_TRACE, " Success: %d repeatation\n",repeat + 1);
 		sleep(15);
@@ -3246,13 +3248,13 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& req,
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	response["result"] = "SUCCESS";
 	response["details"] = "Play, Forward/Rewind and Skip Forward/Backward Successful";
 	DEBUG_PRINT(DEBUG_TRACE, "Play, Forward/Rewind and Skip Forward/Backward Successful \n");
 
-	return TEST_SUCCESS;
+	return ;
 }
 
 /**************************************************************************
@@ -3264,14 +3266,14 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Play for sometime, do Pause and Pause on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Pause(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_Pause_Pause(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 	string url = req["playUrl"].asCString();
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return ;
 	}
 
 	retHNSrcValue = pSource->play();
@@ -3288,7 +3290,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Pause(IN const Json::Value& req,
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc play \n");
 
@@ -3309,7 +3311,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Pause(IN const Json::Value& req,
 
 			close_Term_HNSrc_MPSink(response);
 
-			return TEST_FAILURE;
+			return;
 		}
 		sleep(10);
 		DEBUG_PRINT(DEBUG_TRACE, "HNSource pause called %d time.\n",repeat + 1);
@@ -3325,19 +3327,19 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Pause_Pause(IN const Json::Value& req,
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Play, Pause and Pause on video playback Successful";
 	DEBUG_PRINT(DEBUG_TRACE, "Play, Pause and Pause on video playback Successful \n");
 
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -3349,14 +3351,14 @@ Description   : Sends the URL to HYBRID to playback the video. URL is DVR URL.
 And Play for sometime, do Play  on the video being played.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_Play_Play(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_Play_Play(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 	string url = req["playUrl"].asCString();
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	for (int repeat = 0; repeat < 2; repeat++)
@@ -3376,7 +3378,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Play(IN const Json::Value& req, OUT Js
 
 			close_Term_HNSrc_MPSink(response);
 
-			return TEST_FAILURE;
+			return;
 		}
 		cout << "LOG Line:" << __LINE__ << " : Passed HNSrc play \n";
 		DEBUG_PRINT(DEBUG_TRACE, "HNSource play called %d time.\n",repeat + 1);
@@ -3395,7 +3397,7 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Play(IN const Json::Value& req, OUT Js
 
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "HNSource getState() passed.\n");
 	/* Additional checkpoint for video and audio status */
@@ -3404,27 +3406,27 @@ bool TDKIntegrationStub::E2ERMFAgent_Play_Play(IN const Json::Value& req, OUT Js
 		response["result"] = "FAILURE";
 		response["details"] = "Video playback encountered an error";
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS))
 	{
 		response["result"] = "FAILURE";
 		response["details"] = "Audio playback encountered an error";
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	sleep(5);
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Play and Play on video playback Successful";
 	DEBUG_PRINT(DEBUG_TRACE, "Play and Play on video playback Successful \n");
 
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_ChannelChange
@@ -3434,13 +3436,13 @@ Arguments     : Input argument is Playback URL. Output argument is "SUCCESS" or 
 Description   : Sends the URL to HYBRID to playback the video. URL is .
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_ChannelChange(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_ChannelChange(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(req["playUrl"].asCString(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	Time tuneTime;
@@ -3466,7 +3468,7 @@ bool TDKIntegrationStub::E2ERMFAgent_ChannelChange(IN const Json::Value& req, OU
 		response["details"] = details;
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed %ld\n",retHNSrcValue);
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc play \n");
 	RMFState curState, pendingState;
@@ -3477,12 +3479,12 @@ bool TDKIntegrationStub::E2ERMFAgent_ChannelChange(IN const Json::Value& req, OU
 		response["details"] = "HNSource play failed current state not playing.\n";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed current state not playing.\n");
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	sleep(5);
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	stringstream sst1,sst2;
 	string strTuningTime;
@@ -3494,7 +3496,7 @@ bool TDKIntegrationStub::E2ERMFAgent_ChannelChange(IN const Json::Value& req, OU
 	response["result"] = "SUCCESS";
 	response["details"] = sst2.str();
 	DEBUG_PRINT(DEBUG_TRACE, "Channel Tuning Successful \n");
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_GetURL
@@ -3504,7 +3506,7 @@ Arguments     : IN const Json::Value,OUT Json::Value
 Description   : Send the URL to the Mediastreamer get the valid URL in the Json Response.
 Return the Error code and Error Description to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ERMF_GETURL---Entry\n");
 	string url;
@@ -3528,7 +3530,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
                  }
                         response["result"] = "FAILURE";
                         response["details"] = token;
-                        return TEST_FAILURE;
+                        return;
         }
 
         if( (pos = url.find (":8080")) != std::string::npos)
@@ -3543,7 +3545,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
         {
 		response["result"] = "SUCCESS";
 	        response["details"]= url;
-                return TEST_SUCCESS;
+                return ;
         }
 	streamingip="mdvr";
 #endif
@@ -3563,7 +3565,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
                 DEBUG_PRINT(DEBUG_TRACE, " ---> Exit\n");
 		response["result"] = "FAILURE";
 		response["details"] = "Exception occured execution of parser script";
-		return TEST_FAILURE;
+		return;
         }
 
 	logfile.open(json_parser_log.c_str());
@@ -3581,7 +3583,7 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
                                 	logfile.close();
                                 	DEBUG_PRINT(DEBUG_ERROR,"Json file not parsed \n");
                                 	DEBUG_PRINT(DEBUG_LOG,"TDKIntegrationStub::E2ERMF_GETURL---Exit\n");
-                                	return TEST_FAILURE;
+                                	return;
 				}
                         }
                 }
@@ -3596,11 +3598,11 @@ bool TDKIntegrationStub::E2ERMFAgent_GETURL(IN const Json::Value& request, OUT J
 		response["result"] = "FAILURE";
 		response["details"] = "Unable to open the output.json parsing log file";
                 DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ERMF_GETURL---Exit\n");
-                return TEST_FAILURE;
+                return;
         }
 
 	DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegrationStub::E2ERMF_GETURL---Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFTSB_Play
@@ -3610,7 +3612,7 @@ Arguments     : IN const Json::Value,OUT Json::Value
 Description   : Get the Streaming URL from the TM and play with Hnsrc->MPsink Pipeline.
 Return the SUCCESS or FAILURE  to the testFramework.
  ***************************************************************************/
-bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_LOG,"\nTDKIntegration::TDKIntegration_TSB --Entry\n");
  	#ifdef USE_SOC_INIT
@@ -3637,7 +3639,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 soc_uninit();
                 #endif
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	if(pSink == NULL)
@@ -3650,7 +3652,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 soc_uninit();
                 #endif
 
-		return TEST_FAILURE;
+		return;
 	}
 
         res_HNSrcInit = pSource->init();
@@ -3666,7 +3668,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
         DEBUG_PRINT(DEBUG_LOG, "URL From TM is %s\n", playuri);
         res_HNSrcOpen = pSource->open(playuri, 0);
@@ -3683,7 +3685,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
 
         res_MPSinkInit = pSink->init();
@@ -3702,7 +3704,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
 
         res_MPSinksetrect = pSink->setVideoRectangle(0, 0, 1280, 720, true);
@@ -3723,7 +3725,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+               return;
         }
 
         res_MPSinksetsrc = pSink->setSource(pSource);
@@ -3743,7 +3745,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
 
         res_HNSrcPlay = pSource->play();
@@ -3778,7 +3780,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 soc_uninit();
                 #endif
 
-		return TEST_FAILURE;
+		return;
 	}
 	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS))
 	{
@@ -3794,7 +3796,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 soc_uninit();
                 #endif
 
-		return TEST_FAILURE;
+		return;
 	}
         sleep(30);
         DEBUG_PRINT(DEBUG_LOG, "Playing the Video for 30 seconds\n");
@@ -3813,7 +3815,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
 
         res_HNSrcGetState = pSource->getState(&curstate, NULL);
@@ -3834,7 +3836,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
         //SpeedRate = 0.5;
         DEBUG_PRINT(DEBUG_LOG, "Video is playing");
@@ -3873,7 +3875,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                                 // Uninitialize SOC
                                 soc_uninit();
                                 #endif
-        	                return TEST_FAILURE;
+        	                return;
 			}
                 }
         }
@@ -3896,7 +3898,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
         response["details"] = "HNSrc setSpeed() successful";
         res_HNSrcGetSpeed = pSource->getSpeed(SpeedRate);
@@ -3915,7 +3917,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
         details << "HNSrc getSpeed() successful, Speed:" << SpeedRate;
         DEBUG_PRINT(DEBUG_LOG, " Get speed  is %f\n", SpeedRate);
@@ -3940,7 +3942,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
         if(0 != res_HNSrcClose)
         {
@@ -3954,7 +3956,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
         if(0 != res_HNSrcTerm)
         {
@@ -3968,7 +3970,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return TEST_FAILURE;
+                return;
         }
 
 	delete pSource;
@@ -3981,7 +3983,7 @@ bool TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         response["result"] = "SUCCESS";
         response["details"] = "Video played with TSB successfully";
         DEBUG_PRINT(DEBUG_TRACE, "TDKIntegration_Player--->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -3991,7 +3993,7 @@ Arguments     : Input argument is Playback URL. Output argument is "SUCCESS" or 
 
 Description   :Sends the URL to HYBRID to playback the Audio. URL can be Linear TV or DVR URL.
  **************************************************************************/
-bool TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::Value& req, OUT Json::Value& response)
 {
 	RMFResult retHNSrcValue = RMF_RESULT_SUCCESS;
 	string url = req["playUrl"].asCString();
@@ -3999,7 +4001,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::V
 	modurl=url;
 	if(TEST_FAILURE == init_open_HNsrc_MPsink(modurl.c_str(),NULL,response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_ERROR, "After init_open_HNsrc_MPsink------------------\n");
 	
@@ -4056,7 +4058,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::V
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed %ld\n",retHNSrcValue);
 		close_Term_HNSrc_MPSink(response);
 
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc play\n");
 
@@ -4077,7 +4079,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::V
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource play failed current state not playing.\n");
 
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 	// additional check with scripts 
 	if(TEST_FAILURE ==  getstreamingstatus(AUDIO_STATUS) && curSpeed == 1.0 )
@@ -4085,21 +4087,21 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::V
 		response["result"] = "FAILURE";
 		response["details"] = "Audio playback encountered an error.";
 		close_Term_HNSrc_MPSink(response);
-		return TEST_FAILURE;
+		return;
 	}
 
 	sleep(30);
 
 	if(TEST_FAILURE == close_Term_HNSrc_MPSink(response))
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	response["result"] = "SUCCESS";
 	response["details"] = "Playback Successful ";
 	DEBUG_PRINT(DEBUG_TRACE, "Playback Successful \n");
 
-	return TEST_SUCCESS;
+	return;
 }
 /**************************************************************************
   Function name : TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult
@@ -4110,7 +4112,7 @@ bool TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::V
   Description   : Finds if the final result list contains any failure.
 ***************************************************************************/
 
-bool TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult(IN const Json::Value& req, OUT Json::Value& response)
+void TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_LOG, "E2ERMFAgent_MDVR_GetResult ----> Entry\n");
 
@@ -4124,7 +4126,7 @@ bool TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult(IN const Json::Value& req, O
                 response["result"] = "FAILURE";
                 response["details"] = "One or more clients failed to execute successfully";
                 DEBUG_PRINT(DEBUG_LOG, "E2ERMFAgent_MDVR_GetResult ----> Exit\n");
-                return TEST_FAILURE;
+                return;
         }
         else
         {
@@ -4135,7 +4137,7 @@ bool TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult(IN const Json::Value& req, O
 
         DEBUG_PRINT(DEBUG_LOG, "E2ERMFAgent_MDVR_GetResult ----> Exit\n");
 
-        return TEST_SUCCESS;
+        return;
 }
 #endif
 /**************************************************************************
@@ -4145,9 +4147,9 @@ Arguments     : NULL
 
 Description   : create the object of HybridE2EStub  
  ***************************************************************************/
-extern "C" TDKIntegrationStub* CreateObject()
+extern "C" TDKIntegrationStub* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-	return new TDKIntegrationStub();
+    return new TDKIntegrationStub(ptrtcpServer);
 }
 
 /**************************************************************************
@@ -4157,8 +4159,9 @@ Arguments     : NULL
 
 Description   :close things cleanly  
  ***************************************************************************/
-bool TDKIntegrationStub::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool TDKIntegrationStub::cleanup(IN const char* szVersion)
 {
+#if 0
 #ifdef HYBRID
 	/* UnRegister Wrapper functions */
 	ptrAgentObj->UnregisterMethod("TestMgr_HybridE2E_T2pTuning");
@@ -4198,6 +4201,7 @@ bool TDKIntegrationStub::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAg
 	/* E2E RF Video */
 	ptrAgentObj->UnregisterMethod("TestMgr_RF_Video_ChannelChange");
 	ptrAgentObj->UnregisterMethod("TestMgr_MDVR_GetResult");
+#endif
 #endif
 	return TEST_SUCCESS;
 }

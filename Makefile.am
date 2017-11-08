@@ -16,8 +16,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-SUBDIRS = agent IARMBUS_stub DS_stub ClosedCaption_stub RDKLogger_stub TDKIntegration_Stub \
-OpenSourceComponent_Stub XUPNP_stub $(SUBDIR_HYBRID) $(SUBDIR_CLIENT) $(PLUGIN_SRC) $(SUBDIR_CLIENT_XI3V2) $(SUBDIR_XG1V3) $(SUBDIR_XI5) \
+SUBDIRS = agent IARMBUS_stub DS_stub ClosedCaption_stub RDKLogger_stub \
+XUPNP_stub $(SUBDIR_HYBRID) $(SUBDIR_CLIENT) $(PLUGIN_SRC) $(SUBDIR_CLIENT_XI3V2) $(SUBDIR_XG1V3) $(SUBDIR_XI5) \
 $(SUBDIR_CLIENT_XI5)
 DIST_SUBDIRS = @SUBDIRS@
 

@@ -27,6 +27,7 @@
 #include "dtcpmgr.h"
 #include <fstream>
 #include <cstdlib>
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 #define IN
 #define OUT
 
@@ -38,23 +39,26 @@
 using namespace std;
 
 class RDKTestAgent;
-class DTCPAgent : public RDKTestStubInterface
+class DTCPAgent : public RDKTestStubInterface , public AbstractServer <DTCPAgent>
 {
         public:
-                //Constructor
-                DTCPAgent();
+	        DTCPAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <DTCPAgent>(ptrRpcServer)
+        	{
+			this->bindAndAddMethod(Procedure("TestMgr_DTCP_Test_Execute", PARAMS_BY_NAME, JSON_STRING,"funcName",JSON_STRING,"strParam1",JSON_STRING,"intParam2",JSON_INTEGER,"intParam3",JSON_INTEGER,"intParam4",JSON_INTEGER,NULL), &DTCPAgent::DTCPAgent_Test_Execute);
+
+		}
 
                 //Inherited functions
-                bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
+                bool initialize(IN const char* szVersion);
 
-                bool cleanup(const char*, RDKTestAgent*);
+                bool cleanup(const char* szVersion);
 		std::string testmodulepre_requisites();
                 bool testmodulepost_requisites();
 
                 //DTCPAgent Wrapper functions
-		bool DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Value& response);
+		void DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Value& response);
 };
-        extern "C" DTCPAgent* CreateObject();
+        extern "C" DTCPAgent* CreateObject(TcpSocketServer &ptrtcpServer);
 
 #endif //__DTCP_STUB_H__
 

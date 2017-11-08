@@ -11,7 +11,7 @@
 */
 
 #include "MediaStreamerStub.h"
-
+#include <unistd.h>
 
 #define REC_ID_START_POS_OFFSET 7
 #define TRASPORT_CMD_OFFSET 49
@@ -61,11 +61,12 @@ Arguments    : NULL
 
 Description  : Constructor function for MediaStreamerAgent class
 ***************************************************************************/
+#if 0
 MediaStreamerAgent::MediaStreamerAgent()
 {
     DEBUG_PRINT(DEBUG_TRACE, "Initializing MediastreamerAgent\n");
 }
-
+#endif
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Descrption    : testmodulepre_requisites will  be used for setting the
@@ -245,9 +246,10 @@ Arguments     : Input arguments are Version string and MediaStreamerAgent obj pt
 Description   : Registering all the wrapper functions with the agent for using these functions in the script
 
 ***************************************************************************/
-bool MediaStreamerAgent::initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+bool MediaStreamerAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "Registering wrapper functions with the agent\n");
+#if 0
 #ifdef RDK_BR_1DOT3
     ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::MediaStreamerAgent_LiveTune_Request,"TestMgr_MediaStreamer_LiveTune_Request");
     ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::MediaStreamerAgent_Recording_Request,"TestMgr_MediaStreamer_Recording_Request");
@@ -261,6 +263,7 @@ bool MediaStreamerAgent::initialize(IN const char* szVersion, IN RDKTestAgent *p
     ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting,"TestMgr_RMFStreamer_InterfaceTesting");
     ptrAgentObj->RegisterMethod(*this,&MediaStreamerAgent::RMFStreamerAgent_Player,"TestMgr_RMFStreamer_Player");
 #endif
+#endif
     return TEST_SUCCESS;
 }
 #ifdef RDK_BR_1DOT3
@@ -272,7 +275,7 @@ Arguments     : Input argument is OcapId. Output argument is videoStreamingURL f
 Description   : Receives the ocapid from Test Manager and makes curl request to Media Streamer via Web Interface
 				for Live Tune. Gets the error code of Json Response and send it to the Test Manager.
 ***************************************************************************/
-bool MediaStreamerAgent::MediaStreamerAgent_LiveTune_Request(IN const Json::Value& request, OUT Json::Value& response)
+void MediaStreamerAgent::MediaStreamerAgent_LiveTune_Request(IN const Json::Value& request, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_LiveTune_Request ---> Entry\n");
     string ocapid, errorStatus_LiveTune;
@@ -288,7 +291,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_LiveTune_Request(IN const Json::Valu
         response["details"] = "Failed to get curl response";
         DEBUG_PRINT(DEBUG_ERROR, "Failed to get curl response\n");
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_LiveTune_Request ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     // Returning errorStatus as "0" for success case
@@ -299,7 +302,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_LiveTune_Request(IN const Json::Valu
     response["result"] = errorStatus_LiveTune;
     response["details"] = "SUCCESS";
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_LiveTune_Request ---> Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -311,7 +314,7 @@ Arguments     : Input argument is recordingId. Output argument is videoStreaming
 Description   : Gets the recordingid of a random url and makes curl request to Media Streamer via Web Inteface
 				for Recording asset. Gets the error code of Json Response and send it to the Test Manager.
 ***************************************************************************/
-bool MediaStreamerAgent::MediaStreamerAgent_Recording_Request(IN const Json::Value& request, OUT Json::Value& response)
+void MediaStreamerAgent::MediaStreamerAgent_Recording_Request(IN const Json::Value& request, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Request ---> Entry\n");
     string rec_id, recordingid, errorStatus_Recording;
@@ -328,7 +331,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Request(IN const Json::Val
             response["details"] = "Failed to get Random Recording";
             DEBUG_PRINT(DEBUG_ERROR, "Failed to get Random Recording\n");
             DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Request ---> Exit\n");
-            return TEST_FAILURE;
+            return ;
         }
 
         // If there is no recording asset present in box
@@ -338,7 +341,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Request(IN const Json::Val
             response["details"] = "There is no recording content present";
             DEBUG_PRINT(DEBUG_ERROR, "There is no recording content present\n");
             DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Request ---> Exit\n");
-            return TEST_FAILURE;
+            return;
         }
     }
     else
@@ -357,7 +360,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Request(IN const Json::Val
         response["details"] = "Failed to get curl response";
         DEBUG_PRINT(DEBUG_ERROR, "Failed to get curl response\n");
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Request ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     // Returning errorStatus as zero for success scenario
@@ -368,7 +371,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Request(IN const Json::Val
     response["result"] = errorStatus_Recording;
     response["details"] = "SUCCESS";
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Request ---> Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -379,7 +382,7 @@ Arguments     : Input argument is None. Output argument is URL List log file pat
 Description   : Recieves webinterface request to get list of recorded urls, makes curl request to Media Sreamer
 				via Web Inteface to get log file path and send it to Test Manager.
 ***************************************************************************/
-bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Urls(IN const Json::Value& request, OUT Json::Value& response)
+void MediaStreamerAgent::MediaStreamerAgent_Recorded_Urls(IN const Json::Value& request, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Urls ---> Entry\n");
     string curlReqStatus_Urls, logFilePath_Urls, line_Urls;
@@ -393,7 +396,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Urls(IN const Json::Value& 
         response["details"] = "Get Recorded_Urls failed while getting the curl responce";
         DEBUG_PRINT(DEBUG_ERROR, "Get Recorded_Urls failed while getting the curl responce\n");
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Urls ---> Exit\n");
-        return TEST_FAILURE;
+        return ;
     }
 
     // CurlRequest returns log path of recording url list for success scenario
@@ -414,7 +417,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Urls(IN const Json::Value& 
             response["log-path"] = logFilePath_Urls;
             recordedListmodFile.close();
             DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Urls ---> Exit\n");
-            return TEST_SUCCESS;
+            return ;
         }
 
         // Format checking for the recorded assets present
@@ -429,7 +432,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Urls(IN const Json::Value& 
                     response["details"] = logFilePath_Urls + " file is not in correct format";
                     recordedListmodFile.close();
                     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Urls ---> Exit\n");
-                    return TEST_FAILURE;
+                    return;
                 }
             }
             getline(recordedListmodFile, line_Urls);
@@ -439,7 +442,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Urls(IN const Json::Value& 
         response["log-path"] = logFilePath_Urls;
         recordedListmodFile.close();
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Urls ---> Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
@@ -447,7 +450,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Urls(IN const Json::Value& 
         response["result"] = "FAILURE";
         response["details"] = "Unable to open " + logFilePath_Urls + " file";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Urls ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 }
 
@@ -459,7 +462,7 @@ Arguments     : Input arguments None. Output argument is URL Metadata log file p
 Description   : Recieves webinterface request to get metadata of recorded urls, makes curl request to Media Sreamer
 				via Web Inteface to get log file path and send it to Test Manager.
 ***************************************************************************/
-bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Metadata(IN const Json::Value& request, OUT Json::Value& response)
+void MediaStreamerAgent::MediaStreamerAgent_Recorded_Metadata(IN const Json::Value& request, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Metadata ---> Entry\n");
     string curlReqResult_Metadata, logFilePath_Metadata, line_Metadata;
@@ -473,7 +476,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Metadata(IN const Json::Val
         response["details"] = "Get Recorded_Data failed while getting the curl responce";
         DEBUG_PRINT(DEBUG_ERROR, "Get Recorded_Metadat failed while getting the curl responce\n");
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Metadata ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     // curlRequest returns recording metadata log path for success
@@ -495,7 +498,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Metadata(IN const Json::Val
             response["log-path"] = logFilePath_Metadata;
             recMetadatamodFile.close();
             DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Metadata ---> Exit\n");
-            return TEST_SUCCESS;
+            return;
         }
         // Format checking for the recorded assets present
         while(!recMetadatamodFile.eof())
@@ -516,7 +519,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Metadata(IN const Json::Val
                 response["details"] = logFilePath_Metadata + " file is not in correct format";
                 recMetadatamodFile.close();
                 DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Metadata ---> Exit\n");
-                return TEST_FAILURE;
+                return ;
             }
             getline(recMetadatamodFile, line_Metadata);
         }
@@ -525,7 +528,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Metadata(IN const Json::Val
         response["log-path"] = logFilePath_Metadata;
         recMetadatamodFile.close();
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Metadata ---> Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
@@ -533,7 +536,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recorded_Metadata(IN const Json::Val
         response["result"] = "FAILURE";
         response["details"] = "Unable to open " + logFilePath_Metadata + " file";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recorded_Metadata ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 }
 
@@ -546,7 +549,7 @@ Description   : Receives the ocapid from Test Manager and makes curl request to 
 				for Live Tune and gets videoStreamingURL. Play the url using gstreamer plugin. Capture mediastreamer
 				log from ocapri_log file. Search for the success pattern in the log and send the result to the Test Manager.
 ****************************************************************************/
-bool MediaStreamerAgent::MediaStreamerAgent_Live_Playback(IN const Json::Value& request, OUT Json::Value& response)
+void  MediaStreamerAgent::MediaStreamerAgent_Live_Playback(IN const Json::Value& request, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Live_Playback ---> Entry\n");
     string ocapid, webInterfaceStatus_Live, playurl_Live, errorStatus_Live;
@@ -563,7 +566,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Live_Playback(IN const Json::Value& 
         response["result"] = "FAILURE";
         response["details"] = "WebInterface response is General Error";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     // Handling Web interface Resource Not Found
@@ -573,7 +576,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Live_Playback(IN const Json::Value& 
         response["result"] = "FAILURE";
         response["details"] = "WebInterface response is Resource Not Found";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     if(webInterfaceStatus_Live.find("http://") == string::npos) // Checking curlRequest returns videoStreamingURL
@@ -582,7 +585,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Live_Playback(IN const Json::Value& 
         response["details"] = "Failed to get the video streaming url from webinterface";
         DEBUG_PRINT(DEBUG_ERROR, "Failed to get the video streaming url from webinterface\n");
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Live_Playback ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
     // CurlRequest returns videoStreamingURL for success scenario
     playurl_Live = webInterfaceStatus_Live;
@@ -596,13 +599,13 @@ bool MediaStreamerAgent::MediaStreamerAgent_Live_Playback(IN const Json::Value& 
         response["result"] = "SUCCESS";
         response["details"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Live_Playback ---> Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     response["result"] = "FAILURE";
     response["details"] = "Failed to play the url";
     DEBUG_PRINT(DEBUG_ERROR, "Failed to play the url\n");
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Live_Playback ---> Exit\n");
-    return TEST_FAILURE;
+    return;
 }
 
 /**************************************************************************
@@ -614,7 +617,7 @@ Description   : Gets the recordingid of a random url and makes curl request to M
 				to get videoStreamingURL. Play the url using gstreamer plugin. Capture mediastreamer log from
 				ocapri_log file. Search for the success pattern in the log and send the result to the Test Manager.
 ****************************************************************************/
-bool MediaStreamerAgent::MediaStreamerAgent_Recording_Playback(IN const Json::Value& request, OUT Json::Value& response)
+void  MediaStreamerAgent::MediaStreamerAgent_Recording_Playback(IN const Json::Value& request, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Entry\n");
     string rec_id, webInterfaceStatus_Rec, playurl_Rec, errorStatus_Rec;
@@ -627,7 +630,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Playback(IN const Json::Va
         response["result"] = "FAILURE";
         response["details"] = "get rec_id Failed";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     // If there is no recording asset present in box
@@ -637,7 +640,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Playback(IN const Json::Va
         response["details"] = "There is no recording content present";
         DEBUG_PRINT(DEBUG_ERROR, "There is no recording content present\n");
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Request ---> Exit\n");
-        return TEST_FAILURE;
+        return ;
     }
 
     // Web interface request to get videoStreamingURL for the requested recording id
@@ -651,7 +654,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Playback(IN const Json::Va
         response["result"] = "FAILURE";
         response["details"] = "WebInterface response is General Error";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
-        return TEST_FAILURE;
+        return ;
     }
 
     // Handling Web interface Resource Not Found
@@ -661,7 +664,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Playback(IN const Json::Va
         response["result"] = "FAILURE";
         response["details"] = "WebInterface response is Resource Not Found";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
-        return TEST_FAILURE;
+        return ;
     }
 
     else if(webInterfaceStatus_Rec.find("http://") == string::npos)
@@ -670,7 +673,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Playback(IN const Json::Va
         response["result"] = "FAILURE";
         response["details"] = "WebInterface Failure";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
-        return TEST_FAILURE;
+        return ;
     }
 
     //curlRequest returns videoStreamingURL for success scenario
@@ -683,13 +686,13 @@ bool MediaStreamerAgent::MediaStreamerAgent_Recording_Playback(IN const Json::Va
         response["result"] = "SUCCESS";
         response["details"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     response["result"] = "FAILURE";
     response["details"] = "Failed to play the url";
     DEBUG_PRINT(DEBUG_ERROR,"Failed to play the url\n");
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
-    return TEST_FAILURE;
+    return ;
 }
 
 /**************************************************************************
@@ -702,7 +705,7 @@ Description   : Gets the recordingid of a random url and makes curl request to M
 				gstreamer plugin. Capture mediastreamer log from ocapri_log file. Search for the success pattern
 				in the log and send the result to the Test Manager.
 ****************************************************************************/
-bool MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& request, OUT Json::Value& response)
+void  MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& request, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_DVR_Trickplay ---> Entry\n");
     string rec_id_Dvr, webInterfaceStatus_Dvr, play_speed_Dvr, time_pos_Dvr, playurl_Dvr, errorStatus_Dvr, successPattern_Dvr;
@@ -715,7 +718,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& 
         response["result"] = "FAILURE";
         response["details"] = "get rec_id Failed";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_DVR_Trickplay ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     // If there is no recording asset present in box
@@ -725,7 +728,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& 
         response["details"] = "There is no recording content present";
         DEBUG_PRINT(DEBUG_ERROR, "There is no recording content present\n");
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_RDVR_Trickplay ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     // Web interface request to get videoStreamingURL for the requested recording id
@@ -738,7 +741,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& 
         response["result"] = "FAILURE";
         response["details"] = "WebInterface response is General Error";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     // Handling Web interface Resource Not Found
@@ -748,7 +751,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& 
         response["result"] = "FAILURE";
         response["details"] = "WebInterface response is Resource Not Found";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_Recording_Playback ---> Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     else if(webInterfaceStatus_Dvr.find("http://") == string::npos)
@@ -757,7 +760,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& 
         response["result"] = "FAILURE";
         response["details"] = "WebInterface Failure";
         DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_DVR_Trickplay ---> Exit\n");
-        return TEST_FAILURE;
+        return ;
     }
 
     DEBUG_PRINT(DEBUG_LOG,"webInterfaceStatus_Dvr is %s\n",  webInterfaceStatus_Dvr.c_str());
@@ -784,7 +787,7 @@ bool MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& 
             response["result"] = "SUCCESS";
             response["details"] = "SUCCESS";
             DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_DVR_Trickplay ---> Exit\n");
-            return TEST_SUCCESS;
+            return;
         }
         else
         {
@@ -792,14 +795,14 @@ bool MediaStreamerAgent::MediaStreamerAgent_DVR_Trickplay(IN const Json::Value& 
             response["details"] = "Url is playing with speed " + errorStatus_Dvr;
             DEBUG_PRINT(DEBUG_ERROR,"Url is playing with speed %s\n", errorStatus_Dvr.c_str());
             DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_DVR_Trickplay ---> Exit\n");
-            return TEST_FAILURE;
+            return ;
         }
     }
     response["result"] = "FAILURE";
     response["details"] = "Failed to play the url";
     DEBUG_PRINT(DEBUG_ERROR,"Failed to play the url\n");
     DEBUG_PRINT(DEBUG_TRACE, "MediaStreamerAgent_DVR_Trickplay ---> Exit\n");
-    return TEST_FAILURE;
+    return;
 }
 #endif
 #ifdef RDK_BR_2DOT0
@@ -812,7 +815,7 @@ Arguments     : Input argument is RequestURL. Output argument is Error code from
 Description   : Receives the RequestURL  from Test Manager and makes curl request to RMF Streamer via Web/Stream Interface
                                 for Live Tune or Live playback. Gets the error code of Json Response sends it to the Test Manager.
 ***************************************************************************/
-bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value& request, OUT Json::Value& response)
+void MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value& request, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "RMFStreamerAgent_InterfaceTesting ---> Entry\n");
 
@@ -841,7 +844,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value&
         }
         response["result"]="FAILURE";
         response["details"]=token;
-        return false;
+        return;
     }
     else
     {
@@ -882,7 +885,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value&
             DEBUG_PRINT(DEBUG_TRACE, "Exception caught while doing curl operations\n");
             response["result"]="FAILURE";
             response["details"]="CURL operation failed";
-            return false;
+            return;
         }
 
         if(curlResponse != CURLE_OK)
@@ -890,7 +893,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value&
             fprintf(stderr, "curl_easy_perform() failed: %s \n",curl_easy_strerror(curlResponse));
             response["result"]="FAILURE";
             response["details"]="CURL API Failed";
-            return false;
+            return;
         }
 
         std::ifstream file;
@@ -950,9 +953,9 @@ bool MediaStreamerAgent::RMFStreamerAgent_InterfaceTesting(IN const Json::Value&
             }
         }
         file.close();
-        return true;
+        return;
         DEBUG_PRINT(DEBUG_TRACE, "RMFStreamerAgent_InterfaceTesting ---> Exit\n");
-        return TEST_SUCCESS;
+        return; 
     }
 }
 
@@ -964,7 +967,7 @@ Arguments     : Input argument is VideStreamURL and playtime. Output argument is
 Description   : Receives the RequestURL  from Test Manager and makes to play RMF elemnts via HNSrc and MPSink
                 Gets the return value from HNSrc->MPSink elements and send it to the Test Manager.
 ***************************************************************************/
-bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, OUT Json::Value& response)
+void MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "RMFStreamerAgent_Player ---> Entry\n");
 
@@ -996,7 +999,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
         }
         response["result"]="FAILURE";
         response["details"]=token;
-        return false;
+        return;
     }
     else
     {
@@ -1015,7 +1018,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
             response["result"] = "FAILURE";
             response["details"] = "Failed to Initialize hnsource";
             DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-            return TEST_FAILURE;
+            return ;
         }
         string http = "http://";
 
@@ -1038,7 +1041,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
             response["result"] = "FAILURE";
             response["details"] = "Failed to Open hnsource";
             DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
 
         res_MPSinkInit = pSink->init();
@@ -1051,7 +1054,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
             response["result"] = "FAILURE";
             response["details"] = "Failed to Initialze Mpsink";
             DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
 
         res_MPSinksetrect = pSink->setVideoRectangle(0, 0, 1280, 720, true);
@@ -1065,7 +1068,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
             response["result"] = "FAILURE";
             response["details"] = "Failed to set Video resolution";
             DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
 
         res_MPSinksetsrc = pSink->setSource(pSource);
@@ -1079,7 +1082,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
             response["result"] = "FAILURE";
             response["details"] = "Failed to do set source";
             DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
 
         res_HNSrcPlay = pSource->play();
@@ -1094,7 +1097,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
             response["result"] = "FAILURE";
             response["details"] = "Failed to play video using Hnsource and Mpsink pipeline";
             DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
 
         res_HNSrcGetState = pSource->getState(&curstate, NULL);
@@ -1106,7 +1109,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
             response["result"] = "FAILURE";
             response["details"] = "HNSource Current State is not in RMF_STATE_PLAYING";
             DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
 
         res_MPSinkTerm = pSink->term();
@@ -1125,7 +1128,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
             response["result"] = "FAILURE";
             response["details"] = "Video played successfully, but failed to terminate MPSink";
             DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-            return TEST_FAILURE;
+            return ;
         }
 
         if(0 != res_HNSrcClose)
@@ -1133,7 +1136,7 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
             response["result"] = "FAILURE";
             response["details"] = "Video played successfully, but failed to close Hnsource";
             DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-            return TEST_FAILURE;
+            return ;
         }
 
         if(0 != res_HNSrcTerm)
@@ -1141,14 +1144,14 @@ bool MediaStreamerAgent::RMFStreamerAgent_Player(IN const Json::Value& request, 
             response["result"] = "FAILURE";
             response["details"] = "Video played successfully, but failed to terminate Hnsource";
             DEBUG_PRINT(DEBUG_ERROR, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
 
         response["result"] = "SUCCESS";
         response["details"] = "Video played successfully";
         DEBUG_PRINT(DEBUG_LOG, "Video played successfully\n");
         DEBUG_PRINT(DEBUG_TRACE, "RMFStreamer_HNSrcMPSink_Video_Play--->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
 }
 #endif
@@ -1741,10 +1744,10 @@ Arguments     : NULL
 
 Description   : create the object of MediaStreamerAgent
 ***************************************************************************/
-extern "C" MediaStreamerAgent* CreateObject()
+extern "C" MediaStreamerAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
     DEBUG_PRINT(DEBUG_TRACE, "Creating MediaStreamer Agent Object\n");
-    return new MediaStreamerAgent();
+    return new MediaStreamerAgent(ptrtcpServer);
 }
 
 /**************************************************************************
@@ -1754,9 +1757,10 @@ Arguments     : NULL
 
 Description   :close things cleanly
 ***************************************************************************/
-bool MediaStreamerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool MediaStreamerAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
+#if 0
     if(NULL == ptrAgentObj)
     {
         return TEST_FAILURE;
@@ -1775,6 +1779,7 @@ bool MediaStreamerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAg
     ptrAgentObj->UnregisterMethod("TestMgr_RMFStreamer_Player");
 #endif
     /* All done, close things cleanly */
+#endif
     return TEST_SUCCESS;
 
 }

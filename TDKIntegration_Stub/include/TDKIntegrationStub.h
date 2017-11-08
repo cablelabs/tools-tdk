@@ -30,6 +30,7 @@
 #include <fstream>
 #include <stdlib.h>
 #include <curl/curl.h>
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 
 #include <ifaddrs.h>
 #include <arpa/inet.h>
@@ -69,63 +70,111 @@ using namespace std;
 #define NUMBER_OCAPID 10
 
 class RDKTestAgent;
-class TDKIntegrationStub : public RDKTestStubInterface
+//class TDKIntegrationStub : public RDKTestStubInterface
+class TDKIntegrationStub : public RDKTestStubInterface , public AbstractServer<TDKIntegrationStub>
 {
 	public:
+		TDKIntegrationStub(TcpSocketServer &ptrRpcServer) : AbstractServer <TDKIntegrationStub>(ptrRpcServer)
+                {
+#ifdef HYBRID
+#ifdef RDK_BR_1DOT3
+        	  /*Register stub function for callback*/
+                  this->bindAndAddMethod(Procedure("TestMgr_HybridE2E_T2pTuning", PARAMS_BY_NAME,JSON_STRING, "ValidocapId",JSON_STRING, NULL), &TDKIntegrationStub::TDKIntegrationT2pTuning);
+                  this->bindAndAddMethod(Procedure("TestMgr_HybridE2E_T2pTrickMode", PARAMS_BY_NAME,JSON_STRING, "trickPlayRate",JSON_STRING, NULL), &TDKIntegrationStub::TDKIntegrationT2pTrickplay);
+#endif
+#endif
+#ifdef IPCLIENT
+	          /*Dvr stub wrapper functions*/
+                  this->bindAndAddMethod(Procedure("TestMgr_E2EStub_PlayURL", PARAMS_BY_NAME,JSON_STRING, "videoStreamURL",JSON_STRING, NULL), &TDKIntegrationStub::E2EStubPlayURL);
+                  this->bindAndAddMethod(Procedure("TestMgr_E2EStub_GetRecURLS", PARAMS_BY_NAME,JSON_STRING, "RecordURL",JSON_STRING, NULL), &TDKIntegrationStub::E2EStubGetRecURLS);
+	          /*LinearTV wrapper functions*/
+                  this->bindAndAddMethod(Procedure("TestMgr_E2ELinearTV_GetURL", PARAMS_BY_NAME,JSON_STRING, "Validurl",JSON_STRING, NULL), &TDKIntegrationStub::E2ELinearTVstubGetURL);
+                  this->bindAndAddMethod(Procedure("TestMgr_E2ELinearTV_PlayURL", PARAMS_BY_NAME,JSON_STRING, "videoStreamURL",JSON_STRING, NULL), &TDKIntegrationStub::E2ELinearTVstubPlayURL);
+#endif
+		  /* E2E DVR TrickPlay */
+                  this->bindAndAddMethod(Procedure("TestMgr_LinearTv_Dvr_Play", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_LinearTv_Dvr_Play);
+                  this->bindAndAddMethod(Procedure("TestMgr_LinearTv_AudioChannel_Play", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_LinearTv_AudioChannel_Play);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_Pause", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_Pause);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Pause_Play", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_Pause_Play);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_TrickPlay_FF_FR", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_FF_FR);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_Pause_Play", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_Pause_Play_Repeat", PARAMS_BY_NAME,JSON_STRING, "rCount",JSON_INTEGER, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_Repeat);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_TrickPlay_RewindFromEndPoint", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "rewindSpeed",JSON_REAL, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Skip_Forward_Play", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "seconds", JSON_REAL, "rCount",JSON_INTEGER, NULL), &TDKIntegrationStub::E2ERMFAgent_Skip_Forward_Play);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Skip_Forward_From_Middle", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "seconds", JSON_REAL, "rCount",JSON_INTEGER, NULL), &TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_Middle);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Skip_Forward_From_End", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "seconds",JSON_REAL, NULL), &TDKIntegrationStub::E2ERMFAgent_Skip_Forward_From_End);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Skip_Backward_From_End", PARAMS_BY_NAME,JSON_STRING, "playUrl", JSON_STRING, "seconds", JSON_REAL, "rCount", JSON_INTEGER, NULL), &TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_End);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Skip_Backward_From_Middle", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "seconds",JSON_REAL, NULL), &TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Middle);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Skip_Backward_From_Starting", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "seconds", JSON_REAL, NULL), &TDKIntegrationStub::E2ERMFAgent_Skip_Backward_From_Starting);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_Rewind_Forward", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "rewindSpeed", JSON_REAL, "forwardSpeed",JSON_REAL, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_Rewind_Forward);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_Forward_Rewind", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "rewindSpeed", JSON_REAL, "forwardSpeed",JSON_REAL, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_Forward_Rewind);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_FF_FR_Pause_Play", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_REAL, "trickPlayRate", JSON_REAL, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_Pause_Play);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_Pause_FF_FR", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "trickPlayRate",JSON_REAL, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_Pause_FF_FR);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_Pause_Play_SF_SB", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "sfSeconds", JSON_REAL, "sbSeconds",JSON_REAL, "rCount",JSON_INTEGER, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_Pause_Play_SF_SB);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_FF_FR_SF_SB", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, "rewindSpeed", JSON_REAL, "forwardSpeed",JSON_REAL, "sfSeconds",JSON_REAL, "sbSeconds",JSON_REAL, "rCount",JSON_INTEGER, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_FF_FR_SF_SB);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_Pause_Pause", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_Pause_Pause);
+                  this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_Play", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_Play);
+                  this->bindAndAddMethod(Procedure("TestMgr_LiveTune_GETURL", PARAMS_BY_NAME,JSON_STRING, "Validurl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_GETURL);
+		  /*E2E_RMF_TSB*/
+                  this->bindAndAddMethod(Procedure("TestMgr_TSB_Play", PARAMS_BY_NAME,JSON_STRING, "SpeedRate",JSON_REAL, "VideostreamURL",JSON_STRING, "sbSeconds",JSON_REAL, "rCount",JSON_INTEGER, NULL), &TDKIntegrationStub::E2ERMFTSB_Play);
+	          /* E2E RF Video */
+                  this->bindAndAddMethod(Procedure("TestMgr_RF_Video_ChannelChange", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_ChannelChange);
+                  this->bindAndAddMethod(Procedure("TestMgr_MDVR_GetResult", PARAMS_BY_NAME,JSON_STRING, "resultList",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult);
+                }
 
 		/*Ctor*/
-		TDKIntegrationStub();
+		//TDKIntegrationStub();
 
 		/*inherited functions*/
-		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
+		bool initialize(IN const char* szVersion);
                 std::string testmodulepre_requisites();
                 bool testmodulepost_requisites();
-		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
+		bool cleanup(IN const char* szVersion);
 
 		/*LiveTrickplay Wrapper functions*/
 #ifdef HYBRID
 #ifdef RDK_BR_1DOT3
-		bool TDKIntegrationT2pTuning(IN const Json::Value& request, OUT Json::Value& response);
-		bool TDKIntegrationT2pTrickplay(IN const Json::Value& request, OUT Json::Value& response);
+		void TDKIntegrationT2pTuning(IN const Json::Value& request, OUT Json::Value& response);
+		void TDKIntegrationT2pTrickplay(IN const Json::Value& request, OUT Json::Value& response);
 #endif
 #endif
 		/*1DOT3 DVR Testing Wrapper functions*/
 #ifdef IPCLIENT
-		bool E2EStubPlayURL(IN const Json::Value& request, OUT Json::Value& response);
-		bool E2EStubGetRecURLS(IN const Json::Value& request, OUT Json::Value& response);
-		bool E2ELinearTVstubGetURL(IN const Json::Value& req, OUT Json::Value& response);
-		bool E2ELinearTVstubPlayURL(IN const Json::Value& req, OUT Json::Value& response);
+		void E2EStubPlayURL(IN const Json::Value& request, OUT Json::Value& response);
+		void E2EStubGetRecURLS(IN const Json::Value& request, OUT Json::Value& response);
+		void E2ELinearTVstubGetURL(IN const Json::Value& req, OUT Json::Value& response);
+		void E2ELinearTVstubPlayURL(IN const Json::Value& req, OUT Json::Value& response);
 #endif	
 #ifdef RMFAGENT
 		/*E2ERMFAgent Wrapper functions*/
 		/* E2E DVR TrickPlay */
-		bool E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_Pause(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Pause_Play(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_TrickPlay_FF_FR(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_Pause_Play(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_Pause_Play_Repeat(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Skip_Forward_Play(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Skip_Forward_From_Middle(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Skip_Forward_From_End(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Skip_Backward_From_End(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Skip_Backward_From_Middle(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Skip_Backward_From_Starting(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_Rewind_Forward(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_Pause_FF_FR(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_Pause_Pause(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_Play_Play(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFAgent_GETURL(IN const Json::Value& , OUT Json::Value& );
-		bool E2ERMFTSB_Play(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_LinearTv_Dvr_Play(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_LinearTv_AudioChannel_Play(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_Pause(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Pause_Play(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_TrickPlay_FF_FR(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_Pause_Play(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_Pause_Play_Repeat(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_TrickPlay_Rewind_From_End_Point(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Skip_Forward_Play(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Skip_Forward_From_Middle(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Skip_Forward_From_End(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Skip_Backward_From_End(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Skip_Backward_From_Middle(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Skip_Backward_From_Starting(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_Rewind_Forward(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_Forward_Rewind(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_FF_FR_Pause_Play(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_Pause_FF_FR(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_Pause_Play_SF_SB(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_FF_FR_SF_SB(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_Pause_Pause(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_Play_Play(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFAgent_GETURL(IN const Json::Value& , OUT Json::Value& );
+		void E2ERMFTSB_Play(IN const Json::Value& , OUT Json::Value& );
 		/* E2E RF Video */
-		bool E2ERMFAgent_ChannelChange(IN const Json::Value& , OUT Json::Value&);
-		bool E2ERMFAgent_MDVR_GetResult(IN const Json::Value& , OUT Json::Value&);
+		void E2ERMFAgent_ChannelChange(IN const Json::Value& , OUT Json::Value&);
+		void E2ERMFAgent_MDVR_GetResult(IN const Json::Value& , OUT Json::Value&);
 
 #endif	
 

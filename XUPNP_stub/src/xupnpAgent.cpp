@@ -103,12 +103,12 @@ Arguments     : NULL
 
 Description   : Constructor for XUPNPAgent class
 ***************************************************************************/
-
+#if 0
 XUPNPAgent::XUPNPAgent()
 {
     DEBUG_PRINT(DEBUG_LOG, "XUPNPAgent Initialized\n");
 }
-
+#endif
 /**************************************************************************
 Function name : XUPNPAgent::initialize
 
@@ -117,17 +117,17 @@ Arguments     : Input arguments are Version string and XUPNPAgent obj ptr
 Description   : Registering all the wrapper functions with the agent for using these functions in the script
 ***************************************************************************/
 
-bool XUPNPAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool XUPNPAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent Initialization Entry\n");
-
+#if 0
     ptrAgentObj->RegisterMethod(*this,&XUPNPAgent::XUPNPAgent_GetUpnpResult, "TestMgr_XUPNP_GetUpnpResult");
     ptrAgentObj->RegisterMethod(*this,&XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile, "TestMgr_XUPNP_ReadXDiscOutputFile");
     ptrAgentObj->RegisterMethod(*this,&XUPNPAgent::XUPNPAgent_CheckXDiscOutputFile, "TestMgr_XUPNP_CheckXDiscOutputFile");
     ptrAgentObj->RegisterMethod(*this,&XUPNPAgent::XUPNPAgent_BroadcastEvent, "TestMgr_XUPNP_BroadcastEvent");
 
+#endif
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent Initialization Exit\n");
-
     return TEST_SUCCESS;
 }
 
@@ -249,7 +249,7 @@ Description   : Receives the request from Test Manager to get the value for
                 parameter name from xdiscovery process.
 **************************************************************************/
 
-bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::Value& response)
+void XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_GetUpnpResult --->Entry\n");
 
@@ -343,7 +343,7 @@ bool XUPNPAgent::XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::V
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_GetUpnpResult -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -356,7 +356,7 @@ Description   : Receives the request from Test Manager to get the value for
                 parameter name from xdiscovery output file (output.json)
 **************************************************************************/
 
-bool XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response)
+void XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_ReadXDiscOutputFile --->Entry\n");
 
@@ -401,7 +401,7 @@ bool XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT J
             else
                 response["details"] = value;
             DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_ReadXDiscOutputFile -->Exit\n");
-            return TEST_SUCCESS;
+            return;
         }
     }
     else
@@ -414,7 +414,7 @@ bool XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT J
     response["details"] = value;
 
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_ReadXDiscOutputFile -->Exit\n");
-    return TEST_FAILURE;
+    return;
 }
 
 /**************************************************************************
@@ -425,7 +425,7 @@ Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to check if xdiscovery output file is
                 created or not.
 **************************************************************************/
-bool XUPNPAgent::XUPNPAgent_CheckXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response)
+void XUPNPAgent::XUPNPAgent_CheckXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_CheckXDiscOutputFile --->Entry\n");
     char stringDetails[STR_LEN] = {'\0'};
@@ -447,7 +447,7 @@ bool XUPNPAgent::XUPNPAgent_CheckXDiscOutputFile(IN const Json::Value& req, OUT 
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_CheckXDiscOutputFile -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -461,7 +461,7 @@ Description   : Common function to receive the request from Test Manager to chec
                 received by xcal-device process or not using event log messages.
 **************************************************************************/
 
-bool XUPNPAgent::XUPNPAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response)
+void XUPNPAgent::XUPNPAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_BroadcastEvent --->Entry\n");
 
@@ -509,7 +509,7 @@ bool XUPNPAgent::XUPNPAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::
         response["result"] = "FAILURE";
         response["details"] = "Unsupported state id value";
         DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_BroadcastEvent --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     IARM_Bus_BroadcastEvent(IARM_BUS_SYSMGR_NAME,IARM_BUS_SYSMGR_EVENT_SYSTEMSTATE,(void*)&eventData,sizeof(eventData));
@@ -526,10 +526,10 @@ bool XUPNPAgent::XUPNPAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent_BroadcastEvent --->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
-/****ee********************************************************************
+/************************************************************************
 Function Name   : CreateObject
 
 Arguments       : NULL
@@ -537,9 +537,9 @@ Arguments       : NULL
 Description     : This function is used to create a new object of the class "XUPNPAgent".
 **************************************************************************/
 
-extern "C" XUPNPAgent* CreateObject()
+extern "C" XUPNPAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-    return new XUPNPAgent();
+    return new XUPNPAgent(ptrtcpServer);
 }
 
 /**************************************************************************
@@ -550,19 +550,20 @@ Arguments       : NULL
 Description     : This function will be used to the close things cleanly.
 **************************************************************************/
 
-bool XUPNPAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+bool XUPNPAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
+#if 0
     if(NULL == ptrAgentObj)
     {
         return TEST_FAILURE;
     }
-
     ptrAgentObj->UnregisterMethod("TestMgr_XUPNP_GetUpnpResult");
     ptrAgentObj->UnregisterMethod("TestMgr_XUPNP_ReadXDiscOutputFile");
     ptrAgentObj->UnregisterMethod("TestMgr_XUPNP_CheckXDiscOutputFile");
     ptrAgentObj->UnregisterMethod("TestMgr_XUPNP_BroadcastEvent");
 
+#endif
     return TEST_SUCCESS;
 }
 

@@ -27,6 +27,7 @@
 #include <errno.h>
 
 #include <json/json.h>
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 
@@ -64,13 +65,16 @@ typedef enum
 
 	
 
-class rmfAppTestStub : public RDKTestStubInterface
+class rmfAppTestStub : public RDKTestStubInterface , public AbstractServer<rmfAppTestStub>
 {	
 	public:
-        rmfAppTestStub ();
+        rmfAppTestStub (TcpSocketServer &ptrRpcServer) : AbstractServer <rmfAppTestStub>(ptrRpcServer)
+        {
+            this->bindAndAddMethod(Procedure("TestMgr_CreateRecord", PARAMS_BY_NAME, JSON_STRING,"recordId",JSON_STRING,"recordDuration",JSON_STRING,"recordTitle",JSON_STRING,"ocapId",JSON_STRING,NULL), &rmfAppTestStub::rmfAppTestStub_CreateRecord);
+        }
 
-        bool initialize (IN const char* szVersion,IN RDKTestAgent *ptrAgentObj);
-        bool cleanup (IN const char* szVersion,IN RDKTestAgent	*ptrAgentObj);
+        bool initialize (IN const char* szVersion);
+        bool cleanup (IN const char* szVersion);
 /*
      	bool rmfAppTestStub_Execute (IN const Json::Value& req, OUT Json::Value& response);
 */
@@ -78,7 +82,7 @@ class rmfAppTestStub : public RDKTestStubInterface
         bool testmodulepost_requisites();
 
 	/*To record the content using tdkRmfApp  */		
-	bool rmfAppTestStub_CreateRecord(IN const Json::Value& req, OUT Json::Value& response);
+	void rmfAppTestStub_CreateRecord(IN const Json::Value& req, OUT Json::Value& response);
 
 	private:
 /*	

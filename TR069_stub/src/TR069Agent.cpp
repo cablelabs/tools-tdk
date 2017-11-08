@@ -26,11 +26,12 @@ Arguments     : NULL
 
 Description   : Constructor for TR069Agent class
  ***************************************************************************/
-
+#if 0
 TR069Agent::TR069Agent()
 {
 	DEBUG_PRINT(DEBUG_TRACE, "TR069Agent Initialized\n");
 }
+#endif
 
 /***************************************************************************
  *Function name : testmodulepre_requisites
@@ -102,12 +103,12 @@ Arguments     : Input arguments are Version string and TR069Agent obj ptr
 
 Description   : Registering all the wrapper functions with the agent for using these functions in the script
  ***************************************************************************/
-bool TR069Agent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool TR069Agent::initialize(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "TR069Agent Initialize----->Entry\n");
 
-	ptrAgentObj->RegisterMethod(*this,&TR069Agent::TR069Agent_GetParameterValue, "TestMgr_GetParameterValue");
-	ptrAgentObj->RegisterMethod(*this,&TR069Agent::TR069Agent_VerifyParameterValue, "TestMgr_VerifyParameterValue");
+//	ptrAgentObj->RegisterMethod(*this,&TR069Agent::TR069Agent_GetParameterValue, "TestMgr_GetParameterValue");
+//	ptrAgentObj->RegisterMethod(*this,&TR069Agent::TR069Agent_VerifyParameterValue, "TestMgr_VerifyParameterValue");
 
 	DEBUG_PRINT(DEBUG_TRACE, "TR069Agent Initialize----->Exit\n");
 
@@ -121,7 +122,7 @@ Arguments     : Input arguments are json request object and json response object
 
 Description   : This method queries for the parameter requested through curl and returns the value.
 ***************************************************************************/
-bool TR069Agent::TR069Agent_GetParameterValue(IN const Json::Value& req, OUT Json::Value& response)
+void TR069Agent::TR069Agent_GetParameterValue(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "TR069Agent_GetParameterValue -->Entry\n");
 
@@ -147,7 +148,7 @@ bool TR069Agent::TR069Agent_GetParameterValue(IN const Json::Value& req, OUT Jso
 		response["details"] = "popen() failure";
 		DEBUG_PRINT(DEBUG_ERROR, "popen() failure\n");
 
-		return TEST_FAILURE;
+		return;
 	}
 
 	/*copy the response to a buffer */
@@ -167,7 +168,7 @@ bool TR069Agent::TR069Agent_GetParameterValue(IN const Json::Value& req, OUT Jso
 		response["details"] = curlResp;
 		DEBUG_PRINT(DEBUG_ERROR, "Curl Error: %s\n",curlResp.c_str());
 
-		return TEST_FAILURE;
+		return;
 	}
 	
 	string respResult(readRespBuff);
@@ -197,7 +198,7 @@ bool TR069Agent::TR069Agent_GetParameterValue(IN const Json::Value& req, OUT Jso
 	DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
 
 	DEBUG_PRINT(DEBUG_TRACE, "TR069Agent_GetParameterValue -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 
 }
 
@@ -209,7 +210,7 @@ Arguments     : Input arguments are json request object and json response object
 
 Description   : This method verifies the value for the parameter name and returns SUCCESS or FAILURE. 
 ***************************************************************************/
-bool TR069Agent::TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT Json::Value& response)
+void TR069Agent::TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "TR069Agent_VerifyParameterValue -->Entry\n");
 
@@ -230,7 +231,7 @@ bool TR069Agent::TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT 
 			response["result"] = "FAILURE";
 			response["details"] = "popen failed";
 
-			return TEST_FAILURE;
+			return;
 		}
 
 		if(fgets(resultBuff, sizeof(resultBuff), fp)!=NULL)
@@ -275,7 +276,7 @@ bool TR069Agent::TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT 
 			response["result"] = "FAILURE";
 			response["details"] = "popen failed";
 
-			return TEST_FAILURE;
+			return;
 		}
 
 		if(fgets(resultBuff, sizeof(resultBuff), fp)!=NULL)
@@ -402,7 +403,7 @@ bool TR069Agent::TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT 
 
 			DEBUG_PRINT(DEBUG_ERROR, "if_name index error\n");
 
-			return TEST_FAILURE;
+			return;
 		}
 
 		for (ifnp = ifname; ifnp->if_index != 0; ifnp++)
@@ -452,7 +453,7 @@ bool TR069Agent::TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT 
 			response["result"] = "FAILURE";
 			response["details"] = "popen failed";
 
-			return TEST_FAILURE;
+			return;
 		}
 
 		if(fgets(resultBuff, sizeof(resultBuff), fp)!=NULL)
@@ -583,7 +584,7 @@ bool TR069Agent::TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT 
 			response["result"] = "FAILURE";
 			response["details"] = "popen failed";
 
-			return TEST_FAILURE;
+			return;
 		}
 
 		if(fgets(resultBuff, sizeof(resultBuff), fp)!=NULL)
@@ -651,7 +652,7 @@ bool TR069Agent::TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT 
 	}
 
 	DEBUG_PRINT(DEBUG_TRACE, "TR069Agent_VerifyParameterValue -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /**************************************************************************
@@ -662,11 +663,11 @@ Arguments       : NULL
 Description     : This function is used to create a new object of the class "TR069Agent".
  **************************************************************************/
 
-extern "C" TR069Agent* CreateObject()
+extern "C" TR069Agent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "Creating TR069 Agent Object\n");
 
-	return new TR069Agent();
+	return new TR069Agent(ptrtcpServer);
 }
 
 /**************************************************************************
@@ -676,10 +677,10 @@ Arguments       : NULL
 
 Description     : This function will be used to the close things cleanly.
  **************************************************************************/
-bool TR069Agent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+bool TR069Agent::cleanup(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
-
+#if 0
 	if(NULL == ptrAgentObj)
 	{
 		return TEST_FAILURE;
@@ -688,6 +689,7 @@ bool TR069Agent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
 	ptrAgentObj->UnregisterMethod("TestMgr_GetParameterValue");
 	ptrAgentObj->UnregisterMethod("TestMgr_VerifyParameterValue");
 
+#endif
 	DEBUG_PRINT(DEBUG_TRACE, "cleaningup done\n");
 
 	return TEST_SUCCESS;

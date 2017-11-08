@@ -372,11 +372,12 @@ Arguments     : NULL
 Description   : Constructor for MediaframeworkAgent class
  ***************************************************************************/
 
+#if 0
 MediaframeworkAgent::MediaframeworkAgent()
 {
 	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent Initialized\n");
 }
-
+#endif
 typedef std::list<std::pair<float, float> > range_list_t;
 
 /**************************************************************************
@@ -387,9 +388,10 @@ Arguments     : Input arguments are Version string and MediaframeworkAgent obj p
 Description   : Registering all the wrapper functions with the agent for using these functions in the script
  ***************************************************************************/
 
-bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool MediaframeworkAgent::initialize(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "Mediaframework Initialize----->Entry\n");
+#if 0
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetMute, "TestMgr_MPSink_SetGetMute");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetVolume, "TestMgr_MPSink_SetGetVolume");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges, "TestMgr_HNSrc_GetBufferedRanges");
@@ -466,6 +468,7 @@ bool MediaframeworkAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_UninitPlatform,"TestMgr_RmfElement_HNSink_UninitPlatform");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetProperties,"TestMgr_RmfElement_HNSink_SetProperties");
 	ptrAgentObj->RegisterMethod(*this,&MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetSourceType,"TestMgr_RmfElement_HNSink_SetSourceType");
+#endif
 	return TEST_SUCCESS;
 }
 
@@ -486,7 +489,7 @@ static rmfPlatform *mPlatform = NULL;
 static void* lowSrcElement = NULL;
 
 
-bool MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckAudioVideoStatus -->Entry\n");
         char buffer[128];
@@ -506,7 +509,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus(IN const Jso
         	response["result"] = "FAILURE";
                	response["details"] = "Error in opening pipe";
 
-                return TEST_FAILURE;
+                return;
         }
         while(!feof(pipe)) {
                 if(fgets(buffer, 128, pipe) != NULL)
@@ -525,18 +528,18 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckAudioVideoStatus(IN const Jso
         	response["result"] = "SUCCESS";
                	response["details"] = "Audio/Video playing SUCCESS";
 
-                return TEST_SUCCESS;
+                return;
 	}
         else
 	{
         	response["result"] = "FAILURE";
                	response["details"] = "Audio/Video playing FAILURE";
 
-                return TEST_FAILURE;	
+                return;
 	}
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_ClearLogFile(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_ClearLogFile(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_ClearLogFile -->Entry\n");
 	string logFileToClear = req["logFileToClear"].asCString();
@@ -555,17 +558,17 @@ bool MediaframeworkAgent::MediaframeworkAgent_ClearLogFile(IN const Json::Value&
                 response["result"] = "FAILURE";
 		response["details"] = "Clearing the log file failed!!!";
 		
-		return TEST_FAILURE;
+     		return;
         }
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_ClearLogFile -->Exit\n");
 	response["details"] = "Log file cleared";
         response["result"] = "SUCCESS";
 	
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_CheckRmfStreamerCrash(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_CheckRmfStreamerCrash(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckRmfStreamerCrash -->Entry\n");
 	
@@ -608,7 +611,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckRmfStreamerCrash(IN const Jso
 
 							RecorderLogFile.close();
         						DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckRmfStreamerCrash -->Exit\n");
-							return TEST_SUCCESS;
+							return;
         	                        }
                 	        }
                         	else
@@ -620,7 +623,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckRmfStreamerCrash(IN const Jso
 					
 					RecorderLogFile.close();
         				DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckRmfStreamerCrash -->Exit\n");
-					return TEST_FAILURE;
+					return;
                         	}
 	                }
         	}
@@ -632,14 +635,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_CheckRmfStreamerCrash(IN const Jso
 		response["details"] = "Copy of log file or setting permission failure!!!!";
 
         	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckRmfStreamerCrash -->Exit\n");
-		return TEST_FAILURE;
+		return;
 	}
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_CheckRmfStreamerCrash -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementCreateInstance -->Entry\n");
 
@@ -708,7 +711,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const 
 	                response["details"] = "QAMSrc instance creation failed";
         	        DEBUG_PRINT(DEBUG_ERROR, "QAMSrc instance creation failed \n");
 
-	                return TEST_FAILURE;
+	                return;
 		}
 
         	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc instance created \n");
@@ -725,7 +728,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const 
         	        response["result"] = "FAILURE";
                		response["details"] = "Error: unable to create DVRSrc";
 
-	                return TEST_FAILURE;
+	                return;
         	}
         	DEBUG_PRINT(DEBUG_TRACE, "DVRSrc is created \n");
 		response["details"] = "DVR instance creation successful";
@@ -740,7 +743,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const 
                         response["result"] = "FAILURE";
                         response["details"] = "Error: unable to create HNSrc";
 
-                        return TEST_FAILURE;
+                        return;
                 }
         	DEBUG_PRINT(DEBUG_TRACE, "HNSrc is created \n");
                 response["details"] = "HNSrc instance creation successful";
@@ -754,7 +757,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const 
                         response["result"] = "FAILURE";
                         response["details"] = "Error: unable to create MediaPlayerSink";
 
-                        return TEST_FAILURE;
+                        return;
                 }
         	DEBUG_PRINT(DEBUG_TRACE, "MediaPlayerSink is created \n");
                 response["details"] = "MediaPlayerSink instance creation successful";
@@ -768,7 +771,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const 
                         response["result"] = "FAILURE";
                         response["details"] = "Error: unable to create hnSink";
 
-                        return TEST_FAILURE;
+                        return;
                 }
         	DEBUG_PRINT(DEBUG_TRACE, "HNSink is created \n");
                 response["details"] = "HNSink instance creation successful";
@@ -779,16 +782,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementCreateInstance(IN const 
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to be created";
 
-                return TEST_FAILURE;
+                return;
 	}
 
 	response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementCreateInstance -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementRemoveInstance -->Entry\n");
 
@@ -879,7 +882,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const 
         	DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
         	soc_uninit();
 		#endif
-                return TEST_FAILURE;
+                return;
 	}
 
 	response["result"] = "SUCCESS";
@@ -890,10 +893,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementRemoveInstance(IN const 
 	#endif
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementRemoveInstance -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementInit -->Entry\n");
 
@@ -912,7 +915,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Valu
 			
 			delete qamSource;
 			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "QAMSrc init successful";
 	}
@@ -927,7 +930,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Valu
 			
 			delete dvrSource;
 			DEBUG_PRINT(DEBUG_ERROR, "DVRSrc init() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "DVRSrc init successful";
 	}
@@ -942,7 +945,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Valu
 
 			delete hnSource;
 			DEBUG_PRINT(DEBUG_ERROR, "HNSrc init() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "HNSrc init() successful";
 	}
@@ -956,7 +959,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Valu
 
 			delete mpSink;
 			DEBUG_PRINT(DEBUG_ERROR, "MediaPlayerSink init() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "MediaPlayerSink init() successful";
 	}
@@ -970,7 +973,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Valu
 
 			delete hnSink;
 			DEBUG_PRINT(DEBUG_ERROR, "HNSink init() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "HNSink init() successful";
 	}
@@ -979,16 +982,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementInit(IN const Json::Valu
 		DEBUG_PRINT(DEBUG_ERROR, "Error: Enter the Src/Sink element to initiate init()\n");
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to initiate init()";
-                return TEST_FAILURE;
+                return;
 	}
 
 	response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementInit -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementTerm -->Entry\n");
 
@@ -1005,7 +1008,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
 	                response["details"] = "QAMSrc term() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc term() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "QAMSrc term() successful";
 	}
@@ -1019,7 +1022,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
 	                response["details"] = "DVRSrc term() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "DVRSrc term() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "DVRSrc term() successful";
 	}
@@ -1033,7 +1036,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
 	                response["details"] = "HNSrc term() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "HNSrc term() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "HNSrc term() successful";
 	}
@@ -1046,7 +1049,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
 	                response["details"] = "MediaPlayerSink term() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "MediaPlayerSink term() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "MediaPlayerSink term() successful";
 	}
@@ -1059,7 +1062,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
 	                response["details"] = "HNSink term() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "HNSink term() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "HNSink term() successful";
 	}
@@ -1069,16 +1072,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementTerm(IN const Json::Valu
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to initiate term()";
 
-                return TEST_FAILURE;
+                return;
 	}
 
 	response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementTerm -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementOpen -->Entry\n");
 	
@@ -1100,7 +1103,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
                  }
                  response["result"] = "FAILURE";
                  response["details"] = token;
-                 return TEST_FAILURE;
+                 return;
 	}
 
 	const char * streaming_interface_name = streaming_interface.c_str();
@@ -1135,7 +1138,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
 	                response["details"] = "QAMSrc open() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc open() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "QAMSrc open() successful";
 	}
@@ -1149,7 +1152,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
 	                response["details"] = "DVRSrc open() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "DVRSrc open() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "DVRSrc open() successful";
 	}
@@ -1163,7 +1166,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
 	                response["details"] = "HNSrc open() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "HNSrc open() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "HNSrc open() successful";
 	}
@@ -1173,16 +1176,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementOpen(IN const Json::Valu
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to initiate open()";
 
-                return TEST_FAILURE;
+                return;
 	}
 
 	response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementOpen -->Exit\n");
-	return TEST_SUCCESS;
+        return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementClose(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementClose(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementClose -->Entry\n");
 
@@ -1200,7 +1203,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementClose(IN const Json::Val
 	                response["details"] = "QAMSrc close() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc close() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "QAMSrc close() successful";
 	}
@@ -1214,7 +1217,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementClose(IN const Json::Val
 	                response["details"] = "DVRSrc close() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "DVRSrc close() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "DVRSrc close() successful";
 	}
@@ -1228,7 +1231,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementClose(IN const Json::Val
 	                response["details"] = "HNSrc close() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "HNSrc close() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "HNSrc close() successful";
 	}
@@ -1238,16 +1241,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementClose(IN const Json::Val
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to initiate close()";
 
-                return TEST_FAILURE;
+                return;
 	}
 
 	response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementClose -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementPause -->Entry\n");
 
@@ -1296,7 +1299,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Val
 	                response["details"] = "QAMSrc pause() FAILURE";
 
 			DEBUG_PRINT(DEBUG_TRACE, "QAMSrc pause() FAILURE\n");
-			return TEST_FAILURE;
+			return;
 		}
                 response["details"] = "QAMSrc pause() successful";
 	}
@@ -1310,7 +1313,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Val
 	                response["details"] = "DVRSrc pause() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "DVRSrc pause() FAILURE\n");
-			return TEST_FAILURE;
+			return ;
 		}
                 response["details"] = "DVRSrc pause() successful";
 	}
@@ -1327,7 +1330,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Val
 	                response["details"] = "HNSrc pause() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "HNSrc pause() FAILURE\n");
-			return TEST_FAILURE;
+			return ;
 		}
                 response["details"] = "HNSrc pause() successful";
 	}
@@ -1337,17 +1340,17 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPause(IN const Json::Val
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src element to initiate pause()";
 
-                return TEST_FAILURE;
+                return ;
 	}
 
 	response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementPause -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementPlay -->Entry\n");
 
@@ -1404,7 +1407,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 	                response["details"] = "QAMSrc play() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc play() FAILURE\n");
-			return TEST_FAILURE;
+			return ;
 		}
                 response["details"] = "QAMSrc play() successful";
 	}
@@ -1429,7 +1432,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 	                response["details"] = "DVRSrc play() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "DVRSrc play() FAILURE\n");
-			return TEST_FAILURE;
+			return ;
 		}
                 response["details"] = "DVRSrc play() successful";
 	}
@@ -1469,7 +1472,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
 	                response["details"] = "HNSrc play() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "HNSrc play() FAILURE\n");
-			return TEST_FAILURE;
+			return ;
 		}
                 response["details"] = "HNSrc play() successful";
 	}
@@ -1479,16 +1482,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementPlay(IN const Json::Valu
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to initiate play()";
 
-                return TEST_FAILURE;
+                return;
 	}
 
 	response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementPlay -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetSpeed(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementSetSpeed(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementSetSpeed -->Entry\n");
 
@@ -1507,7 +1510,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetSpeed(IN const Json::
                         response["result"] = "FAILURE";
                         response["details"] = "DVRSrc setSpeed() FAILURE";
                         DEBUG_PRINT(DEBUG_ERROR, "DVRSrc setSpeed() FAILURE\n");
-                        return TEST_FAILURE;
+                        return;
                 }
                 response["details"] = "DVRSrc setSpeed() successful";
         }
@@ -1521,7 +1524,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetSpeed(IN const Json::
                         response["details"] = "HNSrc setSpeed() FAILURE";
 
                         DEBUG_PRINT(DEBUG_ERROR, "HNSrc setSpeed() FAILURE\n");
-                        return TEST_FAILURE;
+                        return;
                 }
                 response["details"] = "HNSrc setSpeed() successful";
         }
@@ -1531,16 +1534,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetSpeed(IN const Json::
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to setSpeed()";
 
-                return TEST_FAILURE;
+                return;
         }
 
         response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementSetSpeed -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetSpeed(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementGetSpeed(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementGetSpeed -->Entry\n");
 
@@ -1560,7 +1563,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetSpeed(IN const Json::
                         response["result"] = "FAILURE";
                         response["details"] = "DVRSrc getSpeed() FAILURE";
                         DEBUG_PRINT(DEBUG_ERROR, "DVRSrc getSpeed() FAILURE\n");
-                        return TEST_FAILURE;
+                        return;
                 }
 		details << "DVRSrc getSpeed() successful, Speed:" << playSpeed;
                 response["details"] = details.str();
@@ -1575,7 +1578,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetSpeed(IN const Json::
                         response["details"] = "HNSrc getSpeed() FAILURE";
 
                         DEBUG_PRINT(DEBUG_ERROR, "HNSrc getSpeed() FAILURE\n");
-                        return TEST_FAILURE;
+                        return;
                 }
 		details << "HNSrc getSpeed() successful, Speed:" << playSpeed;
                 response["details"] = details.str();
@@ -1586,16 +1589,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetSpeed(IN const Json::
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to getSpeed()";
 
-                return TEST_FAILURE;
+                return ;
         }
 
         response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementGetSpeed -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_SinkSetSource -->Entry\n");
 
@@ -1617,7 +1620,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
 	                response["details"] = "Create DVRSrc/MPSink  instances first";
 
 			DEBUG_PRINT(DEBUG_ERROR, "Create DVRSrc/MPSink Instance \n");
-			return TEST_FAILURE;
+			return ;
 
 		}
 		retResult = mpSink->setSource(dvrSource);	
@@ -1627,7 +1630,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
 	                response["details"] = "MPSink setSource() FAILURE";
 
 			DEBUG_PRINT(DEBUG_ERROR, "MPSink setSource() FAILURE\n");
-			return TEST_FAILURE;
+		        return ;
 		}
                 response["details"] = "MPSink setSource() successful";
 		DEBUG_PRINT(DEBUG_TRACE, "MPSink setSource() successful\n");
@@ -1642,7 +1645,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                         response["details"] = "Create HNSrc/MPSink  instances first";
 
                         DEBUG_PRINT(DEBUG_ERROR, "Create HNSrc/MPSink Instance \n");
-                        return TEST_FAILURE;
+                        return;
 
                 }
                 retResult = mpSink->setSource(hnSource);
@@ -1652,7 +1655,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                         response["details"] = "MPSink setSource() FAILURE";
 
                         DEBUG_PRINT(DEBUG_ERROR, "MPSink setSource() FAILURE\n");
-                        return TEST_FAILURE;
+                        return ;
                 }
                 response["details"] = "MPSink setSource() successful";
 		DEBUG_PRINT(DEBUG_TRACE, "MPSink setSource() successful\n");
@@ -1665,7 +1668,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                         response["details"] = "Create QAMSrc/MPSink instances first";
 
                         DEBUG_PRINT(DEBUG_ERROR, "Create QAMSrc/MPSink Instance \n");
-                        return TEST_FAILURE;
+                        return;
 
                 }
 		if(newQamInsFlag == "false")
@@ -1701,7 +1704,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                         response["details"] = "mpSink setSource() FAILURE";
 
                         DEBUG_PRINT(DEBUG_ERROR, "mpSink setSource() FAILURE\n");
-                        return TEST_FAILURE;
+                        return;
                 }
                 response["details"] = "mpSink setSource() successful";
 		DEBUG_PRINT(DEBUG_TRACE, "mpSink setSource() successful\n");
@@ -1720,7 +1723,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                         response["details"] = "mpSink setSource() FAILURE";
 
                         DEBUG_PRINT(DEBUG_ERROR, "mpSink setSource() FAILURE\n");
-                        return TEST_FAILURE;
+                        return;
                 }
                 response["details"] = "mpSink setSource() successful";
 		DEBUG_PRINT(DEBUG_TRACE, "mpSink setSource() successful\n");
@@ -1733,7 +1736,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                         response["details"] = "Create QAMSrc/HNSink instances first";
 
                         DEBUG_PRINT(DEBUG_ERROR, "Create QAMSrc/HNSink Instance \n");
-                        return TEST_FAILURE;
+                        return;
 
                 }
                 retResult = hnSink->setSource(qamSource);
@@ -1743,7 +1746,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                         response["details"] = "hnSink setSource() FAILURE";
 
                         DEBUG_PRINT(DEBUG_ERROR, "hnSink setSource() FAILURE\n");
-                        return TEST_FAILURE;
+                        return;
                 }
                 response["details"] = "hnSink setSource() successful";
 		DEBUG_PRINT(DEBUG_TRACE, "hnSink setSource() successful\n");
@@ -1754,23 +1757,23 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_SinkSetSource(IN const 
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to be used";
 
-                return TEST_FAILURE;
+                return ;
 	}
 
 	response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_SinkSetSource -->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_MpSinkSetVideoRectangle(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_MpSinkSetVideoRectangle(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_MpSinkSetVideoRectangle -->Entry\n");
 
 	RMFResult retResult = RMF_RESULT_SUCCESS;	
 	bool applyNow = req["apply"].asInt();
-	unsigned x = req["X_Value"].asInt();
-	unsigned y = req["Y_Value"].asInt();
+	unsigned x = req["X"].asInt();
+	unsigned y = req["Y"].asInt();
 	unsigned height = req["height"].asInt();
 	unsigned width = req["width"].asInt();
 
@@ -1786,7 +1789,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_MpSinkSetVideoRectangle
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Create the Mediaframework Instance";
 
-                return TEST_FAILURE;
+                return ;
 	}
 	
 	retResult = mpSink->setVideoRectangle(x, y, width, height,applyNow);	
@@ -1796,16 +1799,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_MpSinkSetVideoRectangle
 	        response["details"] = "MPSink setVideoRectangle() FAILURE";
 
 		DEBUG_PRINT(DEBUG_ERROR, "MPSink setVideoRectangle() FAILURE\n");
-		return TEST_FAILURE;
+		return ;
 	}
 	response["details"] = "MPSink setVideoRectangle() SUCCESS";
 	response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_SetVideoRectangle -->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetMediaTime(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementSetMediaTime(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementSetMediaTime -->Entry\n");
         RMFResult retResult = RMF_RESULT_SUCCESS;
@@ -1823,7 +1826,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetMediaTime(IN const Js
   	                response["result"] = "FAILURE";
                         response["details"] = "DVRSrc SetMediaTime() FAILURE";
                         DEBUG_PRINT(DEBUG_ERROR, "DVRSrc SetMediaTime() FAILURE\n");
-                        return TEST_SUCCESS;
+                        return;
                 }
                 response["details"] = "DVRSrc SetMediaTime() successful";
         }
@@ -1837,7 +1840,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetMediaTime(IN const Js
                         response["details"] = "HNSrc SetMediaTime() FAILURE";
 
                         DEBUG_PRINT(DEBUG_ERROR, "HNSrc SetMediaTime() FAILURE\n");
-                        return TEST_FAILURE;
+                        return ;
                 }
                 response["details"] = "HNSrc SetMediaTime() successful";
         }
@@ -1847,16 +1850,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementSetMediaTime(IN const Js
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to SetMediaTime()";
 
-                return TEST_FAILURE;
+                return ;
         }
 
         response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementSetMediaTime -->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaTime(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaTime(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementGetMediaTime -->Entry\n");
         RMFResult retResult = RMF_RESULT_SUCCESS;
@@ -1876,7 +1879,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaTime(IN const Js
                         response["result"] = "FAILURE";
                         response["details"] = "DVRSrc GetMediaTime() FAILURE";
                         DEBUG_PRINT(DEBUG_ERROR, "DVRSrc GetMediaTime() FAILURE\n");
-                        return TEST_FAILURE;
+                        return ;
                 }
 		detail_string<<"DVRSrc GetMediaTime() successful, MediaTime:"<< mediaTime;
                 response["details"] = detail_string.str();
@@ -1891,7 +1894,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaTime(IN const Js
                         response["details"] = "HNSrc GetMediaTime() FAILURE";
 
                         DEBUG_PRINT(DEBUG_ERROR, "HNSrc GetMediaTime() FAILURE\n");
-                        return TEST_FAILURE;
+                        return;
                 }
 		detail_string<<"HNSrc GetMediaTime() successful, MediaTime:"<<mediaTime;
                 response["details"] = detail_string.str();
@@ -1902,16 +1905,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaTime(IN const Js
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src/Sink element to GetMediaTime()";
 
-                return TEST_FAILURE;
+                return ;
         }
 
         response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementGetMediaTime -->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaInfo(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaInfo(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementGetMediaInfo -->Entry\n");
         RMFResult retResult = RMF_RESULT_SUCCESS;
@@ -1929,7 +1932,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaInfo(IN const Js
                         response["result"] = "FAILURE";
                         response["details"] = "DVRSrc GetMediaTime() FAILURE";
                         DEBUG_PRINT(DEBUG_ERROR, "DVRSrc GetMediaTime() FAILURE\n");
-                        return TEST_FAILURE;
+                        return;
                 }
 		detail_string<<"DVRSrc GetMediaInfo() successful, MediaStartTime:"<< mediaInfo.m_startTime <<" MediaDuration:"<<mediaInfo.m_duration;
                 response["details"] = detail_string.str();
@@ -1941,16 +1944,16 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaInfo(IN const Js
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src element to GetMediaInfo()";
 
-                return TEST_FAILURE;
+                return ;
         }
 
         response["result"] = "SUCCESS";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementGetMediaInfo -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementGetState -->Entry\n");
         RMFStateChangeReturn retResult = RMF_STATE_CHANGE_SUCCESS;
@@ -1968,7 +1971,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::
 			response["details"] = "QAMSrc GetState() FAILURE";
 			DEBUG_PRINT(DEBUG_ERROR, "QAMSrc GetState() FAILURE\n");
 
-			return TEST_FAILURE;
+			return;
 		}
 		switch(currentState)
 		{
@@ -2001,7 +2004,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::
                         response["result"] = "FAILURE";
                         response["details"] = "DVRSrc GetState() FAILURE";
                         DEBUG_PRINT(DEBUG_ERROR, "DVRSrc GetState() FAILURE\n");
-                        return TEST_FAILURE;
+                        return ;
                 }
 		switch(currentState)
 		{
@@ -2036,7 +2039,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::
                         response["details"] = "HNSrc GetState() FAILURE";
 
                         DEBUG_PRINT(DEBUG_ERROR, "HNSrc GetState() FAILURE\n");
-                        return TEST_FAILURE;
+                        return;
                 }
 		switch(currentState)
 		{
@@ -2066,17 +2069,17 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState(IN const Json::
                 response["result"] = "FAILURE";
                 response["details"] = "Error: Enter the Src element to GetState()";
 
-                return TEST_FAILURE;
+                return ;
         }
 
         response["result"] = "SUCCESS";
         
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElementGetState -->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
 #if 1
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_CheckForSPTSRead_QAMSrc_Error(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_CheckForSPTSRead_QAMSrc_Error(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_CheckForSPTSRead_QAMSrc_Error -->Entry\n");
 	string logPath = req["logPath"].asCString();
@@ -2099,10 +2102,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_CheckForSPTSRead_QAMSrc
 	
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_CheckForSPTSRead_QAMSrc_Error -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPatform_Init -->Entry\n");
 	int platformRes = RMF_SUCCESS;
@@ -2115,7 +2118,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init
                 response["details"] = "Mediaframework, QAMSrc related pre_requisites failed";
                 DEBUG_PRINT(DEBUG_ERROR, "Mediaframework, QAMSrc related pre_requisites failed\n");
 
-                return TEST_FAILURE;
+                return ;
 	}
 
 	/* Initialzing the gthread instance */
@@ -2131,7 +2134,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init
                 response["details"] = "RMF Platform init failed";
                 DEBUG_PRINT(DEBUG_ERROR, "Platform init failed and result is %d\n",platformRes);
 
-                return TEST_FAILURE;
+                return;
         }
 
         response["result"] = "SUCCESS";
@@ -2139,10 +2142,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init
         DEBUG_PRINT(DEBUG_TRACE, "RMF Platform init success and result is %d\n",platformRes);
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Init -->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Uninit(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Uninit(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPatform_Uninit -->Entry\n");
 	int platformRes = RMF_SUCCESS;
@@ -2156,7 +2159,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Unin
                 response["details"] = "RMF Platform uninit failed";
                 DEBUG_PRINT(DEBUG_ERROR, "RMF Platform uninit failed and result is %d\n",platformRes);
 
-                return TEST_FAILURE;
+                return ;
         }
 	
         response["result"] = "SUCCESS";
@@ -2164,10 +2167,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Unin
         DEBUG_PRINT(DEBUG_TRACE, "RMF Platform uninit success and result is %d\n",platformRes);
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_Uninit -->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform -->Entry\n");
 	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
@@ -2181,7 +2184,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform(IN 
                 response["details"] = "QAMSrc init_platform failed";
                 DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform failed and result is %ld\n",retResultQAMSource);
 
-                return TEST_FAILURE;
+                return ;
         }
 
         response["result"] = "SUCCESS";
@@ -2189,10 +2192,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_InitPlatform(IN 
         DEBUG_PRINT(DEBUG_ERROR, "QAMSrc init_platform success and result is %ld\n",retResultQAMSource);
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_InitPlatform -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UninitPlatform(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UninitPlatform(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_UninitPlatform -->Entry\n");
 	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
@@ -2206,7 +2209,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UninitPlatform(I
                 response["details"] = "QAMSrc uninit_platform failed";
                 DEBUG_PRINT(DEBUG_ERROR, "QAMSrc uninit_platform failed and result is %ld\n",retResultQAMSource);
 
-                return TEST_FAILURE;
+                return;
         }
 
         response["result"] = "SUCCESS";
@@ -2214,10 +2217,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UninitPlatform(I
         DEBUG_PRINT(DEBUG_ERROR, "QAMSrc uninit_platform success and result is %ld\n",retResultQAMSource);
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_RmfPlatform_UninitPlatform -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethods(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethods(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethods -->Entry\n");
 	bool useFactory, rmfUseFactory;
@@ -2234,7 +2237,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethod
                 response["details"] = "Popen error, popen failed to open";
                 DEBUG_PRINT(DEBUG_ERROR, "Popen error, popen failed to open\n");
 
-                return TEST_FAILURE;
+                return;
         }
 	if(fgets(resultBuffer,BUFFER_LENGTH,fp)!= NULL)
         {
@@ -2246,7 +2249,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethod
                 response["details"] = "Cannot read /etc/rmfconfig.ini";
                 DEBUG_PRINT(DEBUG_ERROR, "Cannot read /etc/rmfconfig.ini\n");
 
-                return TEST_FAILURE;
+                return ;
         }
 	pclose(fp);
 	
@@ -2272,14 +2275,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethod
                 response["details"] = "QAMSrc useFactoryMethods() failure";
 
         	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc useFactoryMethods() failure\n");
-		return TEST_FAILURE;
+		return ;
 	}
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethods -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetTSID(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetTSID(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetTSID -->Entry\n");
 	unsigned int tsID;
@@ -2294,7 +2297,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetTSID(IN const
                 response["details"] = "QAMSrc getTSID failed";
                 DEBUG_PRINT(DEBUG_ERROR, "QAMSrc getTSID failed and result is %ld\n",retResultQAMSource);
 
-                return TEST_FAILURE;
+                return ;
         }
 
 	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getTSID value: %u\n",tsID);
@@ -2304,10 +2307,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetTSID(IN const
         DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getTSID success and result is %ld\n",retResultQAMSource);
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetTSID -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID -->Entry\n");
 	unsigned char ltsID;
@@ -2322,7 +2325,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID(IN cons
                 response["details"] = "QAMSrc getLTSID failed";
                 DEBUG_PRINT(DEBUG_ERROR, "QAMSrc getLTSID failed and result is %ld\n",retResultQAMSource);
 
-                return TEST_FAILURE;
+                return;
         }
 
 	DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getLTSID value is %u\n",(unsigned) ltsID);
@@ -2332,10 +2335,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID(IN cons
         DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getLTSID success and result is %ld\n",retResultQAMSource);
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement -->Entry\n");
 
@@ -2347,7 +2350,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelEleme
                 response["details"] = "QAMSrc getLowlevelelement failure";
                 DEBUG_PRINT(DEBUG_ERROR, "QAMSrc getLowlevelelement failure\n");
 
-                return TEST_FAILURE;
+                return;
         }
 
         response["result"] = "SUCCESS";
@@ -2355,10 +2358,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelEleme
         DEBUG_PRINT(DEBUG_TRACE, "QAMSrc getLowLevelElement() success \n");
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement -->Entry\n");
 
@@ -2369,10 +2372,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElem
         DEBUG_PRINT(DEBUG_TRACE, "QAMSrc freeLowLevelElement() success\n");
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement -->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI -->Entry\n");
 	RMFResult retResultQAMSource = RMF_RESULT_SUCCESS;
@@ -2413,7 +2416,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI(IN con
 	        response["details"] = "QAMSrc changeURI() failed";
 	        DEBUG_PRINT(DEBUG_ERROR, "QAMSrc changeURI() failed and result is %ld\n",retResultQAMSource);
 		
-		return TEST_FAILURE;
+		return;
 	}
 	
         response["result"] = "SUCCESS";
@@ -2421,10 +2424,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI(IN con
         DEBUG_PRINT(DEBUG_TRACE, "QAMSrc changeURI() success and result is %ld\n",retResultQAMSource);
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI -->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetProperties(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetProperties(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_SetProperties -->Entry\n");
 	
@@ -2486,7 +2489,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetProperties(IN
 			}
 			response["result"] = "FAILURE";
         		response["details"] = token;
-			return TEST_FAILURE; 
+			return ; 
 		}
 		else
 		{
@@ -2529,11 +2532,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetProperties(IN
         response["details"] = "HNSink setHNSinkProperties() success";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_SetProperties -->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetSourceType(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetSourceType(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_SetSourceType -->Entry\n");
 
@@ -2552,10 +2555,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_SetSourceType(IN
         response["details"] = "HNSink setSourceType() success";
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_SetSourceType -->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_InitPlatform(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_InitPlatform(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_InitPlatform -->Entry\n");
 	RMFResult retResult = RMF_RESULT_SUCCESS;	
@@ -2567,7 +2570,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_InitPlatform(IN 
         	response["result"] = "FAILURE";
                	response["details"] = "HNSink init_platform() failed";
 
-                return TEST_FAILURE;
+                return ;
 	}
 
         DEBUG_PRINT(DEBUG_TRACE, "HNSink init_platform() success\n");
@@ -2576,10 +2579,10 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_InitPlatform(IN 
         response["details"] = "HNSink init_platform() success";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_InitPlatform -->Exit\n");
 
-	return TEST_SUCCESS; 
+	return ; 
 }
 
-bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_UninitPlatform(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_UninitPlatform(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_UninitPlatform -->Entry\n");
 	RMFResult retResult = RMF_RESULT_SUCCESS;	
@@ -2592,7 +2595,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_UninitPlatform(I
         	response["result"] = "FAILURE";
                	response["details"] = "HNSink uninit_platform() failed";
 
-                return TEST_FAILURE;
+                return ;
 	}
 
 
@@ -2602,7 +2605,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_RmfElement_HNSink_UninitPlatform(I
         response["details"] = "HNSink uninit_platform() success";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_RmfElement_HNSink_UninitPlatform -->Exit\n");
 
-	return TEST_SUCCESS; 
+	return ; 
 }
 
 #endif
@@ -2618,7 +2621,7 @@ Arguments     : Input argument is None. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to get total number of recording avaliable.
 Gets the response from dvr manager and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DVRManager *dvm= DVRManager::getInstance();
 	long long recDuration = 0;
@@ -2644,7 +2647,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List(IN const Json::Value&
 		response["details"] = "Enable to find: $TDK_PATH path to create recordDetails.txt file";
 		DEBUG_PRINT(DEBUG_ERROR, "Enable to find: $TDK_PATH path to create recordDetails.txt file");
 
-		return TEST_FAILURE;
+		return ;
 	}
 	
 	strcpy(finalPath,absPath);
@@ -2706,7 +2709,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List(IN const Json::Value&
 		response["result"] = "FAILURE";
 		response["details"] = "File Creation Failed";
 		DEBUG_PRINT(DEBUG_ERROR, "File Creation Failed");
-		return TEST_FAILURE;
+		return ;
 	}
 
         DEBUG_PRINT(DEBUG_TRACE, "logpath: Absolute Path: %s\n",finalPath);
@@ -2717,11 +2720,11 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_Rec_List(IN const Json::Value&
 	DEBUG_PRINT(DEBUG_TRACE, "Success");
 
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVR_Rec_List -->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVR_CreateNewRecording(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVR_CreateNewRecording(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVR_CreateNewRecording -->Entry\n");	
 
@@ -2758,7 +2761,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_CreateNewRecording(IN const Js
                 DEBUG_PRINT(DEBUG_ERROR, "Error: tdkRmfApp failed to record.\n");
                 response["result"] = "FAILURE";
                 response["details"] = "Error: tdkRmfApp failed to record.";
-                return TEST_FAILURE;
+                return;
 	}
 
 
@@ -2767,7 +2770,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVR_CreateNewRecording(IN const Js
         response["details"] = "tdkRmfApp recorded successfully. \n";
 
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVR_CreateNewRecording -->Exit\n");	
-        return TEST_SUCCESS;
+        return ;
 }
 #endif
 /**************************************************************************
@@ -2778,7 +2781,7 @@ Arguments     : Input argument is none. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to Set and Get Mute state. 
 Gets the response from MPSink element and send it to the Test Manager.
  **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetMute(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetMute(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_MPSink_SetGetMute --->Entry\n");
 #ifdef ENABLE_DVRSRC_MPSINK
@@ -2813,14 +2816,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetMute(IN const Json::V
 			{
 				DEBUG_PRINT(DEBUG_TRACE, "Result of MPSink_SetGetMute is Success\n" );	
 				response["result"] = "SUCCESS";
-				return TEST_SUCCESS;
+				return;
 			}
 			else
 			{
 				response["result"] = "FAILURE";
 				response["details"] = "SetgetMute is success but failed to terminate MPSink";
 				DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_MPSink_SetGetMute --->Exit\n");
-				return TEST_FAILURE;
+				return;
 			}
 		}
 		else
@@ -2828,7 +2831,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetMute(IN const Json::V
 			response["details"] = "SetgetMute is failed";
 			response["result"] = "FAILURE";
 			DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_MPSink_SetGetMute --->Exit\n");
-			return TEST_FAILURE;
+			return;
 		}	
 	}
 	else
@@ -2836,13 +2839,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetMute(IN const Json::V
 		response["result"] = "FAILURE";
 		response["details"] = "Initialization of MPSink is failed";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_MPSink_SetGetMute --->Exit\n");
-		return TEST_FAILURE;
+		return ;
 	}
 #else
         response["result"] = "FAILURE";
         response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
         DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
-        return TEST_FAILURE;
+        return ;
 #endif
 }
 /**************************************************************************
@@ -2852,8 +2855,9 @@ Arguments     : Input argument is Volume.  Output argument is "SUCCESS" or "FAIL
 
 Description   : Receives the request from Test Manager to Set and Get Volume.
 Gets the response from MPSink element and send it to the Test Manager.
- **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetVolume(IN const Json::Value& req, OUT Json::Value& response)
+ ***************************************************************************/
+
+void MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetVolume(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_MPSink_SetGetVolume --->Entry\n");
 #ifdef ENABLE_DVRSRC_MPSINK
@@ -2879,14 +2883,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetVolume(IN const Json:
 				response["result"] = "FAILURE";
 				response["details"] = "Get value and entered values are same, Please enter a different value";
 				DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_MPSink_SetGetVolume --->Exit\n");
-				return TEST_FAILURE;
+				return;
 			}
 			else
 			{
 				response["result"] = "FAILURE";
 				response["details"] = "Get value and entered values are same and failed to do terminate MPSink";
 				DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_MPSink_SetGetVolume --->Exit\n");
-				return TEST_FAILURE;
+				return ;
 			}
 		}
 		else
@@ -2904,14 +2908,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetVolume(IN const Json:
 				{
 					response["result"] = "SUCCESS";
 					DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_MPSink_SetGetVolume --->Exit\n");
-					return TEST_SUCCESS;
+					return;
 				}
 				else
 				{
 					response["result"] = "FAILURE";
 					response["details"] = "SetgetVoulme is Success but failed to terminate MPSink";
 					DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_MPSink_SetGetVolume --->Exit\n");
-					return TEST_FAILURE;
+					return;
 				}
 			}
 			else
@@ -2919,7 +2923,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetVolume(IN const Json:
 				response["details"] = "SetgetVoulme is Failed";
 				response["result"] = "FAILURE";
 				DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_MPSink_SetGetVolume --->Exit\n");
-				return TEST_FAILURE;
+				return ;
 			}	
 		}
 	}
@@ -2928,13 +2932,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetVolume(IN const Json:
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to Initialize MPSink";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_MPSink_SetGetVolume --->Exit\n");
-		return TEST_FAILURE;
+		return ;
 	}
 #else
         response["result"] = "FAILURE";
         response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
         DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
-        return TEST_FAILURE;
+        return;
 #endif
 
 }
@@ -2947,7 +2951,7 @@ Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to Get Buffer range supported by HNSource.
 Gets the response from HNSource element and send it to the Test Manager.
  **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrc_Getbufferrange --->Entry\n");
 
@@ -2999,7 +3003,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-                return TEST_FAILURE;
+                return ;
         }
 		string streaming_interface;
         	size_t pos = 0;
@@ -3021,7 +3025,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                         DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                         soc_uninit();
 	                #endif
-                        return TEST_FAILURE;
+                        return;
                 }
 
 	const char * streaming_interface_name = streaming_interface.c_str();
@@ -3053,7 +3057,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-                return TEST_FAILURE;
+                return ;
         }
 
         res_MPSinkInit = pSink->init();
@@ -3070,7 +3074,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-                return TEST_FAILURE;
+                return ;
         }
 
         res_MPSinksetrect = pSink->setVideoRectangle(x, y, height, width, applyNow);
@@ -3088,7 +3092,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-                return TEST_FAILURE;
+                return ;
         }
 
         res_MPSinksetsrc = pSink->setSource(pSource);
@@ -3106,7 +3110,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-                return TEST_FAILURE;
+                return;
         }
 
         res_HNSrcPlay = pSource->play();
@@ -3124,7 +3128,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-                return TEST_FAILURE;
+                return ;
         }
 
         sleep(10);
@@ -3144,7 +3148,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-                return TEST_FAILURE;
+                return;
         }
 
         if (cur_state != RMF_STATE_PLAYING)
@@ -3160,7 +3164,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-                return TEST_FAILURE;
+                return ;
         }
 
         DEBUG_PRINT(DEBUG_LOG, "Get Video state is success. Video is playing and showing state as RMF_STATE_PLAYING\n");
@@ -3179,7 +3183,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-                return TEST_FAILURE;
+                return;
          }
         DEBUG_PRINT(DEBUG_LOG, "Result of Get buffered ranges is %d\n", res_HNSrcGetbuffrange);
         res_MPSinkTerm = pSink->term();
@@ -3199,30 +3203,30 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges(IN const J
         {
                 response["result"] = "FAILURE";
                 response["details"] = "Get Video state is success, but failed to Terminate MPSink";
-                return TEST_FAILURE;
+                return ;
         }
 
         if(0 != res_HNSrcClose)
         {
                 response["result"] = "FAILURE";
                 response["details"] = "Get Video state is success, but failed to close hnsource";
-                return TEST_FAILURE;
+                return;
         }
 
         if(0 != res_HNSrcTerm)
         {
                 response["result"] = "FAILURE";
                 response["details"] = "Get Video state is success, but failed to Terminate hnsource";
-                return TEST_FAILURE;
+                return ;
         }
         response["result"] = "SUCCESS";
         response["details"] = "Bufferranges is success";
-        return TEST_SUCCESS;
+        return;
 #else
         response["result"] = "FAILURE";
         response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
         DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
-        return TEST_FAILURE;
+        return ;
 #endif
 
 }
@@ -3235,7 +3239,7 @@ Arguments     : Input argument is URL. Output argument is "SUCCESS" or "FAILURE"
 Description   : Receives the request from Test Manager to get the state of video.
 Gets the response from HNSource element and send it to the Test Manager.
  **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrcMPSink_Video_State --->Entry\n");
 
@@ -3287,7 +3291,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return;
 	}
 	string streaming_interface;
         size_t pos = 0;
@@ -3310,7 +3314,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-                 return TEST_FAILURE;
+                return ;
          }
 
 	const char * streaming_interface_name = streaming_interface.c_str();
@@ -3343,7 +3347,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	res_MPSinkInit = pSink->init();
@@ -3361,7 +3365,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+        	return ;
 	}
 
 	res_MPSinksetrect = pSink->setVideoRectangle(x, y, height, width, applyNow);
@@ -3380,7 +3384,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	res_MPSinksetsrc = pSink->setSource(pSource);
@@ -3399,7 +3403,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}	
 
 	res_HNSrcPlay = pSource->play();
@@ -3418,7 +3422,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	sleep(20);
@@ -3439,7 +3443,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return; 
 	}
 
 	if (cur_state != RMF_STATE_PLAYING)
@@ -3456,7 +3460,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State(IN const J
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	DEBUG_PRINT(DEBUG_LOG, "Get Video state is success. Video is playing and showing state as RMF_STATE_PLAYING\n");
@@ -3490,7 +3494,7 @@ int retValue;
 		response["result"] = "FAILURE";
 		response["details"] = "Get Video state is success, but failed to Terminate MPSink";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
-		return TEST_FAILURE;
+		return ;
 	}
 
 	if(0 != res_HNSrcClose)
@@ -3498,7 +3502,7 @@ int retValue;
 		response["result"] = "FAILURE";
 		response["details"] = "Get Video state is success, but failed to close hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
-		return TEST_FAILURE;						
+		return ;		
 	}
 
 	if(0 != res_HNSrcTerm)
@@ -3506,17 +3510,17 @@ int retValue;
 		response["result"] = "FAILURE";
 		response["details"] = "Get Video state is success, but failed to Terminate hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
-		return TEST_FAILURE;
+		return ;
 	}
 
 	response["result"] = "SUCCESS";
 	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_State--->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 #else
         response["result"] = "FAILURE";
         response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
         DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
-        return TEST_FAILURE;
+        return ;
 #endif
 
 }
@@ -3529,7 +3533,7 @@ Arguments     : Input argument is URL. Output argument is "SUCCESS" or "FAILURE"
 Description   : Receives the request from Test Manager to verify Mute and Unmute functionality.
 Gets the response from HNSource element and send it to the Test Manager.
  **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute --->Entry\n");
 
@@ -3582,7 +3586,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 	string streamingip;
 	string streaming_interface;
@@ -3601,7 +3605,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
                  }
                  response["result"] = "FAILURE";
                  response["details"] = token;
-                 return TEST_FAILURE;
+                 return ;
 	}
 
 	const char * streaming_interface_name = streaming_interface.c_str();
@@ -3634,7 +3638,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	res_MPSinkInit = pSink->init();
@@ -3647,7 +3651,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Failed to Initialize MPSink";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
-		return TEST_FAILURE;
+		return ;
 	        #ifdef USE_SOC_INIT
                 // Uninitialize SOC
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
@@ -3671,7 +3675,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	res_MPSinksetsrc = pSink->setSource(pSource);
@@ -3690,7 +3694,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	res_HNSrcPlay = pSource->play();
@@ -3709,7 +3713,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+          	return ;
 	}
 
 	sleep(10);
@@ -3729,7 +3733,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}						
 
 	DEBUG_PRINT(DEBUG_LOG, "Video is playing\n");
@@ -3760,7 +3764,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return;
 	}
 
 	DEBUG_PRINT(DEBUG_LOG, "Mute Unmute is success\n");
@@ -3783,7 +3787,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Mute Unmute is success, but failed to Terminate MPSink";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
-		return TEST_FAILURE;
+		return;
 	}
 
 	if(0 != res_HNSrcClose)
@@ -3791,7 +3795,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Mute Unmute is success, but failed to close hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
-		return TEST_FAILURE;						
+		return;		
 	}
 
 	if(0 != res_HNSrcTerm)
@@ -3799,17 +3803,17 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute(IN co
 		response["result"] = "FAILURE";
 		response["details"] = "Mute Unmute is success, but failed to Terminate hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
-		return TEST_FAILURE;
+	        return;
 	}
 
 	response["result"] = "SUCCESS";
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute--->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 #else
         response["result"] = "FAILURE";
         response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
         DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
-        return TEST_FAILURE;
+        return ;
 #endif
 }
 
@@ -3821,7 +3825,7 @@ Arguments     : Input argument is URL. Output argument is "SUCCESS" or "FAILURE"
 Description   : Receives the request from Test Manager to Get the volume of Video.
 Gets the response from HNSource element and send it to the Test Manager.
  **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrcMPSink_Video_Volume --->Entry\n");
 
@@ -3875,7 +3879,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                  DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                  soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return;
 	}
 
 	string streamingip;
@@ -3900,7 +3904,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                  DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                  soc_uninit();
 	         #endif
-                 return TEST_FAILURE;
+                 return ;
 	}
 
 	const char * streaming_interface_name = streaming_interface.c_str();
@@ -3933,7 +3937,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	res_MPSinkInit = pSink->init();
@@ -3951,7 +3955,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	res_MPSinksetrect = pSink->setVideoRectangle(x, y, height, width, applyNow);
@@ -3970,7 +3974,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+ 		return ;
 	}
 
 	res_MPSinksetsrc = pSink->setSource(pSource);
@@ -3989,7 +3993,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	res_HNSrcPlay = pSource->play();
@@ -4008,7 +4012,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	sleep(10);
@@ -4030,7 +4034,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 	}							
 
 	DEBUG_PRINT(DEBUG_LOG, "Video is playing\n");
@@ -4049,7 +4053,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return ;
 
 	}
 
@@ -4067,7 +4071,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
                 DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
                 soc_uninit();
 	        #endif
-		return TEST_FAILURE;
+		return;
 	}
 
 	DEBUG_PRINT(DEBUG_LOG, "Set Get Volume is Success\n");
@@ -4090,7 +4094,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Set Get Volume is Success, but failed to Terminate MPSink";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
-		return TEST_FAILURE;
+		return;
 	}	
 
 	if(0 != res_HNSrcClose)
@@ -4098,7 +4102,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Set Get Volume is Success, but failed to close hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
-		return TEST_FAILURE;						
+		return ;						
 	}
 
 	if(0 != res_HNSrcTerm)
@@ -4106,17 +4110,17 @@ bool MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume(IN const 
 		response["result"] = "FAILURE";
 		response["details"] = "Set Get Volume is Success, but failed to Terminate hnsource";
 		DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
-		return TEST_FAILURE;
+		return ;
 	}
 
 	response["result"] = "SUCCESS";
 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_HNSrcMPSink_Video_Volume--->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 #else
         response["result"] = "FAILURE";
         response["details"] = "DVR SOURCE & MP SINK are not linked during compilation";
         DEBUG_PRINT(DEBUG_ERROR, "DVR SOURCE & MP SINK are not linked during compilation \n");
-        return TEST_FAILURE;
+        return;
 #endif
 
 }
@@ -4227,7 +4231,7 @@ Gets the response from DVRSink element and send it to the Test Manager.
  **************************************************************************/
 
 #ifndef SINGLE_TUNER_IP_CLIENT
-bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm --->Entry\n");
 
@@ -4260,7 +4264,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
         		DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
         		soc_uninit();
 			#endif
-			return TEST_FAILURE;
+			return;
 		}		
 	}
 	else
@@ -4273,7 +4277,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
         	DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
         	soc_uninit();
 		#endif
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm --->Source creation success\n");
 
@@ -4302,7 +4306,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
         	DEBUG_PRINT(DEBUG_TRACE, "soc unint --> Entry\n");
         	soc_uninit();
 		#endif
-		return TEST_FAILURE;
+		return ;
 	}
 
 	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_InitTerm --->createRecording success\n");
@@ -4435,7 +4439,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRSink_InitTerm(IN const Json::Va
 	#endif
 
 	DEBUG_PRINT(DEBUG_ERROR, "MediaframeworkAgent_DVRSink_Init&term --->Exit\n");
-	return TEST_FAILURE;
+	return ;
 }
 
 /**************************************************************************
@@ -4446,7 +4450,7 @@ Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to get TotalSpace and FreeSpace.
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSpace(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSpace(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetSpace --->Entry\n");
 
@@ -4465,7 +4469,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSpace(IN const Json:
                         response["result"] = "FAILURE";
                         response["details"] = "Failed to get total/free space";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetSpace --->Exit\n");
-                        return TEST_FAILURE;
+                        return ;
                 }
 
                 sprintf(stringDetails,"TotalSpace:%lld bytes,FreeSpace:%lld bytes", totalSpace, freeSpace);
@@ -4474,13 +4478,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSpace(IN const Json:
                 response["details"] = stringDetails;
 
                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetSpace -->Exit\n");
-                return TEST_SUCCESS;
+                return;
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get total/free space";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetSpace --->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 /**************************************************************************
@@ -4492,7 +4496,7 @@ Description   : Receives the request from Test Manager to get RecordingCount.
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingCount(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingCount(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingCount --->Entry\n");
 
@@ -4508,13 +4512,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingCount(IN co
                 response["result"] = "SUCCESS";
                 response["details"] = stringDetails;
                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingCount -->Exit\n");
-                return TEST_SUCCESS;
+                return;
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get recording count";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingCount -->Exit\n");
-        return TEST_FAILURE;
+        return ;
 
 }
 
@@ -4528,7 +4532,7 @@ Description   : Receives the request from Test Manager to get RecordingInfoByInd
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex --->Entry\n");
 
@@ -4564,7 +4568,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to create recording for GetRecordingInfoByIndex";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
 
 			pRecInfo = dvm->getRecordingInfoByIndex( index );
@@ -4573,7 +4577,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex
 				response["result"] = "FAILURE";
 				response["details"] = "Failed to get RecordingInfoByIndex";
 				DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
-				return TEST_FAILURE;
+				return;
 			}
 
 			DEBUG_PRINT(DEBUG_TRACE, "Index:%d, RecordingId:%s, Title:%s\n", index, pRecInfo->recordingId.c_str(), pRecInfo->title);
@@ -4587,14 +4591,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to delete recording for GetRecordingInfoByIndex";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex --> Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
                         else
                         {
                                 response["result"] = "SUCCESS";
                                 response["details"] = stringDetails;
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
-                                return TEST_SUCCESS;
+                                return ;
                         }
                 }
 		else
@@ -4605,14 +4609,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex
                        	response["result"] = "SUCCESS";
                        	response["details"] = stringDetails;
                        	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
-                       	return TEST_SUCCESS;
+                       	return ;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoByIndex -->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 /**************************************************************************
@@ -4624,7 +4628,7 @@ Description   : Receives the request from Test Manager to get RecordingInfoByInd
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex --->Entry\n");
 
@@ -4648,7 +4652,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoByInd
                         response["result"] = "FAILURE";
                         response["details"] = "Failed to get RecordingInfo. Index not found";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex -->Exit\n");
-                        return TEST_FAILURE;
+                        return;
                 }
 
                 RecordingInfo *pRecInfo= dvm->getRecordingInfoByIndex( index );
@@ -4659,21 +4663,21 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoByInd
                         response["result"] = "SUCCESS";
                         response["details"] = stringDetails;
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex -->Exit\n");
-                        return TEST_SUCCESS;
+                        return ;
                 }
                 else
                 {
                         response["result"] = "FAILURE";
                         response["details"] = "Failed to get RecordingInfo by Index";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex -->Exit\n");
-                        return TEST_FAILURE;
+                        return ;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get RecordingInfo by Index";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoByIndex -->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 /**************************************************************************
@@ -4685,7 +4689,7 @@ Description   : Receives the request from Test Manager to get RecordingInfoById.
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoById(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoById(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById --->Entry\n");
 
@@ -4712,7 +4716,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoById(IN
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to create recording for GetRecordingInfoById";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
 
 			pRecInfo = dvm->getRecordingInfoById( recordingId );
@@ -4721,7 +4725,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoById(IN
 				response["result"] = "FAILURE";
 				response["details"] = "Failed to get RecordingInfoById";
 				DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
-				return TEST_FAILURE;
+				return ;
 			}
 			
 			sprintf(stringDetails, "RecordingId:%s,Title:%s", pRecInfo->recordingId.c_str(), pRecInfo->title );
@@ -4734,14 +4738,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoById(IN
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to delete recording for GetRecordingInfoById";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById --> Exit\n");
-                                return TEST_FAILURE;
+                                return;
                         }
                         else
                         {
                                 response["result"] = "SUCCESS";
                                 response["details"] = stringDetails;
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
-                                return TEST_SUCCESS;
+                                return ;
                         }
                 }
 
@@ -4753,21 +4757,21 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingInfoById(IN
                         response["result"] = "SUCCESS";
                         response["details"] = stringDetails;
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
-                        return TEST_SUCCESS;
+                        return ;
                 }
                 else
                 {
                         response["result"] = "FAILURE";
                         response["details"] = "Failed to get RecordingInfoById";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
-                        return TEST_FAILURE;
+                        return;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingInfoById -->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 /**************************************************************************
@@ -4779,7 +4783,7 @@ Description   : Receives the request from Test Manager to get RecordingInfoById.
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoById(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoById(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoById --->Entry\n");
 
@@ -4799,14 +4803,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoById(
                                 response["result"] = "SUCCESS";
                                 response["details"] = stringDetails;
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoById -->Exit\n");
-                                return TEST_SUCCESS;
+                                return;
                         }
                         else
                         {
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to get RecordingInfoById";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoById -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
                 }
                 else
@@ -4815,14 +4819,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CheckRecordingInfoById(
                         response["result"] = "FAILURE";
                         response["details"] = "No record found with requested Id";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoById -->Exit\n");
-                        return TEST_FAILURE;
+                        return ;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CheckRecordingInfoById -->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 
@@ -4835,7 +4839,7 @@ Description   : Receives the request from Test Manager to get the status Recordi
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetIsRecordingInProgress(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetIsRecordingInProgress(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress --->Entry\n");
 
@@ -4862,7 +4866,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetIsRecordingInProgres
                                 response["result"] = "FAILURE";
                                 response["details"] = "RecordingId not found. Failed to create test recording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress -->Exit\n");
-                                return TEST_FAILURE;
+                                return;
                         }
 
 			pRecInfo= dvm->getRecordingInfoById( recordingId );
@@ -4871,7 +4875,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetIsRecordingInProgres
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to get RecordingInfoById for GetIsRecordingInProgress";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
 
                 	bool recStatus = dvm->isRecordingInProgress( recordingId );
@@ -4894,14 +4898,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetIsRecordingInProgres
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to delete recording for GetIsRecordingInProgress";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress --> Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
                         else
                         {
                                 response["result"] = "SUCCESS";
                                 response["details"] = stringDetails;
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress -->Exit\n");
-                                return TEST_SUCCESS;
+                                return ;
                         }
                 }
 
@@ -4920,13 +4924,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetIsRecordingInProgres
                 response["result"] = "SUCCESS";
                 response["details"] = stringDetails;
                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress -->Exit\n");
-                return TEST_SUCCESS;
+                return;
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetIsRecordingInProgress -->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 
@@ -4939,7 +4943,7 @@ Description   : Receives the request from Test Manager to get the RecordingSize.
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSize(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSize(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize --->Entry\n");
 
@@ -4967,7 +4971,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSize(IN con
                                 response["result"] = "FAILURE";
                                 response["details"] = "RecordingId not found. Failed to create test recording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize -->Exit\n");
-                                return TEST_FAILURE;
+                                return;
                         }
 
 			pRecInfo= dvm->getRecordingInfoById( recordingId );
@@ -4976,7 +4980,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSize(IN con
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to get RecordingInfoById for GetRecordingSize";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
 
 			long long recSize = dvm->getRecordingSize( recordingId );
@@ -4991,14 +4995,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSize(IN con
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to delete recording for GetRecordingSize";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize --> Exit\n");
-                                return TEST_FAILURE;
+                                return;
                         }
                         else
                         {
                                 response["result"] = "SUCCESS";
                                 response["details"] = stringDetails;
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize -->Exit\n");
-                                return TEST_SUCCESS;
+                                return;
                         }
                 }
 
@@ -5010,13 +5014,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSize(IN con
                 response["result"] = "SUCCESS";
                 response["details"] = stringDetails;
                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize -->Exit\n");
-                return TEST_SUCCESS;
+                return ;
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSize -->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 
@@ -5029,7 +5033,7 @@ Description   : Receives the request from Test Manager to get the RecordingDurat
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingDuration(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingDuration(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration --->Entry\n");
 
@@ -5056,7 +5060,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingDuration(IN
                                 response["result"] = "FAILURE";
                                 response["details"] = "RecordingId not found. Failed to create test recording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
 
                         pRecInfo= dvm->getRecordingInfoById( recordingId );
@@ -5065,7 +5069,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingDuration(IN
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to get RecordingInfoById for GetRecordingDuration";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
 
 			long long recDuration = dvm->getRecordingDuration( recordingId );
@@ -5080,14 +5084,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingDuration(IN
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to delete recording for GetRecordingDuration";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration --> Exit\n");
-                                return TEST_FAILURE;
+                                return; 
                         }
                         else
                         {
                                 response["result"] = "SUCCESS";
                                 response["details"] = stringDetails;
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration -->Exit\n");
-                                return TEST_SUCCESS;
+                                return;
                         }
                 }
 
@@ -5099,13 +5103,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingDuration(IN
                 response["result"] = "SUCCESS";
                 response["details"] = stringDetails;
                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration -->Exit\n");
-                return TEST_SUCCESS;
+                return;
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingDuration -->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 
@@ -5120,7 +5124,7 @@ Description   : Receives the request from Test Manager to get the RecordingStart
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingStartTime(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingStartTime(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime --->Entry\n");
 
@@ -5147,7 +5151,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingStartTime(I
                                 response["result"] = "FAILURE";
                                 response["details"] = "RecordingId not found. Failed to create test recording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
 
                         pRecInfo= dvm->getRecordingInfoById( recordingId );
@@ -5156,7 +5160,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingStartTime(I
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to get RecordingInfoById for GetRecordingStartTime";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
 
                 	long long recStartTime = dvm->getRecordingStartTime( recordingId );
@@ -5171,14 +5175,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingStartTime(I
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to delete recording for GetRecordingStartTime";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime --> Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
                         else
                         {
                                 response["result"] = "SUCCESS";
                                 response["details"] = stringDetails;
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime -->Exit\n");
-                                return TEST_SUCCESS;
+                                return ;
                         }
                 }
 
@@ -5190,13 +5194,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingStartTime(I
                 response["result"] = "SUCCESS";
                 response["details"] = stringDetails;
                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime -->Exit\n");
-                return TEST_SUCCESS;
+                return ;
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime -->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 
@@ -5210,7 +5214,7 @@ Description   : Receives the request from Test Manager to get the default TSB Ma
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetDefaultTSBMaxDuration(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetDefaultTSBMaxDuration(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetDefaultTSBMaxDuration --->Entry\n");
 
@@ -5226,13 +5230,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetDefaultTSBMaxDuratio
                 response["result"] = "SUCCESS";
                 response["details"] = stringDetails;
                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetDefaultTSBMaxDuration -->Exit\n");
-                return TEST_SUCCESS;
+                return ;
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DefaultTSBMaxDuration";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetDefaultTSBMaxDuration -->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 /**************************************************************************
@@ -5244,7 +5248,7 @@ Description   : Receives the request from Test Manager to create TSB with given 
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateTSB(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateTSB(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateTSB --->Entry\n");
 
@@ -5269,21 +5273,21 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateTSB(IN const Json
 			//Post-Condition: Reset tsb
 			tsbId.clear();
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateTSB -->Exit\n");
-                        return TEST_SUCCESS;
+                        return ;
                 }
                 else
                 {
                         response["result"] = "FAILURE";
                         response["details"] = "Get on DVR manager instance success but failed to create TSB";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateTSB -->Exit\n");
-                        return TEST_FAILURE;
+                        return ;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateTSB -->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 /**************************************************************************
@@ -5295,7 +5299,7 @@ Description   : Receives the request from Test Manager to convert TSB to Recordi
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording --->Entry\n");
 
@@ -5318,7 +5322,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                         	response["result"] = "FAILURE";
                         	response["details"] = "Failed to create TSB";
                         	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-                        	return TEST_FAILURE;
+                        	return;
                 	}
 			DEBUG_PRINT(DEBUG_ERROR, "Created TSBId: %s for ConvertTSBToRecording \n", tsbId.c_str());
 
@@ -5328,7 +5332,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to get recording info by tsbId for ConvertTSBToRecording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingStartTime -->Exit\n");
-                                return TEST_FAILURE;
+                                return;
                         }
    		}
 
@@ -5337,7 +5341,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                 	response["result"] = "SUCCESS";
                         response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-                        return TEST_SUCCESS;
+                        return ;
                 }
 
 		// Check whether recordingId is present
@@ -5356,7 +5360,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                                 response["result"] = "FAILURE";
                                 response["details"] = "RecordingId not found. Failed to create test recording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-                                return TEST_FAILURE;
+                                return;
                         }
 
                         pRecInfo= dvm->getRecordingInfoById( recordingId );
@@ -5365,7 +5369,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to get RecordingInfoById for ConvertTSBToRecording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
 
                         if ( (pTSBRecInfo->isShadowedById(recordingId)) && (pRecInfo->shadowingId.size() != 0) )
@@ -5377,7 +5381,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                         	DEBUG_PRINT(DEBUG_ERROR, "Error (%d) deleting recording\n", res_DVR);
 
 				DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-				return TEST_SUCCESS;
+				return;
 			}
 
 			dvrres= dvm->convertTSBToRecording( tsbId, recordingId );
@@ -5387,7 +5391,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                         	response["result"] = "FAILURE";
                         	response["details"] = "Failed to convert TSB to Recording";
                         	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-                        	return TEST_FAILURE;
+                        	return;
                 	}
 
                         // Post-condition: Delete test recording and clear tsb
@@ -5401,14 +5405,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to delete recording for ConvertTSBToRecording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording --> Exit\n");
-                                return TEST_FAILURE;
+                                return;
                         }
                         else
                         {
                                 response["result"] = "SUCCESS";
                                 response["details"] = "Converted TSB to Recording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-                                return TEST_SUCCESS;
+                                return;
                         }
                 }
 
@@ -5417,7 +5421,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                 	response["result"] = "SUCCESS";
                         response["details"] = "TSB conversion of tsbId to recordingId has already happened: Ignoring request";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-                        return TEST_SUCCESS;
+                        return ;
                 }
 
                 dvrres= dvm->convertTSBToRecording( tsbId, recordingId );
@@ -5427,21 +5431,21 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording(I
                         response["result"] = "FAILURE";
                         response["details"] = "Failed to convert TSB to Recording";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-                        return TEST_FAILURE;
+                        return ;
                 }
                 else
                 {
                         response["result"] = "SUCCESS";
 			response["details"] = "Converted TSB to Recording";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-                        return TEST_SUCCESS;
+                        return ;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 /**************************************************************************
@@ -5454,7 +5458,7 @@ Description   : Receives the request from Test Manager to create a recording.
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateRecording(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateRecording(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording --->Entry\n");
 
@@ -5513,7 +5517,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateRecording(IN cons
                         	response["result"] = "FAILURE";
                         	response["details"] = "Retry to create recording failed";
                         	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording -->Exit\n");
-                        	return TEST_FAILURE;
+                        	return;
                 	}
 
                         sprintf(stringDetails, "Created recording id: %s", recordingId.c_str());
@@ -5527,7 +5531,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateRecording(IN cons
                         response["result"] = "FAILURE";
                         response["details"] = "Get on DVR manager instance success but failed to create record";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording -->Exit\n");
-                        return TEST_FAILURE;
+                        return;
                 }
 
                 // Post-condition: Delete test recording
@@ -5538,19 +5542,19 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateRecording(IN cons
                        response["result"] = "FAILURE";
                        response["details"] = "Failed to delete recording after create recording";
                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording --> Exit\n");
-                       return TEST_FAILURE;
+                       return ;
                 }
                 else
                 {
                        DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_ConvertTSBToRecording -->Exit\n");
-                       return TEST_SUCCESS;
+                       return;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_CreateRecording -->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 /**************************************************************************
@@ -5563,7 +5567,7 @@ Description   : Receives the request from Test Manager to update the title of a 
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_UpdateRecording(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_UpdateRecording(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording --->Entry\n");
 
@@ -5597,7 +5601,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_UpdateRecording(IN cons
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to create recording for update recording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                 	}
 
                         pRecInfo= dvm->getRecordingInfoById( recordingId );
@@ -5606,7 +5610,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_UpdateRecording(IN cons
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to get RecordingInfoById for update recording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
    		}
 
@@ -5643,14 +5647,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_UpdateRecording(IN cons
                                 	response["result"] = "FAILURE";
                                 	response["details"] = "Failed to delete recording for UpdateRecording";
                                 	DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording --> Exit\n");
-                                	return TEST_FAILURE;
+                                	return;
                         	}
 			}
 
                         response["result"] = "SUCCESS";
                         response["details"] = stringDetails;
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording -->Exit\n");
-                        return TEST_SUCCESS;
+                        return ;
                 }
                 else
                 {
@@ -5658,14 +5662,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_UpdateRecording(IN cons
 			sprintf(stringDetails, "Failed to update record. Error code: %d", dvrres);
                         response["details"] = stringDetails;
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording -->Exit\n");
-                        return TEST_FAILURE;
+                        return ;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_UpdateRecording -->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 /**************************************************************************
@@ -5678,7 +5682,7 @@ Description   : Receives the request from Test Manager to delete a recording.
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording --->Entry\n");
 
@@ -5694,7 +5698,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording(IN cons
                         response["result"] = "SUCCESS";
 			response["details"] = "Recording deleted";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
-                        return TEST_SUCCESS;
+                        return;
                 }
 		else if (DVRResult_notFound == result)
 		{
@@ -5711,7 +5715,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording(IN cons
                                 response["result"] = "FAILURE";
                                 response["details"] = "Failed to create recording for DeleteRecording";
                                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
-                                return TEST_FAILURE;
+                                return ;
                         }
 			else
 			{
@@ -5723,7 +5727,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording(IN cons
 					response["result"] = "SUCCESS";
 					response["details"] = "Recording deleted";
 					DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
-					return TEST_SUCCESS;
+					return ;
 				}
 				else
 				{
@@ -5731,7 +5735,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording(IN cons
 					response["result"] = "FAILURE";
 					response["details"] = "Failed to delete recording";
 					DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
-					return TEST_FAILURE;
+					return ;
 				}
 			}
 		}
@@ -5741,14 +5745,14 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording(IN cons
                         response["result"] = "FAILURE";
                         response["details"] = "Failed to delete recording";
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
-                        return TEST_FAILURE;
+                        return;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_DeleteRecording -->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 
@@ -5762,7 +5766,7 @@ Description   : Receives the request from Test Manager to get the segments count
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSegmentsCount(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSegmentsCount(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetSegmentsCount --->Entry\n");
 
@@ -5778,13 +5782,13 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSegmentsCount(IN con
                 response["result"] = "SUCCESS";
                 response["details"] = stringDetails;
                 DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetSegmentsCount -->Exit\n");
-                return TEST_SUCCESS;
+                return ;
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetSegmentsCount -->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 
@@ -5798,7 +5802,7 @@ Description   : Receives the request from Test Manager to get the segment info b
                 Gets the response from DVRManager element and send it to the Test Manager.
 **************************************************************************/
 
-bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex(IN const Json::Value& req, OUT Json::Value& response)
+void MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex --->Entry\n");
         unsigned int index = req["index"].asInt();
@@ -5818,7 +5822,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
                         response["result"] = "SUCCESS";
                         response["details"] = stringDetails;
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
-                        return TEST_SUCCESS;
+                        return ;
                 }
                 else
                 {
@@ -5835,7 +5839,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
                             response["result"] = "FAILURE";
                             response["details"] = stringDetails;
                             DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
-                            return TEST_FAILURE;
+                            return;
                         }
                         else
                         {
@@ -5854,7 +5858,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
                             response["result"] = "FAILURE";
                             response["details"] = stringDetails;
                             DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
-                            return TEST_FAILURE;
+                            return ;
                         }
 
                         // Pre-condition: Create test recording
@@ -5879,7 +5883,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
                             response["result"] = "FAILURE";
                             response["details"] = "Failed to create recording for GetRecordingSegmentInfoByIndex";
                             DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
-                            return TEST_FAILURE;
+                            return ;
                         }
 
                         RecordingInfo *pRecInfo= dvm->getRecordingInfoByIndex(index);
@@ -5900,7 +5904,7 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
                             response["result"] = "FAILURE";
                             response["details"] = stringDetails;
                             DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
-                            return TEST_FAILURE;
+                            return ;
                         }
 
                         long long segmentName = pSegInfo->segmentName;
@@ -5918,18 +5922,18 @@ bool MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingSegmentInfo
                             response["result"] = "FAILURE";
                             response["details"] = "Failed to delete recording for GetRecordingSegmentInfoByIndex";
                             DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex --> Exit\n");
-                            return TEST_FAILURE;
+                            return ;
                         }
 
                         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
-                        return TEST_SUCCESS;
+                        return;
                 }
         }
 
         response["result"] = "FAILURE";
         response["details"] = "Failed to get DVR Manager instance";
         DEBUG_PRINT(DEBUG_TRACE, "MediaframeworkAgent_DVRManager_GetRecordingSegmentInfoByIndex -->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 #endif
 /**************************************************************************
@@ -6004,9 +6008,9 @@ Arguments       : NULL
 Description     : This function is used to create a new object of the class "MediaframeworkAgent".
  **************************************************************************/
 
-extern "C" MediaframeworkAgent* CreateObject()
+extern "C" MediaframeworkAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-	return new MediaframeworkAgent();
+	return new MediaframeworkAgent(ptrtcpServer);
 }
 
 /**************************************************************************
@@ -6017,10 +6021,11 @@ Arguments       : NULL
 Description     : This function will be used to the close things cleanly.
  **************************************************************************/
 
-bool MediaframeworkAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+bool MediaframeworkAgent::cleanup(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_ERROR, "cleaningup\n");
 
+#if 0
 	if(NULL == ptrAgentObj)
 	{
 		return TEST_FAILURE;
@@ -6100,6 +6105,7 @@ bool MediaframeworkAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptr
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_HNSink_SetProperties");
 	ptrAgentObj->UnregisterMethod("TestMgr_RmfElement_HNSink_SetSourceType");
 
+#endif
 #endif
 
 	return TEST_SUCCESS;

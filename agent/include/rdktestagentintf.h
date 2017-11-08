@@ -22,13 +22,20 @@
 
 /* System Includes */
 #include <json/json.h>
-#include <jsonrpc/jsonrpc.h>
+//#include <jsonrpc/jsonrpc.h>           //sarves
+#include <jsonrpccpp/server.h>
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
+#include <jsonrpccpp/client.h>
+#include <jsonrpccpp/client/connectors/tcpsocketclient.h>
 #include <iostream>
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
 #include <stdlib.h>
+
+using namespace jsonrpc;
+
 /* debug message */
 typedef enum _DEBUG_LEVEL_
 {
@@ -72,20 +79,27 @@ typedef enum _DEBUG_LEVEL_
 Description   : This Class provides interface for the module to enable RPC mechanism.
 
  **************************************************************************************/
-class RDKTestAgent
+class RDKTestAgent : public AbstractServer<RDKTestAgent>
 {
 
 	public:
 		/* Constructor */
+                //sarves
+#if 0
 		RDKTestAgent (Json::Rpc::TcpServer *ptrRpcServer)
 		{
 			m_ptrRPCServer = ptrRpcServer;
 		}
+#endif
+               RDKTestAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <RDKTestAgent>(ptrRpcServer)
+               {
 
-		/* Destructor */
+               }                                                                 
 		virtual ~RDKTestAgent(){}
-
-
+              
+               //  virtual bool bindAndAddMethod(const Procedure& proc, methodPointer_t pointer); 
+//sarves
+#if 0
 /********************************************************************************************************************
 Description  :       This function helps to register methods to enable RPC.
 Parameters :   
@@ -102,7 +116,7 @@ Return:                bool  -      Always returning true from this function.
 			m_ptrRPCServer -> AddMethod (new Json::Rpc::RpcMethod <T> (refObj, ptrFn, std::string (szName)));
 			return true;
 		}
-
+#endif
 
 /********************************************************************************************************************
 Description  :       This function helps to unregister methods which is registered for RPC mechanism.
@@ -112,6 +126,7 @@ szName - Name of the function as registered in RPC mechanism.
 Return:                bool  -      Always returning true from this function.
 
 *********************************************************************************************************************/
+#if 0
 		bool UnregisterMethod (const char* szName)
 		{
 			DEBUG_PRINT (DEBUG_LOG,  "Unregistering %s \n", szName);
@@ -121,7 +136,7 @@ Return:                bool  -      Always returning true from this function.
 
 	private:
 		Json::Rpc::TcpServer  *m_ptrRPCServer;
-
+#endif
 }; /* End of RDKTestAgent*/
 
 #endif  //__RDK_TEST_AGENT_INTF__

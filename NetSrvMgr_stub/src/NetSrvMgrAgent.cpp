@@ -422,6 +422,7 @@ bool getParameterDetails (Json::Value& response,
 
     return retVal;
 }
+#if 0
 /*************************************************************************
 Function name : NetSrvMgrAgent::NetSrvMgrAgent
 
@@ -434,6 +435,8 @@ NetSrvMgrAgent::NetSrvMgrAgent () {
 
     DEBUG_PRINT (DEBUG_LOG, "NetSrvMgrAgent Initialized\n");
 }
+#endif
+
 
 /**************************************************************************
 Function name : NetSrvMgrAgent::initialize
@@ -443,10 +446,10 @@ Arguments     : Input arguments are Version string and NetSrvMgrAgent obj ptr
 Description   : Registering all the wrapper functions with the agent for using these functions in the script
 ***************************************************************************/
 
-bool NetSrvMgrAgent::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) {
+bool NetSrvMgrAgent::initialize (IN const char* szVersion) {
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent Initialization Entry\n");
-
+#if 0
     ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetAvailableSSIDs, "TestMgr_NetSrvMgr_WifiMgrGetAvailableSSIDs");
     ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetCurrentState, "TestMgr_NetSrvMgr_WifiMgrGetCurrentState");
     ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetLAFState, "TestMgr_NetSrvMgr_WifiMgrGetLAFState");
@@ -455,6 +458,7 @@ bool NetSrvMgrAgent::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAg
     ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetGetParameters, "TestMgr_NetSrvMgr_WifiMgrSetGetParameters");
     ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent, "TestMgr_NetSrvMgrAgent_WifiMgr_BroadcastEvent");
 
+#endif
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent Initialization Exit\n");
 
     return TEST_SUCCESS;
@@ -534,7 +538,7 @@ Description   : Retrieve the available SSIDs from Wifi Service Manager and
                 pass it to Test Manager.
 **************************************************************************/
 
-bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetAvailableSSIDs(IN const Json::Value& req, OUT Json::Value& response) {
+void NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetAvailableSSIDs(IN const Json::Value& req, OUT Json::Value& response) {
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_GetAvailableSSIDs --->Entry\n");
 
@@ -581,7 +585,7 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetAvailableSSIDs(IN const Json::Val
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_GetAvailableSSIDs -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -595,7 +599,7 @@ Description   : Retrieve the current state of Wifi Service Manager and
                 pass it to Test Manager.
 **************************************************************************/
 
-bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetCurrentState(IN const Json::Value& req, OUT Json::Value& response) {
+void NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetCurrentState(IN const Json::Value& req, OUT Json::Value& response) {
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_GetCurrentState --->Entry\n");
 
@@ -662,7 +666,7 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetCurrentState(IN const Json::Value
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_GetCurrentState -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 /**************************************************************************
 Function name : NetSrvMgrAgent_WifiMgr_GetLAFState
@@ -675,7 +679,7 @@ Description   : Retrieve the LAF state of Wifi Service Manager and
                 pass it to Test Manager.
 **************************************************************************/
 
-bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetLAFState(IN const Json::Value& req, OUT Json::Value& response) {
+void NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetLAFState(IN const Json::Value& req, OUT Json::Value& response) {
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_GetLAFState --->Entry\n");
 
@@ -746,7 +750,7 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetLAFState(IN const Json::Value& re
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_GetLAFState -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -760,7 +764,7 @@ Description   : Retrieve the paired SSID for Wifi Service Manager and
                 pass it to Test Manager.
 **************************************************************************/
 
-bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetPairedSSID(IN const Json::Value& req, OUT Json::Value& response) {
+void NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetPairedSSID(IN const Json::Value& req, OUT Json::Value& response) {
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_GetPairedSSID --->Entry\n");
 
@@ -831,7 +835,7 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetPairedSSID(IN const Json::Value& 
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_GetPairedSSID -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -844,7 +848,7 @@ Arguments     : Input argument - Enable : True/False to enable/disable
 Description   : Enable/Disable the Wifi adapter
 **************************************************************************/
 
-bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetEnabled (IN const Json::Value& req, OUT Json::Value& response) {
+void NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetEnabled (IN const Json::Value& req, OUT Json::Value& response) {
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_SetEnabled --->Entry\n");
 
@@ -908,7 +912,7 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetEnabled (IN const Json::Value& re
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_SetEnabled -->Exit\n");
-    return TEST_SUCCESS;
+    return ;
 }
 
 /**************************************************************************
@@ -923,7 +927,7 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetEnabled (IN const Json::Value& re
 *                 pass result back to Test Manager.
 ****************************************************************************/
 
-bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetGetParameters(IN const Json::Value& req, OUT Json::Value& response) {
+void NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetGetParameters(IN const Json::Value& req, OUT Json::Value& response) {
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_SetGetParameters --->Entry\n");
 
@@ -996,7 +1000,7 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetGetParameters(IN const Json::Valu
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_SetGetParameters -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 /***************************************************************************
 Function name : NetSrvMgrAgent_WifiMgr_SaveSSID
@@ -1008,7 +1012,7 @@ Arguments     : Input argument - SSID : SSID to be saved for future sessions
 Description   : Save an SSID for future sessions
 ****************************************************************************/
 
-bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value& req, OUT Json::Value& response) {
+void NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value& req, OUT Json::Value& response) {
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_BroadcastEvent --->Entry\n");
 
@@ -1139,7 +1143,7 @@ bool NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "NetSrvMgrAgent_WifiMgr_BroadcastEvent -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /************************************************************************
@@ -1150,9 +1154,9 @@ Arguments       : NULL
 Description     : This function is used to create a new object of the class "NetSrvMgrAgent".
 **************************************************************************/
 
-extern "C" NetSrvMgrAgent* CreateObject () {
+extern "C" NetSrvMgrAgent* CreateObject (TcpSocketServer &ptrtcpServer) {
 
-    return new NetSrvMgrAgent ();
+    return new NetSrvMgrAgent (ptrtcpServer);
 }
 
 /**************************************************************************
@@ -1163,12 +1167,14 @@ Arguments       : NULL
 Description     : This function will be used to the close things cleanly.
 **************************************************************************/
 
-bool NetSrvMgrAgent::cleanup (IN const char* szVersion, IN RDKTestAgent *ptrAgentObj) {
+bool NetSrvMgrAgent::cleanup (IN const char* szVersion) {
 
     DEBUG_PRINT (DEBUG_TRACE, "Cleaningup\n");
+#if 0
     if (NULL == ptrAgentObj) {
         return TEST_FAILURE;
     }
+
 
     ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrGetAvailableSSIDs");
     ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrGetCurrentState");
@@ -1177,7 +1183,8 @@ bool NetSrvMgrAgent::cleanup (IN const char* szVersion, IN RDKTestAgent *ptrAgen
     ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrSetEnabled");
     ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrSetGetParameters");
     ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgrAgent_WifiMgr_BroadcastEvent");
-
+#endif
+  
     return TEST_SUCCESS;
 }
 
@@ -1193,3 +1200,4 @@ extern "C" void DestroyObject (NetSrvMgrAgent *stubobj) {
     DEBUG_PRINT (DEBUG_LOG, "Destroying NetSrvMgrAgent object\n");
     delete stubobj;
 }
+

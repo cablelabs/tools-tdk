@@ -53,11 +53,12 @@ bool checkRunningProcess(const char *processName)
  *Function name	: DeviceSettingsAgent 
  *Descrption	: This is a constructor function for DeviceSettingsAgent class. 
  *****************************************************************************/ 
+#if 0
 DeviceSettingsAgent::DeviceSettingsAgent()
 {
 	DEBUG_PRINT(DEBUG_LOG,"DeviceSettingsAgent Initialized");
 }
-
+#endif
 /***************************************************************************
  *Function name	: initialize
  *Descrption	: Initialize Function will be used for registering the wrapper method 
@@ -65,11 +66,11 @@ DeviceSettingsAgent::DeviceSettingsAgent()
  *  		  script
  *****************************************************************************/ 
 
-bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool DeviceSettingsAgent::initialize(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"DeviceSettingsAgent Initialize");
 	/*Register stub function for callback*/
-
+#if 0
 	//Manager
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::DSmanagerInitialize, "TestMgr_DS_managerInitialize");
 	ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::DSmanagerDeinitialize, "TestMgr_DS_managerDeinitialize");
@@ -206,7 +207,7 @@ bool DeviceSettingsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getVideoOutputPortFromId, "TestMgr_DS_HOST_getVideoOutputPortFromId");
         ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getAudioOutputPortFromName, "TestMgr_DS_HOST_getAudioOutputPortFromName");
         ptrAgentObj->RegisterMethod(*this,&DeviceSettingsAgent::HOST_getAudioOutputPortFromId, "TestMgr_DS_HOST_getAudioOutputPortFromId");
-
+#endif
 	/*initializing IARMBUS library */
 	IARM_Result_t retval;
 	retval=IARM_Bus_Init("agent");
@@ -253,7 +254,7 @@ bool DeviceSettingsAgent::testmodulepost_requisites()
  *Function name	: DSmanagerInitialize
  *Descrption	: This function is to initialize device settings library.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::DSmanagerInitialize(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::DSmanagerInitialize(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n managerInitialize ---->Entry\n");
 	try
@@ -269,13 +270,13 @@ bool DeviceSettingsAgent::DSmanagerInitialize(IN const Json::Value& req, OUT Jso
 		response["details"]="device::Manager::Initialize FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n managerInitialize ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 /***************************************************************************
  *Function name	: DSmanagerDeinitialize
  *Descrption	: This function is to DeInitialize device settings library.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::DSmanagerDeinitialize(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::DSmanagerDeinitialize(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n managerDeinitialize ---->Entry\n");
 	try
@@ -291,7 +292,7 @@ bool DeviceSettingsAgent::DSmanagerDeinitialize(IN const Json::Value& req, OUT J
 		response["details"]="device::Manager::DeInitialize FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n managerDeinitialize ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -300,7 +301,7 @@ bool DeviceSettingsAgent::DSmanagerDeinitialize(IN const Json::Value& req, OUT J
  *@param  [in]	: req- 	indicator_name: indicator name for which the Brightness will be set and get.
 			brightness: brightness level
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FPI_setBrightness(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPI_setBrightness(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setBrightness ---->Entry\n");
 	char brightnessDetails[30] = {'\0'};
@@ -340,10 +341,10 @@ bool DeviceSettingsAgent::FPI_setBrightness(IN const Json::Value& req, OUT Json:
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setBrightness ---->Exit\n");
-	return TEST_SUCCESS;	
+	return ;	
 }
 
-bool DeviceSettingsAgent::FPI_getBrightnessLevels(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPI_getBrightnessLevels(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPI_getBrightnessLevels ---->Entry\n");
         char brightnessDetails[50] = {'\0'};
@@ -366,7 +367,7 @@ bool DeviceSettingsAgent::FPI_getBrightnessLevels(IN const Json::Value& req, OUT
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setBrightness ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -375,7 +376,7 @@ bool DeviceSettingsAgent::FPI_getBrightnessLevels(IN const Json::Value& req, OUT
  *@param  [in]  : indicator_name: indicator name for which the state will be set.
                   state: 0 (OFF) / 1 (ON)
  *****************************************************************************/
-bool DeviceSettingsAgent::FPI_setState(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPI_setState(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPI_setState ---->Entry\n");
         char details[30] = {'\0'};
@@ -398,7 +399,7 @@ bool DeviceSettingsAgent::FPI_setState(IN const Json::Value& req, OUT Json::Valu
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"FPI_setState ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -407,12 +408,12 @@ bool DeviceSettingsAgent::FPI_setState(IN const Json::Value& req, OUT Json::Valu
  *@param  [in]	: req- 	indicator_name: indicator name for which the color will be set and get.
 				 color: color id.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FPI_setColor(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPI_setColor(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setColor ---->Entry\n");
 	if(&req["indicator_name"]==NULL || &req["color"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string indicator_name=req["indicator_name"].asCString();
 	char colorDetails[20];
@@ -447,7 +448,7 @@ bool DeviceSettingsAgent::FPI_setColor(IN const Json::Value& req, OUT Json::Valu
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setColor ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 /***************************************************************************
  *Function name	: FPI_setBlink
@@ -458,12 +459,12 @@ bool DeviceSettingsAgent::FPI_setColor(IN const Json::Value& req, OUT Json::Valu
 			blink_interval: blink rate.
 		       blink_iteration: Number of iteration for the blink.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FPI_setBlink(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPI_setBlink(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setBlink ---->Entry\n");
 	if(&req["indicator_name"]==NULL || &req["blink_interval"]==NULL || &req["blink_iteration"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string indicator_name=req["indicator_name"].asCString();
 	char blinkDetails[20];
@@ -498,7 +499,7 @@ bool DeviceSettingsAgent::FPI_setBlink(IN const Json::Value& req, OUT Json::Valu
 	}
 
 	DEBUG_PRINT(DEBUG_TRACE,"\n FPI_setBlink ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
@@ -512,12 +513,12 @@ bool DeviceSettingsAgent::FPI_setBlink(IN const Json::Value& req, OUT Json::Valu
                hiteration   : Number of Horizontal Iterations
                viteration   : Number of Vertical Iterations
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FPTEXT_setScroll(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPTEXT_setScroll(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n FPTEXT_setScroll ---->Entry\n");
 	if(&req["text"]==NULL||&req["viteration"]==NULL||&req["hiteration"]==NULL||&req["hold_duration"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	char scrollDetails[40];
 	int vIteration=req["viteration"].asInt();
@@ -549,10 +550,10 @@ bool DeviceSettingsAgent::FPTEXT_setScroll(IN const Json::Value& req, OUT Json::
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n FPTEXT_setScroll ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool DeviceSettingsAgent::FPTEXT_getTextColorMode(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPTEXT_getTextColorMode(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_getTextColorMode ---->Entry\n");
         try
@@ -579,11 +580,11 @@ bool DeviceSettingsAgent::FPTEXT_getTextColorMode(IN const Json::Value& req, OUT
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_getTextColorMode ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::FPTEXT_getTextBrightnessLevels(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPTEXT_getTextBrightnessLevels(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_getTextBrightnessLevels ---->Entry\n");
         char brightnessDetails[50] = {'\0'};
@@ -604,11 +605,11 @@ bool DeviceSettingsAgent::FPTEXT_getTextBrightnessLevels(IN const Json::Value& r
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_getTextBrightnessLevels ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::FPTEXT_setTextBrightness(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPTEXT_setTextBrightness(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_setTextBrightness ---->Entry\n");
         char brightnessDetails[30] = {'\0'};
@@ -642,10 +643,10 @@ bool DeviceSettingsAgent::FPTEXT_setTextBrightness(IN const Json::Value& req, OU
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_setTextBrightness ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::FPTEXT_getTextBrightness(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPTEXT_getTextBrightness(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_getTextBrightness ---->Entry\n");
         char brightnessDetails[30] = {'\0'};
@@ -666,10 +667,10 @@ bool DeviceSettingsAgent::FPTEXT_getTextBrightness(IN const Json::Value& req, OU
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_getTextBrightness ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::FPTEXT_enableDisplay(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPTEXT_enableDisplay(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPTEXT_enableDisplay ---->Entry\n");
 	bool enable = req["enable"].asInt();
@@ -692,7 +693,7 @@ bool DeviceSettingsAgent::FPTEXT_enableDisplay(IN const Json::Value& req, OUT Js
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_enableDisplay ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -702,12 +703,12 @@ bool DeviceSettingsAgent::FPTEXT_enableDisplay(IN const Json::Value& req, OUT Js
  *@param [in]	: req- 	port_name: video port(corresponding audio) for which audio level will be set and get.
                       audio_level: audio level for a given output audio port
  *****************************************************************************/ 
-bool DeviceSettingsAgent::AOP_setLevel(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_setLevel(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n AOP_setLevel ---->Entry\n");
 	if(&req["port_name"]==NULL || &req["audio_level"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	char levelDetails1[20] ="Audio Level:";
@@ -739,7 +740,7 @@ bool DeviceSettingsAgent::AOP_setLevel(IN const Json::Value& req, OUT Json::Valu
 	}
 	free(levelDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\n AOP_setLevel ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
@@ -751,12 +752,12 @@ bool DeviceSettingsAgent::AOP_setLevel(IN const Json::Value& req, OUT Json::Valu
                          db_level: audio DB level for a given output audio port
  *****************************************************************************/ 
 
-bool DeviceSettingsAgent::AOP_setDB(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_setDB(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_setDB ---->Entry\n");
 	if(&req["port_name"]==NULL||&req["db_level"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	char dBDetails1[60] ="DB:";
@@ -809,7 +810,7 @@ bool DeviceSettingsAgent::AOP_setDB(IN const Json::Value& req, OUT Json::Value& 
 	free(maxDBDetails);
 	free(minDBDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_setDB ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -819,12 +820,12 @@ bool DeviceSettingsAgent::AOP_setDB(IN const Json::Value& req, OUT Json::Value& 
  *@param  [in]	: req- 	zoom_setting: new zoom setting for the video device.
  *****************************************************************************/ 
 
-bool DeviceSettingsAgent::VD_setDFC(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VD_setDFC(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"VD_setDFC ---->Entry\n");
 	if(&req["zoom_setting"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	try
@@ -854,10 +855,10 @@ bool DeviceSettingsAgent::VD_setDFC(IN const Json::Value& req, OUT Json::Value& 
 	}
 
 	DEBUG_PRINT(DEBUG_TRACE,"VD_setDFC ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool DeviceSettingsAgent::VD_setPlatformDFC(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VD_setPlatformDFC(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VD_setPlatformDFC ---->Entry\n");
 
@@ -879,10 +880,10 @@ bool DeviceSettingsAgent::VD_setPlatformDFC(IN const Json::Value& req, OUT Json:
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VD_setPlatformDFC ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VD_getSupportedDFCs(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VD_getSupportedDFCs(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VD_getSupportedDFCs ---->Entry\n");
 
@@ -930,10 +931,10 @@ bool DeviceSettingsAgent::VD_getSupportedDFCs(IN const Json::Value& req, OUT Jso
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VD_getSupportedDFCs ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VD_getHDRCapabilities(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VD_getHDRCapabilities(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VD_getHDRCapabilities ---->Entry\n");
 
@@ -962,13 +963,13 @@ bool DeviceSettingsAgent::VD_getHDRCapabilities(IN const Json::Value& req, OUT J
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VD_HDRCapabilities ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
 
 
-bool DeviceSettingsAgent::VDCONFIG_getDevices(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VDCONFIG_getDevices(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDevices ---->Entry\n");
 
@@ -1006,11 +1007,11 @@ bool DeviceSettingsAgent::VDCONFIG_getDevices(IN const Json::Value& req, OUT Jso
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDevices ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::VDCONFIG_getDFCs(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VDCONFIG_getDFCs(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDFCs ---->Entry\n");
 
@@ -1047,11 +1048,11 @@ bool DeviceSettingsAgent::VDCONFIG_getDFCs(IN const Json::Value& req, OUT Json::
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDFCs ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::VDCONFIG_getDefaultDFC(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VDCONFIG_getDefaultDFC(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDefaultDFC ---->Entry\n");
 
@@ -1072,7 +1073,7 @@ bool DeviceSettingsAgent::VDCONFIG_getDefaultDFC(IN const Json::Value& req, OUT 
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VDCONFIG_getDefaultDFC ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -1082,12 +1083,12 @@ bool DeviceSettingsAgent::VDCONFIG_getDefaultDFC(IN const Json::Value& req, OUT 
  *@param [in]	: req- 	port_name: video port (corresponding audio port) Encoding format will be set and get.
                   encoding_format: encoding format to be set for audio port.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::AOP_setEncoding(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_setEncoding(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_setEncoding ---->Entry\n");
 	if(&req["port_name"]==NULL||&req["encoding_format"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	char encodingDetails1[30] ="Encoding Format:";
@@ -1117,7 +1118,7 @@ bool DeviceSettingsAgent::AOP_setEncoding(IN const Json::Value& req, OUT Json::V
 	}
 	free(encodingDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_setEncoding ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -1127,12 +1128,12 @@ bool DeviceSettingsAgent::AOP_setEncoding(IN const Json::Value& req, OUT Json::V
  *@param retval : req- 	port_name: port for which compression format will be set and get.
                compression_format: compression format to be set for audio port.
  ***************************************************************************/
-bool DeviceSettingsAgent::AOP_setCompression(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_setCompression(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n AOP_setCompression ---->Entry\n");
 	if(&req["port_name"]==NULL||&req["compression_format"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	char compressionDetails1[60] ="Compression format:";
@@ -1165,7 +1166,7 @@ bool DeviceSettingsAgent::AOP_setCompression(IN const Json::Value& req, OUT Json
 
 	free(compressionDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\n AOP_setCompression ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 /***************************************************************************
  *Function name	: AOP_setStereoMode
@@ -1174,12 +1175,12 @@ bool DeviceSettingsAgent::AOP_setCompression(IN const Json::Value& req, OUT Json
  *@param [in]	: req- 	port_name: port for which StereoModes will be set and get.
                       stereo_mode: stereo mode to be set for audio port.
  ***************************************************************************/
-bool DeviceSettingsAgent::AOP_setStereoMode(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_setStereoMode(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n AOP_setStreoeMode ---->Entry\n");
 	if(&req["port_name"]==NULL||&req["stereo_mode"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	char stereoModeDetails1[60] ="Mode:";
@@ -1211,10 +1212,10 @@ bool DeviceSettingsAgent::AOP_setStereoMode(IN const Json::Value& req, OUT Json:
 	}
 	free(stereoModeDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\n AOP_setStreoeMode ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool DeviceSettingsAgent::AOP_setStereoAuto(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_setStereoAuto(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOP_setStereoAuto ---->Entry\n");
 
@@ -1248,11 +1249,11 @@ bool DeviceSettingsAgent::AOP_setStereoAuto(IN const Json::Value& req, OUT Json:
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOP_setStereoAuto ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::AOP_getStereoAuto(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_getStereoAuto(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOP_getStereoAuto ---->Entry\n");
 
@@ -1283,11 +1284,11 @@ bool DeviceSettingsAgent::AOP_getStereoAuto(IN const Json::Value& req, OUT Json:
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOP_getStereoAuto ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::AOP_getGain(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_getGain(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOP_getGain ---->Entry\n");
 
@@ -1311,11 +1312,11 @@ bool DeviceSettingsAgent::AOP_getGain(IN const Json::Value& req, OUT Json::Value
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOP_getGain ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::AOP_getOptimalLevel(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_getOptimalLevel(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOP_getOptimalLevel ---->Entry\n");
 
@@ -1339,7 +1340,7 @@ bool DeviceSettingsAgent::AOP_getOptimalLevel(IN const Json::Value& req, OUT Jso
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOP_getOptimalLevel ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
@@ -1350,12 +1351,12 @@ bool DeviceSettingsAgent::AOP_getOptimalLevel(IN const Json::Value& req, OUT Jso
  *@param [in]	: req- 	new_power_state: new power state to be set for decoder.
 		  POWER_ON=1, POWER_STANDBY=2, POWER_OFF=3
  ***************************************************************************/
-bool DeviceSettingsAgent::HOST_setPowerMode(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_setPowerMode(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setPowerMode ---->Entry\n");
 	if(&req["new_power_state"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	int power_state=req["new_power_state"].asInt();
 	try
@@ -1381,7 +1382,7 @@ bool DeviceSettingsAgent::HOST_setPowerMode(IN const Json::Value& req, OUT Json:
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setPowerMode ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -1392,13 +1393,13 @@ bool DeviceSettingsAgent::HOST_setPowerMode(IN const Json::Value& req, OUT Json:
                         port_name : the port for which the resolution will be 
                                     set and get.
  ***************************************************************************/
-bool DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n VOP_setResolution  ---->Entry\n");
 	char getValue[30] = {'\0'};
 	if(&req["port_name"]==NULL || &req["resolution"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	std::string setValue=req["resolution"].asCString();
@@ -1434,11 +1435,11 @@ bool DeviceSettingsAgent::VOP_setResolution(IN const Json::Value& req, OUT Json:
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n setResolution ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
-bool DeviceSettingsAgent::FPCONFIG_getIndicatorFromName(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPCONFIG_getIndicatorFromName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getIndicatorFromName  ---->Entry\n");
 	std::string indicator_name = req["indicator_name"].asCString();
@@ -1468,11 +1469,11 @@ bool DeviceSettingsAgent::FPCONFIG_getIndicatorFromName(IN const Json::Value& re
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getIndicatorFromName ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::FPCONFIG_getIndicatorFromId(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPCONFIG_getIndicatorFromId(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getIndicatorFromId  ---->Entry\n");
         int indicator_id = req["indicator_id"].asInt();
@@ -1504,7 +1505,7 @@ bool DeviceSettingsAgent::FPCONFIG_getIndicatorFromId(IN const Json::Value& req,
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getIndicatorFromId ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
@@ -1513,7 +1514,7 @@ bool DeviceSettingsAgent::FPCONFIG_getIndicatorFromId(IN const Json::Value& req,
  *Descrption		: This function is wrapper function to get the list of indicators 
                           supported in the FrontPanel.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FPCONFIG_getIndicators(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPCONFIG_getIndicators(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nFPCONFIG_getIndicators  ---->Entry\n");
 	char indicators[200] = {'\0'};
@@ -1550,10 +1551,10 @@ bool DeviceSettingsAgent::FPCONFIG_getIndicators(IN const Json::Value& req, OUT 
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nFPCONFIG_getIndicators  ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool DeviceSettingsAgent::FPCONFIG_getTextDisplayFromName(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPCONFIG_getTextDisplayFromName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplayFromName  ---->Entry\n");
         std::string text_name = req["text_name"].asCString();
@@ -1583,10 +1584,10 @@ bool DeviceSettingsAgent::FPCONFIG_getTextDisplayFromName(IN const Json::Value& 
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplayFromName ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::FPCONFIG_getTextDisplayFromId(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPCONFIG_getTextDisplayFromId(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplayFromId  ---->Entry\n");
         int text_id = req["text_id"].asInt();
@@ -1617,7 +1618,7 @@ bool DeviceSettingsAgent::FPCONFIG_getTextDisplayFromId(IN const Json::Value& re
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplayFromId ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -1627,7 +1628,7 @@ bool DeviceSettingsAgent::FPCONFIG_getTextDisplayFromId(IN const Json::Value& re
  *parameter[in]	: req- indicator_name: indicator name, "Text"
  *****************************************************************************/ 
 
-bool DeviceSettingsAgent::FPI_getSupportedColors(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPI_getSupportedColors(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nFPI_getSupportedColors ---->Entry\n");
 
@@ -1682,11 +1683,11 @@ bool DeviceSettingsAgent::FPI_getSupportedColors(IN const Json::Value& req, OUT 
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nFPI_getSupportedColors ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
-bool DeviceSettingsAgent::FPI_getColorMode(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPI_getColorMode(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPI_getColorMode ---->Entry\n");
         char details[20] = {'\0'};
@@ -1717,7 +1718,7 @@ bool DeviceSettingsAgent::FPI_getColorMode(IN const Json::Value& req, OUT Json::
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"FPI_getColorMode ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
@@ -1727,7 +1728,7 @@ bool DeviceSettingsAgent::FPI_getColorMode(IN const Json::Value& req, OUT Json::
  *Descrption	: This function is wrapper function to get a list of text display 
                   subpanels on the front panel.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FPCONFIG_getTextDisplays(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPCONFIG_getTextDisplays(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplays ---->Entry\n");
 	char textDisplayDetails[200] = {'\0'};
@@ -1765,10 +1766,10 @@ bool DeviceSettingsAgent::FPCONFIG_getTextDisplays(IN const Json::Value& req, OU
 	}
 
 	DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getTextDisplays  ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
-bool DeviceSettingsAgent::FPCONFIG_getColors(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPCONFIG_getColors(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getColors ---->Entry\n");
 
@@ -1808,7 +1809,7 @@ bool DeviceSettingsAgent::FPCONFIG_getColors(IN const Json::Value& req, OUT Json
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"FPCONFIG_getColors  ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
@@ -1818,12 +1819,12 @@ bool DeviceSettingsAgent::FPCONFIG_getColors(IN const Json::Value& req, OUT Json
  *@param [in]   : req-	text_display: Text to be displayed.
                                text : Name of the Text LED in the Front panel
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FPTEXT_setText(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPTEXT_setText(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_setText ---->Entry\n");
 	if(&req["text_display"]==NULL || &req["text"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string textDisplay=req["text_display"].asCString();
 	try
@@ -1840,7 +1841,7 @@ bool DeviceSettingsAgent::FPTEXT_setText(IN const Json::Value& req, OUT Json::Va
 		response["details"]="Exception Caught in FPTEXT_setText";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_setText ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -1852,12 +1853,12 @@ bool DeviceSettingsAgent::FPTEXT_setText(IN const Json::Value& req, OUT Json::Va
  *****************************************************************************/ 
 
 
-bool DeviceSettingsAgent::FPTEXT_setTimeFormat(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPTEXT_setTimeFormat(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_setTimeFormat ---->Entry\n");
 	if(&req["text"]==NULL || &req["time_format"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	int timeFormat=req["time_format"].asInt();
 	char timeFormatDetails[30];
@@ -1880,7 +1881,7 @@ bool DeviceSettingsAgent::FPTEXT_setTimeFormat(IN const Json::Value& req, OUT Js
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nFPTEXT_setTimeFormat ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
@@ -1891,12 +1892,12 @@ bool DeviceSettingsAgent::FPTEXT_setTimeFormat(IN const Json::Value& req, OUT Js
                        time_mins: Minutes
                            text : Name of the Text LED in the Front panel
  *****************************************************************************/ 
-bool DeviceSettingsAgent::FPTEXT_setTime(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::FPTEXT_setTime(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n FPTEXT_setTime ---->Entry\n");
 	if(&req["time_hrs"]==NULL || &req["time_mins"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	int time_hrs=req["time_hrs"].asInt();
 	int time_mins=req["time_mins"].asInt();
@@ -1915,7 +1916,7 @@ bool DeviceSettingsAgent::FPTEXT_setTime(IN const Json::Value& req, OUT Json::Va
 		response["details"]="Exception Caught in FPTEXT_setTime";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n FPTEXT_setTime ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -1924,12 +1925,12 @@ bool DeviceSettingsAgent::FPTEXT_setTime(IN const Json::Value& req, OUT Json::Va
  *@param [in]   : req-	port_name: name of the video port.
                         loop_thru: new loopThru status(true/false)
  *****************************************************************************/ 
-bool DeviceSettingsAgent::AOP_loopThru(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_loopThru(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n AOP_loopThru ---->Entry\n");
 	if(&req["port_name"]==NULL||&req["loop_thru"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 
 	std::string portName=req["port_name"].asCString();
@@ -1981,7 +1982,7 @@ bool DeviceSettingsAgent::AOP_loopThru(IN const Json::Value& req, OUT Json::Valu
 	}
 	free(loopThruDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\n AOP_loopThru ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 /***************************************************************************
  *Function name : AOP_mutedStatus
@@ -1992,12 +1993,12 @@ bool DeviceSettingsAgent::AOP_loopThru(IN const Json::Value& req, OUT Json::Valu
                         loop_thru: new loopThru status(true/false)
  *****************************************************************************/
 
-bool DeviceSettingsAgent::AOP_mutedStatus(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOP_mutedStatus(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n AOP_mutedStatus ---->Entry\n");
 	if(&req["port_name"]==NULL||&req["mute_status"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	char muteDetails1[30] ="Mute Set Status :";
@@ -2048,7 +2049,7 @@ bool DeviceSettingsAgent::AOP_mutedStatus(IN const Json::Value& req, OUT Json::V
 	}
 	free(muteDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\n AOP_mutedStatus ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -2056,12 +2057,12 @@ bool DeviceSettingsAgent::AOP_mutedStatus(IN const Json::Value& req, OUT Json::V
  *Descrption    : This function will list the supported encoding formats for the audio port.
  *@param [in]   : req-  port_name: name of the video port.
  *****************************************************************************/
-bool DeviceSettingsAgent::AOPTYPE_getSupportedEncodings(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOPTYPE_getSupportedEncodings(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_getSupportedEncodings ---->Entry\n");
 	if(&req["port_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	char *supportedEncodingDetails = (char*)malloc(sizeof(char)*100);
@@ -2100,7 +2101,7 @@ bool DeviceSettingsAgent::AOPTYPE_getSupportedEncodings(IN const Json::Value& re
 	free(supportedEncodingDetails);
 	free(supportedEncoding);
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_getSupportedEncodings ---->Exit\n");
-	return TEST_SUCCESS;	
+	return;	
 }
 
 
@@ -2109,12 +2110,12 @@ bool DeviceSettingsAgent::AOPTYPE_getSupportedEncodings(IN const Json::Value& re
  *Descrption    : This function will list the supported compression formats for the audio port.
  *@param [in]   : req-  port_name: name of the video port.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::AOPTYPE_getSupportedCompressions(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOPTYPE_getSupportedCompressions(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_getSupportedCompression ---->Entry\n");
 	if(&req["port_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	char *supportedCompressionDetails = (char*)malloc(sizeof(char)*100);
@@ -2149,19 +2150,19 @@ bool DeviceSettingsAgent::AOPTYPE_getSupportedCompressions(IN const Json::Value&
 	free(supportedCompressionDetails);
 	free(supportedCompression);
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_getSupportedCompression ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 /***************************************************************************
  *Function name : AOPTYPE_getSupportedStereoModes
  *Descrption    : This function will list the supported stereo modes for the audio port.
  *@param [in]   : req-  port_name: name of the video port.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::AOPTYPE_getSupportedStereoModes(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOPTYPE_getSupportedStereoModes(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_getSupportedStereoModes ---->Entry\n");
 	if(&req["port_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	char *supportedStereoModesDetails = (char*)malloc(sizeof(char)*100);
@@ -2190,19 +2191,19 @@ bool DeviceSettingsAgent::AOPTYPE_getSupportedStereoModes(IN const Json::Value& 
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in AOP_getSupportedStereoModes\n");
 		response["details"]= "Exception Caught in AOP_getSupportedStereoModes";
 		response["result"]= "FAILURE";
-		return TEST_FAILURE;
+		return;
 	}
 	free(supportedStereoModesDetails);
 	free(supportedStereoModes);
 	DEBUG_PRINT(DEBUG_TRACE,"\nAOP_getSupportedStereoModes ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
  *Function name	: HOST_addPowerModeListener
  *Descrption	: This function will add the listener for the power mode change event.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::HOST_addPowerModeListener(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_addPowerModeListener(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_addPowerModeListener ---->Entry\n");
 	try
@@ -2214,18 +2215,18 @@ bool DeviceSettingsAgent::HOST_addPowerModeListener(IN const Json::Value& req, O
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_addPowerModeListener\n");
 		response["result"]= "FAILURE";
 		response["details"]="Exception Caught in HOST_addPowerModeListener";
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_addPowerModeListener ---->Exit\n");
 	response["result"]="SUCCESS";
 	response["details"]="HOST_addPowerModeListener - SUCCESS";
-	return TEST_SUCCESS;
+	return;
 }
 /***************************************************************************
  *Function name	: HOST_removePowerModeListener
  *Descrption	: This function will remove the listener for the power mode change event.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::HOST_removePowerModeListener(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_removePowerModeListener(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_removePowerModeListener ---->Entry\n");
 	try
@@ -2237,12 +2238,12 @@ bool DeviceSettingsAgent::HOST_removePowerModeListener(IN const Json::Value& req
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_removePowerModeListener\n");
 		response["result"]= "FAILURE";
 		response["details"]="Exception Caught in HOST_removePowerModeListener";
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_removePowerModeListener ---->Exit\n");
 	response["result"]="SUCCESS";
 	response["details"]="HOST_removePowerModeListener - SUCCESS";
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -2252,12 +2253,12 @@ bool DeviceSettingsAgent::HOST_removePowerModeListener(IN const Json::Value& req
  *parameter [in]: req-	display_status - new status of display connection.(true/false)
  *****************************************************************************/ 
 
-bool DeviceSettingsAgent::VOP_isDisplayConnected(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_isDisplayConnected(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_isDisplayConnected ---->Entry\n");
-	if(&req["port_name"]==NULL || &req["display_status"]==NULL)
+	if(&req["port_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	/*getting instance for video ports*/
@@ -2292,14 +2293,14 @@ bool DeviceSettingsAgent::VOP_isDisplayConnected(IN const Json::Value& req, OUT 
 		response["result"]= "FAILURE";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_isDisplayConnected ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
  *Function name	: HOST_addDisplayConnectionListener
  *Descrption	: This function will add the listener for the display connection
  *****************************************************************************/ 
-bool DeviceSettingsAgent::HOST_addDisplayConnectionListener(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_addDisplayConnectionListener(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_addDisplayConnectionListener ---->Entry\n");
 	try
@@ -2311,18 +2312,18 @@ bool DeviceSettingsAgent::HOST_addDisplayConnectionListener(IN const Json::Value
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_addDisplayConnectionListener \n");
 		response["result"]= "FAILURE";
 		response["details"]= "Exception Caught in HOST_addDisplayConnectionListener";
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_addDisplayConnectionListener ---->Exit\n");
 	response["result"]="SUCCESS";
 	response["details"]= "HOST_addDisplayConnectionListener - SUCCESS";
-	return TEST_SUCCESS;
+	return;
 }
 /***************************************************************************
  *Function name	: HOST_removeDisplayConnectionListener
  *Descrption	: This function will remove the listener for the display connection
  *****************************************************************************/ 
-bool DeviceSettingsAgent::HOST_removeDisplayConnectionListener(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_removeDisplayConnectionListener(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_removeDisplayConnectionListener ---->Entry\n");
 	try
@@ -2334,12 +2335,12 @@ bool DeviceSettingsAgent::HOST_removeDisplayConnectionListener(IN const Json::Va
 		DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in HOST_removeDisplayConnectionListener \n");
 		response["result"]= "FAILURE";
 		response["details"]= "Exception Caught in HOST_removeDisplayConnectionListener";
-		return TEST_FAILURE;
+		return;
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nHOST_removeDisplayConnectionListener ---->Exit\n");
 	response["result"]="SUCCESS";
 	response["details"]= "HOST_removeDisplayConnectionListener - SUCCESS";
-	return TEST_SUCCESS;
+	return;
 }
 
 
@@ -2349,7 +2350,7 @@ bool DeviceSettingsAgent::HOST_removeDisplayConnectionListener(IN const Json::Va
                   suppported by the given video port.
  *parameter [in]: req-	port_name - name of the video port.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::VOPTYPE_getSupportedResolutions(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPTYPE_getSupportedResolutions(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_getSupportedResolutions ---->Entry\n");
 	std::string portName=req["port_name"].asCString();
@@ -2389,7 +2390,7 @@ bool DeviceSettingsAgent::VOPTYPE_getSupportedResolutions(IN const Json::Value& 
 	}
 	free(supportedResolutions);
 	DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_getSupportedResolutions ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -2397,7 +2398,7 @@ bool DeviceSettingsAgent::VOPTYPE_getSupportedResolutions(IN const Json::Value& 
  *Descrption	: This function will check if HDCP is supported for the given port.
  *parameter [in]: req-	port_name: id of the video port.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::VOPTYPE_isHDCPSupported(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPTYPE_isHDCPSupported(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_isHDCPSupported ---->Entry\n");
 	std::string portName=req["port_name"].asCString();
@@ -2428,7 +2429,7 @@ bool DeviceSettingsAgent::VOPTYPE_isHDCPSupported(IN const Json::Value& req, OUT
 	}
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_isHDCPSupported ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -2439,7 +2440,7 @@ bool DeviceSettingsAgent::VOPTYPE_isHDCPSupported(IN const Json::Value& req, OUT
  *                keySize
  *                portName (hardcoded to type HDMI in RDK)
  *****************************************************************************/
-bool DeviceSettingsAgent::VOPTYPE_enableHDCP(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPTYPE_enableHDCP(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_enableHDCP ---->Entry\n");
 
@@ -2461,7 +2462,7 @@ bool DeviceSettingsAgent::VOPTYPE_enableHDCP(IN const Json::Value& req, OUT Json
                                 DEBUG_PRINT(DEBUG_TRACE, "%s process is not running\n",MFRMGR);
                                 response["result"] = "FAILURE";
                                 response["details"] = "mfrMgrMain process not running to get Mfr HDCP Key";
-                                return TEST_FAILURE;
+                                return;
                         }
 
                         int IsMfrDataRead = false;
@@ -2541,11 +2542,11 @@ bool DeviceSettingsAgent::VOPTYPE_enableHDCP(IN const Json::Value& req, OUT Json
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_enableHDCP ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::VOPTYPE_getPorts(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPTYPE_getPorts(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_getPorts ---->Entry\n");
 
@@ -2597,11 +2598,11 @@ bool DeviceSettingsAgent::VOPTYPE_getPorts(IN const Json::Value& req, OUT Json::
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_getPorts ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::VOPTYPE_setRestrictedResolution(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPTYPE_setRestrictedResolution(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_setRestrictedResolution ---->Entry\n");
 
@@ -2633,10 +2634,10 @@ bool DeviceSettingsAgent::VOPTYPE_setRestrictedResolution(IN const Json::Value& 
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_setRestrictedResolution ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VOPTYPE_getRestrictedResolution(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPTYPE_getRestrictedResolution(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_getRestrictedResolution ---->Entry\n");
 
@@ -2659,10 +2660,10 @@ bool DeviceSettingsAgent::VOPTYPE_getRestrictedResolution(IN const Json::Value& 
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOPTYPE_getRestrictedResolution ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VOPCONFIG_getPixelResolution(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPCONFIG_getPixelResolution(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPixelResolution ---->Entry\n");
 
@@ -2696,10 +2697,10 @@ bool DeviceSettingsAgent::VOPCONFIG_getPixelResolution(IN const Json::Value& req
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPixelResolution  ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VOPCONFIG_getSSMode(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPCONFIG_getSSMode(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getSSMode ---->Entry\n");
 
@@ -2728,11 +2729,11 @@ bool DeviceSettingsAgent::VOPCONFIG_getSSMode(IN const Json::Value& req, OUT Jso
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getSSMode ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::VOPCONFIG_getVideoResolution(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPCONFIG_getVideoResolution(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getVideoResolution ---->Entry\n");
 
@@ -2766,11 +2767,11 @@ bool DeviceSettingsAgent::VOPCONFIG_getVideoResolution(IN const Json::Value& req
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getVideoResolution ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::VOPCONFIG_getFrameRate(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPCONFIG_getFrameRate(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getFrameRate ---->Entry\n");
 
@@ -2804,10 +2805,10 @@ bool DeviceSettingsAgent::VOPCONFIG_getFrameRate(IN const Json::Value& req, OUT 
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getFrameRate ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VOPCONFIG_getPortType(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPCONFIG_getPortType(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortType ---->Entry\n");
 
@@ -2839,10 +2840,10 @@ bool DeviceSettingsAgent::VOPCONFIG_getPortType(IN const Json::Value& req, OUT J
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortType ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VOPCONFIG_getPortFromName(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPCONFIG_getPortFromName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortFromName ---->Entry\n");
 
@@ -2870,11 +2871,11 @@ bool DeviceSettingsAgent::VOPCONFIG_getPortFromName(IN const Json::Value& req, O
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortFromName ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::VOPCONFIG_getPortFromId(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPCONFIG_getPortFromId(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortFromId ---->Entry\n");
 
@@ -2903,10 +2904,10 @@ bool DeviceSettingsAgent::VOPCONFIG_getPortFromId(IN const Json::Value& req, OUT
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getPortFromId ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VOPCONFIG_getSupportedTypes(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPCONFIG_getSupportedTypes(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getSupportedTypes ---->Entry\n");
 
@@ -2943,7 +2944,7 @@ bool DeviceSettingsAgent::VOPCONFIG_getSupportedTypes(IN const Json::Value& req,
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOPCONFIG_getSupportedTypes ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -2951,7 +2952,7 @@ bool DeviceSettingsAgent::VOPCONFIG_getSupportedTypes(IN const Json::Value& req,
  *Descrption    : This function gets the status of HDCP authentication.
  *parameter [in]: portName
  *****************************************************************************/
-bool DeviceSettingsAgent::VOP_getHDCPStatus(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_getHDCPStatus(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nVOP_getHDCPStatus ---->Entry\n");
         std::string portName=req["port_name"].asCString();
@@ -3001,7 +3002,7 @@ bool DeviceSettingsAgent::VOP_getHDCPStatus(IN const Json::Value& req, OUT Json:
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"\nVOP_getHDCPStatus ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -3010,12 +3011,12 @@ bool DeviceSettingsAgent::VOP_getHDCPStatus(IN const Json::Value& req, OUT Json:
                   the given port.
  *parameter [in]: req-	port_name: name of the video port.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::VOPTYPE_isDynamicResolutionSupported(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOPTYPE_isDynamicResolutionSupported(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\n VOPTYPE_isDynamicResolutionSupported ---->Entry\n");
 	if(&req["port_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	std::string portName=req["port_name"].asCString();
 	char dynamicResolutionDetails1[40] ="isDynamicResolutionSupported :";
@@ -3053,7 +3054,7 @@ bool DeviceSettingsAgent::VOPTYPE_isDynamicResolutionSupported(IN const Json::Va
 	}
 	free(dynamicResolutionSupportDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOPTYPE_isDynamicResolutionSupported ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
@@ -3062,7 +3063,7 @@ bool DeviceSettingsAgent::VOPTYPE_isDynamicResolutionSupported(IN const Json::Va
  *Descrption    : This function is to check content protect status.
  *parameter [in]: req-  port_name: video port name.
  *****************************************************************************/
-bool DeviceSettingsAgent::VOP_isContentProtected(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_isContentProtected(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_isContentProtected ---->Entry\n");
 	std::string portName=req["port_name"].asCString();
@@ -3092,7 +3093,7 @@ bool DeviceSettingsAgent::VOP_isContentProtected(IN const Json::Value& req, OUT 
 	}
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_isContentProtected ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -3100,12 +3101,12 @@ bool DeviceSettingsAgent::VOP_isContentProtected(IN const Json::Value& req, OUT 
  *Descrption	: This function is to get the AspectRatio of the video port.
  *parameter [in]: req-	port_name: video port name.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::VOP_getAspectRatio(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_getAspectRatio(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_getAspectRatio ---->Entry\n");
 	if(&req["port_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	char aspectRatioDetails1[30] ="AspectRatio:";
 	char *aspectRatioDetails = (char*)malloc(sizeof(char)*20);
@@ -3133,7 +3134,7 @@ bool DeviceSettingsAgent::VOP_getAspectRatio(IN const Json::Value& req, OUT Json
 	free(aspectRatioDetails);
 	free(aspectRatio);
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_getAspectRatio ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
@@ -3143,12 +3144,12 @@ bool DeviceSettingsAgent::VOP_getAspectRatio(IN const Json::Value& req, OUT Json
  *Descrption	: This function is to get the list of details about video port.
  *parameter [in]: req-	port_name: video port name.
  *****************************************************************************/ 
-bool DeviceSettingsAgent::VOP_getDisplayDetails(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_getDisplayDetails(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_getDisplayDetails ---->Entry\n");
 	if(&req["port_name"]==NULL)
 	{
-		return TEST_FAILURE;
+		return;
 	}
 	char *displayDetails1 = (char*)malloc(sizeof(char)*200);
 	memset(displayDetails1,'\0', (sizeof(char)*200));
@@ -3201,7 +3202,7 @@ bool DeviceSettingsAgent::VOP_getDisplayDetails(IN const Json::Value& req, OUT J
 	free(pcodeDetails);
 	free(pnumberDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\nVOP_getDisplayDetails ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -3210,7 +3211,7 @@ bool DeviceSettingsAgent::VOP_getDisplayDetails(IN const Json::Value& req, OUT J
  *parameter [in]: port_name: video port name
 		  enable: true to enable, false to disable
  *****************************************************************************/
-bool DeviceSettingsAgent::VOP_setEnable(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_setEnable(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOP_setEnable  ---->Entry\n");
         char details[30] = {'\0'};
@@ -3251,11 +3252,11 @@ bool DeviceSettingsAgent::VOP_setEnable(IN const Json::Value& req, OUT Json::Val
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"VOP_setEnable ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::VOP_isActive(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_isActive(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOP_isActive  ---->Entry\n");
 
@@ -3277,10 +3278,10 @@ bool DeviceSettingsAgent::VOP_isActive(IN const Json::Value& req, OUT Json::Valu
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"VOP_isActive ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VOP_setDisplayConnected(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_setDisplayConnected(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOP_setDisplayConnected  ---->Entry\n");
 
@@ -3302,11 +3303,11 @@ bool DeviceSettingsAgent::VOP_setDisplayConnected(IN const Json::Value& req, OUT
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"VOP_setDisplayConnected ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::VOP_hasSurround(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_hasSurround(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOP_hasSurround ---->Entry\n");
 
@@ -3328,10 +3329,10 @@ bool DeviceSettingsAgent::VOP_hasSurround(IN const Json::Value& req, OUT Json::V
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"VOP_hasSurround ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VOP_getEDIDBytes(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_getEDIDBytes(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOP_getEDIDBytes ---->Entry\n");
 
@@ -3386,10 +3387,10 @@ bool DeviceSettingsAgent::VOP_getEDIDBytes(IN const Json::Value& req, OUT Json::
                 response["result"]= "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"VOP_getEDIDBytes ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::VOP_getDefaultResolution(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VOP_getDefaultResolution(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VOP_getDefaultResolution ---->Entry\n");
 
@@ -3411,11 +3412,11 @@ bool DeviceSettingsAgent::VOP_getDefaultResolution(IN const Json::Value& req, OU
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VOP_getDefaultResolution ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::HOST_getCPUTemperature(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getCPUTemperature(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getCPUTemperature ---->Entry\n");
         try
@@ -3434,10 +3435,10 @@ bool DeviceSettingsAgent::HOST_getCPUTemperature(IN const Json::Value& req, OUT 
                 response["result"] = "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getCPUTemperature ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::HOST_setVersion(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_setVersion(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setVersion ---->Entry\n");
 
@@ -3468,10 +3469,10 @@ bool DeviceSettingsAgent::HOST_setVersion(IN const Json::Value& req, OUT Json::V
                 response["result"] = "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setVersion ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::HOST_setPreferredSleepMode(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_setPreferredSleepMode(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setPreferredSleepMode ---->Entry\n");
 
@@ -3501,11 +3502,11 @@ bool DeviceSettingsAgent::HOST_setPreferredSleepMode(IN const Json::Value& req, 
                 response["result"] = "FAILURE";
         }
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_setPreferredSleepMode ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::HOST_getPreferredSleepMode(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getPreferredSleepMode(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getPreferredSleepMode ---->Entry\n");
 	char details[30] = {'\0'};
@@ -3534,11 +3535,11 @@ bool DeviceSettingsAgent::HOST_getPreferredSleepMode(IN const Json::Value& req, 
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getPreferredSleepMode ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::HOST_getAvailableSleepModes(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getAvailableSleepModes(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getAvailableSleepModes ---->Entry\n");
         char details[100] = {'\0'};
@@ -3574,11 +3575,11 @@ bool DeviceSettingsAgent::HOST_getAvailableSleepModes(IN const Json::Value& req,
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getAvailableSleepModes ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::HOST_getVideoOutputPorts(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getVideoOutputPorts(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getVideoOutputPorts ---->Entry\n");
 
@@ -3627,10 +3628,10 @@ bool DeviceSettingsAgent::HOST_getVideoOutputPorts(IN const Json::Value& req, OU
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getVideoOutputPorts ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::HOST_getAudioOutputPorts(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getAudioOutputPorts(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getAudioOutputPorts ---->Entry\n");
         char details[128] = {'\0'};
@@ -3676,11 +3677,11 @@ bool DeviceSettingsAgent::HOST_getAudioOutputPorts(IN const Json::Value& req, OU
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getAudioOutputPorts ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::HOST_getVideoDevices(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getVideoDevices(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getVideoDevices ---->Entry\n");
         char details[100] = {'\0'};
@@ -3719,11 +3720,11 @@ bool DeviceSettingsAgent::HOST_getVideoDevices(IN const Json::Value& req, OUT Js
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getVideoDevices ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::HOST_getHostEDID(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getHostEDID(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nHOST_getHostEDID ---->Entry\n");
 
@@ -3777,11 +3778,11 @@ bool DeviceSettingsAgent::HOST_getHostEDID(IN const Json::Value& req, OUT Json::
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"HOST_getHostEDID ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::HOST_getVideoOutputPortFromName(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getVideoOutputPortFromName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"HOST_getVideoOutputPortFromName ---->Entry\n");
 
@@ -3811,10 +3812,10 @@ bool DeviceSettingsAgent::HOST_getVideoOutputPortFromName(IN const Json::Value& 
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"HOST_getVideoOutputPortFromName ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::HOST_getVideoOutputPortFromId(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getVideoOutputPortFromId(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"HOST_getVideoOutputPortFromId ---->Entry\n");
 
@@ -3843,10 +3844,10 @@ bool DeviceSettingsAgent::HOST_getVideoOutputPortFromId(IN const Json::Value& re
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"HOST_getVideoOutputPortFromId ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::HOST_getAudioOutputPortFromName(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getAudioOutputPortFromName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"HOST_getAudioOutputPortFromName ---->Entry\n");
 
@@ -3875,11 +3876,11 @@ bool DeviceSettingsAgent::HOST_getAudioOutputPortFromName(IN const Json::Value& 
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"HOST_getAudioOutputPortFromName ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::HOST_getAudioOutputPortFromId(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::HOST_getAudioOutputPortFromId(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"HOST_getAudioOutputPortFromId ---->Entry\n");
 
@@ -3908,11 +3909,11 @@ bool DeviceSettingsAgent::HOST_getAudioOutputPortFromId(IN const Json::Value& re
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"HOST_getAudioOutputPortFromId ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::AOPCONFIG_getPortType(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOPCONFIG_getPortType(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortType ---->Entry\n");
 
@@ -3943,11 +3944,11 @@ bool DeviceSettingsAgent::AOPCONFIG_getPortType(IN const Json::Value& req, OUT J
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortType ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::AOPCONFIG_getPortFromName(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOPCONFIG_getPortFromName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortFromName ---->Entry\n");
 
@@ -3975,12 +3976,12 @@ bool DeviceSettingsAgent::AOPCONFIG_getPortFromName(IN const Json::Value& req, O
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortFromName ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
 
-bool DeviceSettingsAgent::AOPCONFIG_getPortFromId(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOPCONFIG_getPortFromId(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortFromId ---->Entry\n");
 
@@ -4009,10 +4010,10 @@ bool DeviceSettingsAgent::AOPCONFIG_getPortFromId(IN const Json::Value& req, OUT
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPortFromId ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::AOPCONFIG_getPorts(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOPCONFIG_getPorts(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPorts ---->Entry\n");
 
@@ -4049,10 +4050,10 @@ bool DeviceSettingsAgent::AOPCONFIG_getPorts(IN const Json::Value& req, OUT Json
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getPorts ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool DeviceSettingsAgent::AOPCONFIG_getSupportedTypes(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOPCONFIG_getSupportedTypes(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getSupportedTypes ---->Entry\n");
 
@@ -4089,11 +4090,11 @@ bool DeviceSettingsAgent::AOPCONFIG_getSupportedTypes(IN const Json::Value& req,
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_getSupportedTypes ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::AOPCONFIG_release(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOPCONFIG_release(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_release ---->Entry\n");
 
@@ -4150,11 +4151,11 @@ bool DeviceSettingsAgent::AOPCONFIG_release(IN const Json::Value& req, OUT Json:
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_release ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::AOPCONFIG_load(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::AOPCONFIG_load(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_load ---->Entry\n");
 
@@ -4213,11 +4214,11 @@ bool DeviceSettingsAgent::AOPCONFIG_load(IN const Json::Value& req, OUT Json::Va
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"AOPCONFIG_load ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
-bool DeviceSettingsAgent::VR_isInterlaced(IN const Json::Value& req, OUT Json::Value& response)
+void DeviceSettingsAgent::VR_isInterlaced(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"VR_isInterlaced ---->Entry\n");
 
@@ -4269,7 +4270,7 @@ bool DeviceSettingsAgent::VR_isInterlaced(IN const Json::Value& req, OUT Json::V
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"VR_isInterlaced ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
@@ -4280,10 +4281,10 @@ bool DeviceSettingsAgent::VR_isInterlaced(IN const Json::Value& req, OUT Json::V
  *
  **************************************************************************/
 
-extern "C" DeviceSettingsAgent* CreateObject()
+extern "C" DeviceSettingsAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nCreateObject ---->Entry\n");
-	return new DeviceSettingsAgent();
+	return new DeviceSettingsAgent(ptrtcpServer);
 	DEBUG_PRINT(DEBUG_TRACE,"\nCreateObject ---->Exit\n");
 }
 
@@ -4293,15 +4294,16 @@ extern "C" DeviceSettingsAgent* CreateObject()
  *
  **************************************************************************/
 
-bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool DeviceSettingsAgent::cleanup(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Entry\n");
 	DEBUG_PRINT(DEBUG_LOG,"\n DeviceSettingsAgent shutting down \n");
+#if 0
         if(ptrAgentObj==NULL)
         {
                 return TEST_FAILURE;
         }
-
+#endif
 	IARM_Result_t retval;
 	retval=IARM_Bus_Disconnect();
 	if(retval==0)
@@ -4314,6 +4316,7 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
 		return TEST_FAILURE;
 	}
 	IARM_Bus_Term();
+#if 0
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_managerInitialize");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_managerDeinitialize");
 	ptrAgentObj->UnregisterMethod("TestMgr_DS_FP_setBrightness");
@@ -4413,6 +4416,7 @@ bool DeviceSettingsAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
         ptrAgentObj->UnregisterMethod("TestMgr_DS_VDCONFIG_getDFCs");
         ptrAgentObj->UnregisterMethod("TestMgr_DS_VDCONFIG_getDefaultDFC");
         ptrAgentObj->UnregisterMethod("TestMgr_DS_VR_isInterlaced");
+#endif
 
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;

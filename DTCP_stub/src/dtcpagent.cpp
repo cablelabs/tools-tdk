@@ -241,12 +241,12 @@ bool dtcpProcessReleasePacket()
 
     return status;
 }
-
+#if 0
 DTCPAgent::DTCPAgent()
 {
     DEBUG_PRINT(DEBUG_LOG, "DTCPAgent Initialized\n");
 }
-
+#endif
 /**************************************************************************
 Function name : DTCPAgent::initialize
 
@@ -255,10 +255,10 @@ Arguments     : Input arguments are Version string and DTCPAgent obj ptr
 Description   : Registering all the wrapper functions with the agent for using these functions in the script
 ***************************************************************************/
 
-bool DTCPAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool DTCPAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_ERROR, "DTCPAgent Initialization\n");
-    ptrAgentObj->RegisterMethod(*this,&DTCPAgent::DTCPAgent_Test_Execute, "TestMgr_DTCP_Test_Execute");
+//    ptrAgentObj->RegisterMethod(*this,&DTCPAgent::DTCPAgent_Test_Execute, "TestMgr_DTCP_Test_Execute");
 
     return TEST_SUCCESS;
 }
@@ -336,7 +336,7 @@ Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE
 
 Description   : Receives the request from Test Manager to run test dtcp  module.
 **************************************************************************/
-bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Value& response)
+void DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "DTCPAgent_Test_Execute --->Entry\n");
 
@@ -611,7 +611,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
                     response["result"]="FAILURE";
                     response["details"]="Source Session not created";
                     DEBUG_PRINT(DEBUG_TRACE, "DTCPAgent_Test_Execute -->Exit\n");
-                    return TEST_FAILURE;
+                    return;
                 }
             }
             else if(iDeviceType == DTCP_SINK)
@@ -628,7 +628,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
                     response["result"]="FAILURE";
                     response["details"]="Sink Session List not created";
                     DEBUG_PRINT(DEBUG_TRACE, "DTCPAgent_Test_Execute -->Exit\n");
-                    return TEST_FAILURE;
+                    return;
                 }
             }
             else
@@ -637,7 +637,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
                 response["result"]="FAILURE";
                 response["details"]="DeviceType is invalid";
                 DEBUG_PRINT(DEBUG_TRACE, "DTCPAgent_Test_Execute -->Exit\n");
-                return TEST_FAILURE;
+                return;
             }
 
             DTCPIP_Session sessionInfo;
@@ -710,7 +710,7 @@ bool DTCPAgent::DTCPAgent_Test_Execute(IN const Json::Value& req, OUT Json::Valu
     #endif
 
     DEBUG_PRINT(DEBUG_TRACE, "DTCPAgent_Test_Execute -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 /**************************************************************************
 Function Name   : CreateObject
@@ -720,9 +720,9 @@ Arguments       : NULL
 Description     : This function is used to create a new object of the class "DTCPAgent".
 **************************************************************************/
 
-extern "C" DTCPAgent* CreateObject()
+extern "C" DTCPAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-    return new DTCPAgent();
+    return new DTCPAgent(ptrtcpServer);
 }
 
 /**************************************************************************
@@ -733,15 +733,16 @@ Arguments       : NULL
 Description     : This function will be used to the close things cleanly.
 **************************************************************************/
 
-bool DTCPAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+bool DTCPAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
+#if 0
     if(NULL == ptrAgentObj)
     {
         return TEST_FAILURE;
     }
     ptrAgentObj->UnregisterMethod("TestMgr_DTCP_Test_Execute");
-
+#endif
     return TEST_SUCCESS;
 }
 /**************************************************************************
