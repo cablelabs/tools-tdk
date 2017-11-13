@@ -33,6 +33,7 @@ TEST CASE ID:CT_IARMBUS_49</synopsis>
   <remarks/>
   <skip>false</skip>
   <box_types>
+    <box_type>RPI-Client</box_type>
     <box_type>RPI-HYB</box_type>
     <box_type>Hybrid-1</box_type>
     <box_type>Emulator-HYB</box_type>
