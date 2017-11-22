@@ -30,6 +30,8 @@
 #include <fstream>
 #include <stdlib.h>
 #include <curl/curl.h>
+#include <stdlib.h>
+#include <sys/time.h>
 #include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 
 #include <ifaddrs.h>
@@ -41,7 +43,7 @@
 #include "hnsource.h"
 #include "rmfqamsrc.h"
 #include "rmf_platform.h"
-#include "benchmark.h"
+//#include "benchmark.h"
 #endif
 
 #define SKIP_FORWARD 0
@@ -179,5 +181,11 @@ class TDKIntegrationStub : public RDKTestStubInterface , public AbstractServer<T
 #endif	
 
 };
-
+//to resolve Time issue ###Need to revisit
+class Time
+{
+        public:
+          int getTime(struct timeval *);
+          float ExecutionTime(int rb, struct timeval *, int ra, struct timeval * );
+};
 #endif //__TDKIntegrationStub
