@@ -57,9 +57,11 @@ def callReboot(deviceIP,devicePort):
 		tcpClient = getSocketInstance(deviceIP)
         	tcpClient.connect((deviceIP, port))
 
-       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'RebootBox'}
-     		query = json.dumps(jsonMsg)
-        	tcpClient.send(query) #Sending json query
+       		#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'RebootBox'}
+       		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"RebootBox"}\r\n'
+     		#query = json.dumps(jsonMsg)
+        	#tcpClient.send(query) #Sending json query
+                tcpClient.send(jsonMsg) #Sending json query
 
 		result = tcpClient.recv(1048) #Receiving response
 		tcpClient.close()
@@ -69,10 +71,11 @@ def callReboot(deviceIP,devicePort):
 			sys.stdout.flush()
 
 		else:
-			resultIndex = result.find("result") + len("result"+"\":\"")
-	                message = result[resultIndex:]
-        	        message = message[:(message.find("\""))]
+			data = json.loads(result)
+			result=data["result"]
+			message=result["result"]
 			print message
+
 			sys.stdout.flush()
 
 	except socket.error:

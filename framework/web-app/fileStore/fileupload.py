@@ -58,16 +58,18 @@ try:
 	tcpClient.connect((deviceIP, agentMonitorPort))
 
 	# Sending message to push the logs from STB to TM
-        jsonMsg = {'jsonrpc':'2.0','id':'2','method':'uploadLogs','STBfilename':boxFile,'TMfilename':tmFile,'logUploadURL':logUploadURL}
-	query = json.dumps(jsonMsg)
-	tcpClient.send(query) #Sending json query
+	#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'uploadLogs','STBfilename':boxFile,'TMfilename':tmFile,'logUploadURL':logUploadURL}
+	jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"uploadLogs","parameter":{"STBfilename":'+ boxFile +',"TMfilename":'+ tmFile +',"logUploadURL":'+ logUploadURL +'}}\r\n'
+	#query = json.dumps(jsonMsg)
+	#tcpClient.send(query) #Sending json query
+	tcpClient.send(jsonMsg) #Sending json query
 
 	result = tcpClient.recv(1048) #Receiving response
 	tcpClient.close()
 
-	resultIndex = result.find("result") + len("result"+"\":\"")
-	message = result[resultIndex:]
-	message = message[:(message.find("\""))]
+	data = json.loads(result)
+	result=data["result"]
+	message=result["result"]
 	print message
 	sys.stdout.flush()
 

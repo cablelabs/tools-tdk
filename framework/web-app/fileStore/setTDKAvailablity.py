@@ -61,9 +61,11 @@ def setTDKAvailablity(deviceIP,devicePort,option):
 		print "Option : " , option
 
 		if "enable" in option:
-			jsonMsg = {'jsonrpc':'2.0','id':'2','method':'callEnableTDK'}
+			#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'callEnableTDK'}
+			jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"callEnableTDK"}\r\n'
 		elif "disable" in option:
-			jsonMsg = {'jsonrpc':'2.0','id':'2','method':'callDisableTDK'}
+			#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'callDisableTDK'}
+			jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"callDisableTDK"}\r\n'
 		else:
 			print "Invalid Option. Option should be enable/disable"
 			sys.exit()
@@ -74,13 +76,13 @@ def setTDKAvailablity(deviceIP,devicePort,option):
 		tcpClient.close()
 
 		if "Method not found." in result:
-                        print "METHOD_NOT_FOUND"
+			print "METHOD_NOT_FOUND"
 			sys.stdout.flush()
 
 		else:
-			resultIndex = result.find("result") + len("result"+"\":\"")
-	                message = result[resultIndex:]
-        	        message = message[:(message.find("\""))]
+			data = json.loads(result)
+			result=data["result"]
+			message=result["result"]
 			print "Status : ", message
 			sys.stdout.flush()
 
