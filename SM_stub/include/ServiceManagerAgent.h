@@ -183,7 +183,7 @@ class ServiceManagerAgent : public RDKTestStubInterface , public AbstractServer<
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_DisplaySetting_SetCurrentResolution", PARAMS_BY_NAME,JSON_STRING, "videoDisplay",JSON_STRING, "resolution",JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution);
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_GetConnectedAudioPorts", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_GetConnectedAudioPorts);
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_GetSupportedAudioPorts", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioPorts);
-		  this->bindAndAddMethod(Procedure("SM_DisplaySetting_GetSoundMode", PARAMS_BY_NAME,JSON_STRING, "portName",JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_GetSoundMode);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_GetSoundMode", PARAMS_BY_NAME,JSON_STRING, "portName",JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_GetSoundMode);
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_SetSoundMode", PARAMS_BY_NAME,JSON_STRING, "portName",JSON_STRING, "audioMode",JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_SetSoundMode);
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_GetSupportedAudioModes", PARAMS_BY_NAME,JSON_STRING, "portName",JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioModes);
 		  // DeviceSettingService callMethod APIs
@@ -216,7 +216,7 @@ class ServiceManagerAgent : public RDKTestStubInterface , public AbstractServer<
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_AVInputService_GetNumberOfInputs", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_AVInputService_GetNumberOfInputs);
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_AVInputService_GetCurrentVideoMode", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode);
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_AVInputService_IsContentProtected", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_AVInputService_IsContentProtected);
-		  this->bindAndAddMethod(Procedure("TestMgr_SM_RunSMEvent_QtApp", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, "event_name",JSON_STRING, "event_param",JSON_STRING, NULL), &ServiceManagerAgent::SM_RunSMEvent_QtApp);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_RunSMEvent_QtApp", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, "event_name",JSON_STRING, "event_param",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_RunSMEvent_QtApp);
 		  //VideoApplicationEventsService APIs
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_VideoApplicationEventsService_SetEnable", PARAMS_BY_NAME,JSON_STRING, "valueToSetEnabled",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_VideoApplicationEventsService_SetEnable);
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_VideoApplicationEventsService_IsEnableEvent", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent);
@@ -235,7 +235,7 @@ class ServiceManagerAgent : public RDKTestStubInterface , public AbstractServer<
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_Set_24_Hour_Clock", PARAMS_BY_NAME,JSON_STRING, "is24hour",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_FP_Set_24_Hour_Clock);
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_Is_24_Hour_Clock", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_FP_Is_24_Hour_Clock);
          	  //Generic Stub for callMethod APIs
-		  this->bindAndAddMethod(Procedure("TestMgr_SM_Generic_CallMethod", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, "method_name",JSON_STRING, "inputCount",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_FP_SetPreferences);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_Generic_CallMethod", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, "method_name",JSON_STRING, "inputCount",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_Generic_CallMethod);
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_ExecuteCmd", PARAMS_BY_NAME,JSON_STRING, "command",JSON_STRING, NULL), &ServiceManagerAgent::SM_ExecuteCmd);
                 }
 

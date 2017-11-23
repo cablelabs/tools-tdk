@@ -365,6 +365,12 @@ int main(int argc, char* argv[])
 	//registerStatus = sm_create(serviceName);
 	//Commenting the registration part as not required  (RDKTT-661)
         registerStatus = true;
+#ifdef HAS_API_VIDEO_APPLICATION_EVENTS
+        if (serviceName == VideoApplicationEventsService::SERVICE_NAME)
+        {
+                registerStatus = startVideoApplicationEventsService();
+        }
+#endif
 	if(registerStatus)
 	{
 		DEBUG_PRINT(DEBUG_TRACE,"SM create success\n");

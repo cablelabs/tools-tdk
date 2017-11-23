@@ -25,8 +25,6 @@ import tdklib;
 
 def registerService(obj,service_name):
 
-    #Skipping the service registration due to RDK changes (RDKTT-661). If required we will enable later
-    '''
     #Primitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('SM_RegisterService')
 
@@ -50,14 +48,10 @@ def registerService(obj,service_name):
         retValue = "FAILURE"
 
     return retValue
-    '''
-    return "SUCCESS"
 
 
 def unRegisterService(obj,service_name):
 
-    #Skipping the service unregistre due to RDK changes (RDKTT-661). If required we will enable later
-    '''
     #Primitive test case which associated to this Script
     tdkTestObj = obj.createTestStep('SM_UnRegisterService')
 
@@ -81,8 +75,6 @@ def unRegisterService(obj,service_name):
         retValue = "FAILURE"
 
     return retValue
-    '''
-    return "SUCCESS"
 
 
 def doesServiceExists(obj,service_name):

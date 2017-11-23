@@ -753,19 +753,19 @@ void ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json
         /*
         Skipping the service registration due to recent changes (RDKTT-661). If required we will enable later
         */
-        #if 0
+        
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_RegisterService ---->Entry\n");
 	char stringDetails[STR_DETAILS_50] = {'\0'};
-	bool register_service=false;
+	bool status = false;
         if(&req["service_name"]==NULL)
         {
 		response["result"]="FAILURE";
 		response["details"]="service name is NULL";
-                return TEST_FAILURE;
+                return;
         }
 	/*Name of the service to be registered with service manager*/
 	std::string serviceName=req["service_name"].asCString();
-
+	#if 0
 	ServiceStruct serviceStruct;
 	register_service = registerServices(QString::fromStdString(serviceName), serviceStruct);
 
@@ -787,8 +787,47 @@ void ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_RegisterService ---->Exit\n");
 	return TEST_SUCCESS;	
 	#endif
-	response["result"]="SUCCESS"; 
-	response["details"]="registration skipped";
+	response["result"]="SUCCESS";
+        sprintf(stringDetails,"Service registration skipped");
+#ifdef HAS_API_HDMI_CEC
+        if (QString::fromStdString(serviceName) == HdmiCecService::SERVICE_NAME)
+        {
+                DEBUG_PRINT(DEBUG_LOG,"\nCreating Hdmicec handle\n");
+                status = startHdmiCecService();
+                if (true == status)
+                {
+                        DEBUG_PRINT(DEBUG_LOG,"\nHdmiCec handle Creation Success\n");
+                        response["result"]="SUCCESS";
+                        sprintf(stringDetails,"HdmiCec handle creation success");
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_LOG,"\nHdmiCec handle Creation failed\n");
+                        response["result"]="FAILURE";
+                        sprintf(stringDetails,"HdmiCec handle creation failed");
+                }
+        }
+#endif
+#ifdef HAS_FRONT_PANEL
+        if (QString::fromStdString(serviceName) == FrontPanelService::SERVICE_NAME)
+        {
+                DEBUG_PRINT(DEBUG_LOG,"\nCreating frontpanel handle\n");
+                status = startFPService();
+                if (true == status)
+                {
+                        DEBUG_PRINT(DEBUG_LOG,"\nFront panel handle creation Success\n");
+                        response["result"]="SUCCESS";
+                        sprintf(stringDetails,"Front panel handle creation success");
+                }
+                else
+                {
+                        DEBUG_PRINT(DEBUG_LOG,"\nFront panel handle creation failed\n");
+                        response["result"]="FAILURE";
+                        sprintf(stringDetails,"Front panel handle creation failed");
+                }
+        }
+#endif
+        response["details"] = stringDetails;
 	return; 
 }
 
@@ -841,8 +880,16 @@ void ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Js
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_UnRegisterService ---->Exit\n");
 	return TEST_SUCCESS;	
 	#endif
-	response["result"]="SUCCESS"; 
-	response["details"]="un register skipped";
+        std::string serviceName=req["service_name"].asCString();
+#ifdef HAS_API_HDMI_CEC
+        if (QString::fromStdString(serviceName) == HdmiCecService::SERVICE_NAME)
+        {
+                stopHdmiCecService();
+        }
+#endif
+        response["result"]="SUCCESS";
+        response["details"]="un register skipped";
+
 	return ;
 }
 

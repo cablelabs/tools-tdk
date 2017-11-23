@@ -77,7 +77,7 @@ ip = <ipaddress>
 port = <port>
 
 #Number of times the pause/play should repeat.
-skipNumOfSec = 30;
+skipNumOfSec = 30.0;
 
 #Number of repeatation
 repeatCount = 1;

@@ -81,16 +81,16 @@ ip = <ipaddress>
 port = <port>
 
 #Set the trick play speed for forward
-forwardPlaySpeed = 4;
+forwardPlaySpeed = 4.0;
 
 #Set the trick play speed for rewind
-rewindPlaySpeed = -4;
+rewindPlaySpeed = -4.0;
 
 #Set the Number of seconds to skipforward.
-skipForwardSec = 10
+skipForwardSec = 10.0
 
 #Set the Number of seconds to skipbackward.
-skipBackwardSec = 10
+skipBackwardSec = 10.0
 
 #Number of repeatation
 repeatCount = 1;

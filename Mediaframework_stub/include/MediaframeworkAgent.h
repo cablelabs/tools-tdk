@@ -92,7 +92,7 @@ class MediaframeworkAgent : public RDKTestStubInterface , public AbstractServer<
         MediaframeworkAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <MediaframeworkAgent>(ptrRpcServer)
         {
            this->bindAndAddMethod(Procedure("TestMgr_MPSink_SetGetMute", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetMute);
-           this->bindAndAddMethod(Procedure("TestMgr_MPSink_SetGetVolume", PARAMS_BY_NAME, JSON_STRING,"Volume",JSON_INTEGER,NULL), &MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetVolume);
+           this->bindAndAddMethod(Procedure("TestMgr_MPSink_SetGetVolume", PARAMS_BY_NAME, JSON_STRING,"Volume",JSON_REAL,NULL), &MediaframeworkAgent::MediaframeworkAgent_MPSink_SetGetVolume);
            this->bindAndAddMethod(Procedure("TestMgr_HNSrc_GetBufferedRanges", PARAMS_BY_NAME, JSON_STRING,"X",JSON_INTEGER,"Y",JSON_INTEGER,"H",JSON_INTEGER,"W",JSON_INTEGER,"apply",JSON_INTEGER,"playuri",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges);
            this->bindAndAddMethod(Procedure("TestMgr_HNSrcMPSink_Video_State", PARAMS_BY_NAME, JSON_STRING,"X",JSON_INTEGER,"Y",JSON_INTEGER,"H",JSON_INTEGER,"W",JSON_INTEGER,"apply",JSON_INTEGER,"playuri",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State);
            this->bindAndAddMethod(Procedure("TestMgr_HNSrcMPSink_Video_MuteUnmute", PARAMS_BY_NAME, JSON_STRING,"X",JSON_INTEGER,"Y",JSON_INTEGER,"H",JSON_INTEGER,"W",JSON_INTEGER,"apply",JSON_INTEGER,"playuri",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute);
@@ -119,9 +119,9 @@ class MediaframeworkAgent : public RDKTestStubInterface , public AbstractServer<
            this->bindAndAddMethod(Procedure("TestMgr_DVRManager_GetRecordingDuration", PARAMS_BY_NAME, JSON_STRING,"recordingId",JSON_STRING,"playUrl",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingDuration);
            this->bindAndAddMethod(Procedure("TestMgr_DVRManager_GetRecordingStartTime", PARAMS_BY_NAME, JSON_STRING,"recordingId",JSON_STRING,"playUrl",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetRecordingStartTime);
            this->bindAndAddMethod(Procedure("TestMgr_DVRManager_GetDefaultTSBMaxDuration", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetDefaultTSBMaxDuration);
-           this->bindAndAddMethod(Procedure("TestMgr_DVRManager_CreateTSB", PARAMS_BY_NAME, JSON_STRING,"duration",JSON_REAL,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateTSB);
+           this->bindAndAddMethod(Procedure("TestMgr_DVRManager_CreateTSB", PARAMS_BY_NAME, JSON_STRING,"duration",JSON_INTEGER,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateTSB);
            this->bindAndAddMethod(Procedure("TestMgr_DVRManager_ConvertTSBToRecording", PARAMS_BY_NAME, JSON_STRING,"recordingId",JSON_STRING,"playUrl",JSON_STRING,"tsbId",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_ConvertTSBToRecording);
-           this->bindAndAddMethod(Procedure("TestMgr_DVRManager_CreateRecording", PARAMS_BY_NAME, JSON_STRING,"recordingTitle",JSON_STRING,"recordingId",JSON_STRING,"recordDuration",JSON_REAL,"qamLocator",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateRecording);
+           this->bindAndAddMethod(Procedure("TestMgr_DVRManager_CreateRecording", PARAMS_BY_NAME, JSON_STRING,"recordingTitle",JSON_STRING,"recordingId",JSON_STRING,"recordDuration",JSON_INTEGER,"qamLocator",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_CreateRecording);
            this->bindAndAddMethod(Procedure("TestMgr_DVRManager_UpdateRecording", PARAMS_BY_NAME, JSON_STRING,"recordingId",JSON_STRING,"playUrl",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_UpdateRecording);
            this->bindAndAddMethod(Procedure("TestMgr_DVRManager_DeleteRecording", PARAMS_BY_NAME, JSON_STRING,"recordingId",JSON_STRING,"playUrl",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_DeleteRecording);
            this->bindAndAddMethod(Procedure("TestMgr_DVRManager_GetSegmentsCount", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_DVRManager_GetSegmentsCount);
@@ -145,7 +145,7 @@ class MediaframeworkAgent : public RDKTestStubInterface , public AbstractServer<
            this->bindAndAddMethod(Procedure("TestMgr_RmfElementSetSpeed", PARAMS_BY_NAME, JSON_STRING,"playSpeed",JSON_REAL,"rmfElement",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElementSetSpeed);
            this->bindAndAddMethod(Procedure("TestMgr_RmfElementGetSpeed", PARAMS_BY_NAME, JSON_STRING,"rmfElement",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElementGetSpeed);
 
-           this->bindAndAddMethod(Procedure("TestMgr_RmfElementSetMediaTime", PARAMS_BY_NAME, JSON_STRING,"rmfElement",JSON_STRING,"mediaTime",JSON_REAL,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElementSetMediaTime);
+           this->bindAndAddMethod(Procedure("TestMgr_RmfElementSetMediaTime", PARAMS_BY_NAME, JSON_STRING,"rmfElement",JSON_STRING,"mediaTime",JSON_INTEGER,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElementSetMediaTime);
            this->bindAndAddMethod(Procedure("TestMgr_RmfElementGetMediaTime", PARAMS_BY_NAME, JSON_STRING,"rmfElement",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaTime);
            this->bindAndAddMethod(Procedure("TestMgr_RmfElementGetMediaInfo", PARAMS_BY_NAME, JSON_STRING,"rmfElement",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElementGetMediaInfo);
            this->bindAndAddMethod(Procedure("TestMgr_RmfElementGetState", PARAMS_BY_NAME, JSON_STRING,"rmfElement",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElementGetState);
@@ -161,7 +161,7 @@ class MediaframeworkAgent : public RDKTestStubInterface , public AbstractServer<
            this->bindAndAddMethod(Procedure("TestMgr_RmfElement_QAMSrc_UseFactoryMethods", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_UseFactoryMethods);
            this->bindAndAddMethod(Procedure("TestMgr_RmfElement_QAMSrc_GetTSID", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetTSID);
            this->bindAndAddMethod(Procedure("TestMgr_RmfElement_QAMSrc_GetLTSID", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLTSID);
-            this->bindAndAddMethod(Procedure("TestMgr_RmfElement_QAMSrc_GetLowLevelElement", PARAMS_BY_NAME, JSON_STRING,"paramName",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement);
+            this->bindAndAddMethod(Procedure("TestMgr_RmfElement_QAMSrc_GetLowLevelElement", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_GetLowLevelElement);
             this->bindAndAddMethod(Procedure("TestMgr_RmfElement_QAMSrc_FreeLowLevelElement", PARAMS_BY_NAME, JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_FreeLowLevelElement);
             this->bindAndAddMethod(Procedure("TestMgr_RmfElement_QAMSrc_ChangeURI", PARAMS_BY_NAME, JSON_STRING,"url",JSON_STRING,"numOfTimeChannelChange",JSON_INTEGER,NULL), &MediaframeworkAgent::MediaframeworkAgent_RmfElement_QAMSrc_ChangeURI);
 

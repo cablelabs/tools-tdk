@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 
 #include "btmgr.h"
 
@@ -47,38 +48,57 @@ using namespace std;
 BTRMGR_Result_t rc = BTRMGR_RESULT_SUCCESS;
 
 class RDKTestAgent;
-class BluetoothAgent : public RDKTestStubInterface
+class BluetoothAgent : public RDKTestStubInterface , public AbstractServer<BluetoothAgent>
 {
         public:
                 //Constructor
-                BluetoothAgent ();
+                BluetoothAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <BluetoothAgent>(ptrRpcServer)
+                {
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetNumberOfAdapters", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetNumberOfAdapters);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetAdapterName", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetAdapterName);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_SetAdapterName", PARAMS_BY_NAME, JSON_STRING,"name",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_SetAdapterName);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetAdapterPowerStatus", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetAdapterPowerStatus);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_SetAdapterPowerStatus", PARAMS_BY_NAME, JSON_STRING,"powerstatus",JSON_INTEGER,NULL), &BluetoothAgent::Bluetooth_SetAdapterPowerStatus);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_IsAdapterDiscoverable", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_IsAdapterDiscoverable);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_SetAdapterDiscoverable", PARAMS_BY_NAME, JSON_STRING,"discoverablestatus",JSON_INTEGER,"timeout",JSON_INTEGER,NULL), &BluetoothAgent::Bluetooth_SetAdapterDiscoverable);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_StartDeviceDiscovery", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_StartDeviceDiscovery);
+                   this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_StopDeviceDiscovery", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_StopDeviceDiscovery);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetDiscoveredDevices", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetDiscoveredDevices);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_ConnectToDevice", PARAMS_BY_NAME, JSON_STRING,"devicetype",JSON_INTEGER,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_ConnectToDevice);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_DisconnectFromDevice", PARAMS_BY_NAME, JSON_STRING,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_DisconnectFromDevice);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetConnectedDevices", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetConnectedDevices); 
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_PairDevice", PARAMS_BY_NAME, JSON_STRING,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_PairDevice);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_UnpairDevice", PARAMS_BY_NAME, JSON_STRING,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_UnpairDevice);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetPairedDevices", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetPairedDevices);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetDeviceProperties", PARAMS_BY_NAME, JSON_STRING,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetDeviceProperties);
+                }
 
                 //Inherited functions
-                bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
+                bool initialize(IN const char* szVersion);
 
-                bool cleanup(const char*, RDKTestAgent*);
+                bool cleanup(const char*);
                 std::string testmodulepre_requisites();
                 bool testmodulepost_requisites();
 
                 //Stub functions
-                bool Bluetooth_GetNumberOfAdapters(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_GetAdapterName(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_SetAdapterName(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_GetAdapterPowerStatus(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_SetAdapterPowerStatus(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_IsAdapterDiscoverable(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_SetAdapterDiscoverable(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_StartDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_StopDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_GetDiscoveredDevices(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_ConnectToDevice(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_DisconnectFromDevice(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_PairDevice(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_UnpairDevice(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_GetPairedDevices(IN const Json::Value& req, OUT Json::Value& response);
-                bool Bluetooth_GetDeviceProperties(IN const Json::Value& req, OUT Json::Value& response);            
+                void Bluetooth_GetNumberOfAdapters(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_GetAdapterName(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_SetAdapterName(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_GetAdapterPowerStatus(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_SetAdapterPowerStatus(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_IsAdapterDiscoverable(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_SetAdapterDiscoverable(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_StartDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_StopDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_GetDiscoveredDevices(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_ConnectToDevice(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_DisconnectFromDevice(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_PairDevice(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_UnpairDevice(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_GetPairedDevices(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_GetDeviceProperties(IN const Json::Value& req, OUT Json::Value& response);            
                
 };
-        extern "C" BluetoothAgent* CreateObject();
+        //extern "C" BluetoothAgent* CreateObject();
 #endif //__BLUETOOTH_STUB_H__
