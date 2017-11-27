@@ -175,7 +175,10 @@ if expected_Result in loadModuleStatus.upper():
 
 	duration = 3
   
-	matchList = tdkTestObj.getRecordingDetails(duration);    obj.resetConnectionAfterReboot()
+	matchList = tdkTestObj.getRecordingDetails(duration);
+	obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+	obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_DVR_Play_26');
+
 
 #---------End-------------------
 

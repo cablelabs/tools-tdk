@@ -167,7 +167,9 @@ if Expected_Result in loadModuleStatus.upper():
 	duration = 3
   
 	matchList = tdkTestObj.getRecordingDetails(duration);
-	obj.resetConnectionAfterReboot()
+	obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+	obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_DVR_SF_SB_CheckMacroblocking_48');
+
 #---------End-------------------
 
 

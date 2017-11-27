@@ -176,11 +176,12 @@ if "SUCCESS" in smLoadStatus.upper() and "SUCCESS" in snmpLoadStatus.upper():
                                                         actResponse =snmplib.SnmpExecuteCmd("snmpget", commString, "-v 2c", snmpOid[index], ecmIp);
                                                         print "SNMP response is %s" %actResponse;
                                                         snmpValue = actResponse.split(": ");
-                                                        print snmpValue[-1].strip();
+							value = snmpValue[-1].strip();
+							print value;
 
                                                         if configDict:
                                                                 preeqData = configDict[nameList[index]].strip();
-                                                                if preeqData != snmpValue[-1].strip():
+                                                                if preeqData != value.strip('\"'):
                                                                         status = "FAILURE";
                                                                         print "The values are not equal";
                                                                         break;

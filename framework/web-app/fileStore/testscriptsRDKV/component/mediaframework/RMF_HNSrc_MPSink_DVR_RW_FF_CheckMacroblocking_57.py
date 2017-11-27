@@ -40,6 +40,7 @@ Testcase Type: Positive</synopsis>
   <!--  -->
   <box_types>
     <box_type>RPI-HYB</box_type>
+    <!--  -->
     <box_type>Hybrid-1</box_type>
     <!--  -->
     <box_type>Emulator-HYB</box_type>
@@ -144,7 +145,10 @@ if Expected_Result in loadModuleStatus.upper():
 	duration = 3
   
 	matchList = tdkTestObj.getRecordingDetails(duration);
-	obj.resetConnectionAfterReboot()
+#	obj.resetConnectionAfterReboot()
+	obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+	obj.configureTestCase(ip,port,'RMF_HNSrc_MPSink_DVR_RW_FF_CheckMacroblocking_57');
+
 
 #---------End-------------------
 

@@ -136,7 +136,9 @@ if expected_Result in loadModuleStatus.upper():
 
 	duration = 3
 	matchList = tdkTestObj.getRecordingDetails(duration);
-	obj.resetConnectionAfterReboot()
+#	obj.resetConnectionAfterReboot()
+	obj = tdklib.TDKScriptingLibrary("mediaframework","2.0");
+	obj.configureTestCase(ip,port,'RMF_DVRSrc_Open_15');
 
 #---------End-------------------
 

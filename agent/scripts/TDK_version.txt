@@ -19,4 +19,4 @@
 
 RDK Test Development Kit
 
-Version : M-52
+Version : M-53
