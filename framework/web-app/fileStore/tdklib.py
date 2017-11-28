@@ -595,7 +595,7 @@ class PrimitiveTestCase:
 		self.tcpClient.close()
 	#	time.sleep(5)
 		self.tcpClient = self.getSocketInstance(self.ip)
-		self.tcpClient.connect((self.ip, 8087))
+		self.tcpClient.connect((self.ip, self.parentTestCase.portValue))
 		self.tcpClient.send(self.jsonMsgValue)
 		t1 = time.time();
 		self.result = self.tcpClient.recv(1048)
@@ -1635,7 +1635,7 @@ class TDKScriptingLibrary:
                         self.tcpClient.close()
             #            time.sleep(5)
                         self.tcpClient = self.getSocketInstance()
-                        self.tcpClient.connect((self.IP, 8088))
+                        self.tcpClient.connect((self.IP, self.portValue))
                         self.tcpClient.send('{"jsonrpc":"2.0","id":"2","method":"unloadModule","params":{"param1":"'+str(cName)+'","version":"1.3","ScriptSuiteEnabled":"false"}}\r\n')
 			unloadmoduleresult = self.tcpClient.recv(1048)
                         sys.stdout.flush()

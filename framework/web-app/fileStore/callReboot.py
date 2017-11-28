@@ -58,7 +58,7 @@ def callReboot(deviceIP,devicePort):
         	tcpClient.connect((deviceIP, port))
 
        		#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'RebootBox'}
-       		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"RebootBox"}\r\n'
+       		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"rebootBox"}\r\n'
      		#query = json.dumps(jsonMsg)
         	#tcpClient.send(query) #Sending json query
                 tcpClient.send(jsonMsg) #Sending json query

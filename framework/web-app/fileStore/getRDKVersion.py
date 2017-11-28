@@ -72,12 +72,11 @@ def getRDKVersion(deviceIP,devicePort):
 
 		else:
 			data = json.loads(result)
-			result=data["result"]
-			message=result["result"]
+			resultObj=data["result"]
+			message=resultObj["result"]
 			print message
 			sys.stdout.flush()
-
-		return message
+		return message 
 
 	except socket.error:
 		print "AGENT_NOT_FOUND"

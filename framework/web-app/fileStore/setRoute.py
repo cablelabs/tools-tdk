@@ -62,19 +62,22 @@ def setRoute(deviceIP,devicePort,clientMAC,clientAgentPort,clientStatusPort,clie
 		tcpClient = getSocketInstance(deviceIP)
         	tcpClient.connect((deviceIP, port))
 
-       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'setClientRoute','MACaddr':clientMAC,'agentPort':clientAgentPort,'statusPort':clientStatusPort,'logTransferPort':clientLogTransferPort,'agentMonitorPort':clientAgentMonitorPort}
-     		query = json.dumps(jsonMsg)
-        	tcpClient.send(query) #Sending json query
+       		#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'setClientRoute','MACaddr':clientMAC,'agentPort':clientAgentPort,'statusPort':clientStatusPort,'logTransferPort':clientLogTransferPort,'agentMonitorPort':clientAgentMonitorPort}
+       		#jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"setClientRoute","MACaddr":'clientMAC',"agentPort":'clientAgentPort',"statusPort":'clientStatusPort',"logTransferPort":'clientLogTransferPort',"agentMonitorPort":'clientAgentMonitorPort'}\r\n'
+       		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"setClientRoute","params":{"MACaddr":"'+ clientMAC +'","agentPort":"'+ clientAgentPort +'","statusPort":"'+ clientStatusPort +'","logTransferPort":"'+ clientLogTransferPort +'","agentMonitorPort":"'+ clientAgentMonitorPort +'"}}\r\n'
+        	#query = json.dumps(jsonMsg)
+        	#tcpClient.send(query) #Sending json query
+        	tcpClient.send(jsonMsg) #Sending json query
 
 		tcpClient.setblocking(0)
 		recvStatus = select.select([tcpClient], [], [], 5) #Setting timeout for response(3 Sec)
 		result = tcpClient.recv(1048) #Receiving response
 		tcpClient.close()
 
-		resultIndex = result.find("result") + len("result"+"\":\"")
-                message = result[resultIndex:]
-                message = message[:(message.find("\""))]
-                print message
+		data = json.loads(result)
+		result=data["result"]
+		message=result["result"]
+		print message
 
 	except socket.error:
 		print "NOT_FOUND"
