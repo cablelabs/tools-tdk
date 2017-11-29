@@ -176,6 +176,20 @@ AC_ARG_ENABLE([mediautils],
            [echo "mediautils component is not enabled"])
 AM_CONDITIONAL([MEDIAUTILS], [test x$MEDIAUTILS = xtrue])
 
+AC_ARG_ENABLE([audiocapturemgr],
+         AS_HELP_STRING([--enable-audiocapturemgr],[enable audiocapturemgr (default is no)]),
+         [
+           case "${enableval}" in
+              yes) AUDIOCAPTUREMGR=true
+                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" AudioCaptureMgr_stub"],
+                          [echo box type not specified]) ;;
+             no) AUDIOCAPTUREMGR=false ;;
+            *) AC_MSG_ERROR([bad value ${enableval} for --enable-audiocapturemgr ]) ;;
+             esac
+            ],
+           [echo "audiocapturemgr component is not enabled"])
+AM_CONDITIONAL([AUDIOCAPTUREMGR], [test x$AUDIOCAPTUREMGR = xtrue])
+
 AC_ARG_ENABLE([trace],
               AS_HELP_STRING([--enable-trace],[enable trace (default is no)]),
               [
@@ -257,5 +271,6 @@ AC_CONFIG_FILES([Makefile
          SNMP_stub/Makefile
          MocaHal_stub/Makefile
          Bluetooth_stub/Makefile
-	 MediaUtils_stub/Makefile])
+	 MediaUtils_stub/Makefile
+	 AudioCaptureMgr_stub/Makefile])
 AC_OUTPUT
