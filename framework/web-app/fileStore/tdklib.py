@@ -603,7 +603,7 @@ class PrimitiveTestCase:
 		t2 = time.time();
 		# TODO check if required		self.executionName=executionName
 		self.expectedResult = expectedResult
-		self.result=self.getValueFromJSON("result")
+		self.result=self.getValueFromJSONOutput("result")
 		self.result=self.result+"\""
 		self.result = self.result.replace("\"result\"","\"TDK__#@$00_result\"")
 		self.result = self.result.replace("\"details\"","\"TDK__#@$00_details\"")
@@ -762,6 +762,33 @@ class PrimitiveTestCase:
 	
 	########## End of Function ##########
 
+        def getValueFromJSONOutput(self, key):
+
+        # To get the value corresponding to a key from json response
+
+        # Syntax       : OBJ.getValueFromJSON(key)
+        # Description  : Parse the string of corresponding key and fetch the value
+        # Parameters   : key to find value
+        # Return Value : value of the key
+                if key in self.result:
+                        resultIndex = self.result.find(key) + len(key+"\":\"")
+                        message = self.result[(resultIndex-1):]
+                        message = message[:(message.find("TDK__#@$00_"))]
+                        message = message.strip("\"}")
+                        message = message.strip("\",\"")
+                else:
+                        keyString = "#@$00_"
+			if(keyString in self.result):
+				index = key.find("#@$00_") + len("#@$00_")
+        	                key = key[index:]
+                	        print "#TDK_@error-ERROR : Unable to find " + "\"" + key + "\"" + " in response message"
+			else:
+				print "#TDK_@error-ERROR : Unable to find " + "\"" + key + "\"" + " in response message"
+				print self.result
+                        sys.stdout.flush()
+                        exit()
+
+                return message
         def getClientIPAddress(self, mac):
 
         # To get the moca ip address for a mac address
@@ -1385,6 +1412,46 @@ class TDKScriptingLibrary:
 			self.uiLogData = self.uiLogData+"<br/> Connected to Server!";#print "Connected to Server!\n";
 			sys.stdout.flush()
 			self.result = self.tcpClient.recv(1048)
+		return
+
+	########## End of Function ##########
+
+	def reloadModule(self):
+	# To reload a module
+		try:
+			
+			print "Reload Module "+str(self.componentName)
+			self.tcpClient.close()
+                        self.tcpClient = self.getSocketInstance()
+			self.tcpClient.connect((self.IP, self.portValue))
+			final = '{"jsonrpc":"2.0","id":"2","method":"loadModule","params":{"param1":"'+str(self.componentName)+'","version":"'+str(self.rdkversion)+'",\
+                                 "execID":"'+str(self.execID)+'","deviceID":"'+str(self.deviceId)+'","testcaseID":"'+str(self.testcaseId)+'",\
+                                 "execDevID":"'+str(self.execDevId)+'","resultID":"'+str(self.resultId)+'",\
+                                 "performanceBenchMarkingEnabled":"'+str(self.performanceBenchMarkingEnabled)+'", \
+                                 "performanceSystemDiagnosisEnabled":"'+str(self.performanceSystemDiagnosisEnabled)+'"}}\r\n'
+			self.tcpClient.send(final)
+		except socket.error:
+                        print "******************************************************************************************"
+                        print " #TDK_@error-Error while Connecting to Server ... "
+                        print " Please ensure the Box " + self.IP + " is up and Test Agent is running..."
+                        print "******************************************************************************************"
+                        sys.stdout.flush()
+                        exit()
+                except IOError:
+                        print "#TDK_@error-ERROR : Configuration File Not Found!\n"
+                        sys.stdout.flush()
+                        exit()
+                except:
+                        print "#TDK_@error-ERROR : Unable to connect.. Please check box is up and agent is running.....\n"
+                        print "Details : "
+                        logging.exception('')
+                        sys.stdout.flush()
+                        exit()
+                else:
+                        print "Connected to Server!\n"
+                        self.uiLogData = self.uiLogData+"<br/> Connected to Server!";#print "Connected to Server!\n";
+                        sys.stdout.flush()
+                        self.result = self.tcpClient.recv(1048)
 		return
 
 	########## End of Function ##########

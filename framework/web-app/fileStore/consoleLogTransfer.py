@@ -87,7 +87,7 @@ def consoleLogTransfer(deviceIP,agentMonitorPort,boxFileName,tmFileName):
 
 		# Sending message to push the logs from STB to TM
 		#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'PushLog','STBfilename':boxFile,'TMfilename':tmFile}
-		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"pushLog","params":{"STBfilename":"'+ boxFile +'","TMfilename":"'+ tmFile +'"}}\r\n'
+		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"PushLog","params":{"STBfilename":"'+ boxFile +'","TMfilename":"'+ tmFile +'"}}\r\n'
 		#query = json.dumps(jsonMsg)
 		#tcpClient.send(query) #Sending json query
 		tcpClient.send(jsonMsg) #Sending json query

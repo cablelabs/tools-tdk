@@ -659,6 +659,7 @@ def deleteRecording(obj, streamId,recordingId):
     matchList = []
     matchList = tdkTestObj.getRecordingDetails(duration);
     obj.resetConnectionAfterReboot()
+    obj.reloadModule();
     tdkTestObj = obj.createTestStep('RMF_DVRManager_DeleteRecording'); 
     #---------end----------------
     
