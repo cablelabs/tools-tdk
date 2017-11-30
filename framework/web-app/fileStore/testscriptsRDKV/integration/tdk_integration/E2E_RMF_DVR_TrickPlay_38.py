@@ -79,10 +79,10 @@ ip = <ipaddress>
 port = <port>
 
 #Set the trick play speed for rewind
-rewindPlaySpeed = -4;
+rewindPlaySpeed = -4.0;
 
 #Set the trick play speed for forward
-forwardPlaySpeed = 4
+forwardPlaySpeed = 4.0
 
 obj.configureTestCase(ip,port,'E2E_RMF_DVR_TrickPlay_38');
 
