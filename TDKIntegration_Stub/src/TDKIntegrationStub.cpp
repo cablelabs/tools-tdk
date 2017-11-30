@@ -3647,7 +3647,7 @@ void TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         int res_HNSrcGetState;
         float SpeedRate = request["SpeedRate"].asFloat();
         int res_HNSrcTerm, res_HNSrcInit, res_HNSrcOpen, res_HNSrcPlay, res_MPSinksetrect, res_HNSrcSetSpeed, res_HNSrcPause;
-        int res_MPSinksetsrc, res_MPSinkInit, res_MPSinkTerm, res_HNSrcClose, res_HNSrcGetSpeed;
+        int res_MPSinksetsrc, res_MPSinkInit, res_MPSinkTerm, res_HNSrcClose, res_HNSrcGetSpeed,retHNSrcValue ;
         char* playuri = (char*)request["VideostreamURL"].asCString();
         stringstream details;
         RMFState curstate;
@@ -3948,10 +3948,29 @@ void TDKIntegrationStub::E2ERMFTSB_Play(IN const Json::Value& request, OUT Json:
         DEBUG_PRINT(DEBUG_LOG, " Get speed  is %f\n", SpeedRate);
         response["details"] = details.str();
 	sleep(10);
-        res_MPSinkTerm = pSink->term();
-        DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPsink termination is %d\n", res_MPSinkTerm);
+        retHNSrcValue = pSource->pause();
+        if(0 != retHNSrcValue)
+        {
+                response["result"] = "FAILURE";
+                response["details"] = "HNSource pause failed";
+                DEBUG_PRINT(DEBUG_ERROR, "HNSource pause failed %ld\n",retHNSrcValue);
+
+                res_MPSinkTerm = pSink->term();
+                res_HNSrcTerm = pSource->term();
+
+                delete pSink;
+                delete pSource;
+                #ifdef USE_SOC_INIT
+                // Uninitialize SOC
+                soc_uninit();
+                #endif
+                return;
+        }
+        DEBUG_PRINT(DEBUG_TRACE, "Passed Hnsrc pause\n");
         res_HNSrcClose = pSource->close();
         DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource close is %d\n", res_HNSrcClose);
+	res_MPSinkTerm = pSink->term();
+        DEBUG_PRINT(DEBUG_LOG, "RMF Result of MPsink termination is %d\n", res_MPSinkTerm);
         res_HNSrcTerm = pSource->term();
         DEBUG_PRINT(DEBUG_LOG, "RMF Result of Hnsource termination is %d\n", res_HNSrcTerm);
 
