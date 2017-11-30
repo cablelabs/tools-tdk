@@ -242,7 +242,7 @@ if "SUCCESS" in loadmodulestatus1.upper() and "SUCCESS" in loadmodulestatus.uppe
                        if expectedresult in actualresult:
                           tdkTestObj.setResultStatus("SUCCESS");
                           print "SUCCESS: Registered %s with serviceManager"%service_name
-                          tdkTestObj = ibusobj.createTestStep('SM_SetAPIVersion');
+                          tdkTestObj = smobj.createTestStep('SM_SetAPIVersion');
                           expectedresult="SUCCESS"
                           apiVersion=2;
                           tdkTestObj.addParameter("apiVersion",apiVersion);

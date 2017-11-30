@@ -140,7 +140,7 @@ if "SUCCESS" in loadmodulestatus1.upper()and "SUCCESS" in loadmodulestatus2.uppe
         #Get the result of execution
         print "[TEST EXECUTION RESULT] : SUCCESS :Number of tuners connected to the host = %s" %noTuner ;
         #Get the tuner number using TRM module
-        trmResponse=getMaxTuner(obj,'SUCCESS');
+        trmResponse=getMaxTuner(trmObj,'SUCCESS');
             
         if trmResponse== int(noTuner):
                 tdkTestObj.setResultStatus("SUCCESS");

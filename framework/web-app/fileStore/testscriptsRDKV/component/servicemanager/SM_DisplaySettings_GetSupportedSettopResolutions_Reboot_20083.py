@@ -135,7 +135,7 @@ if "SUCCESS" in result.upper():
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
                 print "SUCCESS: Registered %s with serviceManager"%service_name
-                tdkTestObj = dsObj.createTestStep('SM_SetAPIVersion');
+                tdkTestObj = smobj.createTestStep('SM_SetAPIVersion');
                 expectedresult="SUCCESS"
                 apiVersion=6;
                 tdkTestObj.addParameter("apiVersion",apiVersion);
@@ -196,7 +196,7 @@ if "SUCCESS" in result.upper():
                     if expectedresult in actualresult:
                         tdkTestObj.setResultStatus("SUCCESS");
                         print "SUCCESS: Registered %s with serviceManager"%service_name
-                        tdkTestObj = dsObj.createTestStep('SM_SetAPIVersion');
+                        tdkTestObj = smobj.createTestStep('SM_SetAPIVersion');
                         expectedresult="SUCCESS"
                         apiVersion=6;
                         tdkTestObj.addParameter("apiVersion",apiVersion);
