@@ -25,12 +25,12 @@ Arguments     : NULL
 
 Description   : Constructor for MocaHalAgent class
 ***************************************************************************/
-
+#if 0
 MocaHalAgent::MocaHalAgent()
 {
         DEBUG_PRINT(DEBUG_LOG, "MocaHalAgent Initialized\n");
 }
-
+#endif
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Description   : testmodulepre_requisites will be used for setting the
@@ -90,9 +90,9 @@ Arguments       : NULL
 Description     : This function is used to create a new object of the class "MocaHalAgent".
 **************************************************************************/
 
-extern "C" MocaHalAgent* CreateObject()
+extern "C" MocaHalAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-        return new MocaHalAgent();
+        return new MocaHalAgent(ptrtcpServer);
 }
 
 /***************************************************************************
@@ -102,10 +102,10 @@ extern "C" MocaHalAgent* CreateObject()
  *                script
  *****************************************************************************/
 
-bool MocaHalAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool MocaHalAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT (DEBUG_TRACE, "MocaHal Initialization Entry\n");
-
+    #if 0
     ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetMoCALinkUp, "TestMgr_MocaHal_GetMoCALinkUp"); 
     ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_SetEnabled, "TestMgr_MocaHal_SetEnabled");
     ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetEnabled, "TestMgr_MocaHal_GetEnabled");
@@ -121,14 +121,14 @@ bool MocaHalAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgent
     ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetMode, "TestMgr_MocaHal_GetMode");
 
     DEBUG_PRINT (DEBUG_TRACE, "MocaHal Initialization Exit\n");
-
+    #endif
     return TEST_SUCCESS;
 }
 /***************************************************************************
  *Function name : MocaHal_GetMoCALinkUp
  *Descrption    : This function is to get the mocahal uplink status
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetMoCALinkUp(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetMoCALinkUp(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMoCALinkUp --->Entry\n");
     bool output ;
@@ -140,14 +140,14 @@ bool MocaHalAgent::MocaHal_GetMoCALinkUp(IN const Json::Value& req, OUT Json::Va
         response["details"] = output;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetMoCALinkUp call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMoCALinkUp -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetMoCALinkUp call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMoCALinkUp -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
 }
@@ -155,7 +155,7 @@ bool MocaHalAgent::MocaHal_GetMoCALinkUp(IN const Json::Value& req, OUT Json::Va
  *Function name : MocaHal_SetEnabled
  *Descrption    : This function is to set the mocahal enabled or disabled
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_SetEnabled(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_SetEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_SetEnabled --->Entry\n");
     bool input = req["enable"].asInt();
@@ -165,21 +165,21 @@ bool MocaHalAgent::MocaHal_SetEnabled(IN const Json::Value& req, OUT Json::Value
         response["result"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_SetEnabled call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_SetEnabled -->Exit\n");
-        return TEST_SUCCESS;
+        return ;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_SetEnabled call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_SetEnabled -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 }
 /***************************************************************************
  *Function name : MocaHal_GetEnabled
  *Descrption    : This function is to get the mocahal enabled value
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetEnabled(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetEnabled --->Entry\n");
     bool output;
@@ -190,14 +190,14 @@ bool MocaHalAgent::MocaHal_GetEnabled(IN const Json::Value& req, OUT Json::Value
         response["details"] = output;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetEnabled call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetEnabled -->Exit\n");
-        return TEST_SUCCESS;
+        return ;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetEnabled call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetEnabled -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
     
 }
@@ -205,7 +205,7 @@ bool MocaHalAgent::MocaHal_GetEnabled(IN const Json::Value& req, OUT Json::Value
  *Function name : MocaHal_GetLOF
  *Descrption    : This function is to get the mocahal last operating frequency
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetLOF(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetLOF(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetLOF --->Entry\n");
    unsigned int freq;
@@ -216,21 +216,21 @@ bool MocaHalAgent::MocaHal_GetLOF(IN const Json::Value& req, OUT Json::Value& re
         response["details"] = freq;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetLOF call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetLOF -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetLOF call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetLOF -->Exit\n");
-        return TEST_FAILURE;
+        return;
     } 
 }
 /***************************************************************************
  *Function name : MocaHal_GetFrequencyMask
  *Descrption    : This function is to get the mocahal frequency mask
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetFrequencyMask(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetFrequencyMask(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetFrequencyMask --->Entry\n");
     unsigned int mask;
@@ -243,21 +243,21 @@ bool MocaHalAgent::MocaHal_GetFrequencyMask(IN const Json::Value& req, OUT Json:
         response["details"] = freqmask;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetFrequencyMask call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetFrequencyMask -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetFrequencyMask call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetFrequencyMask -->Exit\n");
-        return TEST_FAILURE;
+        return ;
     }
 }
 /***************************************************************************
  *Function name : MocaHal_GetSupportedFrequencies
  *Descrption    : This function is to get the supported frequencies
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetSupportedFrequencies(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetSupportedFrequencies(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetSupportedFrequencies --->Entry\n");
     unsigned int freqArray[FREQUENCIES_BUFFER];
@@ -281,21 +281,21 @@ bool MocaHalAgent::MocaHal_GetSupportedFrequencies(IN const Json::Value& req, OU
         response["details"] = result;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetSupportedFrequencies call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetSupportedFrequencies -->Exit\n");
-        return TEST_SUCCESS;
+        return ;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetSupportedFrequencies call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetSupportedFrequencies -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 }
 /***************************************************************************
  *Function name : MocaHal_GetHighestSupportedMoCAVersion
  *Descrption    : This function is to get the Highest Supported MoCAVersion
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetHighestSupportedMoCAVersion(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetHighestSupportedMoCAVersion(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetHighestSupportedMoCAVersion --->Entry\n");    
     char highestVersion[8]= {'\0'};
@@ -308,21 +308,21 @@ bool MocaHalAgent::MocaHal_GetHighestSupportedMoCAVersion(IN const Json::Value& 
         response["details"] = highestVersion;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetHighestSupportedMoCAVersion call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetHighestSupportedMoCAVersion -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetHighestSupportedMoCAVersion call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetHighestSupportedMoCAVersion -->Exit\n");
-        return TEST_FAILURE;
+        return ;
     }
 }
 /***************************************************************************
  *Function name : MocaHal_GetMac
  *Descrption    : This function is to get the Mac address
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetMac(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetMac(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMac --->Entry\n");
     char macAddress[24]= {'\0'};
@@ -335,21 +335,21 @@ bool MocaHalAgent::MocaHal_GetMac(IN const Json::Value& req, OUT Json::Value& re
         response["details"] = macAddress;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetMac call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMac -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetMac call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMac -->Exit\n");
-        return TEST_FAILURE;
+        return ;
     }
 }
 /***************************************************************************
  *Function name : MocaHal_GetName
  *Descrption    : This function is to get the interface name
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetName(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetName(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetName --->Entry\n");
     char iname [16] = {'\0'};
@@ -360,21 +360,21 @@ bool MocaHalAgent::MocaHal_GetName(IN const Json::Value& req, OUT Json::Value& r
         response["details"] = iname;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetName call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetName -->Exit\n");
-        return TEST_SUCCESS;
+        return ;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetName call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetName -->Exit\n");
-        return TEST_FAILURE;
+        return;
     } 
 }
 /***************************************************************************
  *Function name : MocaHal_GetMoCAVersion
  *Descrption    : This function is to get the current moca version
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetMoCAVersion(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetMoCAVersion(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMoCAVersion --->Entry\n");
     char currentVersion[8]= {'\0'};
@@ -387,21 +387,21 @@ bool MocaHalAgent::MocaHal_GetMoCAVersion(IN const Json::Value& req, OUT Json::V
         response["details"] = currentVersion;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetMoCAVersion call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMoCAVersion -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetMoCAVersion call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMoCAVersion -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 }
 /***************************************************************************
  *Function name : MocaHal_GetNumNodes 
  *Descrption    : This function is to get the the number of nodes
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetNumNodes(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetNumNodes(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetNumNodes --->Entry\n");
     unsigned int nodes;
@@ -414,21 +414,21 @@ bool MocaHalAgent::MocaHal_GetNumNodes(IN const Json::Value& req, OUT Json::Valu
         response["details"] = numNodes;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetNumNodes call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetNumNodes  -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetNumNodes call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetNumNodes -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 }
 /***************************************************************************
  *Function name : MocaHal_GetSupportedModes
  *Descrption    : This function is to get the supported power modes
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetSupportedModes(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetSupportedModes(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetSupportedModes --->Entry\n");
     unsigned int modes=0;
@@ -441,21 +441,21 @@ bool MocaHalAgent::MocaHal_GetSupportedModes(IN const Json::Value& req, OUT Json
         response["details"] = powerModes;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetSupportedModes call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetSupportedModes  -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetSupportedModes call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetSupportedModes -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 }
 /***************************************************************************
  *Function name : MocaHal_GetMode
  *Descrption    : This function is to get the power mode
  *****************************************************************************/
-bool MocaHalAgent::MocaHal_GetMode(IN const Json::Value& req, OUT Json::Value& response)
+void MocaHalAgent::MocaHal_GetMode(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMode --->Entry\n");
     RMH_PowerMode mode;
@@ -468,14 +468,14 @@ bool MocaHalAgent::MocaHal_GetMode(IN const Json::Value& req, OUT Json::Value& r
         response["details"] = powerMode;
         DEBUG_PRINT(DEBUG_LOG, "MocaHal_GetMode call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMode  -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MocaHal_GetMode call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MocaHal_GetMode -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 }
 /**************************************************************************
@@ -485,10 +485,11 @@ Arguments       : NULL
 
 Description     : This function will be used to the close things cleanly.
  **************************************************************************/
-bool MocaHalAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+//bool MocaHalAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+bool MocaHalAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaning up\n");
-
+    #if 0
     if(NULL == ptrAgentObj)
     {
 	return TEST_FAILURE;
@@ -507,6 +508,7 @@ bool MocaHalAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentOb
     ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetNumNodes");
     ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetSupportedModes");
     ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetMode");
+    #endif
     return TEST_SUCCESS;
 }
 

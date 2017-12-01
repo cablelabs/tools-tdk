@@ -406,11 +406,12 @@ void HdmiListener::onServiceEvent(const QString& event, ServiceParams params)
  *Function name	: ServiceManagerAgent 
  *Descrption	: This is a constructor function for ServiceManagerAgent class. 
  *****************************************************************************/ 
+#if 0
 ServiceManagerAgent::ServiceManagerAgent()
 {
 	DEBUG_PRINT(DEBUG_LOG,"ServiceManagerAgent Initialized");
 }
-
+#endif
 /***************************************************************************
  *Function name	: initialize
  *Descrption	: Initialize Function will be used for registering the wrapper method 
@@ -418,9 +419,10 @@ ServiceManagerAgent::ServiceManagerAgent()
  *  		  script
  *****************************************************************************/ 
 
-bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool ServiceManagerAgent::initialize(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"ServiceManagerAgent Initialize");
+#if 0
 	/*Register stub function for callback*/
 	// ServiceManager APIs
 	ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_RegisterService,"TestMgr_SM_RegisterService");
@@ -510,7 +512,7 @@ bool ServiceManagerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *p
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_Generic_CallMethod, "TestMgr_SM_Generic_CallMethod");
 
         ptrAgentObj->RegisterMethod(*this,&ServiceManagerAgent::SM_ExecuteCmd, "TestMgr_SM_ExecuteCmd");
-
+#endif
 	return TEST_SUCCESS;
 }
 
@@ -745,7 +747,7 @@ bool registerServices(QString serviceName, ServiceStruct &serviceStruct)
         return registerStatus;
 }
 
-bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_RegisterService ---->Skipping the registration as it is handled in Service Manager itself. \n");
         /*
@@ -787,7 +789,7 @@ bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json
 	#endif
 	response["result"]="SUCCESS"; 
 	response["details"]="registration skipped";
-	return TEST_SUCCESS;
+	return; 
 }
 
 /***************************************************************************
@@ -796,7 +798,7 @@ bool ServiceManagerAgent::SM_RegisterService(IN const Json::Value& req, OUT Json
  *parameter [in]: req-  service_name- Name of the service.
  *****************************************************************************/ 
 
-bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Json::Value& response)
 {
 	 DEBUG_PRINT(DEBUG_TRACE,"\nSM_UnRegisterService ---->Skipping the unregistration as it is handled in Service Manager itself. \n");
         /*
@@ -841,7 +843,7 @@ bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Js
 	#endif
 	response["result"]="SUCCESS"; 
 	response["details"]="un register skipped";
-	return TEST_SUCCESS;  
+	return ;
 }
 
 
@@ -851,7 +853,7 @@ bool ServiceManagerAgent::SM_UnRegisterService(IN const Json::Value& req, OUT Js
  *parameter [in]: req-  service_name-Name of the service.
  *****************************************************************************/ 
 
-bool ServiceManagerAgent::SM_DoesServiceExist(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_DoesServiceExist(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DoesServiceExist ---->Entry\n");
 	bool exist=false;
@@ -859,7 +861,7 @@ bool ServiceManagerAgent::SM_DoesServiceExist(IN const Json::Value& req, OUT Jso
         {
 		response["result"]="FAILURE";
 		response["details"]="service name is NULL";
-                return TEST_FAILURE;
+                return; 
         }
 	std::string serviceName=req["service_name"].asCString();
 	/*Checking the service existence in service manager component*/
@@ -877,7 +879,7 @@ bool ServiceManagerAgent::SM_DoesServiceExist(IN const Json::Value& req, OUT Jso
 		response["details"]="PRESENT";
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DoesServiceExist ---->Exit\n");
-	return TEST_SUCCESS;	
+	return;
 }
 
 
@@ -886,7 +888,7 @@ bool ServiceManagerAgent::SM_DoesServiceExist(IN const Json::Value& req, OUT Jso
  *Descrption    : This will return the list of registered services with the serviceManger component.
  *parameter [in]: NULL
  *****************************************************************************/ 
-bool ServiceManagerAgent::SM_GetRegisteredServices(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_GetRegisteredServices(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_GetRegisteredServices ---->Entry\n");
 	char services[STR_DETAILS_200]="Service:" ;
@@ -910,7 +912,7 @@ bool ServiceManagerAgent::SM_GetRegisteredServices(IN const Json::Value& req, OU
 	response["details"]=services;
 	free(list_services);
 	DEBUG_PRINT(DEBUG_TRACE,"\n SM_GetRegisteredServices  ---->Exit\n");
-	return TEST_SUCCESS;	
+	return;
 }
 
 
@@ -919,14 +921,14 @@ bool ServiceManagerAgent::SM_GetRegisteredServices(IN const Json::Value& req, OU
  *Descrption    : This will return the name of the given service.
  *parameter [in]: req-  service_name-Name of the service.
  *****************************************************************************/ 
-bool ServiceManagerAgent::SM_GetGlobalService(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_GetGlobalService(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_GetGlobalService ---->Entry\n");
         if(&req["service_name"]==NULL)
         {
 		response["result"]="FAILURE";
 		response["details"]="service name is NULL";
-                return TEST_FAILURE;
+                return ;
         }
 	std::string serviceName=req["service_name"].asCString();
 	char services[STR_DETAILS_50]= "Service:";
@@ -948,17 +950,17 @@ bool ServiceManagerAgent::SM_GetGlobalService(IN const Json::Value& req, OUT Jso
 		DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\n SM_GetGlobalService ---->Exit\n");
-	return TEST_SUCCESS;	
+	return ;
 }
 
-bool ServiceManagerAgent::SM_GetSetting(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_GetSetting(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_GetSetting ---->Entry\n");
         if(&req["service_name"]==NULL)
         {
                 response["result"]="FAILURE";
 		response["details"]="service name is NULL";
-                return TEST_FAILURE;
+                return ;
         }
         std::string serviceName=req["service_name"].asCString();
 
@@ -990,17 +992,17 @@ bool ServiceManagerAgent::SM_GetSetting(IN const Json::Value& req, OUT Json::Val
 	response["details"]=stringDetails;
 
         DEBUG_PRINT(DEBUG_TRACE,"\n SM_GetSetting ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
-bool ServiceManagerAgent::SM_CreateService(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_CreateService(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_CreateService ---->Entry\n");
         if(&req["service_name"]==NULL)
         {
                 response["result"]="FAILURE";
                 response["details"]="service name is NULL";
-                return TEST_FAILURE;
+                return ;
         }
         std::string serviceName=req["service_name"].asCString();
 
@@ -1035,7 +1037,7 @@ bool ServiceManagerAgent::SM_CreateService(IN const Json::Value& req, OUT Json::
         }
 
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_CreateService ---->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
 /***************************************************************************
@@ -1043,7 +1045,7 @@ bool ServiceManagerAgent::SM_CreateService(IN const Json::Value& req, OUT Json::
  *Descrption    : This function will enable/disable MDVR staus.
  *parameter [in]: req-  enable - Parameter to be passed to callMethod API.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableMDVR ---->Entry\n");
 
@@ -1052,7 +1054,7 @@ bool ServiceManagerAgent::SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::
         {
                 response["result"]="FAILURE";
                 response["details"]="enable value is NULL";
-                return TEST_FAILURE;
+                return;
         }
         int enable=req["enable"].asInt();
         ServiceParams inParams,resultParams;
@@ -1076,7 +1078,7 @@ bool ServiceManagerAgent::SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::
                                 DEBUG_PRINT(DEBUG_TRACE,"Set Enable MDVR success");
                                 response["details"] = "Set Enable MDVR success";
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return;
                         }
                         else
                         {
@@ -1105,14 +1107,14 @@ bool ServiceManagerAgent::SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::
         response["details"]="Home Networking Service unsupported";
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableMDVR ---->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
 /***************************************************************************
  *Function name : SM_HN_IsMDVREnabled
  *Descrption    : This function will check if MDVR status is enabled/disabled.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HN_IsMDVREnabled(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HN_IsMDVREnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_IsMDVREnabled ---->Entry\n");
 
@@ -1134,7 +1136,7 @@ bool ServiceManagerAgent::SM_HN_IsMDVREnabled(IN const Json::Value& req, OUT Jso
                                 sprintf(enableStatus,"%d",resultParams["enabled"].toBool());
                                 response["details"] = enableStatus;
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return;
                         }
                         else
                         {
@@ -1157,7 +1159,7 @@ bool ServiceManagerAgent::SM_HN_IsMDVREnabled(IN const Json::Value& req, OUT Jso
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HN_IsMDVREnabled---->exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 /***************************************************************************
@@ -1167,7 +1169,7 @@ bool ServiceManagerAgent::SM_HN_IsMDVREnabled(IN const Json::Value& req, OUT Jso
 		  parameters.
  *parameter [in]: req-  enable - Parameter to be passed to callMethod API
  *****************************************************************************/ 
-bool ServiceManagerAgent::SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableVPOP ---->Entry\n");
 
@@ -1176,7 +1178,7 @@ bool ServiceManagerAgent::SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::
         {
 		response["result"]="FAILURE";
 		response["details"]="enable value is NULL";
-                return TEST_FAILURE;
+                return;
         }
 	int enable=req["enable"].asInt();
 	bool enable_flag=false;
@@ -1197,7 +1199,7 @@ bool ServiceManagerAgent::SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::
 		DEBUG_PRINT(DEBUG_ERROR,"\nEnter enable/disable in 'enable' field\n");
 		response["result"]="FAILURE";
 		response["details"]="Enter 'enable' field correctly";
-		return TEST_FAILURE;
+		return;
 	}
 	/*Calling getGlobalService API to get the service instance*/
 	ptr_service = ServiceManager::getInstance()->getGlobalService(HOME_NETWORKING_SERVICE_NAME);
@@ -1228,14 +1230,14 @@ bool ServiceManagerAgent::SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::
         response["details"]="Home Networking Service unsupported";
 #endif
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_EnableVPOP ---->Exit\n");
-	return TEST_SUCCESS;	
+	return;
 }
 
 /***************************************************************************
  *Function name : SM_HN_IsVPOPEnabled
  *Descrption    : This function will check if VPOP status is enabled/disabled.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HN_IsVPOPEnabled(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HN_IsVPOPEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_IsVPOPEnabled ---->Entry\n");
 
@@ -1256,7 +1258,7 @@ bool ServiceManagerAgent::SM_HN_IsVPOPEnabled(IN const Json::Value& req, OUT Jso
                                 sprintf(enableStatus,"%d",resultParams["enabled"].toBool());
                                 response["details"] = enableStatus;
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return;
                         }
                         else
                         {
@@ -1279,7 +1281,7 @@ bool ServiceManagerAgent::SM_HN_IsVPOPEnabled(IN const Json::Value& req, OUT Jso
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HN_IsVPOPEnabled---->exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 /***************************************************************************
@@ -1287,7 +1289,7 @@ bool ServiceManagerAgent::SM_HN_IsVPOPEnabled(IN const Json::Value& req, OUT Jso
  *Descrption    : This function will enable/disable Vidi path
  *parameter [in]: req - enable - value corresponding Vidi path enable/disable
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HN_SetVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HN_SetVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HN_SetVidiPathEnabled---->Entry\n");
 
@@ -1311,7 +1313,7 @@ bool ServiceManagerAgent::SM_HN_SetVidiPathEnabled(IN const Json::Value& req, OU
                                 DEBUG_PRINT(DEBUG_TRACE,"Set Vidi Enable success");
                                 response["details"] = "Set Vidi Enable success";
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return ;
                         }
                         else
                         {
@@ -1335,14 +1337,14 @@ bool ServiceManagerAgent::SM_HN_SetVidiPathEnabled(IN const Json::Value& req, OU
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HN_SetVidiPathEnabled---->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 /***************************************************************************
  *Function name : SM_HN_IsVidiPathEnabled
  *Descrption    : This function will check if VidiPath is enabled/disabled
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HN_IsVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HN_IsVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HN_IsVidiPathEnabled---->Entry\n");
 
@@ -1364,7 +1366,7 @@ bool ServiceManagerAgent::SM_HN_IsVidiPathEnabled(IN const Json::Value& req, OUT
                                 sprintf(enableStatus,"%d",resultParams["enabled"].toBool());
                                 response["details"] = enableStatus;
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return;
                         }
                         else
                         {
@@ -1387,7 +1389,7 @@ bool ServiceManagerAgent::SM_HN_IsVidiPathEnabled(IN const Json::Value& req, OUT
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HN_IsVidiPathEnabled---->exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 /***************************************************************************
@@ -1395,7 +1397,7 @@ bool ServiceManagerAgent::SM_HN_IsVidiPathEnabled(IN const Json::Value& req, OUT
  *Descrption    : This function will enable/disable the upnp status.
  *parameter [in]: req-  enable - Parameter to be passed to callMethod API.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HN_SetUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HN_SetUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_SetUpnpEnabled ---->Entry\n");
 
@@ -1404,7 +1406,7 @@ bool ServiceManagerAgent::SM_HN_SetUpnpEnabled(IN const Json::Value& req, OUT Js
         {
                 response["result"]="FAILURE";
                 response["details"]="enable value is NULL";
-                return TEST_FAILURE;
+                return;
         }
         int enable=req["enable"].asInt();
         ServiceParams inParams,resultParams;
@@ -1428,7 +1430,7 @@ bool ServiceManagerAgent::SM_HN_SetUpnpEnabled(IN const Json::Value& req, OUT Js
                                 DEBUG_PRINT(DEBUG_TRACE,"Set Enable Upnp success");
                                 response["details"] = "Set Enable Upnp success";
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return ;
                         }
                         else
                         {
@@ -1457,14 +1459,14 @@ bool ServiceManagerAgent::SM_HN_SetUpnpEnabled(IN const Json::Value& req, OUT Js
         response["details"]="Home Networking Service unsupported";
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_SetUpnpEnabled ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
  *Function name : SM_HN_IsUpnpEnabled
  *Descrption    : This function will check if Upnp status is enabled/disabled.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HN_IsUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HN_IsUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_IsUpnpEnabled ---->Entry\n");
 
@@ -1486,7 +1488,7 @@ bool ServiceManagerAgent::SM_HN_IsUpnpEnabled(IN const Json::Value& req, OUT Jso
                                 sprintf(enableStatus,"%d",resultParams["enabled"].toBool());
                                 response["details"] = enableStatus;
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return;
                         }
                         else
                         {
@@ -1509,14 +1511,14 @@ bool ServiceManagerAgent::SM_HN_IsUpnpEnabled(IN const Json::Value& req, OUT Jso
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HN_IsUpnpEnabled---->exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
  *Function name : SM_HN_GetDeviceName
  *Descrption    : This function will retrieve the device name
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HN_GetDeviceName(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HN_GetDeviceName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_GetDeviceName ---->Entry\n");
 
@@ -1537,7 +1539,7 @@ bool ServiceManagerAgent::SM_HN_GetDeviceName(IN const Json::Value& req, OUT Jso
                                 DEBUG_PRINT(DEBUG_LOG,"%s",deviceNameDetail);
                                 response["details"] = deviceNameDetail;
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return;
                         }
                         else
                         {
@@ -1560,7 +1562,7 @@ bool ServiceManagerAgent::SM_HN_GetDeviceName(IN const Json::Value& req, OUT Jso
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HN_GetDeviceName---->exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 
@@ -1572,7 +1574,7 @@ bool ServiceManagerAgent::SM_HN_GetDeviceName(IN const Json::Value& req, OUT Jso
  *parameter [in]: req- 	videoDisplay - name of the videoDisplay
 			zoomLevel - Level for Zoom 
  *****************************************************************************/ 
-bool ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetZoomSettings ---->Entry\n");
 
@@ -1581,7 +1583,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings(IN const Json::Value
         {
 		response["result"]="FAILURE";
 		response["details"]="videoDisplay or zoomLevel is NULL";
-                return TEST_FAILURE;
+                return;
         }
 	std:: string videoDisplay=req["videoDisplay"].asCString();
 	std:: string zoomLevel=req["zoomLevel"].asCString();
@@ -1626,7 +1628,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings(IN const Json::Value
 #endif
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetZoomSettings ---->Exit\n");
-	return TEST_SUCCESS;	
+	return;
 }
 
 /***************************************************************************
@@ -1638,7 +1640,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings(IN const Json::Value
  *parameter [in]: req- 	videoDisplay - name of the videoDisplay
 			resolution - video resolution 
  *****************************************************************************/ 
-bool ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetCurrentResolution ---->Entry\n");
 
@@ -1647,7 +1649,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution(IN const Json::
         {
 		response["result"]="FAILURE";
 		response["details"]="videoDisplay or resolution is NULL";
-                return TEST_FAILURE;
+                return;
         }
 	std:: string videoDisplay=req["videoDisplay"].asCString();
 	std:: string resolution=req["resolution"].asCString();
@@ -1692,7 +1694,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution(IN const Json::
 #endif
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetCurrentResolution ---->Exit\n");
-	return TEST_SUCCESS;	
+	return;
 }
 
 
@@ -1701,7 +1703,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution(IN const Json::
  *Descrption    : This function returns the available Audio Output Ports
  *parameter     : none
  *****************************************************************************/
-bool ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioPorts(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioPorts(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetSupportedAudioPorts--->Entry\n");
 
@@ -1727,7 +1729,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioPorts(IN const Json
                         DEBUG_PRINT(DEBUG_TRACE,"Supported Ports are: %s \nlist size is: %d",details.toUtf8().constData(), portList.size());
                         response["details"] = details.toUtf8().constData();
                         response["result"]="SUCCESS";
-                        return TEST_SUCCESS;
+                        return ;
                 }
                 else
                 {
@@ -1744,7 +1746,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioPorts(IN const Json
         }
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetSupportedAudioPorts--->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 
@@ -1756,7 +1758,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioPorts(IN const Json
  *parameter [in]: req-  videoDisplay - name of the videoDisplay
                         resolution - video resolution 
  *****************************************************************************/
-bool ServiceManagerAgent::SM_DisplaySetting_GetConnectedAudioPorts(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_DisplaySetting_GetConnectedAudioPorts(IN const Json::Value& req, OUT Json::Value& response)
 {
 
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetConnectedAudioPorts--->Entry\n");
@@ -1784,7 +1786,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetConnectedAudioPorts(IN const Json
                         DEBUG_PRINT(DEBUG_TRACE,"Connected Ports are: %s \nlist size is: %d",details.toUtf8().constData(), portList.size());
                         response["details"] = details.toUtf8().constData();
                         response["result"]="SUCCESS";
-                        return TEST_SUCCESS;
+                        return;
                 }
                 else
                         DEBUG_PRINT(DEBUG_TRACE,"No Connected Ports\n");
@@ -1800,7 +1802,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetConnectedAudioPorts(IN const Json
 
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetConnectedAudioPorts--->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 
@@ -1810,7 +1812,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetConnectedAudioPorts(IN const Json
                   METHOD_DISPLAY_SETTINGS_GET_SOUND_MODE 
  *parameter [in]: req-  audioport - name of the audioport
  *****************************************************************************/
-bool ServiceManagerAgent::SM_DisplaySetting_GetSoundMode(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_DisplaySetting_GetSoundMode(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetSoundMode--->Entry\n");
 
@@ -1837,7 +1839,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetSoundMode(IN const Json::Value& r
                 {
                         response["details"] = audMode.toUtf8().constData();
                         response["result"]="SUCCESS";
-                        return TEST_SUCCESS;
+                        return;
                 }
                 else
                 {
@@ -1854,7 +1856,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetSoundMode(IN const Json::Value& r
 
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetSoundMode ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
@@ -1864,7 +1866,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetSoundMode(IN const Json::Value& r
                   METHOD_DISPLAY_SETTINGS_SET_SOUND_MODE 
  *parameter [in]: req-  audioport - name of the audioport audiomode - the mode to be set
  *******************************************************************************************/
-bool ServiceManagerAgent::SM_DisplaySetting_SetSoundMode(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_DisplaySetting_SetSoundMode(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetSoundMode--->Entry\n");
 
@@ -1894,7 +1896,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetSoundMode(IN const Json::Value& r
                         DEBUG_PRINT(DEBUG_TRACE,"AudioMode set successfully");
                         response["details"] = "Audio mode set suuccessfully";
                         response["result"]="SUCCESS";
-                        return TEST_SUCCESS;
+                        return;
                 }
                 else
                 {
@@ -1913,11 +1915,11 @@ bool ServiceManagerAgent::SM_DisplaySetting_SetSoundMode(IN const Json::Value& r
 
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_SetSoundMode ---->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
 
-bool ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioModes(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioModes(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GGetSupportedAudioModes-->Entry\n");
 
@@ -1948,7 +1950,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioModes(IN const Json
                         DEBUG_PRINT(DEBUG_TRACE,"for audio port %s audio mode is %s",portName.c_str(), details.toUtf8().constData());
                         response["details"] = details.toUtf8().constData();
                         response["result"]="SUCCESS";
-                        return TEST_SUCCESS;
+                        return;
                 }
                 else
                 {
@@ -1965,7 +1967,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioModes(IN const Json
 
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_DisplaySetting_GetSoundMode ---->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 
@@ -1976,7 +1978,7 @@ bool ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioModes(IN const Json
 		  parameters.
  *parameter [in]: device_name - name of the device.
  *****************************************************************************/ 
-bool ServiceManagerAgent::SM_HN_SetDeviceName(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HN_SetDeviceName(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_SetDeviceName ---->Entry\n");
 
@@ -1985,7 +1987,7 @@ bool ServiceManagerAgent::SM_HN_SetDeviceName(IN const Json::Value& req, OUT Jso
         {
 		response["result"]="FAILURE";
 		response["details"]="device_name is NULL";
-                return TEST_FAILURE;
+                return;
         }
         std::string deviceName=req["device_name"].asCString();
         ServiceParams params,resultParams;
@@ -2023,10 +2025,10 @@ bool ServiceManagerAgent::SM_HN_SetDeviceName(IN const Json::Value& req, OUT Jso
 #endif
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_HN_SetDeviceName ---->Exit\n");
-	return TEST_SUCCESS;	
+	return ;
 }
 
-bool ServiceManagerAgent::SM_Services_GetName(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_Services_GetName(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_GetName ---->Entry\n");
 
@@ -2034,7 +2036,7 @@ bool ServiceManagerAgent::SM_Services_GetName(IN const Json::Value& req, OUT Jso
         {
                 response["result"]="FAILURE";
 		response["details"]="service_name is NULL";
-                return TEST_FAILURE;
+                return ;
         }
         std::string serviceName=req["service_name"].asCString();
 
@@ -2064,7 +2066,7 @@ bool ServiceManagerAgent::SM_Services_GetName(IN const Json::Value& req, OUT Jso
         }
 
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_GetName ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -2074,14 +2076,14 @@ bool ServiceManagerAgent::SM_Services_GetName(IN const Json::Value& req, OUT Jso
  *parameter [in]: req-  service_name-Name of the service.
 			apiVersion - Parameter to be passed to callMethod API.
  *****************************************************************************/ 
-bool ServiceManagerAgent::SM_Services_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_Services_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_SetAPIVersion ---->Entry\n");
         if(&req["service_name"]==NULL || &req["apiVersion"] == NULL)
         {
 		response["result"]="FAILURE";
 		response["details"]="service_name or apiVersion is NULL";
-                return TEST_FAILURE;
+                return ;
         }
 	std::string serviceName=req["service_name"].asCString();
 	int setApiVersion=req["apiVersion"].asInt();
@@ -2100,7 +2102,7 @@ bool ServiceManagerAgent::SM_Services_SetAPIVersion(IN const Json::Value& req, O
 		{
 			response["result"]="SUCCESS";
 			response["details"]="SAME_DATA_ALREADY_ENTERED";
-			return TEST_SUCCESS;	
+			return ;
 		}
 		/*set API version by calling setApiVersionNumber API*/
 		ptr_service->setApiVersionNumber(setApiVersion);
@@ -2120,7 +2122,7 @@ bool ServiceManagerAgent::SM_Services_SetAPIVersion(IN const Json::Value& req, O
 	}
 	free(versionDetails);
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_SetAPIVersion ---->Exit\n");
-	return TEST_SUCCESS;	
+	return ;
 }
 
 
@@ -2131,14 +2133,14 @@ bool ServiceManagerAgent::SM_Services_SetAPIVersion(IN const Json::Value& req, O
  *parameter [in]: service_name - Name of the service.
 		  event_name - event to be registered.
  *****************************************************************************/ 
-bool ServiceManagerAgent::SM_Services_RegisterForEvents(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_Services_RegisterForEvents(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_RegisterForEvents ---->Entry\n");
         if(&req["service_name"]==NULL || &req["event_name"]==NULL)
         {
 		response["result"]="FAILURE";
 		response["details"]="service_name or event_name is NULL";
-                return TEST_FAILURE;
+                return;
         }
 	std::string serviceName=req["service_name"].asCString();
 	std::string eventName=req["event_name"].asCString();
@@ -2189,7 +2191,7 @@ bool ServiceManagerAgent::SM_Services_RegisterForEvents(IN const Json::Value& re
 		DEBUG_PRINT(DEBUG_ERROR,"\n SM getGlobalService failed\n");
 	}
 	DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_RegisterForEvents ---->Exit\n");
-	return TEST_SUCCESS;	
+	return;
 }
 
 
@@ -2200,14 +2202,14 @@ bool ServiceManagerAgent::SM_Services_RegisterForEvents(IN const Json::Value& re
  *parameter [in]: service_name - Name of the service.
                   event_name - event to be registered.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_Services_UnRegisterForEvents(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_Services_UnRegisterForEvents(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_UnRegisterForEvents ---->Entry\n");
         if(&req["service_name"]==NULL || &req["event_name"]==NULL)
         {
                 response["result"]="FAILURE";
                 response["details"]="service_name or event_name is NULL";
-                return TEST_FAILURE;
+                return;
         }
         std::string serviceName=req["service_name"].asCString();
         std::string eventName=req["event_name"].asCString();
@@ -2265,7 +2267,7 @@ bool ServiceManagerAgent::SM_Services_UnRegisterForEvents(IN const Json::Value& 
 	}
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_UnRegisterForEvents ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 
@@ -2275,7 +2277,7 @@ bool ServiceManagerAgent::SM_Services_UnRegisterForEvents(IN const Json::Value& 
                   of DeviceSettingService.
  *parameter [in]: methodType - Supported device parameter.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"SM_DeviceSetting_GetDeviceInfo ---->Entry\n");
 
@@ -2331,7 +2333,7 @@ bool ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& r
                         response["details"] = "device info is empty";
                 }
                 response["result"]="SUCCESS";
-                return TEST_SUCCESS;
+                return ;
             }
             else
             {
@@ -2347,7 +2349,7 @@ bool ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& r
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"SM_DeviceSetting_GetDeviceInfo ---->Exit\n");
         response["result"]="FAILURE";
-        return TEST_FAILURE;
+        return ;
 }
 
 
@@ -2357,7 +2359,7 @@ bool ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& r
                   of ScreenCaptureService.
  *parameter [in]: URL of web page.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_ScreenCapture_Upload(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_ScreenCapture_Upload(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"SM_ScreenCapture_Upload ---->Entry\n");
 
@@ -2412,7 +2414,7 @@ bool ServiceManagerAgent::SM_ScreenCapture_Upload(IN const Json::Value& req, OUT
 	response["details"]="ScreenCapture Service unsupported";
 #endif
 	DEBUG_PRINT(DEBUG_TRACE,"SM_ScreenCapture_Upload ---->Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
 /***************************************************************************
@@ -2421,7 +2423,7 @@ bool ServiceManagerAgent::SM_ScreenCapture_Upload(IN const Json::Value& req, OUT
                   of WebSocketService.
  *parameter [in]: NONE
  *****************************************************************************/                
-bool ServiceManagerAgent::SM_WebSocket_GetUrl(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_WebSocket_GetUrl(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetUrl ---->Entry\n");
 
@@ -2456,7 +2458,7 @@ bool ServiceManagerAgent::SM_WebSocket_GetUrl(IN const Json::Value& req, OUT Jso
 
 	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetUrl ---->Exit\n");
 		
-	return TEST_SUCCESS;
+	return;
 }
               
 /***************************************************************************
@@ -2465,7 +2467,7 @@ bool ServiceManagerAgent::SM_WebSocket_GetUrl(IN const Json::Value& req, OUT Jso
                   of WebSocketService.
  *parameter [in]: NONE
  *****************************************************************************/
-bool ServiceManagerAgent::SM_WebSocket_GetReadyState(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_WebSocket_GetReadyState(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetReadyState ---->Entry\n");
 
@@ -2504,7 +2506,7 @@ bool ServiceManagerAgent::SM_WebSocket_GetReadyState(IN const Json::Value& req, 
 
 	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetReadyState ---->Exit\n");
 
-	return TEST_SUCCESS;
+	return ;
 }
          
 /***************************************************************************
@@ -2513,7 +2515,7 @@ bool ServiceManagerAgent::SM_WebSocket_GetReadyState(IN const Json::Value& req, 
                   of WebSocketService.
  *parameter [in]: NONE
  *****************************************************************************/       
-bool ServiceManagerAgent::SM_WebSocket_GetBufferedAmount(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_WebSocket_GetBufferedAmount(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetBufferedAmount ---->Entry\n");
 
@@ -2543,7 +2545,7 @@ bool ServiceManagerAgent::SM_WebSocket_GetBufferedAmount(IN const Json::Value& r
 
 	DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetBufferedAmount ---->Exit\n");
 
-	return TEST_SUCCESS;
+	return ;
 }
 
 /***************************************************************************
@@ -2552,7 +2554,7 @@ bool ServiceManagerAgent::SM_WebSocket_GetBufferedAmount(IN const Json::Value& r
                   of WebSocketService.
  *parameter [in]: NONE
  *****************************************************************************/
-bool ServiceManagerAgent::SM_WebSocket_GetProtocol(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_WebSocket_GetProtocol(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetProtocol ---->Entry\n");
 
@@ -2587,7 +2589,7 @@ bool ServiceManagerAgent::SM_WebSocket_GetProtocol(IN const Json::Value& req, OU
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_WebSocket_GetProtocol ---->Exit\n");
 
-	return TEST_SUCCESS;
+	return ;
 }
 
 /***************************************************************************
@@ -2595,7 +2597,7 @@ bool ServiceManagerAgent::SM_WebSocket_GetProtocol(IN const Json::Value& req, OU
  *Descrption    : This will ClearCecLog and new log entry be done.
  *parameter [in]: NONE.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "SM_HdmiCec_ClearCecLog ---> Entry\n");
 
@@ -2623,7 +2625,7 @@ bool ServiceManagerAgent::SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT 
         response["details"]="HdmiCec Service not supported";
 #endif
         DEBUG_PRINT(DEBUG_TRACE, "SM_HdmiCec_ClearCecLog ---> Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
 /***************************************************************************
@@ -2631,7 +2633,7 @@ bool ServiceManagerAgent::SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT 
  *Descrption    : This will search for the pattern in the cec log.
  *parameter [in]: pattern - string.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckStatus ---> Entry\n");
 
@@ -2677,7 +2679,7 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT 
         response["details"]="HdmiCec Service not supported";
 #endif		
 	DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckStatus ---> Exit\n");
-	return TEST_SUCCESS;
+	return ;
 }
 
 /***************************************************************************
@@ -2685,7 +2687,7 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT 
  *Descrption    : This will enable the Cec service.
  *parameter [in]: req - set true or false.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetEnabled ---->Entry\n");
 
@@ -2724,7 +2726,7 @@ bool ServiceManagerAgent::SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT J
         response["details"]="HdmiCec Service not supported";
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetEnabled ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 
@@ -2733,7 +2735,7 @@ bool ServiceManagerAgent::SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT J
  *Descrption    : This will get current state (whether it is enabled or disabled) of Cec service.
  *parameter [in]: NONE.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetEnabled ---->Entry\n");
 
@@ -2762,7 +2764,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT J
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetEnabled ---->Exit\n");
-	return TEST_SUCCESS;
+	return;
 }
 
 /***************************************************************************
@@ -2770,7 +2772,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT J
  *Descrption    : This will sets the name of the STB device..
  *parameter [in]: req - name to be set to STB device as string.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SetName ---->Entry\n");
 
@@ -2810,7 +2812,7 @@ bool ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetEnabled ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -2818,7 +2820,7 @@ bool ServiceManagerAgent::SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json
  *Descrption    : This will get current STB device name.
  *parameter [in]: NONE.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetName ---->Entry\n");
 
@@ -2847,7 +2849,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetName ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -2855,7 +2857,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json
  *Descrption    : This will get the number of devices connected to STB.
  *parameter [in]: NONE.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetConnectedDevices ---->Entry\n");
 
@@ -2889,7 +2891,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices(IN const Json::Value& r
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetConnectedDevices ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -2897,7 +2899,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices(IN const Json::Value& r
  *Descrption    : This will send the message to connected STB.
  *parameter [in]: req - message.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SendMessage ---->Entry\n");
 
@@ -2963,7 +2965,7 @@ bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT 
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_SendMessage ---->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
 /***************************************************************************
@@ -2971,7 +2973,7 @@ bool ServiceManagerAgent::SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT 
  *Descrption    : This will get the logical and physical addresses of connected devices 
  *parameter [in]: NONE.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HdmiCec_GetCECAddresses(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_GetCECAddresses(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetCECAddresses ---->Entry\n");
 
@@ -3011,7 +3013,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetCECAddresses(IN const Json::Value& req, 
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_GetCECAddresses ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /***************************************************************************
@@ -3019,7 +3021,7 @@ bool ServiceManagerAgent::SM_HdmiCec_GetCECAddresses(IN const Json::Value& req, 
  *Descrption    : This will be fired when a message is sent from an HDMI device to STB.
  *parameter [in]: req - message.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_OnMessage ---->Entry\n");
 
@@ -3048,10 +3050,10 @@ bool ServiceManagerAgent::SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Js
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_OnMessage ---->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
-bool ServiceManagerAgent::SM_HdmiCec_FlushCecData(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_FlushCecData(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_FlushCecData ---->Entry\n");
 
@@ -3078,10 +3080,10 @@ bool ServiceManagerAgent::SM_HdmiCec_FlushCecData(IN const Json::Value& req, OUT
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_FlushCecData ---->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
-bool ServiceManagerAgent::SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckCecData ---->Entry\n");
 
@@ -3124,10 +3126,10 @@ bool ServiceManagerAgent::SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_HdmiCec_CheckCecData ---->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
-bool ServiceManagerAgent::SM_AppService_GetAppInfo(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_AppService_GetAppInfo(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_AppService_GetAppInfo---->Entry\n");
 
@@ -3148,14 +3150,14 @@ bool ServiceManagerAgent::SM_AppService_GetAppInfo(IN const Json::Value& req, OU
                         {
                                 response["result"]="FAILURE";
                                 response["details"]="appConnectionInfo is empty";
-                                return TEST_FAILURE;
+                                return ;
                         }
                         conInfo = listToString(conInfoList);
                         DEBUG_PRINT(DEBUG_TRACE,"APPINFO: \n %s \n",conInfo.toUtf8().constData());
 
                         response["details"] = conInfo.toUtf8().constData();
                         response["result"]="SUCCESS";
-                        return TEST_SUCCESS;
+                        return ;
                 }
                 else
                         response["details"] = "AppService creation failed";
@@ -3165,11 +3167,11 @@ bool ServiceManagerAgent::SM_AppService_GetAppInfo(IN const Json::Value& req, OU
 
         response["result"] = "FAILURE";
 #endif
-        return TEST_FAILURE;
+        return;
 }
 
 
-bool ServiceManagerAgent::SM_AppService_SetConnectionReset(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_AppService_SetConnectionReset(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_AppService_setConnectionReset--->Entry\n");
 
@@ -3182,7 +3184,7 @@ bool ServiceManagerAgent::SM_AppService_SetConnectionReset(IN const Json::Value&
         {
                 response["result"]="FAILURE";
                 response["details"]="App details not provided";
-                return TEST_FAILURE;
+                return ;
         }
 
         char cmd[100] = {'\0'};
@@ -3235,7 +3237,7 @@ bool ServiceManagerAgent::SM_AppService_SetConnectionReset(IN const Json::Value&
                                                                         response["result"]="SUCCESS";
 								        IARM_Bus_Disconnect();
 								        IARM_Bus_Term();
-                                                                        return TEST_SUCCESS;
+                                                                        return;
                                                                 }
                                                         }
                                                 }
@@ -3260,11 +3262,11 @@ bool ServiceManagerAgent::SM_AppService_SetConnectionReset(IN const Json::Value&
         IARM_Bus_Disconnect();
         IARM_Bus_Term();
 #endif
-        return TEST_FAILURE;
+        return ;
 }
 
 /*this function serves as ths post-requisite of recorder-stub, to restore rmfconfig.ini to its actual form*/
-bool ServiceManagerAgent::SM_AppService_Restore_rmfconfig(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_AppService_Restore_rmfconfig(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_AppService_Restore_rmfconfig--->Entry\n");
 
@@ -3285,10 +3287,10 @@ bool ServiceManagerAgent::SM_AppService_Restore_rmfconfig(IN const Json::Value& 
                 DEBUG_PRINT(DEBUG_TRACE,"rmfconfig not in opt\n");
         }
 #endif
-        return TEST_SUCCESS;
+        return;
 }
 
-bool ServiceManagerAgent::SM_AVInputService_GetNumberOfInputs(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_AVInputService_GetNumberOfInputs(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_GetNumberOfInputs---->Entry\n");
 
@@ -3309,7 +3311,7 @@ bool ServiceManagerAgent::SM_AVInputService_GetNumberOfInputs(IN const Json::Val
 
                         response["details"] = inputCount.toUtf8().constData();
                         response["result"]="SUCCESS";
-                        return TEST_SUCCESS;
+                        return ;
                 }
 
         }
@@ -3323,10 +3325,10 @@ bool ServiceManagerAgent::SM_AVInputService_GetNumberOfInputs(IN const Json::Val
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_GetNumberOfInputs---->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
-bool ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_GetCurrentVideoMode---->Entry\n");
 
@@ -3346,7 +3348,7 @@ bool ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode(IN const Json::V
 
                         response["details"] = videoMode.toUtf8().constData();
                         response["result"]="SUCCESS";
-                        return TEST_SUCCESS;
+                        return;
                 }
 
         }
@@ -3360,11 +3362,11 @@ bool ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode(IN const Json::V
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_GetCurrentVideoMode---->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 
-bool ServiceManagerAgent::SM_AVInputService_IsContentProtected(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_AVInputService_IsContentProtected(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_IsContentProtected---->Entry\n");
 
@@ -3384,7 +3386,7 @@ bool ServiceManagerAgent::SM_AVInputService_IsContentProtected(IN const Json::Va
 
                         response["details"] = contentProtected.toUtf8().constData();
                         response["result"]="SUCCESS";
-                        return TEST_SUCCESS;
+                        return;
                 }
 
         }
@@ -3398,7 +3400,7 @@ bool ServiceManagerAgent::SM_AVInputService_IsContentProtected(IN const Json::Va
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_AVInputService_IsContentProtected---->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 
@@ -3407,7 +3409,7 @@ bool ServiceManagerAgent::SM_AVInputService_IsContentProtected(IN const Json::Va
  *Descrption    : This function will enable/disable Video Application Events
  *parameter [in]: req - valueToSetEnabled - value corresponding event enable/disable
  *****************************************************************************/
-bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetEnable(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_VideoApplicationEventsService_SetEnable(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_SetEnable---->Entry\n");
 
@@ -3431,7 +3433,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetEnable(IN const Js
                                 DEBUG_PRINT(DEBUG_TRACE,"Set Enable event success");
                                 response["details"] = "Set Enable event success";
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return ;
                         }
                         else
                         {
@@ -3454,7 +3456,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetEnable(IN const Js
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_SetEnable---->Exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 
@@ -3462,7 +3464,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetEnable(IN const Js
  *Function name : SM_VideoApplicationEventsService_IsEnableEvent
  *Descrption    : This function will check if Video Application Events are enabled or not
  *****************************************************************************/
-bool ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_IsEnableEvent---->Entry\n");
 
@@ -3484,7 +3486,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent(IN cons
                                 sprintf(enableStatus,"%d",resultParams["enabled"].toBool());
                                 response["details"] = enableStatus;
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return ;
                         }
                         else
                         {
@@ -3507,7 +3509,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent(IN cons
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_IsEnableEvent---->exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 
@@ -3517,7 +3519,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent(IN cons
  *parameter [in]: req - appString - String corresponding to the application filter
  *parameter [in]: req - count - Filter count
  *****************************************************************************/
-bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_SetApplications---->entry\n");
 
@@ -3564,7 +3566,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications(IN co
                 DEBUG_PRINT(DEBUG_TRACE,"Application set failed");
                 response["details"] = "Application set failed";
                 response["result"]="FAILURE";
-                return TEST_FAILURE;
+                return ;
         }
         DEBUG_PRINT(DEBUG_TRACE,"Video application events service supported\n");
         response["result"] = "SUCCESS";
@@ -3585,7 +3587,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications(IN co
                                 DEBUG_PRINT(DEBUG_TRACE,"Applications set successfully");
                                 response["details"] = "Applications set successfully";
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return;
                         }
                         else
                         {
@@ -3608,14 +3610,14 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_SetApplications(IN co
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_SetApplications-------->exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 /***************************************************************************
  *Function name : SM_VideoApplicationEventsService_GetApplications
  *Descrption    : This function retrieves the Application Filter
  *****************************************************************************/
-bool ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_GetApplications---->entry\n");
 
@@ -3655,7 +3657,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN co
 
                                 response["details"] = appString.toUtf8().constData();
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return;
                         }
                         else
                         {
@@ -3678,7 +3680,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN co
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_VideoApplicationEventsService_GetApplications---->exit\n");
-        return TEST_FAILURE;
+        return ;
 }
 
 /***************************************************************************
@@ -3686,7 +3688,7 @@ bool ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications(IN co
  *Descrption    : This function will get the configuration values for the TR-181 objects
  *parameter [in]: req - names -List of objects whose configuration values to be retrieved
  *****************************************************************************/
-bool ServiceManagerAgent::SM_DDS_GetConfiguration(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_DDS_GetConfiguration(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_DDS_GetConfiguration---->Entry\n");
 
@@ -3726,7 +3728,7 @@ bool ServiceManagerAgent::SM_DDS_GetConfiguration(IN const Json::Value& req, OUT
 				DEBUG_PRINT(DEBUG_TRACE,"Device Diagnostics Info: \n %s \n",deviceDiagnosticsinfo.toUtf8().constData());
                         	response["details"] = deviceDiagnosticsinfo.toUtf8().constData();
                                 response["result"]="SUCCESS";
-                                return TEST_SUCCESS;
+                                return ;
                         }
                         else
                         {
@@ -3749,7 +3751,7 @@ bool ServiceManagerAgent::SM_DDS_GetConfiguration(IN const Json::Value& req, OUT
 #endif
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_DDS_GetConfiguration---->Exit\n");
-        return TEST_FAILURE;
+        return;
 }
 
 
@@ -3761,7 +3763,7 @@ bool ServiceManagerAgent::SM_DDS_GetConfiguration(IN const Json::Value& req, OUT
 			event_name   - event name to be tested
 			event_param  - parameter to be passed to the event
  *****************************************************************************/
-bool ServiceManagerAgent::SM_RunSMEvent_QtApp(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_RunSMEvent_QtApp(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_RunSMEvent_QtApp--->Entry\n");
 
@@ -3781,21 +3783,21 @@ bool ServiceManagerAgent::SM_RunSMEvent_QtApp(IN const Json::Value& req, OUT Jso
                         response["details"] = "QAPP started";
                         response["result"] = "SUCCESS";
                         DEBUG_PRINT(DEBUG_TRACE, "QApp started\n");
-                        return TEST_SUCCESS;
+                        return ;
                 }
         }
 
         response["details"] = "QAPP execution failed";
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_TRACE, "QApp returned error \n");
-        return TEST_FAILURE;
+        return;
 }
 /***************************************************************************
  *Function name : SM_FP_SetBrightness
  *Descrption    : This will sets the brightness of the front panel LED..
  *parameter [in]: req - name of the LED and Brightness value to be set.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_FP_SetBrightness(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_FP_SetBrightness(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetBrightness ---->Entry\n");
 
@@ -3845,7 +3847,7 @@ bool ServiceManagerAgent::SM_FP_SetBrightness(IN const Json::Value& req, OUT Jso
  *Descrption    : This will gets the brightness of the front panel LED..
  *parameter [in]: req - name of the LED .
  *****************************************************************************/
-bool ServiceManagerAgent::SM_FP_GetBrightness(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_FP_GetBrightness(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_FP_GetBrightness ---->Entry\n");
 
@@ -3901,7 +3903,7 @@ bool ServiceManagerAgent::SM_FP_GetBrightness(IN const Json::Value& req, OUT Jso
  *Descrption    : This will sets the color and Brightness of the front panel LED..
  *parameter [in]: req - name of the LED and Brightness value to be set.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_FP_SetLED(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_FP_SetLED(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetLED ---->Entry\n");
 
@@ -3961,7 +3963,7 @@ bool ServiceManagerAgent::SM_FP_SetLED(IN const Json::Value& req, OUT Json::Valu
  *parameter [in]: req-  service_name-Name of the service.
                         apiVersion - Parameter to be passed to callMethod API.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_Services_SetAPIVersion ---->Entry\n");
 #ifdef HAS_FRONT_PANEL
@@ -3971,7 +3973,7 @@ bool ServiceManagerAgent::SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Jso
         {
                 response["result"]="FAILURE";
                 response["details"]=" apiVersion is NULL";
-                return TEST_FAILURE;
+                return ;
         }
         int setApiVersion=req["apiVersion"].asInt();
         //ServiceParams params;
@@ -3986,7 +3988,7 @@ bool ServiceManagerAgent::SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Jso
                 {
                         response["result"]="SUCCESS";
                         response["details"]="SAME_DATA_ALREADY_ENTERED";
-                        return TEST_SUCCESS;
+                        return;
                 }
                 /*set API version by calling setApiVersionNumber API*/
                 ptr_service->setApiVersionNumber(setApiVersion);
@@ -4006,7 +4008,7 @@ bool ServiceManagerAgent::SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Jso
         }
         free(versionDetails);
         DEBUG_PRINT(DEBUG_TRACE,"\nSM_FP_SetAPIVersion ---->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 #else
         DEBUG_PRINT(DEBUG_TRACE,"FP Service not supported\n");
         response["result"]="FAILURE";
@@ -4020,7 +4022,7 @@ bool ServiceManagerAgent::SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Jso
  *Descrption    : This will sets the color and Brightness of the front panel LED..
  *parameter [in]: req - name of the LED and Brightness value to be set.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_FP_SetPreferences(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_FP_SetPreferences(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetPreferences ---->Entry\n");
 
@@ -4078,7 +4080,7 @@ bool ServiceManagerAgent::SM_FP_SetPreferences(IN const Json::Value& req, OUT Js
  *Descrption    : This will sets the color and Brightness of the front panel LED..
  *parameter [in]: req - name of the LED and Brightness value to be set.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_FP_GetPreferences(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_FP_GetPreferences(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_FP_GetPreferences ---->Entry\n");
 
@@ -4131,7 +4133,7 @@ bool ServiceManagerAgent::SM_FP_GetPreferences(IN const Json::Value& req, OUT Js
  *Descrption    : This will sets the Blink pattern of the front panel LED..
  *parameter [in]: req - name of the LED and Brightness value to be set.
  *****************************************************************************/
-bool ServiceManagerAgent::SM_FP_SetBlink(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_FP_SetBlink(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_FP_SetBlink ---->Entry\n");
 
@@ -4231,7 +4233,7 @@ bool ServiceManagerAgent::SM_FP_SetBlink(IN const Json::Value& req, OUT Json::Va
  *Descrption    : This will set 24hour clock..
  *parameter [in]: req - bool .
  *****************************************************************************/
-bool ServiceManagerAgent::SM_FP_Set_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_FP_Set_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_FP_Set_24_Hour_Clock ---->Entry\n");
 #ifdef HAS_FRONT_PANEL
@@ -4295,14 +4297,14 @@ bool ServiceManagerAgent::SM_FP_Set_24_Hour_Clock(IN const Json::Value& req, OUT
 
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"SM_FP_Set_24_Hour_Clock ---->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 /***************************************************************************
  *Function name : SM_FP_Is_24_Hour_Clock
  *Descrption    : This will get current time format (whether 24hourclock is enabled/disabled)
  *parameter [in]: none .
  *****************************************************************************/
-bool ServiceManagerAgent::SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response)
+void ServiceManagerAgent::SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE,"SM_FP_Is_24_Hour_Clock ---->Entry\n");
 #ifdef HAS_FRONT_PANEL
@@ -4349,7 +4351,7 @@ bool ServiceManagerAgent::SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT 
         response["details"]="FP Service not supported";
 #endif
         DEBUG_PRINT(DEBUG_TRACE,"SM_FP_Is_24_Hour_Clock ---->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 }
 
 /***************************************************************************
@@ -4360,7 +4362,7 @@ bool ServiceManagerAgent::SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT 
  *                methodName : API to be invoked
  *		  parameters : List of parameters to be passed to the service
  *****************************************************************************/
-bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req, 
+void ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req, 
 						 OUT Json::Value& response) {
 
         DEBUG_PRINT(DEBUG_TRACE,"SM_Generic_CallMethod ---->Entry\n");
@@ -4379,7 +4381,7 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
         if ((NULL == &req["service_name"]) || (NULL == &req["method_name"]) || (NULL == &req["inputCount"])) {
 		response["result"]="FAILURE";
 		response["details"]="Invalid Parameters";
-                return TEST_FAILURE;
+                return;
         }
 
         serviceName = req["service_name"].asCString();
@@ -4487,7 +4489,7 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
         }
 
         DEBUG_PRINT (DEBUG_TRACE,"SM_Generic_CallMethod ---->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -4497,7 +4499,7 @@ bool ServiceManagerAgent::SM_Generic_CallMethod (IN const Json::Value& req,
  *
  * Description   : This will execute linux commands in box
  * ***************************************************************************/
-bool ServiceManagerAgent::SM_ExecuteCmd(IN const Json::Value& request, OUT Json::Value& response)
+void ServiceManagerAgent::SM_ExecuteCmd(IN const Json::Value& request, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "SM_ExecuteCmd ---> Entry\n");
         string fileinfo = request["command"].asCString();
@@ -4520,7 +4522,7 @@ bool ServiceManagerAgent::SM_ExecuteCmd(IN const Json::Value& request, OUT Json:
                 response["details"] = "popen() failure";
                 DEBUG_PRINT(DEBUG_ERROR, "popen() failure for %s\n", path.c_str());
 
-                return TEST_FAILURE;
+                return ;
         }
 
         /*copy the response to a buffer */
@@ -4536,7 +4538,7 @@ bool ServiceManagerAgent::SM_ExecuteCmd(IN const Json::Value& request, OUT Json:
         response["details"] = popenBuff;
         DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
         DEBUG_PRINT(DEBUG_TRACE, "SM_ExecuteCmd -->Exit\n");
-        return TEST_SUCCESS;
+        return ;
 
 }
 
@@ -4547,10 +4549,10 @@ bool ServiceManagerAgent::SM_ExecuteCmd(IN const Json::Value& request, OUT Json:
  *
  **************************************************************************/
 
-extern "C" ServiceManagerAgent* CreateObject()
+extern "C" ServiceManagerAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\nCreateObject ---->Entry\n");
-	return new ServiceManagerAgent();
+	return new ServiceManagerAgent(ptrtcpServer);
 	DEBUG_PRINT(DEBUG_TRACE,"\nCreateObject ---->Exit\n");
 }
 
@@ -4560,10 +4562,11 @@ extern "C" ServiceManagerAgent* CreateObject()
  *
  **************************************************************************/
 
-bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool ServiceManagerAgent::cleanup(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Entry\n");
 	DEBUG_PRINT(DEBUG_LOG,"\n ServiceManagerAgent shutting down \n");
+#if 0
         if(ptrAgentObj==NULL)
         {
                 return TEST_FAILURE;
@@ -4653,7 +4656,7 @@ bool ServiceManagerAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrA
         ptrAgentObj->UnregisterMethod("TestMgr_SM_FP_Is_24_Hour_Clock");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_Generic_CallMethod");
         ptrAgentObj->UnregisterMethod("TestMgr_SM_ExecuteCmd");
-
+#endif
 	DEBUG_PRINT(DEBUG_TRACE,"\ncleanup ---->Exit\n");
 	return TEST_SUCCESS;
 }

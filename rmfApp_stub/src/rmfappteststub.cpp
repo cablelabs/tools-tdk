@@ -21,6 +21,7 @@
 * @param [in]: none
 * @param [out]: none
 ***************************************************************************/	
+#if 0
 rmfAppTestStub::rmfAppTestStub ()
 {
 	/* Ignore any sigpipe errors while this test is running. This could be caused by the child
@@ -34,6 +35,7 @@ rmfAppTestStub::rmfAppTestStub ()
 #endif
 	DEBUG_PRINT(DEBUG_LOG, "Creating new stub object.\n");
 }
+#endif
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Descrption    : testmodulepre_requisites will  be used for setting the
@@ -72,11 +74,11 @@ bool rmfAppTestStub::testmodulepost_requisites()
 * 
 * return value: true or false depending on the success of operation.
 ***************************************************************************/	
-bool rmfAppTestStub::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool rmfAppTestStub::initialize (IN const char* szVersion)
 {
 	//int log_fd = 0;
 	DEBUG_PRINT(DEBUG_LOG, "rmfAppTestStub Initialize");
-
+#if 0
 	/*TODO: Need to separate running tdkRmfApp from rmfAppStub. */
 	/*To record the content using tdkRmfApp  */
 	ptrAgentObj->RegisterMethod(*this,&rmfAppTestStub::rmfAppTestStub_CreateRecord,"TestMgr_CreateRecord");
@@ -165,10 +167,11 @@ bool rmfAppTestStub::initialize (IN const char* szVersion,IN RDKTestAgent *ptrAg
 		}
 	}
 #endif
+#endif
 	return true;
 }
 
-bool rmfAppTestStub::rmfAppTestStub_CreateRecord(IN const Json::Value& req, OUT Json::Value& response)
+void rmfAppTestStub::rmfAppTestStub_CreateRecord(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "rmfAppTestStub_CreateRecord -->Entry\n");	
 
@@ -206,7 +209,7 @@ bool rmfAppTestStub::rmfAppTestStub_CreateRecord(IN const Json::Value& req, OUT 
                 DEBUG_PRINT(DEBUG_ERROR, "Error: tdkRmfApp failed to record.\n");
                 response["result"] = "FAILURE";
                 response["details"] = "Error: tdkRmfApp failed to record.";
-                return TEST_FAILURE;
+                return;
 	}
 
 
@@ -215,7 +218,7 @@ bool rmfAppTestStub::rmfAppTestStub_CreateRecord(IN const Json::Value& req, OUT 
         response["details"] = "tdkRmfApp recorded successfully. \n";
 
 	DEBUG_PRINT(DEBUG_TRACE, "rmfAppTestStub_CreateRecord -->Exit\n");	
-        return TEST_SUCCESS;
+        return;
 }
 
 
@@ -275,9 +278,9 @@ bool rmfAppTestStub::rmfAppTestStub_Execute (IN const Json::Value& req, OUT Json
 *
 * return value: pointer to the newly created object.
 ***************************************************************************/	
-extern "C" rmfAppTestStub* CreateObject ()
+extern "C" rmfAppTestStub* CreateObject (TcpSocketServer &ptrtcpServer)
 {
-	return new rmfAppTestStub ();
+	return new rmfAppTestStub (ptrtcpServer);
 }
 
 
@@ -293,19 +296,19 @@ extern "C" rmfAppTestStub* CreateObject ()
 * 
 * return value: always returns true.
  ***************************************************************************/	
-bool rmfAppTestStub::cleanup (IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool rmfAppTestStub::cleanup (IN const char* szVersion)
 {
 //	int returnval;
 	DEBUG_PRINT(DEBUG_LOG, "rmfAppTestStub shutting down\n");
 
-	
+#if 0	
 	if(NULL == ptrAgentObj)
 	{
 		return TEST_FAILURE;
 	}
 
 	ptrAgentObj->UnregisterMethod("TestMgr_CreateRecord");
-
+#endif
 #if 0	
 	/* Unregister RPC methods. */
 	if (true != ptrAgentObj->UnregisterMethod (RMFAPP_RPC_COMMAND_STRING))

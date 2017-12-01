@@ -30,6 +30,7 @@
 #include <arpa/inet.h>
 #include <net/if.h>
 #include <errno.h>
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
@@ -44,22 +45,25 @@
 using namespace std;
 
 class RDKTestAgent;
-class SNMPProtocolAgent : public RDKTestStubInterface
+class SNMPProtocolAgent : public RDKTestStubInterface , public AbstractServer<SNMPProtocolAgent>
 {
         public:
 		/*Constructor*/
-		SNMPProtocolAgent();
+		SNMPProtocolAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <SNMPProtocolAgent>(ptrRpcServer)
+                {
+                 this->bindAndAddMethod(Procedure("TestMgr_GetCommString", PARAMS_BY_NAME, JSON_STRING,NULL), &SNMPProtocolAgent::GetCommString);
+		}
 
 		/*Inherited functions*/
-		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
-		bool cleanup(const char*, RDKTestAgent*);
+		bool initialize(IN const char* szVersion);
+		bool cleanup(IN const char* szVersion);
 		std::string testmodulepre_requisites();
 		bool testmodulepost_requisites();
 
                 /*Retreive community string*/
-                bool GetCommString(IN const Json::Value& req, OUT Json::Value& response);
+                void GetCommString(IN const Json::Value& req, OUT Json::Value& response);
 };
 
-extern "C" SNMPProtocolAgent* CreateObject();
+//extern "C" SNMPProtocolAgent* CreateObject();
 #endif
 

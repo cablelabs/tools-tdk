@@ -222,12 +222,12 @@ Arguments     : NULL
 
 Description   : Constructor for RDKLoggerAgent class
 ***************************************************************************/
-
+#if 0
 RDKLoggerAgent::RDKLoggerAgent()
 {
         DEBUG_PRINT(DEBUG_LOG, "RDKLoggerAgent Initialized\n");
 }
-
+#endif
 /**************************************************************************
 Function name : RDKLoggerAgent::initialize
 
@@ -236,9 +236,10 @@ Arguments     : Input arguments are Version string and RDKLoggerAgent obj ptr
 Description   : Registering all the wrapper functions with the agent for using these functions in the script
 ***************************************************************************/
 
-bool RDKLoggerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool RDKLoggerAgent::initialize(IN const char* szVersion)
 {
         DEBUG_PRINT(DEBUG_ERROR, "RDKLoggerAgent Initialization\n");
+        #if 0
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Init, "TestMgr_RDKLogger_Init");
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log, "TestMgr_RDKLogger_Log");
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Dbg_Enabled_Status, "TestMgr_RDKLogger_Dbg_Enabled_Status");
@@ -255,7 +256,7 @@ bool RDKLoggerAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAge
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_SetLogLevel, "TestMgr_RDKLogger_SetLogLevel");
 	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_GetLogLevel, "TestMgr_RDKLogger_GetLogLevel");
         //ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_MPEOSDisabled,"TestMgr_RDKLogger_Log_MPEOSDisabled");
-
+        #endif
         return TEST_SUCCESS;
 }
 
@@ -342,7 +343,7 @@ Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to initialize RDK debug manager module.
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
-bool RDKLoggerAgent::RDKLoggerAgent_Init(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_Init(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Init --->Entry\n");
 
@@ -357,12 +358,12 @@ bool RDKLoggerAgent::RDKLoggerAgent_Init(IN const Json::Value& req, OUT Json::Va
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to init rdk logger";
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Init -->Exit\n");
-                return TEST_FAILURE;
+                return;
         }
 
      	DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Init -->Exit\n");
 
-       	return TEST_SUCCESS;
+       	return;
 }
 
 /**************************************************************************
@@ -377,7 +378,7 @@ Description   : Receives the request from Test Manager to add a log message.
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
 
-bool RDKLoggerAgent::RDKLoggerAgent_Log(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_Log(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log --->Entry\n");
 
@@ -399,14 +400,14 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log(IN const Json::Value& req, OUT Json::Val
                 response["result"] = "SUCCESS";
                 response["details"] = "rdk logging success";
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log -->Exit\n");
-                return TEST_SUCCESS;
+                return;
         }
         else
         {
                 response["result"] = "FAILURE";
                 response["details"] = "rdk logging failed";
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log -->Exit\n");
-                return TEST_FAILURE;
+                return;
         }
 }
 
@@ -420,7 +421,7 @@ Description   : Receives the request from Test Manager to check if a specified l
 		of a module is enabled.
                 Gets the response from RDKLogger element and send it to the Test Manager. 
 **************************************************************************/
-bool RDKLoggerAgent::RDKLoggerAgent_Dbg_Enabled_Status(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_Dbg_Enabled_Status(IN const Json::Value& req, OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Dbg_Enabled_Status --->Entry\n");
 
@@ -452,7 +453,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Dbg_Enabled_Status(IN const Json::Value& req
 		response["result"] = "SUCCESS";
 		response["details"] = stringDetails;
 		DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Dbg_Enabled_Status -->Exit\n");
-		return TEST_SUCCESS;
+		return;
         }
 
 	DEBUG_PRINT(DEBUG_ERROR, "Failed to get %s %s log status\n", rdkMod, level.c_str()); 
@@ -462,7 +463,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Dbg_Enabled_Status(IN const Json::Value& req
 	response["details"] = "Failed to get dbg enable status";
 
 	DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Dbg_Enabled_Status -->Exit\n");
-	return TEST_FAILURE;
+	return;
 }
 
 /**************************************************************************
@@ -474,7 +475,7 @@ Description   : Receives the request from Test Manager to get the logging level 
 		specified environment variable
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
-bool RDKLoggerAgent::RDKLoggerAgent_EnvGet(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_EnvGet(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGet --->Entry\n");
 
@@ -498,12 +499,12 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGet(IN const Json::Value& req, OUT Json::
 		response["result"] = "FAILURE";
                 response["details"] = "Logging disabled for module";
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGet -->Exit\n");
-                return TEST_FAILURE;
+                return;
         }
 
         response["result"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGet -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -515,7 +516,7 @@ Description   : Receives the request from Test Manager to get the registered num
                 specified environment variable
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
-bool RDKLoggerAgent::RDKLoggerAgent_EnvGetNum(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_EnvGetNum(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetNum --->Entry\n");
 
@@ -533,7 +534,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGetNum(IN const Json::Value& req, OUT Jso
                 response["result"] = "FAILURE";
                 response["details"] = "Unknown module specified";
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetNum -->Exit\n");
-                return TEST_FAILURE;
+                return;
     	}
 
       	sprintf(stringDetails, "%d", modNum);
@@ -541,7 +542,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGetNum(IN const Json::Value& req, OUT Jso
 
         response["result"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetNum -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -553,7 +554,7 @@ Description   : Receives the request from Test Manager to get the logging level 
 		specified environment variable based on its registered number
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
-bool RDKLoggerAgent::RDKLoggerAgent_EnvGetValueFromNum(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_EnvGetValueFromNum(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetValueFromNum --->Entry\n");
 
@@ -576,12 +577,12 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGetValueFromNum(IN const Json::Value& req
 		response["result"] = "FAILURE";
 		response["details"] = "No logging level value for number";
 		DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetValueFromNum -->Exit\n");
-		return TEST_FAILURE;
+		return;
         }
 
         response["result"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetValueFromNum -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -593,7 +594,7 @@ Description   : Receives the request from Test Manager to get the module name of
                 specified environment variable based on its registered number
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
-bool RDKLoggerAgent::RDKLoggerAgent_EnvGetModFromNum(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_EnvGetModFromNum(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetModFromNum --->Entry\n");
 
@@ -615,12 +616,12 @@ bool RDKLoggerAgent::RDKLoggerAgent_EnvGetModFromNum(IN const Json::Value& req, 
 		response["result"] = "FAILURE";
 		response["details"] = "No module for number";
 		DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetModFromNum -->Exit\n");
-		return TEST_FAILURE;
+		return;
         }
 
         response["result"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_EnvGetModFromNum -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -633,7 +634,7 @@ Arguments     : Input argument : None
 Description   : Receives the request from Test Manager to check if EnableMPELog value is true or false
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
-bool RDKLoggerAgent::RDKLoggerAgent_CheckMPELogEnabled(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_CheckMPELogEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_CheckMPELogEnabled --->Entry\n");
 
@@ -648,7 +649,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_CheckMPELogEnabled(IN const Json::Value& req
 			response["result"] = "FAILURE";
 			response["details"] = "EnableMPELog not enabled";
 			DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_CheckMPELogEnabled -->Exit\n");
-			return TEST_FAILURE;
+			return;
         	}
         }
         else
@@ -657,13 +658,13 @@ bool RDKLoggerAgent::RDKLoggerAgent_CheckMPELogEnabled(IN const Json::Value& req
                 response["result"] = "FAILURE";
                 response["details"] = "Failed to get EnableMPELog value";
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_CheckMPELogEnabled -->Exit\n");
-                return TEST_FAILURE;
+                return;
         }
 
         response["result"] = "SUCCESS";
 	response["details"] = "EnableMPELog enabled";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_CheckMPELogEnabled --> Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -679,7 +680,7 @@ Description   : Receives the request from Test Manager to add 5 log messages
 		configured with ALL threshold in conf file.
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
-bool RDKLoggerAgent::RDKLoggerAgent_Log_All(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_Log_All(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_All --->Entry\n");
 
@@ -702,7 +703,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log_All(IN const Json::Value& req, OUT Json:
                 response["details"] = testMsg;
                 DEBUG_PRINT(DEBUG_ERROR, "%s\n",testMsg);
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_All -->Exit\n");
-                return TEST_FAILURE;
+                return;
             }
             level++;
         }
@@ -710,7 +711,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log_All(IN const Json::Value& req, OUT Json:
 	response["result"] = "SUCCESS";
      	response["details"] = "rdk logging all success";
     	DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_All -->Exit\n");
-     	return TEST_SUCCESS;
+     	return;
 }
 
 /**************************************************************************
@@ -726,7 +727,7 @@ Description   : Receives the request from Test Manager to add 15 log messages
                 configured with NONE threshold in conf file.
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
-bool RDKLoggerAgent::RDKLoggerAgent_Log_None(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_Log_None(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_None --->Entry\n");
 
@@ -749,7 +750,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log_None(IN const Json::Value& req, OUT Json
                 response["details"] = testMsg;
                 DEBUG_PRINT(DEBUG_ERROR, "%s\n",testMsg);
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_None -->Exit\n");
-                return TEST_FAILURE;
+                return;
             }
             level++;
     	}
@@ -757,7 +758,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log_None(IN const Json::Value& req, OUT Json
         response["result"] = "SUCCESS";
         response["details"] = "No rdk logging with NONE threshold";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_None -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -774,7 +775,7 @@ Description   : Receives the request from Test Manager to add 9 log messages
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
 
-bool RDKLoggerAgent::RDKLoggerAgent_Log_Trace(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_Log_Trace(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Trace --->Entry\n");
 
@@ -797,7 +798,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log_Trace(IN const Json::Value& req, OUT Jso
                 response["details"] = testMsg;
                 DEBUG_PRINT(DEBUG_ERROR, "%s\n",testMsg);
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Trace -->Exit\n");
-                return TEST_FAILURE;
+                return;
             }
             level++;
         }
@@ -805,7 +806,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log_Trace(IN const Json::Value& req, OUT Jso
         response["result"] = "SUCCESS";
         response["details"] = "rdk logging trace success";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Trace -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -822,7 +823,7 @@ Description   : Receives the request from Test Manager to add 9 log messages
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
 
-bool RDKLoggerAgent::RDKLoggerAgent_Log_InverseTrace(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_Log_InverseTrace(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_InverseTrace --->Entry\n");
 
@@ -845,7 +846,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log_InverseTrace(IN const Json::Value& req, 
                 response["details"] = testMsg;
                 DEBUG_PRINT(DEBUG_ERROR, "%s\n",testMsg);
                 DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_InverseTrace -->Exit\n");
-                return TEST_FAILURE;
+                return;
             }
             level++;
         }
@@ -853,7 +854,7 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log_InverseTrace(IN const Json::Value& req, 
         response["result"] = "SUCCESS";
         response["details"] = "rdk logging inverse trace success";
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_InverseTrace -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 
 /**************************************************************************
@@ -869,7 +870,7 @@ Arguments     : Input arguments:
 Description   : Receives the request from Test Manager to add a log message.
                 Gets the response from RDKLogger element and send it to the Test Manager.
 **************************************************************************/
-bool RDKLoggerAgent::RDKLoggerAgent_Log_Msg(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_Log_Msg(IN const Json::Value& req, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Msg --->Entry\n");
 
@@ -890,29 +891,29 @@ bool RDKLoggerAgent::RDKLoggerAgent_Log_Msg(IN const Json::Value& req, OUT Json:
         	response["result"] = "SUCCESS";
         	response["details"] = "rdk logging success";
         	DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Msg -->Exit\n");
-        	return TEST_SUCCESS;
+        	return;
 	}
 	else
 	{
 		response["result"] = "FAILURE";
 		response["details"] = "rdk logging failed";
 		DEBUG_PRINT(DEBUG_TRACE, "RDKLoggerAgent_Log_Msg -->Exit\n");
-		return TEST_FAILURE;
+		return;
 	}
 }
 
-bool RDKLoggerAgent::RDKLoggerAgent_SetLogLevel(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_SetLogLevel(IN const Json::Value& req, OUT Json::Value& response)
 {
 	response["result"] = "FAILURE";
 	response["details"] = "Failed to call rdk_dbg_priv_SetLogLevel";
-	return TEST_FAILURE;
+	return;
 }
 
-bool RDKLoggerAgent::RDKLoggerAgent_GetLogLevel(IN const Json::Value& req, OUT Json::Value& response)
+void RDKLoggerAgent::RDKLoggerAgent_GetLogLevel(IN const Json::Value& req, OUT Json::Value& response)
 {
 	response["result"] = "FAILURE";
 	response["details"] = "Failed to call rdk_dbg_priv_LogQueryOpSysIntf";
-	return TEST_FAILURE;
+	return;
 }
 
 #if 0
@@ -1010,9 +1011,9 @@ Arguments       : NULL
 Description     : This function is used to create a new object of the class "RDKLoggerAgent".
 **************************************************************************/
 
-extern "C" RDKLoggerAgent* CreateObject()
+extern "C" RDKLoggerAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-        return new RDKLoggerAgent();
+        return new RDKLoggerAgent(ptrtcpServer);
 }
 
 /**************************************************************************
@@ -1023,9 +1024,10 @@ Arguments       : NULL
 Description     : This function will be used to the close things cleanly.
 **************************************************************************/
 
-bool RDKLoggerAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+bool RDKLoggerAgent::cleanup(IN const char* szVersion)
 {
         DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
+        #if 0
         if(NULL == ptrAgentObj)
         {
                 return TEST_FAILURE;
@@ -1046,7 +1048,7 @@ bool RDKLoggerAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgent
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_SetLogLevel");
 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_GetLogLevel");
         //ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_MPEOSDisabled");
-
+        #endif
         return TEST_SUCCESS;
 }
 /**************************************************************************

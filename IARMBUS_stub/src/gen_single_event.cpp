@@ -22,6 +22,7 @@
 #include "pwrMgr.h"
 #include "dummytestmgr.h"
 #include "keyeventdata.h"
+#include <unistd.h>
 
 int main(int argc,char **argv)
 {

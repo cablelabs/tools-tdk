@@ -23,12 +23,12 @@ gsw_CcAttributes CCGetDefaultAttribute;
  *
  *
  ******************************************************************************************************************/
-
+#if 0
 CCAgent::CCAgent()
 {
     std::cout<<"CCAgent Initialized"<<std::endl;
 }
-
+#endif
 /**********************************************************************************************************************
  * Function Description  : This is a Common function will get the retvalue as input and it returns corresponding SUCCESS
  * 				       or FAILUER status to the wrapper function
@@ -90,12 +90,14 @@ char* getResult_CC(int retval,char *resultDetails)
  * @return               : return success
  **************************************************************************************************************************/
 
-bool CCAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool CCAgent::initialize(IN const char* szVersion)
 {
     std::cout<<"CCStub Initialize"<<std::endl;
 
     /*Register stub function for callback*/
-    ptrAgentObj->RegisterMethod(*this,&CCAgent::CCInit, "TestMgr_CC_Init");
+    //ptrAgentObj->RegisterMethod(*this,&CCAgent::CCInit, "TestMgr_CC_Init");
+    //ptrAgentObj->bindAndAddMethod(Procedure("CCInit", PARAMS_BY_NAME, JSON_STRING,NULL), &CCAgent::CCInit);
+#if 0
     ptrAgentObj->RegisterMethod(*this,&CCAgent::CCSetGetState, "TestMgr_CC_SetGetState");
     ptrAgentObj->RegisterMethod(*this,&CCAgent::CCSetGetAttribute, "TestMgr_CC_SetGetAttribute");
     ptrAgentObj->RegisterMethod(*this,&CCAgent::CCSetGetDigitalChannel, "TestMgr_CC_SetGetDigitalChannel");
@@ -108,6 +110,7 @@ bool CCAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
     ptrAgentObj->RegisterMethod(*this,&CCAgent::CCOnEasStop, "TestMgr_CC_OnEasStop");
     ptrAgentObj->RegisterMethod(*this,&CCAgent::CCSetTrickPlayStatus, "TestMgr_CC_SetTrickPlayStatus");
     ptrAgentObj->RegisterMethod(*this,&CCAgent::CCResetTrickPlayStatus, "TestMgr_CC_ResetTrickPlayStatus");
+#endif
     return TEST_SUCCESS;
 }
 
@@ -144,8 +147,7 @@ bool CCAgent::testmodulepost_requisites()
  * @return               :Filled with SUCCESS or FAILURE based on the return value of CC API
  **************************************************************************************************************************/
 
-
-bool CCAgent::CCInit(IN const Json::Value& req, OUT Json::Value& response)
+void  CCAgent::CCInit(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_ERROR,"\nCCAgent_Init --->Entry %d\n",CCInitFlag);
     if(CCInitFlag == true)
@@ -162,7 +164,7 @@ bool CCAgent::CCInit(IN const Json::Value& req, OUT Json::Value& response)
             DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in vlGfxInit(0)\n");
             response["result"] = "FAILURE";
 	    response["details"] = "Exception Caught in vlGfxInit";
-            return TEST_FAILURE;
+            return;
         }
         DEBUG_PRINT(DEBUG_ERROR,"\nvlGfxInit(0) --->Entry \n");
 
@@ -172,7 +174,7 @@ bool CCAgent::CCInit(IN const Json::Value& req, OUT Json::Value& response)
             DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in vlMpeosCCManagerInit()\n");
             response["result"] = "FAILURE";
 	    response["details"] = "Exception Caught in vlMpeosCCManagerInit";
-            return TEST_FAILURE;
+            return;
         }
 
         resultDetails=(char *)malloc(sizeof(char)*16);
@@ -202,17 +204,17 @@ bool CCAgent::CCInit(IN const Json::Value& req, OUT Json::Value& response)
     DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.borderType :%d\n",CCGetDefaultAttribute.borderType);
     DEBUG_PRINT(DEBUG_LOG,"\nCCGetDefaultAttribute.edgeType :%d\n",CCGetDefaultAttribute.edgeType);
 
-    return TEST_SUCCESS;
+    return;
     }
     else
     {
         DEBUG_PRINT(DEBUG_ERROR,"\nCCAgent_Init already Intialized--->Exit \n");
         response["result"]= "SUCCESS";
         response["details"]="Agent is already intialised";
-        return TEST_SUCCESS;
+        return;
     }
 }
-
+#if 1
 /**************************************************************************************************************************
  * @Function Description : CCGetSupportedServiceNumber Function will be used for get the Supported services by the TS
  *
@@ -222,7 +224,7 @@ bool CCAgent::CCInit(IN const Json::Value& req, OUT Json::Value& response)
  * @return               :Filled with SUCCESS or FAILURE based on the return value of CC API
  **************************************************************************************************************************/
 
-bool CCAgent::CCGetSupportedServiceNumber(IN const Json::Value& req, OUT Json::Value& response)
+void CCAgent::CCGetSupportedServiceNumber(IN const Json::Value& req, OUT Json::Value& response)
 {
     unsigned int *stubservicesArray;
     unsigned int *stubservicesArraySize;
@@ -254,7 +256,7 @@ bool CCAgent::CCGetSupportedServiceNumber(IN const Json::Value& req, OUT Json::V
     free(stubservicesArraySize );
     free(stringDetails);
     free(resultDetails);
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************************************************************
@@ -265,7 +267,7 @@ bool CCAgent::CCGetSupportedServiceNumber(IN const Json::Value& req, OUT Json::V
  *
  * @return               : Filled with SUCCESS or FAILURE based on the return value of CC API
  **************************************************************************************************************************/
-bool CCAgent::CCGetSupportedServiceNumberCount(IN const Json::Value& req, OUT Json::Value& response)
+void CCAgent::CCGetSupportedServiceNumberCount(IN const Json::Value& req, OUT Json::Value& response)
 {
 
     unsigned int *stubservicesArraySize;
@@ -296,7 +298,7 @@ bool CCAgent::CCGetSupportedServiceNumberCount(IN const Json::Value& req, OUT Js
     free(stubservicesArraySize );
     free(stringDetails);
     free(resultDetails);
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************************************************************
@@ -308,7 +310,7 @@ bool CCAgent::CCGetSupportedServiceNumberCount(IN const Json::Value& req, OUT Js
  * @return               : Filled with SUCCESS or FAILURE based on the return value of CC API
  **************************************************************************************************************************/
 
-bool CCAgent::CCResetTrickPlayStatus(IN const Json::Value& req, OUT Json::Value& response)
+void CCAgent::CCResetTrickPlayStatus(IN const Json::Value& req, OUT Json::Value& response)
 {
 
     try
@@ -322,12 +324,12 @@ bool CCAgent::CCResetTrickPlayStatus(IN const Json::Value& req, OUT Json::Value&
         DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in CCResetTrickPlayStatus()\n");
         response["result"]= "FAILURE";
         response["details"]="Exception Caught in CCResetTrickPlayStatus";
-        return TEST_FAILURE;
+        return;
     }
 
     response["result"]= "SUCCESS";
     response["details"]="Successfully  executed";
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************************************************************
@@ -340,11 +342,11 @@ bool CCAgent::CCResetTrickPlayStatus(IN const Json::Value& req, OUT Json::Value&
  **************************************************************************************************************************/
 
 
-bool CCAgent::CCOnEasStart(IN const Json::Value& req, OUT Json::Value& response)
+void CCAgent::CCOnEasStart(IN const Json::Value& req, OUT Json::Value& response)
 {
     try
     {
-        /*calling CCOnEasStop*/
+        /*calling CCOnEasStart*/
         DEBUG_PRINT(DEBUG_LOG,"\nCalling ccOnEasStart\n");
         ccOnEasStart();
     }
@@ -353,12 +355,12 @@ bool CCAgent::CCOnEasStart(IN const Json::Value& req, OUT Json::Value& response)
         DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in ccOnEasStart()\n");
         response["result"]= "FAILURE";
         response["details"]="Exception Caught in ccOnEasStart()";
-        return TEST_FAILURE;
+        return;
 
     }
     response["result"]= "SUCCESS";
     response["details"]="Successfully  executed";
-    return TEST_SUCCESS;
+    return;
 }
 
 
@@ -372,7 +374,7 @@ bool CCAgent::CCOnEasStart(IN const Json::Value& req, OUT Json::Value& response)
  **************************************************************************************************************************/
 
 
-bool CCAgent::CCOnEasStop(IN const Json::Value& req, OUT Json::Value& response)
+void CCAgent::CCOnEasStop(IN const Json::Value& req, OUT Json::Value& response)
 {
     try
     {
@@ -386,12 +388,12 @@ bool CCAgent::CCOnEasStop(IN const Json::Value& req, OUT Json::Value& response)
         DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in ccOnEasStop()\n");
         response["result"]= "FAILURE";
         response["details"]="Exception Caught in ccOnEasStop()";
-        return TEST_FAILURE;
+        return;
 
     }
     response["result"]= "SUCCESS";
     response["details"]="Successfully  executed";
-    return TEST_SUCCESS;
+    return;
 }
 
 
@@ -403,7 +405,7 @@ bool CCAgent::CCOnEasStop(IN const Json::Value& req, OUT Json::Value& response)
  *
  * @return               : Filled with SUCCESS or FAILURE based on the return value of CC API
  **************************************************************************************************************************/
-bool CCAgent::CCSetTrickPlayStatus(IN const Json::Value& request, OUT Json::Value& response)
+void CCAgent::CCSetTrickPlayStatus(IN const Json::Value& request, OUT Json::Value& response)
 {
     int status=request["trickPlayStatus"].asInt();
     try
@@ -418,12 +420,12 @@ bool CCAgent::CCSetTrickPlayStatus(IN const Json::Value& request, OUT Json::Valu
         DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in ccSetTrickPlayStatus()\n");
         response["result"]= "FAILURE";
         response["details"]="Exception Caught in ccSetTrickPlayStatus()";
-        return TEST_FAILURE;
+        return;
     }
 
     response["result"]= "SUCCESS";
     response["details"]="Successfully  executed";
-    return TEST_SUCCESS;
+    return;
 }
 /**************************************************************************************************************************
  * @Function Description : CCShow will show the Closed Caption display
@@ -433,7 +435,7 @@ bool CCAgent::CCSetTrickPlayStatus(IN const Json::Value& request, OUT Json::Valu
  *
  * @return               : Filled with SUCCESS or FAILURE based on the return value of CC API
  **************************************************************************************************************************/
-bool CCAgent::CCShow(IN const Json::Value& req, OUT Json::Value& response)
+void CCAgent::CCShow(IN const Json::Value& req, OUT Json::Value& response)
 {
     int retval;
     char *resultDetails;
@@ -441,7 +443,7 @@ bool CCAgent::CCShow(IN const Json::Value& req, OUT Json::Value& response)
     retval=ccShow();
     response["result"]=getResult_CC(retval,resultDetails);
     response["details"]=resultDetails;
-    return TEST_SUCCESS;
+    return;
 }
 /**************************************************************************************************************************
  * @Function Description : CCHide will hide the closed caption display
@@ -451,7 +453,7 @@ bool CCAgent::CCShow(IN const Json::Value& req, OUT Json::Value& response)
  *
  * @return               : Filled with SUCCESS or FAILURE based on the return value of CC API
  **************************************************************************************************************************/
-bool CCAgent::CCHide(IN const Json::Value& req, OUT Json::Value& response)
+void CCAgent::CCHide(IN const Json::Value& req, OUT Json::Value& response)
 {
     int retval;
     char *resultDetails;
@@ -460,7 +462,7 @@ bool CCAgent::CCHide(IN const Json::Value& req, OUT Json::Value& response)
     response["result"]=getResult_CC(retval,resultDetails);
     response["details"]=resultDetails;
     free(resultDetails);
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************************************************************
@@ -472,7 +474,7 @@ bool CCAgent::CCHide(IN const Json::Value& req, OUT Json::Value& response)
  * @return               : Filled with SUCCESS or FAILURE based on the return value of CC API
  **************************************************************************************************************************/
 
-bool CCAgent::CCSetGetState(IN const Json::Value& request, OUT Json::Value& response)
+void CCAgent::CCSetGetState(IN const Json::Value& request, OUT Json::Value& response)
 {
 
     int retval;
@@ -500,7 +502,7 @@ bool CCAgent::CCSetGetState(IN const Json::Value& request, OUT Json::Value& resp
 
             free(stringDetails);
             free(resultDetails);
-            return TEST_SUCCESS;
+            return;
         }
 
     }
@@ -510,7 +512,7 @@ bool CCAgent::CCSetGetState(IN const Json::Value& request, OUT Json::Value& resp
     DEBUG_PRINT(DEBUG_ERROR,"\nCalling CCGetState %s \n",response["result"].asCString());
     free(stringDetails);
     free(resultDetails);
-    return TEST_SUCCESS;
+    return;
 }
 
 
@@ -522,7 +524,7 @@ bool CCAgent::CCSetGetState(IN const Json::Value& request, OUT Json::Value& resp
  *
  * @return               : Filled with SUCCESS or FAILURE based on the return value of CC API
  **************************************************************************************************************************/
-bool CCAgent::CCSetGetDigitalChannel(IN const Json::Value& request, OUT Json::Value& response)
+void CCAgent::CCSetGetDigitalChannel(IN const Json::Value& request, OUT Json::Value& response)
 {
     unsigned int channel=0;
     int userSelection;
@@ -537,7 +539,7 @@ bool CCAgent::CCSetGetDigitalChannel(IN const Json::Value& request, OUT Json::Va
     {
         DEBUG_PRINT(DEBUG_ERROR,"\n Input Parameter is null CCSetDigitalChannel\n");
         response["result"]= "FAILURE";
-        return TEST_FAILURE;
+        return;
 
     }
 
@@ -553,7 +555,7 @@ bool CCAgent::CCSetGetDigitalChannel(IN const Json::Value& request, OUT Json::Va
             response["result"]=getResult_CC(returnvalue,resultDetails);
             response["details"]=resultDetails;
             free(resultDetails);
-            return TEST_FAILURE;
+            return;
         }
     }
     else
@@ -562,7 +564,7 @@ bool CCAgent::CCSetGetDigitalChannel(IN const Json::Value& request, OUT Json::Va
         response["details"]="Invalid Digital Channel";
         free(resultDetails);
 
-        return TEST_FAILURE;
+        return;
     }
     stringDetails = (char*)malloc(sizeof(char)*10);
 
@@ -584,7 +586,7 @@ bool CCAgent::CCSetGetDigitalChannel(IN const Json::Value& request, OUT Json::Va
     free(stringDetails);
     free(resultDetails);
 
-    return TEST_SUCCESS;
+    return;
 }
 
 
@@ -596,7 +598,7 @@ bool CCAgent::CCSetGetDigitalChannel(IN const Json::Value& request, OUT Json::Va
  *
  * @return               : Filled with SUCCESS or FAILURE based on the return value of CC API
  **************************************************************************************************************************/
-bool CCAgent::CCSetGetAnalogChannel(IN const Json::Value& request, OUT Json::Value& response)
+void CCAgent::CCSetGetAnalogChannel(IN const Json::Value& request, OUT Json::Value& response)
 {
 
 
@@ -614,7 +616,7 @@ bool CCAgent::CCSetGetAnalogChannel(IN const Json::Value& request, OUT Json::Val
         DEBUG_PRINT(DEBUG_ERROR,"\n Input Parameter is null CCSetGetAnalogChannel\n");
         response["result"]= "FAILURE";
         response["details"]="Input Parameter is null CCSetGetAnalogChannel";
-        return TEST_FAILURE;
+        return;
 
     }
 
@@ -642,7 +644,7 @@ bool CCAgent::CCSetGetAnalogChannel(IN const Json::Value& request, OUT Json::Val
             response["result"]=getResult_CC(returnvalue,resultDetails);
             response["details"]=resultDetails;
             free(resultDetails);
-            return TEST_FAILURE;
+            return;
         }
 
 
@@ -653,7 +655,7 @@ bool CCAgent::CCSetGetAnalogChannel(IN const Json::Value& request, OUT Json::Val
         response["result"]="FAILURE";
         response["details"]="Invalid AnalogChannel range 10";
         free(resultDetails);
-        return TEST_FAILURE;
+        return;
 
     }
     stringDetails = (char*)malloc(sizeof(char)*30);
@@ -674,7 +676,7 @@ bool CCAgent::CCSetGetAnalogChannel(IN const Json::Value& request, OUT Json::Val
     }
     free(stringDetails);
     free(resultDetails);
-    return TEST_SUCCESS;
+    return;
 
 }
 
@@ -691,7 +693,7 @@ bool CCAgent::CCSetGetAnalogChannel(IN const Json::Value& request, OUT Json::Val
  **************************************************************************************************************************/
 
 
-bool CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& response)
+void CCAgent::CCSetGetAttribute(IN const Json::Value& request, OUT Json::Value& response)
 {
     gsw_CcAttributes CCAttribute,CCGetAttribute;
     char *resultDetails;
@@ -867,7 +869,7 @@ int setvalue=request["value"].asInt();
         DEBUG_PRINT(DEBUG_ERROR,"\n Not a valid Categories  CCSetGetAttributes\n");
         response["result"]= "FAILURE";
         response["details"]="Not a valid Categories for CCSetGetAttributes";
-        return TEST_FAILURE;
+        return;
     }
 
 if(setvalue != TEST_DEFAULT) 
@@ -883,7 +885,7 @@ if(setvalue != TEST_DEFAULT)
         DEBUG_PRINT(DEBUG_ERROR,"\n Exception Caught in ccSetAttributes\n");
         response["result"]= "FAILURE";
         response["details"]="Exception Caught in ccSetAttributes()";
-        return TEST_FAILURE;
+        return;
 
     }
 
@@ -1003,12 +1005,12 @@ else if (setvalue == TEST_DEFAULT)
     
     free(stringDetails);
     free(resultDetails);
-    return TEST_SUCCESS;
+    return;
 
 
 }
 
-
+#endif
 /*****************************************************************************************************************
  *
  * This CreateObject function for CCAgent class
@@ -1016,9 +1018,9 @@ else if (setvalue == TEST_DEFAULT)
  *
  ******************************************************************************************************************/
 
-extern "C" CCAgent* CreateObject()
+extern "C" CCAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-    return new CCAgent();
+    return new CCAgent(ptrtcpServer);
 }
 
 /*****************************************************************************************************************
@@ -1026,10 +1028,13 @@ extern "C" CCAgent* CreateObject()
  * This Cleanup function for CCAgent class
  *
  *
+
  ******************************************************************************************************************/
-bool CCAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+//bool CCAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool CCAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_LOG,"\n CCAgent shutting down ");
+#if 0
     ptrAgentObj->UnregisterMethod("TestMgr_CC_Init");
     ptrAgentObj->UnregisterMethod("TestMgr_CC_SetGetState");
     ptrAgentObj->UnregisterMethod("TestMgr_CC_SetGetAttribute");
@@ -1043,9 +1048,9 @@ bool CCAgent::cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
     ptrAgentObj->UnregisterMethod("TestMgr_CC_OnEasStop");
     ptrAgentObj->UnregisterMethod("TestMgr_CC_SetTrickPlayStatus");
     ptrAgentObj->UnregisterMethod("TestMgr_CC_ResetTrickPlayStatus");
+#endif
     return TEST_SUCCESS;
 }
-
 /**************************************************************************
 Function name : CCAgent::DestroyObject()
 

@@ -16,11 +16,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
+
 AM_CXXFLAGS = -DYOCTO_LIB_LOADING -DDEBUG_LEVEL_TRACE -DRDKVERSION="\"${RDK_VERSION}\"" $(GST_CFLAGS) $(GST_LIBS) $(AGENT_FLAGS) \
-              -I${top_srcdir}/agent/include -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)
+              -I./include/ -I${top_srcdir}/agent/include -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)
 
 bin_PROGRAMS = rdk_tdk_agent_process
 rdk_tdk_agent_processdir = ${bindir}
-rdk_tdk_agent_process_SOURCES = src/agentmain.cpp src/rpcmethods.cpp
-rdk_tdk_agent_process_LDADD = -ljsoncpp -ljsonrpc-cpp -ldl -lpthread
+rdk_tdk_agent_process_SOURCES = src/rpcmethods.cpp src/agentmain.cpp 
+rdk_tdk_agent_process_LDADD = -ljsoncpp -ldl -lpthread -ljsonrpccpp-server -ljsonrpccpp-common -ljsonrpccpp-client
 rdk_tdk_agent_process_includedir = ${includedir}

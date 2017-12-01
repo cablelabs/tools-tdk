@@ -21,12 +21,12 @@
 #define __RDK_TEST_STUB_INTF__
 
 #include <string>
+#include <jsonrpccpp/server.h>
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 
 #define IN	
 #define OUT
-
 class RDKTestAgent;
-
 /**************************************************************************************
  Description   : This Class provides provides interface for the modules.
  
@@ -43,11 +43,11 @@ class RDKTestStubInterface
 
         virtual std::string testmodulepre_requisites() = 0;
         virtual bool testmodulepost_requisites() = 0;
-        virtual bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj) = 0;
-        virtual bool cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj) = 0;
+        virtual bool initialize(IN const char* szVersion) = 0;
+        //virtual bool initialize(IN const char* szVersion, IN TcpSocketServer *ptrAgentObj) = 0;
+        //virtual bool cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj) = 0;
+        virtual bool cleanup(IN const char* szVersion) = 0;
 		
 }; /* End of RDKTestStubInterface */
 
 #endif //__RDK_TEST_STUB_INTF__
-
-

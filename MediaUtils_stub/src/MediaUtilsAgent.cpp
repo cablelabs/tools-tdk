@@ -116,12 +116,12 @@ Arguments     : NULL
 
 Description   : Constructor for MediaUtilsAgent class
 ***************************************************************************/
-
+#if 0
 MediaUtilsAgent::MediaUtilsAgent()
 {
         DEBUG_PRINT(DEBUG_LOG, "MediaUtilsAgent Initialized\n");
 }
-
+#endif
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Description   : testmodulepre_requisites will be used for setting the
@@ -187,9 +187,9 @@ Arguments       : NULL
 Description     : This function is used to create a new object of the class "MediaUtilsAgent".
 **************************************************************************/
 
-extern "C" MediaUtilsAgent* CreateObject()
+extern "C" MediaUtilsAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-        return new MediaUtilsAgent();
+        return new MediaUtilsAgent(ptrtcpServer);
 }
 
 /***************************************************************************
@@ -199,10 +199,10 @@ extern "C" MediaUtilsAgent* CreateObject()
  *                script
  *****************************************************************************/
 
-bool MediaUtilsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool MediaUtilsAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT (DEBUG_TRACE, "MediaUtils Initialization Entry\n");
-    
+#if 0    
     ptrAgentObj->RegisterMethod(*this,&MediaUtilsAgent::MediaUtils_AudioCapture_Open, "TestMgr_MediaUtils_AudioCapture_Open");
     ptrAgentObj->RegisterMethod(*this,&MediaUtilsAgent::MediaUtils_Get_DefaultSettings, "TestMgr_MediaUtils_Get_DefaultSettings");
     ptrAgentObj->RegisterMethod(*this,&MediaUtilsAgent::MediaUtils_Get_Current_Settings, "TestMgr_MediaUtils_Get_Current_Settings");
@@ -211,6 +211,7 @@ bool MediaUtilsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAg
     ptrAgentObj->RegisterMethod(*this,&MediaUtilsAgent::MediaUtils_AudioCaptureStop, "TestMgr_MediaUtils_AudioCaptureStop");
     ptrAgentObj->RegisterMethod(*this,&MediaUtilsAgent::MediaUtils_AudioCapture_Close, "TestMgr_MediaUtils_AudioCapture_Close");
     ptrAgentObj->RegisterMethod(*this,&MediaUtilsAgent::MediaUtils_ExecuteCmd,"TestMgr_MediaUtils_ExecuteCmd");
+#endif
     DEBUG_PRINT (DEBUG_TRACE, "MediaUtils Initialization Exit\n");
 
     return TEST_SUCCESS;
@@ -221,7 +222,7 @@ bool MediaUtilsAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAg
  *Function name : MediaUtils_AudioCapture_Open
  *Descrption    : This function is to get the default settings of audio capture
  *****************************************************************************/
-bool MediaUtilsAgent::MediaUtils_AudioCapture_Open(IN const Json::Value& req, OUT Json::Value& response)
+void MediaUtilsAgent::MediaUtils_AudioCapture_Open(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCapture_Open --->Entry\n");
 
@@ -232,7 +233,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCapture_Open(IN const Json::Value& req, OU
 	response["details"] = "RMF_AudioCapture_Open success\n";
         DEBUG_PRINT(DEBUG_LOG, "MediaUtils_AudioCapture_Open success\n");
 	DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCapture_Open -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
@@ -240,7 +241,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCapture_Open(IN const Json::Value& req, OU
 	response["details"] = "RMF_AudioCapture_Open failed\n";
         DEBUG_PRINT(DEBUG_ERROR, "RMF_AudioCapture_Open failed\n");
 	DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCapture_Open -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
 }
@@ -250,7 +251,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCapture_Open(IN const Json::Value& req, OU
  *Function name : MediaUtils_Get_DefaultSettings
  *Descrption    : This function is to get the default settings of audio capture
  *****************************************************************************/
-bool MediaUtilsAgent::MediaUtils_Get_DefaultSettings(IN const Json::Value& req, OUT Json::Value& response)
+void MediaUtilsAgent::MediaUtils_Get_DefaultSettings(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_Get_DefaultSettings --->Entry\n");
     int returnStatus;
@@ -270,14 +271,14 @@ bool MediaUtilsAgent::MediaUtils_Get_DefaultSettings(IN const Json::Value& req, 
         response["details"] = outputDetails;
         DEBUG_PRINT(DEBUG_LOG, "MediaUtils_GetDefaultSettings call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_GetDefaultSettings -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MediaUtils_GetDefaultSettings call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_GetDefaultSettings -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
 }
@@ -286,7 +287,7 @@ bool MediaUtilsAgent::MediaUtils_Get_DefaultSettings(IN const Json::Value& req, 
  *Function name : MediaUtils_GetCurrentSettings
  *Descrption    : This function is to get the current settings of audio capture
  *****************************************************************************/
-bool MediaUtilsAgent::MediaUtils_Get_Current_Settings(IN const Json::Value& req, OUT Json::Value& response)
+void MediaUtilsAgent::MediaUtils_Get_Current_Settings(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_GetCurrentSettings --->Entry\n");
     int returnStatus;
@@ -302,7 +303,7 @@ bool MediaUtilsAgent::MediaUtils_Get_Current_Settings(IN const Json::Value& req,
 	}
     else
 	{
-	return TEST_FAILURE;
+	return;
 	}
 
     std::string outputDetails;
@@ -319,14 +320,14 @@ bool MediaUtilsAgent::MediaUtils_Get_Current_Settings(IN const Json::Value& req,
         response["details"] = outputDetails;
         DEBUG_PRINT(DEBUG_LOG, "MediaUtils_GetCurrentSettings call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_GetCurrentSettings -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MediaUtils_GetCurrentSettings call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_GetCurrentSettings -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
 }
@@ -337,7 +338,7 @@ bool MediaUtilsAgent::MediaUtils_Get_Current_Settings(IN const Json::Value& req,
  *Function name : MediaUtils_GetStatus
  *Descrption    : This function is to get the status of audio capture
  *****************************************************************************/
-bool MediaUtilsAgent::MediaUtils_Get_Status(IN const Json::Value& req, OUT Json::Value& response)
+void MediaUtilsAgent::MediaUtils_Get_Status(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_GetStatus --->Entry\n");
     int returnStatus;
@@ -347,14 +348,14 @@ bool MediaUtilsAgent::MediaUtils_Get_Status(IN const Json::Value& req, OUT Json:
         response["result"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_LOG, "MediaUtils_GetStatus call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_GetStatus -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MediaUtils_GetStatus call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_GetStatus -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
 }
@@ -364,7 +365,7 @@ bool MediaUtilsAgent::MediaUtils_Get_Status(IN const Json::Value& req, OUT Json:
  *Function name : MediaUtils_AudioCaptureStart
  *Descrption    : This function is to start the audio capture
  *****************************************************************************/
-bool MediaUtilsAgent::MediaUtils_AudioCaptureStart(IN const Json::Value& req, OUT Json::Value& response)
+void MediaUtilsAgent::MediaUtils_AudioCaptureStart(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCaptureStart --->Entry\n");
 
@@ -390,7 +391,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCaptureStart(IN const Json::Value& req, OU
 	}
     else
 	{
-	return TEST_FAILURE;
+	return;
 	}
 
     if(paramFifosize == "NULL")
@@ -406,7 +407,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCaptureStart(IN const Json::Value& req, OU
         }
     else
         {
-        return TEST_FAILURE;
+        return;
         }
     if(paramHandle == "NULL")
 	{
@@ -419,7 +420,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCaptureStart(IN const Json::Value& req, OU
 	}
     else
 	{
-	return TEST_FAILURE;
+	return;
 	}
 
 
@@ -428,14 +429,14 @@ bool MediaUtilsAgent::MediaUtils_AudioCaptureStart(IN const Json::Value& req, OU
         response["result"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_LOG, "MediaUtils_AudioCaptureStart call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCaptureStart -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MediaUtils_AudioCaptureStart call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCaptureStart -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
 }
@@ -444,7 +445,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCaptureStart(IN const Json::Value& req, OU
  *Function name : MediaUtils_AudioCaptureStop
  *Descrption    : This function is to stop the audio capture
  *****************************************************************************/
-bool MediaUtilsAgent::MediaUtils_AudioCaptureStop(IN const Json::Value& req, OUT Json::Value& response)
+void MediaUtilsAgent::MediaUtils_AudioCaptureStop(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCaptureStop --->Entry\n");
     int returnStatus;
@@ -465,14 +466,14 @@ bool MediaUtilsAgent::MediaUtils_AudioCaptureStop(IN const Json::Value& req, OUT
         response["result"] = "SUCCESS";
         DEBUG_PRINT(DEBUG_LOG, "MediaUtils_AudioCaptureStop call is SUCCESS");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCaptureStop -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
         response["result"] = "FAILURE";
         DEBUG_PRINT(DEBUG_ERROR, "MediaUtils_AudioCaptureStop call is FAILURE");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCaptureStop -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
 }
@@ -481,7 +482,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCaptureStop(IN const Json::Value& req, OUT
  *Function name : MediaUtils_AudioCapture_Close
  *Descrption    : This function is to get the default settings of audio capture
  *****************************************************************************/
-bool MediaUtilsAgent::MediaUtils_AudioCapture_Close(IN const Json::Value& req, OUT Json::Value& response)
+void MediaUtilsAgent::MediaUtils_AudioCapture_Close(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCapture_Close --->Entry\n");
     paramHandle = req["paramHandle"].asCString();
@@ -501,7 +502,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCapture_Close(IN const Json::Value& req, O
         response["details"] = "RMF_AudioCapture_Close success\n";
         DEBUG_PRINT(DEBUG_LOG, "MediaUtils_AudioCapture_Close success\n");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCapture_Close -->Exit\n");
-        return TEST_SUCCESS;
+        return;
     }
     else
     {
@@ -509,7 +510,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCapture_Close(IN const Json::Value& req, O
         response["details"] = "RMF_AudioCapture_Close failed\n";
         DEBUG_PRINT(DEBUG_ERROR, "RMF_AudioCapture_Close failed\n");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_AudioCapture_Close -->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
 }
@@ -520,7 +521,7 @@ bool MediaUtilsAgent::MediaUtils_AudioCapture_Close(IN const Json::Value& req, O
  *
  * Description   : This will execute linux commands in box
  * ***************************************************************************/
-bool MediaUtilsAgent::MediaUtils_ExecuteCmd(IN const Json::Value& request, OUT Json::Value& response)
+void MediaUtilsAgent::MediaUtils_ExecuteCmd(IN const Json::Value& request, OUT Json::Value& response)
 {
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_ExecuteCmd ---> Entry\n");
         string fileinfo = request["command"].asCString();
@@ -542,7 +543,7 @@ bool MediaUtilsAgent::MediaUtils_ExecuteCmd(IN const Json::Value& request, OUT J
                 response["details"] = "popen() failure";
                 DEBUG_PRINT(DEBUG_ERROR, "popen() failure\n");
 
-                return TEST_FAILURE;
+                return;
         }
 
         /*copy the response to a buffer */
@@ -560,7 +561,7 @@ bool MediaUtilsAgent::MediaUtils_ExecuteCmd(IN const Json::Value& request, OUT J
         response["details"] = respResult;
         DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
         DEBUG_PRINT(DEBUG_TRACE, "MediaUtils_ExecuteCmd -->Exit\n");
-        return TEST_SUCCESS;
+        return;
 }
 /**************************************************************************
 Function Name   : cleanup
@@ -569,15 +570,14 @@ Arguments       : NULL
 
 Description     : This function will be used to the close things cleanly.
  **************************************************************************/
-bool MediaUtilsAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+bool MediaUtilsAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaning up\n");
-
+#if 0
     if(NULL == ptrAgentObj)
     {
         return TEST_FAILURE;
     }
-
     ptrAgentObj->UnregisterMethod("TestMgr_MediaUtils_AudioCapture_Open");
     ptrAgentObj->UnregisterMethod("TestMgr_MediaUtils_Get_DefaultSettings");
     ptrAgentObj->UnregisterMethod("TestMgr_MediaUtils_Get_Current_Settings");
@@ -586,6 +586,7 @@ bool MediaUtilsAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgen
     ptrAgentObj->UnregisterMethod("TestMgr_MediaUtils_AudioCaptureStop");
     ptrAgentObj->UnregisterMethod("TestMgr_MediaUtils_AudioCapture_Close");
     ptrAgentObj->UnregisterMethod("TestMgr_MediaUtils_ExecuteCmd");
+#endif
     return TEST_SUCCESS;
 }
 

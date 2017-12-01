@@ -20,7 +20,7 @@
 
 /* System Includes */
 #include <stdlib.h>
-#include <string.h>
+#include <string>
 #include <signal.h>
 #include <dlfcn.h>
 #include <map>
@@ -33,19 +33,25 @@
 #include <errno.h>
 #include <sstream>
 #include <algorithm>
+#include <unistd.h>
 
 /* Application Includes */
 #include "rpcmethods.h"
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
 
+
 /* External Variables */
 extern 	     std::fstream go_ConfigFile;
 extern 	     std::fstream go_PortforwardFile;
-extern 	     Json::Rpc::TcpServer go_Server;
+//extern 	     Json::Rpc::TcpServer go_Server; sarves
+//extern TcpSocketServer o_stubserver;
+extern TcpSocketServer go_Server;
+extern RDKTestAgent o_Agent;
 bool   	     bBenchmarkEnabled;
 std::string GetSubString (std::string strLine, std::string strDelimiter);
-
+#define LOCAL_SERVER_ADDR "127.0.0.1"
+#define LOCAL_PORT        18087
 /* Constants */
 #define LIB_NAME_SIZE 50       // Maximum size of component interface library name
 #define COMMAND_SIZE  500      // Maximum size of command
@@ -80,6 +86,8 @@ std::string GetSubString (std::string strLine, std::string strDelimiter);
 #ifndef RDKVERSION
 #define RDKVERSION "NOT_DEFINED"       
 #endif
+
+TcpSocketServer o_StubStatus (LOCAL_SERVER_ADDR, LOCAL_PORT);
 
 /* Structure to hold module details */
 struct sModuleDetails 
@@ -118,8 +126,60 @@ int RpcMethods::sm_nModuleCount = 0;                       // Setting Module cou
 std::string RpcMethods::sm_strResultId = "0000";
 int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of device as FREE by default
 std::string RpcMethods::sm_strConsoleLogPath = "";
+static volatile bool b_stubServerFlag =false;
 
+void *Createstubserver (void *)
+{
+    DEBUG_PRINT (DEBUG_TRACE, "\nStarting Stub server.....\n");
+    //Json::Rpc::TcpServer o_Status (ANY_ADDR, RDK_DEVICE_STATUS_PORT);
+    //RpcMethods o_RpcMethods (NULL);
+    //TcpSocketServer go_Status("127.0.0.1", 18087);
+    //RpcMethods o_Status(go_Status);
 
+#if 0
+    if (!networking::init())
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Network initialization failed \n");
+    }
+
+    if (!o_Status.Bind())
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Bind failed \n");
+    }
+#endif
+    if (!o_StubStatus.StartListening())
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Listen failed \n");
+    }
+
+    /* Registering methods to status server */
+#if 0
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetHostStatus, std::string("getHostStatus")));
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCCallEnableTDK, std::string("callEnableTDK")));
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCCallDisableTDK, std::string("callDisableTDK")));
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCExecuteLoggerScript, std::string("executeLoggerScript")));
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCRemoveLogs, std::string("executeRemoveLogsScript")));
+
+    /* To set route to client devices. For gateway boxes only */
+    #ifdef PORT_FORWARD
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCSetClientRoute, std::string("setClientRoute")));
+    o_Status.AddMethod (new Json::Rpc::RpcMethod<RpcMethods> (o_RpcMethods, &RpcMethods::RPCGetConnectedDevices, std::string("getConnectedDevices")));
+    #endif /* End of PORT_FORWARD  */
+
+#endif
+    while (b_stubServerFlag)
+    {
+        /* Status server waiting indefinitely */
+        //do nothing
+        //o_Status.WaitMessage(1000);
+    }
+
+    /* clean up and exit */
+    DEBUG_PRINT (DEBUG_TRACE, "\nExiting Device Status Monitoring..\n");
+    //o_Status.Close();
+    //networking::cleanup();
+    pthread_exit (NULL);
+} /* End of CheckStatus */
 
 /********************************************************************************************************************
  Purpose:             This function will execute in a thread. It will invoke a shell script which inturn fetch performance data using sysstat tool.
@@ -324,12 +384,15 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
     std::string strPreRequisiteDetails;
     std::string strLibName(pszLibName);
     std::string strLoadLibraryDetails = "Module Loaded Successfully";
+    pthread_t StubServerThreadId; //Multi
+    int nReturnValue =0;
 
     DEBUG_PRINT (DEBUG_TRACE, "\nLoad Library --> Entry\n");
 
     m_iLoadStatus = FLAG_SET;
     pszError = new char [ERROR_SIZE];
-    RDKTestStubInterface* (*pfnCreateObject)(void);
+    //RDKTestStubInterface* (*pfnCreateObject)(void);
+    RDKTestStubInterface* (*pfnCreateObject)(TcpSocketServer &ptrRpcServer);
     RDKTestStubInterface* pRDKTestStubInterface;
 
     do
@@ -349,7 +412,7 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
         }
 
         /* Executing  "CreateObject" function of loaded module */
-        pfnCreateObject = (RDKTestStubInterface* (*) (void)) dlsym (pvHandle, "CreateObject");
+        pfnCreateObject = (RDKTestStubInterface* (*) (jsonrpc::TcpSocketServer&)) dlsym (pvHandle, "CreateObject");
         if ( (pszError = dlerror()) != NULL)
         {
             DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
@@ -360,8 +423,20 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
             break;                                         // Returns with error details when fails to invoke "CreateObject".
 		
         }	
-		
-        pRDKTestStubInterface = pfnCreateObject();
+	
+        /* Multi-server */
+        //TcpSocketServer o_stubserver("127.0.0.1", 18087);  //creating local server  	
+        pRDKTestStubInterface = pfnCreateObject(o_StubStatus);
+#if 0
+        if (o_stubserver.StartListening()) {
+           cout << "Server started successfully" << endl;
+        }
+#endif        
+         /* Starting new thread for Device Status Monitoring */
+      
+ 
+
+        //pRDKTestStubInterface = pfnCreateObject(go_Server);
 		
         /* Executing "testmodulepre_requisites" function of loaded module to enable pre-requisites */
         strPreRequisiteDetails = pRDKTestStubInterface -> testmodulepre_requisites ();
@@ -403,7 +478,8 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
         o_gModuleMap.insert (std::make_pair (nModuleId, o_ModuleDetails));
 	
         /* Executing "initialize" function of loaded module */
-        bRet = pRDKTestStubInterface -> initialize ("0.0.1", m_pAgent);
+        //bRet = pRDKTestStubInterface -> initialize ("0.0.1", &go_Server); //sarves
+        bRet = pRDKTestStubInterface -> initialize ("0.0.1"); //sarves
         if (bRet == false)
         {
             strLoadLibraryDetails = "component initialize failed";
@@ -435,6 +511,16 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
         o_ModuleListFile.close();    
 		
     }while(0);
+    //o_stubserver.StopListening();
+    //if (o_stubserver.StartListening()) {
+      //cout << "Server started successfully" << endl;
+    //}
+    b_stubServerFlag=true;   
+    nReturnValue = pthread_create (&StubServerThreadId, NULL, Createstubserver,NULL);
+    if(nReturnValue != RETURN_SUCCESS)
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Device Status Monitoring\n");
+    }
 	
     return strLoadLibraryDetails;            // Returns when library loaded successfully.
 	
@@ -532,7 +618,7 @@ std::string RpcMethods::UnloadLibrary (char* pszLibName)
         /* Calling CleanUp of module */
         DEBUG_PRINT (DEBUG_LOG, "Going to cleanup \n");
         bRet = pRDKTestStubInterface -> testmodulepost_requisites();
-        bRet = pRDKTestStubInterface -> cleanup ("0.0.1", m_pAgent);
+        bRet = pRDKTestStubInterface -> cleanup ("0.0.1");
         pfnDestroyObject (pRDKTestStubInterface);
 
         bRet = DeleteModuleFromFile(strLibName);
@@ -546,6 +632,10 @@ std::string RpcMethods::UnloadLibrary (char* pszLibName)
 
 
     }while(0);	
+    //go_Server.StopListening();
+    //if (go_Server.StartListening()) {
+     // cout << "Server started successfully" << endl;
+    //}
 
     return strUnloadLibraryDetails;	
 
@@ -671,7 +761,7 @@ void RpcMethods::CallReboot()
  Other Methods used :             PerformanceExecuter()
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
 
@@ -848,8 +938,7 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
     response["details"] = strLoadModuleDetails;
 
     DEBUG_PRINT (DEBUG_LOG, "\nRPC Load Module --> Exit \n"); 
-	
-    return bRet;
+    return;
 	
 } /* End of RPCLoadModule */
 
@@ -868,7 +957,7 @@ bool RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
                                              ResetCrashStatus()
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     void* pvHandle = NULL;
@@ -937,8 +1026,9 @@ bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& respo
             RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
         }
     }
-
-    return bRet;
+    
+    b_stubServerFlag=false;
+    return ;
 	
 } /* End of RPCUnloadModule */
 
@@ -957,7 +1047,7 @@ bool RpcMethods::RPCUnloadModule (const Json::Value& request, Json::Value& respo
                                              ResetCrashStatus()
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& response)
 {
     DEBUG_PRINT (DEBUG_TRACE, "\nRPC Enable Reboot --> Entry\n");
     //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
@@ -1040,7 +1130,7 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
 
     CallReboot();
 
-    return bRet;
+    return;
 	
 } /* End of RPCEnableReboot */
 
@@ -1057,7 +1147,7 @@ bool RpcMethods::RPCEnableReboot (const Json::Value& request, Json::Value& respo
  Methods of same class used:   LoadLibrary()
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     std::string strFilePath;
@@ -1203,7 +1293,7 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
     system(strNullLog.c_str());
 
     nReturnValue = remove (strFilePath.c_str());
-    return bRet;
+    return;
 
 } /* End of RPCRestorePreviousState */
 
@@ -1220,7 +1310,7 @@ bool RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
  Methods of same class used:   callReboot()
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCRebootBox(const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCRebootBox(const Json::Value& request, Json::Value& response)
 {
 
     bool bRet = true;
@@ -1235,7 +1325,7 @@ bool RpcMethods::RPCRebootBox(const Json::Value& request, Json::Value& response)
     response["id"] = request["id"];
     response["result"] = "Success";
 
-    return bRet;
+    return;
 	
 }/* End of RPCRebootBox */
 
@@ -1255,15 +1345,16 @@ bool RpcMethods::RPCRebootBox(const Json::Value& request, Json::Value& response)
                              getIP()
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& response)
+//sarves
+void RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     char* pszInterface;
     std::string strFilePath;
 
-    //DEBUG_PRINT (DEBUG_TRACE, "\nRPCGetHostStatus --> Entry\n");
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPCGetHostStatus --> Entry\n");
     //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
-    //cout << "Received query: \n" << request << endl;
+    cout << "Received query: \n" << request << endl;
 
     /* Constructing JSON response */
     response["jsonrpc"] = "2.0";
@@ -1289,7 +1380,8 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
           (strcmp ( (request["managerIP"].asCString()), "NULL") != 0) )
     {	
         /* Fetching the connected box IP address */
-        RpcMethods::sm_strBoxIP = go_Server.getIP();
+        //RpcMethods::sm_strBoxIP = go_Server.getIP(); sarves
+          RpcMethods::sm_strBoxIP = "127.0.0.1"; // Need to revisit this
 
         /* Getting corresponding network interface */
         pszInterface = GetHostIPInterface (RpcMethods::sm_strBoxIP.c_str());
@@ -1347,10 +1439,39 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
         }
     }
 	
-    return bRet;
+    return;
 	
 } /* End of RPCGetHostStatus */
 
+//sarves
+void RpcMethods::RPCGetStatus (const Json::Value& request, Json::Value& response)
+{
+   DEBUG_PRINT (DEBUG_ERROR, "\n Valid!!! \n");
+   DEBUG_PRINT (DEBUG_TRACE, "\nRPCGetHostStatus --> Entry\n");
+   //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
+   cout << "Received query: \n" << request << endl;
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+#if 1
+    /* Finding Test Manager IP and box name from JSON message */
+    if ( (request["managerIP"] != Json::Value::null) &&
+          (strcmp((request["managerIP"].asCString()),"NULL") != 0) )
+    {
+        RpcMethods::sm_szManagerIP = (request["managerIP"].asCString());
+    }
+
+    if ( (request["boxName"] != Json::Value::null) &&
+          (strcmp((request["boxName"].asCString()),"NULL") != 0) )
+    {
+        RpcMethods::sm_szBoxName = (request["boxName"].asCString());
+    }
+
+   response["boxname"]=RpcMethods::sm_szBoxName;
+   response["managerIP"]=RpcMethods::sm_szManagerIP;   
+#endif
+   response["result"] = "Device Free";
+
+}
 
 /********************************************************************************************************************
  Purpose:               RPC call to enable TDK in STB
@@ -1361,7 +1482,7 @@ bool RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
  Return:                 bool  -      Always returning true from this function, with details in response[result]
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCCallEnableTDK(const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCCallEnableTDK(const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     int nReturnValue = 0;
@@ -1386,7 +1507,7 @@ bool RpcMethods::RPCCallEnableTDK(const Json::Value& request, Json::Value& respo
     }
     sleep (2);
 
-    return bRet;
+    return;
 
 }/* End of RPCEnableTDK */
 
@@ -1400,7 +1521,7 @@ bool RpcMethods::RPCCallEnableTDK(const Json::Value& request, Json::Value& respo
  Return:                 bool  -      Always returning true from this function, with details in response[result]
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCCallDisableTDK(const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCCallDisableTDK(const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     int nReturnValue = 0;
@@ -1425,7 +1546,7 @@ bool RpcMethods::RPCCallDisableTDK(const Json::Value& request, Json::Value& resp
     }
     sleep (2);
 
-    return bRet;
+    return;
 
 }/* End of RPCCallDisableTDK */
 
@@ -1439,7 +1560,7 @@ bool RpcMethods::RPCCallDisableTDK(const Json::Value& request, Json::Value& resp
  Return:                 bool  -      Always returning true from this function.
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& response)
 {
     char* pszError;
     bool bRet = true;
@@ -1455,7 +1576,7 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
     const char* pszEnableReset = NULL;
 
     pszError = new char [ERROR_SIZE];
-    RDKTestStubInterface* (*pfnCreateObject)(void);
+    RDKTestStubInterface* (*pfnCreateObject)(TcpSocketServer &ptrRpcServer);
     RDKTestStubInterface* pRDKTestStubInterface;
     void (*pfnDestroyObject) (RDKTestStubInterface*);
 
@@ -1477,6 +1598,7 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         {	
             sprintf (szLibName, "%s", strLineInFile.c_str());
             bRet = DeleteModuleFromFile (strLineInFile);
+            DEBUG_PRINT (DEBUG_TRACE, "\nRPCResetAgent --> Module %s \n",szLibName);
 
             /* Dynamically loading library */
             pvHandle = dlopen (szLibName, RTLD_LAZY | RTLD_GLOBAL);
@@ -1488,13 +1610,13 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
             }
 
             /* Executing  "CreateObject" function of loaded module */
-            pfnCreateObject = (RDKTestStubInterface* (*) (void)) dlsym (pvHandle, "CreateObject");
+            pfnCreateObject = (RDKTestStubInterface* (*) (jsonrpc::TcpSocketServer&)) dlsym (pvHandle, "CreateObject");
             if ( (pszError = dlerror()) != NULL)
             {
                 DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
 		  break;
             }	
-            pRDKTestStubInterface = pfnCreateObject();
+            pRDKTestStubInterface = pfnCreateObject(o_StubStatus);
 
             /* Calling Post requisites for module */
             DEBUG_PRINT (DEBUG_LOG, "Executing Post requisites for %s \n", szLibName);
@@ -1553,13 +1675,14 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
         DEBUG_PRINT (DEBUG_LOG, "\n\nAgent Restarting...\n");
 
         /* Find group id for agent process */
-        nPgid = getpgid(RpcMethods::sm_nAgentPID);
+        //nPgid = getpgid(RpcMethods::sm_nAgentPID); sarves
 
         /* Ignore SIGINT signal in agent monitor process */
 	sighandler_t sigIgnoreHandle = signal (SIGINT, SIG_IGN);
 
 	/* Send SIGINT signal to all process in the group */
-        nReturnValue = kill ( (-1 * nPgid), SIGINT);
+        //nReturnValue = kill ( (-1 * nPgid), SIGINT);  sarves
+        nReturnValue=RETURN_SUCCESS;
         if (nReturnValue == RETURN_SUCCESS)
         {
             DEBUG_PRINT (DEBUG_TRACE, "Sent SIGINT signal to all process in group successfully \n");
@@ -1619,7 +1742,7 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
        RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
     }
 	
-    return bRet;
+    return;
 
 }/* End of RPCResetAgent */
 
@@ -1633,7 +1756,7 @@ bool RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
  Return:                 bool  -      Always returning true from this function.
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCGetRDKVersion (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCGetRDKVersion (const Json::Value& request, Json::Value& response)
 {
 
     bool bRet = true;
@@ -1646,8 +1769,7 @@ bool RpcMethods::RPCGetRDKVersion (const Json::Value& request, Json::Value& resp
     response["id"] = request["id"];
     response["result"] = RDKVERSION;
 
-    return bRet;
-
+    return;
 }/* End of RPCGetRDKVersion */
 
 
@@ -1662,7 +1784,7 @@ bool RpcMethods::RPCGetRDKVersion (const Json::Value& request, Json::Value& resp
  Return:                 bool  -      Always returning true from this function.
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
 
@@ -1671,7 +1793,7 @@ bool RpcMethods::RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Val
     response["id"] = request["id"];
     response["result"] = RpcMethods::sm_strLogFolderPath;
 
-    return bRet;
+    return;
 
 }/* End of RPCGetAgentConsoleLogPath */
 
@@ -1687,7 +1809,7 @@ bool RpcMethods::RPCGetAgentConsoleLogPath(const Json::Value& request, Json::Val
  Return:                 bool  -      Always returning true from this function, with details in response[result].
  
 *********************************************************************************************************************/
-bool RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     std::string strLogPath;
@@ -1717,7 +1839,7 @@ bool RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::V
 
     DEBUG_PRINT (DEBUG_TRACE, "\nRPCPerformanceBenchMarking --> Exit \n");
 
-    return bRet;
+    return;
 	
 } /* End of RPCPerformanceBenchMarking */
 
@@ -1733,7 +1855,7 @@ bool RpcMethods::RPCPerformanceBenchMarking (const Json::Value& request, Json::V
  Return:                 bool  -      Always returning true from this function, with details in response[result].
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     char szBuffer[LINE_LEN];
@@ -1790,7 +1912,7 @@ bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Js
 
     DEBUG_PRINT (DEBUG_TRACE, "\nRPCPerformanceSystemDiagnostics --> Exit \n");
  
-    return bRet;
+    return;
 	
 } /* End of RPCPerformanceSystemDiagnostics */
 
@@ -1805,7 +1927,7 @@ bool RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Js
  Return:                 bool  -      Always returning true from this function, with details in response[result].
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCExecuteLoggerScript (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCExecuteLoggerScript (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     char szCommand[COMMAND_SIZE];
@@ -1829,7 +1951,7 @@ bool RpcMethods::RPCExecuteLoggerScript (const Json::Value& request, Json::Value
     system (szCommand); //Calling the getdevices script
     sleep (2);
 
-    return bRet;
+    return;
 
 } /* End of RPCExecuteLoggerScript */
 
@@ -1844,7 +1966,7 @@ bool RpcMethods::RPCExecuteLoggerScript (const Json::Value& request, Json::Value
  Return:                 bool  -      Always returning true from this function, with details in response[result].
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCRemoveLogs (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCRemoveLogs (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     char szCommand[COMMAND_SIZE];
@@ -1868,7 +1990,7 @@ bool RpcMethods::RPCRemoveLogs (const Json::Value& request, Json::Value& respons
     system (szCommand); //Calling the script to remove unwanted logs
     sleep (2);
 
-    return bRet;
+    return;
 
 } /* End of RPCRemoveLogs */
 
@@ -1884,7 +2006,7 @@ bool RpcMethods::RPCRemoveLogs (const Json::Value& request, Json::Value& respons
  Return:                 bool  -      Always returning true from this function, with details in response[result].
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCPushLog (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCPushLog (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     std::string strFilePath;
@@ -1936,7 +2058,7 @@ bool RpcMethods::RPCPushLog (const Json::Value& request, Json::Value& response)
             DEBUG_PRINT (DEBUG_ERROR, "Failed to extract Test Manager IP Address");
             response["result"] = "FAILURE";
             response["details"] = "Failed to extract Test Manager IP Address";
-            return bRet;
+            return;
         }
     }
     else
@@ -1944,7 +2066,7 @@ bool RpcMethods::RPCPushLog (const Json::Value& request, Json::Value& response)
         DEBUG_PRINT (DEBUG_TRACE, "\nAlert!!! Configuration file %s not found \n", SHOW_DEFINE(CONFIGURATION_FILE));
         response["result"] = "FAILURE";
         response["details"] = "Configuration file not found";
-        return bRet;
+        return;
     }
 
     /* Constructing the command to invoke script */
@@ -1953,7 +2075,7 @@ bool RpcMethods::RPCPushLog (const Json::Value& request, Json::Value& response)
     system (szCommand); //Calling the script to remove unwanted logs
     sleep (2);
 
-    return bRet;
+    return;
 
 } /* End of RPCPushLog */
 
@@ -1967,7 +2089,7 @@ bool RpcMethods::RPCPushLog (const Json::Value& request, Json::Value& response)
  Return:                 bool  -      Always returning true from this function, with details in response[result].
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCUploadLog (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCUploadLog (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     std::string strFilePath;
@@ -2026,7 +2148,7 @@ bool RpcMethods::RPCUploadLog (const Json::Value& request, Json::Value& response
             DEBUG_PRINT (DEBUG_ERROR, "Failed to extract Test Manager IP Address");
             response["result"] = "FAILURE";
             response["details"] = "Failed to extract Test Manager IP Address";
-            return bRet;
+            return;
         }
     }
     else
@@ -2034,7 +2156,7 @@ bool RpcMethods::RPCUploadLog (const Json::Value& request, Json::Value& response
         DEBUG_PRINT (DEBUG_TRACE, "\nAlert!!! Configuration file %s not found \n", SHOW_DEFINE(CONFIGURATION_FILE));
         response["result"] = "FAILURE";
         response["details"] = "Configuration file not found";
-        return bRet;
+        return;
     }
 
     /* Constructing the command to invoke script */
@@ -2047,7 +2169,7 @@ bool RpcMethods::RPCUploadLog (const Json::Value& request, Json::Value& response
     system (szCommand); //Calling the script to remove unwanted logs
     sleep (2);
 
-    return bRet;
+    return;
 
 } /* End of RPCUploadLog */
 
@@ -2061,7 +2183,7 @@ bool RpcMethods::RPCUploadLog (const Json::Value& request, Json::Value& response
  Return:                bool  -      Always returning true from this function, with details in response[result]
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCGetImageName(const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCGetImageName(const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     char szBuffer [LINE_LEN] = {'\0'};
@@ -2105,9 +2227,53 @@ bool RpcMethods::RPCGetImageName(const Json::Value& request, Json::Value& respon
 
     DEBUG_PRINT (DEBUG_TRACE, "RPC Get Image name --> Exit");
 
-    return bRet;
+    return;
 
 }/* End of RPCGetImageName */
+
+/********************************************************************************************************************
+ Purpose:               RPC call to enable TDK in STB
+ Parameters:
+                             request [IN]       - Json request
+                             response [OUT]  - Json response with result "SUCCESS"
+
+ Return:                 bool  -      Always returning true from this function, with details in response[result]
+
+*********************************************************************************************************************/
+void RpcMethods::RPCExecuteTestCase(const Json::Value& request, Json::Value& response)
+{
+    bool bRet = true;
+    int nReturnValue = 0;
+    char szCommand[COMMAND_SIZE];
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPC Execute Test case --> Entry\n");
+    cout << "Received query: \n" << request << endl;
+
+    response["jsonrpc"] = "2.0";
+    response["id"] = request["id"];
+    //response["result"] = "Success";
+
+    //Multi server
+    //host="127.0.0.1";
+    //port=18087;
+    
+    TcpSocketClient client("127.0.0.1",18087);
+    Client c(client);
+    
+     
+    Json::Value params;
+    Json::Value method;
+   // params[""] =""; 
+    params=request["params"];
+    method=request["method"];
+  
+    response=c.CallMethod(method.asCString(),params);
+    cout<< "Received response \n" <<response <<endl;
+    response["result"]=response["result"];
+
+   return ;
+
+}/* End of RPCEnableTDK */
 
 /* To enable port forwarding. In gateway boxes only  */
 #ifdef PORT_FORWARD
@@ -2122,7 +2288,7 @@ bool RpcMethods::RPCGetImageName(const Json::Value& request, Json::Value& respon
  Return:                 bool  -      Always returning true from this function, with details in response[result].
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCGetConnectedDevices (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCGetConnectedDevices (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     std::string strFilePath;
@@ -2179,7 +2345,7 @@ bool RpcMethods::RPCGetConnectedDevices (const Json::Value& request, Json::Value
         response["result"] = "FAILURE";
     }
 	
-    return bRet;
+    return;
 
 } /* End of RPCGetConnectedDevices */
 
@@ -2193,7 +2359,7 @@ bool RpcMethods::RPCGetConnectedDevices (const Json::Value& request, Json::Value
  Return:                 bool  -      Always returning true from this function, with details in response[result].
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     std::string strFilePath;
@@ -2294,10 +2460,9 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
         response["result"] = "FAILURE";		
     }
 
-    return bRet;
+    return;
 	
 } /* End of RPCSetClientRoute */
-
 
 
 /********************************************************************************************************************
@@ -2309,7 +2474,7 @@ bool RpcMethods::RPCSetClientRoute (const Json::Value& request, Json::Value& res
  Return:                 bool  -      Always returning true from this function, with details in response[result].
 
 *********************************************************************************************************************/
-bool RpcMethods::RPCGetClientMocaIpAddress (const Json::Value& request, Json::Value& response)
+void RpcMethods::RPCGetClientMocaIpAddress (const Json::Value& request, Json::Value& response)
 {
     bool bRet = true;
     char szBuffer[LINE_LEN];
@@ -2362,7 +2527,7 @@ bool RpcMethods::RPCGetClientMocaIpAddress (const Json::Value& request, Json::Va
     /* Sending ip address or error message with json response message */	
     response["result"] = strIPaddr.c_str();
 
-    return bRet;
+    return;
 
 }/* End of RPCGetClientMocaIpAddress */
 

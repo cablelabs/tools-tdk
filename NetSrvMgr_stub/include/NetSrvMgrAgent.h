@@ -22,6 +22,7 @@
 
 #include <json/json.h>
 #include <fstream>
+#include <unistd.h>
 #include <sstream>
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
@@ -31,6 +32,7 @@
 #include "irMgr.h"
 #include "libIBusDaemon.h"
 //#include "authserviceIARM.h"
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 
 #define IN
 #define OUT
@@ -60,8 +62,20 @@
 using namespace std;
 
 class RDKTestAgent;
-class NetSrvMgrAgent : public RDKTestStubInterface
+class NetSrvMgrAgent : public RDKTestStubInterface , public AbstractServer<NetSrvMgrAgent>
 {
+public:
+    NetSrvMgrAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <NetSrvMgrAgent>(ptrRpcServer)
+    {
+        this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrGetAvailableSSIDs", PARAMS_BY_NAME, JSON_STRING,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetAvailableSSIDs);
+        this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrGetCurrentState", PARAMS_BY_NAME, JSON_STRING,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetCurrentState);
+        this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrGetLAFState", PARAMS_BY_NAME, JSON_STRING,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetLAFState);
+        this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrGetPairedSSID", PARAMS_BY_NAME, JSON_STRING,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetPairedSSID);
+        this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrSetEnabled", PARAMS_BY_NAME, JSON_STRING,"enable",JSON_BOOLEAN,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetEnabled);
+        this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrSetGetParameters", PARAMS_BY_NAME,JSON_STRING,"method_name",JSON_STRING,"new_mode",JSON_INTEGER,"enable",JSON_BOOLEAN,"ssid",JSON_STRING,"passphrase",JSON_STRING,"security_mode",JSON_INTEGER,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetGetParameters);
+        this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgrAgent_WifiMgr_BroadcastEvent", PARAMS_BY_NAME, JSON_STRING,"owner",JSON_STRING,"event_id",JSON_INTEGER,"event_log",JSON_STRING,"key_code",JSON_INTEGER,"key_type",JSON_INTEGER,"isFP",JSON_INTEGER,"value",JSON_INTEGER, NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent);
+    }
+
 private:
     string aWifiStatus[WIFI_MAX_STATUS_CODE] = {"Wifi Uninstalled",
 			   "Wifi disabled",
@@ -82,29 +96,28 @@ public:
     /*
      *Constructor
      */
-    NetSrvMgrAgent ();
+//    NetSrvMgrAgent ();
 
     /*
      *Inherited functions
      */
-    bool initialize (IN const char* szVersion, IN RDKTestAgent *);
-
-    bool cleanup (const char*, RDKTestAgent*);
+    bool initialize (IN const char* szVersion);
+    bool cleanup(IN const char* szVersion);
     std::string testmodulepre_requisites ();
     bool testmodulepost_requisites ();
 
     /*
      *NetSrvMgrAgent Wrapper functions
      */
-    bool NetSrvMgrAgent_WifiMgr_GetAvailableSSIDs (IN const Json::Value& req, OUT Json::Value& response);
-    bool NetSrvMgrAgent_WifiMgr_GetCurrentState (IN const Json::Value& req, OUT Json::Value& response);
-    bool NetSrvMgrAgent_WifiMgr_GetLAFState (IN const Json::Value& req, OUT Json::Value& response);
-    bool NetSrvMgrAgent_WifiMgr_GetPairedSSID (IN const Json::Value& req, OUT Json::Value& response);
-    bool NetSrvMgrAgent_WifiMgr_SetEnabled (IN const Json::Value& req, OUT Json::Value& response);
-    bool NetSrvMgrAgent_WifiMgr_SetGetParameters (IN const Json::Value& req, OUT Json::Value& response);
-    bool NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value& req, OUT Json::Value& response);
+    void NetSrvMgrAgent_WifiMgr_GetAvailableSSIDs (IN const Json::Value& req, OUT Json::Value& response);
+    void NetSrvMgrAgent_WifiMgr_GetCurrentState (IN const Json::Value& req, OUT Json::Value& response);
+    void NetSrvMgrAgent_WifiMgr_GetLAFState (IN const Json::Value& req, OUT Json::Value& response);
+    void NetSrvMgrAgent_WifiMgr_GetPairedSSID (IN const Json::Value& req, OUT Json::Value& response);
+    void NetSrvMgrAgent_WifiMgr_SetEnabled (IN const Json::Value& req, OUT Json::Value& response);
+    void NetSrvMgrAgent_WifiMgr_SetGetParameters (IN const Json::Value& req, OUT Json::Value& response);
+    void NetSrvMgrAgent_WifiMgr_BroadcastEvent (IN const Json::Value& req, OUT Json::Value& response);
 };
 
-extern "C" NetSrvMgrAgent* CreateObject();
+//extern "C" NetSrvMgrAgent* CreateObject();
 
 #endif //__NETSRVMGR_STUB_H__

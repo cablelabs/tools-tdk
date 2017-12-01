@@ -29,7 +29,7 @@
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <net/if.h>
-
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
@@ -52,26 +52,33 @@
 using namespace std;
 
 class RDKTestAgent;
-class TR069Agent : public RDKTestStubInterface
+class TR069Agent : public RDKTestStubInterface, public AbstractServer<TR069Agent>
+
 {
+
+
         public:
-                /*Constructor*/
-                TR069Agent();
+	        TR069Agent(TcpSocketServer &ptrRpcServer) : AbstractServer <TR069Agent>(ptrRpcServer)
+        	{
+	           this->bindAndAddMethod(Procedure("TestMgr_GetParameterValue", PARAMS_BY_NAME, JSON_STRING,"path",JSON_STRING,NULL), &TR069Agent::TR069Agent_GetParameterValue);
+	           this->bindAndAddMethod(Procedure("TestMgr_VerifyParameterValue", PARAMS_BY_NAME, JSON_STRING,"path",JSON_STRING,"paramValue",JSON_STRING,NULL), &TR069Agent::TR069Agent_VerifyParameterValue);
+
+        	}
 
                 /*Inherited functions*/
-                bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
-                bool cleanup(const char*, RDKTestAgent*);
+                bool initialize(IN const char* szVersion);
+                bool cleanup(IN const char* szVersion);
 		std::string testmodulepre_requisites();
 		bool testmodulepost_requisites();
 
 		/*Query Get Parameter Value */
-		bool TR069Agent_GetParameterValue(IN const Json::Value& req, OUT Json::Value& response);
-		bool TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT Json::Value& response);
+		void TR069Agent_GetParameterValue(IN const Json::Value& req, OUT Json::Value& response);
+		void TR069Agent_VerifyParameterValue(IN const Json::Value& req, OUT Json::Value& response);
 		/*Query Set Parameter Value */
 		//bool TR069Agent_SetParameterValue(IN const Json::Value& req, OUT Json::Value& response);
 	
 
 };
 
-extern "C" TR069Agent* CreateObject();
+extern "C" TR069Agent* CreateObject(TcpSocketServer &ptrtcpServer);
 #endif 

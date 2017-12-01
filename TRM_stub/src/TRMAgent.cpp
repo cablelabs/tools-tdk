@@ -42,12 +42,12 @@ Arguments     : NULL
 
 Description   : Constructor for TRMAgent class
 ***************************************************************************/
-
+#if 0
 TRMAgent::TRMAgent()
 {
     DEBUG_PRINT(DEBUG_LOG, "TRMAgent Initialized\n");
 }
-
+#endif
 /**************************************************************************
 Function Name   : CreateObject
 
@@ -56,9 +56,9 @@ Arguments       : NULL
 Description     : This function is used to create a new object of the class "TRMAgent".
 **************************************************************************/
 
-extern "C" TRMAgent* CreateObject()
+extern "C" TRMAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-    return new TRMAgent();
+    return new TRMAgent(ptrtcpServer);
 }
 
 /**************************************************************************
@@ -69,9 +69,10 @@ Arguments     : Input arguments are Version string and TRMAgent obj ptr
 Description   : Registering all the wrapper functions with the agent for using these functions in the script
 ***************************************************************************/
 
-bool TRMAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool TRMAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_ERROR, "TRMAgent Initialization\n");
+    #if 0
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetMaxTuners, "TestMgr_TRM_GetMaxTuners");
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetAllTunerIds, "TestMgr_TRM_GetAllTunerIds");
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetAllTunerStates, "TestMgr_TRM_GetAllTunerStates");
@@ -82,7 +83,7 @@ bool TRMAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_ReleaseTunerReservation, "TestMgr_TRM_ReleaseTunerReservation");
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_ValidateTunerReservation, "TestMgr_TRM_ValidateTunerReservation");
     ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_CancelRecording, "TestMgr_TRM_CancelRecording");
-
+    #endif
     return TEST_SUCCESS;
 }
 
@@ -184,7 +185,7 @@ Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to get the max number of tuners.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
-bool TRMAgent::TRMAgent_GetMaxTuners(IN const Json::Value& req, OUT Json::Value& response)
+void  TRMAgent::TRMAgent_GetMaxTuners(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetMaxTuners --->Entry\n");
 #ifdef NUM_OF_TUNERS
@@ -199,7 +200,7 @@ bool TRMAgent::TRMAgent_GetMaxTuners(IN const Json::Value& req, OUT Json::Value&
     response["details"] = "0";
 #endif
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetMaxTuners -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -210,7 +211,7 @@ Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to fetch Ids for all tuners.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
-bool TRMAgent::TRMAgent_GetAllTunerIds(IN const Json::Value& req, OUT Json::Value& response)
+void  TRMAgent::TRMAgent_GetAllTunerIds(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllTunerIds --->Entry\n");
 
@@ -222,7 +223,7 @@ bool TRMAgent::TRMAgent_GetAllTunerIds(IN const Json::Value& req, OUT Json::Valu
             response["details"] = "TRM failed to get all tuners Ids";
             DEBUG_PRINT(DEBUG_ERROR,"TRM failed to get all tuners Ids\n");
             DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllTunerIds --->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
     }
     catch(...)
@@ -231,13 +232,13 @@ bool TRMAgent::TRMAgent_GetAllTunerIds(IN const Json::Value& req, OUT Json::Valu
         response["details"] = "Exception occured while getting all tuner Ids";
         DEBUG_PRINT(DEBUG_ERROR,"Exception occured while getting all tuner Ids\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllTunerIds --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     response["result"] = "SUCCESS";
     response["details"] = "TRM get all tuner Ids success";
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllTunerIds -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -248,7 +249,7 @@ Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to fetch states for all tuners.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
-bool TRMAgent::TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::Value& response)
+void TRMAgent::TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllTunerStates --->Entry\n");
     char output[OUTPUT_LEN] = {'\0'};
@@ -261,7 +262,7 @@ bool TRMAgent::TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::V
             response["details"] = "TRM failed to get all tuners states";
             DEBUG_PRINT(DEBUG_ERROR,"TRM failed to get all tuners states\n");
             DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllTunerStates --->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
     }
     catch(...)
@@ -270,7 +271,7 @@ bool TRMAgent::TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::V
         response["details"] = "Exception occured while getting all tuner states";
         DEBUG_PRINT(DEBUG_ERROR,"Exception occured while getting all tuner states\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllTunerStates --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "output length = %d output value = %s\n", strlen(output),output);
@@ -278,7 +279,7 @@ bool TRMAgent::TRMAgent_GetAllTunerStates(IN const Json::Value& req, OUT Json::V
     response["details"] = output;
 
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllTunerStates -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -291,7 +292,7 @@ Arguments     : Input argument is deviceNo. If deviceNo is default value(-1) sen
 Description   : Receives the request from Test Manager to fetch reservation for all tuners.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
-bool TRMAgent::TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::Value& response)
+void TRMAgent::TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllReservations --->Entry\n");
     int deviceNo = req["deviceNo"].asInt();
@@ -311,7 +312,7 @@ bool TRMAgent::TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::
             response["details"] = "TRM failed to get all tuners reservations";
             DEBUG_PRINT(DEBUG_ERROR,"TRM failed to get all tuners reservations\n");
             DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllReservations --->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
     }
     catch(...)
@@ -320,14 +321,14 @@ bool TRMAgent::TRMAgent_GetAllReservations(IN const Json::Value& req, OUT Json::
         response["details"] = "Exception occured while getting all reservations";
         DEBUG_PRINT(DEBUG_ERROR,"Exception occured while getting all reservations\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllReservations --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "output length = %d output value = %s\n", strlen(output),output);
     response["result"] = "SUCCESS";
     response["details"] = output;
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetAllReservations -->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -338,7 +339,7 @@ Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to fetch tuner version.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
-bool TRMAgent::TRMAgent_GetVersion(IN const Json::Value& req, OUT Json::Value& response)
+void TRMAgent::TRMAgent_GetVersion(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetVersion --->Entry\n");
 
@@ -350,7 +351,7 @@ bool TRMAgent::TRMAgent_GetVersion(IN const Json::Value& req, OUT Json::Value& r
             response["details"] = "TRM failed to get tuner version";
             DEBUG_PRINT(DEBUG_ERROR,"TRM failed to get tuner version\n");
             DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetVersion --->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
     }
     catch(...)
@@ -359,13 +360,13 @@ bool TRMAgent::TRMAgent_GetVersion(IN const Json::Value& req, OUT Json::Value& r
         response["details"] = "Exception occured while getting version";
         DEBUG_PRINT(DEBUG_ERROR,"Exception occured while getting version\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetVersion --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     response["result"] = "SUCCESS";
     response["details"] = "TRM get tuner version success";
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_GetVersion -->Exit\n");
-    return TEST_SUCCESS;
+    return ;
 }
 
 /**************************************************************************
@@ -378,7 +379,7 @@ Arguments     : Input argument is deviceNo, recordingId, locator,
 Description   : Receives the request from Test Manager to reserve tuner for recording.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
-bool TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Json::Value& response)
+void TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForRecord --->Entry\n");
 
@@ -405,7 +406,7 @@ bool TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Jso
 	response["details"] = "Device Number out of range.";
 	DEBUG_PRINT(DEBUG_ERROR,"Device Number out of range.\n");
 	DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForRecord --->Exit\n");
-	return TEST_FAILURE;
+	return;
     }
 
     gettimeofday( &tv, 0 );
@@ -440,11 +441,11 @@ bool TRMAgent::TRMAgent_TunerReserveForRecord(IN const Json::Value& req, OUT Jso
         response["details"] = "Exception occured while reserving tuner for recording";
         DEBUG_PRINT(DEBUG_ERROR,"Exception occured while reserving tuner for recording\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForRecord --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForRecord --->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -456,7 +457,7 @@ Arguments     : Input argument is deviceNo, locator, duration, startTime.
 Description   : Receives the request from Test Manager to reserve tuner for live viewing.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
-bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json::Value& response)
+void TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForLive --->Entry\n");
 
@@ -481,7 +482,7 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
         response["details"] = "Device Number out of range.";
         DEBUG_PRINT(DEBUG_ERROR,"Device Number out of range.\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForLive --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     gettimeofday( &tv, 0 );
@@ -516,11 +517,11 @@ bool TRMAgent::TRMAgent_TunerReserveForLive(IN const Json::Value& req, OUT Json:
         response["details"] = "Exception occured while reserving tuner for live";
         DEBUG_PRINT(DEBUG_ERROR,"Exception occured while reserving tuner for live\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForLive --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_TunerReserveForLive --->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -532,7 +533,7 @@ Arguments     : Input argument is deviceNo, locator and activityType(Live:1/Reco
 Description   : Receives the request from Test Manager to release a reservation.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
-bool TRMAgent::TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT Json::Value& response)
+void TRMAgent::TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ReleaseTunerReservation --->Entry\n");
 
@@ -545,7 +546,7 @@ bool TRMAgent::TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT J
         response["details"] = "Device Number out of range.";
         DEBUG_PRINT(DEBUG_ERROR,"Device Number out of range.\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ReleaseTunerReservation --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     try
@@ -556,7 +557,7 @@ bool TRMAgent::TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT J
             response["details"] = "TRM failed to release tuner reservation";
             DEBUG_PRINT(DEBUG_ERROR,"TRM failed to release tuner reservation\n");
             DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ReleaseTunerReservation --->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
     }
     catch(...)
@@ -565,13 +566,13 @@ bool TRMAgent::TRMAgent_ReleaseTunerReservation(IN const Json::Value& req, OUT J
         response["details"] = "Exception occured while releasing tuner reservation";
         DEBUG_PRINT(DEBUG_ERROR,"Exception occured while releasing tuner reservation\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ReleaseTunerReservation --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     response["result"] = "SUCCESS";
     response["details"] = "TRM release tuner reservation success";
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ReleaseTunerReservation --->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -583,7 +584,7 @@ Arguments     : Input argument is deviceNo, locator and activityType(Live:1/Reco
 Description   : Receives the request from Test Manager to validate a reservation.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
-bool TRMAgent::TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT Json::Value& response)
+void TRMAgent::TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ValidateTunerReservation --->Entry\n");
 
@@ -596,7 +597,7 @@ bool TRMAgent::TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT 
         response["details"] = "Device Number out of range.";
         DEBUG_PRINT(DEBUG_ERROR,"Device Number out of range.\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ValidateTunerReservation --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     try
@@ -607,7 +608,7 @@ bool TRMAgent::TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT 
             response["details"] = "TRM failed to validate tuner reservation";
             DEBUG_PRINT(DEBUG_ERROR,"TRM failed to validate tuner reservation\n");
             DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ValidateTunerReservation --->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
     }
     catch(...)
@@ -616,13 +617,13 @@ bool TRMAgent::TRMAgent_ValidateTunerReservation(IN const Json::Value& req, OUT 
         response["details"] = "Exception occured while validating tuner reservation";
         DEBUG_PRINT(DEBUG_ERROR,"Exception occured while validating tuner reservation\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ValidateTunerReservation --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     response["result"] = "SUCCESS";
     response["details"] = "TRM validate tuner reservation success";
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_ValidateTunerReservation --->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -633,7 +634,7 @@ Arguments     : Input argument is NONE. Output argument is "SUCCESS" or "FAILURE
 Description   : Receives the request from Test Manager to cancel a recording.
                 Gets the response from TRM server and sent to the Test Manager.
 **************************************************************************/
-bool TRMAgent::TRMAgent_CancelRecording(IN const Json::Value& req, OUT Json::Value& response)
+void TRMAgent::TRMAgent_CancelRecording(IN const Json::Value& req, OUT Json::Value& response)
 {
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_CancelRecording --->Entry\n");
 
@@ -647,7 +648,7 @@ bool TRMAgent::TRMAgent_CancelRecording(IN const Json::Value& req, OUT Json::Val
             response["details"] = "TRM failed to cancel recording";
             DEBUG_PRINT(DEBUG_ERROR,"TRM failed to cancel recording\n");
             DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_CancelRecording --->Exit\n");
-            return TEST_FAILURE;
+            return;
         }
     }
     catch(...)
@@ -656,13 +657,13 @@ bool TRMAgent::TRMAgent_CancelRecording(IN const Json::Value& req, OUT Json::Val
         response["details"] = "Exception occured while cancelling recording";
         DEBUG_PRINT(DEBUG_ERROR,"Exception occured while cancelling recording\n");
         DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_CancelRecording --->Exit\n");
-        return TEST_FAILURE;
+        return;
     }
 
     response["result"] = "SUCCESS";
     response["details"] = "TRM cancel recording success";
     DEBUG_PRINT(DEBUG_TRACE, "TRMAgent_CancelRecording --->Exit\n");
-    return TEST_SUCCESS;
+    return;
 }
 
 /**************************************************************************
@@ -673,9 +674,10 @@ Arguments       : NULL
 Description     : This function will be used to the close things cleanly.
 **************************************************************************/
 
-bool TRMAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+bool TRMAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
+    #if 0
     if(NULL == ptrAgentObj)
     {
         return TEST_FAILURE;
@@ -691,7 +693,7 @@ bool TRMAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
     ptrAgentObj->UnregisterMethod("TestMgr_TRM_ReleaseTunerReservation");
     ptrAgentObj->UnregisterMethod("TestMgr_TRM_ValidateTunerReservation");
     ptrAgentObj->UnregisterMethod("TestMgr_TRM_CancelRecording");
-
+    #endif
     return TEST_SUCCESS;
 }
 /**************************************************************************

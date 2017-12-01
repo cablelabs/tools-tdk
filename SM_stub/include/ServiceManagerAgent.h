@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <json/json.h>
 #include <json/value.h>
 #include <QByteArray>
@@ -37,6 +38,7 @@
 #include "rdktestagentintf.h"
 #include "servicemanager.h"
 #include "servicelistener.h"
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 using namespace std;
 
 // Includes for services
@@ -146,107 +148,195 @@ using namespace std;
 #define SM_MIN_PARAMS 1
 
 class RDKTestAgent;
-class ServiceManagerAgent : public RDKTestStubInterface
+//class ServiceManagerAgent : public RDKTestStubInterface
+class ServiceManagerAgent : public RDKTestStubInterface , public AbstractServer<ServiceManagerAgent>
 {
 	public:
+		ServiceManagerAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <ServiceManagerAgent>(ptrRpcServer)
+                {
+		  // ServiceManager APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_RegisterService", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_RegisterService);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_UnRegisterService", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_UnRegisterService);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_DoesServiceExist", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, NULL), &ServiceManagerAgent::SM_DoesServiceExist);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_GetRegisteredServices", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_GetRegisteredServices);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_GetGlobalService", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, NULL), &ServiceManagerAgent::SM_GetGlobalService);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_GetSetting", PARAMS_BY_NAME, JSON_STRING, "service_name",JSON_STRING, NULL), &ServiceManagerAgent::SM_GetSetting);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_CreateService", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, NULL), &ServiceManagerAgent::SM_CreateService);
+		  // Services common APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_Services_GetName", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, NULL), &ServiceManagerAgent::SM_Services_GetName);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_SetAPIVersion", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, "apiVersion",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_Services_SetAPIVersion);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_RegisterForEvents", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, "event_name",JSON_STRING, NULL), &ServiceManagerAgent::SM_Services_RegisterForEvents);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_UnRegisterForEvents", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, "event_name",JSON_STRING, NULL), &ServiceManagerAgent::SM_Services_UnRegisterForEvents);
+		  // HomeNetworking Service callMethod APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HN_EnableMDVR", PARAMS_BY_NAME,JSON_STRING, "enable",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_HN_EnableMDVR);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HN_EnableVPOP", PARAMS_BY_NAME, JSON_STRING, "enable",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_HN_EnableVPOP);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HN_SetDeviceName", PARAMS_BY_NAME,JSON_STRING, "device_name",JSON_STRING, NULL), &ServiceManagerAgent::SM_HN_SetDeviceName);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HN_IsVPOPEnabled",PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HN_IsVPOPEnabled);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HN_IsMDVREnabled", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HN_IsMDVREnabled);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HN_GetDeviceName", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HN_GetDeviceName);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HN_IsUpnpEnabled", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HN_IsUpnpEnabled);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HN_SetUpnpEnabled", PARAMS_BY_NAME,JSON_STRING, "enable",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_HN_SetUpnpEnabled);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HN_IsVidiPathEnabled", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HN_IsVidiPathEnabled);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HN_SetVidiPathEnabled", PARAMS_BY_NAME,JSON_STRING, "enable",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_HN_SetVidiPathEnabled);
+		  // DisplaySettings Service callMethod APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_DisplaySetting_SetZoomSettings", PARAMS_BY_NAME,JSON_STRING, "videoDisplay",JSON_STRING, "zoomLevel",JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_SetZoomSettings);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_DisplaySetting_SetCurrentResolution", PARAMS_BY_NAME,JSON_STRING, "videoDisplay",JSON_STRING, "resolution",JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_SetCurrentResolution);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_GetConnectedAudioPorts", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_GetConnectedAudioPorts);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_GetSupportedAudioPorts", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioPorts);
+		  this->bindAndAddMethod(Procedure("SM_DisplaySetting_GetSoundMode", PARAMS_BY_NAME,JSON_STRING, "portName",JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_GetSoundMode);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_SetSoundMode", PARAMS_BY_NAME,JSON_STRING, "portName",JSON_STRING, "audioMode",JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_SetSoundMode);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_GetSupportedAudioModes", PARAMS_BY_NAME,JSON_STRING, "portName",JSON_STRING, NULL), &ServiceManagerAgent::SM_DisplaySetting_GetSupportedAudioModes);
+		  // DeviceSettingService callMethod APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_DeviceSetting_GetDeviceInfo", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_DeviceSetting_GetDeviceInfo);
+	          // ScreenCaptureService callMethod APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_ScreenCapture_Upload", PARAMS_BY_NAME,JSON_STRING, "url",JSON_STRING, NULL), &ServiceManagerAgent::SM_ScreenCapture_Upload);
+        	  // WebSocketService callMethod APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_WebSocket_GetUrl", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_WebSocket_GetUrl);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_WebSocket_GetReadyState", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_WebSocket_GetReadyState);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_WebSocket_GetBufferedAmount", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_WebSocket_GetBufferedAmount);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_WebSocket_GetProtocol", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_WebSocket_GetProtocol);
+        	  //HdmiCecService API's
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_SetEnabled", PARAMS_BY_NAME,JSON_STRING, "valueToSetEnabled",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_HdmiCec_SetEnabled);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_GetEnabled", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_GetEnabled);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_SetName", PARAMS_BY_NAME,JSON_STRING, "nameToSet",JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_SetName);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_GetName", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_GetName);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_GetConnectedDevices", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_GetConnectedDevices);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_SendMessage", PARAMS_BY_NAME,JSON_STRING, "messageToSend",JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_SendMessage);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_OnMessage", PARAMS_BY_NAME,JSON_STRING, "onMessage",JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_OnMessage);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_GetCECAddresses", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_GetCECAddresses);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_ClearCecLog", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_ClearCecLog);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_CheckStatus", PARAMS_BY_NAME,JSON_STRING, "pattern",JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_CheckStatus);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_FlushCecData", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_FlushCecData);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_HdmiCec_CheckCecData", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_HdmiCec_CheckCecData);
+		  //ApplicationService APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_AppService_GetAppInfo", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_AppService_GetAppInfo);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_AppService_setConnectionReset", PARAMS_BY_NAME,JSON_STRING, "applicationID",JSON_STRING, "connectionID",JSON_STRING, "connectionResetLevel",JSON_STRING, NULL), &ServiceManagerAgent::SM_AppService_SetConnectionReset);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_AppService_Restore_rmfconfig", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_AppService_Restore_rmfconfig);
+   	          //AVInputService APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_AVInputService_GetNumberOfInputs", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_AVInputService_GetNumberOfInputs);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_AVInputService_GetCurrentVideoMode", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_AVInputService_GetCurrentVideoMode);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_AVInputService_IsContentProtected", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_AVInputService_IsContentProtected);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_RunSMEvent_QtApp", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, "event_name",JSON_STRING, "event_param",JSON_STRING, NULL), &ServiceManagerAgent::SM_RunSMEvent_QtApp);
+		  //VideoApplicationEventsService APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_VideoApplicationEventsService_SetEnable", PARAMS_BY_NAME,JSON_STRING, "valueToSetEnabled",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_VideoApplicationEventsService_SetEnable);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_VideoApplicationEventsService_IsEnableEvent", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_VideoApplicationEventsService_IsEnableEvent);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_VideoApplicationEventsService_SetApplications", PARAMS_BY_NAME,JSON_STRING, "appString",JSON_STRING, "count",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_HdmiCec_OnMessage);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_VideoApplicationEventsService_GetApplications", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_VideoApplicationEventsService_GetApplications);
+		  //Device Diagnistics Service APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_DDS_GetConfiguration", PARAMS_BY_NAME,JSON_STRING, "names",JSON_STRING, NULL), &ServiceManagerAgent::SM_DDS_GetConfiguration);
+         	  //Front Panel Service APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_GetBrightness", PARAMS_BY_NAME,JSON_STRING, "LEDName",JSON_STRING, NULL), &ServiceManagerAgent::SM_FP_GetBrightness);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_SetBrightness", PARAMS_BY_NAME,JSON_STRING, "LEDName",JSON_STRING, "LEDBrightness",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_FP_SetBrightness);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_SetLED", PARAMS_BY_NAME,JSON_STRING, "LEDName",JSON_STRING, "LEDBrightness",JSON_INTEGER, "LEDColorRed",JSON_INTEGER, "LEDColorBlue",JSON_INTEGER, "LEDColorGreen",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_FP_SetLED);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_SetAPIVersion", PARAMS_BY_NAME,JSON_STRING, "apiVersion",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_FP_SetAPIVersion);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_SetPreferences", PARAMS_BY_NAME, JSON_STRING, "LEDName",JSON_STRING, "LEDBrightness",JSON_INTEGER, "LEDColorRed",JSON_INTEGER, "LEDColorBlue",JSON_INTEGER, "LEDColorGreen",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_FP_SetPreferences);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_GetPreferences", PARAMS_BY_NAME, JSON_STRING, "LEDName",JSON_STRING, NULL), &ServiceManagerAgent::SM_FP_GetPreferences);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_SetBlink", PARAMS_BY_NAME,JSON_STRING, "LEDName",JSON_STRING, "LEDBrightness",JSON_STRING, "LEDColorRed",JSON_STRING, "LEDColorBlue",JSON_STRING, "LEDColorGreen",JSON_STRING, "BlinkDuration",JSON_STRING, "IterationCount",JSON_INTEGER, "SequenceCount",JSON_STRING, NULL), &ServiceManagerAgent::SM_FP_SetBlink);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_Set_24_Hour_Clock", PARAMS_BY_NAME,JSON_STRING, "is24hour",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_FP_Set_24_Hour_Clock);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_FP_Is_24_Hour_Clock", PARAMS_BY_NAME,JSON_STRING, NULL), &ServiceManagerAgent::SM_FP_Is_24_Hour_Clock);
+         	  //Generic Stub for callMethod APIs
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_Generic_CallMethod", PARAMS_BY_NAME,JSON_STRING, "service_name",JSON_STRING, "method_name",JSON_STRING, "inputCount",JSON_INTEGER, NULL), &ServiceManagerAgent::SM_FP_SetPreferences);
+		  this->bindAndAddMethod(Procedure("TestMgr_SM_ExecuteCmd", PARAMS_BY_NAME,JSON_STRING, "command",JSON_STRING, NULL), &ServiceManagerAgent::SM_ExecuteCmd);
+                }
+
 		/*Ctor*/
-		ServiceManagerAgent();
+		//ServiceManagerAgent();
 
 		/*inherited functions*/
 		/*ServiceManagerAgent Wrapper functions*/
-		bool initialize(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj);
+		bool initialize(IN const char* szVersion);
 		std::string testmodulepre_requisites();
                 bool testmodulepost_requisites();
 
 		// ServiceManager APIs
-		bool SM_RegisterService(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_UnRegisterService(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_DoesServiceExist(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_GetRegisteredServices (IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_GetGlobalService (IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_GetSetting(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_CreateService(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_RegisterService(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_UnRegisterService(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_DoesServiceExist(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_GetRegisteredServices (IN const Json::Value& req, OUT Json::Value& response);
+		void SM_GetGlobalService (IN const Json::Value& req, OUT Json::Value& response);
+		void SM_GetSetting(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_CreateService(IN const Json::Value& req, OUT Json::Value& response);
 		// Services common APIs
-		bool SM_Services_GetName(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_Services_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_Services_RegisterForEvents(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_Services_UnRegisterForEvents(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_Services_GetName(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_Services_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_Services_RegisterForEvents(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_Services_UnRegisterForEvents(IN const Json::Value& req, OUT Json::Value& response);
 		// HomeNetworking Service callMethod APIs
-		bool SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HN_SetDeviceName(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HN_IsMDVREnabled(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_HN_IsVPOPEnabled(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_HN_GetDeviceName(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_HN_IsUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_HN_SetUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_HN_IsVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_HN_SetVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HN_EnableMDVR(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HN_EnableVPOP(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HN_SetDeviceName(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HN_IsMDVREnabled(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_HN_IsVPOPEnabled(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_HN_GetDeviceName(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_HN_IsUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_HN_SetUpnpEnabled(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_HN_IsVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_HN_SetVidiPathEnabled(IN const Json::Value& req, OUT Json::Value& response);
 		// DisplaySettings Service callMethod APIs
-		bool SM_DisplaySetting_SetZoomSettings(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_DisplaySetting_SetCurrentResolution(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_DisplaySetting_GetConnectedAudioPorts(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_DisplaySetting_GetSupportedAudioPorts(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_DisplaySetting_GetSupportedAudioModes(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_DisplaySetting_GetSoundMode(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_DisplaySetting_SetSoundMode(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_DisplaySetting_SetZoomSettings(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_DisplaySetting_SetCurrentResolution(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_DisplaySetting_GetConnectedAudioPorts(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_DisplaySetting_GetSupportedAudioPorts(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_DisplaySetting_GetSupportedAudioModes(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_DisplaySetting_GetSoundMode(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_DisplaySetting_SetSoundMode(IN const Json::Value& req, OUT Json::Value& response);
         	// DeviceSettingService callMethod APIs
-		bool SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_DeviceSetting_GetDeviceInfo(IN const Json::Value& req, OUT Json::Value& response);
 		// ScreenCaptureService callMethod APIs
-		bool SM_ScreenCapture_Upload(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_ScreenCapture_Upload(IN const Json::Value& req, OUT Json::Value& response);
         	// WebSocketService callMethod APIs
-		bool SM_WebSocket_GetUrl(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_WebSocket_GetReadyState(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_WebSocket_GetBufferedAmount(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_WebSocket_GetProtocol(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_WebSocket_GetUrl(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_WebSocket_GetReadyState(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_WebSocket_GetBufferedAmount(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_WebSocket_GetProtocol(IN const Json::Value& req, OUT Json::Value& response);
 		/*HdmiCecService API's*/
-		bool SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HdmiCec_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HdmiCec_GetCECAddresses(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_HdmiCec_FlushCecData(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HdmiCec_SetEnabled(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HdmiCec_GetEnabled(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HdmiCec_SetName(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HdmiCec_GetName(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HdmiCec_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HdmiCec_SendMessage(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HdmiCec_OnMessage(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HdmiCec_GetCECAddresses(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_HdmiCec_ClearCecLog(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_HdmiCec_FlushCecData(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_HdmiCec_CheckCecData(IN const Json::Value& req, OUT Json::Value& response);
                 /*ApplicationService APIs*/
-                bool SM_AppService_GetAppInfo(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_AppService_SetConnectionReset(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_AppService_Restore_rmfconfig(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_AppService_GetAppInfo(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_AppService_SetConnectionReset(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_AppService_Restore_rmfconfig(IN const Json::Value& req, OUT Json::Value& response);
                 /*AVInputService APIs*/
-                bool SM_AVInputService_GetNumberOfInputs(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_AVInputService_GetCurrentVideoMode(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_AVInputService_IsContentProtected(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_RunSMEvent_QtApp(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_AVInputService_GetNumberOfInputs(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_AVInputService_GetCurrentVideoMode(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_AVInputService_IsContentProtected(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_RunSMEvent_QtApp(IN const Json::Value& req, OUT Json::Value& response);
 		/*VideoApplicationEventsService APIs*/
-		bool SM_VideoApplicationEventsService_SetEnable(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_VideoApplicationEventsService_IsEnableEvent(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_VideoApplicationEventsService_SetApplications(IN const Json::Value& req, OUT Json::Value& response);
-		bool SM_VideoApplicationEventsService_GetApplications(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_VideoApplicationEventsService_SetEnable(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_VideoApplicationEventsService_IsEnableEvent(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_VideoApplicationEventsService_SetApplications(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_VideoApplicationEventsService_GetApplications(IN const Json::Value& req, OUT Json::Value& response);
 		/*DeviceDiagnosticsService APIs*/
-		bool SM_DDS_GetConfiguration(IN const Json::Value& req, OUT Json::Value& response);
+		void SM_DDS_GetConfiguration(IN const Json::Value& req, OUT Json::Value& response);
                  /*Front panel Service APIs*/
-                bool SM_FP_SetBrightness(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_GetBrightness(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_SetLED(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_SetPreferences(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_GetPreferences(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_SetBlink(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_FP_SetBrightness(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_FP_GetBrightness(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_FP_SetLED(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_FP_SetAPIVersion(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_FP_SetPreferences(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_FP_GetPreferences(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_FP_SetBlink(IN const Json::Value& req, OUT Json::Value& response);
 
-                bool SM_FP_Set_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response);
-                bool SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_FP_Set_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response);
+                void SM_FP_Is_24_Hour_Clock(IN const Json::Value& req, OUT Json::Value& response);
 
 		/* Generic Stub for callMethod*/
-		bool SM_Generic_CallMethod (IN const Json::Value& req, OUT Json::Value& response);
+		void SM_Generic_CallMethod (IN const Json::Value& req, OUT Json::Value& response);
 
-                bool SM_ExecuteCmd (IN const Json::Value& req, OUT Json::Value& response);
+                void SM_ExecuteCmd (IN const Json::Value& req, OUT Json::Value& response);
 			
 
-		bool cleanup(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj) ;
+		bool cleanup(IN const char* szVersion) ;
 		
 };
 

@@ -22,6 +22,7 @@
 
 #include <json/json.h>
 #include "rdkteststubintf.h"
+#include <jsonrpccpp/server/connectors/tcpsocketserver.h>
 #include "rdktestagentintf.h"
 
 #define IN
@@ -43,28 +44,34 @@
 using namespace std;
 
 class RDKTestAgent;
-class XUPNPAgent : public RDKTestStubInterface
+class XUPNPAgent : public RDKTestStubInterface, public AbstractServer<XUPNPAgent>
 {
 public:
-    //Constructor
-    XUPNPAgent();
+	XUPNPAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <XUPNPAgent>(ptrRpcServer)
+	{
+	   this->bindAndAddMethod(Procedure("TestMgr_XUPNP_GetUpnpResult", PARAMS_BY_NAME, JSON_STRING,"paramName",JSON_STRING,NULL), &XUPNPAgent::XUPNPAgent_GetUpnpResult);
+	   this->bindAndAddMethod(Procedure("TestMgr_XUPNP_ReadXDiscOutputFile", PARAMS_BY_NAME, JSON_STRING,"paramName",JSON_STRING,NULL), &XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile);
+	   this->bindAndAddMethod(Procedure("TestMgr_XUPNP_CheckXDiscOutputFile", PARAMS_BY_NAME, JSON_STRING,NULL), &XUPNPAgent::XUPNPAgent_CheckXDiscOutputFile);
+	   this->bindAndAddMethod(Procedure("TestMgr_XUPNP_BroadcastEvent", PARAMS_BY_NAME, JSON_STRING,"stateId",JSON_INTEGER,"eventLog",JSON_STRING,"state",JSON_INTEGER,"payload",JSON_STRING,"error", JSON_INTEGER,NULL), &XUPNPAgent::XUPNPAgent_BroadcastEvent);
+
+	}
 
     //Inherited functions
-    bool initialize(IN const char* szVersion, IN RDKTestAgent *);
+    bool initialize(IN const char* szVersion);
 
-    bool cleanup(const char*, RDKTestAgent*);
+    bool cleanup(const char* szVersion);
     std::string testmodulepre_requisites();
     bool testmodulepost_requisites();
 
     //XUPNPAgent Wrapper functions
     //Generic (common to Gateway + IPClient boxes)
-    bool XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::Value& response);
-    bool XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response);
-    bool XUPNPAgent_CheckXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response);
+    void XUPNPAgent_GetUpnpResult(IN const Json::Value& req, OUT Json::Value& response);
+    void XUPNPAgent_ReadXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response);
+    void XUPNPAgent_CheckXDiscOutputFile(IN const Json::Value& req, OUT Json::Value& response);
     //Only for Gateway boxes
-    bool XUPNPAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response);
+    void XUPNPAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response);
 };
 
-extern "C" XUPNPAgent* CreateObject();
+//extern "C" XUPNPAgent* CreateObject(); sarves
 
 #endif //__XUPNP_STUB_H__
