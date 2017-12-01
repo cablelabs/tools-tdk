@@ -58,22 +58,22 @@ def getRDKVersion(deviceIP,devicePort):
 		tcpClient = getSocketInstance(deviceIP)
         	tcpClient.connect((deviceIP, port))
 
-       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'GetRDKVersion'}
-     		query = json.dumps(jsonMsg)
-        	tcpClient.send(query) #Sending json query
-
+       		#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'GetRDKVersion'}
+       		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"getRDKVersion"}\r\n'
+     		#query = json.dumps(jsonMsg)
+        	#tcpClient.send(query) #Sending json query
+                tcpClient.send(jsonMsg) #Sending json query
 		result = tcpClient.recv(1048) #Receiving response
 		tcpClient.close()
-
 		if "Method not found." in result:
-                        print "METHOD_NOT_FOUND"
+			print "METHOD_NOT_FOUND"
 			sys.stdout.flush()
 			sys.exit()
 
 		else:
-			resultIndex = result.find("result") + len("result"+"\":\"")
-	                message = result[resultIndex:]
-        	        message = message[:(message.find("\""))]
+			data = json.loads(result)
+			result=data["result"]
+			message=result["result"]
 			print message
 			sys.stdout.flush()
 

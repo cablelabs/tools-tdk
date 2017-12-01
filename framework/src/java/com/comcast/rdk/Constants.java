@@ -38,6 +38,7 @@ public final class Constants
     public static final String KEY_ID               = "id";
     public static final String KEY_JSONRPC          = "jsonrpc";
     public static final String KEY_METHOD           = "method";
+    public static final String KEY_MODULE           = "module";
     public static final String KEY_PARAMS           = "params";
     public static final String KEY_LOCATOR          = "locator";
     public static final String KEY_FREQUENCY        = "frequency";

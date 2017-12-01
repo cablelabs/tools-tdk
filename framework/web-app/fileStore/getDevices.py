@@ -57,20 +57,20 @@ def getConnectedDevices(deviceIP,devicePort):
 		tcpClient = getSocketInstance(deviceIP)
         	tcpClient.connect((deviceIP, port))
 
-       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'getConnectedDevices'}
-     		query = json.dumps(jsonMsg)
-        	tcpClient.send(query) #Sending json query
+       		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"getConnectedDevices"}\r\n'
+     		#query = json.dumps(jsonMsg)
+        	tcpClient.send(jsonMsg) #Sending json query
+                #tcpClient.sendall('{"jsonrpc":"2.0","id":"2","method":"getConnectedDevices"}\r\n')
+        	#tcpClient.sendall('{"jsonrpc":"2.0","id":"2","method":"getHostStatus","params":{"boxName":"pacexg1v3","managerIP":"106"}}\r\n') #Sending json query
 
 		tcpClient.setblocking(0)
 		recvStatus = select.select([tcpClient], [], [], 3) #Setting timeout for response(3 Sec)
 		result = tcpClient.recv(1048) #Receiving response
 		tcpClient.close() 
-
-		resultIndex = result.find("result") + len("result"+"\":\"")
-
-                message = result[resultIndex:]
-                message = message[:(message.find("\""))]
-                print message
+		data = json.loads(result)
+		result=data["result"]
+		message=result["result"]
+		print message
 
 	except socket.error:
 		print "AGENT_NOT_FOUND"

@@ -55,9 +55,11 @@ try:
 	tcpClient = getSocketInstance(ipaddrs)
 	tcpClient.connect((ipaddrs, deviceport))
 
-	jsonMsg = {'jsonrpc':'2.0','id':'2','method':'executeRemoveLogsScript','argument':filename}
-	query = json.dumps(jsonMsg)
-	tcpClient.send(query) #Sending json query
+	#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'executeRemoveLogsScript','argument':filename}
+	jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"executeRemoveLogsScript","parameter":{"argument":'+ filename +'}}\r\n'
+	#query = json.dumps(jsonMsg)
+	#tcpClient.send(query) #Sending json query
+	tcpClient.send(jsonMsg) #Sending json query
 
 	result = tcpClient.recv(1048) #Receiving response
 
@@ -68,9 +70,9 @@ try:
 		exit()
 
 	# Extracting result from response message
-	resultIndex = result.find("result") + len("result"+"\":\"")
-	message = result[resultIndex:]
-	message = message[:(message.find("\""))]
+	data = json.loads(result)
+	result=data["result"]
+	message=result["result"]
 	print message.upper()
 
 except socket.error:

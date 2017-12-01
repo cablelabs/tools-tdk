@@ -469,7 +469,8 @@ class PrimitiveTestCase:
 			temp = self.url + "/primitiveTest/getJson?testName=&idVal=2"
 			data = temp.split("&")
 			url = data[0] + name + "&" + data[1]
-			self.jsonMsgValue = urllib.urlopen(url).read() 
+			self.jsonMsgValue = urllib.urlopen(url).read()
+			self.jsonMsgValue='{"jsonrpc":"2.0","id":"2","method":"executeTestCase","params":'+str(self.jsonMsgValue)+'}'
 			self.parentTestCase=None
 			self.TestFnLogDom=None
 			self.executionTime=0
@@ -522,7 +523,9 @@ class PrimitiveTestCase:
 			exit()
 	
 		self.replaceValueInJson(data, paramName, paramValue)
-		jsonAscii = json.dumps(data, ensure_ascii = False) 
+		#jsonAscii = json.dumps(data, ensure_ascii = False) 
+	#	self.jsonMsgValue = jsonAscii
+		jsonAscii = json.dumps(data, ensure_ascii = False)
 		self.jsonMsgValue = jsonAscii
 		return
 
@@ -540,16 +543,17 @@ class PrimitiveTestCase:
 	# Return Value : None
 
 		flag = 0
-		for key in orgJson.keys():
-		  	if key.strip() == searchKey.strip():
-		  		orgJson[key] = replaceValue
+		orgParamJson = orgJson["params"]
+		paramsJson = orgParamJson["params"]
+		for key in paramsJson.keys():
+			if key.strip() == searchKey.strip():
+				paramsJson[key] = replaceValue
 				flag = 1
 		
 		if (flag == 0):
 			print "#TDK_@error-ERROR : Parameter (" + searchKey + ") not found in primitive test !!!"
 			sys.stdout.flush()
-			exit()
-	
+			exit()	
 	    	return
 
 	########## End of Function ##########
@@ -576,18 +580,31 @@ class PrimitiveTestCase:
 	# Description  : Send the JSON Message to Server over TCP
 	#                Receives the result of the execution send by the Server 
 	# Parameters   : expectedResult - Expected result for that particular test
-	# Return Value : None 
-
+	# Return Value : None
 		print "Executing %s...." %self.testCaseName
 		sys.stdout.flush()
+
+		data = json.loads(self.jsonMsgValue)
+                pObj=data["params"]	
+		pObj["module"] = self.parentTestCase.componentName
+		jsonAscii = json.dumps(data, ensure_ascii = False)
+                self.jsonMsgValue = jsonAscii
+
+		self.jsonMsgValue=  self.jsonMsgValue +"\r\n"
+		#self.tcpClient.resetConnection(self.tcpClient,8087)
+		self.tcpClient.close()
+	#	time.sleep(5)
+		self.tcpClient = self.getSocketInstance(self.ip)
+		self.tcpClient.connect((self.ip, 8087))
 		self.tcpClient.send(self.jsonMsgValue)
 		t1 = time.time();
-		self.result = self.tcpClient.recv(2048)
+		self.result = self.tcpClient.recv(1048)
+		self.tcpClient.close()
 		t2 = time.time();
-		self.executionTime = t2-t1;
 		# TODO check if required		self.executionName=executionName
 		self.expectedResult = expectedResult
-
+		self.result=self.getValueFromJSON("result")
+		self.result=self.result+"\""
 		self.result = self.result.replace("\"result\"","\"TDK__#@$00_result\"")
 		self.result = self.result.replace("\"details\"","\"TDK__#@$00_details\"")
 		self.result = self.result.replace("\"log-path\"","\"TDK__#@$00_log-path\"")
@@ -613,7 +630,6 @@ class PrimitiveTestCase:
 	# Description  : Shows the result SUCCESS/FAILURE
 	# Parameters   : None
 	# Return Value : Result of the test execution 
-    		
 		if "Method not found." in self.result:
 			print "#TDK_@error-ERROR : Method not registered with Test Agent"
 			if self.xmlLogEnabled==True:
@@ -729,14 +745,12 @@ class PrimitiveTestCase:
 	# Description  : Parse the string of corresponding key and fetch the value
 	# Parameters   : key to find value
 	# Return Value : value of the key
-
 		if key in self.result:
 			resultIndex = self.result.find(key) + len(key+"\":\"")
 			message = self.result[(resultIndex-1):]
 			message = message[:(message.find("TDK__#@$00_"))]
 			message = message.strip("\"}")
 			message = message.strip("\",\"")
-
 		else:
 			index = key.find("#@$00_") + len("#@$00_")
 			key = key[index:]
@@ -758,9 +772,8 @@ class PrimitiveTestCase:
         # Return Value : client moca ip address
 
                 try:
-                        message = {'jsonrpc':'2.0','id':'2','method':'getClientMocaIpAddress','MACaddr':str(mac)}
-                        query = json.dumps(message)
-                        self.tcpClient.send(query)
+                        message = '{"jsonrpc":"2.0","id":"2","method":"getClientMocaIpAddress","params":{"MACaddr":'+ str(mac) +'}}\r\n'
+                        self.tcpClient.send(message)
 
                 except socket.error:
                         print "******************************************************************************************"
@@ -776,11 +789,11 @@ class PrimitiveTestCase:
                         sys.stdout.flush()
                         exit()
 
-                result = self.tcpClient.recv(1048)
-                resultIndex = result.find("result") + len("result"+"\":\"")
-                message = result[resultIndex:]
-                result = message[:(message.find("\""))]
-
+	                result = self.tcpClient.recv(1048)
+			data = json.loads(result)
+			result=data["result"]
+			message=result["result"]
+			result = message
                 if((result == "") | ("incomplete" in result)):
                         print "#TDK_@error-ERROR : Given mac address does not have available Moca IP address\n"
                         sys.stdout.flush()
@@ -863,18 +876,17 @@ class PrimitiveTestCase:
                                 tmIPv6 = get_ipv6_address(self)
                                 tmIPv6 = "[" + tmIPv6 + "]"
                                 logUploadURL = self.url.replace(tmIPv4, tmIPv6)
-                                jsonMsg = {'jsonrpc':'2.0','id':'2','method':'uploadLogs','STBfilename':boxFile,'TMfilename':tmFile, 'logUploadURL':logUploadURL}
+                                jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"uploadLog","params":{"STBfilename":"'+ boxFile +'","TMfilename":"'+ tmFile +'", "logUploadURL":"' + logUploadURL +'"}}\r\n'
                         else:
-                                jsonMsg = {'jsonrpc':'2.0','id':'2','method':'PushLog','STBfilename':boxFile,'TMfilename':tmFile}
-                        query = json.dumps(jsonMsg)
-			tcpClient.send(query) #Sending json query
+                                jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"PushLog","params":{"STBfilename":"'+ boxFile +'","TMfilename":"'+ tmFile +'"}}\r\n'
+			tcpClient.send(jsonMsg) #Sending json query
 
 			result = tcpClient.recv(1048) #Receiving response
 			tcpClient.close()
+			data = json.loads(result)
+			result=data["result"]
+			message=result["result"]
 
-			resultIndex = result.find("result") + len("result"+"\":\"")
-			message = result[resultIndex:]
-			message = message[:(message.find("\""))]
 			sys.stdout.flush()
 			if message == "SUCCESS":
 			    	status = 1
@@ -1344,14 +1356,13 @@ class TDKScriptingLibrary:
 			print "Connected to "+ self.IP +" Box for testing "+ self.componentName
        			sys.stdout.flush()         	
 	
-			final = {'jsonrpc':'2.0','id':'2','method':'LoadModule','param1':self.componentName,'version':self.rdkversion,\
-				 'execID':str(self.execID),'deviceID':str(self.deviceId),'testcaseID':str(self.testcaseId),\
-				 'execDevID':str(self.execDevId),'resultID':str(self.resultId),\
-				 'performanceBenchMarkingEnabled':str(self.performanceBenchMarkingEnabled), \
-				 'performanceSystemDiagnosisEnabled': str(self.performanceSystemDiagnosisEnabled) }
-			query = json.dumps(final)
-			self.tcpClient.send(query)
-			
+           
+                        final = '{"jsonrpc":"2.0","id":"2","method":"loadModule","params":{"param1":"'+str(self.componentName)+'","version":"'+str(self.rdkversion)+'",\
+                                 "execID":"'+str(self.execID)+'","deviceID":"'+str(self.deviceId)+'","testcaseID":"'+str(self.testcaseId)+'",\
+                                 "execDevID":"'+str(self.execDevId)+'","resultID":"'+str(self.resultId)+'",\
+                                 "performanceBenchMarkingEnabled":"'+str(self.performanceBenchMarkingEnabled)+'", \
+                                 "performanceSystemDiagnosisEnabled":"'+str(self.performanceSystemDiagnosisEnabled)+'"}}\r\n'
+                        self.tcpClient.send(final)
 		except socket.error:
 			print "******************************************************************************************" 
 			print " #TDK_@error-Error while Connecting to Server ... "
@@ -1374,7 +1385,6 @@ class TDKScriptingLibrary:
 			self.uiLogData = self.uiLogData+"<br/> Connected to Server!";#print "Connected to Server!\n";
 			sys.stdout.flush()
 			self.result = self.tcpClient.recv(1048)
-
 		return
 
 	########## End of Function ##########
@@ -1387,11 +1397,10 @@ class TDKScriptingLibrary:
 	# Description  : Shows the result of LoadModule
 	# Parameters   : None
 	# Return Value : Result of the load module
-    	
 		if self.result:
-			resultIndex = self.result.find("result") + len("result\":\"")
-			message = self.result[resultIndex:]
-			message = message[:(message.find("\""))]
+			data = json.loads(self.result)
+			result=data["result"]
+			message=result["result"]
 			if "Success" in message:
 				self.uiLogData=self.uiLogData+ "<br/> Opensource test module successfully loaded\n"
 			else:
@@ -1486,7 +1495,7 @@ class TDKScriptingLibrary:
 			testObj.enableXmlLog(False)
 
 		self.primitiveTests.append(testObj)
-
+		self.primitiveTests.append("\r\n")
 		return testObj
  
 	########## End of Function ##########
@@ -1619,12 +1628,18 @@ class TDKScriptingLibrary:
 				logstr=self.xmlLogDom.toprettyxml(indent='\t')
 				logxmlfile.write(logstr)
 				logxmlfile.close()
-			
-			final = {'jsonrpc':'2.0','id':'2','method':'UnloadModule','param1':cName,'version':self.rdkversion, \
-                                 'ScriptSuiteEnabled':self.scriptSuiteEnabled}
-			query = json.dumps(final)
-			self.tcpClient.send(query)
+                        
+                        final = '{"jsonrpc":"2.0","id":"2","method":"unloadModule","params":{"param1":"'+str(cName)+'","version":"'+str(self.rdkversion)+'", \
+                                 "ScriptSuiteEnabled":"'+self.scriptSuiteEnabled+'"}}\r\n'
+                        #self.resetConnection(8088)
+                        self.tcpClient.close()
+            #            time.sleep(5)
+                        self.tcpClient = self.getSocketInstance()
+                        self.tcpClient.connect((self.IP, 8088))
+                        self.tcpClient.send('{"jsonrpc":"2.0","id":"2","method":"unloadModule","params":{"param1":"'+str(cName)+'","version":"1.3","ScriptSuiteEnabled":"false"}}\r\n')
 			unloadmoduleresult = self.tcpClient.recv(1048)
+                        sys.stdout.flush()
+			self.tcpClient.close()
 		
 		except socket.error:
 			print "******************************************************************************************" 
@@ -1652,9 +1667,9 @@ class TDKScriptingLibrary:
 					print "Unload Module Status  : Failure"
 
 				if "details" in unloadmoduleresult:
-					resultIndex = unloadmoduleresult.find("details") + len("details\":\"")
-					message = unloadmoduleresult[resultIndex:]
-					message = message[:(message.find("\""))]
+					data = json.loads(unloadmoduleresult)
+					result=data["result"]
+					message=result["details"]
 					print "Unload Module Details : " + message
 			else:
 				print "#TDK_@error-ERROR : Unload Module failed\n"	
@@ -1664,6 +1679,7 @@ class TDKScriptingLibrary:
 
 		sys.stdout.flush()
 		self.tcpClient.close()
+                #resetAgent(self.IP,8087,"true")
 		return 
 
 	########## End of Function ##########
@@ -1680,9 +1696,10 @@ class TDKScriptingLibrary:
 
 		# Invoking RPC 'EnableReboot' to reboot the device 
 		try:
-			message = {'jsonrpc':'2.0','id':'2','method':'EnableReboot','version':self.rdkversion}
-			query = json.dumps(message)
-			self.tcpClient.send(query)
+			message = '{"jsonrpc":"2.0","id":"2","method":"enableReboot"}\r\n'
+                        self.tcpClient = self.getSocketInstance()
+                        self.tcpClient.connect((self.IP, self.portValue))
+			self.tcpClient.send(message)
 	
 		except socket.error:
 			print "******************************************************************************************" 
@@ -1707,9 +1724,9 @@ class TDKScriptingLibrary:
 					sys.stdout.flush()
 				else:
 					print "#TDK_@error-ERROR : Unable to set preconditons for reboot"
-					resultIndex = result.find("details") + len("details"+"\":\"")
-					message = result[resultIndex:]
-					details = message[:(message.find("\""))]
+					data = json.loads(result)
+					result=data["result"]
+					message=result["result"]
 					print "Deatils : " + details
 					sys.stdout.flush()
 					exit()
@@ -1728,14 +1745,22 @@ class TDKScriptingLibrary:
 
 		# Invoking RPC 'RestorePreviousState' to restore the state before reboot
 		try:
-			message = {'jsonrpc':'2.0','id':'2','method':'RestorePreviousState','version':self.rdkversion,\
-				   'execID':str(self.execID),'deviceID':str(self.deviceId),'testcaseID':str(self.testcaseId),\
-				   'execDevID':str(self.execDevId),'resultID':str(self.resultId)}
-			query = json.dumps(message)
+			#message = {'jsonrpc':'2.0','id':'2','method':'RestorePreviousState','version':self.rdkversion,\
+			#	   'execID':str(self.execID),'deviceID':str(self.deviceId),'testcaseID':str(self.testcaseId),\
+			#	   'execDevID':str(self.execDevId),'resultID':str(self.resultId)}
+  
+                        #message = '{"jsonrpc":"2.0","id":"2","method":"restorePreviousState","params":{"version":'+ self.rdkversion +',\
+                        #          "execID":'+ str(self.execID) +',"deviceID":'+ str(self.deviceId) +',"testcaseID":'+ str(self.testcaseId) +',\
+                        #          "execDevID":'+ str(self.execDevId) +',"resultID":'+ str(self.resultId) +'}}\r\n'
+                        message = '{"jsonrpc":"2.0","id":"2","method":"restorePreviousState","params":{"version":"'+ self.rdkversion +'",\
+                                  "execID":"'+ str(self.execID) +'","deviceID":"'+ str(self.deviceId) +'","testcaseID":"'+ str(self.testcaseId) +'",\
+                                  "execDevID":"'+ str(self.execDevId) +'","resultID":"'+ str(self.resultId) +'"}}\r\n'
+			#query = json.dumps(message)
 
-			self.tcpClient = self.getSocketInstance()
+                        self.tcpClient = self.getSocketInstance()
 			self.tcpClient.connect((self.IP, self.portValue))
-			self.tcpClient.send(query)
+			#self.tcpClient.send(query)
+                        self.tcpClient.send(message)
 
 		except socket.error:
 			print "******************************************************************************************" 
@@ -1757,10 +1782,10 @@ class TDKScriptingLibrary:
 				sys.stdout.flush()
 			else:
 				print "#TDK_@error-ERROR : Unable to restore previous state after reboot" 
-				resultIndex = result.find("details") + len("details"+"\":\"")
-				message = result[resultIndex:]
-				details = message[:(message.find("\""))]
-				print "Deatils : " + details
+				data = json.loads(result)
+				result=data["result"]
+				message=result["result"]
+				print "Details : " + details
 				sys.stdout.flush()
 				exit()
 
@@ -1786,6 +1811,20 @@ class TDKScriptingLibrary:
                 return
 
         ########## End of Function ##########
+
+        def resetConnection(self,portValue):
+        # To reset tcp connection with other instances in multi component tests
+        # Syntax       : OBJ.resetConnection()
+        # Description  : To reset tcp connection with other instances in multi component tests 
+        # Parameters   : none
+        # Return Value : null
+
+                        print "Resetting server connection...."
+                        self.close()
+                        time.sleep(5)
+                        self = self.getSocketInstance()
+                        self.connect((deviceIP, portValue))
+                        return 
 
 	def insertScriptAndFnExeDetailsInDb(self):
 		
@@ -1835,7 +1874,6 @@ class TDKScriptingLibrary:
     	# Return Value : executionId
     		try:
         		conn = MySQLdb.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
-        		#conn = _mysql.connect (host = "localhost", user = "root", passwd = "root", db = "rdktesttoolproddb")
 	                cur = conn.cursor()
         	        query = "SELECT id FROM execution ORDER BY id DESC limit 1";
 	                #print query;

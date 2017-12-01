@@ -56,23 +56,23 @@ def getImageName(deviceIP,devicePort):
 		tcpClient = getSocketInstance(deviceIP)
 		tcpClient.connect((deviceIP, devicePort))
 
-       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'getImageName'}
-     		query = json.dumps(jsonMsg)
-        	tcpClient.send(query) #Sending json query
+       		#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'getImageName'}
+       		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"getImageName"}\r\n'
+     		#query = json.dumps(jsonMsg)
+        	#tcpClient.send(query) #Sending json query
+        	tcpClient.send(jsonMsg) #Sending json query
 
 		result = tcpClient.recv(1048) #Receiving response
 		tcpClient.close()
 
 		if "Method not found" in result:
 			message = "METHOD_NOT_FOUND"
-                        #print "METHOD_NOT_FOUND"
 			#sys.stdout.flush()
 		else:
-			resultIndex = result.find("result") + len("result"+"\":\"")
-	                message = result[resultIndex:]
-        	        message = message[:(message.find("\""))]
+			data = json.loads(result)
+			resultJson = data["result"]
+			message = resultJson["result"]
 			sys.stdout.flush()
-
 		return message
 
 	except socket.error:

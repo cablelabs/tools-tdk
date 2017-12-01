@@ -64,9 +64,11 @@ class PrimitivetestService {
         log.info(" getJsonData ::::::::: "+primitiveTest?.name)        
         JsonObject outData = new JsonObject()
         if(primitiveTest){
-            outData.addProperty(KEY_ID, idValue);
-            outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
+//            outData.addProperty(KEY_ID, idValue);
+//            outData.addProperty(KEY_JSONRPC, VAL_JSONRPC);
+			outData.addProperty(KEY_MODULE, primitiveTest?.module?.name.trim());
             outData.addProperty(KEY_METHOD, primitiveTest?.function?.name.trim());            
+			JsonObject paramsObj = new JsonObject()
             Set parameters = primitiveTest?.parameters;
             for ( Map parameter : parameters ) {
                 if(parameter?.parameterType?.parameterTypeEnum.getTypeValue().equals("integer") ){
@@ -76,7 +78,7 @@ class PrimitivetestService {
                     }catch (Exception e){
                         log.error("----Exception in converting to integer")
                     }
-                    outData.addProperty (parameter?.parameterType.name, val);
+                    paramsObj.addProperty (parameter?.parameterType.name, val);
                 }
 				else if(parameter?.parameterType?.parameterTypeEnum.getTypeValue().equals("float") ){
 					float floatVal = 0.0 ;
@@ -85,7 +87,7 @@ class PrimitivetestService {
 					}catch (Exception e){
 						log.error("----Exception in converting to float")
 					}
-					outData.addProperty (parameter?.parameterType.name, floatVal);
+					paramsObj.addProperty (parameter?.parameterType.name, floatVal);
 				}
 				else if(parameter?.parameterType?.parameterTypeEnum.getTypeValue().equals("double") ){
 					double doubleVal = 0.00 ;
@@ -94,13 +96,17 @@ class PrimitivetestService {
 					}catch (Exception e){
 						log.error("----Exception in converting to double")
 					}
-					outData.addProperty (parameter?.parameterType.name, doubleVal);
+					paramsObj.addProperty (parameter?.parameterType.name, doubleVal);
 				}				
                 else{
-                    outData.addProperty( parameter?.parameterType.name, parameter?.value.trim() );
+                    paramsObj.addProperty( parameter?.parameterType.name, parameter?.value.trim() );
                 }
             }
+			if(parameters?.size() > 0){
+				outData.add(KEY_PARAMS, paramsObj );
+			}
         }
+		
         return outData
     }
 

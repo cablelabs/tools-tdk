@@ -60,9 +60,13 @@ def getStatus(deviceIP,managerIP,boxName,statusPort):
 		tcpClient = getSocketInstance(deviceIP)
         	tcpClient.connect((deviceIP, port))
 
-       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'getHostStatus','managerIP':managerIP,'boxName':boxName}
-     		query = json.dumps(jsonMsg)
-        	tcpClient.send(query) #Sending json query
+       		#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'getHostStatus','params':{'managerIP':managerIP,'boxName':boxName}'\r\n'}
+       		#jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"getHostStatus","params":{"managerIP":"96.114.220.236","boxName":"RK04-PX1V3-6184"}\r\n}'
+       		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"getHostStatus","params":{"managerIP":"'+managerIP+'","boxName":"'+boxName+'"}\r\n}' #sarves
+		#query = json.dumps(jsonMsg)
+     		#query = jsonMsg
+        	#tcpClient.send(query) #Sending json query
+        	tcpClient.send(jsonMsg) #Sending json query
 
 		tcpClient.setblocking(0)
 		recvStatus = select.select([tcpClient], [], [], 5) #Setting timeout for response(3 Sec)

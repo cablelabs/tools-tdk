@@ -62,18 +62,20 @@ def resetAgent(deviceIP,devicePort,enableReset):
 		tcpClient.settimeout(5.0)
         	tcpClient.connect((deviceIP, port))
 
-       		jsonMsg = {'jsonrpc':'2.0','id':'2','method':'ResetAgent','enableReset':enableReset}
-     		query = json.dumps(jsonMsg)
-        	tcpClient.send(query) #Sending json query
+       		#jsonMsg = {'jsonrpc':'2.0','id':'2','method':'ResetAgent','enableReset':enableReset}
+       		jsonMsg = '{"jsonrpc":"2.0","id":"2","method":"resetAgent","params":{"enableReset":"'+ enableReset +'"}}\r\n'
+     		#query = json.dumps(jsonMsg)
+        	#tcpClient.send(query) #Sending json query
+                tcpClient.send(jsonMsg) #Sending json query
 
 		result = tcpClient.recv(1048) #Receiving response
 		tcpClient.close()
 
-		resultIndex = result.find("result") + len("result"+"\":\"")
+		data = json.loads(result)
+		result=data["result"]
+		message=result["result"]
 
-                message = result[resultIndex:]
-                message = message[:(message.find("\""))]
-                if "SUCCESS" in message.upper():
+		if "SUCCESS" in message.upper():
 			print "Test timed out.. Agent Reset.."
 		else:
 			print "Test timed out.. Failed to reset agent.."
