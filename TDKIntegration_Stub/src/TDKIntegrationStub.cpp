@@ -42,6 +42,29 @@ void soc_init(int , char *, int );
 #define BUFFER_LENGTH 64
 #define STREAMING_INTERFACE "Streaming Interface"
 #define FETCH_STREAMING_INT_FILE "streaming_interface_file" 
+
+//to resolve Time issue ###Need to revisit
+int Time::getTime(struct timeval *tp)
+{
+    int rc;
+
+    rc = gettimeofday(tp,NULL);
+    return rc;
+}
+float Time::ExecutionTime(int rb, struct timeval *before, int ra, struct timeval *after)
+{
+    float execTime = 0.0f;
+    long long time = 0;
+
+    if (!ra && !rb)
+    {
+       time = (after->tv_sec * (unsigned int)1e6 + after->tv_usec) - (before->tv_sec * (unsigned int)1e6 + before->tv_usec);
+       execTime = time/1000.0;
+    }
+
+    return execTime;
+} 
+
 /********************************************************************************************************************
 Purpose:               To get the current status of the AV running
 
@@ -125,10 +148,12 @@ std::string fetchStreamingInterface()
 
 Arguments     : NULL
  **************************************************************************/
+#if 0
 TDKIntegrationStub::TDKIntegrationStub()
 {
 	DEBUG_PRINT(DEBUG_LOG,"TDKIntegrationTest Initialized");
 }
+#endif
 /**************************************************************************
   Function name : TDKIntegrationStub::initialize
 
@@ -950,7 +975,7 @@ Arguments     : Input argument is Playback URL, mime, Json object. Output argume
 
 Description   : Helper function to initialize, open HnSrc and MpSink component.
  ****************************************************************************/
-void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
+int init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response)
 {
 	DEBUG_PRINT(DEBUG_TRACE, " Entered into %s\n",__FUNCTION__);
  	#ifdef USE_SOC_INIT
@@ -970,7 +995,7 @@ void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response
 		response["details"] = "HNSource instance creation failed";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource instance creation failed\n");
 
-		return;
+		return TEST_FAILURE;
 	}
 
 	if(pSink == NULL)
@@ -979,7 +1004,7 @@ void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response
 		response["details"] = "MPSink instance creation failed";
 		DEBUG_PRINT(DEBUG_ERROR, "MPSink instance creation failed\n");
 
-		return;
+		return TEST_FAILURE;
 	}
 
 	retHNSrcValue = pSource->init();
@@ -989,7 +1014,7 @@ void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response
 		response["details"] = "HNSource initialization failed";
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource initialization failed %ld\n",retHNSrcValue);
 
-		return;
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc init\n");
 
@@ -1011,7 +1036,7 @@ void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response
                  }
                         response["result"] = "FAILURE";
                         response["details"] = token;
-                        return;
+                        return TEST_FAILURE;
         }
 
 	
@@ -1168,7 +1193,7 @@ void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response
 		DEBUG_PRINT(DEBUG_ERROR, "HNSource open failed %ld\n",retHNSrcValue);
 
 		pSource->term();
-		return;
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed HNSrc open\n");
 	/* TuningTime */
@@ -1183,7 +1208,7 @@ void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response
 		//Source close and terminate before exiting.
 		pSource->close();
 		pSource->term();
-		return;
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed MP Sink init\n");
 	retMPSinkValue = pSink->setVideoRectangle(X_VALUE, Y_VALUE, WIDTH, HEIGHT, 0);
@@ -1197,7 +1222,7 @@ void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response
 		pSource->term();
 		//Sink terminate
 		pSink->term();
-		return;
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed MP Sink set video rectangle\n");
 	retMPSinkValue = pSink->setSource(pSource);
@@ -1211,7 +1236,7 @@ void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response
 		pSource->term();
 		//Sink terminate
 		pSink->term();
-		return;
+		return TEST_FAILURE;
 	}
 	
 	/*FIX for RDKTT-124 ticket*/
@@ -1221,7 +1246,7 @@ void init_open_HNsrc_MPsink(const char *url,char *mime,OUT Json::Value& response
 
 	DEBUG_PRINT(DEBUG_TRACE, "Passed MP Sink setSource\n");
 	DEBUG_PRINT(DEBUG_TRACE, "Passed %s\n",__FUNCTION__);
-	return;
+	return TEST_SUCCESS;
 }
 /**************************************************************************
   Function name : close_Term_HNSrc_MPSink
@@ -1261,7 +1286,7 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
                 // Uninitialize SOC
                 soc_uninit();
                 #endif
-                return;
+                return TEST_FAILURE;
         }
         DEBUG_PRINT(DEBUG_TRACE, "Passed Hnsrc pause\n");
 
@@ -1281,7 +1306,7 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
         	// Uninitialize SOC
         	soc_uninit();
         	#endif
-		return;
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed Hnsrc close\n");
 
@@ -1299,7 +1324,7 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
         	soc_uninit();
         	#endif
 
-		return;
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed MPSink term\n");
 
@@ -1316,7 +1341,7 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
         	// Uninitialize SOC
         	soc_uninit();
         	#endif
-		return;
+		return TEST_FAILURE;
 	}
 	DEBUG_PRINT(DEBUG_TRACE, "Passed Hnsrc term\n");
 
@@ -1330,7 +1355,7 @@ int close_Term_HNSrc_MPSink(OUT Json::Value& response)
         #endif
 
 
-	return;
+	return TEST_SUCCESS;
 }
 
 /**************************************************************************

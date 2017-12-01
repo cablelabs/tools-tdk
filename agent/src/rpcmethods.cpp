@@ -82,12 +82,19 @@ std::string GetSubString (std::string strLine, std::string strDelimiter);
 #define UPLOAD_LOG_SCRIPT "$TDK_PATH/uploadLogs.sh"       // Script to upload log files when device IP is configured for IPv6
 #define NULL_LOG_FILE        "cat /dev/null > "
 #define GET_IMAGENAME_CMD    "cat /version.txt | grep imagename | cut -d: -f 2"
+#define TCP_PORT_1 18086
+#define TCP_PORT_2 18087
+#define TCP_PORT_3 18088
+#define TCP_PORT_4 18089
 
 #ifndef RDKVERSION
 #define RDKVERSION "NOT_DEFINED"       
 #endif
 
-TcpSocketServer o_StubStatus (LOCAL_SERVER_ADDR, LOCAL_PORT);
+TcpSocketServer o_StubStatus_obj1 (LOCAL_SERVER_ADDR, TCP_PORT_1);
+TcpSocketServer o_StubStatus_obj2 (LOCAL_SERVER_ADDR, TCP_PORT_2);
+TcpSocketServer o_StubStatus_obj3 (LOCAL_SERVER_ADDR, TCP_PORT_3);
+TcpSocketServer o_StubStatus_obj4 (LOCAL_SERVER_ADDR, TCP_PORT_4);
 
 /* Structure to hold module details */
 struct sModuleDetails 
@@ -107,6 +114,16 @@ typedef std::map <int, sModuleDetails> ModuleMap;
 
 ModuleMap o_gModuleMap;                     // Map to store loaded modules and its handle
 ModuleMap::iterator o_gModuleMapIter;
+std::map<int, std::string> create_map()
+{
+  map<int,std::string> m;
+  m[18086] = "FREE";
+  m[18087] = "FREE";
+  m[18088] = "FREE";
+  m[18089] = "FREE";
+  return m;
+}
+std::map<int,std::string> o_gTcpPortMap = create_map();
 
 /* To enable port forwarding. In gateway boxes only  */
 #ifdef PORT_FORWARD
@@ -128,14 +145,18 @@ int RpcMethods::sm_nDeviceStatusFlag = DEVICE_FREE;        // Setting status of 
 std::string RpcMethods::sm_strConsoleLogPath = "";
 static volatile bool b_stubServerFlag =false;
 
-void *Createstubserver (void *)
+void *Createstubserver (void* modulename)
 {
     DEBUG_PRINT (DEBUG_TRACE, "\nStarting Stub server.....\n");
     //Json::Rpc::TcpServer o_Status (ANY_ADDR, RDK_DEVICE_STATUS_PORT);
     //RpcMethods o_RpcMethods (NULL);
     //TcpSocketServer go_Status("127.0.0.1", 18087);
     //RpcMethods o_Status(go_Status);
-
+    char libname[100] = {'\0'};
+    int reservedPort = *(int*) (modulename);
+    free(modulename);
+    DEBUG_PRINT (DEBUG_TRACE, "\n Reserved Port  is %d \n",reservedPort); 
+    std::map <int, std::string>::iterator o_gTcpPortMapIter;
 #if 0
     if (!networking::init())
     {
@@ -147,10 +168,54 @@ void *Createstubserver (void *)
         DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Bind failed \n");
     }
 #endif
-    if (!o_StubStatus.StartListening())
-    {
-        DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Listen failed \n");
-    }
+     int assignedPort;
+     for (o_gTcpPortMapIter = o_gTcpPortMap.begin(); o_gTcpPortMapIter != o_gTcpPortMap.end(); o_gTcpPortMapIter ++ )
+      {
+
+            cout << o_gTcpPortMapIter -> second <<std::endl;
+	    cout << o_gTcpPortMapIter -> first <<std::endl;
+            if (o_gTcpPortMapIter -> first == reservedPort)
+            {
+		
+	        assignedPort = o_gTcpPortMapIter ->first;
+                if(o_gTcpPortMapIter ->first == TCP_PORT_1)
+                {    
+                     DEBUG_PRINT (DEBUG_TRACE, "\n Reserved Port  %d \n",assignedPort);
+		     
+                     if (!o_StubStatus_obj1.StartListening())
+                        {
+                               DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Listen failed \n");
+                        }
+                               DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device port  %d\n",assignedPort);
+                }
+                else if (o_gTcpPortMapIter ->first == TCP_PORT_2)
+                {
+                      if (!o_StubStatus_obj2.StartListening())
+                      {
+                               DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Listen failed \n");
+                      }
+                               DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device port  %d\n",assignedPort);
+                }
+		else if (o_gTcpPortMapIter ->first == TCP_PORT_3)
+		{
+		      if (!o_StubStatus_obj3.StartListening())
+                      {
+                               DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Listen failed \n");
+                      }
+                               DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device port  %d\n",assignedPort);
+		}
+		else
+		{
+		      if (!o_StubStatus_obj4.StartListening())
+                      {
+                               DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device Status Monitoring Listen failed \n");
+                      }
+                               DEBUG_PRINT (DEBUG_ERROR, "Alert!!! Device port  %d\n",assignedPort);
+		}
+ 
+                DEBUG_PRINT (DEBUG_LOG, "Found FREE PORT : %s \n", o_gTcpPortMapIter-> second.c_str());
+            }
+      }
 
     /* Registering methods to status server */
 #if 0
@@ -167,15 +232,21 @@ void *Createstubserver (void *)
     #endif /* End of PORT_FORWARD  */
 
 #endif
-    while (b_stubServerFlag)
+    bool statusFlag = true ;
+    while (statusFlag)
     {
+     if(o_gTcpPortMap[assignedPort] == "FREE"){
+	DEBUG_PRINT (DEBUG_TRACE, "\nExiting Stub server as itis free now ..\n");
+	statusFlag = false;
+	break;
+     }
         /* Status server waiting indefinitely */
         //do nothing
         //o_Status.WaitMessage(1000);
     }
 
     /* clean up and exit */
-    DEBUG_PRINT (DEBUG_TRACE, "\nExiting Device Status Monitoring..\n");
+    DEBUG_PRINT (DEBUG_TRACE, "\nExiting Stub Server ...\n");
     //o_Status.Close();
     //networking::cleanup();
     pthread_exit (NULL);
@@ -387,6 +458,11 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
     pthread_t StubServerThreadId; //Multi
     int nReturnValue =0;
 
+    int *reservedPort = (int*)malloc(sizeof(int));
+        if ( reservedPort == NULL ) {
+            fprintf(stderr, "Couldn't allocate memory for thread arg.\n");
+            exit(EXIT_FAILURE);
+        }
     DEBUG_PRINT (DEBUG_TRACE, "\nLoad Library --> Entry\n");
 
     m_iLoadStatus = FLAG_SET;
@@ -394,6 +470,7 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
     //RDKTestStubInterface* (*pfnCreateObject)(void);
     RDKTestStubInterface* (*pfnCreateObject)(TcpSocketServer &ptrRpcServer);
     RDKTestStubInterface* pRDKTestStubInterface;
+    std::map <int, std::string>::iterator o_gTcpPortMapIter;
 
     do
     {   
@@ -426,7 +503,50 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
 	
         /* Multi-server */
         //TcpSocketServer o_stubserver("127.0.0.1", 18087);  //creating local server  	
-        pRDKTestStubInterface = pfnCreateObject(o_StubStatus);
+          for (o_gTcpPortMapIter = o_gTcpPortMap.begin(); o_gTcpPortMapIter != o_gTcpPortMap.end(); o_gTcpPortMapIter ++ )
+      {
+
+            cout << o_gTcpPortMapIter -> second <<std::endl;
+            if (o_gTcpPortMapIter -> second == "FREE")
+            {
+                if(o_gTcpPortMapIter ->first == TCP_PORT_1)
+                {
+		     DEBUG_PRINT (DEBUG_LOG, "Identified PORT 1  FOR %s PORT %d \n", pszLibName,o_gTcpPortMapIter ->first);
+                     o_gTcpPortMapIter->second=pszLibName;
+		     *reservedPort = 18086;
+		     DEBUG_PRINT (DEBUG_LOG, "Identified  PORT %d \n", *reservedPort);
+                     pRDKTestStubInterface = pfnCreateObject(o_StubStatus_obj1);
+                     break;
+                }
+                else if(o_gTcpPortMapIter ->first == TCP_PORT_2)
+                {
+                     DEBUG_PRINT (DEBUG_LOG, "Identified PORT 2 %s PORT is %d \n",pszLibName,o_gTcpPortMapIter ->first);
+                     o_gTcpPortMapIter->second=pszLibName;
+		     *reservedPort = 18087;
+		     DEBUG_PRINT (DEBUG_LOG, "Identified  PORT %d \n", *reservedPort);
+                     pRDKTestStubInterface = pfnCreateObject(o_StubStatus_obj2);
+                     break;
+                }
+		else if(o_gTcpPortMapIter ->first == TCP_PORT_3)
+		{
+		     DEBUG_PRINT (DEBUG_LOG, "Identified PORT 3 %s PORT is %d \n",pszLibName,o_gTcpPortMapIter ->first);
+                     o_gTcpPortMapIter->second=pszLibName;
+		     *reservedPort = 18088;
+		     DEBUG_PRINT (DEBUG_LOG, "Identified  PORT %d \n", *reservedPort);
+                     pRDKTestStubInterface = pfnCreateObject(o_StubStatus_obj3);
+                     break;
+		}
+		else
+		{
+		     DEBUG_PRINT (DEBUG_LOG, "Identified PORT 4 %s PORT is %d \n",pszLibName,o_gTcpPortMapIter ->first);
+                     o_gTcpPortMapIter->second=pszLibName;
+		     *reservedPort = 18089;
+		     DEBUG_PRINT (DEBUG_LOG, "Identified  PORT %d \n", *reservedPort);
+                     pRDKTestStubInterface = pfnCreateObject(o_StubStatus_obj4);
+                     break;
+		}
+            }
+      }
 #if 0
         if (o_stubserver.StartListening()) {
            cout << "Server started successfully" << endl;
@@ -515,8 +635,9 @@ std::string RpcMethods::LoadLibrary (char* pszLibName)
     //if (o_stubserver.StartListening()) {
       //cout << "Server started successfully" << endl;
     //}
-    b_stubServerFlag=true;   
-    nReturnValue = pthread_create (&StubServerThreadId, NULL, Createstubserver,NULL);
+    //b_stubServerFlag=true;
+    DEBUG_PRINT (DEBUG_LOG, "Lib Name used is %s  port %d \n",pszLibName,*reservedPort);
+    nReturnValue = pthread_create (&StubServerThreadId, NULL, Createstubserver,(void*)reservedPort);
     if(nReturnValue != RETURN_SUCCESS)
     {
         DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Device Status Monitoring\n");
@@ -547,7 +668,7 @@ std::string RpcMethods::UnloadLibrary (char* pszLibName)
     std::string strLibName(pszLibName);
     int nMapEntryStatus = FLAG_NOT_SET;
     std::string strUnloadLibraryDetails = "Module Unloaded Successfully";
-
+    std::map <int, std::string>::iterator o_gTcpPortMapIter;
     void (*pfnDestroyObject) (RDKTestStubInterface*);
     RDKTestStubInterface* pRDKTestStubInterface;
 	
@@ -632,6 +753,15 @@ std::string RpcMethods::UnloadLibrary (char* pszLibName)
 
 
     }while(0);	
+    for (o_gTcpPortMapIter = o_gTcpPortMap.begin(); o_gTcpPortMapIter != o_gTcpPortMap.end(); o_gTcpPortMapIter ++ )
+      {
+            cout << o_gTcpPortMapIter -> second <<std::endl;
+            if (o_gTcpPortMapIter -> second == strLibName)
+            {
+                o_gTcpPortMapIter ->second = "FREE";
+            }
+
+      }
     //go_Server.StopListening();
     //if (go_Server.StartListening()) {
      // cout << "Server started successfully" << endl;
@@ -1579,7 +1709,7 @@ void RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
     RDKTestStubInterface* (*pfnCreateObject)(TcpSocketServer &ptrRpcServer);
     RDKTestStubInterface* pRDKTestStubInterface;
     void (*pfnDestroyObject) (RDKTestStubInterface*);
-
+    std::map <int, std::string>::iterator o_gTcpPortMapIter;
     fprintf(stdout,"\nResetting Agent..\n");
     DEBUG_PRINT (DEBUG_TRACE, "\nRPCResetAgent --> Entry\n");
     //DEBUG_PRINT (DEBUG_TRACE, "Received query: %s \n", request.asCString());
@@ -1616,7 +1746,7 @@ void RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
                 DEBUG_PRINT (DEBUG_ERROR, "%s \n", pszError);
 		  break;
             }	
-            pRDKTestStubInterface = pfnCreateObject(o_StubStatus);
+            pRDKTestStubInterface = pfnCreateObject(o_StubStatus_obj1);
 
             /* Calling Post requisites for module */
             DEBUG_PRINT (DEBUG_LOG, "Executing Post requisites for %s \n", szLibName);
@@ -1740,6 +1870,13 @@ void RpcMethods::RPCResetAgent (const Json::Value& request, Json::Value& respons
     {
        fclose(RpcMethods::sm_pLogStream);
        RpcMethods::sm_pLogStream = freopen (NULL_LOG, "w", stdout);
+    }
+DEBUG_PRINT (DEBUG_LOG, "\n\nAgent Restarting, so clearing all the stub server ports !!!! \n");   
+ 
+   for (o_gTcpPortMapIter = o_gTcpPortMap.begin(); o_gTcpPortMapIter != o_gTcpPortMap.end(); o_gTcpPortMapIter ++ )
+    {
+       cout << o_gTcpPortMapIter -> second <<std::endl;
+       o_gTcpPortMapIter ->second = "FREE";
     }
 	
     return;
@@ -2245,19 +2382,45 @@ void RpcMethods::RPCExecuteTestCase(const Json::Value& request, Json::Value& res
     bool bRet = true;
     int nReturnValue = 0;
     char szCommand[COMMAND_SIZE];
+    char szLibName[LIB_NAME_SIZE];
 
     DEBUG_PRINT (DEBUG_TRACE, "\nRPC Execute Test case --> Entry\n");
     cout << "Received query: \n" << request << endl;
 
     response["jsonrpc"] = "2.0";
     response["id"] = request["id"];
+    std::map <int, std::string>::iterator o_gTcpPortMapIter;
     //response["result"] = "Success";
 
     //Multi server
     //host="127.0.0.1";
     //port=18087;
+    const char* libname = request["module"].asCString();
+    #ifdef YOCTO_LIB_LOADING
+        sprintf (szLibName, "lib%sstub.so.0", libname);
+    #else
+        sprintf (szLibName, "lib%sstub.so", libname);
+    #endif
+
+     int assignedPort;
+     DEBUG_PRINT (DEBUG_TRACE, "\nRPC Execute Test case Module Name %s --> Entry\n",szLibName);
+     for (o_gTcpPortMapIter = o_gTcpPortMap.begin(); o_gTcpPortMapIter != o_gTcpPortMap.end(); o_gTcpPortMapIter ++ )
+      {
+
+            cout << o_gTcpPortMapIter -> second <<std::endl;
+            if (o_gTcpPortMapIter -> second == szLibName)
+            {
+                assignedPort = o_gTcpPortMapIter ->first;
+            }
+
+                DEBUG_PRINT (DEBUG_LOG, "Found FREE PORT :%d and value  %s \n",o_gTcpPortMapIter-> first , o_gTcpPortMapIter-> second.c_str());
+      }
+
+    DEBUG_PRINT (DEBUG_TRACE, "\nRPC Execute Test case Module Name %s Client Port is %d --> Entry\n",szLibName,assignedPort);
+
     
-    TcpSocketClient client("127.0.0.1",18087);
+    TcpSocketClient client("127.0.0.1",assignedPort);
+
     Client c(client);
     
      
