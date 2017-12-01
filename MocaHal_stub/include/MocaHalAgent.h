@@ -51,7 +51,7 @@ class MocaHalAgent : public RDKTestStubInterface , public AbstractServer<MocaHal
                 MocaHalAgent(TcpSocketServer &ptrRpcServer) : AbstractServer <MocaHalAgent>(ptrRpcServer)
                 {
                     this->bindAndAddMethod(Procedure("TestMgr_MocaHal_GetMoCALinkUp", PARAMS_BY_NAME, JSON_STRING,NULL), &MocaHalAgent::MocaHal_GetMoCALinkUp);
-                    this->bindAndAddMethod(Procedure("TestMgr_MocaHal_SetEnabled", PARAMS_BY_NAME, JSON_STRING,"enable",JSON_STRING,NULL), &MocaHalAgent::MocaHal_SetEnabled);
+                    this->bindAndAddMethod(Procedure("TestMgr_MocaHal_SetEnabled", PARAMS_BY_NAME, JSON_STRING,"enable",JSON_INTEGER,NULL), &MocaHalAgent::MocaHal_SetEnabled);
                     this->bindAndAddMethod(Procedure("TestMgr_MocaHal_GetEnabled", PARAMS_BY_NAME, JSON_STRING,NULL), &MocaHalAgent::MocaHal_GetEnabled);
                     this->bindAndAddMethod(Procedure("TestMgr_MocaHal_GetLOF", PARAMS_BY_NAME, JSON_STRING,NULL), &MocaHalAgent::MocaHal_GetLOF);
                     this->bindAndAddMethod(Procedure("TestMgr_MocaHal_GetFrequencyMask", PARAMS_BY_NAME, JSON_STRING,NULL), &MocaHalAgent::MocaHal_GetFrequencyMask);

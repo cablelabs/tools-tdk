@@ -118,7 +118,7 @@ class TDKIntegrationStub : public RDKTestStubInterface , public AbstractServer<T
                   this->bindAndAddMethod(Procedure("TestMgr_Dvr_Play_Play", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_Play_Play);
                   this->bindAndAddMethod(Procedure("TestMgr_LiveTune_GETURL", PARAMS_BY_NAME,JSON_STRING, "Validurl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_GETURL);
 		  /*E2E_RMF_TSB*/
-                  this->bindAndAddMethod(Procedure("TestMgr_TSB_Play", PARAMS_BY_NAME,JSON_STRING, "SpeedRate",JSON_REAL, "VideostreamURL",JSON_STRING, "sbSeconds",JSON_REAL, "rCount",JSON_INTEGER, NULL), &TDKIntegrationStub::E2ERMFTSB_Play);
+		  this->bindAndAddMethod(Procedure("TestMgr_TSB_Play", PARAMS_BY_NAME,JSON_STRING, "SpeedRate",JSON_REAL, "VideostreamURL",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFTSB_Play); 
 	          /* E2E RF Video */
                   this->bindAndAddMethod(Procedure("TestMgr_RF_Video_ChannelChange", PARAMS_BY_NAME,JSON_STRING, "playUrl",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_ChannelChange);
                   this->bindAndAddMethod(Procedure("TestMgr_MDVR_GetResult", PARAMS_BY_NAME,JSON_STRING, "resultList",JSON_STRING, NULL), &TDKIntegrationStub::E2ERMFAgent_MDVR_GetResult);

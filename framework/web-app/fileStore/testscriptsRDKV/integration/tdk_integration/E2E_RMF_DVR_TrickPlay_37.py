@@ -76,7 +76,7 @@ ip = <ipaddress>
 port = <port>
 
 #Number of times the pause/play should repeat.
-skipNumOfSec = 20;
+skipNumOfSec = 20.0;
 
 obj.configureTestCase(ip,port,'E2E_RMF_DVR_TrickPlay_37');
 

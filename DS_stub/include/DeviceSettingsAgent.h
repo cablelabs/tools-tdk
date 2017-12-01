@@ -134,7 +134,7 @@ class DeviceSettingsAgent : public RDKTestStubInterface , public AbstractServer<
                   this->bindAndAddMethod(Procedure("TestMgr_DS_AOP_setStereoMode", PARAMS_BY_NAME, JSON_STRING,"port_name", JSON_STRING,"stereo_mode", JSON_STRING,"get_only", JSON_INTEGER,NULL), &DeviceSettingsAgent::AOP_setStereoMode);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_AOP_loopThru", PARAMS_BY_NAME, JSON_STRING,"port_name", JSON_STRING, "loop_thru", JSON_INTEGER,NULL), &DeviceSettingsAgent::AOP_loopThru);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_AOP_mutedStatus", PARAMS_BY_NAME, JSON_STRING,"port_name",JSON_STRING,"mute_status",  JSON_INTEGER,NULL), &DeviceSettingsAgent::AOP_mutedStatus);
-                  this->bindAndAddMethod(Procedure("TestMgr_DS_AOP_setStereoAuto", PARAMS_BY_NAME, JSON_STRING,"port_name",JSON_STRING,"autoMode", JSON_BOOLEAN,NULL), &DeviceSettingsAgent::AOP_setStereoAuto);
+                  this->bindAndAddMethod(Procedure("TestMgr_DS_AOP_setStereoAuto", PARAMS_BY_NAME, JSON_STRING,"port_name",JSON_STRING,"autoMode", JSON_INTEGER,NULL), &DeviceSettingsAgent::AOP_setStereoAuto);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_AOP_getStereoAuto", PARAMS_BY_NAME, JSON_STRING,"port_name", JSON_STRING,NULL), &DeviceSettingsAgent::AOP_getStereoAuto);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_AOP_getGain", PARAMS_BY_NAME, JSON_STRING, "port_name", JSON_STRING,NULL), &DeviceSettingsAgent::AOP_getGain);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_AOP_getOptimalLevel", PARAMS_BY_NAME, JSON_STRING,"port_name", JSON_STRING,NULL), &DeviceSettingsAgent::AOP_getOptimalLevel);
@@ -147,7 +147,7 @@ class DeviceSettingsAgent : public RDKTestStubInterface , public AbstractServer<
                   this->bindAndAddMethod(Procedure("TestMgr_DS_VOP_isContentProtected", PARAMS_BY_NAME, JSON_STRING,"port_name", JSON_STRING,NULL), &DeviceSettingsAgent::VOP_isContentProtected);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_VOP_setEnable", PARAMS_BY_NAME, JSON_STRING,"port_name",JSON_STRING, "enable", JSON_INTEGER,NULL), &DeviceSettingsAgent::VOP_setEnable);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_VOP_isActive", PARAMS_BY_NAME, JSON_STRING,"port_name", JSON_STRING,NULL), &DeviceSettingsAgent::VOP_isActive);
-                  this->bindAndAddMethod(Procedure("TestMgr_DS_VOP_setDisplayConnected", PARAMS_BY_NAME, JSON_STRING,"port_name", JSON_STRING,"connected",JSON_BOOLEAN,NULL), &DeviceSettingsAgent::VOP_setDisplayConnected);
+                  this->bindAndAddMethod(Procedure("TestMgr_DS_VOP_setDisplayConnected", PARAMS_BY_NAME, JSON_STRING,"port_name", JSON_STRING,"connected",JSON_INTEGER,NULL), &DeviceSettingsAgent::VOP_setDisplayConnected);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_VOP_hasSurround", PARAMS_BY_NAME, JSON_STRING,"port_name", JSON_STRING,NULL), &DeviceSettingsAgent::VOP_hasSurround);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_VOP_getEDIDBytes", PARAMS_BY_NAME, JSON_STRING,"port_name", JSON_STRING,NULL), &DeviceSettingsAgent::VOP_getEDIDBytes);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_VOPTYPE_isHDCPSupported", PARAMS_BY_NAME, JSON_STRING,"port_name",JSON_STRING,NULL), &DeviceSettingsAgent::VOPTYPE_isHDCPSupported);
@@ -194,6 +194,10 @@ class DeviceSettingsAgent : public RDKTestStubInterface , public AbstractServer<
                   this->bindAndAddMethod(Procedure("TestMgr_DS_HOST_getVideoOutputPorts", PARAMS_BY_NAME, JSON_STRING,NULL), &DeviceSettingsAgent::HOST_getVideoOutputPorts);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_HOST_getHostEDID", PARAMS_BY_NAME, JSON_STRING,NULL), &DeviceSettingsAgent::HOST_getHostEDID);
                   this->bindAndAddMethod(Procedure("TestMgr_DS_HOST_getVideoDevices", PARAMS_BY_NAME, JSON_STRING,NULL), &DeviceSettingsAgent::HOST_getVideoDevices);
+                  this->bindAndAddMethod(Procedure("TestMgr_DS_HOST_getAudioOutputPortFromId", PARAMS_BY_NAME, JSON_STRING, "port_id", JSON_INTEGER, NULL), &DeviceSettingsAgent::HOST_getAudioOutputPortFromId);
+                  this->bindAndAddMethod(Procedure("TestMgr_DS_HOST_getVideoOutputPortFromId", PARAMS_BY_NAME, JSON_STRING, "port_id", JSON_INTEGER, NULL), &DeviceSettingsAgent::HOST_getVideoOutputPortFromId);
+                  this->bindAndAddMethod(Procedure("TestMgr_DS_HOST_getVideoOutputPortFromName", PARAMS_BY_NAME, JSON_STRING, "port_name", JSON_STRING, NULL), &DeviceSettingsAgent::HOST_getVideoOutputPortFromName);
+                  this->bindAndAddMethod(Procedure("TestMgr_DS_HOST_getAudioOutputPortFromName", PARAMS_BY_NAME, JSON_STRING, "port_name", JSON_STRING, NULL), &DeviceSettingsAgent::HOST_getAudioOutputPortFromName);
                 }
 
 

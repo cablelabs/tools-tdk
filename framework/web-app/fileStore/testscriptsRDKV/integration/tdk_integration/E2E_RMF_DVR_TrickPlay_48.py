@@ -23,7 +23,6 @@
   <remarks/>
   <skip>false</skip>
   <box_types>
-    <box_type>RPI-HYB</box_type>
     <box_type>IPClient-3</box_type>
     <box_type>IPClient-4</box_type>
     <box_type>Emulator-Client</box_type>
@@ -79,10 +78,10 @@ ip = <ipaddress>
 port = <port>
 
 #Set the Number of seconds to skipforward.
-skipForwardSec = 10
+skipForwardSec = 10.0
 
 #Set the Number of seconds to skipbackward.
-skipBackwardSec = 10
+skipBackwardSec = 10.0
 
 #Number of repeatation
 repeatCount = 5;

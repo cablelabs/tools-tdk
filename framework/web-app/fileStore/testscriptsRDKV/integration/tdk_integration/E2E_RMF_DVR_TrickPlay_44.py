@@ -23,7 +23,6 @@
   <remarks/>
   <skip>false</skip>
   <box_types>
-    <box_type>RPI-HYB</box_type>
     <box_type>IPClient-3</box_type>
     <box_type>IPClient-4</box_type>
     <box_type>Emulator-Client</box_type>
@@ -79,7 +78,7 @@ ip = <ipaddress>
 port = <port>
 
 #Set the trick play speed for forward
-rewindPlaySpeed = -4
+rewindPlaySpeed = -4.0
 
 obj.configureTestCase(ip,port,'E2E_RMF_DVR_TrickPlay_44');
 

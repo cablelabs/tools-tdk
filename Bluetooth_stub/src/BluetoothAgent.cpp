@@ -25,12 +25,12 @@ Arguments     : NULL
 
 Description   : Constructor for BluetoothAgent class
 ***************************************************************************/
-
+#if 0
 BluetoothAgent::BluetoothAgent()
 {
         DEBUG_PRINT(DEBUG_LOG, "BluetoothAgent Initialized\n");
 }
-
+#endif
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Description   : testmodulepre_requisites will be used for setting the
@@ -87,15 +87,15 @@ Arguments       : NULL
 Description     : This function is used to create a new object of the class "BluetoothAgent".
 **************************************************************************/
 
-extern "C" BluetoothAgent* CreateObject()
+extern "C" BluetoothAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
-        return new BluetoothAgent();
+        return new BluetoothAgent(ptrtcpServer);
 }
 
-bool BluetoothAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAgentObj)
+bool BluetoothAgent::initialize(IN const char* szVersion)
 {    
         DEBUG_PRINT (DEBUG_TRACE, "Bluetooth Initialization Entry\n");
-
+        #if 0
         ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetNumberOfAdapters, "TestMgr_Bluetooth_GetNumberOfAdapters");
         ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetAdapterName, "TestMgr_Bluetooth_GetAdapterName");
         ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_SetAdapterName, "TestMgr_Bluetooth_SetAdapterName");
@@ -108,12 +108,12 @@ bool BluetoothAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAge
         ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetDiscoveredDevices, "TestMgr_Bluetooth_GetDiscoveredDevices");
         ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_ConnectToDevice, "TestMgr_Bluetooth_ConnectToDevice");
         ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_DisconnectFromDevice, "TestMgr_Bluetooth_DisconnectFromDevice");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetConnectedDevices, "TestMgr_Bluetooth_Bluetooth_GetConnectedDevices");
+        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetConnectedDevices, "TestMgr_Bluetooth_GetConnectedDevices");
         ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_PairDevice, "TestMgr_Bluetooth_PairDevice");
         ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_UnpairDevice, "TestMgr_Bluetooth_UnpairDevice");
         ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetPairedDevices, "TestMgr_Bluetooth_GetPairedDevices");
         ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetDeviceProperties, "TestMgr_Bluetooth_GetDeviceProperties");
-
+        #endif
         DEBUG_PRINT (DEBUG_TRACE, "Bluetooth Initialization Exit\n");
         return TEST_SUCCESS;
 }
@@ -122,7 +122,7 @@ bool BluetoothAgent::initialize(IN const char* szVersion,IN RDKTestAgent *ptrAge
  *Function name : Bluetooth_GetNumberOfAdapters
  *Descrption    : This function is to get the number of bluetooth adapters
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_GetNumberOfAdapters(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_GetNumberOfAdapters(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetNumberOfAdapters --->Entry\n");
      
@@ -134,14 +134,14 @@ bool BluetoothAgent::Bluetooth_GetNumberOfAdapters(IN const Json::Value& req, OU
        response["details"] = numOfAdapters;
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetNumberOfAdapters call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetNumberOfAdapters --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetNumberOfAdapters call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetNumberOfAdapters -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -149,7 +149,7 @@ bool BluetoothAgent::Bluetooth_GetNumberOfAdapters(IN const Json::Value& req, OU
  *Function name : Bluetooth_GetAdapterName
  *Descrption    : This function is to get the bluetooth adapter name
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_GetAdapterName(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_GetAdapterName(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetAdapterName --->Entry\n");
    char adapterName[DEVICE_NAME_BUFFER]= {'\0'};
@@ -160,14 +160,14 @@ bool BluetoothAgent::Bluetooth_GetAdapterName(IN const Json::Value& req, OUT Jso
        response["details"] = adapterName;
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetAdapterName call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetAdapterName --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetAdapterName call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetAdapterName -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -175,7 +175,7 @@ bool BluetoothAgent::Bluetooth_GetAdapterName(IN const Json::Value& req, OUT Jso
  *Function name : Bluetooth_SetAdapterName
  *Descrption    : This function is to set the bluetooth adapter name
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_SetAdapterName(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_SetAdapterName(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_SetAdapterName --->Entry\n");
    char nameAdapter[DEVICE_NAME_BUFFER]= {'\0'};
@@ -187,14 +187,14 @@ bool BluetoothAgent::Bluetooth_SetAdapterName(IN const Json::Value& req, OUT Jso
        response["details"] = nameAdapter;
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_SetAdapterName call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_SetAdapterName --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_SetAdapterName call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_SetAdapterName -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -202,7 +202,7 @@ bool BluetoothAgent::Bluetooth_SetAdapterName(IN const Json::Value& req, OUT Jso
  *Function name : Bluetooth_GetAdapterPowerStatus
  *Descrption    : This function is to get the bluetooth adapter power status
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_GetAdapterPowerStatus(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_GetAdapterPowerStatus(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetAdapterPowerStatus --->Entry\n");
    unsigned char powerStatus;
@@ -213,14 +213,14 @@ bool BluetoothAgent::Bluetooth_GetAdapterPowerStatus(IN const Json::Value& req, 
        response["details"] = powerStatus;
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetAdapterPowerStatus call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetAdapterPowerStatus --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetAdapterPowerStatus call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetAdapterPowerStatus -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -228,7 +228,7 @@ bool BluetoothAgent::Bluetooth_GetAdapterPowerStatus(IN const Json::Value& req, 
  *Function name : Bluetooth_SetAdapterPowerStatus
  *Descrption    : This function is to set the bluetooth adapter power status
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_SetAdapterPowerStatus(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_SetAdapterPowerStatus(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_SetAdapterPowerStatus --->Entry\n");
    unsigned char powerStatus;
@@ -239,14 +239,14 @@ bool BluetoothAgent::Bluetooth_SetAdapterPowerStatus(IN const Json::Value& req, 
        response["result"] = "SUCCESS";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_SetAdapterPowerStatus call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_SetAdapterPowerStatus --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_SetAdapterPowerStatus call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_SetAdapterPowerStatus -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -254,7 +254,7 @@ bool BluetoothAgent::Bluetooth_SetAdapterPowerStatus(IN const Json::Value& req, 
  *Function name : Bluetooth_IsAdapterDiscoverable
  *Descrption    : This function is to get the bluetooth discoverable status
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_IsAdapterDiscoverable(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_IsAdapterDiscoverable(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_IsAdapterDiscoverable --->Entry\n");
    unsigned char discoverableStatus;
@@ -265,14 +265,14 @@ bool BluetoothAgent::Bluetooth_IsAdapterDiscoverable(IN const Json::Value& req, 
        response["details"] = discoverableStatus;
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_IsAdapterDiscoverable call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_IsAdapterDiscoverable --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_IsAdapterDiscoverable call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_IsAdapterDiscoverable -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -280,7 +280,7 @@ bool BluetoothAgent::Bluetooth_IsAdapterDiscoverable(IN const Json::Value& req, 
  *Function name : Bluetooth_SetAdapterDiscoverable
  *Descrption    : This function is to set the bluetooth discoverable status
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_SetAdapterDiscoverable(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_SetAdapterDiscoverable(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_SetAdapterDiscoverable --->Entry\n");
    unsigned char discoverableStatus;
@@ -293,14 +293,14 @@ bool BluetoothAgent::Bluetooth_SetAdapterDiscoverable(IN const Json::Value& req,
        response["result"] = "SUCCESS";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_SetAdapterDiscoverable call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_SetAdapterDiscoverable --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_SetAdapterDiscoverable call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_SetAdapterDiscoverable -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -308,7 +308,7 @@ bool BluetoothAgent::Bluetooth_SetAdapterDiscoverable(IN const Json::Value& req,
  *Function name : Bluetooth_StartDeviceDiscovery
  *Descrption    : This function is to start the device discovery
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_StartDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_StartDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartDeviceDiscovery --->Entry\n");
    rc = BTRMGR_StartDeviceDiscovery(0);
@@ -317,14 +317,14 @@ bool BluetoothAgent::Bluetooth_StartDeviceDiscovery(IN const Json::Value& req, O
        response["result"] = "SUCCESS";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StartDeviceDiscovery call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartDeviceDiscovery --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StartDeviceDiscovery call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartDeviceDiscovery -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -332,7 +332,7 @@ bool BluetoothAgent::Bluetooth_StartDeviceDiscovery(IN const Json::Value& req, O
  *Function name : Bluetooth_StopDeviceDiscovery
  *Descrption    : This function is to stop the device discovery
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_StopDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_StopDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StopDeviceDiscovery --->Entry\n");
    rc = BTRMGR_StopDeviceDiscovery(0);
@@ -341,14 +341,14 @@ bool BluetoothAgent::Bluetooth_StopDeviceDiscovery(IN const Json::Value& req, OU
        response["result"] = "SUCCESS";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StopDeviceDiscovery call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StopDeviceDiscovery --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StopDeviceDiscovery call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StopDeviceDiscovery -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -356,7 +356,7 @@ bool BluetoothAgent::Bluetooth_StopDeviceDiscovery(IN const Json::Value& req, OU
  *Function name : Bluetooth_GetDiscoveredDevices
  *Descrption    : This function is to get the discovered devices
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_GetDiscoveredDevices(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_GetDiscoveredDevices(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetDiscoveredDevices --->Entry\n");
    BTRMGR_DiscoveredDevicesList_t discoveredDevices;
@@ -383,14 +383,14 @@ bool BluetoothAgent::Bluetooth_GetDiscoveredDevices(IN const Json::Value& req, O
        }
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetDiscoveredDevices call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetDiscoveredDevices --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetDiscoveredDevices call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetDiscoveredDevices -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -398,7 +398,7 @@ bool BluetoothAgent::Bluetooth_GetDiscoveredDevices(IN const Json::Value& req, O
  *Function name : Bluetooth_ConnectToDevice
  *Descrption    : This function is to connect to a device
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_ConnectToDevice(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_ConnectToDevice(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_ConnectToDevice --->Entry\n");
    unsigned long long int handle;
@@ -416,14 +416,14 @@ bool BluetoothAgent::Bluetooth_ConnectToDevice(IN const Json::Value& req, OUT Js
        response["result"] = "SUCCESS";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_ConnectToDevice call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_ConnectToDevice --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_ConnectToDevice call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_ConnectToDevice -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -431,7 +431,7 @@ bool BluetoothAgent::Bluetooth_ConnectToDevice(IN const Json::Value& req, OUT Js
  *Function name : Bluetooth_DisconnectFromDevice
  *Descrption    : This function is to connect to a device
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_DisconnectFromDevice(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_DisconnectFromDevice(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_DisconnectFromDevice --->Entry\n");
    unsigned long long int handle;
@@ -445,14 +445,14 @@ bool BluetoothAgent::Bluetooth_DisconnectFromDevice(IN const Json::Value& req, O
        response["result"] = "SUCCESS";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_DisconnectFromDevice call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_DisconnectFromDevice --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_DisconnectFromDevice call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_DisconnectFromDevice -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -460,7 +460,7 @@ bool BluetoothAgent::Bluetooth_DisconnectFromDevice(IN const Json::Value& req, O
  *Function name : Bluetooth_GetConnectedDevices
  *Descrption    : This function is to get the connected devices
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_GetConnectedDevices(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetConnectedDevices --->Entry\n");
    BTRMGR_ConnectedDevicesList_t connectedDevices;
@@ -487,14 +487,14 @@ bool BluetoothAgent::Bluetooth_GetConnectedDevices(IN const Json::Value& req, OU
        }
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetConnectedDevices call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetConnectedDevices --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetConnectedDevices call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetConnectedDevices -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -502,7 +502,7 @@ bool BluetoothAgent::Bluetooth_GetConnectedDevices(IN const Json::Value& req, OU
  *Function name : Bluetooth_PairDevice
  *Descrption    : This function is to pair a device
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_PairDevice(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_PairDevice(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_PairDevice --->Entry\n");
    unsigned long long int handle;
@@ -516,14 +516,14 @@ bool BluetoothAgent::Bluetooth_PairDevice(IN const Json::Value& req, OUT Json::V
        response["result"] = "SUCCESS";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_PairDevice call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_PairDevice --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_PairDevice call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_PairDevice -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -531,7 +531,7 @@ bool BluetoothAgent::Bluetooth_PairDevice(IN const Json::Value& req, OUT Json::V
  *Function name : Bluetooth_UnpairDevice
  *Descrption    : This function is to unpair a device
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_UnpairDevice(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_UnpairDevice(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_UnpairDevice --->Entry\n");
    unsigned long long int handle;
@@ -545,14 +545,14 @@ bool BluetoothAgent::Bluetooth_UnpairDevice(IN const Json::Value& req, OUT Json:
        response["result"] = "SUCCESS";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_UnpairDevice call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_UnpairDevice --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_UnpairDevice call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_UnpairDevice -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -560,7 +560,7 @@ bool BluetoothAgent::Bluetooth_UnpairDevice(IN const Json::Value& req, OUT Json:
  *Function name : Bluetooth_GetPairedDevices
  *Descrption    : This function is to get the paired devices list
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_GetPairedDevices(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_GetPairedDevices(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetPairedDevices --->Entry\n");
    BTRMGR_PairedDevicesList_t pairedDevices;
@@ -587,14 +587,14 @@ bool BluetoothAgent::Bluetooth_GetPairedDevices(IN const Json::Value& req, OUT J
        }
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetPairedDevices call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetPairedDevices --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetPairedDevices call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetPairedDevices -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -602,7 +602,7 @@ bool BluetoothAgent::Bluetooth_GetPairedDevices(IN const Json::Value& req, OUT J
  *Function name : Bluetooth_GetDeviceProperties
  *Descrption    : This function is to get the discovered devices properties
  *****************************************************************************/
-bool BluetoothAgent::Bluetooth_GetDeviceProperties(IN const Json::Value& req, OUT Json::Value& response)
+void BluetoothAgent::Bluetooth_GetDeviceProperties(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetDeviceProperties --->Entry\n");
    BTRMGR_DevicesProperty_t deviceProperty;
@@ -621,14 +621,14 @@ bool BluetoothAgent::Bluetooth_GetDeviceProperties(IN const Json::Value& req, OU
        response["details"] = deviceProperties;
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetDeviceProperties call is SUCCESS");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetDeviceProperties --->Exit\n");
-       return TEST_SUCCESS;
+       return ;
    }
    else
    {
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetDeviceProperties call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetDeviceProperties -->Exit\n");
-       return TEST_FAILURE;
+       return ;
    }
 }
 
@@ -639,10 +639,10 @@ Arguments       : NULL
 
 Description     : This function will be used to the close things cleanly.
  **************************************************************************/
-bool BluetoothAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
+bool BluetoothAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaning up\n");
-
+    #if 0
     if(NULL == ptrAgentObj)
     {
         return TEST_FAILURE;
@@ -665,7 +665,7 @@ bool BluetoothAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgent
     ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_UnpairDevice"); 
     ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_GetPairedDevices"); 
     ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_GetDeviceProperties"); 
-
+    #endif
     return TEST_SUCCESS;
 }
 
