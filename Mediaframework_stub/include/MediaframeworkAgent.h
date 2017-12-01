@@ -96,7 +96,7 @@ class MediaframeworkAgent : public RDKTestStubInterface , public AbstractServer<
            this->bindAndAddMethod(Procedure("TestMgr_HNSrc_GetBufferedRanges", PARAMS_BY_NAME, JSON_STRING,"X",JSON_INTEGER,"Y",JSON_INTEGER,"H",JSON_INTEGER,"W",JSON_INTEGER,"apply",JSON_INTEGER,"playuri",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_HNSrc_GetBufferedRanges);
            this->bindAndAddMethod(Procedure("TestMgr_HNSrcMPSink_Video_State", PARAMS_BY_NAME, JSON_STRING,"X",JSON_INTEGER,"Y",JSON_INTEGER,"H",JSON_INTEGER,"W",JSON_INTEGER,"apply",JSON_INTEGER,"playuri",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_State);
            this->bindAndAddMethod(Procedure("TestMgr_HNSrcMPSink_Video_MuteUnmute", PARAMS_BY_NAME, JSON_STRING,"X",JSON_INTEGER,"Y",JSON_INTEGER,"H",JSON_INTEGER,"W",JSON_INTEGER,"apply",JSON_INTEGER,"playuri",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_MuteUnmute);
-           this->bindAndAddMethod(Procedure("TestMgr_HNSrcMPSink_Video_Volume", PARAMS_BY_NAME, JSON_STRING,"Volume",JSON_INTEGER,"X",JSON_INTEGER,"Y",JSON_INTEGER,"H",JSON_INTEGER,"W",JSON_INTEGER,"apply",JSON_INTEGER,"playuri",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume);
+           this->bindAndAddMethod(Procedure("TestMgr_HNSrcMPSink_Video_Volume", PARAMS_BY_NAME, JSON_STRING,"Volume",JSON_REAL,"X",JSON_INTEGER,"Y",JSON_INTEGER,"H",JSON_INTEGER,"W",JSON_INTEGER,"apply",JSON_INTEGER,"playuri",JSON_STRING,NULL), &MediaframeworkAgent::MediaframeworkAgent_HNSrcMPSink_Video_Volume);
 	
 	#ifndef SINGLE_TUNER_IP_CLIENT
         /*DVR Recording List*/
