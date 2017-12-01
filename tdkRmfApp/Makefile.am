@@ -17,10 +17,11 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/jsonrpc \
               -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/glib-2.0 \
               -I${PKG_CONFIG_SYSROOT_DIR}/usr/lib/glib-2.0/include \
-              -I${top_srcdir}/agent/include
+              -I${top_srcdir}/agent/include \
+              -I${PKG_CONFIG_SYSROOT_DIR}${includedir}/rdk/podmgr
 
 bin_PROGRAMS = tdkRmfApp
 tdkRmfAppdir = ${bindir}
 tdkRmfApp_SOURCES = tdkRmfApp.cpp
-tdkRmfApp_LDFLAGS = -ldvrmgr -ldvrsink -lmediaplayersink -lhnsource -luuid -lsharedtsb -lrbifilter -lrbi ${SOC_LIBS} $(TDK_GST_LIBS)
+tdkRmfApp_LDFLAGS = -ldvrmgr -ldvrsink -lmediaplayersink -lhnsource -luuid -lsharedtsb -lrbifilter -lrbi ${SOC_LIBS} $(TDK_GST_LIBS) $(TDKINTEGRATION_HYBRID_LIBS)
 tdkRmfApp_includedir = ${includedir}

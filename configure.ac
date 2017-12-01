@@ -110,7 +110,7 @@ AC_ARG_ENABLE([hybrid],
                   SUBDIR_HYBRID="TRM_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub SNMP_stub"
                   AGENT_FLAGS=" -DPORT_FORWARD"
                   TDK_GST_LIBS=" -lgstreamer-$GST_MAJORMINOR -lgstbase-$GST_MAJORMINOR"
-                  TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc"
+                  TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc -lcanh -lpodmgr"
                   TDKINTEGRATION_FLAGS="-DENABLE_HYBRID_CODECOMPILE -DHYBRID" ;;
            no) HYBRID=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-hybrid ]) ;;
