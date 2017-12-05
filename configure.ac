@@ -68,6 +68,7 @@ DVRMGR_FLAGS=" "
 RDK_VERSION="RDK2DOT0"
 TDKINTEGRATION_FLAGS=" "
 TDKINTEGRATION_HYBRID_LIBS=" "
+MEDIAFRAMEWORK_HYBRID_LIBS=" "
 QAM_LIBS=" "
 SF_LIBS=" "
 TDK_GST_LIBS=" "
@@ -111,6 +112,7 @@ AC_ARG_ENABLE([hybrid],
                   AGENT_FLAGS=" -DPORT_FORWARD"
                   TDK_GST_LIBS=" -lgstreamer-$GST_MAJORMINOR -lgstbase-$GST_MAJORMINOR"
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc -lcanh -lpodmgr"
+                  MEDIAFRAMEWORK_HYBRID_LIBS="-lcanh -lpodmgr -ltrh"
                   TDKINTEGRATION_FLAGS="-DENABLE_HYBRID_CODECOMPILE -DHYBRID" ;;
            no) HYBRID=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-hybrid ]) ;;
@@ -118,6 +120,20 @@ AC_ARG_ENABLE([hybrid],
            ],
          [echo "hybrid build is enable"])
 AM_CONDITIONAL([HYBRID], [test x$HYBRID = xtrue])
+
+AC_ARG_ENABLE([quemux86hyb],
+        AS_HELP_STRING([--enable-qemux86hyb],[enable quemux86hyb build]),
+        [
+          case "${enableval}" in
+             yes) QEMUX86HYB=true
+                  TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc" 
+                  MEDIAFRAMEWORK_HYBRID_LIBS="";;
+           no) QEMUX86HYB=false ;;
+          *) AC_MSG_ERROR([bad value ${enableval} for --enable-qemux86hyb ]) ;;
+           esac
+           ],
+         [echo "emulator hybrid build is enable"])
+AM_CONDITIONAL([QEMUX86HYB], [test x$QEMUX86HYB = xtrue])
 
 AC_ARG_ENABLE([client],
         AS_HELP_STRING([--enable-client],[enable client build]),
@@ -250,6 +266,7 @@ AC_SUBST(TDK_GST_LIBS)
 AC_SUBST(SUBDIR_HYBRID)
 AC_SUBST(SUBDIR_CLIENT)
 AC_SUBST(SM_STUB_CFLAG_HYBRID)
+AC_SUBST(MEDIAFRAMEWORK_HYBRID_LIBS)
 AC_CONFIG_FILES([Makefile
          cfg/Makefile
          agent/Makefile

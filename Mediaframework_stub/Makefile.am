@@ -45,7 +45,7 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir)/mediaframework/core/ \
 
 lib_LTLIBRARIES = libmediaframeworkstub.la
 libmediaframeworkstub_la_SOURCES = src/MediaframeworkAgent.cpp
-libmediaframeworkstub_la_LIBADD = -ldvrmgr -lqamsrc -ldvrmgrsoc -lhnsource -ldvrsink -lhnsink -lmediaplayersink -ldvrsource -lrmfinit
+libmediaframeworkstub_la_LIBADD = -ldvrmgr -lqamsrc -ldvrmgrsoc -lhnsource -ldvrsink -lhnsink -lmediaplayersink -ldvrsource -lrmfinit ${MEDIAFRAMEWORK_HYBRID_LIBS}
 libmediaframeworkstub_la_includedir = ${includedir}
 libmediaframeworkstub_la_include_HEADERS = ${top_srcdir}/Mediaframework_stub/include/MediaframeworkAgent.h
 
