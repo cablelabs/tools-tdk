@@ -121,19 +121,19 @@ AC_ARG_ENABLE([hybrid],
          [echo "hybrid build is enable"])
 AM_CONDITIONAL([HYBRID], [test x$HYBRID = xtrue])
 
-AC_ARG_ENABLE([quemux86hyb],
-        AS_HELP_STRING([--enable-qemux86hyb],[enable quemux86hyb build]),
+AC_ARG_ENABLE([qemux86hyb],
+        AS_HELP_STRING([--enable-qemux86hyb],[enable qemux86hyb build]),
         [
           case "${enableval}" in
-             yes) QEMUX86HYB=true
+             yes) qemux86hyb=true
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc" 
                   MEDIAFRAMEWORK_HYBRID_LIBS="";;
-           no) QEMUX86HYB=false ;;
+           no) qemux86hyb=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-qemux86hyb ]) ;;
            esac
            ],
          [echo "emulator hybrid build is enable"])
-AM_CONDITIONAL([QEMUX86HYB], [test x$QEMUX86HYB = xtrue])
+AM_CONDITIONAL([QEMUX86HYB], [test x$qemux86hyb = xtrue])
 
 AC_ARG_ENABLE([client],
         AS_HELP_STRING([--enable-client],[enable client build]),

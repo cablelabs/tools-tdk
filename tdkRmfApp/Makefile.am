@@ -23,5 +23,9 @@ AM_CXXFLAGS = -I${PKG_CONFIG_SYSROOT_DIR}$(includedir) \
 bin_PROGRAMS = tdkRmfApp
 tdkRmfAppdir = ${bindir}
 tdkRmfApp_SOURCES = tdkRmfApp.cpp
+if QEMUX86HYB
+tdkRmfApp_LDFLAGS = -ldvrmgr -ldvrsink -lmediaplayersink -lhnsource -luuid -lsharedtsb -lrbifilter -lrbi -ldvrmgr -lqamsrc ${SOC_LIBS} $(TDK_GST_LIBS)
+else 
 tdkRmfApp_LDFLAGS = -ldvrmgr -ldvrsink -lmediaplayersink -lhnsource -luuid -lsharedtsb -lrbifilter -lrbi ${SOC_LIBS} $(TDK_GST_LIBS) $(TDKINTEGRATION_HYBRID_LIBS)
+endif
 tdkRmfApp_includedir = ${includedir}
