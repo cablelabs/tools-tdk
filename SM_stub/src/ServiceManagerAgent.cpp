@@ -2701,7 +2701,7 @@ void ServiceManagerAgent::SM_HdmiCec_CheckStatus(IN const Json::Value& req, OUT 
                 response["log-path"] = cecRdkLog.c_str();
 		while ( cecTDKLogIn.good() )
                 {
-			if( getline(cecTDKLogIn,lineMatching) > 0 )
+			if( getline(cecTDKLogIn,lineMatching))
 			{
 				if ( lineMatching.find(pattern) != string::npos )
 				{

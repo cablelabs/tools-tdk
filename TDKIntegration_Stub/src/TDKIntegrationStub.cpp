@@ -245,7 +245,7 @@ std::string TDKIntegrationStub::testmodulepre_requisites()
         logfile.open(TDK_testmodule_PR_log.c_str());
         if(logfile.is_open())
         {
-            	if(getline(logfile,line)>0)
+            	if(getline(logfile,line))
                 {
                         logfile.close();
                         DEBUG_PRINT(DEBUG_LOG,"\nPre-Requisites set\n");
