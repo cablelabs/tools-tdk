@@ -796,7 +796,7 @@ def setMultipleParameterValues(obj,paramList):
 ######### End of Function ##########
 
 
-def verifyNetworkConnectivity(dest_ip,connectivityType,source_ip,gateway_ip):
+def verifyNetworkConnectivity(dest_ip,connectivityType,source_ip,gateway_ip,source="WLAN"):
 
 # verifyNetworkConnectivity
 
@@ -809,15 +809,19 @@ def verifyNetworkConnectivity(dest_ip,connectivityType,source_ip,gateway_ip):
 # Return Value: Returns the status of ping operation
 
         try:
-                status = clientConnect("WLAN")
+                status = clientConnect(source)
                 if status == "SUCCESS":
                         if wlan_os_type == "UBUNTU":
+				if source == "WLAN":
+                                    script_name = wlan_script;
+                                else:
+                                    script_name = lan_script;
                                 if connectivityType == "PING":
-                                    command="sudo sh %s ping_to_network %s %s %s" %(wlan_script,source_ip,dest_ip,gateway_ip)
+                                    command="sudo sh %s ping_to_network %s %s %s" %(script_name,source_ip,dest_ip,gateway_ip)
                                 elif connectivityType == "WGET_HTTP":
-                                    command="sudo sh %s wget_http_network %s %s %s" %(wlan_script,source_ip,dest_ip,http_port)
+                                    command="sudo sh %s wget_http_network %s %s %s" %(script_name,source_ip,dest_ip,http_port)
                                 elif connectivityType == "WGET_HTTPS":
-                                    command="sudo sh %s wget_https_network %s %s %s" %(wlan_script,source_ip,dest_ip,https_port)
+                                    command="sudo sh %s wget_https_network %s %s %s" %(script_name,source_ip,dest_ip,https_port)
                                 status = executeCommand(command)
                         else:
                                 status = "Only UBUNTU platform supported!!!"
@@ -832,8 +836,7 @@ def verifyNetworkConnectivity(dest_ip,connectivityType,source_ip,gateway_ip):
 
 ########## End of Function ##########
 
-
-def ftpToClient(clientType,network_ip):
+def ftpToClient(dest, network_ip, source="LAN"):
 
 # ftpToClient
 
@@ -844,16 +847,22 @@ def ftpToClient(clientType,network_ip):
 # Return Value: Returns the status of ftp connection
 
         try:
-                status = clientConnect("LAN")
+                status = clientConnect(source)
                 if status == "SUCCESS":
                         if lan_os_type == "UBUNTU":
-                                if clientType == "WLAN":
+                                if dest == "WLAN" :
                                     command="sudo sh %s ftpToClient %s %s %s" %(lan_script,network_ip,wlan_username,wlan_password)
-				elif clientType == "LAN":
+                                elif dest == "LAN":
                                     command="sudo sh %s ftpToClient %s %s %s" %(wlan_script,network_ip,lan_username,lan_password)
+                                elif dest == "WAN" and source == "LAN":
+                                    command="sudo sh %s ftpToClient %s %s %s" %(lan_script,network_ip,wan_username,wan_password)
+                                elif dest == "WAN" and source == "WLAN":
+                                    command="sudo sh %s ftpToClient %s %s %s" %(wlan_script,network_ip,wan_username,wan_password)
                                 else:
-                                    return "Invalid clientType"
+                                    return "Invalid source or destination"
+
                                 status = executeCommand(command)
+
                                 if "230 Login successful" in status:
                                     status = "SUCCESS"
                                 else:
@@ -871,8 +880,7 @@ def ftpToClient(clientType,network_ip):
 
 ########## End of Function ##########
 
-
-def telnetToClient(clientType,dest_ip):
+def telnetToClient(dest,dest_ip,source="LAN"):
 
 # telnetToClient
 
@@ -884,10 +892,14 @@ def telnetToClient(clientType,dest_ip):
 
         try:
                 if wlan_os_type == "UBUNTU":
-                        if clientType == "WLAN":
+                    status = clientConnect(source)
+                    if status == "SUCCESS":
+                        if dest == "WLAN":
                                 command="sudo sh %s telnetToClient %s %s %s" %(lan_script,dest_ip,wlan_username,wlan_password)
-                        elif clientType == "LAN":
+                        elif dest == "LAN":
                                 command="sudo sh %s telnetToClient %s %s %s" %(wlan_script,dest_ip,lan_username,lan_password)
+                        elif dest == "WAN":
+                                command="sudo sh %s telnetToClient %s %s %s" %(wlan_script,dest_ip,wan_username,wan_password)
                         else:
                                     return "Invalid argument"
                         status = executeCommand(command)
@@ -907,7 +919,6 @@ def telnetToClient(clientType,dest_ip):
                 return "SUCCESS"
 
 ########## End of Function ##########
-
 
 def getWlanAccessPoint(wlanInterface):
 

@@ -26,6 +26,34 @@ get_lan_ip_address()
         echo "OUTPUT:$value"
 }
 
+#Verify ping to a network
+ping_to_network()
+{
+        route_add_cmd="$(sudo ip route add $var2 via $var4 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        sleep 10
+        ping_cmd="$(ping -I $var2 -c 3 $var3 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        route_del_cmd="$(sudo ip route delete $var2 via $var4 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        if [ $route_add_cmd = "SUCCESS" ] && [ $ping_cmd = "SUCCESS" ]  && [ $route_del_cmd = "SUCCESS" ]; then
+                echo "OUTPUT:SUCCESS"
+        else
+                echo "OUTPUT:FAILURE"
+        fi
+}
+
+#To send http request to a network
+wget_http_network()
+{
+        value="$(wget --bind-address=$var2 -q --tries=1 -T 60 http://$var3:$var4 && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
+#To send https request to a network
+wget_https_network()
+{
+        value="$(wget --bind-address=$var2 -q --tries=1 -T 60 https://$var3:$var4 --no-check-certificate && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
 # Telnet to the client devices
 telnetToClient()
 {
@@ -58,12 +86,19 @@ echo "OUTPUT:$value"
 event=$1
 var2=$2
 var3=$3
+var4=$4
 #echo "\r\n";
 
 # Invoke the function based on the argument passed
 case $event in
    "get_lan_ip_address")
         get_lan_ip_address;;
+   "ping_to_network")
+        ping_to_network;;
+   "wget_http_network")
+        wget_http_network;;
+   "wget_https_network")
+        wget_https_network;;
    "telnetToClient")
         telnetToClient;;
    "ftpToClient")
