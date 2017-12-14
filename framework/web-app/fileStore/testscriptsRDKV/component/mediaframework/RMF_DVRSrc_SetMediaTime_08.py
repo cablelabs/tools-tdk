@@ -134,7 +134,7 @@ if expected_Result in loadModuleStatus.upper():
         if expected_Result in result.upper():
                 result=Create_and_ExecuteTestStep('RMF_Element_Init',obj,expected_Result,src_parameter,src_element);
                 if expected_Result in result.upper():
-                        setMediaTime = 8.000
+                        setMediaTime = 8
                         print "setmediaTime:",setMediaTime
                         src_parameter=["rmfElement","mediaTime"];
                         src_element=["DVRSrc",setMediaTime];
