@@ -25,15 +25,7 @@ isEmpty(RDK_PROJECT_ROOT_PATH) {
 
 
 QT += widgets network core gui concurrent
-DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
-DEFINES += LOGGING_PREFERENCE_MASK USE_IARMBUS USE_IARM_BUS WAREHOUSE_API ENABLE_HDCP_PROFILE USE_DEVICE_SETTINGS_SERVICE HAS_FRONT_PANEL USE_DS SCREEN_CAPTURE HAS_API_APPLICATION USE_DISPLAY_SETTINGS
-DEFINES += HAS_API_VIDEO_APPLICATION_EVENTS
-DEFINES += HAS_API_DEVICEDIAGNOSTICS
-DEFINES += HAS_API_HOME_NETWORKING
-DEFINES += USE_LSB
-DEFINES += USE_RDK_STORAGE_MANAGER_V2
-DEFINES += HAS_API_SYSTEM USE_IARMBUS ENABLE_SYSTEM_6 ENABLE_SYSTEM_7 HAS_API_POWERSTATE ENABLE_SYSTEM_8 ENABLE_SYSTEM_9
-DEFINES += ENABLE_SYSTEM_10 ENABLE_SYSTEM_11
+DEFINES += WAREHOUSE_API HAS_API_APPLICATION HAS_API_VIDEO_APPLICATION_EVENTS HAS_API_DEVICEDIAGNOSTICS ENABLE_HDCP_PROFILE
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -98,87 +90,3 @@ exists(../../platform/SM_stub/broadcom.pri) : include(../../platform/SM_stub/bro
 
 SOURCES += ServiceManagerAgent.cpp
 
-contains(DEFINES,HAS_API_HDMI_CEC) {
-        INCLUDEPATH += $${RDK_PROJECT_ROOT_PATH}/hdmicec/ccec/include/ccec/
-	HEADERS += ../servicemanager/include/services/hdmicecservice.h
-	SOURCES += ../servicemanager/src/services/hdmicecservice.cpp
-LIBS += -lRCEC -lRCECOSHal -lRCECIARMBusHal
-}
-
-contains(DEFINES,HAS_FRONT_PANEL) {
-HEADERS += ../servicemanager/include/helpers/frontpanel.h \
-        ../servicemanager/include/services/frontpanelservice.h
-SOURCES += ../servicemanager/src/helpers/frontpanel.cpp \
-        ../servicemanager/src/services/frontpanelservice.cpp
-LIBS +=  -ludev -lgthread-2.0 -lglib-2.0 -lQt5Sql -lQt5Widgets -lQt5Network -lQt5Gui -lQt5Core -lz -lssl -lcrypto -ljpeg -licui18n -licuuc -licudata -lIARMBus -ldshalsrv -ldshalcli
-}
-contains(DEFINES,HAS_API_APPLICATION) {
-	HEADERS += ../servicemanager/include/services/applicationservice.h
-	SOURCES += ../servicemanager/src/services/applicationservice.cpp \
-}
-
-contains(DEFINES,USE_DISPLAY_SETTINGS) {
-	HEADERS += ../servicemanager/include/services/displaysettingsservice.h
-	SOURCES += ../servicemanager/src/services/displaysettingsservice.cpp
-}
-
-contains(DEFINES,WAREHOUSE_API) {
-HEADERS += ../servicemanager/include/services/warehouseservice.h
-SOURCES += ../servicemanager/src/services/warehouseservice.cpp
-}
-
-contains(DEFINES,ENABLE_HDCP_PROFILE) {
-    SOURCES += ../servicemanager/src/services/hdcpprofileservice.cpp
-    HEADERS += ../servicemanager/include/services/hdcpprofileservice.h
-}
-contains(DEFINES,LOGGING_PREFERENCE_MASK) {
-    SOURCES += ../servicemanager/src/services/loggingpreferencesservice.cpp
-    HEADERS += ../servicemanager/include/services/loggingpreferencesservice.h
-}
-contains(DEFINES,HAS_API_AVINPUT) {
-	HEADERS += ../servicemanager/include/abstractservice.h \
-                   $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/avinputservice.h
-
-	SOURCES += ../servicemanager/src/abstractservice.cpp \
-                   ../servicemanager/src/services/avinputservice.cpp
-
-        exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/intel/build/intel.pri) {
-                HEADERS += ${SM_STUB_ROOT_PATH}/servicemanager/platform/intel/include/helpers/avinputhelper.h \
-                           ${SM_STUB_ROOT_PATH}/servicemanager/platform/intel/include/helpers/avinput.h
-                SOURCES += $$(SM_STUB_ROOT_PATH)/servicemanager/platform/intel/src/helpers/avinputhelper.cpp
-        }
-        exists($(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/build/broadcom.pri) {
-                HEADERS += ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinputhelper.h \
-                           ${SM_STUB_ROOT_PATH}/servicemanager/platform/broadcom/include/helpers/avinput.h
-                SOURCES += $$(SM_STUB_ROOT_PATH)/servicemanager/platform/broadcom/src/helpers/avinputhelper.cpp
-        }
-}
-
-contains(DEFINES,HAS_API_VIDEO_APPLICATION_EVENTS) {
-	HEADERS += ../servicemanager/include/services/videoapplicationeventsservice.h 
-	SOURCES += ../servicemanager/src/services/videoapplicationeventsservice.cpp
-}
-
-contains(DEFINES,HAS_API_DEVICEDIAGNOSTICS) {
-    	HEADERS += ../servicemanager/include/services/devicediagnosticsservice.h
-	SOURCES += ../servicemanager/src/services/devicediagnosticsservice.cpp
-}
-
-contains(DEFINES,HAS_API_HOME_NETWORKING) {
-        HEADERS += ../servicemanager/include/services/homenetworkingservice.h
-        SOURCES += ../servicemanager/src/services/homenetworkingservice.cpp
-}
-
-contains(DEFINES, USE_RDK_STORAGE_MANAGER_V2) {
-	LIBS += -lrdkstmgr
-        HEADERS += ../servicemanager/include/services/storagemanagerservice.h
-        SOURCES += ../servicemanager/src/services/storagemanagerservice.cpp
-}
-contains(DEFINES,HAS_API_SYSTEM) {
-        HEADERS += ../servicemanager/include/services/systemservice.h \
-                   ../servicemanager/include/helpers/powerstate.h \
-		   ../servicemanager/include/helpers/timezonetester.h
-        SOURCES += ../servicemanager/src/services/systemservice.cpp \
-                   ../servicemanager/src/helpers/powerstate.cpp \
-		   ../servicemanager/src/helpers/timezonetester.cpp
-}
