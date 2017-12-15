@@ -201,7 +201,7 @@ int SendInfo (char* strStringToSend, int nStringSize)
     int nValue = 0;
     int nDestination;
     int nInfoSockDesc;    
-    void *pvReturnValue;    
+    bool pvReturnValue;    
     std::string strFilePath;
     std::string strManagerIP;
     
@@ -228,7 +228,7 @@ int SendInfo (char* strStringToSend, int nStringSize)
         DEBUG_PRINT (DEBUG_LOG, "\nConfiguration file %s found \n", SHOW_DEFINE (CONFIGURATION_FILE));
 		
         /* Parsing configuration file to get manager IP */
-        pvReturnValue = getline (go_ConfigFile, strManagerIP); 
+        pvReturnValue = !!getline (go_ConfigFile, strManagerIP); 
         go_ConfigFile.close();
         if (pvReturnValue)
         {
@@ -372,7 +372,7 @@ static void SignalHandler (int nCode)
 *********************************************************************************************************************/
 int SendDetailsToManager()
 {
-    void *pvReturnValue;
+    bool pvReturnValue;
     char szBoxInfo[INFO_STRING_SIZE];
     int nSendInfoStatus = 0;
     std::string strBoxName;
@@ -390,7 +390,7 @@ int SendDetailsToManager()
         /* Parsing configuration file to get box name */
         for (int i=0; i<2; i++)
         {
-            pvReturnValue = getline (go_ConfigFile, strBoxName);
+            pvReturnValue = !!getline (go_ConfigFile, strBoxName);
 
             if (!pvReturnValue)
             {
@@ -449,7 +449,7 @@ int SendDetailsToManager()
 *********************************************************************************************************************/
 void* ReportCrash (void*)
 {
-    void *pvReturnValue;
+    bool pvReturnValue;
     int nCount = 0;
     int nCrashFlag = FLAG_SET;
     std::string strExecId;
@@ -475,7 +475,7 @@ void* ReportCrash (void*)
         DEBUG_PRINT (DEBUG_LOG, "\nConfiguration file %s found", SHOW_DEFINE (CRASH_STATUS_FILE) );
 		
         /* Parsing configuration file to get crash status */
-        pvReturnValue = getline (o_CrashStatusFile, strCrashStatus); 
+        pvReturnValue = !!getline (o_CrashStatusFile, strCrashStatus); 
         if (!pvReturnValue)
         {
             DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve status on crash");
@@ -492,7 +492,7 @@ void* ReportCrash (void*)
             DEBUG_PRINT (DEBUG_LOG, "Test Details :  ");
 	
             /* Parsing configuration file to get execution ID */
-            pvReturnValue = getline (o_CrashStatusFile, strExecId); 
+            pvReturnValue = !!getline (o_CrashStatusFile, strExecId); 
             if (!pvReturnValue)
             {
                 DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve execution ID \n");
@@ -505,7 +505,7 @@ void* ReportCrash (void*)
             }
 		
             /* Parsing configuration file to get Device ID */
-            pvReturnValue = getline (o_CrashStatusFile, strDeviceId);
+            pvReturnValue = !!getline (o_CrashStatusFile, strDeviceId);
             if (!pvReturnValue)
             {
                 DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve Device ID \n");
@@ -518,7 +518,7 @@ void* ReportCrash (void*)
             }
             
             /* Parsing configuration file to get Testcase ID */
-            pvReturnValue = getline (o_CrashStatusFile, strTestcaseId); 
+            pvReturnValue = !!getline (o_CrashStatusFile, strTestcaseId); 
             if (!pvReturnValue)
             {
                 DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve Testcase ID \n");
@@ -531,7 +531,7 @@ void* ReportCrash (void*)
             }
 			
             /* Parsing configuration file to get Execution Device ID */
-            pvReturnValue = getline (o_CrashStatusFile, strExecDeviceId); 
+            pvReturnValue = !!getline (o_CrashStatusFile, strExecDeviceId); 
             if (!pvReturnValue)
             {
                 DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve Execution Device ID \n");
@@ -544,7 +544,7 @@ void* ReportCrash (void*)
             }
 					
             /* Parsing configuration file to get Result ID */
-            pvReturnValue = getline (o_CrashStatusFile, strResultId);
+            pvReturnValue = !!getline (o_CrashStatusFile, strResultId);
             if (!pvReturnValue)
             {
                 DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve Result ID \n");
@@ -674,7 +674,7 @@ void *CheckStatus (void *)
 void *ProcessDeviceDetails (void *)
 {
     int nCount = 0;
-    void *pvReturnValue;
+    bool pvReturnValue;
     std::string strFilePath;
     int nDeviceInfoStatus = 0;
     std::string strBoxInterface;	
@@ -708,7 +708,7 @@ void *ProcessDeviceDetails (void *)
             /* Finding the box interface from configuration file */
             for (int i=0; i<3; i++)
             {
-                pvReturnValue = getline (go_ConfigFile, strBoxInterface);
+                pvReturnValue = !!getline (go_ConfigFile, strBoxInterface);
                 if (!pvReturnValue)
                 {
                     DEBUG_PRINT (DEBUG_ERROR, "Unable to find device network interface \n");

@@ -1231,7 +1231,7 @@ void RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
     char szLibName [LIB_NAME_SIZE];
     int nReturnValue = RETURN_SUCCESS;
 
-    void *pvReturnValue;
+    bool pvReturnValue;
     const char* pszExecId = NULL;
     const char* pszResultId = NULL;
     const char* pszDeviceId = NULL;
@@ -1335,7 +1335,7 @@ void RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
         DEBUG_PRINT (DEBUG_LOG, "\nPerformance Configuration file %s found", SHOW_DEFINE (PERFORMANCE_CONFIG_FILE) );
 
         /* Parsing configuration file to get crash status */
-        pvReturnValue = getline (o_perfConfigFile, strPerfStatus);
+        pvReturnValue = !!getline (o_perfConfigFile, strPerfStatus);
         if (!pvReturnValue)
         {
             DEBUG_PRINT (DEBUG_ERROR, "Failed to retrieve status of performnace monitoring");
@@ -2080,7 +2080,7 @@ void RpcMethods::RPCPushLog (const Json::Value& request, Json::Value& response)
     std::string strFilePath;
     std::string strManagerIP;
     std::fstream go_ConfigFile;
-    void *pvReturnValue;
+    bool pvReturnValue;
     char szCommand[COMMAND_SIZE];
     const char* pszSTBFileName = NULL;
     const char* pszTMFileName = NULL;
@@ -2113,7 +2113,7 @@ void RpcMethods::RPCPushLog (const Json::Value& request, Json::Value& response)
         DEBUG_PRINT (DEBUG_LOG, "\nConfiguration file %s found \n", SHOW_DEFINE (CONFIGURATION_FILE));
 
         /* Parsing configuration file to get manager IP */
-        pvReturnValue = getline (go_ConfigFile, strManagerIP);
+        pvReturnValue = !!getline (go_ConfigFile, strManagerIP);
         go_ConfigFile.close();
         if (pvReturnValue)
         {
@@ -2163,7 +2163,7 @@ void RpcMethods::RPCUploadLog (const Json::Value& request, Json::Value& response
     std::string strFilePath;
     std::string strManagerIP;
     std::fstream go_ConfigFile;
-    void *pvReturnValue;
+    bool pvReturnValue;
     char szCommand[COMMAND_SIZE];
     const char* pszSTBFileName = NULL;
     const char* pszTMFileName = NULL;
@@ -2203,7 +2203,7 @@ void RpcMethods::RPCUploadLog (const Json::Value& request, Json::Value& response
          DEBUG_PRINT (DEBUG_LOG, "\nConfiguration file %s found \n", SHOW_DEFINE (CONFIGURATION_FILE));
 
         /* Parsing configuration file to get manager IP */
-        pvReturnValue = getline (go_ConfigFile, strManagerIP);
+        pvReturnValue = !!getline (go_ConfigFile, strManagerIP);
         go_ConfigFile.close();
         if (pvReturnValue)
         {
