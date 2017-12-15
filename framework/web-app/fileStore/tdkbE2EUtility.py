@@ -183,6 +183,12 @@ def parseDeviceConfig(obj):
                 global https_port
                 https_port = config.get(deviceConfig, "HTTPS_PORT")
 
+                global wan_http_port
+                wan_http_port = config.get(deviceConfig, "WAN_HTTP_PORT")
+
+                global wan_https_port
+                wan_https_port = config.get(deviceConfig, "WAN_HTTPS_PORT")
+
                 global cm_ip_type
                 cm_ip_type = config.get(deviceConfig, "CM_IP_TYPE")
                 
@@ -971,8 +977,111 @@ def deleteSavedWifiConnections():
 
         print "Delete saved wifi connections:%s" %status;
         return status;
+######### End of Function ##########
+
+def addStaticRoute(destIp, gwIp, interface, source="WLAN"):
+
+# addStaticRoute
+
+# Syntax      : addStaticRoute(destIp, gwIp, interface)
+# Description : Function to add a new static route to the destIp via gwIp
+# Parameters  : destIp : Ip to which new route is to be added
+#               gwIp   : Gateway ip through which routing should happen
+#	      interface : interface for static routing
+#               source  :  client machine type in which route is being added
+#
+# Return Value: SUCCESS/FAILURE
+
+        try:
+                if wlan_os_type == "UBUNTU":
+                        if source == "WLAN":
+                                script_name = wlan_script;
+                        else:
+                                script_name = lan_script;
+
+                        command="sudo sh %s add_static_route %s %s %s" %(script_name,destIp,gwIp,interface)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "Route add status is :%s" %status;
+        return status;
+######### End of Function ##########
+
+
+def delStaticRoute(destIp, gwIp, interface, source="WLAN"):
+# delStaticRoute
+
+# Syntax      : addStaticRoute(destIp, gwIp, interface, source="WLAN")
+# Description : Function to delete a static route to the destIp via gwIp
+# Parameters  : destIp : Ip to which new route is to be added
+#               gwIp   : Gateway ip through which routing should happen
+#             interface : interface for static routing
+#               source  :  client machine type in which route is being added
+# Return Value: SUCCESS/FAILURE
+
+        try:
+                if wlan_os_type == "UBUNTU":
+                        if source == "WLAN":
+                                script_name = wlan_script;
+                        else:
+                                script_name = lan_script;
+
+                        command="sudo sh %s del_static_route %s %s %s" %(script_name, destIp, gwIp, interface)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "Route delete status is :%s" %status;
+        return status;
 
 ######### End of Function ##########
+
+def wgetToWAN(connectivityType,source_ip,gateway_ip,source="WLAN"):
+
+# wgetToWAN
+
+# Syntax      : wgetToWAN(connectivityType,source_ip,gateway_ip,source="WLAN")
+# Description : Function to do wget to WAN client from other client devices
+# Parameters  : connectivityType - PING/HTTP/HTTPS
+#               source_ip - Ip from which ping/http/https to be placed
+#               gateway_ip - Gateway IP address
+#               source  :  client machine type from which wget is to be done
+# Return Value: Returns the status of wget operation
+
+        try:
+                status = clientConnect(source)
+                if status == "SUCCESS":
+                        if wlan_os_type == "UBUNTU":
+                                if source == "WLAN":
+                                    script_name = wlan_script;
+                                else:
+                                    script_name = lan_script;
+                                if connectivityType == "WGET_HTTP":
+                                    command="sudo sh %s wget_http_network %s %s %s" %(script_name,source_ip,wan_ip,wan_http_port)
+                                elif connectivityType == "WGET_HTTPS":
+                                    command="sudo sh %s wget_https_network %s %s %s" %(script_name,source_ip,wan_ip,wan_https_port)
+                                status = executeCommand(command)
+                        else:
+                                status = "Only UBUNTU platform supported!!!"
+                else:
+                        return "Failed to connect to wan client"
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "Status of verifyNetworkConnectivity:%s" %status;
+        return status;
+
+########## End of Function ##########
 
 def postExecutionCleanup():
 

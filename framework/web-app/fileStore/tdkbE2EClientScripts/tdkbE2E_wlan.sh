@@ -189,6 +189,19 @@ get_wlan_accesspoint()
         echo "OUTPUT:$value"
 }
 
+add_static_route()
+{
+        value="$(sudo route add -net $var2 netmask 255.255.255.255 gw $var3 dev $var4  > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+
+        echo "OUTPUT:$value"
+}
+
+del_static_route()
+{
+        value="$(sudo route del -net $var2 netmask 255.255.255.255 gw $var3 dev $var4  > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -235,6 +248,10 @@ case $event in
         ftpToClient;;
    "get_wlan_accesspoint")
         get_wlan_accesspoint;;
+   "add_static_route")
+        add_static_route;;
+   "del_static_route")
+        del_static_route;;
    *) echo "Invalid Argument passed";;
 esac
 
