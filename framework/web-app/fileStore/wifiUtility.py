@@ -58,3 +58,40 @@ def ExecuteWIFIHalCallMethod(obj, primitive, radioIndex, param, methodname):
         print "[TEST EXECUTION RESULT] : FAILURE";
 
     return (tdkTestObj, actualresult, details);
+
+
+##########################################################################
+
+# A utility function to invoke WiFi hal api wifi_applyRadioSettings based on the radioIndex received
+#
+# Syntax       : ExecuteWIFIApplySettings(obj, radioIndex)
+#
+# Parameters   : obj, radioIndex
+#
+# Return Value : Execution status of the hal api
+
+def ExecuteWIFIApplySettings(obj,radioIndex):
+    #Script to load the configuration file of the component
+    tdkTestObj = obj.createTestStep("WIFIHAL_ApplySettings");
+    #Giving the method name to invoke the api to set the radio settings
+    #Radio index is 0 for 2.4GHz and 1 for 5GHz
+    tdkTestObj.addParameter("radioIndex",radioIndex);
+    expectedresult="SUCCESS";
+    tdkTestObj.executeTestCase(expectedresult);
+    actualresult = tdkTestObj.getResult();
+    details = tdkTestObj.getResultDetails();
+
+    if expectedresult in actualresult :
+        print "TEST STEP: Executing wifi_applyRadioSettings to set the previous changes"
+        print "EXPECTED RESULT: Execution returns SUCCESS"
+        print "ACTUAL RESULT: %s"%details;
+        print "TEST EXECUTION RESULT :SUCCESS"
+    else:
+        print "TEST STEP: Executing wifi_applyRadioSettings to set the previous changes"
+        print "EXPECTED RESULT: Execution returns SUCCESS"
+        print "ACTUAL RESULT: %s"%details;
+        print "TEST EXECUTION RESULT :FAILURE"
+
+    return (tdkTestObj, actualresult, details);
+
+
