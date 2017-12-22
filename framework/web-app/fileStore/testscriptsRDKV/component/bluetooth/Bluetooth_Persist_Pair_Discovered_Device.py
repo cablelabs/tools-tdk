@@ -226,6 +226,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                                    print "Client device is successfully paired with DUT"
                                    #Reboot the STB
                                    bluetoothObj.initiateReboot(); 
+                                   sleep(60);
                                    print "Set the client device as discoverable"
                                    commandList = ['bluetoothctl','discoverable on','quit'] 
                                    output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)

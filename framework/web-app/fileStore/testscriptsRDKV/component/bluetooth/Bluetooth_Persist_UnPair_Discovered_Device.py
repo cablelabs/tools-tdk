@@ -257,6 +257,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                                                    print "Discoverable is enabled in Client Device" , bluetoothlib.deviceName
                                                    #Reboot the STB
                                                    bluetoothObj.initiateReboot();
+                                                   sleep(60);
                                                    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetPairedDevices')
                                                    #Execute the test case in STB
                                                    tdkTestObj.executeTestCase(expectedresult);

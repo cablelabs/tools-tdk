@@ -71,6 +71,7 @@ Checkpoint 2.The new adapter name "tdk" should persists successfully .</except_o
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+from time import sleep
 
 #Test component to be tested
 bluetoothObj = tdklib.TDKScriptingLibrary("bluetooth","2.0");
@@ -146,7 +147,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                print "Adapter name successfully set to " , adapterName
                #Reboot the STB
                bluetoothObj.initiateReboot();
- 
+               sleep(120); 
                tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterName');
                #Execute the test case in STB
                tdkTestObj.executeTestCase(expectedresult);

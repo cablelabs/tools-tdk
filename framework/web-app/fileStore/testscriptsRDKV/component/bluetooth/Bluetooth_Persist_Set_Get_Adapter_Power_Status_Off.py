@@ -69,6 +69,7 @@ Checkpoint 2.The adapter power status should persists as ON</except_output>
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
+from time import sleep
 
 #Test component to be tested
 bluetoothObj = tdklib.TDKScriptingLibrary("bluetooth","2.0");
@@ -133,7 +134,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
            print "Bluetooth Adapter Power Status set to " , powerStatusOff , "successfully" 
            #Reboot the STB
            bluetoothObj.initiateReboot();
-              
+           sleep(60);  
            tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterPowerStatus');
            #Execute the test case in STB
            tdkTestObj.executeTestCase(expectedresult);

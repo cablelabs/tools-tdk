@@ -77,7 +77,7 @@
         </parameters>
       </primitiveTest>
       <primitiveTest id="" name="Bluetooth_GetConnectedDevices" version="1">
-        <function>TestMgr_Bluetooth_Bluetooth_GetConnectedDevices</function>
+        <function>TestMgr_Bluetooth_GetConnectedDevices</function>
         <parameters/>
       </primitiveTest>
       <primitiveTest id=" " name="Bluetooth_PairDevice" version="1">

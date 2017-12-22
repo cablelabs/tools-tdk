@@ -120,6 +120,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                 print "Reboot the box and check whether the discoverable status persists or not"
                 #Reboot the STB
                 bluetoothObj.initiateReboot();
+                sleep(60);
                 tdkTestObj = bluetoothObj.createTestStep('Bluetooth_IsAdapterDiscoverable')
                 #Execute the test case in STB
                 tdkTestObj.executeTestCase(expectedresult);

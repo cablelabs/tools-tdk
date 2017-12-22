@@ -246,6 +246,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                                        print "Bluetooth_ConnectToDevice call is SUCCESS"
                                        #Reboot the STB
                                        bluetoothObj.initiateReboot(); 
+                                       sleep(60);
                                        print "Set the client device as discoverable"
                                        commandList = ['bluetoothctl','discoverable on','quit'] 
                                        output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
@@ -266,7 +267,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                                                print "Connected Devices List" , connectedDevicesList
                                                connectedDeviceNameList=[]
                                                for devices in range(len(connectedDevicesList)):  
-                                                   connectedDeviceNameList.append(connectedDeviceNameList[devices].split(':')[0])
+                                                   connectedDeviceNameList.append(connectedDevicesList[devices].split(':')[0])
                                                if str(bluetoothlib.deviceName) in connectedDeviceNameList :
                                                    tdkTestObj.setResultStatus("SUCCESS");
                                                    print "Client device is successfully connected with DUT"

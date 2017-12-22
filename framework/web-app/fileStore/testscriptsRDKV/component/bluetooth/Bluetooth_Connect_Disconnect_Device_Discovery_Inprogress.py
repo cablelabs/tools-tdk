@@ -243,7 +243,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                                        print "Connected Devices List" , connectedDevicesList
                                        connectedDeviceNameList=[]
                                        for devices in range(len(connectedDevicesList)):  
-                                           connectedDeviceNameList.append(connectedDeviceNameList[devices].split(':')[0])
+                                           connectedDeviceNameList.append(connectedDevicesList[devices].split(':')[0])
                                        if str(bluetoothlib.deviceName) in connectedDeviceNameList :
                                            tdkTestObj.setResultStatus("SUCCESS");
                                            print "Client device is successfully connected with DUT"
