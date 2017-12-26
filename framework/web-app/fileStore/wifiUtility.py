@@ -82,11 +82,15 @@ def ExecuteWIFIApplySettings(obj,radioIndex):
     details = tdkTestObj.getResultDetails();
 
     if expectedresult in actualresult :
+        #Set the result status of execution
+        tdkTestObj.setResultStatus("SUCCESS");
         print "TEST STEP: Executing wifi_applyRadioSettings to set the previous changes"
         print "EXPECTED RESULT: Execution returns SUCCESS"
         print "ACTUAL RESULT: %s"%details;
         print "TEST EXECUTION RESULT :SUCCESS"
     else:
+        #Set the result status of execution
+        tdkTestObj.setResultStatus("FAILURE");
         print "TEST STEP: Executing wifi_applyRadioSettings to set the previous changes"
         print "EXPECTED RESULT: Execution returns SUCCESS"
         print "ACTUAL RESULT: %s"%details;
