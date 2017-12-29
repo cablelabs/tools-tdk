@@ -29,6 +29,7 @@ from pexpect import pxssh
 import ConfigParser
 import tdklib
 from time import sleep
+import commands
 
 #Global variable to check whether login session is active
 isSessionActive = False
@@ -976,7 +977,18 @@ def deleteSavedWifiConnections():
                 status = e;
 
         print "Delete saved wifi connections:%s" %status;
+
+        #Logic to delete the saved wifi connections using nmcli
+        res = commands.getstatusoutput("nmcli -t -f TYPE,UUID con")
+        lines = res[1].split('\n')
+
+        for line in lines:
+                parts = line.split(":")
+                if (parts[0] == "802-11-wireless"):
+                        os.system("nmcli connection delete uuid "+ parts[1])
+
         return status;
+
 ######### End of Function ##########
 
 def addStaticRoute(destIp, gwIp, interface, source="WLAN"):
