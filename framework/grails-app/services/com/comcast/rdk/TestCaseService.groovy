@@ -166,6 +166,7 @@ class TestCaseService {
 			testCaseMap?.put(TC_TSI,testCase?.testStubInterface)
 			testCaseMap?.put(TC_SKIP,testCase?.tcskip)
 			testCaseMap?.put(TC_RELEASE_VERSION,testCase?.releaseVersion)
+			testCaseMap?.put(REMARKS,testCase?.remarks)
 		}
 		return testCaseMap
 	}
