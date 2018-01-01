@@ -206,6 +206,20 @@ AC_ARG_ENABLE([audiocapturemgr],
            [echo "audiocapturemgr component is not enabled"])
 AM_CONDITIONAL([AUDIOCAPTUREMGR], [test x$AUDIOCAPTUREMGR = xtrue])
 
+AC_ARG_ENABLE([usbctrl],
+         AS_HELP_STRING([--enable-usbctrl],[enable usbctrl (default is no)]),
+         [
+           case "${enableval}" in
+              yes) USBCTRL=true
+                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" USBCtrl_stub"],
+                          [echo box type not specified]) ;;
+             no) USBCTRL=false ;;
+            *) AC_MSG_ERROR([bad value ${enableval} for --enable-usbctrl ]) ;;
+             esac
+            ],
+           [echo "usbctrl component is not enabled"])
+AM_CONDITIONAL([USBCTRL], [test x$USBCTRL = xtrue])
+
 AC_ARG_ENABLE([trace],
               AS_HELP_STRING([--enable-trace],[enable trace (default is no)]),
               [
@@ -289,5 +303,6 @@ AC_CONFIG_FILES([Makefile
          MocaHal_stub/Makefile
          Bluetooth_stub/Makefile
 	 MediaUtils_stub/Makefile
-	 AudioCaptureMgr_stub/Makefile])
+	 AudioCaptureMgr_stub/Makefile
+	 USBCtrl_stub/Makefile])
 AC_OUTPUT
