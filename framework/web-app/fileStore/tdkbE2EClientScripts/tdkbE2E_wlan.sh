@@ -97,10 +97,10 @@ refresh_wifi_network()
 #Verify ping to a network
 ping_to_network()
 {
-        route_add_cmd="$(sudo ip route add $var2 via $var4 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        route_add_cmd="$(sudo ip route add $var3 via $var4 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
 	sleep 10
         ping_cmd="$(ping -I $var2 -c 3 $var3 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
-        route_del_cmd="$(sudo ip route delete $var2 via $var4 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        route_del_cmd="$(sudo ip route delete $var3 via $var4 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
         if [ $route_add_cmd = "SUCCESS" ] && [ $ping_cmd = "SUCCESS" ]  && [ $route_del_cmd = "SUCCESS" ]; then
                 echo "OUTPUT:SUCCESS"
         else
