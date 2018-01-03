@@ -72,7 +72,7 @@ public:
         this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrGetLAFState", PARAMS_BY_NAME, JSON_STRING,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetLAFState);
         this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrGetPairedSSID", PARAMS_BY_NAME, JSON_STRING,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetPairedSSID);
         this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrSetEnabled", PARAMS_BY_NAME, JSON_STRING,"enable",JSON_BOOLEAN,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetEnabled);
-        this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrSetGetParameters", PARAMS_BY_NAME,JSON_STRING,"method_name",JSON_STRING,"new_mode",JSON_INTEGER,"enable",JSON_BOOLEAN,"ssid",JSON_STRING,"passphrase",JSON_STRING,"security_mode",JSON_INTEGER,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetGetParameters);
+        this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgr_WifiMgrSetGetParameters", PARAMS_BY_NAME,JSON_STRING,"method_name",JSON_STRING,"new_mode",JSON_INTEGER,"enable",JSON_INTEGER,"ssid",JSON_STRING,"passphrase",JSON_STRING,"security_mode",JSON_INTEGER,NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetGetParameters);
         this->bindAndAddMethod(Procedure("TestMgr_NetSrvMgrAgent_WifiMgr_BroadcastEvent", PARAMS_BY_NAME, JSON_STRING,"owner",JSON_STRING,"event_id",JSON_INTEGER,"event_log",JSON_STRING,"key_code",JSON_INTEGER,"key_type",JSON_INTEGER,"isFP",JSON_INTEGER,"value",JSON_INTEGER, NULL), &NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent);
     }
 
