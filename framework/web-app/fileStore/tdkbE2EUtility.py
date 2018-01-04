@@ -73,6 +73,18 @@ def parseDeviceConfig(obj):
         	global wlan_ip
         	wlan_ip = config.get(deviceConfig, 'WLAN_IP')
 
+                global wan_ping_ip
+                wan_ping_ip = config.get(deviceConfig, "WAN_PING_IP")
+
+                global wan_http_ip
+                wan_http_ip = config.get(deviceConfig, "WAN_HTTP_IP")
+
+                global wan_https_ip
+                wan_https_ip = config.get(deviceConfig, "WAN_HTTPS_IP")
+
+                global wan_ftp_ip
+                wan_ftp_ip = config.get(deviceConfig, "WAN_FTP_IP")
+
         	global wlan_username
         	wlan_username = config.get(deviceConfig, "WLAN_USERNAME")
         
@@ -1078,9 +1090,9 @@ def wgetToWAN(connectivityType,source_ip,gateway_ip,source="WLAN"):
                                 else:
                                     script_name = lan_script;
                                 if connectivityType == "WGET_HTTP":
-                                    command="sudo sh %s wget_http_network %s %s %s" %(script_name,source_ip,wan_ip,wan_http_port)
+                                    command="sudo sh %s wget_http_network %s %s %s" %(script_name,source_ip,wan_http_ip,wan_http_port)
                                 elif connectivityType == "WGET_HTTPS":
-                                    command="sudo sh %s wget_https_network %s %s %s" %(script_name,source_ip,wan_ip,wan_https_port)
+                                    command="sudo sh %s wget_https_network %s %s %s" %(script_name,source_ip,wan_https_ip,wan_https_port)
                                 status = executeCommand(command)
                         else:
                                 status = "Only UBUNTU platform supported!!!"
