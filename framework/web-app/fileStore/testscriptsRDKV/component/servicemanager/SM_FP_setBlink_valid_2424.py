@@ -99,6 +99,7 @@ if "SUCCESS" in loadmodulestatus.upper() and "SUCCESS" in loadmodulestatus1.uppe
                             GreenColor='';
                             setbrightness='';
                             blinkduration='';
+			    firstBrightness='';
                             for x in range(0, sequencecount):
                                     print "in loop******************"
                                     duration = 5000;        
@@ -111,6 +112,8 @@ if "SUCCESS" in loadmodulestatus.upper() and "SUCCESS" in loadmodulestatus1.uppe
                                     GreenColor= GreenColor+str(Green)+',';
                                     setbrightness = setbrightness+str(brightness)+',';
                                     blinkduration = blinkduration+str(duration)+',';
+			            if x == 0:
+				    	    firstBrightness = brightness;
                             tdkTestObj.addParameter("LEDName","power_led");
                             tdkTestObj.addParameter("IterationCount",-1);
                             tdkTestObj.addParameter("SequenceCount",sequencecount);
@@ -134,9 +137,9 @@ if "SUCCESS" in loadmodulestatus.upper() and "SUCCESS" in loadmodulestatus1.uppe
                                     actualresult= tdkTestObj.getResult();
                                     brightnessdetails= tdkTestObj.getResultDetails();
                                     #Check for SUCCESS/FAILURE return value of SM_DisplaySetting_SetbrightnessSettings
-                                    if expectedresult in actualresult and str(setbrightness) in brightnessdetails:
+				    if expectedresult in actualresult and str(firstBrightness) in brightnessdetails:
                                             print "SUCCESS: Application succesfully executes SM_FP_GetBrightness API";
-                                            print "Get Brightness value = %d"%brightnessdetails;
+                                            print "Get Brightness value = %s"%brightnessdetails;
                                             tdkTestObj.setResultStatus("SUCCESS");
                                     else:
                                             tdkTestObj.setResultStatus("FAILURE");
