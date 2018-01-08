@@ -100,6 +100,9 @@ def parseDeviceConfig(obj):
         	global wlan_inet_address
         	wlan_inet_address = config.get(deviceConfig, "WLAN_INET_ADDRESS")
 
+                global wlan_subnet_mask
+                wlan_subnet_mask = config.get(deviceConfig, "WLAN_SUBNET_MASK")
+
         	global wlan_script
        		wlan_script = config.get(deviceConfig, "WLAN_SCRIPT")
 
@@ -526,7 +529,6 @@ def wlanDisconnectWifiSsid(wlanInterface):
 
 ######### End of Function ##########
 
-
 def getWlanIPAddress(wlanInterface):
 
 # getWlanIPAddress
@@ -536,10 +538,10 @@ def getWlanIPAddress(wlanInterface):
 # Parameters  : wlanInterface - wlan interface name
 # Return Value: status - IP Address of the WLAN client
 
-	try:
-        	if wlan_os_type == "UBUNTU":
-        		command="sudo sh %s get_wlan_ip_address %s %s" %(wlan_script,wlanInterface,wlan_inet_address)
-        		status = executeCommand(command)
+        try:
+                if wlan_os_type == "UBUNTU":
+                        command="sudo sh %s get_wlan_ip_address %s %s" %(wlan_script,wlanInterface,wlan_inet_address)
+                        status = executeCommand(command)
                 else:
                         status = "Only UBUNTU platform supported!!!"
         except Exception, e:
@@ -550,6 +552,30 @@ def getWlanIPAddress(wlanInterface):
         return status;
 
 ########## End of Function ##########
+
+def getWlanSubnetMask(wlanInterface):
+
+# getWlanSubnetMask
+
+# Syntax      : getWlanSubnetMask()
+# Description : Function to get the subnet mask of the wlan client after connecting to wifi
+# Parameters  : wlanInterface - wlan interface name
+# Return Value: status - IP Address of the WLAN client
+
+        try:
+                if wlan_os_type == "UBUNTU":
+                        command="sudo sh %s get_wlan_subnet_mask %s %s" %(wlan_script,wlanInterface,wlan_subnet_mask)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "WLAN IP Address after connecting to WIFI:%s" %status;
+        return status;
+
+########## End of Function #########
 
 def getLanIPAddress(lanInterface):
 

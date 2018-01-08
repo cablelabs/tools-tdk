@@ -54,6 +54,13 @@ get_wlan_ip_address()
         echo "OUTPUT:$value"
 }
 
+# Get the subnet mask of the WLAN after connecting to WIFI
+get_wlan_subnet_mask()
+{
+        value="$(ifconfig $var2 | grep "$var3" | cut -d ':' -f 4 | cut -d ' ' -f 1)"
+        echo "OUTPUT:$value"
+}
+
 # Get the current SSID name of the WIFI connected
 get_connected_ssid_name()
 {
@@ -220,6 +227,8 @@ case $event in
         wifi_ssid_disconnect;;
    "get_wlan_ip_address")
         get_wlan_ip_address;;
+   "get_wlan_subnet_mask")
+        get_wlan_subnet_mask;;
    "get_connected_ssid_name")
         get_connected_ssid_name;;
    "is_ssid_available")
