@@ -572,7 +572,7 @@ def getWlanSubnetMask(wlanInterface):
                 print e;
                 status = e;
 
-        print "WLAN IP Address after connecting to WIFI:%s" %status;
+        print "Subnet mask of wifi client:%s" %status;
         return status;
 
 ########## End of Function #########
@@ -591,6 +591,10 @@ def getLanIPAddress(lanInterface):
                 if status == "SUCCESS":
 
                         if wlan_os_type == "UBUNTU":
+				command="sudo sh %s refresh_lan_network %s" %(lan_script,lanInterface)
+                                executeCommand(command)
+                                sleep(20);
+
                                 command="sudo sh %s get_lan_ip_address %s %s" %(lan_script,lanInterface,lan_inet_address)
                                 status = executeCommand(command)
                         else:

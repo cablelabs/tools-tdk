@@ -26,6 +26,18 @@ get_lan_ip_address()
         echo "OUTPUT:$value"
 }
 
+#Refresh Lan Network
+refresh_lan_network()
+{
+        lan_down="$(ifconfig $var2 down > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        lan_up="$(ifconfig $var2 up > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        if [ $lan_down = "SUCCESS" ] && [ $lan_up = "SUCCESS" ]; then
+                echo "OUTPUT:SUCCESS"
+        else
+                echo "OUTPUT:FAILURE"
+        fi
+}
+
 #Verify ping to a network
 ping_to_network()
 {
@@ -106,6 +118,8 @@ var4=$4
 case $event in
    "get_lan_ip_address")
         get_lan_ip_address;;
+   "refresh_lan_network")
+        refresh_lan_network;;
    "ping_to_network")
         ping_to_network;;
    "wget_http_network")
