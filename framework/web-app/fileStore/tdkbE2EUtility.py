@@ -1137,6 +1137,37 @@ def wgetToWAN(connectivityType,source_ip,gateway_ip,source="WLAN"):
 
 ########## End of Function ##########
 
+def nslookupInClient(domainName,serverIP,source):
+
+# nslookupInClient
+
+# Syntax      : nslookupInClient()
+# Description : Function to do nslookup in client machine
+# Parameters  : domainName - The domainName which needs to be resolved
+#		serverIP - DNS server ip
+#               source - The client from which the command should execute
+# Return Value: status - Status of nslookup command
+
+        try:
+            status = clientConnect(source)
+            if status == "SUCCESS":
+                if wlan_os_type == "UBUNTU":
+                        if source == "WLAN":
+                            script_name = wlan_script;
+                        else:
+                            script_name = lan_script;
+                        command="sudo sh %s nslookup_in_client %s %s" %(script_name,domainName,serverIP)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+        except Exception, e:
+                print e;
+                status = e;
+        print "Status of nslookupInClient:%s" %status;
+        return status;
+
+########## End of Function ##########
+
 def postExecutionCleanup():
 
 # postExecutionCleanup

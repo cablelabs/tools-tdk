@@ -209,6 +209,17 @@ del_static_route()
         echo "OUTPUT:$value"
 }
 
+nslookup_in_client()
+{
+        outStatus="$(nslookup $var2 $var3)"
+        outStatus=$(printf "%s " $outStatus)
+        case $outStatus in
+            *"Non-authoritative answer: Name: $var2 Address:"*) value="SUCCESS";;
+            *)value="FAILURE"
+        esac
+        echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -261,6 +272,8 @@ case $event in
         add_static_route;;
    "del_static_route")
         del_static_route;;
+   "nslookup_in_client")
+        nslookup_in_client;;
    *) echo "Invalid Argument passed";;
 esac
 
