@@ -305,5 +305,6 @@ AC_CONFIG_FILES([Makefile
          Bluetooth_stub/Makefile
 	 MediaUtils_stub/Makefile
 	 AudioCaptureMgr_stub/Makefile
-	 USBCtrl_stub/Makefile])
+	 USBCtrl_stub/Makefile
+	 SysUtil_stub/Makefile])
 AC_OUTPUT
