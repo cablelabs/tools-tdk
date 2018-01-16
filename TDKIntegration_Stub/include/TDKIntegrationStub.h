@@ -68,8 +68,12 @@
 #define TEST_FAILURE false 
 #define JSON_PARSER_LOG_PATH "output_json_parser_details.log"
 #define JSON_PARSER_SCRIPT "output_json_parser.sh"
-using namespace std;
 #define NUMBER_OCAPID 10
+using namespace std;
+string JSON_LOCATION ="opt" ;
+string OUTPUT_JSON_FILE ="output.json" ;
+string STREAMING_GWIP ="dataGatewayIPaddress" ;
+
 
 class RDKTestAgent;
 //class TDKIntegrationStub : public RDKTestStubInterface

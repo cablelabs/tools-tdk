@@ -387,7 +387,8 @@ DEBUG_PRINT(DEBUG_TRACE, "Streaming URL : %s\n",url.c_str());
           DEBUG_PRINT(DEBUG_ERROR, "Failed to fetch proper Interface name\n");
           return "FAILURE<DETAILS>Failed to fetch proper interface name";
        }
-        string cmd = "arp -n -i "+streaming_interface+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+        //string cmd = "arp -n -i "+streaming_interface+"|grep : | cut -d ' ' -f 2 | cut -b 2- |sed 's/.$//'";
+	string cmd="cat /"+JSON_LOCATION+"/"+OUTPUT_JSON_FILE+"|grep "+STREAMING_GWIP+"| cut -d : -f 2 | cut -d , -f 1 |sed -e 's/^""//' -e 's/""$//'";
         FILE* pipe = popen(cmd.c_str(), "r");
         if (!pipe)
         {
