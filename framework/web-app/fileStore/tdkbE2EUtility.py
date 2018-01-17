@@ -220,6 +220,9 @@ def parseDeviceConfig(obj):
                 global wlan_invalid_interface
                 wlan_invalid_interface = config.get(deviceConfig, "WLAN_INVALID_INTERFACE")
 
+                global nslookup_domain_name
+                nslookup_domain_name = config.get(deviceConfig, "NSLOOKUP_DOMAIN_NAME")
+
 	except Exception, e:
 		print e;
 		status = "Failed to parse the device specific configuration file"
