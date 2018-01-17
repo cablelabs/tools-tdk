@@ -125,12 +125,15 @@ if "SUCCESS" in loadmodulestatus.upper():
     (out, err) = proc.communicate();
     print "date cmd:", out;
     cmdDate = out.split(" UTC ");
-    cmdDate1 = cmdDate[0];
-    cmdDatesplit =cmdDate1.split(" ");
-        
+    cmdDatesplit = cmdDate[0].split(" ")
+    cmdDatesplit[3] = cmdDatesplit[3].rsplit(":",1)[0]
+    cmdDatesplit.append(cmdDate[1].strip())
+    print cmdDatesplit
+
     if "SNMPv2-SMI" in snmpResponse:
-        actResponse =snmpResponse.split('\"')[1].replace("\"","");
+        actResponse =snmpResponse.split('\"')[1].replace("\"","").strip();
         actDate =actResponse.split(" ");
+	actDate[3] = actDate[3].rsplit(":",1)[0]
         print actDate;
         if set(cmdDatesplit).issubset(set(actDate)):
                 tdkTestObj.setResultStatus("SUCCESS");
