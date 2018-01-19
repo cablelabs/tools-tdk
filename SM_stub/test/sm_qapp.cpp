@@ -272,7 +272,7 @@ void dsHdmiEventHandler(const char *owner, IARM_EventId_t eventId, void *data, s
 	}
 }
 
-void trigger_event(unsigned char app_signal)
+/*void trigger_event(unsigned char app_signal)
 {
 	QByteArray application_id(6, 0);
 	unsigned int locator_id = 0;
@@ -298,7 +298,7 @@ void trigger_event(unsigned char app_signal)
         pVideoApplicationEventsService->setApplications(AppArray);
 
 	ServiceManagerNotifier::getInstance()->notifyEISSAppSignal(application_id, app_signal, locator_id);	
-}
+}*/
 
 IARM_Result_t iarm_broadcast(QString eventName, QString eventParam)
 {
@@ -390,13 +390,13 @@ int main(int argc, char* argv[])
 	}
 	sleep(5);
 #ifdef HAS_API_VIDEO_APPLICATION_EVENTS
-	if (eventName ==  VideoApplicationEventsService::EVT_ON_START)
+	/*if (eventName ==  VideoApplicationEventsService::EVT_ON_START)
 		trigger_event(EISS_STATUS_ON_START);
 	else if (eventName == VideoApplicationEventsService::EVT_ON_COMPLETTE)
 		trigger_event(EISS_STATUS_ON_COMPLETE);
 	else if (eventName == VideoApplicationEventsService::EVT_ON_WATCHED)
 		trigger_event(EISS_STATUS_ON_WATCHED);
-	else	
+	else	*/
 #endif
 	if( iarm_broadcast(eventName, eventParam) )
 		return FAIL;
