@@ -1449,7 +1449,7 @@ void RpcMethods::RPCGetHostStatus (const Json::Value& request, Json::Value& resp
           (strcmp ( (request["managerIP"].asCString()), "NULL") != 0) )
     {	
         /* Fetching the connected box IP address */
-          RpcMethods::sm_strBoxIP = "127.0.0.1"; // Need to revisit this
+          RpcMethods::sm_strBoxIP = go_Server.GetIP();
 
         /* Getting corresponding network interface */
         pszInterface = GetHostIPInterface (RpcMethods::sm_strBoxIP.c_str());
