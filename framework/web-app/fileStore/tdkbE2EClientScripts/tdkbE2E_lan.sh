@@ -118,6 +118,13 @@ nslookup_in_client()
         echo "OUTPUT:$value"
 }
 
+# Get the subnet mask of the LAN client
+get_lan_subnet_mask()
+{
+        value="$(ifconfig $var2 | grep "$var3" | cut -d ':' -f 4 | cut -d ' ' -f 1)"
+        echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -147,5 +154,7 @@ case $event in
         del_static_route;;
    "nslookup_in_client")
         nslookup_in_client;;
+   "get_lan_subnet_mask")
+        get_lan_subnet_mask;;
    *) echo "Invalid Argument passed";;
 esac

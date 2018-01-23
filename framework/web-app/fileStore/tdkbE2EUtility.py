@@ -136,6 +136,9 @@ def parseDeviceConfig(obj):
 		global lan_inet_address
    		lan_inet_address = config.get(deviceConfig, "LAN_INET_ADDRESS")
 
+                global lan_subnet_mask
+                lan_subnet_mask = config.get(deviceConfig, "LAN_SUBNET_MASK")
+
 		global lan_script
         	lan_script = config.get(deviceConfig, "LAN_SCRIPT")
 
@@ -613,6 +616,42 @@ def getLanIPAddress(lanInterface):
         return status;
 
 ########## End of Function ##########
+
+
+def getLanSubnetMask(lanInterface):
+
+# getWlanSubnetMask
+
+# Syntax      : getLanSubnetMask()
+# Description : Function to get the subnet mask of the lan client 
+# Parameters  : lanInterface - lan interface name
+# Return Value: status - Subnetmask of the LAN client
+
+        try:
+                status = clientConnect("LAN")
+                if status == "SUCCESS":
+
+                        if wlan_os_type == "UBUNTU":
+                                command="sudo sh %s refresh_lan_network %s" %(lan_script,lanInterface)
+                                executeCommand(command)
+                                sleep(20);
+
+                                command="sudo sh %s get_lan_subnet_mask %s %s" %(lan_script,lanInterface,lan_subnet_mask)
+                                status = executeCommand(command)
+                        else:
+                                status = "Only UBUNTU platform supported!!!"
+                else:
+                        return "Failed to connect to lan client"
+
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "Subnetmask of LAN client is :%s" %status;
+        return status;
+
+########## End of Function ##########
+
 
 def getWlanMACAddress(wlanInterface):
 
