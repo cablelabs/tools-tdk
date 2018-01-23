@@ -306,5 +306,5 @@ AC_CONFIG_FILES([Makefile
 	 MediaUtils_stub/Makefile
 	 AudioCaptureMgr_stub/Makefile
 	 USBCtrl_stub/Makefile
-	 SysUtil_stub/Makefile])
+	 SystemUtil_stub/Makefile])
 AC_OUTPUT

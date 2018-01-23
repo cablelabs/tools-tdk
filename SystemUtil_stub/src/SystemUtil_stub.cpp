@@ -17,19 +17,19 @@
  * limitations under the License.
 */
 
-#include "SysUtil_stub.h"
+#include "SystemUtil_stub.h"
 
 /*************************************************************************
-  Function name : SysUtilAgent::SysUtilAgent
+  Function name : SystemUtilAgent::SystemUtilAgent
 
 Arguments     : NULL
 
-Description   : Constructor for SysUtilAgent class
+Description   : Constructor for SystemUtilAgent class
  ***************************************************************************/
 #if 0
-SysUtilAgent::SysUtilAgent()
+SystemUtilAgent::SystemUtilAgent()
 {
-	DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent Initialized\n");
+	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent Initialized\n");
 }
 #endif
 /***************************************************************************
@@ -38,7 +38,7 @@ SysUtilAgent::SysUtilAgent()
  *                pre-requisites that are necessary for this component
  *
  *****************************************************************************/
-std::string SysUtilAgent::testmodulepre_requisites()
+std::string SystemUtilAgent::testmodulepre_requisites()
 {
 	return "SUCCESS";
 }
@@ -49,44 +49,44 @@ std::string SysUtilAgent::testmodulepre_requisites()
  *                pre-requisites that are set
  *
  *****************************************************************************/
-bool SysUtilAgent::testmodulepost_requisites()
+bool SystemUtilAgent::testmodulepost_requisites()
 {
 	return true;
 }
 
 /**************************************************************************
-Function name : SysUtilAgent::initialize
+Function name : SystemUtilAgent::initialize
 
-Arguments     : Input arguments are Version string and SysUtilAgent obj ptr
+Arguments     : Input arguments are Version string and SystemUtilAgent obj ptr
 
 Description   : Registering all the wrapper functions with the agent for using these functions in the script
  ***************************************************************************/
-bool SysUtilAgent::initialize(IN const char* szVersion)
+bool SystemUtilAgent::initialize(IN const char* szVersion)
 {
-	DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent Initialize----->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent Initialize----->Entry\n");
 #if 0
-	ptrAgentObj->RegisterMethod(*this,&SysUtilAgent::SysUtilAgent_GetifconfigValue, "TestMgr_GetifconfigValue");
-	ptrAgentObj->RegisterMethod(*this,&SysUtilAgent::SysUtilAgent_TouchFile, "TestMgr_TouchFile");
-	ptrAgentObj->RegisterMethod(*this,&SysUtilAgent::SysUtilAgent_GetpingValue, "TestMgr_GetpingValue");
-	ptrAgentObj->RegisterMethod(*this,&SysUtilAgent::SysUtilAgent_GetrouteInfo, "TestMgr_GetrouteInfo");
-	ptrAgentObj->RegisterMethod(*this,&SysUtilAgent::SysUtilAgent_ExecuteCmd, "TestMgr_ExecuteCmd");
-	ptrAgentObj->RegisterMethod(*this,&SysUtilAgent::SysUtilAgent_Getoutput_json_file, "TestMgr_Getoutput_json_file");
+	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_GetifconfigValue, "TestMgr_GetifconfigValue");
+	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_TouchFile, "TestMgr_TouchFile");
+	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_GetpingValue, "TestMgr_GetpingValue");
+	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_GetrouteInfo, "TestMgr_GetrouteInfo");
+	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_ExecuteCmd, "TestMgr_ExecuteCmd");
+	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_Getoutput_json_file, "TestMgr_Getoutput_json_file");
 
-	DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent Initialize----->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent Initialize----->Exit\n");
 #endif
 	return TEST_SUCCESS;
 }
 
 /**************************************************************************
-Function name : SysUtilAgent::SysUtilAgent_GetifconfigValue
+Function name : SystemUtilAgent::SystemUtilAgent_GetifconfigValue
 
 Arguments     : Input arguments are json request object and json response object
 
 Description   : This method queries for the parameter requested through curl and returns the value.
 ***************************************************************************/
-void SysUtilAgent::SysUtilAgent_GetifconfigValue(IN const Json::Value& req, OUT Json::Value& response)
+void SystemUtilAgent::SystemUtilAgent_GetifconfigValue(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_GetifconfigValue -->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_GetifconfigValue -->Entry\n");
 
 	string interface = req["interface"].asCString();
 	
@@ -126,21 +126,21 @@ void SysUtilAgent::SysUtilAgent_GetifconfigValue(IN const Json::Value& req, OUT 
 	response["result"] = "SUCCESS";
 	response["details"] = popenBuff;
 	DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
-	DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_GetifconfigValue -->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_GetifconfigValue -->Exit\n");
 	return;
 
 }
 
 /**************************************************************************
-Function name : SysUtilAgent::SysUtilAgent_GetpingValue
+Function name : SystemUtilAgent::SystemUtilAgent_GetpingValue
 
 Arguments     : Input arguments are json request object and json response object
 
 Description   : This method queries for the parameter requested through curl and returns the value.
 ***************************************************************************/
-void SysUtilAgent::SysUtilAgent_GetpingValue(IN const Json::Value& req, OUT Json::Value& response)
+void SystemUtilAgent::SystemUtilAgent_GetpingValue(IN const Json::Value& req, OUT Json::Value& response)
 {
-        DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_GetpingValue -->Entry\n");
+        DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_GetpingValue -->Entry\n");
 
         FILE *fp = NULL;
 	char readRespBuff[BUFF_LENGTH] = { '\0' };
@@ -199,21 +199,21 @@ void SysUtilAgent::SysUtilAgent_GetpingValue(IN const Json::Value& req, OUT Json
         response["result"] = "SUCCESS";
         response["details"] = popenBuff;
         DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
-        DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_GetpingValue -->Exit\n");
+        DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_GetpingValue -->Exit\n");
         return;
 
 }
 
 /**************************************************************************
-Function name : SysUtilAgent::SysUtilAgent_Getrouteinfo
+Function name : SystemUtilAgent::SystemUtilAgent_Getrouteinfo
 
 Arguments     : Input arguments are json request object and json response object
 
 Description   : This method queries for the parameter requested through curl and returns the value.
 ***************************************************************************/
-void SysUtilAgent::SysUtilAgent_GetrouteInfo(IN const Json::Value& req, OUT Json::Value& response)
+void SystemUtilAgent::SystemUtilAgent_GetrouteInfo(IN const Json::Value& req, OUT Json::Value& response)
 {
-        DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_GetrouteInfo -->Entry\n");
+        DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_GetrouteInfo -->Entry\n");
 
         FILE *fp = NULL;
 	char readRespBuff[BUFF_LENGTH] = { '\0' };
@@ -264,21 +264,21 @@ void SysUtilAgent::SysUtilAgent_GetrouteInfo(IN const Json::Value& req, OUT Json
         response["result"] = "SUCCESS";
         response["details"] = popenBuff;
         DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
-        DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_GetrouteInfo -->Exit\n");
+        DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_GetrouteInfo -->Exit\n");
         return;
 
 }
 
 /**************************************************************************
-Function name : SysUtilAgent::SysUtilAgent_TouchFile
+Function name : SystemUtilAgent::SystemUtilAgent_TouchFile
 
 Arguments     : Input arguments are json request object and json response object
 
 Description   : This method queries for the parameter requested through curl and returns the value.
 ***************************************************************************/
-void SysUtilAgent::SysUtilAgent_TouchFile(IN const Json::Value& req, OUT Json::Value& response)
+void SystemUtilAgent::SystemUtilAgent_TouchFile(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_TouchFile -->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_TouchFile -->Entry\n");
 
 	string fileinfo = req["fileinfo"].asCString();
 	
@@ -317,22 +317,22 @@ void SysUtilAgent::SysUtilAgent_TouchFile(IN const Json::Value& req, OUT Json::V
 	response["result"] = "SUCCESS";
 	response["details"] = respResult;
 	DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
-	DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_TouchFile -->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_TouchFile -->Exit\n");
 	return;
 
 }
 
 
 /**************************************************************************
-Function name : SysUtilAgent::SysUtilAgent_ExecuteCmd
+Function name : SystemUtilAgent::SystemUtilAgent_ExecuteCmd
 
 Arguments     : Input arguments are json request object and json response object
 
 Description   : This method queries for the parameter requested through curl and returns the value.
 ***************************************************************************/
-void SysUtilAgent::SysUtilAgent_ExecuteCmd(IN const Json::Value& req, OUT Json::Value& response)
+void SystemUtilAgent::SystemUtilAgent_ExecuteCmd(IN const Json::Value& req, OUT Json::Value& response)
 {
-	DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_ExecuteCmd -->Entry\n");
+	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_ExecuteCmd -->Entry\n");
 
 	string fileinfo = req["command"].asCString();
 	
@@ -371,22 +371,22 @@ void SysUtilAgent::SysUtilAgent_ExecuteCmd(IN const Json::Value& req, OUT Json::
 	response["result"] = "SUCCESS";
 	response["details"] = respResult;
 	DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
-	DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_ExecuteCmd -->Exit\n");
+	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_ExecuteCmd -->Exit\n");
 	return;
 
 }
 
 
 /**************************************************************************
-Function name : SysUtilAgent::SysUtilAgent_Getoutput_json_file
+Function name : SystemUtilAgent::SystemUtilAgent_Getoutput_json_file
 
 Arguments     : Input arguments are json request object and json response object
 
 Description   : This method queries for the parameter requested through curl and returns the value.
 ***************************************************************************/
-void SysUtilAgent::SysUtilAgent_Getoutput_json_file(IN const Json::Value& req, OUT Json::Value& response)
+void SystemUtilAgent::SystemUtilAgent_Getoutput_json_file(IN const Json::Value& req, OUT Json::Value& response)
 {
-        DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_Getoutput_json_file -->Entry\n");
+        DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_Getoutput_json_file -->Entry\n");
 
         FILE *fp = NULL;
 	char readRespBuff[BUFF_LENGTH] = { '\0' };
@@ -421,7 +421,7 @@ void SysUtilAgent::SysUtilAgent_Getoutput_json_file(IN const Json::Value& req, O
         response["details"] = popenBuff;
         response["log-path"] = popenBuff;
         DEBUG_PRINT(DEBUG_LOG, "Execution success\n");
-        DEBUG_PRINT(DEBUG_TRACE, "SysUtilAgent_Getoutput_json_file -->Exit\n");
+        DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_Getoutput_json_file -->Exit\n");
         return;
 
 }
@@ -431,14 +431,14 @@ Function Name   : CreateObject
 
 Arguments       : NULL
 
-Description     : This function is used to create a new object of the class "SysUtilAgent".
+Description     : This function is used to create a new object of the class "SystemUtilAgent".
  **************************************************************************/
 
-extern "C" SysUtilAgent* CreateObject(TcpSocketServer &ptrtcpServer)
+extern "C" SystemUtilAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "Creating SysUtil Agent Object\n");
 
-	return new SysUtilAgent(ptrtcpServer);
+	return new SystemUtilAgent(ptrtcpServer);
 }
 
 /**************************************************************************
@@ -448,7 +448,7 @@ Arguments       : NULL
 
 Description     : This function will be used to the close things cleanly.
  **************************************************************************/
-bool SysUtilAgent::cleanup(IN const char* szVersion)
+bool SystemUtilAgent::cleanup(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
 #if 0
@@ -472,12 +472,12 @@ bool SysUtilAgent::cleanup(IN const char* szVersion)
 /**************************************************************************
 Function Name : DestroyObject
 
-Arguments     : Input argument is SysUtilAgent Object
+Arguments     : Input argument is SystemUtilAgent Object
 
-Description   : This function will be used to destory the SysUtilAgent object.
+Description   : This function will be used to destory the SystemUtilAgent object.
  **************************************************************************/
-extern "C" void DestroyObject(SysUtilAgent *stubobj)
+extern "C" void DestroyObject(SystemUtilAgent *stubobj)
 {
-	DEBUG_PRINT(DEBUG_TRACE, "Destroying SysUtilAgent object\n");
+	DEBUG_PRINT(DEBUG_TRACE, "Destroying SystemUtilAgent object\n");
 	delete stubobj;
 }
