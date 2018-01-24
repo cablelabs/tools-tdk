@@ -125,6 +125,14 @@ get_lan_subnet_mask()
         echo "OUTPUT:$value"
 }
 
+# get the DHCP config details like lease-time, dns and domain-name etc
+get_lan_dhcp_details()
+{
+        value1="$(sudo lsof -p `cat $var2/dhclient-$var3.pid` | grep $var3 | awk '{ print $9 }')"
+        value="$(cat $value1 | grep $var4 | tail -1 | awk '{ print $3 }' | cut -d ";" -f1)"
+        echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -156,5 +164,7 @@ case $event in
         nslookup_in_client;;
    "get_lan_subnet_mask")
         get_lan_subnet_mask;;
+   "get_lan_dhcp_details")
+        get_lan_dhcp_details;;
    *) echo "Invalid Argument passed";;
 esac

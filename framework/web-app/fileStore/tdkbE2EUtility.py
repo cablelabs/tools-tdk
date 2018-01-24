@@ -138,6 +138,15 @@ def parseDeviceConfig(obj):
 
                 global lan_subnet_mask
                 lan_subnet_mask = config.get(deviceConfig, "LAN_SUBNET_MASK")
+                
+                global lan_dns_server
+                lan_dns_server = config.get(deviceConfig, "LAN_DNS_SERVER")
+                
+                global lan_lease_time
+                lan_lease_time = config.get(deviceConfig, "LAN_LEASE_TIME")  
+                
+                global lan_domain_name
+                lan_domain_name = config.get(deviceConfig, "LAN_DOMAIN_NAME")                                
 
 		global lan_script
         	lan_script = config.get(deviceConfig, "LAN_SCRIPT")
@@ -225,6 +234,10 @@ def parseDeviceConfig(obj):
 
                 global nslookup_domain_name
                 nslookup_domain_name = config.get(deviceConfig, "NSLOOKUP_DOMAIN_NAME")
+                
+                global lan_dhcp_location
+                lan_dhcp_location = config.get(deviceConfig, "LAN_DHCP_LOCATION")
+                
 
 	except Exception, e:
 		print e;
@@ -799,6 +812,42 @@ def checkIpRange(ip1,ip2):
 
 ######### End of Function ##########
 
+def checkIpWithinMinMaxRange(ipmin,ipmax,ip):
+
+# checkIpRange
+
+# Syntax      : checkIpWithinMinMaxRange()
+# Description : Function to check whether a given ip is within a minimum and maximum range
+# Parameters  : ipmin - minimum address of the ip range
+#             : ipmax - maximum address of the ip range
+#             : ip    -  the ip to be verified
+# Return Value: SUCCESS/FAILURE
+
+        try:
+                status = "SUCCESS"
+                ipmin = ipmin.split('.')
+                ipmax = ipmax.split('.')
+                ip = ip.split('.')
+                print ipmin,ipmax,ip
+                for i in range(len(ipmin)-1):
+                        if ipmin[i] != ip[i] or ipmax[i] != ip[i]:
+                                print "IP address not in same DHCP range"
+                                status = "FAILURE"
+                                break;
+                index = len(ipmin)-1
+                if ipmax[index] >= ip[index] and ip[index] >= ipmin[index] :
+                        print "Ip address is with in the given range"
+                else:
+                        status = "FAILURE"
+                        print "Ip address is not with in the given range"
+
+        except Exception, e:
+                print e;
+                status = e;
+
+        return status
+
+######### End of Function ##########
 
 def getMultipleParameterValues(obj,paramList):
 
@@ -1206,6 +1255,32 @@ def nslookupInClient(domainName,serverIP,source):
                 print e;
                 status = e;
         print "Status of nslookupInClient:%s" %status;
+        return status;
+
+########## End of Function ##########
+
+
+# getLanDhcpDetails
+
+# Syntax      : getLanDhcpDetails()
+# Description : Function to fetch dhcp confiiguration values like lease-time, domain-name and dns
+# Parameters  : param  - The dhcp configuration attribute name, like lease-time, domain-name and dns
+# Return Value: status - dhcp attribute value
+
+def getLanDhcpDetails(param):
+
+        try:
+            status = clientConnect("LAN")
+            if status == "SUCCESS":
+                if wlan_os_type == "UBUNTU":
+                        command="sudo sh %s get_lan_dhcp_details %s %s %s" %(lan_script, lan_dhcp_location, lan_interface, param)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+        except Exception, e:
+                print e;
+                status = e;
+        print "Status of getDhcpDetails: %s" %status;
         return status;
 
 ########## End of Function ##########
