@@ -39,13 +39,25 @@ class PrimitiveService {
 	
 	public static volatile Map primitiveMap = [:]
 	
+	public static volatile Map moduleDirMap = [:]
+	
 	def initializePrimitiveTests(def realPath){
 		List primitiveTestList = []
 		
 		List dirList = [Constants.COMPONENT,Constants.INTEGRATION]
 		
-		[TESTSCRIPTS_RDKB,TESTSCRIPTS_RDKV].each{ testScriptPath ->
+		[TESTSCRIPTS_RDKB,TESTSCRIPTS_RDKV,TESTSCRIPTS_RDKV_ADV, TESTSCRIPTS_RDKB_ADV ].each{ testScriptPath ->
 			def primitiveList = []
+			if(testScriptPath.equals(TESTSCRIPTS_RDKB) || testScriptPath.equals(TESTSCRIPTS_RDKB_ADV)){
+				if(primitiveListMap.get(RDKB)){
+					primitiveList = primitiveListMap.get(RDKB)
+				}
+			}else{
+				if(primitiveListMap.get(RDKV)){
+					primitiveList = primitiveListMap.get(RDKV)
+				}
+			}
+			
 			dirList.each{ directory ->
 				
 				File scriptsDir = new File( "${realPath}" + Constants.FILE_SEPARATOR + "fileStore" +  Constants.FILE_SEPARATOR + testScriptPath + Constants.FILE_SEPARATOR + directory )
@@ -60,7 +72,11 @@ class PrimitiveService {
 						});
 					def list = []
 					files.each { file ->
-						
+						if(testScriptPath.equals(TESTSCRIPTS_RDKB) || testScriptPath.equals(TESTSCRIPTS_RDKB_ADV)){
+							moduleDirMap.put(RDKB+"_"+module?.name?.toString()?.trim(), testScriptPath)
+						}else{
+							moduleDirMap.put(RDKV+"_"+module?.name?.toString()?.trim(), testScriptPath)
+						}
 						def lines = file?.readLines()
 						int indx = lines?.findIndexOf { it.startsWith("<?xml")}
 						String xmlComtent =""
@@ -86,6 +102,7 @@ class PrimitiveService {
 										}
 									}
 								} catch (Exception e) {
+								println " Error "+e.getMessage()
 								e.printStackTrace()
 							}
 						   }
@@ -95,10 +112,10 @@ class PrimitiveService {
 				
 			}
 		}
-			if(testScriptPath.equals(TESTSCRIPTS_RDKB)){
+			if(testScriptPath.equals(TESTSCRIPTS_RDKB) || testScriptPath.equals(TESTSCRIPTS_RDKB_ADV)){
 				primitiveListMap.put(RDKB, primitiveList)
 			}
-			else if(testScriptPath.equals(TESTSCRIPTS_RDKV)){
+			else if(testScriptPath.equals(TESTSCRIPTS_RDKV) || testScriptPath.equals(TESTSCRIPTS_RDKV_ADV)){
 				primitiveListMap.put(RDKV, primitiveList)
 			}
 		}
@@ -185,8 +202,25 @@ class PrimitiveService {
 		return pList
 	}
 	
+	/*to fetch the name of  directory in which primitive xml comes  */
+	def getDirectoryName(def primitiveTestName){
+		def dirName = ""
+		try {
+			def moduleName = primitiveModuleMap.get(primitiveTestName)
+			if(moduleName){
+				def category = getCategory(moduleName)
+				dirName = moduleDirMap.get(category+"_"+moduleName)
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+
+		return dirName
+	}
+	
 	def deletePrimitiveTest(def realPath,def primitiveTestName){
 		def moduleName = primitiveModuleMap.get(primitiveTestName)
+		def dirName = getDirectoryName(primitiveTestName)
 		primitiveList.removeAll(primitiveTestName)
 		primitiveMap?.get(moduleName)?.remove(primitiveTestName)
 		primitiveModuleMap.remove(primitiveTestName)		
@@ -200,10 +234,16 @@ class PrimitiveService {
 		def category = moduleObj?.category.toString()
 		def primitivePath = realPath+ FILE_SEPARATOR + "fileStore" + FILE_SEPARATOR
 		if(RDKV.equals(category)){
-			primitivePath = primitivePath + FileStorePath.RDKV.value() + FILE_SEPARATOR
+			if(!dirName){
+				dirName = FileStorePath.RDKV.value()
+			}
+				primitivePath = primitivePath + dirName + FILE_SEPARATOR
 		}
 		if(RDKB.equals(category)){
-			primitivePath = primitivePath + FileStorePath.RDKB.value() + FILE_SEPARATOR
+			if(!dirName){
+				dirName = FileStorePath.RDKB.value()
+			}
+			primitivePath = primitivePath + dirName + FILE_SEPARATOR
 		}
 		primitivePath = primitivePath + scriptDirName + FILE_SEPARATOR + moduleName + FILE_SEPARATOR + moduleName+".xml"
 		File primitiveFile = new File(primitivePath)
@@ -244,19 +284,25 @@ class PrimitiveService {
 		def newFilePath = null
 		def testScriptsPath = null
 		def categoryFound = false
-		
 		if(!(filePath.contains(FileStorePath.RDKV.value()) || filePath.contains(FileStorePath.RDKB.value()))) {
 			categoryFound = primitiveListMap.get(RDKV)?.contains(primitiveTestName?.trim())
+			def dirName = getDirectoryName(primitiveTestName)
 			if(!categoryFound) {
 				categoryFound = primitiveListMap.get(RDKB)?.contains(primitiveTestName?.trim())
 				if(!categoryFound){
 					categoryFound = primitiveListMap.get(RDKB)?.contains(primitiveTestName)
 				}
 				if(categoryFound){
-					testScriptsPath = FileStorePath.RDKB.value()
+						if(!dirName){
+							dirName = FileStorePath.RDKB.value()
+						}
+						testScriptsPath = dirName
 				}
 			}else{
-				testScriptsPath = FileStorePath.RDKV.value()
+				if(!dirName){
+					dirName = FileStorePath.RDKV.value()
+				}
+				testScriptsPath = dirName
 			}
 			if(testScriptsPath != null) {
 				def paths = filePath.split('fileStore')
@@ -264,6 +310,11 @@ class PrimitiveService {
 				def fileName = paths[1].split('testscripts')
 				file = fileName[1]?fileName[1]:fileName[0]
 				newFilePath = paths[0] + 'fileStore' + FILE_SEPARATOR + testScriptsPath + file
+				File primitiveXml = new File(newFilePath)
+				if(!primitiveXml?.exists()){
+					newFilePath = paths[0] + 'fileStore' + FILE_SEPARATOR + testScriptsPath + file
+				}
+				
 			}
 		}else{
 			newFilePath = filePath
@@ -271,7 +322,6 @@ class PrimitiveService {
 		 
 		Map primitiveMap = [:]
 		try {
-			
 			File primitiveXml = new File(newFilePath)
 			//def local = new XmlParser()
 			//def node = local.parse(primitiveXml)
@@ -326,30 +376,35 @@ class PrimitiveService {
 	
 	def getModulesListBasedOnCategory(def path, def category){
 		def modules = []
-		def testScriptsFolder = null
+		def dirList = []
 		if(RDKV.equals(category)){
-			testScriptsFolder = FileStorePath.RDKV.value()
+			dirList.add(FileStorePath.RDKV.value())
+			dirList.add(FileStorePath.RDKVADVANCED.value())
 		}
 		else if(RDKB.equals(category)){
-			testScriptsFolder = FileStorePath.RDKB.value()
+			dirList.add(FileStorePath.RDKB.value())
+			dirList.add(FileStorePath.RDKBADVANCED.value())
 		}
-		def dir = path + FILE_SEPARATOR + "fileStore" + FILE_SEPARATOR + testScriptsFolder
-		File f = new File(dir)
-		if(f.exists() && f.isDirectory()){
-			f.listFiles(new FilenameFilter(){
-				boolean accept(File file, String arg1) {
-					return file.isDirectory()
-				};
-			}).each{ file ->
-				if(file.isDirectory()){
-					modules.addAll(Arrays.asList(file.list()))
-				}
+
+		dirList.each { testScriptsFolder  ->
+			def dir = path + FILE_SEPARATOR + "fileStore" + FILE_SEPARATOR + testScriptsFolder
+			File f = new File(dir)
+			if(f.exists() && f.isDirectory()){
+				f.listFiles(new FilenameFilter(){
+							boolean accept(File file, String arg1) {
+								return file.isDirectory()
+							};
+						}).each{ file ->
+							if(file.isDirectory()){
+								modules.addAll(Arrays.asList(file.list()))
+							}
+						}
 			}
 		}
 		if(!modules.isEmpty()){
 			modules.sort()
 		}
- 		modules
+		modules
 	}
 	
 }

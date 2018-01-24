@@ -211,22 +211,19 @@ class ScriptService {
 			]
 			def start = System.currentTimeMillis()
 			[Constants.TESTSCRIPTS_RDKV, Constants.TESTSCRIPTS_RDKB, Constants.TESTSCRIPTS_RDKV_ADV, Constants.TESTSCRIPTS_RDKB_ADV ].each{ fileStorePath ->
-		
 					dirList.each{ directory ->
 						File scriptsDir = new File( "${realPath}//fileStore//$fileStorePath//"+directory+"//")
 						if(scriptsDir.exists()){
 							def modules = scriptsDir.listFiles()
+							
+							
 							//Arrays.sort(modules);
 							
 							modules.each { module ->
-								def category = null
-							if(Constants.TESTSCRIPTS_RDKV.equals(fileStorePath)){
+							def category = null
+							if(Constants.TESTSCRIPTS_RDKV.equals(fileStorePath) || Constants.TESTSCRIPTS_RDKV_ADV.equals(fileStorePath)){
 								category = Constants.RDKV
-							}else if(Constants.TESTSCRIPTS_RDKV_ADV.equals(fileStorePath)){
-								category = Constants.RDKV
-							}else if(Constants.TESTSCRIPTS_RDKB.equals(fileStorePath)){
-								category = Constants.RDKB
-							}else if(Constants.TESTSCRIPTS_RDKB_ADV.equals(fileStorePath)){
+							}else if(Constants.TESTSCRIPTS_RDKB.equals(fileStorePath) || Constants.TESTSCRIPTS_RDKB_ADV.equals(fileStorePath)){
 								category = Constants.RDKB
 							}
 							initialize( module, updateReqd, realPath, category,fileStorePath)
@@ -247,6 +244,7 @@ class ScriptService {
 	}
 	
 	private void initialize(def module, def updateReqd, def realPath, def category,def fileStorePath){
+		
 		def start1 =System.currentTimeMillis()
 		try {
 			File [] files = module.listFiles(new FilenameFilter() {
@@ -313,6 +311,7 @@ class ScriptService {
 			
 			scriptGroupMap.put(module?.getName(), sLst)
 		} catch (Exception e) {
+			println " Error "+e.getMessage()
 			e.printStackTrace()
 		}
 		
@@ -860,26 +859,32 @@ class ScriptService {
 		return map
 	}
   
-	  def getCategoryMap(def realPath, def category){
-		  def dir = []
-		  if("RDKV".equals(category)){
-			  def path  = realPath+Constants.FILE_SEPARATOR+"fileStore"+Constants.FILE_SEPARATOR+"testscriptsRDKV"
-			  ["component", "integration"].each{ directory ->
-				dir.addAll(getDirectoryList(path+Constants.FILE_SEPARATOR+directory))
-			  }
-		  }
-		  else if("RDKB".equals(category)){
-			  def path = realPath+Constants.FILE_SEPARATOR+"fileStore"+Constants.FILE_SEPARATOR+"testscriptsRDKB"
-			  ["component", "integration"].each{ directory ->
-				  dir.addAll(getDirectoryList(path+Constants.FILE_SEPARATOR+directory))
-			   }
-		  }
-		  def map = [:]
-		  dir.each{
-			  map.put(it, scriptGroupMap.get(it))
-		  }
-		  map
-	  }
+	def getCategoryMap(def realPath, def category){
+		def dir = []
+		if("RDKV".equals(category)){
+			def directories = ["testscriptsRDKV", "testscriptsRDKVAdvanced"]
+			directories.each { dirName ->
+				def path  = realPath+Constants.FILE_SEPARATOR+"fileStore"+Constants.FILE_SEPARATOR+dirName
+				["component", "integration"].each{ directory ->
+					dir.addAll(getDirectoryList(path+Constants.FILE_SEPARATOR+directory))
+				}
+			}
+		}
+		else if("RDKB".equals(category)){
+			def directories = ["testscriptsRDKV", "testscriptsRDKVAdvanced"]
+			directories.each { dirName ->
+				def path = realPath+Constants.FILE_SEPARATOR+"fileStore"+Constants.FILE_SEPARATOR+dirName
+				["component", "integration"].each{ directory ->
+					dir.addAll(getDirectoryList(path+Constants.FILE_SEPARATOR+directory))
+				}
+			}
+		}
+		def map = [:]
+		dir.each{
+			map.put(it, scriptGroupMap.get(it))
+		}
+		map
+	}
   
 	def getDirectoryList(def path){
 		File f = new File(path)
@@ -1041,11 +1046,10 @@ class ScriptService {
 				}
 
 				def primitiveTest = null
+				def directoryName = primitiveService.getDirectoryName(nodePrimitiveTestName)
+				
 				if("RDKV".equals(category)){
-					primitiveTest = primitiveService.getPrimitiveTest(realPath+"/fileStore/testscriptsRDKV/"+primitiveDirName+"//"+moduleName1+"/"+moduleName1+".xml",nodePrimitiveTestName)
-				}
-				if("RDKB".equals(category)){
-					primitiveTest = primitiveService.getPrimitiveTest(realPath+"/fileStore/testscriptsRDKB/"+primitiveDirName+"//"+moduleName1+"/"+moduleName1+".xml",nodePrimitiveTestName)
+					primitiveTest = primitiveService.getPrimitiveTest(realPath+"/fileStore/"+directoryName+"//"+primitiveDirName+"//"+moduleName1+"/"+moduleName1+".xml",nodePrimitiveTestName)
 				}
 
 				//def primitiveTest = primitiveService.getPrimitiveTest(realPath+"/fileStore/testscripts/"+primitiveDirName+"//"+moduleName1+"/"+moduleName1+".xml",nodePrimitiveTestName)
@@ -1161,6 +1165,8 @@ class ScriptService {
 		
 	
 	def getMinimalScript(realPath,dirName,fileName,category){
+		Map script = [:]
+		try{
 		dirName = dirName?.trim()
 		fileName = fileName?.trim()
 		
@@ -1191,7 +1197,7 @@ class ScriptService {
 			}
 			file = new File( "${realPath}"+sDirName+scriptDirName+"//"+dirName+"//"+fileName+".py");
 		}
-		Map script = [:]
+
 		if(file.exists()){
 			String s = ""
 			List line = file.readLines()
@@ -1239,6 +1245,9 @@ class ScriptService {
 			script.put("boxTypes", btList)
 			script.put("scriptTags", tagList)
 			
+		}
+		} catch (Exception e) {
+			e.printStackTrace()
 		}
 		return script
 	}

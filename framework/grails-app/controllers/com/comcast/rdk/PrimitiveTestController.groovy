@@ -159,14 +159,14 @@ class PrimitiveTestController {
 
 	def getPrimitiveFilePath(def moduleName, def category){
 		def scriptDirName = primitiveService.getScriptDirName(moduleName)
-		def path = getFileScriptsPath(category)
+		def path = getFileScriptsPath(category,moduleName)
 		path =  path + FILE_SEPARATOR + scriptDirName + FILE_SEPARATOR + moduleName + FILE_SEPARATOR + moduleName+".xml"
 		return path
 	}
 
 	def getPrimitiveFileDirectory(def moduleName, def category){
 		def scriptDirName = primitiveService.getScriptDirName(moduleName)
-		return getFileScriptsPath(category)+ FILE_SEPARATOR +scriptDirName + FILE_SEPARATOR + moduleName
+		return getFileScriptsPath(category,moduleName)+ FILE_SEPARATOR +scriptDirName + FILE_SEPARATOR + moduleName
 	}
 
 	/**
@@ -708,13 +708,11 @@ class PrimitiveTestController {
 		render primitiveTestInstanceList as JSON
 	}
 
-	def getFileScriptsPath(def category){
+	def getFileScriptsPath(def category , def moduleName){
 		def path = getRealPath() + FILE_SEPARATOR + "fileStore" + FILE_SEPARATOR
-		if(RDKV.equals(category)){
-			path = path + "testscriptsRDKV"
-		}
-		else if(RDKB.equals(category)){
-			path = path + "testscriptsRDKB"
+		def dirName = PrimitiveService.moduleDirMap.get(category+"_"+moduleName)
+		if(RDKV.equals(category) || RDKB.equals(category)){
+			path = path + dirName
 		}
 		path
 	}
