@@ -108,7 +108,7 @@ AC_ARG_ENABLE([hybrid],
         [
           case "${enableval}" in
              yes) HYBRID=true
-                  SUBDIR_HYBRID="TRM_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub SNMP_stub"
+                  SUBDIR_HYBRID="TRM_stub DTCP_stub SNMP_stub"
                   AGENT_FLAGS=" -DPORT_FORWARD"
                   TDK_GST_LIBS=" -lgstreamer-$GST_MAJORMINOR -lgstbase-$GST_MAJORMINOR"
                   TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc -lcanh -lpodmgr"
@@ -154,8 +154,8 @@ AC_ARG_ENABLE([aspcomponents],
          [
            case "${enableval}" in
               yes) ASPCOMPONENTS=true
-                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" advancecomponents/Recorder_stub"],
-                          [test x$CLIENT = xtrue], [SUBDIR_CLIENT+=" advancecomponents/gstPluginsRdk_check advancecomponents/gstPluginsRdk_stub"],
+                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" advancecomponents/Recorder_stub advancecomponents/ClosedCaption_stub advancecomponents/Mediaframework_stub advancecomponents/MediaStreamer_stub  advancecomponents/rmfApp_stub advancecomponents/tdkRmfApp advancecomponents/TDKIntegration_Stub"],
+                          [test x$CLIENT = xtrue], [SUBDIR_CLIENT+=" advancecomponents/gstPluginsRdk_check advancecomponents/gstPluginsRdk_stub advancecomponents/ClosedCaption_stub advancecomponents/TDKIntegration_Stub"],
                           [echo box type not specified]) ;;
              no) ASPCOMPONENTS=false ;;
             *) AC_MSG_ERROR([bad value ${enableval} for --enable-aspcomponents ]) ;;
@@ -184,7 +184,7 @@ AC_ARG_ENABLE([mediautils],
          [
            case "${enableval}" in
               yes) MEDIAUTILS=true
-                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" MediaUtils_stub"],
+                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" advancecomponents/MediaUtils_stub "],
                           [echo box type not specified]) ;;
              no) MEDIAUTILS=false ;;
             *) AC_MSG_ERROR([bad value ${enableval} for --enable-mediautils ]) ;;
@@ -263,10 +263,30 @@ PKG_CHECK_MODULES([JANSON],[jansson >= 2.4])
 m4_syscmd([test -d advancecomponents/Recorder_stub/])
 m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/Recorder_stub/Makefile])])
 
+m4_syscmd([test -d advancecomponents/ClosedCaption_stub/])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/ClosedCaption_stub/Makefile])])
+
+m4_syscmd([test -d advancecomponents/Mediaframework_stub/])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/Mediaframework_stub/Makefile])])
 
 m4_syscmd([test -d advancecomponents/gstPluginsRdk_check/])
 m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/gstPluginsRdk_check/Makefile])])
 m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/gstPluginsRdk_stub/Makefile])])
+
+m4_syscmd([test -d advancecomponents/MediaStreamer_stub/])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/MediaStreamer_stub/Makefile])])
+
+m4_syscmd([test -d advancecomponents/rmfApp_stub/])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/rmfApp_stub/Makefile])])
+
+m4_syscmd([test -d advancecomponents/tdkRmfApp/])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/tdkRmfApp/Makefile])])
+
+m4_syscmd([test -d advancecomponents/TDKIntegration_Stub/])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/TDKIntegration_Stub/Makefile])])
+
+m4_syscmd([test -d advancecomponents/MediaUtils_stub/])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/MediaUtils_stub/Makefile])])
 
 AC_SUBST(COPTS)
 AC_SUBST(AGENT_FLAGS)
@@ -287,23 +307,16 @@ AC_CONFIG_FILES([Makefile
          agent/Makefile
          IARMBUS_stub/Makefile
          DS_stub/Makefile
-         ClosedCaption_stub/Makefile
          RDKLogger_stub/Makefile
-         TDKIntegration_Stub/Makefile
-         Mediaframework_stub/Makefile
-         MediaStreamer_stub/Makefile
 	 NetSrvMgr_stub/Makefile
          OpenSourceComponent_Stub/Makefile
          TR069_stub/Makefile
          TRM_stub/Makefile
-         rmfApp_stub/Makefile
          XUPNP_stub/Makefile
          DTCP_stub/Makefile
-         tdkRmfApp/Makefile
          SNMP_stub/Makefile
          MocaHal_stub/Makefile
          Bluetooth_stub/Makefile
-	 MediaUtils_stub/Makefile
 	 AudioCaptureMgr_stub/Makefile
 	 USBCtrl_stub/Makefile
 	 SystemUtil_stub/Makefile])
