@@ -219,9 +219,12 @@ def parseDeviceConfig(obj):
 
                 global cm_ip_type
                 cm_ip_type = config.get(deviceConfig, "CM_IP_TYPE")
-                
+
                 global cm_ip
                 cm_ip = config.get(deviceConfig, "CM_IP")
+
+                global gw_wan_ip
+                gw_wan_ip = config.get(deviceConfig, "GW_WAN_IP")
 
                 global ssid_invalid_name
                 ssid_invalid_name = config.get(deviceConfig, "SSID_INVALID_NAME")
@@ -954,8 +957,10 @@ def verifyNetworkConnectivity(dest_ip,connectivityType,source_ip,gateway_ip,sour
                         if wlan_os_type == "UBUNTU":
 				if source == "WLAN":
                                     script_name = wlan_script;
-                                else:
+                                elif source == "LAN":
                                     script_name = lan_script;
+                                else:
+                                    script_name = wan_script;
                                 if connectivityType == "PING":
                                     command="sudo sh %s ping_to_network %s %s %s" %(script_name,source_ip,dest_ip,gateway_ip)
                                 elif connectivityType == "WGET_HTTP":
@@ -990,7 +995,9 @@ def ftpToClient(dest, network_ip, source="LAN"):
                 status = clientConnect(source)
                 if status == "SUCCESS":
                         if lan_os_type == "UBUNTU":
-                                if dest == "WLAN" :
+                                if dest == "WLAN" and source == "WAN":
+                                    command="sudo sh %s ftpToClient %s %s %s" %(wan_script,network_ip,wlan_username,wlan_password)
+                                elif dest == "WLAN" :
                                     command="sudo sh %s ftpToClient %s %s %s" %(lan_script,network_ip,wlan_username,wlan_password)
                                 elif dest == "LAN":
                                     command="sudo sh %s ftpToClient %s %s %s" %(wlan_script,network_ip,lan_username,lan_password)
