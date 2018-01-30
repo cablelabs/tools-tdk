@@ -111,7 +111,7 @@ AC_ARG_ENABLE([hybrid],
                   SUBDIR_HYBRID="TRM_stub Mediaframework_stub MediaStreamer_stub tdkRmfApp rmfApp_stub DTCP_stub SNMP_stub"
                   AGENT_FLAGS=" -DPORT_FORWARD"
                   TDK_GST_LIBS=" -lgstreamer-$GST_MAJORMINOR -lgstbase-$GST_MAJORMINOR"
-                  TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc -lcanh -lpodmgr"
+                  TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc -lcanh -lpodmgr -ltrm -ltrh"
                   MEDIAFRAMEWORK_HYBRID_LIBS="-lcanh -lpodmgr -ltrh"
                   TDKINTEGRATION_FLAGS="-DENABLE_HYBRID_CODECOMPILE -DHYBRID" ;;
            no) HYBRID=false ;;
@@ -126,7 +126,7 @@ AC_ARG_ENABLE([qemux86hyb],
         [
           case "${enableval}" in
              yes) qemux86hyb=true
-                  TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc" 
+                  TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc -ltrm -ltrh" 
                   MEDIAFRAMEWORK_HYBRID_LIBS="";;
            no) qemux86hyb=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-qemux86hyb ]) ;;

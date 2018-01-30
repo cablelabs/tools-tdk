@@ -21,6 +21,7 @@ QT += widgets network core gui
 DEFINES += DEBUG_LEVEL_TRACE RDK2DOT0
 DEFINES += USE_DISPLAY_SETTINGS
 DEFINES += HAS_API_VIDEO_APPLICATION_EVENTS
+DEFINES += DISABLE_APPLICATION_MANAGER
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -70,7 +71,8 @@ LIBS += -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10
 }
 
 LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
-LIBS += -lservicemanager -lds -ldshalcli -lIARMBus -ljsoncpp -ljsonrpccpp-server -ljsonrpccpp-common -ljsonrpccpp-client
+LIBS += -lservicemanager -lds -ldshalcli -lIARMBus -ljsoncpp -ljsonrpccpp-server -ljsonrpccpp-common -ljsonrpccpp-client -lrtRemote -lrtCore -luuid -lnode
+LIBS += -Wl,--warn-unresolved-symbols
 
 #non-yocto env variables
 exists(../../platform/SM_stub/intel.pri) : include(../../platform/SM_stub/intel.pri)

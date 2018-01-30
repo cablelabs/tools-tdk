@@ -25,7 +25,7 @@ isEmpty(RDK_PROJECT_ROOT_PATH) {
 
 
 QT += widgets network core gui concurrent
-DEFINES += WAREHOUSE_API HAS_API_APPLICATION HAS_API_VIDEO_APPLICATION_EVENTS HAS_API_DEVICEDIAGNOSTICS ENABLE_HDCP_PROFILE
+DEFINES += WAREHOUSE_API HAS_API_APPLICATION HAS_API_VIDEO_APPLICATION_EVENTS HAS_API_DEVICEDIAGNOSTICS ENABLE_HDCP_PROFILE DISABLE_APPLICATION_MANAGER
 
 greaterThan(QT_MAJOR_VERSION, 4) {
         DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
@@ -82,7 +82,8 @@ LIBS += -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10
 }
 
 LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
-LIBS += -lservicemanager -lds
+LIBS += -lservicemanager -lds  -lrtRemote -lrtCore -luuid -lnode
+LIBS += -Wl,--warn-unresolved-symbols
 
 #non-yocto env variables
 exists(../../platform/SM_stub/intel.pri) : include(../../platform/SM_stub/intel.pri)
