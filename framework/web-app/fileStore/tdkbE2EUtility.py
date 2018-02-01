@@ -217,6 +217,12 @@ def parseDeviceConfig(obj):
                 global wan_https_port
                 wan_https_port = config.get(deviceConfig, "WAN_HTTPS_PORT")
 
+                global wlan_http_port
+                wlan_http_port = config.get(deviceConfig, "WLAN_HTTP_PORT")
+
+                global wlan_https_port
+                wlan_https_port = config.get(deviceConfig, "WLAN_HTTPS_PORT")
+
                 global cm_ip_type
                 cm_ip_type = config.get(deviceConfig, "CM_IP_TYPE")
 
@@ -479,8 +485,9 @@ def wlanConnectWifiSsid(ssidName,ssidPwd,wlanInterface,securityType= "Protected"
 			sleep(20);
 			status = checkSsidAvailable(ssidName)
 			if ssidName in status:
-				status = wifiConnect(ssidName,ssidPwd,securityType)	
+				status = wifiConnect(ssidName,ssidPwd,securityType)
 				if wlan_2ghz_ssid_connect_status in status or wlan_5ghz_ssid_connect_status in status:
+                            		sleep(60);
 					status = getConnectedSsidName(wlanInterface)
 					if ssidName in status:
 						return "SUCCESS"
@@ -1045,8 +1052,10 @@ def telnetToClient(dest,dest_ip,source="LAN"):
                                 command="sudo sh %s telnetToClient %s %s %s" %(lan_script,dest_ip,wlan_username,wlan_password)
                         elif dest == "LAN":
                                 command="sudo sh %s telnetToClient %s %s %s" %(wlan_script,dest_ip,lan_username,lan_password)
-                        elif dest == "WAN":
+                        elif dest == "WAN" and source == "WLAN"::
                                 command="sudo sh %s telnetToClient %s %s %s" %(wlan_script,dest_ip,wan_username,wan_password)
+                        elif dest == "WAN" and source == "LAN":
+                                command="sudo sh %s telnetToClient %s %s %s" %(lan_script,dest_ip,wan_username,wan_password)
                         else:
                                     return "Invalid argument"
                         status = executeCommand(command)
