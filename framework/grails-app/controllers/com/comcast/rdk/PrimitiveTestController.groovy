@@ -181,7 +181,7 @@ class PrimitiveTestController {
 		try {
 			//def primitiveList = primitiveService.getPrimitiveList(getRealPath(), category)
 			def primitiveList = primitiveService.getAllPrimitiveTest(getRealPath(), category)
-			if(primitiveList?.toString().contains(params?.testName?.trim()?.toString())){
+			if(primitiveService.checkPrimitiveTestExists(params?.testName?.trim())){
 				render("Duplicate PrimitiveTest Name not allowed. Try Again")
 			}
 			else{
@@ -710,7 +710,17 @@ class PrimitiveTestController {
 
 	def getFileScriptsPath(def category , def moduleName){
 		def path = getRealPath() + FILE_SEPARATOR + "fileStore" + FILE_SEPARATOR
-		def dirName = PrimitiveService.moduleDirMap.get(category+"_"+moduleName)
+		def dirName
+		if(!PrimitiveService.moduleDirMap.containsKey(category+"_"+moduleName)){
+			if(RDKV.equals(category)){
+				dirName = TESTSCRIPTS_RDKV
+			}else if(RDKB.equals(category)){
+				dirName = TESTSCRIPTS_RDKB
+			}
+
+		}else{
+			dirName = PrimitiveService.moduleDirMap.get(category+"_"+moduleName)
+		}
 		if(RDKV.equals(category) || RDKB.equals(category)){
 			path = path + dirName
 		}

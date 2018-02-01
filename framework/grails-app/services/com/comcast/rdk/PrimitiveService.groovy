@@ -436,5 +436,18 @@ class PrimitiveService {
 		}
 		return category
 	}
+	
+	def checkPrimitiveTestExists(def primitiveTest){
+		boolean exist = false
+		def primitiveList = primitiveListMap?.get(RDKV)
+		if(!primitiveList?.contains(primitiveTest?.trim())){
+			primitiveList = primitiveListMap?.get(RDKB)
+			exist = primitiveList?.contains(primitiveTest?.trim())
+		}else{
+			exist = true
+		}
+		
+		return exist
+	}
 
 }
