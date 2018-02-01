@@ -71,7 +71,7 @@ LIBS += -lgstpbutils-0.10 -lgstvideo-0.10 -lgstbase-0.10
 }
 
 LIBS += -L"${STAGING_DIR_TARGET}/usr/lib/"
-LIBS += -lservicemanager -lds -ldshalcli -lIARMBus -ljsoncpp -ljsonrpccpp-server -ljsonrpccpp-common -ljsonrpccpp-client -lrtRemote -lrtCore -luuid -lnode
+LIBS += -lservicemanager -lds -ldshalcli -lIARMBus -ljsoncpp -ljsonrpccpp-server -ljsonrpccpp-common -ljsonrpccpp-client -lrtRemote -lrtCore -luuid -lnode -lpxscene -lessos -ljpeg
 LIBS += -Wl,--warn-unresolved-symbols
 
 #non-yocto env variables
