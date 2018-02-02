@@ -477,13 +477,19 @@ class ExecutionService {
      * @param script
      * @return
      */
-    def convertScriptFromHTMLToPython(final String script){
-        def afterspan =removeAllSpan(script)
-        def afterBr = afterspan.replaceAll(HTML_REPLACEBR, KEY_ENTERNEW_LINE)
-        afterBr = afterBr.replaceAll(HTML_LESSTHAN,LESSTHAN);
-        afterBr = afterBr.replaceAll(HTML_GREATERTHAN, GREATERTHAN)
-        return afterBr;
-    }
+	def convertScriptFromHTMLToPython(final String script){
+		def output
+		if(script){
+			def afterspan =removeAllSpan(script)
+			def afterBr = afterspan.replaceAll(HTML_REPLACEBR, KEY_ENTERNEW_LINE)
+			afterBr = afterBr.replaceAll(HTML_LESSTHAN,LESSTHAN);
+			afterBr = afterBr.replaceAll(HTML_GREATERTHAN, GREATERTHAN)
+			output =  afterBr;
+		}else{
+			output = script
+		}
+		return output
+	}
 
     
     /**

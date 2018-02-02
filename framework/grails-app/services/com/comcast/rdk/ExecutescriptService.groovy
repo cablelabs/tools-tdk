@@ -93,7 +93,7 @@ class ExecutescriptService {
 			final Device deviceInstance, final String url, final String filePath, final String realPath, final String isBenchMark, final String isSystemDiagnostics,final String uniqueExecutionName,final String isMultiple, def executionResult,def isLogReqd, final def category) {
 				Date startTime = new Date()
 		String htmlData = ""
-		String scriptData = executionService.convertScriptFromHTMLToPython(scriptInstance.scriptContent)
+		String scriptData = executionService.convertScriptFromHTMLToPython(scriptInstance?.scriptContent)
 		String stbIp = STRING_QUOTES + deviceInstance.stbIp + STRING_QUOTES
 		def executionInstance = Execution.findByName(executionName)
 		def executionId = executionInstance?.id
