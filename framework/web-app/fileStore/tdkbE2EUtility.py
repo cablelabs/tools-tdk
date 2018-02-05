@@ -91,6 +91,12 @@ def parseDeviceConfig(obj):
         	global wlan_password
         	wlan_password = config.get(deviceConfig, "WLAN_PASSWORD")
 
+        	global wlan_ftp_username
+        	wlan_ftp_username = config.get(deviceConfig, "WLAN_FTP_USERNAME")
+        
+        	global wlan_ftp_password
+        	wlan_ftp_password = config.get(deviceConfig, "WLAN_FTP_PASSWORD")
+
         	global wlan_2ghz_interface
         	wlan_2ghz_interface = config.get(deviceConfig, "WLAN_2GHZ_INTERFACE")
 
@@ -130,6 +136,12 @@ def parseDeviceConfig(obj):
 		global lan_password
         	lan_password = config.get(deviceConfig, "LAN_PASSWORD")
 
+		global lan_ftp_username        
+        	lan_ftp_username = config.get(deviceConfig, "LAN_FTP_USERNAME")
+        
+		global lan_ftp_password
+        	lan_ftp_password = config.get(deviceConfig, "LAN_FTP_PASSWORD")
+
 		global lan_interface
         	lan_interface = config.get(deviceConfig, "LAN_INTERFACE")
 
@@ -159,6 +171,12 @@ def parseDeviceConfig(obj):
 
 		global wan_password
         	wan_password = config.get(deviceConfig, "WAN_PASSWORD")
+
+		global wan_ftp_username
+        	wan_ftp_username = config.get(deviceConfig, "WAN_FTP_USERNAME")
+
+		global wan_ftp_password
+        	wan_ftp_password = config.get(deviceConfig, "WAN_FTP_PASSWORD")
 
 		global wan_interface
         	wan_interface = config.get(deviceConfig, "WAN_INTERFACE")
@@ -1003,21 +1021,21 @@ def ftpToClient(dest, network_ip, source="LAN"):
                 if status == "SUCCESS":
                         if lan_os_type == "UBUNTU":
                                 if dest == "WLAN" and source == "WAN":
-                                    command="sudo sh %s ftpToClient %s %s %s" %(wan_script,network_ip,wlan_username,wlan_password)
+                                    command="sudo sh %s ftpToClient %s %s %s" %(wan_script,network_ip,wlan_ftp_username,wlan_ftp_password)
                                 elif dest == "WLAN" :
-                                    command="sudo sh %s ftpToClient %s %s %s" %(lan_script,network_ip,wlan_username,wlan_password)
+                                    command="sudo sh %s ftpToClient %s %s %s" %(lan_script,network_ip,wlan_ftp_username,wlan_ftp_password)
                                 elif dest == "LAN":
-                                    command="sudo sh %s ftpToClient %s %s %s" %(wlan_script,network_ip,lan_username,lan_password)
+                                    command="sudo sh %s ftpToClient %s %s %s" %(wlan_script,network_ip,lan_ftp_username,lan_ftp_password)
                                 elif dest == "WAN" and source == "LAN":
-                                    command="sudo sh %s ftpToClient %s %s %s" %(lan_script,network_ip,wan_username,wan_password)
+                                    command="sudo sh %s ftpToClient %s %s %s" %(lan_script,network_ip,wan_ftp_username,wan_ftp_password)
                                 elif dest == "WAN" and source == "WLAN":
-                                    command="sudo sh %s ftpToClient %s %s %s" %(wlan_script,network_ip,wan_username,wan_password)
+                                    command="sudo sh %s ftpToClient %s %s %s" %(wlan_script,network_ip,wan_ftp_username,wan_ftp_password)
                                 else:
                                     return "Invalid source or destination"
 
                                 status = executeCommand(command)
 
-                                if "230 Login successful" in status:
+                                if "230 Login successful" in status or "230 User logged in" in status:
                                     status = "SUCCESS"
                                 else:
                                     status = "FAILURE"
