@@ -59,7 +59,7 @@
   </rdk_versions>
   <test_cases>
     <test_case_id>CT_TR69_100</test_case_id>
-    <test_objective>To fetch the tsb Qualified value (True if card is approved for Comcast TSB use. For Xi3v1, this will be based on the expected signature. False otherwise) by querying the tr69Hostif through curl.
+    <test_objective>To fetch the tsb Qualified value (True if card is approved for TSB use. For Xi3v1, this will be based on the expected signature. False otherwise) by querying the tr69Hostif through curl.
 Query string "Device.Services.STBService.1.Components.X_RDKCENTRAL-COM_SDCard.tsbQualified".
 No set operation available for this parameter.</test_objective>
     <test_type>Positive</test_type>

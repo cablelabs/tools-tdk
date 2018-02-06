@@ -1278,8 +1278,6 @@ class TDKScriptingLibrary:
 	#				     performanceBenchMarkingEnabled, performanceSystemDiagnosisEnabled, scriptSuiteEnabled,
 	#				     executionName)
 	# eg           : obj.configureTestCase ('http://192.168.160.248:8080/rdk-test-tool', 
-	#                                       '/opt/comcast/software/tomcat/current/webapps/rdk-test-tool/',
-	#                                       '/opt/comcast/software/tomcat/current/webapps/rdk-test-tool/logs/',
 	#                                       25, 3333, 29, ip, port, 69, 8088, 55, 66, 'true', 'true', 'true', 'CT_IARMBUS_3');
 	# Description  : Obtain the device ip and port number,
 	#                Create a TCP connection to the device under Test
