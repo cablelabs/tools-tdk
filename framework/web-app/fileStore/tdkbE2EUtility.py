@@ -265,6 +265,8 @@ def parseDeviceConfig(obj):
                 global lan_dhcp_location
                 lan_dhcp_location = config.get(deviceConfig, "LAN_DHCP_LOCATION")
                 
+                global tmp_file_tcp
+                tmp_file_tcp = config.get(deviceConfig, "TMP_FILE_TCP")
 
 	except Exception, e:
 		print e;
@@ -1316,6 +1318,129 @@ def getLanDhcpDetails(param):
                 status = e;
         print "Status of getDhcpDetails: %s" %status;
         return status;
+
+########## End of Function ##########
+
+def tcpInClients(source,destination,dest_ip):
+
+# tcpInClients
+
+# Syntax      : tcpInClients()
+# Description : Function to do tcp requests in client machine
+# Parameters  : destination - The client machine to which the request is sent
+#               dest_ip - IP address of the destination machine
+#               source - The client from which the command should execute
+# Return Value: status - Status of tcp request
+
+        try:
+           global serverOutput;
+           serverOutput = "Failed to get Bandwidth of server";
+           global clientOutput;
+           clientOutput = "Failed to get Bandwidth of client"
+           #Set destination machine as server
+           status = initTCPServer(destination)
+           if status == "SUCCESS":
+                #Send TCP request from client(source) to server(client).
+                #This request returns the bandwidth from client side
+                status,clientOutput = tcpRequestToServer(source,dest_ip)
+                if status == "SUCCESS":
+                    status = clientConnect(destination)
+                    if status == "SUCCESS":
+                        #Get the bandwidth from server side and validate it.
+                        command="sudo sh %s validate_tcp_server_output %s" %(dest_script_name,tmp_file_tcp)
+                        serverOutput = executeCommand(command)
+                        if serverOutput >= clientOutput:
+                            status = "SUCCESS"
+                        else:
+                            status = "FAILURE"
+                else:
+                    status = "Failed to send TCP request to destination"
+           else:
+               status = "Failed to init TCP server in machine "
+           #Post Requisite: Kill iperf pid
+           status_server = clientConnect(destination)
+           if status_server == "SUCCESS":
+               command="sudo sh %s kill_iperf" %(dest_script_name)
+               status_server = executeCommand(command)
+           status_client = clientConnect(source)
+           if status_client == "SUCCESS":
+               command="sudo sh %s kill_iperf" %(src_script_name)
+               status_client = executeCommand(command)
+           if status_server == "SUCCESS" and status_client == "SUCCESS" and status == "SUCCESS":
+               status = "SUCCESS"
+           else:
+               status = "FAILURE"
+
+        except Exception, e:
+                print e;
+                status = e;
+        print "Status of TCP request:%s" %status;
+        return status,serverOutput,clientOutput;
+
+########## End of Function ##########
+
+def initTCPServer(destination):
+
+# initTCPServer
+
+# Syntax      : initTCPServer()
+# Description : Function to keep the server in listening mode
+# Parameters  : destination - The client machine to which the request is sent
+# Return Value: status - Status of initTCPServer
+
+        try:
+           global dest_script_name;
+           status = clientConnect(destination)
+           if status == "SUCCESS":
+                if destination == "WLAN":
+                    dest_script_name = wlan_script;
+                elif destination == "LAN":
+                    dest_script_name = lan_script;
+                else:
+                    dest_script_name = wan_script;
+                command="sudo sh %s tcp_init_server %s" %(dest_script_name,tmp_file_tcp)
+                status = executeCommand(command)
+
+        except Exception, e:
+                print e;
+                status = e;
+        return status;
+
+########## End of Function ##########
+
+def tcpRequestToServer(source,dest_ip):
+
+# tcpRequestToServer
+
+# Syntax      : tcpRequestToServer()
+# Description : Function to send TCP request from client to server
+# Parameters  : dest_ip - IP address of the destination machine
+#               source - The client from which the TCP request is sent
+# Return Value: status - Status of TCP request
+#               output - Bandwidth from client side
+
+        try:
+           global src_script_name;
+           status = clientConnect(source)
+           if status == "SUCCESS":
+               if source == "WLAN":
+                   src_script_name = wlan_script;
+               elif source == "LAN":
+                   src_script_name = lan_script;
+               else:
+                   src_script_name = wan_script;
+               command="sudo sh %s tcp_request %s" %(src_script_name,dest_ip)
+               output = executeCommand(command)
+               if output:
+                   status = "SUCCESS"
+               else:
+                   status = "FAILURE"
+
+        except Exception, e:
+                print e;
+                status = e;
+
+        return status,output;
 
 ########## End of Function ##########
 

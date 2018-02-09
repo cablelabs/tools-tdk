@@ -133,6 +133,37 @@ get_lan_dhcp_details()
         echo "OUTPUT:$value"
 }
 
+# To set the server in listening mode
+tcp_init_server()
+{
+        iperf -s > $var2 &
+        value="$(ps aux | grep iperf | grep -v grep > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
+#To send TCP request from client to server
+tcp_request()
+{
+        value="$(iperf -c $var2 | grep Mbits/sec | cut -d ' ' -f 11)"
+        echo "OUTPUT:$value"
+}
+
+#To get the bandwidth from server
+validate_tcp_server_output()
+{
+        serverOutput="$(cat $var2 | grep Mbits/sec | cut -d ' ' -f 11)"
+        echo "OUTPUT:$serverOutput"
+        deleteTmpFile="$(sudo rm $var2 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+}
+
+#To kill iperf pid
+kill_iperf()
+{
+        pkill iperf
+        value="$(ps aux | grep iperf | grep -v "grep" > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -166,5 +197,13 @@ case $event in
         get_lan_subnet_mask;;
    "get_lan_dhcp_details")
         get_lan_dhcp_details;;
+   "tcp_init_server")
+        tcp_init_server;;
+   "tcp_request")
+        tcp_request;;
+   "validate_tcp_server_output")
+        validate_tcp_server_output;;
+   "kill_iperf")
+        kill_iperf;;
    *) echo "Invalid Argument passed";;
 esac
