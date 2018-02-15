@@ -129,14 +129,6 @@ bool iarmMgrStatus(char *ownerName )
 	return running;
 }
 
-/*This is a constructor function for IARMBUSAgent class*/
-#if 0
-IARMBUSAgent::IARMBUSAgent()
-{
-	DEBUG_PRINT(DEBUG_LOG,"IARMBUSAgent Initialized\n");
-}
-#endif
-
 /***************************************************************************
  *Function name	: initialize
  *Descrption	: Initialize Function will be used for registering the wrapper method 
@@ -147,33 +139,6 @@ IARMBUSAgent::IARMBUSAgent()
 bool IARMBUSAgent::initialize(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE,"IARMBUSAgent Initialize\n");
-#if 0
-	/*Register stub function for callback*/
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_Init, "TestMgr_IARMBUS_Init");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_Term, "TestMgr_IARMBUS_Term");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_BusConnect, "TestMgr_IARMBUS_Connect");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_BusDisconnect, "TestMgr_IARMBUS_Disconnect");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_IsConnected, "TestMgr_IARMBUS_IsConnected");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_RequestResource, "TestMgr_IARMBUS_RequestResource");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_ReleaseResource, "TestMgr_IARMBUS_ReleaseResource");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_RegisterEventHandler, "TestMgr_IARMBUS_RegisterEventHandler");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_RemoveEventHandler, "TestMgr_IARMBUS_RemoveEventHandler");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_UnRegisterEventHandler, "TestMgr_IARMBUS_UnRegisterEventHandler");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_RegisterEvent, "TestMgr_IARMBUS_RegisterEvent");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_RegisterCall, "TestMgr_IARMBUS_RegisterCall");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_BroadcastEvent, "TestMgr_IARMBUS_BroadcastEvent");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_BusCall, "TestMgr_IARMBUS_BusCall");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::get_LastReceivedEventDetails, "TestMgr_IARMBUS_GetLastReceivedEventDetails");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::InvokeSecondApplication, "TestMgr_IARMBUS_InvokeSecondApplication");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::SyncSecondApplication, "TestMgr_IARMBUS_SyncSecondApplication");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::IARMBUSAgent_GetContext, "TestMgr_IARMBUS_GetContext");
-	
-	/* IarmBus Performance test Wrapper functions */
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::InvokeEventTransmitterApp, "TestMgr_IARMBUS_InvokeEventTransmitterApp");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::GetLastReceivedEventPerformanceDetails, "TestMgr_IARMBUS_GetLastReceivedEventPerformanceDetails");
-	ptrAgentObj->RegisterMethod(*this,&IARMBUSAgent::RegisterMultipleEventHandlers, "TestMgr_IARMBUS_RegisterMultipleEventHandlers");
-		
-#endif
 	return TEST_SUCCESS;
 
 }
@@ -2647,38 +2612,6 @@ extern "C" IARMBUSAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 
 bool IARMBUSAgent::cleanup(IN const char* szVersion)
 {
-#if 0
-	DEBUG_PRINT(DEBUG_LOG,"IARMBUSAgent shutting down\n");
-	if(ptrAgentObj==NULL)
-	{
-		return TEST_FAILURE;
-	}
-	/*unRegister stub function for callback*/
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_Init");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_Term");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_Connect");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_Disconnect");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_IsConnected");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RequestResource");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_ReleaseResource");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RegisterEventHandler");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RemoveEventHandler");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_UnRegisterEventHandler");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RegisterEvent");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RegisterCall");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_BroadcastEvent");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_BusCall");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_GetLastReceivedEventDetails");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_InvokeSecondApplication");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_SyncSecondApplication");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_GetContext");
-
-	/*IARMBus Performance test Wrapper Functions*/
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_InvokeEventTransmitterApp");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_GetLastReceivedEventPerformanceDetails");
-	ptrAgentObj->UnregisterMethod("TestMgr_IARMBUS_RegisterMultipleEventHandlers");
-#endif
-	
 	/* TWC-change : ReInitialize variable*/
 	REGISTERCALLSTATUS = 0;
 

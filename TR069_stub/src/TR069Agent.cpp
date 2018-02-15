@@ -19,20 +19,6 @@
 
 #include "TR069Agent.h"
 
-/*************************************************************************
-  Function name : TR069Agent::TR069Agent
-
-Arguments     : NULL
-
-Description   : Constructor for TR069Agent class
- ***************************************************************************/
-#if 0
-TR069Agent::TR069Agent()
-{
-	DEBUG_PRINT(DEBUG_TRACE, "TR069Agent Initialized\n");
-}
-#endif
-
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Descrption    : testmodulepre_requisites will  be used for setting the
@@ -106,9 +92,6 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool TR069Agent::initialize(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "TR069Agent Initialize----->Entry\n");
-
-//	ptrAgentObj->RegisterMethod(*this,&TR069Agent::TR069Agent_GetParameterValue, "TestMgr_GetParameterValue");
-//	ptrAgentObj->RegisterMethod(*this,&TR069Agent::TR069Agent_VerifyParameterValue, "TestMgr_VerifyParameterValue");
 
 	DEBUG_PRINT(DEBUG_TRACE, "TR069Agent Initialize----->Exit\n");
 
@@ -680,16 +663,6 @@ Description     : This function will be used to the close things cleanly.
 bool TR069Agent::cleanup(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
-#if 0
-	if(NULL == ptrAgentObj)
-	{
-		return TEST_FAILURE;
-	}
-
-	ptrAgentObj->UnregisterMethod("TestMgr_GetParameterValue");
-	ptrAgentObj->UnregisterMethod("TestMgr_VerifyParameterValue");
-
-#endif
 	DEBUG_PRINT(DEBUG_TRACE, "cleaningup done\n");
 
 	return TEST_SUCCESS;

@@ -35,19 +35,6 @@ const char *deviceNames[TOTAL_DEVICE_NUMBER+1] = {
     "XiRoom11"
 };
 
-/*************************************************************************
-Function name : TRMAgent::TRMAgent
-
-Arguments     : NULL
-
-Description   : Constructor for TRMAgent class
-***************************************************************************/
-#if 0
-TRMAgent::TRMAgent()
-{
-    DEBUG_PRINT(DEBUG_LOG, "TRMAgent Initialized\n");
-}
-#endif
 /**************************************************************************
 Function Name   : CreateObject
 
@@ -72,18 +59,6 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool TRMAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_ERROR, "TRMAgent Initialization\n");
-    #if 0
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetMaxTuners, "TestMgr_TRM_GetMaxTuners");
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetAllTunerIds, "TestMgr_TRM_GetAllTunerIds");
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetAllTunerStates, "TestMgr_TRM_GetAllTunerStates");
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetAllReservations, "TestMgr_TRM_GetAllReservations");
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_GetVersion, "TestMgr_TRM_GetVersion");
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_TunerReserveForRecord, "TestMgr_TRM_TunerReserveForRecord");
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_TunerReserveForLive, "TestMgr_TRM_TunerReserveForLive");
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_ReleaseTunerReservation, "TestMgr_TRM_ReleaseTunerReservation");
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_ValidateTunerReservation, "TestMgr_TRM_ValidateTunerReservation");
-    ptrAgentObj->RegisterMethod(*this,&TRMAgent::TRMAgent_CancelRecording, "TestMgr_TRM_CancelRecording");
-    #endif
     return TEST_SUCCESS;
 }
 
@@ -677,23 +652,6 @@ Description     : This function will be used to the close things cleanly.
 bool TRMAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
-    #if 0
-    if(NULL == ptrAgentObj)
-    {
-        return TEST_FAILURE;
-    }
-
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_GetMaxTuners");
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_GetAllTunerIds");
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_GetAllTunerStates");
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_GetAllReservations");
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_GetVersion");
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_TunerReserveForRecord");
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_TunerReserveForLive");
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_ReleaseTunerReservation");
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_ValidateTunerReservation");
-    ptrAgentObj->UnregisterMethod("TestMgr_TRM_CancelRecording");
-    #endif
     return TEST_SUCCESS;
 }
 /**************************************************************************

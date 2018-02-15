@@ -74,6 +74,5 @@ public:
     void TRMAgent_CancelRecording(IN const Json::Value& req, OUT Json::Value& response);
 
 };
-//extern "C" TRMAgent* CreateObject(); sarves
 
 #endif //__TRM_STUB_H__

@@ -18,19 +18,6 @@
 */
 
 #include "BluetoothAgent.h"
-/*************************************************************************
-Function name : BluetoothAgent::BluetoothAgent
-
-Arguments     : NULL
-
-Description   : Constructor for BluetoothAgent class
-***************************************************************************/
-#if 0
-BluetoothAgent::BluetoothAgent()
-{
-        DEBUG_PRINT(DEBUG_LOG, "BluetoothAgent Initialized\n");
-}
-#endif
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Description   : testmodulepre_requisites will be used for setting the
@@ -95,25 +82,6 @@ extern "C" BluetoothAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 bool BluetoothAgent::initialize(IN const char* szVersion)
 {    
         DEBUG_PRINT (DEBUG_TRACE, "Bluetooth Initialization Entry\n");
-        #if 0
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetNumberOfAdapters, "TestMgr_Bluetooth_GetNumberOfAdapters");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetAdapterName, "TestMgr_Bluetooth_GetAdapterName");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_SetAdapterName, "TestMgr_Bluetooth_SetAdapterName");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetAdapterPowerStatus, "TestMgr_Bluetooth_GetAdapterPowerStatus");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_SetAdapterPowerStatus, "TestMgr_Bluetooth_SetAdapterPowerStatus");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_IsAdapterDiscoverable, "TestMgr_Bluetooth_IsAdapterDiscoverable");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_SetAdapterDiscoverable, "TestMgr_Bluetooth_SetAdapterDiscoverable");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_StartDeviceDiscovery, "TestMgr_Bluetooth_StartDeviceDiscovery");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_StopDeviceDiscovery, "TestMgr_Bluetooth_StopDeviceDiscovery");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetDiscoveredDevices, "TestMgr_Bluetooth_GetDiscoveredDevices");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_ConnectToDevice, "TestMgr_Bluetooth_ConnectToDevice");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_DisconnectFromDevice, "TestMgr_Bluetooth_DisconnectFromDevice");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetConnectedDevices, "TestMgr_Bluetooth_GetConnectedDevices");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_PairDevice, "TestMgr_Bluetooth_PairDevice");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_UnpairDevice, "TestMgr_Bluetooth_UnpairDevice");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetPairedDevices, "TestMgr_Bluetooth_GetPairedDevices");
-        ptrAgentObj->RegisterMethod(*this,&BluetoothAgent::Bluetooth_GetDeviceProperties, "TestMgr_Bluetooth_GetDeviceProperties");
-        #endif
         DEBUG_PRINT (DEBUG_TRACE, "Bluetooth Initialization Exit\n");
         return TEST_SUCCESS;
 }
@@ -642,30 +610,6 @@ Description     : This function will be used to the close things cleanly.
 bool BluetoothAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaning up\n");
-    #if 0
-    if(NULL == ptrAgentObj)
-    {
-        return TEST_FAILURE;
-    }
-
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_GetNumberOfAdapters"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_GetAdapterName"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_SetAdapterName"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_GetAdapterPowerStatus"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_SetAdapterPowerStatus"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_IsAdapterDiscoverable"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_SetAdapterDiscoverable"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_StartDeviceDiscovery"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_StopDeviceDiscovery"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_GetDiscoveredDevices"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_ConnectToDevice"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_DisconnectFromDevice"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_GetConnectedDevices");
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_PairDevice"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_UnpairDevice"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_GetPairedDevices"); 
-    ptrAgentObj->UnregisterMethod("TestMgr_Bluetooth_GetDeviceProperties"); 
-    #endif
     return TEST_SUCCESS;
 }
 

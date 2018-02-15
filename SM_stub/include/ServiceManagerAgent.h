@@ -148,7 +148,6 @@ using namespace std;
 #define SM_MIN_PARAMS 1
 
 class RDKTestAgent;
-//class ServiceManagerAgent : public RDKTestStubInterface
 class ServiceManagerAgent : public RDKTestStubInterface , public AbstractServer<ServiceManagerAgent>
 {
 	public:
@@ -239,8 +238,6 @@ class ServiceManagerAgent : public RDKTestStubInterface , public AbstractServer<
 		  this->bindAndAddMethod(Procedure("TestMgr_SM_ExecuteCmd", PARAMS_BY_NAME,JSON_STRING, "command",JSON_STRING, NULL), &ServiceManagerAgent::SM_ExecuteCmd);
                 }
 
-		/*Ctor*/
-		//ServiceManagerAgent();
 
 		/*inherited functions*/
 		/*ServiceManagerAgent Wrapper functions*/

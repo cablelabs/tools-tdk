@@ -88,5 +88,4 @@ class MocaHalAgent : public RDKTestStubInterface , public AbstractServer<MocaHal
                 void MocaHal_GetSupportedModes(IN const Json::Value& req, OUT Json::Value& response);
                 void MocaHal_GetMode(IN const Json::Value& req, OUT Json::Value& response);
 };
-//        extern "C" MocaHalAgent* CreateObject(); sarves
 #endif //__MOCAHAL_STUB_H__

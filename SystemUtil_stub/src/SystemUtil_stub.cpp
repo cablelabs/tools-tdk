@@ -19,19 +19,6 @@
 
 #include "SystemUtil_stub.h"
 
-/*************************************************************************
-  Function name : SystemUtilAgent::SystemUtilAgent
-
-Arguments     : NULL
-
-Description   : Constructor for SystemUtilAgent class
- ***************************************************************************/
-#if 0
-SystemUtilAgent::SystemUtilAgent()
-{
-	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent Initialized\n");
-}
-#endif
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Descrption    : testmodulepre_requisites will  be used for setting the
@@ -64,16 +51,7 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool SystemUtilAgent::initialize(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent Initialize----->Entry\n");
-#if 0
-	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_GetifconfigValue, "TestMgr_GetifconfigValue");
-	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_TouchFile, "TestMgr_TouchFile");
-	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_GetpingValue, "TestMgr_GetpingValue");
-	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_GetrouteInfo, "TestMgr_GetrouteInfo");
-	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_ExecuteCmd, "TestMgr_ExecuteCmd");
-	ptrAgentObj->RegisterMethod(*this,&SystemUtilAgent::SystemUtilAgent_Getoutput_json_file, "TestMgr_Getoutput_json_file");
-
 	DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent Initialize----->Exit\n");
-#endif
 	return TEST_SUCCESS;
 }
 
@@ -450,23 +428,8 @@ Description     : This function will be used to the close things cleanly.
  **************************************************************************/
 bool SystemUtilAgent::cleanup(IN const char* szVersion)
 {
-	DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
-#if 0
-	if(NULL == ptrAgentObj)
-	{
-		return TEST_FAILURE;
-	}
-
-	ptrAgentObj->UnregisterMethod("TestMgr_GetifconfigValue");
-	ptrAgentObj->UnregisterMethod("TestMgr_GetrouteInfo");
-	ptrAgentObj->UnregisterMethod("TestMgr_TouchFile");
-	ptrAgentObj->UnregisterMethod("TestMgr_ExecuteCmd");
-	ptrAgentObj->UnregisterMethod("TestMgr_GetpingValue");
-	ptrAgentObj->UnregisterMethod("TestMgr_Getoutput_json_file");
-
-	DEBUG_PRINT(DEBUG_TRACE, "cleaningup done\n");
-
-#endif	return TEST_SUCCESS;
+        DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
+	return TEST_SUCCESS;
 }
 
 /**************************************************************************

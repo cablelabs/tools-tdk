@@ -72,6 +72,4 @@ public:
     void XUPNPAgent_BroadcastEvent(IN const Json::Value& req, OUT Json::Value& response);
 };
 
-//extern "C" XUPNPAgent* CreateObject(); sarves
-
 #endif //__XUPNP_STUB_H__

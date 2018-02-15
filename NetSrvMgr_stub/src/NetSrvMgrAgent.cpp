@@ -422,21 +422,6 @@ bool getParameterDetails (Json::Value& response,
 
     return retVal;
 }
-#if 0
-/*************************************************************************
-Function name : NetSrvMgrAgent::NetSrvMgrAgent
-
-Arguments     : NULL
-
-Description   : Constructor for NetSrvMgrAgent class
-***************************************************************************/
-
-NetSrvMgrAgent::NetSrvMgrAgent () {
-
-    DEBUG_PRINT (DEBUG_LOG, "NetSrvMgrAgent Initialized\n");
-}
-#endif
-
 
 /**************************************************************************
 Function name : NetSrvMgrAgent::initialize
@@ -449,16 +434,6 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool NetSrvMgrAgent::initialize (IN const char* szVersion) {
 
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent Initialization Entry\n");
-#if 0
-    ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetAvailableSSIDs, "TestMgr_NetSrvMgr_WifiMgrGetAvailableSSIDs");
-    ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetCurrentState, "TestMgr_NetSrvMgr_WifiMgrGetCurrentState");
-    ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetLAFState, "TestMgr_NetSrvMgr_WifiMgrGetLAFState");
-    ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_GetPairedSSID, "TestMgr_NetSrvMgr_WifiMgrGetPairedSSID");
-    ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetEnabled, "TestMgr_NetSrvMgr_WifiMgrSetEnabled");
-    ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_SetGetParameters, "TestMgr_NetSrvMgr_WifiMgrSetGetParameters");
-    ptrAgentObj->RegisterMethod (*this,&NetSrvMgrAgent::NetSrvMgrAgent_WifiMgr_BroadcastEvent, "TestMgr_NetSrvMgrAgent_WifiMgr_BroadcastEvent");
-
-#endif
     DEBUG_PRINT (DEBUG_TRACE, "NetSrvMgrAgent Initialization Exit\n");
 
     return TEST_SUCCESS;
@@ -1170,21 +1145,6 @@ Description     : This function will be used to the close things cleanly.
 bool NetSrvMgrAgent::cleanup (IN const char* szVersion) {
 
     DEBUG_PRINT (DEBUG_TRACE, "Cleaningup\n");
-#if 0
-    if (NULL == ptrAgentObj) {
-        return TEST_FAILURE;
-    }
-
-
-    ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrGetAvailableSSIDs");
-    ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrGetCurrentState");
-    ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrGetLAFState");
-    ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrGetPairedSSID");
-    ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrSetEnabled");
-    ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgr_WifiMgrSetGetParameters");
-    ptrAgentObj->UnregisterMethod ("TestMgr_NetSrvMgrAgent_WifiMgr_BroadcastEvent");
-#endif
-  
     return TEST_SUCCESS;
 }
 

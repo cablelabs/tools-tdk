@@ -89,9 +89,7 @@ class RDKLoggerAgent : public RDKTestStubInterface , public AbstractServer<RDKLo
 		void RDKLoggerAgent_Log_Msg(IN const Json::Value& req, OUT Json::Value& response);
 		void RDKLoggerAgent_SetLogLevel(IN const Json::Value& req, OUT Json::Value& response);
 		void RDKLoggerAgent_GetLogLevel(IN const Json::Value& req, OUT Json::Value& response);
-                //bool RDKLoggerAgent_Log_MPEOSDisabled(IN const Json::Value& req, OUT Json::Value& response);
 };
-//        extern "C" RDKLoggerAgent* CreateObject();
 
 #endif //__RDKLOGGER_STUB_H__
 

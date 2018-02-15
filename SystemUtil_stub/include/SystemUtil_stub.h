@@ -64,9 +64,6 @@ class SystemUtilAgent : public RDKTestStubInterface, public AbstractServer<Syste
                    this->bindAndAddMethod(Procedure("TestMgr_Getoutput_json_file", PARAMS_BY_NAME, JSON_STRING,NULL), &SystemUtilAgent::SystemUtilAgent_Getoutput_json_file);
                }
 
-                /*Constructor*/
-//                SystemUtilAgent();
-
                 /*Inherited functions*/
                 bool initialize(IN const char* szVersion);
                 bool cleanup(const char*);
@@ -82,5 +79,4 @@ class SystemUtilAgent : public RDKTestStubInterface, public AbstractServer<Syste
 
 };
 
-//extern "C" SystemUtilAgent* CreateObject();
 #endif 

@@ -95,20 +95,6 @@ bool checkRunningProcess(const char *processName)
     return running;
 }
 
-
-/*************************************************************************
-Function name : XUPNPAgent::XUPNPAgent
-
-Arguments     : NULL
-
-Description   : Constructor for XUPNPAgent class
-***************************************************************************/
-#if 0
-XUPNPAgent::XUPNPAgent()
-{
-    DEBUG_PRINT(DEBUG_LOG, "XUPNPAgent Initialized\n");
-}
-#endif
 /**************************************************************************
 Function name : XUPNPAgent::initialize
 
@@ -120,13 +106,6 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool XUPNPAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent Initialization Entry\n");
-#if 0
-    ptrAgentObj->RegisterMethod(*this,&XUPNPAgent::XUPNPAgent_GetUpnpResult, "TestMgr_XUPNP_GetUpnpResult");
-    ptrAgentObj->RegisterMethod(*this,&XUPNPAgent::XUPNPAgent_ReadXDiscOutputFile, "TestMgr_XUPNP_ReadXDiscOutputFile");
-    ptrAgentObj->RegisterMethod(*this,&XUPNPAgent::XUPNPAgent_CheckXDiscOutputFile, "TestMgr_XUPNP_CheckXDiscOutputFile");
-    ptrAgentObj->RegisterMethod(*this,&XUPNPAgent::XUPNPAgent_BroadcastEvent, "TestMgr_XUPNP_BroadcastEvent");
-
-#endif
     DEBUG_PRINT(DEBUG_TRACE, "XUPNPAgent Initialization Exit\n");
     return TEST_SUCCESS;
 }
@@ -553,17 +532,6 @@ Description     : This function will be used to the close things cleanly.
 bool XUPNPAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
-#if 0
-    if(NULL == ptrAgentObj)
-    {
-        return TEST_FAILURE;
-    }
-    ptrAgentObj->UnregisterMethod("TestMgr_XUPNP_GetUpnpResult");
-    ptrAgentObj->UnregisterMethod("TestMgr_XUPNP_ReadXDiscOutputFile");
-    ptrAgentObj->UnregisterMethod("TestMgr_XUPNP_CheckXDiscOutputFile");
-    ptrAgentObj->UnregisterMethod("TestMgr_XUPNP_BroadcastEvent");
-
-#endif
     return TEST_SUCCESS;
 }
 

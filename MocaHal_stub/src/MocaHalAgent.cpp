@@ -18,19 +18,6 @@
 */
 
 #include "MocaHalAgent.h"
-/*************************************************************************
-Function name : MocaHalAgent::MocaHalAgent
-
-Arguments     : NULL
-
-Description   : Constructor for MocaHalAgent class
-***************************************************************************/
-#if 0
-MocaHalAgent::MocaHalAgent()
-{
-        DEBUG_PRINT(DEBUG_LOG, "MocaHalAgent Initialized\n");
-}
-#endif
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Description   : testmodulepre_requisites will be used for setting the
@@ -59,7 +46,7 @@ std::string MocaHalAgent::testmodulepre_requisites()
 
 /***************************************************************************
  *Function name : testmodulepost_requisites
- *Descrption    : testmodulepost_requisites will be used for resetting the
+ *Description    : testmodulepost_requisites will be used for resetting the
  *                pre-requisites that are set
  *
  *****************************************************************************/
@@ -97,7 +84,7 @@ extern "C" MocaHalAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 
 /***************************************************************************
  *Function name : initialize
- *Descrption    : Initialize Function will be used for registering the wrapper method
+ *Description    : Initialize Function will be used for registering the wrapper method
  *                with the agent so that wrapper functions will be used in the
  *                script
  *****************************************************************************/
@@ -105,28 +92,12 @@ extern "C" MocaHalAgent* CreateObject(TcpSocketServer &ptrtcpServer)
 bool MocaHalAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT (DEBUG_TRACE, "MocaHal Initialization Entry\n");
-    #if 0
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetMoCALinkUp, "TestMgr_MocaHal_GetMoCALinkUp"); 
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_SetEnabled, "TestMgr_MocaHal_SetEnabled");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetEnabled, "TestMgr_MocaHal_GetEnabled");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetLOF, "TestMgr_MocaHal_GetLOF");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetFrequencyMask, "TestMgr_MocaHal_GetFrequencyMask");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetSupportedFrequencies, "TestMgr_MocaHal_GetSupportedFrequencies");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetHighestSupportedMoCAVersion, "TestMgr_MocaHal_GetHighestSupportedMoCAVersion");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetMac, "TestMgr_MocaHal_GetMac");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetName, "TestMgr_MocaHal_GetName");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetMoCAVersion, "TestMgr_MocaHal_GetMoCAVersion");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetNumNodes, "TestMgr_MocaHal_GetNumNodes");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetSupportedModes, "TestMgr_MocaHal_GetSupportedModes");
-    ptrAgentObj->RegisterMethod(*this,&MocaHalAgent::MocaHal_GetMode, "TestMgr_MocaHal_GetMode");
-
     DEBUG_PRINT (DEBUG_TRACE, "MocaHal Initialization Exit\n");
-    #endif
     return TEST_SUCCESS;
 }
 /***************************************************************************
  *Function name : MocaHal_GetMoCALinkUp
- *Descrption    : This function is to get the mocahal uplink status
+ *Description    : This function is to get the mocahal uplink status
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetMoCALinkUp(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -153,7 +124,7 @@ void MocaHalAgent::MocaHal_GetMoCALinkUp(IN const Json::Value& req, OUT Json::Va
 }
 /***************************************************************************
  *Function name : MocaHal_SetEnabled
- *Descrption    : This function is to set the mocahal enabled or disabled
+ *Description    : This function is to set the mocahal enabled or disabled
  *****************************************************************************/
 void MocaHalAgent::MocaHal_SetEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -177,7 +148,7 @@ void MocaHalAgent::MocaHal_SetEnabled(IN const Json::Value& req, OUT Json::Value
 }
 /***************************************************************************
  *Function name : MocaHal_GetEnabled
- *Descrption    : This function is to get the mocahal enabled value
+ *Description    : This function is to get the mocahal enabled value
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetEnabled(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -203,7 +174,7 @@ void MocaHalAgent::MocaHal_GetEnabled(IN const Json::Value& req, OUT Json::Value
 }
 /***************************************************************************
  *Function name : MocaHal_GetLOF
- *Descrption    : This function is to get the mocahal last operating frequency
+ *Description    : This function is to get the mocahal last operating frequency
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetLOF(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -228,7 +199,7 @@ void MocaHalAgent::MocaHal_GetLOF(IN const Json::Value& req, OUT Json::Value& re
 }
 /***************************************************************************
  *Function name : MocaHal_GetFrequencyMask
- *Descrption    : This function is to get the mocahal frequency mask
+ *Description    : This function is to get the mocahal frequency mask
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetFrequencyMask(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -255,7 +226,7 @@ void MocaHalAgent::MocaHal_GetFrequencyMask(IN const Json::Value& req, OUT Json:
 }
 /***************************************************************************
  *Function name : MocaHal_GetSupportedFrequencies
- *Descrption    : This function is to get the supported frequencies
+ *Description    : This function is to get the supported frequencies
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetSupportedFrequencies(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -293,7 +264,7 @@ void MocaHalAgent::MocaHal_GetSupportedFrequencies(IN const Json::Value& req, OU
 }
 /***************************************************************************
  *Function name : MocaHal_GetHighestSupportedMoCAVersion
- *Descrption    : This function is to get the Highest Supported MoCAVersion
+ *Description    : This function is to get the Highest Supported MoCAVersion
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetHighestSupportedMoCAVersion(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -320,7 +291,7 @@ void MocaHalAgent::MocaHal_GetHighestSupportedMoCAVersion(IN const Json::Value& 
 }
 /***************************************************************************
  *Function name : MocaHal_GetMac
- *Descrption    : This function is to get the Mac address
+ *Description    : This function is to get the Mac address
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetMac(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -347,7 +318,7 @@ void MocaHalAgent::MocaHal_GetMac(IN const Json::Value& req, OUT Json::Value& re
 }
 /***************************************************************************
  *Function name : MocaHal_GetName
- *Descrption    : This function is to get the interface name
+ *Description    : This function is to get the interface name
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetName(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -372,7 +343,7 @@ void MocaHalAgent::MocaHal_GetName(IN const Json::Value& req, OUT Json::Value& r
 }
 /***************************************************************************
  *Function name : MocaHal_GetMoCAVersion
- *Descrption    : This function is to get the current moca version
+ *Description    : This function is to get the current moca version
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetMoCAVersion(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -399,7 +370,7 @@ void MocaHalAgent::MocaHal_GetMoCAVersion(IN const Json::Value& req, OUT Json::V
 }
 /***************************************************************************
  *Function name : MocaHal_GetNumNodes 
- *Descrption    : This function is to get the the number of nodes
+ *Description    : This function is to get the the number of nodes
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetNumNodes(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -426,7 +397,7 @@ void MocaHalAgent::MocaHal_GetNumNodes(IN const Json::Value& req, OUT Json::Valu
 }
 /***************************************************************************
  *Function name : MocaHal_GetSupportedModes
- *Descrption    : This function is to get the supported power modes
+ *Description    : This function is to get the supported power modes
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetSupportedModes(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -453,7 +424,7 @@ void MocaHalAgent::MocaHal_GetSupportedModes(IN const Json::Value& req, OUT Json
 }
 /***************************************************************************
  *Function name : MocaHal_GetMode
- *Descrption    : This function is to get the power mode
+ *Description    : This function is to get the power mode
  *****************************************************************************/
 void MocaHalAgent::MocaHal_GetMode(IN const Json::Value& req, OUT Json::Value& response)
 {
@@ -485,30 +456,9 @@ Arguments       : NULL
 
 Description     : This function will be used to the close things cleanly.
  **************************************************************************/
-//bool MocaHalAgent::cleanup(IN const char* szVersion, IN RDKTestAgent *ptrAgentObj)
 bool MocaHalAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaning up\n");
-    #if 0
-    if(NULL == ptrAgentObj)
-    {
-	return TEST_FAILURE;
-    }
-   
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetMoCALinkUp");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_SetEnabled");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetEnabled");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetLOF");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetFrequencyMask");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetSupportedFrequencies");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetHighestSupportedMoCAVersion");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetMac");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetName");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetMoCAVersion");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetNumNodes");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetSupportedModes");
-    ptrAgentObj->UnregisterMethod("TestMgr_MocaHal_GetMode");
-    #endif
     return TEST_SUCCESS;
 }
 

@@ -241,12 +241,6 @@ bool dtcpProcessReleasePacket()
 
     return status;
 }
-#if 0
-DTCPAgent::DTCPAgent()
-{
-    DEBUG_PRINT(DEBUG_LOG, "DTCPAgent Initialized\n");
-}
-#endif
 /**************************************************************************
 Function name : DTCPAgent::initialize
 
@@ -258,7 +252,6 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool DTCPAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_ERROR, "DTCPAgent Initialization\n");
-//    ptrAgentObj->RegisterMethod(*this,&DTCPAgent::DTCPAgent_Test_Execute, "TestMgr_DTCP_Test_Execute");
 
     return TEST_SUCCESS;
 }
@@ -736,13 +729,6 @@ Description     : This function will be used to the close things cleanly.
 bool DTCPAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
-#if 0
-    if(NULL == ptrAgentObj)
-    {
-        return TEST_FAILURE;
-    }
-    ptrAgentObj->UnregisterMethod("TestMgr_DTCP_Test_Execute");
-#endif
     return TEST_SUCCESS;
 }
 /**************************************************************************

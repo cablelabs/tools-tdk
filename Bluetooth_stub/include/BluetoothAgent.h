@@ -100,5 +100,4 @@ class BluetoothAgent : public RDKTestStubInterface , public AbstractServer<Bluet
                 void Bluetooth_GetDeviceProperties(IN const Json::Value& req, OUT Json::Value& response);            
                
 };
-        //extern "C" BluetoothAgent* CreateObject();
 #endif //__BLUETOOTH_STUB_H__

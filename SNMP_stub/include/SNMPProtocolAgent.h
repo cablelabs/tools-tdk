@@ -64,6 +64,5 @@ class SNMPProtocolAgent : public RDKTestStubInterface , public AbstractServer<SN
                 void GetCommString(IN const Json::Value& req, OUT Json::Value& response);
 };
 
-//extern "C" SNMPProtocolAgent* CreateObject();
 #endif
 

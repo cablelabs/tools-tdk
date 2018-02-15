@@ -54,7 +54,6 @@ using namespace std;
 audio_properties_t properties;*/
 
 class RDKTestAgent;
-//class AudioCaptureMgrAgent : public RDKTestStubInterface
 class AudioCaptureMgrAgent : public RDKTestStubInterface , public AbstractServer<AudioCaptureMgrAgent>
 {
         public:
@@ -72,9 +71,6 @@ class AudioCaptureMgrAgent : public RDKTestStubInterface , public AbstractServer
                   this->bindAndAddMethod(Procedure("TestMgr_AudioCaptureMgr_Stop", PARAMS_BY_NAME,JSON_STRING, NULL), &AudioCaptureMgrAgent::AudioCaptureMgr_Stop);
                   this->bindAndAddMethod(Procedure("TestMgr_AudioCaptureMgr_ExecuteCmd", PARAMS_BY_NAME,JSON_STRING, "command",JSON_STRING, NULL), &AudioCaptureMgrAgent::AudioCaptureMgr_ExecuteCmd);
 		}
-
-                //Constructor
-                //AudioCaptureMgrAgent();
 
                 //Inherited functions
                 bool initialize(IN const char* szVersion);
@@ -95,8 +91,6 @@ class AudioCaptureMgrAgent : public RDKTestStubInterface , public AbstractServer
 		void AudioCaptureMgr_Stop(IN const Json::Value& req, OUT Json::Value& response);
 		void AudioCaptureMgr_ExecuteCmd(IN const Json::Value& req, OUT Json::Value& response);
 };
-
-//extern "C" AudioCaptureMgrAgent* CreateObject();
 
 using namespace audiocapturemgr;
 session_id_t session = -1;

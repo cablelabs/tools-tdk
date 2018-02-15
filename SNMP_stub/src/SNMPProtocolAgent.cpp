@@ -22,19 +22,6 @@
 #define BUFFERMEMSIZE 512
 static std::string Command;
 
-/*************************************************************************
-  Function name : SNMPProtocolAgent::SNMPProtocolAgent
-
-Arguments     : NULL
-
-Description   : Constructor for SNMPProtocolAgent class
- ***************************************************************************/
-#if 0
-SNMPProtocolAgent::SNMPProtocolAgent()
-{
-	DEBUG_PRINT(DEBUG_TRACE, "SNMPProtocolAgent Initialized\n");
-}
-#endif
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Descrption    : testmodulepre_requisites will  be used for setting the
@@ -67,9 +54,6 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool SNMPProtocolAgent::initialize(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "SNMPProtocolAgent Initialize----->Entry\n");
-#if 0
-	ptrAgentObj->RegisterMethod(*this,&SNMPProtocolAgent::GetCommString, "TestMgr_GetCommString");
-#endif
 	DEBUG_PRINT(DEBUG_TRACE, "SNMPProtocolAgent Initialize----->Exit\n");
 
 	return TEST_SUCCESS;
@@ -144,15 +128,6 @@ Description     : This function will be used to the close things cleanly.
 bool SNMPProtocolAgent::cleanup(IN const char* szVersion)
 {
 	DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
-
-#if 0
-	if(NULL == ptrAgentObj)
-	{
-		return TEST_FAILURE;
-	}
-	ptrAgentObj->UnregisterMethod("TestMgr_GetCommString");
-
-#endif
 	DEBUG_PRINT(DEBUG_TRACE, "cleaningup done\n");
 	return TEST_SUCCESS;
 }

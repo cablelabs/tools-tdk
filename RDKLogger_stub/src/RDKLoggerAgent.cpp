@@ -214,20 +214,6 @@ bool createTdkDebugIniFile(bool enableMPELog=true)
         return true;
 }
 
-
-/*************************************************************************
-Function name : RDKLoggerAgent::RDKLoggerAgent
-
-Arguments     : NULL
-
-Description   : Constructor for RDKLoggerAgent class
-***************************************************************************/
-#if 0
-RDKLoggerAgent::RDKLoggerAgent()
-{
-        DEBUG_PRINT(DEBUG_LOG, "RDKLoggerAgent Initialized\n");
-}
-#endif
 /**************************************************************************
 Function name : RDKLoggerAgent::initialize
 
@@ -239,24 +225,6 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool RDKLoggerAgent::initialize(IN const char* szVersion)
 {
         DEBUG_PRINT(DEBUG_ERROR, "RDKLoggerAgent Initialization\n");
-        #if 0
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Init, "TestMgr_RDKLogger_Init");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log, "TestMgr_RDKLogger_Log");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Dbg_Enabled_Status, "TestMgr_RDKLogger_Dbg_Enabled_Status");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_EnvGet, "TestMgr_RDKLogger_EnvGet");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_EnvGetNum, "TestMgr_RDKLogger_EnvGetNum");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_EnvGetValueFromNum, "TestMgr_RDKLogger_EnvGetValueFromNum");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_EnvGetModFromNum, "TestMgr_RDKLogger_EnvGetModFromNum");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_CheckMPELogEnabled, "TestMgr_RDKLogger_CheckMPELogEnabled");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_All, "TestMgr_RDKLogger_Log_All");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_None, "TestMgr_RDKLogger_Log_None");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_Trace, "TestMgr_RDKLogger_Log_Trace");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_InverseTrace, "TestMgr_RDKLogger_Log_InverseTrace");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_Msg, "TestMgr_RDKLogger_Log_Msg");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_SetLogLevel, "TestMgr_RDKLogger_SetLogLevel");
-	ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_GetLogLevel, "TestMgr_RDKLogger_GetLogLevel");
-        //ptrAgentObj->RegisterMethod(*this,&RDKLoggerAgent::RDKLoggerAgent_Log_MPEOSDisabled,"TestMgr_RDKLogger_Log_MPEOSDisabled");
-        #endif
         return TEST_SUCCESS;
 }
 
@@ -1027,28 +995,6 @@ Description     : This function will be used to the close things cleanly.
 bool RDKLoggerAgent::cleanup(IN const char* szVersion)
 {
         DEBUG_PRINT(DEBUG_TRACE, "cleaningup\n");
-        #if 0
-        if(NULL == ptrAgentObj)
-        {
-                return TEST_FAILURE;
-        }
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Init");
- 	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Dbg_Enabled_Status");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_EnvGet");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_EnvGetNum");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_EnvGetValueFromNum");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_EnvGetModFromNum");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_CheckMPELogEnabled");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_All");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_None");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_Trace");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_InverseTrace");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_Msg");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_SetLogLevel");
-	ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_GetLogLevel");
-        //ptrAgentObj->UnregisterMethod("TestMgr_RDKLogger_Log_MPEOSDisabled");
-        #endif
         return TEST_SUCCESS;
 }
 /**************************************************************************

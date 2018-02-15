@@ -103,20 +103,6 @@ void connectAndReadData(std::string &socketPath)
 	}
 }
 
-/*************************************************************************
-Function name : AudioCaptureMgrAgent::AudioCaptureMgrAgent
-
-Arguments     : NULL
-
-Description   : Constructor for AudioCaptureMgrAgent class
-***************************************************************************/
-#if 0
-AudioCaptureMgrAgent::AudioCaptureMgrAgent()
-{
-        DEBUG_PRINT(DEBUG_LOG, "AudioCaptureMgrAgent Initialized\n");
-}
-#endif
-
 /***************************************************************************
  *Function name : testmodulepre_requisites
  *Description   : testmodulepre_requisites will be used for setting the
@@ -174,19 +160,7 @@ Description   : Registering all the wrapper functions with the agent for using t
 bool AudioCaptureMgrAgent::initialize(IN const char* szVersion)
 {
     DEBUG_PRINT (DEBUG_TRACE, "AudioCaptureMgr Initialization Entry\n");
-#if 0
-    ptrAgentObj->RegisterMethod(*this,&AudioCaptureMgrAgent::AudioCaptureMgr_SessionOpen, "TestMgr_AudioCaptureMgr_Session_Open");
-    ptrAgentObj->RegisterMethod(*this,&AudioCaptureMgrAgent::AudioCaptureMgr_SessionClose, "TestMgr_AudioCaptureMgr_Session_Close");
-    ptrAgentObj->RegisterMethod(*this,&AudioCaptureMgrAgent::AudioCaptureMgr_GetSessionDetails, "TestMgr_AudioCaptureMgr_GetSessionDetails");
-    ptrAgentObj->RegisterMethod(*this,&AudioCaptureMgrAgent::AudioCaptureMgr_GetDefaultAudioProperties, "TestMgr_AudioCaptureMgr_GetDefaultAudioProperties");
-    ptrAgentObj->RegisterMethod(*this,&AudioCaptureMgrAgent::AudioCaptureMgr_GetAudioProperties, "TestMgr_AudioCaptureMgr_GetAudioProperties");
-    ptrAgentObj->RegisterMethod(*this,&AudioCaptureMgrAgent::AudioCaptureMgr_SetAudioProperties, "TestMgr_AudioCaptureMgr_SetAudioProperties");
-    ptrAgentObj->RegisterMethod(*this,&AudioCaptureMgrAgent::AudioCaptureMgr_GetOutputProperties, "TestMgr_AudioCaptureMgr_GetOutputProperties");
-    ptrAgentObj->RegisterMethod(*this,&AudioCaptureMgrAgent::AudioCaptureMgr_Start, "TestMgr_AudioCaptureMgr_Start");
-    ptrAgentObj->RegisterMethod(*this,&AudioCaptureMgrAgent::AudioCaptureMgr_Stop, "TestMgr_AudioCaptureMgr_Stop");
-    ptrAgentObj->RegisterMethod(*this,&AudioCaptureMgrAgent::AudioCaptureMgr_ExecuteCmd, "TestMgr_AudioCaptureMgr_ExecuteCmd");
     DEBUG_PRINT (DEBUG_TRACE, "AudioCaptureMgr Initialization Exit\n");
-#endif
     return TEST_SUCCESS;
 }
 
@@ -796,23 +770,6 @@ Description     : This function will be used to the close things cleanly.
 bool AudioCaptureMgrAgent::cleanup(IN const char* szVersion)
 {
     DEBUG_PRINT(DEBUG_TRACE, "cleaning up\n");
-#if 0
-    if(NULL == ptrAgentObj)
-    {
-        return TEST_FAILURE;
-    }
-
-    ptrAgentObj->UnregisterMethod("TestMgr_AudioCaptureMgr_SessionOpen");
-    ptrAgentObj->UnregisterMethod("TestMgr_AudioCaptureMgr_SessionClose");
-    ptrAgentObj->UnregisterMethod("TestMgr_AudioCaptureMgr_GetSessionDetails");
-    ptrAgentObj->UnregisterMethod("TestMgr_AudioCaptureMgr_GetDefaultAudioProperties");
-    ptrAgentObj->UnregisterMethod("TestMgr_AudioCaptureMgr_GetAudioProperties");
-    ptrAgentObj->UnregisterMethod("TestMgr_AudioCaptureMgr_SetAudioProperties");
-    ptrAgentObj->UnregisterMethod("TestMgr_AudioCaptureMgr_GetOutputProperties");
-    ptrAgentObj->UnregisterMethod("TestMgr_AudioCaptureMgr_Start");
-    ptrAgentObj->UnregisterMethod("TestMgr_AudioCaptureMgr_Stop");
-    ptrAgentObj->UnregisterMethod("TestMgr_AudioCaptureMgr_ExecuteCmd");
-#endif
     return TEST_SUCCESS;
 }
 

@@ -200,7 +200,6 @@ class DeviceSettingsAgent : public RDKTestStubInterface , public AbstractServer<
                   this->bindAndAddMethod(Procedure("TestMgr_DS_HOST_getAudioOutputPortFromName", PARAMS_BY_NAME, JSON_STRING, "port_name", JSON_STRING, NULL), &DeviceSettingsAgent::HOST_getAudioOutputPortFromName);
                 }
 
-
 		/*inherited functions*/
 		bool initialize(IN const char* szVersion);
 		std::string testmodulepre_requisites();
@@ -276,10 +275,6 @@ class DeviceSettingsAgent : public RDKTestStubInterface , public AbstractServer<
 		void AOPCONFIG_getSupportedTypes(IN const Json::Value& req, OUT Json::Value& response);
 		void AOPCONFIG_release(IN const Json::Value& req, OUT Json::Value& response);
 		void AOPCONFIG_load(IN const Json::Value& req, OUT Json::Value& response);
-		//bool AOPTYPE_addEncoding(IN const Json::Value& req, OUT Json::Value& response);
-		//bool AOPTYPE_addCompression(IN const Json::Value& req, OUT Json::Value& response);
-		//bool AOPTYPE_addStereoMode(IN const Json::Value& req, OUT Json::Value& response);
-		//bool AOPTYPE_addPort(IN const Json::Value& req, OUT Json::Value& response);
 		void AOP_setStereoAuto(IN const Json::Value& req, OUT Json::Value& response);
 		void AOP_getStereoAuto(IN const Json::Value& req, OUT Json::Value& response);
 		void AOP_getGain(IN const Json::Value& req, OUT Json::Value& response);
@@ -290,7 +285,6 @@ class DeviceSettingsAgent : public RDKTestStubInterface , public AbstractServer<
 		void VOP_hasSurround(IN const Json::Value& req, OUT Json::Value& response);
 		void VOP_getEDIDBytes(IN const Json::Value& req, OUT Json::Value& response);
 		void VOPTYPE_getSupportedResolutions(IN const Json::Value& req, OUT Json::Value& response);
-		//bool VOPTYPE_addPort(IN const Json::Value& req, OUT Json::Value& response);
 		void VOPTYPE_getPorts(IN const Json::Value& req, OUT Json::Value& response);
 		void VOPTYPE_setRestrictedResolution(IN const Json::Value& req, OUT Json::Value& response);
 		void VOPTYPE_getRestrictedResolution(IN const Json::Value& req, OUT Json::Value& response);
@@ -302,17 +296,12 @@ class DeviceSettingsAgent : public RDKTestStubInterface , public AbstractServer<
 		void VOPCONFIG_getPortFromName(IN const Json::Value& req, OUT Json::Value& response);
 		void VOPCONFIG_getPortFromId(IN const Json::Value& req, OUT Json::Value& response);
 		void VOPCONFIG_getSupportedTypes(IN const Json::Value& req, OUT Json::Value& response);
-		//bool VOPCONFIG_release(IN const Json::Value& req, OUT Json::Value& response);
-		//bool VOPCONFIG_load(IN const Json::Value& req, OUT Json::Value& response);
 		void VD_setPlatformDFC(IN const Json::Value& req, OUT Json::Value& response);
 		void VD_getSupportedDFCs(IN const Json::Value& req, OUT Json::Value& response);
 		void VD_getHDRCapabilities(IN const Json::Value& req, OUT Json::Value& response);
-		//bool VD_addDFC(IN const Json::Value& req, OUT Json::Value& response);
 		void VDCONFIG_getDevices(IN const Json::Value& req, OUT Json::Value& response);
                 void VDCONFIG_getDFCs(IN const Json::Value& req, OUT Json::Value& response);
                 void VDCONFIG_getDefaultDFC(IN const Json::Value& req, OUT Json::Value& response);
-                //bool VDCONFIG_release(IN const Json::Value& req, OUT Json::Value& response);
-                //bool VDCONFIG_load(IN const Json::Value& req, OUT Json::Value& response);
                 void VR_isInterlaced(IN const Json::Value& req, OUT Json::Value& response);
                 void VOP_getAspectRatio(IN const Json::Value& req, OUT Json::Value& response);
 
