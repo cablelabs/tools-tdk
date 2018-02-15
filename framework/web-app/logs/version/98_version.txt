@@ -21,12 +21,7 @@
 BRANCH=trunk
 VERSION= 33.33.33.33
 SPIN= 8
-imagename:PACXI3_XC_DEV_BC_trunk_080108392013_PBTsd
-fsroot : 0
-toolchain : 0
-mediaserver : 182476
-qt : 0
-xre : 143484
+imagename:sample_image_name
 ----------------------------------------------
 
 

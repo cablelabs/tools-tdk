@@ -45,7 +45,6 @@ class MigrationService {
 		long time = System.currentTimeMillis()
 		Role.withSession{ Role.findAll() }
 		try {
-			initialiseModuleNameChanges()
 			boolean flag = false
 			Role.temp.withSession{
 				def listr = Role?.temp?.findAll()
@@ -64,39 +63,6 @@ class MigrationService {
 		}
 		println "MIGRATION COMPLETED" + (System.currentTimeMillis() - time )
 	}
-
-	def initialiseModuleNameChanges(){
-		moduleNameChanges.put("closedcaption","ClosedCaption")
-		moduleNameChanges.put("devicesettings","DeviceSettings")
-		moduleNameChanges.put("dtcp","dtcp")
-		moduleNameChanges.put("gst-plugins-rdk","gstpluginsrdk")
-		moduleNameChanges.put("iarmbus","IARMBUS")
-		moduleNameChanges.put("mediaframework","Mediaframework")
-		moduleNameChanges.put("mediastreamer","Mediastreamer")
-		moduleNameChanges.put("newrmf","newrmf")
-		moduleNameChanges.put("openSource_components","OpenSource_Components")
-		moduleNameChanges.put("rdk_logger","RDKLogger")
-		moduleNameChanges.put("recorder","Recorder")
-		moduleNameChanges.put("rmfapp","rmfapp")
-		moduleNameChanges.put("servicemanager","ServiceManager")
-		moduleNameChanges.put("tdk_integration","tdkintegration")
-		moduleNameChanges.put("tr69","tr069module")
-		moduleNameChanges.put("trm","TRM")
-		moduleNameChanges.put("xupnp","xupnp")
-		
-	/*	moduleNameChanges.put("AdvancedConfig","AdvancedConfig")
-		moduleNameChanges.put("ccspcommon_mbus","ccspcommon_mbus")
-		moduleNameChanges.put("CosaCM","CosaCM")
-		moduleNameChanges.put("MBus","MBus")
-		moduleNameChanges.put("SNMP_PA","SNMP_PA")
-		moduleNameChanges.put("WebPA","WebPA")
-		moduleNameChanges.put("WECB","WECB")
-		moduleNameChanges.put("CMAgent","CMAgent")
-		moduleNameChanges.put("MtaAgent","MtaAgent")
-		moduleNameChanges.put("TR069","TR069")
-		moduleNameChanges.put("WIFIAgent","WIFIAgent")*/
-	}
-
 
 	def cleanData(){
 		cleanDB()

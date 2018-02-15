@@ -309,7 +309,6 @@ AC_CONFIG_FILES([Makefile
          DS_stub/Makefile
          RDKLogger_stub/Makefile
 	 NetSrvMgr_stub/Makefile
-         OpenSourceComponent_Stub/Makefile
          TR069_stub/Makefile
          TRM_stub/Makefile
          XUPNP_stub/Makefile

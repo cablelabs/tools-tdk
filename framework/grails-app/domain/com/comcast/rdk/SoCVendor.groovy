@@ -54,38 +54,41 @@ class SoCVendor {
     }
 
     @Override
-    public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ( ( name == null ) ? 0 : name.hashCode() );
-        return result;
-    }
+	public int hashCode() {
+		int result = 1;
+		final int primeNumber = 13;
+		int internalHash = ( ( name == null ) ? 0 : name.hashCode() )
+		result = primeNumber * result + internalHash;
+		return result;
+	}
 
     @Override
-    public boolean equals( Object obj ) {
-        if ( this == obj )
-            return true;
-        if ( obj == null )
-            return false;
-        if ( getClass() != obj.getClass() )
-            return false;
-        SoCVendor other = ( SoCVendor ) obj;
-        if ( name == null ) {
-            if ( other.name != null )
-                return false;
-        }
-        else if ( !name.equals( other.name ) )
-            return false;
-		else if(category == null){
-			if(other.category != null){
-				return false
+	public boolean equals( Object obj ) {
+		boolean equals = true
+		if ( this == obj ){
+			equals = true;
+		}else if ( obj == null ){
+			equals = false;
+		}else if ( getClass() != obj.getClass() ){
+			equals = false;
+		}else{
+			SoCVendor other = ( SoCVendor ) obj;
+			if ( name == null ) {
+				if ( other.name != null ){
+					equals =  false;
+				}
+			} else if ( !name.equals( other.name ) ){
+				equals =  false;
+			} else if(category == null){
+				if(other.category != null){
+					equals =  false
+				}
+			}else if(category != other.category){
+				equals =  false
 			}
 		}
-		else if(category != other.category){
-			return false
-		} 
-        return true;
-    }
+		return equals;
+	}
 	
 	static mapping = {
 		category enumType: "string" , defaultValue:'"RDKV"' 
