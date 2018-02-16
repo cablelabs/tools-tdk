@@ -105,6 +105,8 @@ grails.project.dependency.resolution = {
 		  compile 'org.apache.httpcomponents:httpcore:4.4.1'
 		  // dependency for the TDKB TCL support , to execute the TCL thru TDK approach
 		  compile 'com.googlecode.json-simple:json-simple:1.1.1'
+		  // dependency for gson
+		  compile 'com.google.code.gson:gson:1.4'
 		  //mysql connector dependency
 		  runtime 'mysql:mysql-connector-java:5.1.10'
 		   // for excel reader 
