@@ -220,7 +220,7 @@ nslookup_in_client()
         echo "OUTPUT:$value"
 }
 
-# To set the server in listening mode
+# To set the TCP server in listening mode
 tcp_init_server()
 {
         iperf -s > $var2 &
@@ -231,15 +231,39 @@ tcp_init_server()
 #To send TCP request from client to server
 tcp_request()
 {
-        value="$(iperf -c $var2 | grep Mbits/sec | cut -d ' ' -f 11)"
+        value="$(iperf -c $var2 | grep bits/sec | cut -d ' ' -f 11)"
         echo "OUTPUT:$value"
 }
 
 #To get the bandwidth from server
 validate_tcp_server_output()
 {
-        serverOutput="$(cat $var2 | grep Mbits/sec | cut -d ' ' -f 11)"
+        serverOutput="$(cat $var2 | grep bits/sec | cut -d ' ' -f 11)"
         echo "OUTPUT:$serverOutput"
+        deleteTmpFile="$(sudo rm $var2 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+}
+
+# To set the UDP server in listening mode
+udp_init_server()
+{
+        iperf -s -u &
+        value="$(ps aux | grep iperf | grep -v grep > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
+#To send UDP request from client to server
+udp_request()
+{
+        value="$(iperf -c $var2 -u > $var3 && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
+#To validate the UDP output
+validate_udp_output()
+{
+        bandwidh="$(cat $var2 | grep bits/sec | awk '{ print $7 }' | tail -1)"
+        lossPercentage="$(cat $var2 | grep bits/sec | awk '{ print $13 }' | tail -1)"
+        echo "OUTPUT:$bandwidh,$lossPercentage"
         deleteTmpFile="$(sudo rm $var2 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
 }
 
@@ -311,6 +335,12 @@ case $event in
         tcp_request;;
    "validate_tcp_server_output")
         validate_tcp_server_output;;
+   "udp_init_server")
+        udp_init_server;;
+   "udp_request")
+        udp_request;;
+   "validate_udp_output")
+        validate_udp_output;;
    "kill_iperf")
         kill_iperf;;
    *) echo "Invalid Argument passed";;

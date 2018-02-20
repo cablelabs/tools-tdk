@@ -268,6 +268,9 @@ def parseDeviceConfig(obj):
                 global tmp_file_tcp
                 tmp_file_tcp = config.get(deviceConfig, "TMP_FILE_TCP")
 
+                global tmp_file_udp
+                tmp_file_udp = config.get(deviceConfig, "TMP_FILE_UDP")
+
 	except Exception, e:
 		print e;
 		status = "Failed to parse the device specific configuration file"
@@ -1321,42 +1324,34 @@ def getLanDhcpDetails(param):
 
 ########## End of Function ##########
 
-def tcpInClients(source,destination,dest_ip):
+def tcp_udpInClients(source,destination,dest_ip,connectivityType="TCP"):
 
-# tcpInClients
+# tcp_udpInClients
 
-# Syntax      : tcpInClients()
-# Description : Function to do tcp requests in client machine
+# Syntax      : tcp_udpInClients()
+# Description : Function to do tcp/udp requests in client machine
 # Parameters  : destination - The client machine to which the request is sent
 #               dest_ip - IP address of the destination machine
 #               source - The client from which the command should execute
-# Return Value: status - Status of tcp request
+# Return Value: status - Status of tcp/udp request
 
         try:
-           global serverOutput;
-           serverOutput = "Failed to get Bandwidth of server";
+           global outputValue;
+           outputValue = "Failed to get Bandwidth of server";
            global clientOutput;
            clientOutput = "Failed to get Bandwidth of client"
-           #Set destination machine as server
-           status = initTCPServer(destination)
+           #Set destination machine as server for TCP/UDP
+           status = initServer(destination,connectivityType)
            if status == "SUCCESS":
-                #Send TCP request from client(source) to server(client).
-                #This request returns the bandwidth from client side
-                status,clientOutput = tcpRequestToServer(source,dest_ip)
+                #Send TCP/UDP request from client(source) to server(client).
+                #This request returns the bandwidth from client side for TCP
+                status,clientOutput = RequestToServer(source,dest_ip,connectivityType)
                 if status == "SUCCESS":
-                    status = clientConnect(destination)
-                    if status == "SUCCESS":
-                        #Get the bandwidth from server side and validate it.
-                        command="sudo sh %s validate_tcp_server_output %s" %(dest_script_name,tmp_file_tcp)
-                        serverOutput = executeCommand(command)
-                        if serverOutput >= clientOutput:
-                            status = "SUCCESS"
-                        else:
-                            status = "FAILURE"
+                    validationStatus,outputValue = validateTcpUdpOutput(source,destination,connectivityType)
                 else:
-                    status = "Failed to send TCP request to destination"
+                    status = "Failed to send request to destination"
            else:
-               status = "Failed to init TCP server in machine "
+               status = "Failed to init server in machine "
            #Post Requisite: Kill iperf pid
            status_server = clientConnect(destination)
            if status_server == "SUCCESS":
@@ -1374,19 +1369,20 @@ def tcpInClients(source,destination,dest_ip):
         except Exception, e:
                 print e;
                 status = e;
-        print "Status of TCP request:%s" %status;
-        return status,serverOutput,clientOutput;
+        print "Status of tcp_udpInClients: %s" %status;
+        return status,outputValue,clientOutput;
 
 ########## End of Function ##########
 
-def initTCPServer(destination):
+def initServer(destination,connectivityType):
 
-# initTCPServer
+# initServer
 
-# Syntax      : initTCPServer()
+# Syntax      : initServer()
 # Description : Function to keep the server in listening mode
 # Parameters  : destination - The client machine to which the request is sent
-# Return Value: status - Status of initTCPServer
+#               connectivityType - TCP/UDP
+# Return Value: status - Status of initServer
 
         try:
            global dest_script_name;
@@ -1398,7 +1394,10 @@ def initTCPServer(destination):
                     dest_script_name = lan_script;
                 else:
                     dest_script_name = wan_script;
-                command="sudo sh %s tcp_init_server %s" %(dest_script_name,tmp_file_tcp)
+                if connectivityType == "TCP":
+                    command="sudo sh %s tcp_init_server %s" %(dest_script_name,tmp_file_tcp)
+                elif connectivityType == "UDP":
+                    command="sudo sh %s udp_init_server" %(dest_script_name)
                 status = executeCommand(command)
 
         except Exception, e:
@@ -1408,15 +1407,16 @@ def initTCPServer(destination):
 
 ########## End of Function ##########
 
-def tcpRequestToServer(source,dest_ip):
+def RequestToServer(source,dest_ip,connectivityType):
 
-# tcpRequestToServer
+# RequestToServer
 
-# Syntax      : tcpRequestToServer()
-# Description : Function to send TCP request from client to server
+# Syntax      : RequestToServer()
+# Description : Function to send TCP/UDP request from client to server
 # Parameters  : dest_ip - IP address of the destination machine
 #               source - The client from which the TCP request is sent
-# Return Value: status - Status of TCP request
+#               connectivityType - TCP/UDP
+# Return Value: status - Status of TCP/UDP request
 #               output - Bandwidth from client side
 
         try:
@@ -1429,7 +1429,10 @@ def tcpRequestToServer(source,dest_ip):
                    src_script_name = lan_script;
                else:
                    src_script_name = wan_script;
-               command="sudo sh %s tcp_request %s" %(src_script_name,dest_ip)
+               if connectivityType == "TCP":
+                   command="sudo sh %s tcp_request %s" %(src_script_name,dest_ip)
+               elif connectivityType == "UDP":
+                   command="sudo sh %s udp_request %s %s" %(src_script_name,dest_ip,tmp_file_udp)
                output = executeCommand(command)
                if output:
                    status = "SUCCESS"
@@ -1441,6 +1444,46 @@ def tcpRequestToServer(source,dest_ip):
                 status = e;
 
         return status,output;
+
+########## End of Function ##########
+
+def validateTcpUdpOutput(source,destination,connectivityType):
+
+# validateTcpUdpOutput
+
+# Syntax      : validateTcpUdpOutput()
+# Description : Function to validate the o/p obatined by TCP/UDP
+# Parameters  : destination - The client machine to which the request is sent
+#               source - The client machine from which the request is sent
+#               connectivityType - TCP/UDP
+# Return Value: status - Status of validateTcpUdpOutput and the output value
+
+        try:
+            if connectivityType=="TCP":
+                status = clientConnect(destination)
+                if status == "SUCCESS":
+                    #Get the bandwidth from server side and validate it.
+                    command="sudo sh %s validate_tcp_server_output %s" %(dest_script_name,tmp_file_tcp)
+                    outputValue = executeCommand(command)
+                    if outputValue >= clientOutput:
+                        status = "SUCCESS"
+                    else:
+                        status = "FAILURE"
+            if connectivityType == "UDP":
+                status = clientConnect(source)
+                if status == "SUCCESS":
+                    #Get the bandwidth and loss percentage from client side
+                    command="sudo sh %s validate_udp_output %s" %(src_script_name,tmp_file_udp)
+                    outputValue = executeCommand(command)
+                    if outputValue:
+                        status = "SUCCESS"
+                    else:
+                        status = "FAILURE"
+        except Exception, e:
+                print e;
+                status = e;
+        print "Status of validation: %s" %status;
+        return status,outputValue;
 
 ########## End of Function ##########
 
