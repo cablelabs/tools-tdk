@@ -98,7 +98,8 @@ obj.setLoadModuleStatus(loadStatus.upper());
 
 if "SUCCESS" in loadStatus.upper():
 	#Prmitive test case which associated to this Script
-	result = container.CheckProcessTree(obj, True);
+        processList = ["dbusDaemonInit", "rmfStreamerInit", "systemd"];
+        result = container.CheckProcessTree(obj, True, processList);
 	print "CONTAINERIZATION STATUS: ", result;
 
 obj.unloadModule("systemutil");

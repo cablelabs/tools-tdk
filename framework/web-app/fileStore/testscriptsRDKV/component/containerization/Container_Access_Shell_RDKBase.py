@@ -23,7 +23,7 @@
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>2</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Container_Unprivileged_ConfigDrop_RmfSer</name>
+  <name>Container_Access_Shell_RDKBase</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -33,7 +33,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Check unprivileged containers configuration drop super-user capabilities for rmfserv</synopsis>
+  <synopsis>Verify rdk-base container shell is accessible when the container is running</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -56,21 +56,23 @@
     <!--  -->
   </rdk_versions>
   <test_cases>
-    <test_case_id>CT_Container_09</test_case_id>
-    <test_objective>Check unprivileged containers configuration drop super-user capabilities for rmfserv</test_objective>
+    <test_case_id>CT_Container_21</test_case_id>
+    <test_objective>Verify rdk-base container shell is accessible when the container is running</test_objective>
     <test_type>Positive</test_type>
-    <test_setup>Emulator hybrid</test_setup>
+    <test_setup>Emulator Hybrid</test_setup>
     <pre_requisite>Emulator containerized image booted in a VM</pre_requisite>
-    <api_or_interface_used>N/A</api_or_interface_used>
-    <input_parameters>N/A</input_parameters>
+    <api_or_interface_used>Linux commands</api_or_interface_used>
+    <input_parameters>NA</input_parameters>
     <automation_approch>1. TM loads the SystemUtilAgent
-2. SystemUtilAgent will check the file content of "/containers/rmserv/base-namespaces.conf" 
-3. TM will check if the file contains an entry as "lxc.cap.keep = none" and return SUCCESS/FAILURE status.
-4. TM unloads the SystemUtilAgent</automation_approch>
-    <except_output>Checkpoint 1.Check the file "/containers/rmserv/base-namespaces.conf" contains an entry as "lxc.cap.keep = none"</except_output>
+2. SystemUtilAgent will check if the rdk-base container state is "RUNNING"
+3. SystemUtilAgent will check if the rdk-base container shell is accessible 
+4. TM will return SUCCESS/FAILURE status based on whether the container shell is accessible or not
+5. TM unloads the SystemUtilAgent</automation_approch>
+    <except_output>Checkpoint 1.Check the rdk-base container state is "RUNNING"
+Checkpoint 2.Check if the rdk-base container shell is accessible</except_output>
     <priority>High</priority>
     <test_stub_interface>libsystemutilstub.so.0</test_stub_interface>
-    <test_script>Container_Unprivileged_ConfigDrop_RmfSer</test_script>
+    <test_script>Container_Access_Shell_RDKBase</test_script>
     <skipped>No</skipped>
     <release_version></release_version>
     <remarks></remarks>
@@ -89,7 +91,7 @@ obj = tdklib.TDKScriptingLibrary("systemutil","1");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'Container_Unprivileged_ConfigDrop_RmfSer');
+obj.configureTestCase(ip,port,'Container_Access_Shell_RDKBase');
 
 #Get the result of connection with test component and STB
 loadStatus = obj.getLoadModuleResult();
@@ -101,14 +103,9 @@ if "SUCCESS" in loadStatus.upper():
         processList = ["dbusDaemonInit", "rmfStreamerInit", "systemd"];
         result = container.CheckProcessTree(obj, True, processList);
 	if result:
-		fileName = "/containers/rmfserv/base-namespaces.conf"
-		field = "lxc.cap.keep";
-		pattern = "none"
-		status, value = container.FindPatternFromFile(obj, fileName, field, pattern);
-		if status:
-			print "RmfServer capabilities dropped";
-		else:
-			print "RmfServer capabilities not dropped";
+		containerState = container.CheckContainerState(obj, "rdk-base", True);
+		if containerState:
+			container.AccessContainerShell(obj, "rdk-base", "IARMDaemonMain", True);
 	else:
 		print "Please test with containerized image";
 

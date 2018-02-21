@@ -17,7 +17,7 @@
 <xml>
   <module name='systemutil' testGroup='Component'>
     <primitiveTests>
-      <primitiveTest name='ExecuteCmd' id='' version='1'>
+      <primitiveTest name='ExecuteCommand' id='' version='1'>
         <function>TestMgr_ExecuteCmd</function>
         <parameters>
           <parameter name='command' value='' />

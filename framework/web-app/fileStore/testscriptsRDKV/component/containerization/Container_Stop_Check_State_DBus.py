@@ -99,13 +99,15 @@ obj.setLoadModuleStatus(loadStatus.upper());
 
 if "SUCCESS" in loadStatus.upper():
 	#Prmitive test case which associated to this Script
-	result = container.CheckProcessTree(obj, True);
+        processList = ["dbusDaemonInit", "rmfStreamerInit", "systemd"];
+        result = container.CheckProcessTree(obj, True, processList);
 	if result:
 		container.StopContainer(obj, "dbus");
 		container.CheckContainerState(obj, "dbus", False);
-		container.StartContainer(obj);
-		
+                path = "/usr/bin/start_containers.sh";
+                container.StartContainer(obj,path);	
 	else:
 		print "Please test with containerized image";
-
+                path = "/usr/bin/start_containers.sh";
+                container.StartContainer(obj,path);
 obj.unloadModule("systemutil");

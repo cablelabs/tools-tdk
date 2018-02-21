@@ -21,9 +21,9 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Container_Unprivileged_ConfigDrop_RmfSer</name>
+  <name>Container_Check_Dbus_Content_Coherent</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -33,7 +33,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Check unprivileged containers configuration drop super-user capabilities for rmfserv</synopsis>
+  <synopsis>Verify dbus content is coherent with config file</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -56,21 +56,23 @@
     <!--  -->
   </rdk_versions>
   <test_cases>
-    <test_case_id>CT_Container_09</test_case_id>
-    <test_objective>Check unprivileged containers configuration drop super-user capabilities for rmfserv</test_objective>
+    <test_case_id>CT_Container_28</test_case_id>
+    <test_objective>Verify dbus content is coherent with config file</test_objective>
     <test_type>Positive</test_type>
-    <test_setup>Emulator hybrid</test_setup>
+    <test_setup>Emulator Hybrid</test_setup>
     <pre_requisite>Emulator containerized image booted in a VM</pre_requisite>
-    <api_or_interface_used>N/A</api_or_interface_used>
-    <input_parameters>N/A</input_parameters>
+    <api_or_interface_used>Linux commands</api_or_interface_used>
+    <input_parameters>NA</input_parameters>
     <automation_approch>1. TM loads the SystemUtilAgent
-2. SystemUtilAgent will check the file content of "/containers/rmserv/base-namespaces.conf" 
-3. TM will check if the file contains an entry as "lxc.cap.keep = none" and return SUCCESS/FAILURE status.
-4. TM unloads the SystemUtilAgent</automation_approch>
-    <except_output>Checkpoint 1.Check the file "/containers/rmserv/base-namespaces.conf" contains an entry as "lxc.cap.keep = none"</except_output>
+2. SystemUtilAgent will check content of /usr/bin folder and check if the output is a subset of the list ["dbusDaemonInit.sh", "dbus-daemon", "dbus-monitor"]
+3. SystemUtilAgent will check content of /etc folder and check if the output is a subset of the list ["dbus-1"]
+4. SystemUtilAgent will check content of /var/run folder and check if the output is a subset of the list ["dbus"]
+5. TM will return FAILURE/SUCCESS status based on the outputs in steps 2,3 and 4
+6. TM unloads the SystemUtilAgent</automation_approch>
+    <except_output>Checkpoint 1.Check the dbus folder content is coherent with config file</except_output>
     <priority>High</priority>
     <test_stub_interface>libsystemutilstub.so.0</test_stub_interface>
-    <test_script>Container_Unprivileged_ConfigDrop_RmfSer</test_script>
+    <test_script>Container_Check_Dbus_Content_Coherent</test_script>
     <skipped>No</skipped>
     <release_version></release_version>
     <remarks></remarks>
@@ -82,6 +84,42 @@
 import tdklib; 
 import container;
 
+def GetFileList(obj, containerName, folderPath, expFileList):
+        fileList = [];
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
+        expectedResult="SUCCESS";
+
+        cmd = "lxc-attach -n " + containerName + " -- ls " + folderPath + " | tr \'\n\' \' \'";
+        print cmd;
+
+        #configre the command
+        tdkTestObj.addParameter("command", cmd);
+        tdkTestObj.executeTestCase(expectedResult);
+
+        actualResult = tdkTestObj.getResult();
+        print "Excecution result: ", actualResult;
+
+        if expectedResult in actualResult:
+                details = tdkTestObj.getResultDetails();
+                print "Output: ", details;
+                fileList = details.split();
+                print fileList;
+		print expFileList;
+		#fileList = fileList.sort()
+		#expFileList = expFileList.sort();
+		if set(fileList) >= set(expFileList):
+                	tdkTestObj.setResultStatus("SUCCESS");
+                        print "%s Contents are coherent" %folderPath;
+                else:
+			tdkTestObj.setResultStatus("FAILURE");
+		       	print "%s Contents are not coherent" %folderPath;
+
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+                print "Command execution failed";
+        return;
+
+ 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("systemutil","1");
 
@@ -89,7 +127,7 @@ obj = tdklib.TDKScriptingLibrary("systemutil","1");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'Container_Unprivileged_ConfigDrop_RmfSer');
+obj.configureTestCase(ip,port,'Container_Check_Dbus_Content_Coherent');
 
 #Get the result of connection with test component and STB
 loadStatus = obj.getLoadModuleResult();
@@ -101,14 +139,21 @@ if "SUCCESS" in loadStatus.upper():
         processList = ["dbusDaemonInit", "rmfStreamerInit", "systemd"];
         result = container.CheckProcessTree(obj, True, processList);
 	if result:
-		fileName = "/containers/rmfserv/base-namespaces.conf"
-		field = "lxc.cap.keep";
-		pattern = "none"
-		status, value = container.FindPatternFromFile(obj, fileName, field, pattern);
-		if status:
-			print "RmfServer capabilities dropped";
-		else:
-			print "RmfServer capabilities not dropped";
+		containerState = container.CheckContainerState(obj, "dbus", True);
+		if containerState:
+			status = container.AccessContainerShell(obj, "dbus", "dbusDaemonInit", True);
+			if status:
+				path = "/usr/bin";
+				contentList = ["dbusDaemonInit.sh", "dbus-daemon", "dbus-monitor"];
+				GetFileList(obj, "dbus", path, contentList);			
+				
+				path = "/etc";
+				contentList = ["dbus-1"];
+				GetFileList(obj, "dbus", path, contentList);			
+
+				path = "/var/run";
+				contentList = ["dbus"];
+				GetFileList(obj, "dbus", path, contentList);			
 	else:
 		print "Please test with containerized image";
 

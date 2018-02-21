@@ -98,12 +98,13 @@ obj.setLoadModuleStatus(loadStatus.upper());
 
 if "SUCCESS" in loadStatus.upper():
 	#Prmitive test case which associated to this Script
-	result = container.CheckProcessTree(obj, True);
+        processList = ["dbusDaemonInit", "rmfStreamerInit", "systemd"];
+        result = container.CheckProcessTree(obj, True, processList);
 	if result:
 		fileName = "/containers/dbus/base-namespaces.conf"
 		field = "lxc.cap.keep";
 		pattern = "none"
-		status = container.FindPatternFromFile(obj, fileName, field, pattern);
+		status, value = container.FindPatternFromFile(obj, fileName, field, pattern);
 		if status:
 			print "dbus capabilities dropped";
 		else:

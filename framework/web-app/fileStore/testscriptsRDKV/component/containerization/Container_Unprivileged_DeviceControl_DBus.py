@@ -98,12 +98,13 @@ obj.setLoadModuleStatus(loadStatus.upper());
 
 if "SUCCESS" in loadStatus.upper():
 	#Prmitive test case which associated to this Script
-	result = container.CheckProcessTree(obj, True);
+        processList = ["dbusDaemonInit", "rmfStreamerInit", "systemd"];
+        result = container.CheckProcessTree(obj, True, processList);
 	if result:
 		fileName = "/containers/dbus/base.conf"
 		field = "lxc.cgroup.devices.deny";
 		pattern = " = a\\n"
-		status = container.FindPatternFromFile(obj, fileName, field, pattern);
+		status, value = container.FindPatternFromFile(obj, fileName, field, pattern);
 		if status:
 			print "Devices denied by default";
 		else:

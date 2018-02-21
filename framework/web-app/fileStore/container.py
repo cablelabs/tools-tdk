@@ -23,12 +23,18 @@
 #------------------------------------------------------------------------------
 import tdklib;
 
-def CheckProcessTree(obj, expectedState):
+def CheckProcessTree(obj, expectedState, psList):
 	status = False;
-        tdkTestObj = obj.createTestStep('ExecuteCmd');
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
         expectedResult="SUCCESS";
 	
-	cmd = "pstree | grep -o -e dbusDaemonInit -e rmfStreamerInit -e systemd | tr \'\n\' \' \'";
+	cmd = "pstree | grep -o"; 
+
+	for ps in psList:
+		cmd += " -e " + ps ;
+				
+	cmd += " | tr \'\n\' \' \'";
+	print cmd;
 	
 	#configre the command
         tdkTestObj.addParameter("command", cmd);
@@ -40,19 +46,21 @@ def CheckProcessTree(obj, expectedState):
 	if expectedResult in actualResult:
 		details = tdkTestObj.getResultDetails();
 		print "Output: ", details;
-		if "dbusDaemonInit" in details and "rmfStreamerInit" in details and "systemd" in details:
-			if expectedState:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                        else:
-                                tdkTestObj.setResultStatus("FAILURE");
-			print "Containerization is enabled";
-			status = True;
-		else:
-			if expectedState:
-                                tdkTestObj.setResultStatus("FAILURE");
-                        else:
-                                tdkTestObj.setResultStatus("SUCCESS");
-			print "Containerization is not enabled";
+		for ps in psList:
+			if ps not in details:
+				if expectedState:
+	                                tdkTestObj.setResultStatus("FAILURE");
+        	                else:
+                	                tdkTestObj.setResultStatus("SUCCESS");
+                        	print "Containerization is not enabled";
+				return status;
+
+		if expectedState:
+                	tdkTestObj.setResultStatus("SUCCESS");
+                else:
+                	tdkTestObj.setResultStatus("FAILURE");
+		print "Containerization is enabled";
+		status = True;
 	else:
 		tdkTestObj.setResultStatus("FAILURE");
 		print "Command execution failed";
@@ -61,7 +69,7 @@ def CheckProcessTree(obj, expectedState):
 
 def CheckContainerState(obj, containerName, expectedState):
 	status = False;
-        tdkTestObj = obj.createTestStep('ExecuteCmd');
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
         expectedResult="SUCCESS";
 	
 	cmd = "lxc-info -n " + containerName + " | grep State";
@@ -94,13 +102,14 @@ def CheckContainerState(obj, containerName, expectedState):
 		print "Command execution failed";
 	return status;
 
-
 def FindPatternFromFile(obj, fileName, field, pattern):
 	status = False;
-        tdkTestObj = obj.createTestStep('ExecuteCmd');
+	value = "";
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
         expectedResult="SUCCESS";
 	
 	cmd = "cat " + fileName + " | grep " + field;
+	print cmd
 	
 	#configre the command
         tdkTestObj.addParameter("command", cmd);
@@ -112,19 +121,24 @@ def FindPatternFromFile(obj, fileName, field, pattern):
 	if expectedResult in actualResult:
 		details = tdkTestObj.getResultDetails();
 		print "Output: ", details;
-		if pattern in details:
+		if pattern == "":
+			value = details.replace(field.strip("\""), '').strip("\\n");
 			tdkTestObj.setResultStatus("SUCCESS");
-			status = True;
+			print value;
 		else:
-			tdkTestObj.setResultStatus("FAILURE");
+			if pattern in details:
+				tdkTestObj.setResultStatus("SUCCESS");
+				status = True;
+			else:
+				tdkTestObj.setResultStatus("FAILURE");
 	else:
 		tdkTestObj.setResultStatus("FAILURE");
 		print "Command execution failed";
-	return status;
+	return (status, value);
 
 def GetFilePermission(obj, fileName):
         status = False;
-        tdkTestObj = obj.createTestStep('ExecuteCmd');
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
         expectedResult="SUCCESS";
 
         cmd = "stat -c \"%a %n\" "  + fileName + "| cut -d \" \" -f 1";
@@ -156,7 +170,7 @@ def GetFilePermission(obj, fileName):
 def GetOwnership(obj, fileName, owner, field):
         status = False;
 	result = True;
-        tdkTestObj = obj.createTestStep('ExecuteCmd');
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
         expectedResult="SUCCESS";
 
         cmd = "ls -al "  + fileName + " |  tr -s \" \" | cut -d \" \" -f " +field + " | tr \'\\n\' \',\'";
@@ -192,7 +206,7 @@ def GetOwnership(obj, fileName, owner, field):
 
 def StopContainer(obj, containerName):
         status = False;
-        tdkTestObj = obj.createTestStep('ExecuteCmd');
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
         expectedResult="SUCCESS";
 
         cmd = "lxc-stop -n " + containerName + "&";
@@ -214,12 +228,12 @@ def StopContainer(obj, containerName):
                 print "Command execution failed";
         return status;
 
-def StartContainer(obj):
+def StartContainer(obj, filePath):
         status = False;
-        tdkTestObj = obj.createTestStep('ExecuteCmd');
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
         expectedResult="SUCCESS";
 
-        cmd = "/usr/bin/start_containers.sh &"
+        cmd = filePath + " > /tmp/start_status.log &"
         print cmd;
 
         #configre the command
@@ -240,45 +254,15 @@ def StartContainer(obj):
 
 
 
-def GetIdFromFile(obj, fileName, pattern):
+def AccessContainerShell(obj, containerName, expProcess, output):
         status = False;
-        tdkTestObj = obj.createTestStep('ExecuteCmd');
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
         expectedResult="SUCCESS";
 
-        cmd = "cat " + fileName + " | grep " + pattern + " | cut -d \" \" -f 5";
+        cmd = "lxc-attach -n " + containerName + " -- ps | grep " + expProcess;
 	print cmd;
 
-        #configre the command
-        tdkTestObj.addParameter("command", cmd);
-        tdkTestObj.executeTestCase(expectedResult);
-
-        actualResult = tdkTestObj.getResult();
-        print "Exceution result: ", actualResult;
-
-        if expectedResult in actualResult:
-                details = tdkTestObj.getResultDetails();
-                print "Output: ", details;
-                if pattern in details:
-                        tdkTestObj.setResultStatus("SUCCESS");
-                        status = True;
-                else:
-                        tdkTestObj.setResultStatus("FAILURE");
-        else:
-                tdkTestObj.setResultStatus("FAILURE");
-                print "Command execution failed";
-        return status;
-
-
-def AccessContainerShell(obj, containerName):
-        status = False;
-        tdkTestObj = obj.createTestStep('ExecuteCmd');
-        expectedResult="SUCCESS";
-
-        #cmd = "lxc-attach -n " + containerName;
-        cmd = "lxc-attach -n dbus";
-	print cmd;
-
-        #configre the command
+        #configure the command
         tdkTestObj.addParameter("command", cmd);
         tdkTestObj.executeTestCase(expectedResult);
 
@@ -289,26 +273,186 @@ def AccessContainerShell(obj, containerName):
                 details = tdkTestObj.getResultDetails();
                 print "Output: ", details;
 
-		print "*****************";
-		tdkTestObj.addParameter("command", "ps | grep dbusDaemonInit");
-	        tdkTestObj.executeTestCase(expectedResult);
-
-        	actualResult = tdkTestObj.getResult();
-	        print "Exceution result: ", actualResult;
-		details = tdkTestObj.getResultDetails();
-                print "Output: ", details;
-		print "*****************";
-
-		expectedOutput = "root@" + containerName + ":/#";
-                if expectedOutput in details:
-                        tdkTestObj.setResultStatus("SUCCESS");
+                if expProcess in details:
+			if output:
+                        	tdkTestObj.setResultStatus("SUCCESS");
+			else:
+                        	tdkTestObj.setResultStatus("FAILURE");
                         print "Accessed %s Container shell" %containerName;
                         status = True;
                 else:
-                        tdkTestObj.setResultStatus("FAILURE");
-                        print "%s Container shell not accessible" %containerName;
+			cmd = "lxc-attach -n " + containerName + " -- ps -ef | grep " + expProcess;
+			print cmd;
+		 	#configure the command
+			tdkTestObj.addParameter("command", cmd);
+			tdkTestObj.executeTestCase(expectedResult);
+
+			actualResult = tdkTestObj.getResult();
+			print "Exceution result: ", actualResult;
+
+			if expectedResult in actualResult:
+				details = tdkTestObj.getResultDetails();
+				print "Output: ", details;
+				if expProcess in details:
+					if output:
+		                                tdkTestObj.setResultStatus("SUCCESS");
+                		        else:
+                                		tdkTestObj.setResultStatus("FAILURE");
+                        		print "Accessed %s Container shell" %containerName;
+                        		status = True;
+				else:
+					if output:
+                		        	tdkTestObj.setResultStatus("FAILURE");
+					else:
+                        			tdkTestObj.setResultStatus("SUCCESS");
+                        		print "%s Container shell not accessible" %containerName;
+			else:
+				tdkTestObj.setResultStatus("FAILURE");
+		                print "Command execution failed";
         else:
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Command execution failed";
         return status;
+
+def UpdateFile(obj, command, fileName):
+	status = False;
+	tdkTestObj = obj.createTestStep('ExecuteCommand');
+	expectedResult="SUCCESS";
+
+	cmd = command + " " + fileName;
+	print cmd;
+
+	#configre the command
+	tdkTestObj.addParameter("command", cmd);
+	tdkTestObj.executeTestCase(expectedResult);
+
+	actualResult = tdkTestObj.getResult();
+	print "Exceution result: ", actualResult;
+
+	if expectedResult in actualResult:
+		tdkTestObj.setResultStatus("SUCCESS");
+		print ("Command execution success");
+		status = True;
+	else:
+		tdkTestObj.setResultStatus("FAILURE");
+		print ("Command execution failed");
+	return status;
+
+
+def checkOrderCreation(obj, orderList):
+        for index, item in enumerate(orderList):
+                if item == "dbus--block":
+                        orderList[index] = "dbus";
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
+        expectedResult="SUCCESS";
+
+        cmd = "cat \'/tmp/start_status.log\' | grep \'Name\' | tr -s \' \' | cut -d \' \' -f 2 | tr \'\n\' \' \'";
+        print cmd;
+
+        #configre the command
+        tdkTestObj.addParameter("command", cmd);
+        tdkTestObj.executeTestCase(expectedResult);
+
+        actualResult = tdkTestObj.getResult();
+        print "Exceution result: ", actualResult;
+
+        if expectedResult in actualResult:
+                details = tdkTestObj.getResultDetails();
+                print "Output: ", details;
+                containerList = details.strip('\\n').split();
+                print "Expected container creation order", orderList;
+                print "Actual container creation order", containerList;
+                if containerList == orderList:
+                         tdkTestObj.setResultStatus("SUCCESS");
+                         print ("Container creation order is correct");
+                else:
+                         tdkTestObj.setResultStatus("FAILURE");
+                         print ("Container creation order is wrong");
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+                print "Command execution failed";
+
+def GetProcessList(obj, containerName, inside):
+        processList = [];
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
+        expectedResult="SUCCESS";
+
+        if inside:
+                field = "5";
+                cmd = "lxc-attach -n " + containerName + " -- ps";
+        else:
+                field = "4";
+                cmd = "ps -G " + containerName;
+
+        cmd = cmd + "| tr -s \' \'| sed 's/^[ ]*//' | cut -d \' \' -f " + field + " | tr \'\n\' \' \'";
+        print cmd;
+
+        #configre the command
+        tdkTestObj.addParameter("command", cmd);
+        tdkTestObj.executeTestCase(expectedResult);
+
+        actualResult = tdkTestObj.getResult();
+        print "Exceution result: ", actualResult;
+
+        if expectedResult in actualResult:
+                details = tdkTestObj.getResultDetails();
+                print "Output: ", details;
+                processList = details.split();
+                print processList;
+                removeList1 = ['CMD', 'COMMAND', 'ps', '/bin/sh'];
+                removeList2 = '[]{}';
+                for item in removeList1:
+                        if item in processList:
+                                processList.remove(item);
+
+                for i in removeList2:
+                        for index, item in enumerate(processList):
+                                if i in item:
+                                        processList[index] = item.strip(i);
+
+                for index, item in enumerate(processList):
+                	if '/usr/bin/' in item:
+                        	processList[index] = item.replace('/usr/bin/', '');
+
+                tdkTestObj.setResultStatus("SUCCESS");
+                print "Command execution success";
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+                print "Command execution failed";
+        return (tdkTestObj, processList);
+
+def GetFileList(obj, containerName, folderPath, expFileList):
+        fileList = [];
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
+        expectedResult="SUCCESS";
+
+        cmd = "lxc-attach -n " + containerName + " -- ls " + folderPath + " | tr \'\n\' \' \'";
+        print cmd;
+
+        #configre the command
+        tdkTestObj.addParameter("command", cmd);
+        tdkTestObj.executeTestCase(expectedResult);
+
+        actualResult = tdkTestObj.getResult();
+        print "Exceution result: ", actualResult;
+
+        if expectedResult in actualResult:
+                details = tdkTestObj.getResultDetails();
+                print "Output: ", details;
+                fileList = details.split();
+                print fileList;
+                print expFileList;
+                #fileList = fileList.sort()
+                #expFileList = expFileList.sort();
+                if set(fileList) >= set(expFileList):
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        print "%s Contents are coherent" %folderPath;
+                else:
+                        tdkTestObj.setResultStatus("FAILURE");
+                        print "%s Contents are not coherent" %folderPath;
+
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+                print "Command execution failed";
+        return;
 

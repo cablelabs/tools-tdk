@@ -98,7 +98,8 @@ obj.setLoadModuleStatus(loadStatus.upper());
 
 if "SUCCESS" in loadStatus.upper():
 	#Prmitive test case which associated to this Script
-	result = container.CheckProcessTree(obj, True);
+        processList = ["dbusDaemonInit", "rmfStreamerInit", "systemd"];
+        result = container.CheckProcessTree(obj, True, processList);
 	if result:
 		dirList = ["/containers/dbus", "/var/lib/lxc", "/var/run/dbus", "/var/run/dbus/system_bus_socket", "/etc/dbus-1/"];
 		for item in dirList:
