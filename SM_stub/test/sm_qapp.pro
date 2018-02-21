@@ -80,39 +80,4 @@ exists(../../platform/SM_stub/broadcom.pri) : include(../../platform/SM_stub/bro
 
 SOURCES += sm_qapp.cpp
 
-contains(DEFINES,USE_DISPLAY_SETTINGS) {
-	HEADERS += ../servicemanager/include/services/displaysettingsservice.h
-	SOURCES += ../servicemanager/src/services/displaysettingsservice.cpp
-}
-
-contains(DEFINES,HAS_API_AVINPUT) {
-	HEADERS += ../servicemanager/include/abstractservice.h \
-        	   $$(STAGING_DIR_TARGET)/usr/include/rdk/servicemanager/services/avinputservice.h
-
-	SOURCES += ../servicemanager/src/abstractservice.cpp \
-                   ../servicemanager/src/services/avinputservice.cpp
-
-        exists(../servicemanager/platform/intel/build/intel.pri) {
-                LIBS += -lgdl
-                LIBS += -lavcap
-                LIBS += -lpipeline_library
-                LIBS += -lismd_clock_recovery -lismd_core -lismd_vidrend -lismd_vidpproc -lismd_audio -lismd_bufmon -lismd_demux
-                LIBS += -lfile_io_utils
-                LIBS += -lpal -lismd_avcap_shim -lEGL
-                LIBS += -lavemedia -lfaxportingkit
-                HEADERS += ../servicemanager/platform/intel/include/helpers/avinputhelper.h \
-                           ../servicemanager/platform/intel/include/helpers/avinput.h
-                SOURCES += ../servicemanager/platform/intel/src/helpers/avinputhelper.cpp
-        }
-        exists(../servicemanager/platform/broadcom/build/broadcom.pri) {
-                HEADERS += ../servicemanager/platform/broadcom/include/helpers/avinputhelper.h \
-                           ../servicemanager/platform/broadcom/include/helpers/avinput.h
-                SOURCES += ../servicemanager/platform/broadcom/src/helpers/avinputhelper.cpp
-        }
-}
-
-contains(DEFINES,HAS_API_VIDEO_APPLICATION_EVENTS) {
-        HEADERS += ../servicemanager/include/services/videoapplicationeventsservice.h
-        SOURCES += ../servicemanager/src/services/videoapplicationeventsservice.cpp
-}
 
