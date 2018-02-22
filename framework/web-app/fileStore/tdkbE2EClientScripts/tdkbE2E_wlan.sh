@@ -275,6 +275,48 @@ kill_iperf()
         echo "OUTPUT:$value"
 }
 
+#File transfer via FTP from Wlan to LAN using PUT command
+ftpFromWlan()
+{
+FTP_FILE=$var5
+touch $FTP_FILE
+value="$(SERVER=$var2
+USER=$var3
+PASSW=$var4
+ftp -v -n $SERVER <<END_OF_SESSION
+user $USER $PASSW
+put $FTP_FILE
+END_OF_SESSION
+rm -rf $FTP_FILE
+)"
+echo "OUTPUT:$value"
+
+}
+
+#transfer the test file from LAN to WLAN using GET command
+ftpFromlan()
+{
+FTP_FILE=$var5
+rm -rf $FTP_FILE
+value="$(SERVER=$var2
+USER=$var3
+PASSW=$var4
+ftp -v -n $SERVER <<END_OF_SESSION
+user $USER $PASSW
+get $TFTP_FILE
+END_OF_SESSION
+)"
+echo "OUTPUT:$value"
+}
+
+#Verify the FTP download
+validate_FTP()
+{
+        FTP_FILE=$var2
+        value="$(ls -lrt $FTP_FILE > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -343,6 +385,12 @@ case $event in
         validate_udp_output;;
    "kill_iperf")
         kill_iperf;;
+   "ftpFromWlan")
+        ftpFromWlan;;
+   "ftpFromlan")
+        ftpFromlan;;
+   "validtae_FTP")
+        validtae_FTP;;
    *) echo "Invalid Argument passed";;
 esac
 

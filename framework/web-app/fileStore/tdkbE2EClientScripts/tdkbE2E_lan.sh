@@ -188,6 +188,30 @@ kill_iperf()
         echo "OUTPUT:$value"
 }
 
+#Verify the FTP download
+validate_FTP()
+{
+        FTP_FILE=$var2
+        value="$(ls -lrt $FTP_FILE > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
+#Create the file to verify FTP download
+touch_File()
+{
+        FTP_FILE=$var2
+        value="$(touch $FTP_FILE  > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
+#Remove the file which is transfered via FTP
+remove_File()
+{
+        FTP_FILE=$var2
+        value="$(rm -rf  $FTP_FILE > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+        echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -235,5 +259,11 @@ case $event in
         validate_udp_output;;
    "kill_iperf")
         kill_iperf;;
+   "validate_FTP")
+        validate_FTP;;
+    "touch_File")
+        touch_File;;
+    "remove_File")
+        remove_File;;
    *) echo "Invalid Argument passed";;
 esac
