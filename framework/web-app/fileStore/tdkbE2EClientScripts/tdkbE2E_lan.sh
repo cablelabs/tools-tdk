@@ -174,9 +174,9 @@ udp_request()
 #To validate the UDP output
 validate_udp_output()
 {
-        bandwidh="$(cat $var2 | grep bits/sec | awk '{ print $7 }' | tail -1)"
+        bandwidth="$(cat $var2 | grep bits/sec | awk '{ print $7 }' | tail -1)"
         lossPercentage="$(cat $var2 | grep bits/sec | awk '{ print $13 }' | tail -1)"
-        echo "OUTPUT:$bandwidh,$lossPercentage"
+        echo "OUTPUT:$bandwidth,$lossPercentage"
         deleteTmpFile="$(sudo rm $var2 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
 }
 

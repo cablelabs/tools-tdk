@@ -1078,7 +1078,7 @@ def telnetToClient(dest,dest_ip,source="LAN"):
                                 command="sudo sh %s telnetToClient %s %s %s" %(lan_script,dest_ip,wlan_username,wlan_password)
                         elif dest == "LAN":
                                 command="sudo sh %s telnetToClient %s %s %s" %(wlan_script,dest_ip,lan_username,lan_password)
-                        elif dest == "WAN" and source == "WLAN"::
+                        elif dest == "WAN" and source == "WLAN":
                                 command="sudo sh %s telnetToClient %s %s %s" %(wlan_script,dest_ip,wan_username,wan_password)
                         elif dest == "WAN" and source == "LAN":
                                 command="sudo sh %s telnetToClient %s %s %s" %(lan_script,dest_ip,wan_username,wan_password)
@@ -1526,9 +1526,16 @@ def ftpToClient_File_Download(dest,dest_ip,src,src_ip):
                                                           		#Reomve the ftp_test_file created for FTP download validation
                                                                         command="sudo sh %s remove_File %s" %(lan_script,ftp_test_file)
                                                                         status = executeCommand(command)
+								else:
+									print "ftp_test_file not received in the destination"
+							else:
+								print "Log in to Destination client failed"
 
                                                 else:
+							print "File transfer Failed"
                                                         status == "FAILURE"
+					else:
+						print "Log in to Source client Failed"
 
 
                                 elif(src == "LAN" ):
@@ -1556,9 +1563,20 @@ def ftpToClient_File_Download(dest,dest_ip,src,src_ip):
                                                                                 	#Reomve the ftp_test_file created for FTP download validation
                                                                                         command="sudo sh %s remove_File %s" %(lan_script,ftp_test_file)
                                                                                         status = executeCommand(command)
+										else:
+											print "Log in to Source client Failed"
+									else:
+										print "File not received at Destination client"
                                                                 else:
-
+									print "File transfer Failed"
                                                                         status == "FAILURE"
+							else:
+								print "Log in to Destination client failed"
+						else:	
+							print "Trnasfer file creation failed"
+						
+					else:
+						print "Log in to Source client failed"
 
                                 else:
                                         return "src is wan and not yet handled"
