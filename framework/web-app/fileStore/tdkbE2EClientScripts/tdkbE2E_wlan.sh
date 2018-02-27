@@ -303,7 +303,7 @@ USER=$var3
 PASSW=$var4
 ftp -v -n $SERVER <<END_OF_SESSION
 user $USER $PASSW
-get $TFTP_FILE
+get $FTP_FILE
 END_OF_SESSION
 )"
 echo "OUTPUT:$value"
