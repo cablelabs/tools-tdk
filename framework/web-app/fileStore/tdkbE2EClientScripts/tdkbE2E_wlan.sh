@@ -389,8 +389,8 @@ case $event in
         ftpFromWlan;;
    "ftpFromlan")
         ftpFromlan;;
-   "validtae_FTP")
-        validtae_FTP;;
+   "validate_FTP")
+        validate_FTP;;
    *) echo "Invalid Argument passed";;
 esac
 
