@@ -1085,6 +1085,8 @@ def telnetToClient(dest,dest_ip,source="LAN"):
                         else:
                                     return "Invalid argument"
                         status = executeCommand(command)
+                    else:
+                        return "Failed to connect to client"
                 else:
                         status = "Only UBUNTU platform supported!!!"
                         return status
@@ -1293,6 +1295,8 @@ def nslookupInClient(domainName,serverIP,source):
                         status = executeCommand(command)
                 else:
                         status = "Only UBUNTU platform supported!!!"
+            else:
+                status = "Failed to connect to client"
         except Exception, e:
                 print e;
                 status = e;
@@ -1319,6 +1323,8 @@ def getLanDhcpDetails(param):
                         status = executeCommand(command)
                 else:
                         status = "Only UBUNTU platform supported!!!"
+            else:
+                status = "Failed to connect to client"
         except Exception, e:
                 print e;
                 status = e;
@@ -1402,6 +1408,8 @@ def initServer(destination,connectivityType):
                 elif connectivityType == "UDP":
                     command="sudo sh %s udp_init_server" %(dest_script_name)
                 status = executeCommand(command)
+           else:
+                status = "Failed to connect to client"
 
         except Exception, e:
                 print e;
@@ -1441,6 +1449,8 @@ def RequestToServer(source,dest_ip,connectivityType):
                    status = "SUCCESS"
                else:
                    status = "FAILURE"
+           else:
+               status = "Failed to connect to Client"
 
         except Exception, e:
                 print e;
@@ -1472,6 +1482,8 @@ def validateTcpUdpOutput(source,destination,connectivityType):
                         status = "SUCCESS"
                     else:
                         status = "FAILURE"
+                else:
+                    status = "Failed to connect to Client"
             if connectivityType == "UDP":
                 status = clientConnect(source)
                 if status == "SUCCESS":
@@ -1482,6 +1494,8 @@ def validateTcpUdpOutput(source,destination,connectivityType):
                         status = "SUCCESS"
                     else:
                         status = "FAILURE"
+                else:
+                    status = "Failed to connect to Client"
         except Exception, e:
                 print e;
                 status = e;
@@ -1504,87 +1518,84 @@ def ftpToClient_File_Download(dest,dest_ip,src,src_ip):
         try:
                 status = ftpToClient (dest,dest_ip,src);
                 if status == "SUCCESS":
-                        if lan_os_type == "UBUNTU":
-                                #Make necessary changes in Src client for FTP.
-                		#If the source is WLAN need to create ftp_test_file in Wlan client and will tranfer to the destination client using put command in FTP.
-                                if (src == "WLAN" ):
-                                        status = clientConnect(src);
+                    if lan_os_type == "UBUNTU":
+                    #Make necessary changes in Src client for FTP.
+                    #If the source is WLAN need to create ftp_test_file in Wlan client and will tranfer to the destination client using put command in FTP.
+                        if (src == "WLAN" ):
+                            status = clientConnect(src);
+                            if status == "SUCCESS":
+                                #ftpFromWlan() will create the file and will transfer the file to destination via FTP protocol using PUT command.
+                                command="sudo sh %s ftpFromWlan %s %s %s %s" %(wlan_script,dest_ip,lan_username,lan_password,ftp_test_file)
+                                status = executeCommand(command)
+
+                                #Validate the file transfer to destination is success or not.
+                                if "230 Login successful" and "Transfer complete" in status:
+                                    print "ftpFromWlan is Success"
+                                    status = clientConnect(dest);
+                                    if status == "SUCCESS":
+                                        #Validate ftp_test_file received in the destination.
+                                        command="sudo sh %s validate_FTP %s" %(lan_script,ftp_test_file)                                        
+                                        status = executeCommand(command)
                                         if status == "SUCCESS":
-                            			#ftpFromWlan() will create the file and will transfer the file to destination via FTP protocol using PUT command.
-                                                command="sudo sh %s ftpFromWlan %s %s %s %s" %(wlan_script,dest_ip,lan_username,lan_password,ftp_test_file)
-                                                status = executeCommand(command)
+                                            #Reomve the ftp_test_file created for FTP download validation
+                                            command="sudo sh %s remove_File %s" %(lan_script,ftp_test_file)
+                                            status = executeCommand(command)
 
-                                  		#Validate the file transfer to destination is success or not.
-                                                if "230 Login successful" and "Transfer complete" in status:
-                                                        print "ftpFromWlan is Success"
-                                                        status = clientConnect(dest);
-                                                        if status == "SUCCESS":
-                                                		#Validate ftp_test_file received in the destination.
-                                                                command="sudo sh %s validate_FTP %s" %(lan_script,ftp_test_file)                                                   
-                                                                status = executeCommand(command)
-                                                                if status == "SUCCESS":
-                                                          		#Reomve the ftp_test_file created for FTP download validation
-                                                                        command="sudo sh %s remove_File %s" %(lan_script,ftp_test_file)
-                                                                        status = executeCommand(command)
-								else:
-									print "ftp_test_file not received in the destination"
-							else:
-								print "Log in to Destination client failed"
+                                        else:
+                                            status = "Couldn't find the transferred file in destination client"
 
-                                                else:
-							print "File transfer Failed"
-                                                        status == "FAILURE"
-					else:
-						print "Log in to Source client Failed"
-
-
-                                elif(src == "LAN" ):
-                                  	#If the source is LAN need to create ftp_test_file in lan client and will tranfer to the destination client using get command in FTP.
-                                        status = clientConnect(src);
-                                        if status == "SUCCESS":
-                                          	#Create a test file to verify FTP download in Lan client
-                                                command="sudo sh %s touch_File %s" %(lan_script,ftp_test_file)
-                                                status = executeCommand(command)
-                                                if status == "SUCCESS":
-                                                        status = clientConnect(dest);
-                                                        if status == "SUCCESS":
-                                                        	#Will transfer the test file from Lan client to Wlan using Get command in FTP 
-                                                                command="sudo sh %s ftpFromlan %s %s %s %s" %(wlan_script,src_ip,lan_username,lan_password,ftp_test_file)
-                                                                status = executeCommand(command)
-                                                                # Validate the test file transfer to destination is success or not
-                                                                if "230 Login successful" and "Transfer complete" in status:
-                                                                        print "ftpFromlan is success"
-
-                                                                        command="sudo sh %s validate_FTP %s" %(wlan_script,ftp_test_file)
-                                                                        status = executeCommand(command)
-                                                                        if status == "SUCCESS":
-                                                                                status = clientConnect(src);
-                                                                                if status == "SUCCESS":
-                                                                                	#Reomve the ftp_test_file created for FTP download validation
-                                                                                        command="sudo sh %s remove_File %s" %(lan_script,ftp_test_file)
-                                                                                        status = executeCommand(command)
-										else:
-											print "Log in to Source client Failed"
-									else:
-										print "File not received at Destination client"
-                                                                else:
-									print "File transfer Failed"
-                                                                        status == "FAILURE"
-							else:
-								print "Log in to Destination client failed"
-						else:	
-							print "Trnasfer file creation failed"
-						
-					else:
-						print "Log in to Source client failed"
-
+                                    else:
+                                        status = "Failed to connect to destination client"
                                 else:
-                                        return "src is wan and not yet handled"
+                                    status = "ftpFromWlan: Failed to transfer file via FTP"
+                            else:
+                                status = "Failed to connect to WLAN client"
+
+                        elif(src == "LAN" ):
+                            #If the source is LAN need to create ftp_test_file in lan client and will tranfer to the destination client using get command in FTP.
+                            status = clientConnect(src);
+                            if status == "SUCCESS":
+                                #Create a test file to verify FTP download in Lan client
+                                command="sudo sh %s touch_File %s" %(lan_script,ftp_test_file)
+                                status = executeCommand(command)
+                                if status == "SUCCESS":
+                                    status = clientConnect(dest);
+                                    if status == "SUCCESS":
+                                        #Will transfer the test file from Lan client to Wlan using Get command in FTP 
+                                        command="sudo sh %s ftpFromlan %s %s %s %s" %(wlan_script,src_ip,lan_username,lan_password,ftp_test_file)
+                                        status = executeCommand(command)
+                                        # Validate the test file transfer to destination is success or not
+                                        if "230 Login successful" and "Transfer complete" in status:
+                                            print "ftpFromlan is success"
+
+                                            command="sudo sh %s validate_FTP %s" %(wlan_script,ftp_test_file)
+                                            status = executeCommand(command)
+                                            if status == "SUCCESS":
+                                                status = clientConnect(src);
+                                                if status == "SUCCESS":
+                                                #Reomve the ftp_test_file created for FTP download validation
+                                                    command="sudo sh %s remove_File %s" %(lan_script,ftp_test_file)
+                                                    status = executeCommand(command)
+                                                else:
+                                                    status = "Failed to connect to LAN to remove testfile"
+                                            else:
+                                                status = "Couldn't find the transferred file in destination client"
+                                       else:
+                                            status = "ftpFromlan: Failed to transfer file via FTP"
+                                    else:
+                                        status = "Failed to connect to destination client"
+                                else:
+                                    status = "Failed to create the test file in LAN client"
+                            else:
+                                status = "Failed to connect to LAN client"
 
                         else:
-                                status = "Only UBUNTU platform supported!!!"
+                            status = "src is wan and not yet handled"
+
+                    else:
+                        status = "Only UBUNTU platform supported!!!"
                 else:
-                        return "Failed to do FTP with source and Destination client"
+                    status = "Failed to do FTP with source and Destination client"
         except Exception, e:
                 print e;
                 status = e;
@@ -1594,7 +1605,6 @@ def ftpToClient_File_Download(dest,dest_ip,src,src_ip):
 
 
 ########## End of Function ##########
-
 def postExecutionCleanup():
 
 # postExecutionCleanup
