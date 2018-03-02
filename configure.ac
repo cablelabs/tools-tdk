@@ -154,7 +154,7 @@ AC_ARG_ENABLE([aspcomponents],
          [
            case "${enableval}" in
               yes) ASPCOMPONENTS=true
-                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" advancecomponents/Recorder_stub advancecomponents/ClosedCaption_stub advancecomponents/Mediaframework_stub advancecomponents/MediaStreamer_stub  advancecomponents/rmfApp_stub advancecomponents/tdkRmfApp advancecomponents/TDKIntegration_Stub"],
+                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" advancecomponents/Recorder_stub advancecomponents/ClosedCaption_stub advancecomponents/Mediaframework_stub advancecomponents/MediaStreamer_stub  advancecomponents/rmfApp_stub advancecomponents/tdkRmfApp advancecomponents/TDKIntegration_Stub advancecomponents/OpenSourceComponent_Stub"],
                           [test x$CLIENT = xtrue], [SUBDIR_CLIENT+=" advancecomponents/gstPluginsRdk_check advancecomponents/gstPluginsRdk_stub advancecomponents/ClosedCaption_stub advancecomponents/TDKIntegration_Stub"],
                           [echo box type not specified]) ;;
              no) ASPCOMPONENTS=false ;;
@@ -287,6 +287,9 @@ m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/TDKIntegration_Stub/Make
 
 m4_syscmd([test -d advancecomponents/MediaUtils_stub/])
 m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/MediaUtils_stub/Makefile])])
+
+m4_syscmd([test -d advancecomponents/OpenSourceComponent_Stub/])
+m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/OpenSourceComponent_Stub/Makefile])])
 
 AC_SUBST(COPTS)
 AC_SUBST(AGENT_FLAGS)
