@@ -265,11 +265,11 @@ def parseDeviceConfig(obj):
                 global lan_dhcp_location
                 lan_dhcp_location = config.get(deviceConfig, "LAN_DHCP_LOCATION")
                 
-                global tmp_file_tcp
-                tmp_file_tcp = config.get(deviceConfig, "TMP_FILE_TCP")
+                global tmp_file_lan
+                tmp_file_lan = config.get(deviceConfig, "TMP_FILE_LAN")
 
-                global tmp_file_udp
-                tmp_file_udp = config.get(deviceConfig, "TMP_FILE_UDP")
+                global tmp_file_wlan
+                tmp_file_wlan = config.get(deviceConfig, "TMP_FILE_WLAN")
 
 		global ftp_test_file
                 ftp_test_file = config.get(deviceConfig, "FTP_TEST_FILE")
@@ -1333,7 +1333,7 @@ def getLanDhcpDetails(param):
 
 ########## End of Function ##########
 
-def tcp_udpInClients(source,destination,dest_ip,connectivityType="TCP"):
+def tcp_udpInClients(source,destination,dest_ip,src_ip,connectivityType="TCP"):
 
 # tcp_udpInClients
 
@@ -1342,6 +1342,7 @@ def tcp_udpInClients(source,destination,dest_ip,connectivityType="TCP"):
 # Parameters  : destination - The client machine to which the request is sent
 #               dest_ip - IP address of the destination machine
 #               source - The client from which the command should execute
+#		src_ip - IP address of the source machine
 # Return Value: status - Status of tcp/udp request
 
         try:
@@ -1350,15 +1351,27 @@ def tcp_udpInClients(source,destination,dest_ip,connectivityType="TCP"):
            global clientOutput;
            clientOutput = "Failed to get Bandwidth of client"
            #Set destination machine as server for TCP/UDP
-           status = initServer(destination,connectivityType)
+           status = initServer(destination,dest_ip,connectivityType)
            if status == "SUCCESS":
                 #Send TCP/UDP request from client(source) to server(client).
                 #This request returns the bandwidth from client side for TCP
-                status,clientOutput = RequestToServer(source,dest_ip,connectivityType)
+                status,clientOutput = RequestToServer(source,dest_ip,src_ip,connectivityType)
                 if status == "SUCCESS":
                     validationStatus,outputValue = validateTcpUdpOutput(source,destination,connectivityType)
+                    if validationStatus == "SUCCESS" and connectivityType == "UDP":
+                        status = validationStatus;
+                        bandwidth = outputValue.split(",")[0];
+                        loss = outputValue.split(",")[1].split("/")[0];
+                        lossPercentage = loss[loss.find("(")+1:loss.find(")")]
+                        outputValue = bandwidth + "," + lossPercentage
+                    elif validationStatus == "SUCCESS" and connectivityType == "TCP":
+                        status = validationStatus;
+                    else:
+                        status = "Failed to validate the output"
+                        outputValue = "Failed to validate bandwidth,Failed to validate loss percentage"
                 else:
                     status = "Failed to send request to destination"
+                    outputValue ="Failed to get bandwidth,Failed to get loss percentage"
            else:
                status = "Failed to init server in machine "
            #Post Requisite: Kill iperf pid
@@ -1404,9 +1417,9 @@ def initServer(destination,connectivityType):
                 else:
                     dest_script_name = wan_script;
                 if connectivityType == "TCP":
-                    command="sudo sh %s tcp_init_server %s" %(dest_script_name,tmp_file_tcp)
+                    command="sudo sh %s tcp_init_server %s %s" %(dest_script_name,tmp_file_lan,dest_ip)
                 elif connectivityType == "UDP":
-                    command="sudo sh %s udp_init_server" %(dest_script_name)
+                    command="sudo sh %s udp_init_server %s" %(dest_script_name,dest_ip)
                 status = executeCommand(command)
            else:
                 status = "Failed to connect to client"
@@ -1441,9 +1454,9 @@ def RequestToServer(source,dest_ip,connectivityType):
                else:
                    src_script_name = wan_script;
                if connectivityType == "TCP":
-                   command="sudo sh %s tcp_request %s" %(src_script_name,dest_ip)
+                   command="sudo sh %s tcp_request %s %s %s" %(src_script_name,dest_ip,src_ip,tmp_file_wlan)
                elif connectivityType == "UDP":
-                   command="sudo sh %s udp_request %s %s" %(src_script_name,dest_ip,tmp_file_udp)
+                   command="sudo sh %s udp_request %s %s %s" %(src_script_name,dest_ip,tmp_file_wlan,src_ip)
                output = executeCommand(command)
                if output:
                    status = "SUCCESS"
@@ -1451,7 +1464,6 @@ def RequestToServer(source,dest_ip,connectivityType):
                    status = "FAILURE"
            else:
                status = "Failed to connect to Client"
-
         except Exception, e:
                 print e;
                 status = e;
@@ -1476,7 +1488,7 @@ def validateTcpUdpOutput(source,destination,connectivityType):
                 status = clientConnect(destination)
                 if status == "SUCCESS":
                     #Get the bandwidth from server side and validate it.
-                    command="sudo sh %s validate_tcp_server_output %s" %(dest_script_name,tmp_file_tcp)
+                    command="sudo sh %s validate_tcp_server_output %s" %(dest_script_name,tmp_file_lan)
                     outputValue = executeCommand(command)
                     if outputValue >= clientOutput:
                         status = "SUCCESS"
@@ -1484,18 +1496,20 @@ def validateTcpUdpOutput(source,destination,connectivityType):
                         status = "FAILURE"
                 else:
                     status = "Failed to connect to Client"
+
             if connectivityType == "UDP":
                 status = clientConnect(source)
                 if status == "SUCCESS":
                     #Get the bandwidth and loss percentage from client side
-                    command="sudo sh %s validate_udp_output %s" %(src_script_name,tmp_file_udp)
+                    command="sudo sh %s validate_udp_output %s" %(src_script_name,tmp_file_wlan)
                     outputValue = executeCommand(command)
                     if outputValue:
                         status = "SUCCESS"
                     else:
                         status = "FAILURE"
                 else:
-                    status = "Failed to connect to Client"
+                    status = "Failed to connect to client"
+
         except Exception, e:
                 print e;
                 status = e;

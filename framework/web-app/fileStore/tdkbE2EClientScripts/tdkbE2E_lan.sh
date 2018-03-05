@@ -133,10 +133,10 @@ get_lan_dhcp_details()
         echo "OUTPUT:$value"
 }
 
-# To set the server in listening mode
+# To set the TCP server in listening mode
 tcp_init_server()
 {
-        iperf -s > $var2 &
+        iperf -s -B $var3 > $var2 &
         value="$(ps aux | grep iperf | grep -v grep > /dev/null && echo "SUCCESS" || echo "FAILURE")"
         echo "OUTPUT:$value"
 }
@@ -144,8 +144,15 @@ tcp_init_server()
 #To send TCP request from client to server
 tcp_request()
 {
-        value="$(iperf -c $var2 | grep bits/sec | cut -d ' ' -f 11)"
-        echo "OUTPUT:$value"
+        iperf -c $var2 -B $var3 > $var4 2>&1
+        bindStatus="$(cat $var4 | grep "bind failed:" && echo "FAILURE" || echo "SUCCESS")"
+        echo "bindStatus:$bindStatus"
+        if [ $bindStatus = "SUCCESS" ]; then
+                value="$(cat $var4 | grep bits/sec | cut -d ' ' -f 11)"
+                echo "OUTPUT:$value"
+        else
+                echo "OUTPUT:"
+        fi
 }
 
 #To get the bandwidth from server
@@ -159,7 +166,7 @@ validate_tcp_server_output()
 # To set the UDP server in listening mode
 udp_init_server()
 {
-        iperf -s -u &
+        iperf -s -B $var2 -u &
         value="$(ps aux | grep iperf | grep -v grep > /dev/null && echo "SUCCESS" || echo "FAILURE")"
         echo "OUTPUT:$value"
 }
@@ -167,8 +174,13 @@ udp_init_server()
 #To send UDP request from client to server
 udp_request()
 {
-        value="$(iperf -c $var2 -u > $var3 && echo "SUCCESS" || echo "FAILURE")"
-        echo "OUTPUT:$value"
+        iperf -c $var2 -B $var4 -u > $var3 2>&1
+        bindStatus="$(cat $var3 | grep "bind failed:" && echo "FAILURE" || echo "SUCCESS")"
+        if [ $bindStatus = "SUCCESS" ]; then
+                echo "OUTPUT:SUCCESS"
+        else
+                echo "OUTPUT:"
+        fi
 }
 
 #To validate the UDP output
