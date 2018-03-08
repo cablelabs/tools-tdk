@@ -1594,7 +1594,7 @@ def ftpToClient_File_Download(dest,dest_ip,src,src_ip):
                                                     status = "Failed to connect to LAN to remove testfile"
                                             else:
                                                 status = "Couldn't find the transferred file in destination client"
-                                       else:
+                                        else:
                                             status = "ftpFromlan: Failed to transfer file via FTP"
                                     else:
                                         status = "Failed to connect to destination client"
