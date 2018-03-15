@@ -58,11 +58,11 @@ def parseDeviceConfig(obj):
 		configFilePath = configFilePath + "/tdkbDeviceConfig"
 
         	print "Device config file:", configFilePath+'/'+deviceConfig
-	
+
         	#Parse the device configuration file
         	config = ConfigParser.ConfigParser()
 		config.read(configFilePath+'/'+deviceConfig)
-	
+
         	#Parse the file and store the values in global variables
                 global setup_type
                 setup_type = config.get(deviceConfig, 'SETUP_TYPE')
@@ -87,13 +87,13 @@ def parseDeviceConfig(obj):
 
         	global wlan_username
         	wlan_username = config.get(deviceConfig, "WLAN_USERNAME")
-        
+
         	global wlan_password
         	wlan_password = config.get(deviceConfig, "WLAN_PASSWORD")
 
         	global wlan_ftp_username
         	wlan_ftp_username = config.get(deviceConfig, "WLAN_FTP_USERNAME")
-        
+
         	global wlan_ftp_password
         	wlan_ftp_password = config.get(deviceConfig, "WLAN_FTP_PASSWORD")
 
@@ -130,15 +130,15 @@ def parseDeviceConfig(obj):
         	global lan_ip
         	lan_ip = config.get(deviceConfig, "LAN_IP")
 
-		global lan_username        
+		global lan_username
         	lan_username = config.get(deviceConfig, "LAN_USERNAME")
-        
+
 		global lan_password
         	lan_password = config.get(deviceConfig, "LAN_PASSWORD")
 
-		global lan_ftp_username        
+		global lan_ftp_username
         	lan_ftp_username = config.get(deviceConfig, "LAN_FTP_USERNAME")
-        
+
 		global lan_ftp_password
         	lan_ftp_password = config.get(deviceConfig, "LAN_FTP_PASSWORD")
 
@@ -150,15 +150,15 @@ def parseDeviceConfig(obj):
 
                 global lan_subnet_mask
                 lan_subnet_mask = config.get(deviceConfig, "LAN_SUBNET_MASK")
-                
+
                 global lan_dns_server
                 lan_dns_server = config.get(deviceConfig, "LAN_DNS_SERVER")
-                
+
                 global lan_lease_time
-                lan_lease_time = config.get(deviceConfig, "LAN_LEASE_TIME")  
-                
+                lan_lease_time = config.get(deviceConfig, "LAN_LEASE_TIME")
+
                 global lan_domain_name
-                lan_domain_name = config.get(deviceConfig, "LAN_DOMAIN_NAME")                                
+                lan_domain_name = config.get(deviceConfig, "LAN_DOMAIN_NAME")
 
 		global lan_script
         	lan_script = config.get(deviceConfig, "LAN_SCRIPT")
@@ -261,10 +261,10 @@ def parseDeviceConfig(obj):
 
                 global nslookup_domain_name
                 nslookup_domain_name = config.get(deviceConfig, "NSLOOKUP_DOMAIN_NAME")
-                
+
                 global lan_dhcp_location
                 lan_dhcp_location = config.get(deviceConfig, "LAN_DHCP_LOCATION")
-                
+
                 global tmp_file_lan
                 tmp_file_lan = config.get(deviceConfig, "TMP_FILE_LAN")
 
@@ -273,6 +273,21 @@ def parseDeviceConfig(obj):
 
 		global ftp_test_file
                 ftp_test_file = config.get(deviceConfig, "FTP_TEST_FILE")
+
+                global website_url
+                website_url = config.get(deviceConfig, "WEBSITE_URL")
+
+		global website_keyword
+                website_keyword = config.get(deviceConfig, "WEBSITE_KEYWORD")
+
+                global allowed_url
+                allowed_url = config.get(deviceConfig, "ALLOWED_URL")
+
+                global parentalCtl_port
+                parentalCtl_port = config.get(deviceConfig, "PARENTALCTL_PORT")
+
+		global invalid_dns_server
+                invalid_dns_server = config.get(deviceConfig, "INVALID_DNS_SERVER")
 
 	except Exception, e:
 		print e;
@@ -319,7 +334,7 @@ def clientConnect(clientType):
 # Description : Function to connect to the client machine.
 # Parameters  : clientType: WLAN/LAN/WAN
 # Return Value: SUCCESS/FAILURE
-	
+
 	try:
 		status = "SUCCESS";
 		global isSessionActive;
@@ -339,8 +354,8 @@ def clientConnect(clientType):
 			status = "Invalid client type"
 	except Exception, e:
 		print e;
-		status = "Connection to client machine failed"	
-	
+		status = "Connection to client machine failed"
+
 	print "Connection to client machine:%s" %status;
     	return status;
 
@@ -672,7 +687,7 @@ def getLanSubnetMask(lanInterface):
 # getWlanSubnetMask
 
 # Syntax      : getLanSubnetMask()
-# Description : Function to get the subnet mask of the lan client 
+# Description : Function to get the subnet mask of the lan client
 # Parameters  : lanInterface - lan interface name
 # Return Value: status - Subnetmask of the LAN client
 
@@ -772,7 +787,7 @@ def getOperatingStandard(ssidName):
 				operating_standard = "802.11n"
 			else:
 				operating_standard = "Invalid operating standard"
-				
+
                 else:
                         operating_standard = "Only UBUNTU platform supported!!!"
         except Exception, e:
@@ -843,7 +858,7 @@ def checkIpRange(ip1,ip2):
 	except Exception, e:
                 print e;
                 status = e;
-        
+
 	return status
 
 ######### End of Function ##########
@@ -958,7 +973,7 @@ def setMultipleParameterValues(obj,paramList):
 # Return Value: SUCCESS/FAILURE
 
 	tdkTestObj = obj.createTestStep("tdkb_e2e_SetMultipleParams");
-    	
+
 	expectedresult="SUCCESS";
 	tdkTestObj.addParameter("paramList",paramList);
 	tdkTestObj.executeTestCase(expectedresult);
@@ -1182,6 +1197,8 @@ def addStaticRoute(destIp, gwIp, interface, source="WLAN"):
 # Return Value: SUCCESS/FAILURE
 
         try:
+            status = clientConnect(source)
+            if status == "SUCCESS":
                 if wlan_os_type == "UBUNTU":
                         if source == "WLAN":
                                 script_name = wlan_script;
@@ -1192,6 +1209,8 @@ def addStaticRoute(destIp, gwIp, interface, source="WLAN"):
                         status = executeCommand(command)
                 else:
                         status = "Only UBUNTU platform supported!!!"
+            else:
+                return "Failed to connect to wlan client"
 
         except Exception, e:
                 print e;
@@ -1272,6 +1291,42 @@ def wgetToWAN(connectivityType,source_ip,gateway_ip,source="WLAN"):
 
 ########## End of Function ##########
 
+def parentalCntrlWgetToWAN(connectivityType,source_ip,gateway_ip,url,source="WLAN"):
+
+# parentalCntrlWgetToWAN
+
+# Syntax      : parentalCntrlWgetToWAN(connectivityType,source_ip,gateway_ip,url,source="WLAN")
+# Description : Function to do wget to WAN client from other client devices for parental control
+# Parameters  : connectivityType - HTTP
+#               source_ip - Ip from which http to be placed
+#               gateway_ip - Gateway IP address
+#		url : The URL to do wget
+#               source  :  client machine type from which wget is to be done
+# Return Value: Returns the status of wget operation
+
+        try:
+                status = clientConnect(source)
+                if status == "SUCCESS":
+                        if wlan_os_type == "UBUNTU":
+                                if source == "WLAN":
+                                    script_name = wlan_script;
+                                else:
+                                    script_name = lan_script;
+                                if connectivityType == "WGET_HTTP":
+                                    command="sudo sh %s wget_http_network %s %s %s" %(script_name,source_ip,url,parentalCtl_port)
+                                status = executeCommand(command)
+                        else:
+                                status = "Only UBUNTU platform supported!!!"
+                else:
+                        return "Failed to connect to client"
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "Status of parentalCntrlWgetToWAN:%s" %status;
+        return status;
+
+########## End of Function ##########
 def nslookupInClient(domainName,serverIP,source):
 
 # nslookupInClient
@@ -1396,7 +1451,7 @@ def tcp_udpInClients(source,destination,dest_ip,src_ip,connectivityType="TCP"):
 
 ########## End of Function ##########
 
-def initServer(destination,connectivityType):
+def initServer(destination,dest_ip,connectivityType):
 
 # initServer
 
@@ -1431,7 +1486,7 @@ def initServer(destination,connectivityType):
 
 ########## End of Function ##########
 
-def RequestToServer(source,dest_ip,connectivityType):
+def RequestToServer(source,dest_ip,src_ip,connectivityType):
 
 # RequestToServer
 
@@ -1548,7 +1603,7 @@ def ftpToClient_File_Download(dest,dest_ip,src,src_ip):
                                     status = clientConnect(dest);
                                     if status == "SUCCESS":
                                         #Validate ftp_test_file received in the destination.
-                                        command="sudo sh %s validate_FTP %s" %(lan_script,ftp_test_file)                                        
+                                        command="sudo sh %s validate_FTP %s" %(lan_script,ftp_test_file)
                                         status = executeCommand(command)
                                         if status == "SUCCESS":
                                             #Reomve the ftp_test_file created for FTP download validation
@@ -1575,7 +1630,7 @@ def ftpToClient_File_Download(dest,dest_ip,src,src_ip):
                                 if status == "SUCCESS":
                                     status = clientConnect(dest);
                                     if status == "SUCCESS":
-                                        #Will transfer the test file from Lan client to Wlan using Get command in FTP 
+                                        #Will transfer the test file from Lan client to Wlan using Get command in FTP
                                         command="sudo sh %s ftpFromlan %s %s %s %s" %(wlan_script,src_ip,lan_username,lan_password,ftp_test_file)
                                         status = executeCommand(command)
                                         # Validate the test file transfer to destination is success or not
