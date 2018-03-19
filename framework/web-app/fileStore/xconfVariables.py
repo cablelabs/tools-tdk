@@ -17,9 +17,9 @@
 # limitations under the License.
 ##########################################################################
 
-AUTO_SEARCH_IN_JENKINS='TRUE'
+AUTO_SEARCH_IN_JENKINS='FALSE'
 SEARCH_MASTER_IN_JENKINS='TRUE'
-FIRMWARELOCATION = 
+FIRMWARELOCATION =
 CDN_MOC_SERVER=
 
 #These are helper fields to search for the latest RDK image in jenkins
@@ -37,6 +37,4 @@ XCONF_INVALID_URL="https://xconf.invalidurl"
 #image name is to be added in the format JENKINS_JOB=imagename
 #JENKINS_JOB and imagename values are to be reffered from version.txt file in the device
 #replace - symbol in JENKINS_JOB with _
-
-
 

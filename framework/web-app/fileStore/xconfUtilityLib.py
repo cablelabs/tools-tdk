@@ -28,6 +28,7 @@ import requests
 from ConfigParser import SafeConfigParser
 from jenkinsapi.custom_exceptions import JenkinsAPIException, UnknownJob,  NoBuildData, NotFound
 import os
+from random import randint
 from xconfVariables import *
 #--------------------------------------------------------------------------------
 # To get the latest TDK build for the given Job.
@@ -38,14 +39,12 @@ from xconfVariables import *
 #
 # Return Value : Latest TDK build 
 #---------------------------------------------------------------------------------
-
 def getLatestTDKBuild(jobName,branch_name='master'):
 
   requests.packages.urllib3.disable_warnings()
-    
-  try: 
+
+  try:
     parser = SafeConfigParser()
-    #parser.read( os.path.dirname(os.path.abspath(__file__))+'/secure_connection/CDN/Configure_Jenkins.ini')
     parser.read( os.path.dirname(os.path.abspath(__file__))+'/Configure_Jenkins.ini')
     print "Connecting to Jenkins..."
     # Fetching the credentials from configuration file
@@ -59,12 +58,12 @@ def getLatestTDKBuild(jobName,branch_name='master'):
     print "Login to Jenkins failed. Check your url, username or password"
 
   else:
-    print "Fetching the latest build..." 
+    print "Fetching the latest build..."
 
     try:
      job =  J[jobName]
 
-    except UnknownJob: 
+    except UnknownJob:
      print "Unknown Job Name. Please Check and retry."
 
     else:
@@ -72,19 +71,41 @@ def getLatestTDKBuild(jobName,branch_name='master'):
      try:
       # Fetching the build ids of the given Job
       build_ids = job.get_build_ids()
+      image_file_dir = os.path.dirname(os.path.abspath(__file__))+ '/build-images'+str(randint(0, 100000))
+      image_path =  image_file_dir+'/build-images.txt'
+      remove_command = 'rm -rf ' + image_file_dir
+      make_dir_command = 'mkdir ' + image_file_dir
 
       for buildid in build_ids:
-	# Fetching the build names
- 	build_name=job.get_build(buildid)
-        
-        #Fetching the Latest TDK build of the given job and branch
-        if  build_name.name.find(VALID_KEYWORD) != -1 and build_name.name.find(branch_name) != -1 and build_name.name.find(INVALID_KEYWORD) == -1:
-	 image_name = build_name.name.replace(jobName+' ','')
-	 print "The latest TDK build is successfully fetched."
-	 return image_name
+        # Fetching the build names
+        build_name=job.get_build(buildid)
+        if os.path.isfile(image_path):
+         os.system(remove_command)
+        if build_name.is_good():
+         all_artifacts = build_name.get_artifact_dict()
+         os.system( make_dir_command)
+         all_artifacts.get('build-images.txt').save_to_dir( image_file_dir)
+         file = open(image_path, "r")
+         if os.path.isfile(image_path):
+          image_line = file.readline()
+          file.close()
+          os.system(remove_command)
+          image_name_split= image_line.split()
+          if image_name_split[0] == VALID_KEYWORD :
+                image_name = image_name_split[2]
+                if image_name.find(branch_name) != -1 and image_name.find(INVALID_KEYWORD) == -1:
+                        image_name_required =image_name
+                        print "The latest TDK build is successfully fetched."
+                        return image_name_required
+
+      return  null
+     #Fetching the Latest TDK build of the given job and branch
+     except  requests.exceptions.HTTPError  as e:
+      print "Unable to fetch TDK build as no build available for this job in Jenkins"
 
      except NoBuildData as e:
        print "Some error in fetching the TDK  build of the given job. No build data available for this job"
+
 ########## End of Function ##########
 
 
