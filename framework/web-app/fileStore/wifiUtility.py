@@ -41,60 +41,17 @@ def ExecuteWIFIHalCallMethod(obj, primitive, radioIndex, param, methodname):
     details = tdkTestObj.getResultDetails();
 
     if expectedresult in actualresult :
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
         print "TEST STEP : Execute callmethod for %s" %methodname
         print "EXPECTED RESULT : Should successfully execute callmethod"
         print "ACTUAL RESULT : %s " %details
         #Get the result of execution
         print "[TEST EXECUTION RESULT] : SUCCESS";
     else:
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("FAILURE");
         print "TEST STEP : Execute callmethod for %s" %methodname
         print "EXPECTED RESULT : Should successfully execute callmethod"
         print "ACTUAL RESULT 1: %s " %details
         #Get the result of execution
         print "[TEST EXECUTION RESULT] : FAILURE";
-
-    return (tdkTestObj, actualresult, details);
-
-
-##########################################################################
-
-# A utility function to invoke WiFi hal api wifi_applyRadioSettings based on the radioIndex received
-#
-# Syntax       : ExecuteWIFIApplySettings(obj, radioIndex)
-#
-# Parameters   : obj, radioIndex
-#
-# Return Value : Execution status of the hal api
-
-def ExecuteWIFIApplySettings(obj,radioIndex):
-    #Script to load the configuration file of the component
-    tdkTestObj = obj.createTestStep("WIFIHAL_ApplySettings");
-    #Giving the method name to invoke the api to set the radio settings
-    #Radio index is 0 for 2.4GHz and 1 for 5GHz
-    tdkTestObj.addParameter("radioIndex",radioIndex);
-    expectedresult="SUCCESS";
-    tdkTestObj.executeTestCase(expectedresult);
-    actualresult = tdkTestObj.getResult();
-    details = tdkTestObj.getResultDetails();
-
-    if expectedresult in actualresult :
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("SUCCESS");
-        print "TEST STEP: Executing wifi_applyRadioSettings to set the previous changes"
-        print "EXPECTED RESULT: Execution returns SUCCESS"
-        print "ACTUAL RESULT: %s"%details;
-        print "TEST EXECUTION RESULT :SUCCESS"
-    else:
-        #Set the result status of execution
-        tdkTestObj.setResultStatus("FAILURE");
-        print "TEST STEP: Executing wifi_applyRadioSettings to set the previous changes"
-        print "EXPECTED RESULT: Execution returns SUCCESS"
-        print "ACTUAL RESULT: %s"%details;
-        print "TEST EXECUTION RESULT :FAILURE"
 
     return (tdkTestObj, actualresult, details);
 
