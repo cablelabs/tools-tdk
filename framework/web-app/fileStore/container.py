@@ -74,7 +74,7 @@ def CheckContainerState(obj, containerName, expectedState):
 	
 	cmd = "lxc-info -n " + containerName + " | grep State";
 	
-	#configre the command
+	#configure the command
         tdkTestObj.addParameter("command", cmd);
         tdkTestObj.executeTestCase(expectedResult);
 
@@ -107,9 +107,11 @@ def FindPatternFromFile(obj, fileName, field, pattern):
 	value = "";
         tdkTestObj = obj.createTestStep('ExecuteCommand');
         expectedResult="SUCCESS";
-	
-	cmd = "cat " + fileName + " | grep " + field;
-	print cmd
+	if field == "":
+		cmd = "cat " + fileName + " | grep -o " + pattern;
+	else:
+		cmd = "cat " + fileName + " | grep " + field + " | tr \'\n\' \' \'";
+	print cmd;
 	
 	#configre the command
         tdkTestObj.addParameter("command", cmd);
@@ -126,10 +128,13 @@ def FindPatternFromFile(obj, fileName, field, pattern):
 			tdkTestObj.setResultStatus("SUCCESS");
 			print value;
 		else:
-			if pattern in details:
+			pattern = pattern.replace("\*", "*");
+			if pattern.strip("\"") in details:
+				print "%s Pattern Found" %pattern;
 				tdkTestObj.setResultStatus("SUCCESS");
 				status = True;
 			else:
+				print "%s Pattern not Found" %pattern;
 				tdkTestObj.setResultStatus("FAILURE");
 	else:
 		tdkTestObj.setResultStatus("FAILURE");
@@ -455,4 +460,38 @@ def GetFileList(obj, containerName, folderPath, expFileList):
                 tdkTestObj.setResultStatus("FAILURE");
                 print "Command execution failed";
         return;
+
+def CheckFileExists(obj, folderPath, fileName):
+        fileList = [];
+	status = False;
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
+        expectedResult="SUCCESS";
+
+        cmd = "ls " + folderPath + " | tr \'\n\' \' \'";
+        print cmd;
+
+        #configre the command
+        tdkTestObj.addParameter("command", cmd);
+        tdkTestObj.executeTestCase(expectedResult);
+
+        actualResult = tdkTestObj.getResult();
+        print "Exceution result: ", actualResult;
+
+        if expectedResult in actualResult:
+                details = tdkTestObj.getResultDetails();
+                print "Output: ", details;
+                fileList = details.split();
+                print fileList;
+		if fileName in fileList:
+			status = True;
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        print "File exists";
+                else:
+                        tdkTestObj.setResultStatus("FAILURE");
+                        print "File does not exist";
+
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+                print "Command execution failed";
+        return status;
 

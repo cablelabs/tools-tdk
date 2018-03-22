@@ -103,7 +103,7 @@ if "SUCCESS" in loadStatus.upper():
 	if result:
 		fileName = "/containers/rmfserv/base.conf"
 		field = "lxc.cgroup.devices.deny";
-		pattern = " = a\\n"
+		pattern = " = a"
 		status, value = container.FindPatternFromFile(obj, fileName, field, pattern);
 		if status:
 			print "Devices denied by default";

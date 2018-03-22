@@ -21,9 +21,9 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
+  <version>3</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Container_Unprivileged_DeviceControl_DBus</name>
+  <name>Container_Check_Special_Permission_Iarmbus</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -33,7 +33,7 @@
   <!--  -->
   <status>FREE</status>
   <!--  -->
-  <synopsis>Check unprivileged containers devices control restrictions for dbus</synopsis>
+  <synopsis>Check that containeirzed tdk image added special permissions to IARMBUS</synopsis>
   <!--  -->
   <groups_id />
   <!--  -->
@@ -56,21 +56,21 @@
     <!--  -->
   </rdk_versions>
   <test_cases>
-    <test_case_id>CT_Container_10</test_case_id>
-    <test_objective>Check unprivileged containers devices control restrictions for dbus</test_objective>
+    <test_case_id>CT_Container_32</test_case_id>
+    <test_objective>Check that containeirzed tdk image added special permissions to IARMBUS</test_objective>
     <test_type>Positive</test_type>
     <test_setup>Emulator hybrid</test_setup>
     <pre_requisite>Emulator containerized image booted in a VM</pre_requisite>
     <api_or_interface_used>N/A</api_or_interface_used>
     <input_parameters>N/A</input_parameters>
     <automation_approch>1. TM loads the SystemUtilAgent
-2. SystemUtilAgent will check the file content of "/containers/dbus/base.conf" 
-3. TM will check if the file contains an entry as "lxc.cgroup.devices.deny = a" and return SUCCESS/FAILURE status.
+2. SystemUtilAgent will check check if system-local-tdk.conf was added to the emulator image
+3. TM will check if the system-local-tdk.conf contains needed permissions to IARMBUS and return SUCCESS/FAILURE status.
 4. TM unloads the SystemUtilAgent</automation_approch>
-    <except_output>Checkpoint 1.Check the file " /containers/dbus/base.conf" contains an entry as "lxc.cgroup.devices.deny = a"</except_output>
+    <except_output>Checkpoint 1.Check if the system-local-tdk.conf contains needed permissions to IARMBUS</except_output>
     <priority>High</priority>
     <test_stub_interface>libsystemutilstub.so.0</test_stub_interface>
-    <test_script>Container_Unprivileged_DeviceControl_DBus</test_script>
+    <test_script>Container_Check_Special_Permission_Iarmbus</test_script>
     <skipped>No</skipped>
     <release_version></release_version>
     <remarks></remarks>
@@ -81,6 +81,7 @@
 # use tdklib library,which provides a wrapper for tdk testcase script 
 import tdklib; 
 import container;
+import os.path;
 
 #Test component to be tested
 obj = tdklib.TDKScriptingLibrary("systemutil","1");
@@ -89,7 +90,44 @@ obj = tdklib.TDKScriptingLibrary("systemutil","1");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-obj.configureTestCase(ip,port,'Container_Unprivileged_DeviceControl_DBus');
+
+def CheckFileExists(obj, folderPath, fileName):
+        fileList = [];
+	status = False;
+        tdkTestObj = obj.createTestStep('ExecuteCommand');
+        expectedResult="SUCCESS";
+
+        cmd = "ls " + folderPath + " | tr \'\n\' \' \'";
+        print cmd;
+
+        #configre the command
+        tdkTestObj.addParameter("command", cmd);
+        tdkTestObj.executeTestCase(expectedResult);
+
+        actualResult = tdkTestObj.getResult();
+        print "Exceution result: ", actualResult;
+
+        if expectedResult in actualResult:
+                details = tdkTestObj.getResultDetails();
+                print "Output: ", details;
+                fileList = details.split();
+                print fileList;
+		if fileName in fileList:
+			status = True;
+                        tdkTestObj.setResultStatus("SUCCESS");
+                        print "File exists";
+                else:
+                        tdkTestObj.setResultStatus("FAILURE");
+                        print "File does not exist";
+
+        else:
+                tdkTestObj.setResultStatus("FAILURE");
+                print "Command execution failed";
+        return status;
+
+
+
+obj.configureTestCase(ip,port,'Container_Check_Special_Permission_Iarmbus');
 
 #Get the result of connection with test component and STB
 loadStatus = obj.getLoadModuleResult();
@@ -101,14 +139,16 @@ if "SUCCESS" in loadStatus.upper():
         processList = ["dbusDaemonInit", "rmfStreamerInit", "systemd"];
         result = container.CheckProcessTree(obj, True, processList);
 	if result:
-		fileName = "/containers/dbus/base.conf"
-		field = "lxc.cgroup.devices.deny";
-		pattern = " = a"
-		status, value = container.FindPatternFromFile(obj, fileName, field, pattern);
+		folder = "/etc/dbus-1/";
+		fileName = "system-local-tdk.conf";
+		status = CheckFileExists(obj, folder, fileName)
 		if status:
-			print "Devices denied by default";
-		else:
-			print "Devices not denied by default";
+			patternList = ["\"allow own=\\\"process.iarm.agent\\\"\"", "\"allow own=\\\"process.iarm.Daemon\\\"\"",	"\"allow send_destination=\\\"process.iarm.Daemon\\\"\"", "\"allow receive_sender=\\\"process.iarm.Daemon\\\"\"", "\"allow send_destination=\\\"process.iarm.agent\\\"\"", "\"allow receive_sender=\\\"process.iarm.agent\\\"\""];
+			fileName = folder + fileName;
+			for pattern in patternList:
+				status, value = container.FindPatternFromFile(obj, fileName, "", pattern);			
+		
+
 	else:
 		print "Please test with containerized image";
 
