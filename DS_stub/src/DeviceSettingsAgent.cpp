@@ -304,8 +304,8 @@ void DeviceSettingsAgent::FPI_setColor(IN const Json::Value& req, OUT Json::Valu
                       colorMatchId=16777215;
                       break;
                     default:
-                      colorSetId = device::FrontPanelIndicator::Color::kMax;
-                      colorMatchId=6;
+                      colorSetId = color;
+                      colorMatchId = color;
                       break;
                }
                 DEBUG_PRINT(DEBUG_LOG,"\nColorSetId retrieved is:%d\n",colorSetId);

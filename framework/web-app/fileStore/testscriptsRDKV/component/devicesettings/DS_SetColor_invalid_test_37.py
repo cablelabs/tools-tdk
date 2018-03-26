@@ -105,7 +105,7 @@ if "SUCCESS" in loadmodulestatus.upper():
         if expectedresult in actualresult:
                 tdkTestObj.setResultStatus("SUCCESS");
                 tdkTestObj = obj.createTestStep('DS_GetSupportedColors');
-                tdkTestObj.addParameter("indicator_name","Message");
+                tdkTestObj.addParameter("indicator_name","Power");
                 expectedresult="SUCCESS"
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
@@ -127,28 +127,17 @@ if "SUCCESS" in loadmodulestatus.upper():
                 tdkTestObj = obj.createTestStep('DS_SetColor');
                 #setting color parameter value
                 color = 10;
-                print "Color value set to:%d" %color;
+                print "Color value to be set: %d" %color;
                 indicator = "Power";
-                print "Indicator value set to:%s" %indicator;
+                print "Indicator value to be set: %s" %indicator;
                 tdkTestObj.addParameter("indicator_name",indicator);
                 tdkTestObj.addParameter("color",color);
                 expectedresult="FAILURE"
                 tdkTestObj.executeTestCase(expectedresult);
                 actualresult = tdkTestObj.getResult();
-                colordetails = tdkTestObj.getResultDetails();
-                setColor = "%s" %color;
-                colorList = ['255','65280','16711680','16777184','16747520']
                 if expectedresult in actualresult:
+                        tdkTestObj.setResultStatus("SUCCESS");
                         print "SUCCESS :Failed to get and set the invalid color";
-                        print "getColor %s" %colordetails;
-                        #comparing the color before and after setting
-                        print "Color to be verified: ",setColor;
-                        if list[int(setColor)] in colordetails :
-                                tdkTestObj.setResultStatus("FAILURE");
-                                print "SUCCESS: Both the colors are same";
-                        else:
-                                tdkTestObj.setResultStatus("SUCCESS");
-                                print "FAILURE: Both the colors are not same";
                 else:
                         tdkTestObj.setResultStatus("FAILURE");
                         print "Failure: Application Successfully gets and sets invalid color for LED";
