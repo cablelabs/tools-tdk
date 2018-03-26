@@ -623,7 +623,7 @@ class ScriptexecutionService {
 
 						deviceNode.addProperty("Device",execDevice?.device?.toString())
 						def bbType = boxType?.toString()
-						if(boxType?.toString()?.equals("Broadband")){
+						if(boxType?.toString()?.equals("Broadband") || boxType?.toString()?.contains("RPI")){
 							bbType = "Hybrid-1"
 						}
 						deviceNode.addProperty("BoxType",bbType)

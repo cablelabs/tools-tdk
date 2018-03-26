@@ -4009,4 +4009,53 @@ class ScriptGroupController {
 		status.put("status", "update completed")
 		render status as JSON
 	}
+	
+	/**
+	 * REST API to fetch the test JS files 
+	 */
+	def getTestJavaScript(String category, String module , String scriptName){
+
+		boolean found = false
+		String data = ""
+		try {
+			Module moduleObj = Module.findByName(module)
+			/*currenlty support only video*/
+			if(category?.equals(Constants.RDKV)){
+
+				def scriptDirName = Constants.COMPONENT
+				if(moduleObj){
+					if(moduleObj?.testGroup?.groupValue?.equals(TestGroup.E2E.groupValue)){
+						scriptDirName = Constants.INTEGRATION
+					}
+				}
+				def path = getRealPath() +  FILESTORE + FILE_SEPARATOR + FileStorePath.RDKVJS.value()
+				path = path + FILE_SEPARATOR + scriptDirName + FILE_SEPARATOR +module + FILE_SEPARATOR + scriptName
+				File sFile = new File(path)
+				params.format = "text"
+
+				if(sFile.exists()){
+					found = true
+					params.extension = "js"
+					data = new String(sFile.getBytes())
+					response.setHeader("Content-Disposition", "attachment; filename=\""+ scriptName+"\"")
+				}else{
+					data = "Download failed !!! No valid script is available for download."
+				}
+
+			}else{
+				data = "Download failed !!! Category not supported."
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+
+		if(!found) {
+			/*if requested test js file not available it returns error.txt*/
+			params.extension = "txt"
+			response.setHeader("Content-Disposition", "attachment; filename=\""+"error.txt\"")
+		}
+		response.setHeader("Content-Type", "application/octet-stream;")
+		response.outputStream << data.getBytes()
+	}
 }

@@ -3565,6 +3565,30 @@ class ExecutionController {
 			}
 			render data;
 	}
+	def securedUploadLogs(String fileName){
+		String data = "";
+			try {
+				String deviceStreams , deviceOcapId
+				def node
+				if(params?.logFile){
+					def uploadedFile = request.getFile("logFile")
+					if(uploadedFile){
+						InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
+						def fileContent = reader?.readLines()
+						def logPath = "${realPath}/logs//logs"
+						File logFile = new File(logPath+"//${fileName}")
+						fileContent?.each { logg ->
+							data = data + logg+"\n";
+							logFile << logg+"\n"
+						}
+					}
+				}
+			}catch(Exception e ){
+				println  "uploadLogs ERROR "+ e.getMessage()
+			}
+			render data;
+	}
+	
 	/**
 	 * REST API : Method to get the module wise execution status
 	 */

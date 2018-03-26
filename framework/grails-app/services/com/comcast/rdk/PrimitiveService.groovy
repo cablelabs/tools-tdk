@@ -64,58 +64,66 @@ class PrimitiveService {
 			}
 
 			dirList.each{ directory ->
-
-				File scriptsDir = new File( "${realPath}" + Constants.FILE_SEPARATOR + "fileStore" +  Constants.FILE_SEPARATOR + testScriptPath + Constants.FILE_SEPARATOR + directory )
-				if(scriptsDir.exists()){
-					def modules = scriptsDir.listFiles()
-					modules.each { module ->
-						File [] files = module.listFiles(new FilenameFilter() {
-									@Override
-									public boolean accept(File dir, String name) {
-										return name.endsWith(module?.name?.toString()?.trim()+".xml");
-									}
-								});
-						def list = []
-						files.each { file ->
-							if(testScriptPath.equals(TESTSCRIPTS_RDKB) || testScriptPath.equals(TESTSCRIPTS_RDKB_ADV)){
-								moduleDirMap.put(RDKB+"_"+module?.name?.toString()?.trim(), testScriptPath)
-							}else{
-								moduleDirMap.put(RDKV+"_"+module?.name?.toString()?.trim(), testScriptPath)
-							}
-							def lines = file?.readLines()
-							int indx = lines?.findIndexOf { it.startsWith("<?xml")}
-							String xmlComtent =""
-							while(indx < lines.size()){
-								xmlComtent = xmlComtent + lines.get(indx)+"\n"
-								indx++
-							}
-							def parser = new XmlParser();
-							def node = parser.parseText(xmlComtent?.toString())
-							//def node = new XmlParser().parse(file)
-							def pList = []
-							node.each{
+				try {
+					File scriptsDir = new File( "${realPath}" + Constants.FILE_SEPARATOR + "fileStore" +  Constants.FILE_SEPARATOR + testScriptPath + Constants.FILE_SEPARATOR + directory )
+					if(scriptsDir.exists()){
+						def modules = scriptsDir.listFiles()
+						modules.each { module ->
+							File [] files = module.listFiles(new FilenameFilter() {
+										@Override
+										public boolean accept(File dir, String name) {
+											return name.endsWith(module?.name?.toString()?.trim()+".xml");
+										}
+									});
+							def list = []
+							files.each { file ->
 								try {
-									it.primitiveTests.each{
-										it.primitiveTest.each {
-											String pName = "${it.attribute('name')}"
-											if(StringUtils.hasText(pName)){
-												pName = pName?.trim()
-												pList.add(pName)
-												primitiveList.add(pName)
-												primitiveModuleMap.put(pName,""+module.getName())
+									if(testScriptPath.equals(TESTSCRIPTS_RDKB) || testScriptPath.equals(TESTSCRIPTS_RDKB_ADV)){
+										moduleDirMap.put(RDKB+"_"+module?.name?.toString()?.trim(), testScriptPath)
+									}else{
+										moduleDirMap.put(RDKV+"_"+module?.name?.toString()?.trim(), testScriptPath)
+									}
+									def lines = file?.readLines()
+									int indx = lines?.findIndexOf { it.startsWith("<?xml") }
+									String xmlComtent =""
+									while(indx >=0 && indx < lines.size()){
+										xmlComtent = xmlComtent + lines.get(indx)+"\n"
+										indx++
+									}
+									def parser = new XmlParser();
+									def node = parser.parseText(xmlComtent?.toString())
+									//def node = new XmlParser().parse(file)
+									def pList = []
+									node.each{
+										try {
+											it.primitiveTests.each{
+												it.primitiveTest.each {
+													String pName = "${it.attribute('name')}"
+													if(StringUtils.hasText(pName)){
+														pName = pName?.trim()
+														pList.add(pName)
+														primitiveList.add(pName)
+														primitiveModuleMap.put(pName,""+module.getName())
+													}
+												}
 											}
+										} catch (Exception e) {
+											println " Error "+e.getMessage()
+											e.printStackTrace()
 										}
 									}
+									primitiveMap.put(""+module.getName(), pList)
 								} catch (Exception e) {
-									println " Error "+e.getMessage()
 									e.printStackTrace()
 								}
 							}
-							primitiveMap.put(""+module.getName(), pList)
 						}
-					}
 
+					}
+				} catch (Exception e) {
+					e.printStackTrace()
 				}
+
 			}
 			if(testScriptPath.equals(TESTSCRIPTS_RDKB) || testScriptPath.equals(TESTSCRIPTS_RDKB_ADV)){
 				primitiveListMap.put(RDKB, primitiveList)
