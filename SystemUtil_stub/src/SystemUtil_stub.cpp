@@ -405,6 +405,62 @@ void SystemUtilAgent::SystemUtilAgent_Getoutput_json_file(IN const Json::Value& 
 }
 
 /**************************************************************************
+Function name : SystemUtilAgent::SystemUtilAgent_ExecuteBinary
+
+Description   : This method execute the binary and redirect logs to the specified file .
+***************************************************************************/
+void SystemUtilAgent::SystemUtilAgent_ExecuteBinary(IN const Json::Value& req, OUT Json::Value& response)
+{
+        DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_ExecuteBinary -->Entry\n");
+        string scriptFile = req["shell_script"].asCString();
+        string logFile = req["log_file"].asCString();
+        string ExecutionLogFile,ShellScript,testenvPath;
+        int Status;
+        try
+        {
+                pid_t idChild = vfork();
+                if(idChild == 0)
+                {
+                      testenvPath = getenv ("TDK_PATH");
+                      ExecutionLogFile.append(testenvPath);
+                      ExecutionLogFile.append("/");
+                      ExecutionLogFile.append(logFile);
+                      ShellScript.append(testenvPath);
+                      ShellScript.append("/");
+                      ShellScript.append(scriptFile);
+                      int fd = open(ExecutionLogFile.c_str(), O_WRONLY|O_CREAT, 0666);
+                      dup2(fd, 1);
+                      close(fd);
+                      execlp("/bin/sh","sh",ShellScript.c_str(),NULL);
+                }
+
+                else if(idChild <0)
+                {
+                    DEBUG_PRINT(DEBUG_ERROR,"\nFork failed");
+                    response["result"]="FAILURE";
+                    response["result"]="Binary Execution Failed";
+                }
+                else
+                {
+                   waitpid(idChild,&Status,0);
+                   DEBUG_PRINT(DEBUG_LOG, "Binary Execution success\n");
+                   response["result"]="SUCCESS";
+                   response["details"]="Binary Execution Success";
+                }
+
+        }
+        catch(...)
+        {
+                DEBUG_PRINT(DEBUG_ERROR,"Exception occured while binary execution\n");
+                response["result"]="FAILURE";
+                response["details"]="Binary Execution Failed";
+        }
+
+        DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_ExecuteBinary -->Exit\n");
+        return;
+}
+
+/**************************************************************************
 Function Name   : CreateObject
 
 Arguments       : NULL

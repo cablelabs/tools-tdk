@@ -27,6 +27,9 @@
 #include <string.h>
 #include <algorithm>
 #include <jsonrpccpp/server/connectors/tcpsocketserver.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 
 #include "rdkteststubintf.h"
 #include "rdktestagentintf.h"
@@ -47,7 +50,6 @@
 #define TEST_SUCCESS true
 #define TEST_FAILURE false
 
-
 using namespace std;
 
 class RDKTestAgent;
@@ -62,6 +64,7 @@ class SystemUtilAgent : public RDKTestStubInterface, public AbstractServer<Syste
                    this->bindAndAddMethod(Procedure("TestMgr_GetrouteInfo", PARAMS_BY_NAME, JSON_STRING,"ip6enable",JSON_INTEGER,NULL), &SystemUtilAgent::SystemUtilAgent_GetrouteInfo);
                    this->bindAndAddMethod(Procedure("TestMgr_ExecuteCmd", PARAMS_BY_NAME, JSON_STRING,"command",JSON_STRING,NULL), &SystemUtilAgent::SystemUtilAgent_ExecuteCmd);
                    this->bindAndAddMethod(Procedure("TestMgr_Getoutput_json_file", PARAMS_BY_NAME, JSON_STRING,NULL), &SystemUtilAgent::SystemUtilAgent_Getoutput_json_file);
+                   this->bindAndAddMethod(Procedure("TestMgr_ExecuteBinary", PARAMS_BY_NAME, JSON_STRING,"shell_script",JSON_STRING,"log_file",JSON_STRING,NULL), &SystemUtilAgent::SystemUtilAgent_ExecuteBinary);
                }
 
                 /*Inherited functions*/
@@ -75,6 +78,7 @@ class SystemUtilAgent : public RDKTestStubInterface, public AbstractServer<Syste
 		void SystemUtilAgent_TouchFile(IN const Json::Value& req, OUT Json::Value& response);
 		void SystemUtilAgent_ExecuteCmd(IN const Json::Value& req, OUT Json::Value& response);
 		void SystemUtilAgent_Getoutput_json_file(IN const Json::Value& req, OUT Json::Value& response);
+                void SystemUtilAgent_ExecuteBinary(IN const Json::Value& req, OUT Json::Value& response);
 	
 
 };
