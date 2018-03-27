@@ -77,43 +77,13 @@ SUBDIR_HYBRID=" "
 SUBDIR_CLIENT=" "
 SM_STUB_CFLAG_HYBRID=" "
 
-dnl GStreamer version. Use 0.10 by default
-AC_ARG_ENABLE(gstreamer1,
-    AS_HELP_STRING([--enable-gstreamer1],
-                    [Use GStreamer 1.x]), ,
-        [enable_gstreamer1=auto])
-
-AS_IF([test "x$enable_gstreamer1" = "xyes"], [
-    GST_MAJORMINOR=1.0
-    PKG_CHECK_MODULES([GST], [gstreamer-1.0 >= 1.4], have_gst1="yes", have_gst1="no")
-    PKG_CHECK_MODULES([GST_CHECK], [gstreamer-check-1.0 >= 1.4], have_gst1="yes", have_gst1="no")
-    PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.38.2])
-    AC_DEFINE(USE_GST1, 1, [Build with GStreamer 1.x])
-], [])
-
-AS_IF([test "x$enable_gstreamer1" = "xyes" -a "x$have_gst1" != "xyes"], [
-    AC_MSG_ERROR([Could not find GStreamer 1.x dependencies:
-$GST_PKG_ERRORS])], [])
-
-AS_IF([test "x$have_gst1" != "xyes"], [
-    GST_MAJORMINOR=0.10
-    PKG_CHECK_MODULES([GST], [gstreamer-0.10 >= 0.10.28])
-    PKG_CHECK_MODULES([GST_CHECK], [gstreamer-check-0.10 >= 0.10.28])
-    PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.22.5])
-], [])
-
-
 AC_ARG_ENABLE([hybrid],
         AS_HELP_STRING([--enable-hybrid],[enable hybrid build]),
         [
           case "${enableval}" in
              yes) HYBRID=true
                   SUBDIR_HYBRID="TRM_stub DTCP_stub SNMP_stub"
-                  AGENT_FLAGS=" -DPORT_FORWARD"
-                  TDK_GST_LIBS=" -lgstreamer-$GST_MAJORMINOR -lgstbase-$GST_MAJORMINOR"
-                  TDKINTEGRATION_HYBRID_LIBS="-ldvrmgr -lqamsrc -lcanh -lpodmgr -ltrm -ltrh"
-                  MEDIAFRAMEWORK_HYBRID_LIBS="-lcanh -lpodmgr -ltrh"
-                  TDKINTEGRATION_FLAGS="-DENABLE_HYBRID_CODECOMPILE -DHYBRID" ;;
+                  AGENT_FLAGS=" -DPORT_FORWARD";;
            no) HYBRID=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-hybrid ]) ;;
            esac
@@ -140,8 +110,7 @@ AC_ARG_ENABLE([client],
         [
           case "${enableval}" in
              yes) CLIENT=true
-                  SUBDIR_CLIENT="TR069_stub NetSrvMgr_stub MocaHal_stub"
-                  TDKINTEGRATION_FLAGS="-DIPCLIENT" ;;
+                  SUBDIR_CLIENT="TR069_stub NetSrvMgr_stub MocaHal_stub";;
            no) CLIENT=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
            esac
@@ -149,49 +118,18 @@ AC_ARG_ENABLE([client],
          [echo "client build is enable"])
 AM_CONDITIONAL([CLIENT], [test x$CLIENT = xtrue])
 
-AC_ARG_ENABLE([aspcomponents],
-         AS_HELP_STRING([--enable-aspcomponents],[enable aspcomponents (default is no)]),
-         [
-           case "${enableval}" in
-              yes) ASPCOMPONENTS=true
-                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" advancecomponents/Recorder_stub advancecomponents/ClosedCaption_stub advancecomponents/Mediaframework_stub advancecomponents/MediaStreamer_stub  advancecomponents/rmfApp_stub advancecomponents/tdkRmfApp advancecomponents/TDKIntegration_Stub advancecomponents/OpenSourceComponent_Stub"],
-                          [test x$CLIENT = xtrue], [SUBDIR_CLIENT+=" advancecomponents/gstPluginsRdk_check advancecomponents/gstPluginsRdk_stub advancecomponents/ClosedCaption_stub advancecomponents/TDKIntegration_Stub"],
-                          [echo box type not specified]) ;;
-             no) ASPCOMPONENTS=false ;;
-            *) AC_MSG_ERROR([bad value ${enableval} for --enable-aspcomponents ]) ;;
-             esac
-            ],
-           [echo "advanced components build is not enabled"])
-AM_CONDITIONAL([ASPCOMPONENTS], [test x$ASPCOMPONENTS = xtrue])
-
 AC_ARG_ENABLE([quemux86mc],
         AS_HELP_STRING([--enable-qemux86mc],[enable quemux86mc build]),
         [
           case "${enableval}" in
              yes) QEMUX86MC=true
-                  SUBDIR_CLIENT="TR069_stub"
-                  TDKINTEGRATION_FLAGS="-DIPCLIENT -DSTAND_ALONE_CLIENT" ;;
+                  SUBDIR_CLIENT="TR069_stub";;
            no) QEMUX86MC=false ;;
           *) AC_MSG_ERROR([bad value ${enableval} for --enable-client ]) ;;
            esac
            ],
          [echo "client build is enable"])
 AM_CONDITIONAL([QEMUX86MC], [test x$QEMUX86MC = xtrue])
-
-
-AC_ARG_ENABLE([mediautils],
-         AS_HELP_STRING([--enable-mediautils],[enable mediautils (default is no)]),
-         [
-           case "${enableval}" in
-              yes) MEDIAUTILS=true
-                   AS_IF([test x$HYBRID = xtrue], [SUBDIR_HYBRID+=" advancecomponents/MediaUtils_stub "],
-                          [echo box type not specified]) ;;
-             no) MEDIAUTILS=false ;;
-            *) AC_MSG_ERROR([bad value ${enableval} for --enable-mediautils ]) ;;
-             esac
-            ],
-           [echo "mediautils component is not enabled"])
-AM_CONDITIONAL([MEDIAUTILS], [test x$MEDIAUTILS = xtrue])
 
 AC_ARG_ENABLE([audiocapturemgr],
          AS_HELP_STRING([--enable-audiocapturemgr],[enable audiocapturemgr (default is no)]),
@@ -260,51 +198,17 @@ AC_ARG_ENABLE([errorlog],
 PKG_CHECK_MODULES([XML2], [libxml-2.0 >= 2.7.8])
 PKG_CHECK_MODULES([JANSON],[jansson >= 2.4])
 
-m4_syscmd([test -d advancecomponents/Recorder_stub/])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/Recorder_stub/Makefile])])
-
-m4_syscmd([test -d advancecomponents/ClosedCaption_stub/])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/ClosedCaption_stub/Makefile])])
-
-m4_syscmd([test -d advancecomponents/Mediaframework_stub/])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/Mediaframework_stub/Makefile])])
-
-m4_syscmd([test -d advancecomponents/gstPluginsRdk_check/])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/gstPluginsRdk_check/Makefile])])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/gstPluginsRdk_stub/Makefile])])
-
-m4_syscmd([test -d advancecomponents/MediaStreamer_stub/])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/MediaStreamer_stub/Makefile])])
-
-m4_syscmd([test -d advancecomponents/rmfApp_stub/])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/rmfApp_stub/Makefile])])
-
-m4_syscmd([test -d advancecomponents/tdkRmfApp/])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/tdkRmfApp/Makefile])])
-
-m4_syscmd([test -d advancecomponents/TDKIntegration_Stub/])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/TDKIntegration_Stub/Makefile])])
-
-m4_syscmd([test -d advancecomponents/MediaUtils_stub/])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/MediaUtils_stub/Makefile])])
-
-m4_syscmd([test -d advancecomponents/OpenSourceComponent_Stub/])
-m4_if(m4_sysval,[0],[AC_CONFIG_FILES([advancecomponents/OpenSourceComponent_Stub/Makefile])])
-
 AC_SUBST(COPTS)
 AC_SUBST(AGENT_FLAGS)
 AC_SUBST(DVRMGR_FLAGS)
 AC_SUBST(CONFIG_PREFIX)
 AC_SUBST(RDK_VERSION)
-AC_SUBST(TDKINTEGRATION_FLAGS)
-AC_SUBST(TDKINTEGRATION_HYBRID_LIBS)
 AC_SUBST(QAM_LIBS)
 AC_SUBST(SF_LIBS)
 AC_SUBST(TDK_GST_LIBS)
 AC_SUBST(SUBDIR_HYBRID)
 AC_SUBST(SUBDIR_CLIENT)
 AC_SUBST(SM_STUB_CFLAG_HYBRID)
-AC_SUBST(MEDIAFRAMEWORK_HYBRID_LIBS)
 AC_CONFIG_FILES([Makefile
          cfg/Makefile
          agent/Makefile
