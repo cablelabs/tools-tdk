@@ -1223,7 +1223,6 @@ def addStaticRoute(destIp, gwIp, interface, source="WLAN"):
 
 def delStaticRoute(destIp, gwIp, interface, source="WLAN"):
 # delStaticRoute
-
 # Syntax      : addStaticRoute(destIp, gwIp, interface, source="WLAN")
 # Description : Function to delete a static route to the destIp via gwIp
 # Parameters  : destIp : Ip to which new route is to be added
@@ -1231,26 +1230,26 @@ def delStaticRoute(destIp, gwIp, interface, source="WLAN"):
 #             interface : interface for static routing
 #               source  :  client machine type in which route is being added
 # Return Value: SUCCESS/FAILURE
-
         try:
+            status = clientConnect(source)
+	    if status == "SUCCESS":
                 if wlan_os_type == "UBUNTU":
                         if source == "WLAN":
                                 script_name = wlan_script;
                         else:
                                 script_name = lan_script;
-
                         command="sudo sh %s del_static_route %s %s %s" %(script_name, destIp, gwIp, interface)
                         status = executeCommand(command)
                 else:
                         status = "Only UBUNTU platform supported!!!"
+            else:
+                return "Failed to connect to client"
 
         except Exception, e:
                 print e;
                 status = e;
-
         print "Route delete status is :%s" %status;
         return status;
-
 ######### End of Function ##########
 
 def wgetToWAN(connectivityType,source_ip,gateway_ip,source="WLAN"):
