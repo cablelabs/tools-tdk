@@ -30,8 +30,8 @@ Test case Id - CT_IARMBUS_64</synopsis>
   <groups_id/>
   <execution_time>3</execution_time>
   <long_duration>false</long_duration>
-  <remarks>Causes warehouse reset of the box</remarks>
-  <skip>false</skip>
+  <remarks>Skipped : Causes warehouse reset of the box and observed device crash
+  <skip>true</skip>
   <box_types>
     <box_type>RPI-Client</box_type>
     <box_type>Hybrid-1</box_type>
@@ -81,7 +81,7 @@ IARM_Bus_Term : None</input_parameters>
 4.TestMgr_IARMBUS_Disconnect
 5.TestMgr_IARMBUS_BusCall</test_stub_interface>
     <test_script>IARMBUS_Reset_WareHouse_state_64</test_script>
-    <skipped>No</skipped>
+    <skipped>Yes</skipped>
     <release_version>M21</release_version>
     <remarks/>
   </test_cases>
