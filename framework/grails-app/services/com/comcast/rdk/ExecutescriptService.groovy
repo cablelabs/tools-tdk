@@ -744,10 +744,10 @@ class ExecutescriptService {
 			int execCnt = 0
 			int execCount =0
 			def executionList = Execution?.findAll()
-			if(execName?.toString()?.contains("_RERUN")){
-				def execNameSplitList = execName.toString().tokenize("_")
-				if(execNameSplitList[2]){
-					executionCount =Integer.parseInt(execNameSplitList[2])
+			if(execName?.toString()?.contains("_RERUN_")){
+				def execNameSplitList = execName.toString().split("_RERUN_")
+				if(execNameSplitList?.length == 2){
+					executionCount =Integer.parseInt(execNameSplitList[1])
 					executionCount++
 					newExecName =  execNameSplitList[0]+"_RERUN_"+executionCount
 					if(executionList?.toString().contains(newExecName?.toString())){
@@ -779,10 +779,15 @@ class ExecutescriptService {
 					def lastExecname  = executionList.find{ it  ->
 						it?.toString().contains(execName?.toString())
 					}
-					def newExecNameList = lastExecname.toString().tokenize("_")
-					execCnt = Integer.parseInt(newExecNameList[2])
-					execCnt++
-					newExecName = execName+"_RERUN_"+(execCnt)
+					
+					if(lastExecname?.toString()?.contains("_RERUN_")){
+						def newExecNameList = lastExecname.toString().split("_RERUN_")
+						if(newExecNameList?.length == 2){
+							execCnt = Integer.parseInt(newExecNameList[1])
+							execCnt++
+							newExecName = execName+"_RERUN_"+(execCnt)
+						}
+					}
 				}else{
 					newExecName= newExecName
 				}

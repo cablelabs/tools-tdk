@@ -155,7 +155,7 @@ function showStreamDetails12(){
 	
 	<div class="footer" role="contentinfo"> 
 	<div>
-		<label> <b> RDK Test Development Kit TM-M56 </b></label>
+		<label> <b> RDK Test Development Kit TM-M57 </b></label>
 	</div>
 	</div>
 	<div id="spinner" class="spinner" style="display: none;">

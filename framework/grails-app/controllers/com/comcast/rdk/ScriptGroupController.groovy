@@ -1099,9 +1099,20 @@ class ScriptGroupController {
 			
 			if(RDKV.equals(category)){
 				path = path+TESTSCRIPTS_RDKV + Constants.FILE_SEPARATOR + scriptsDirName.toString() + Constants.FILE_SEPARATOR + moduleName +Constants.FILE_SEPARATOR + moduleName +XML
+				File xmlFile = new File(path)
+				if(!xmlFile?.exists()){
+					def dirName = primitiveService.getDirectoryName(params?.ptest)
+					path = getRealPath()+Constants.FILE_SEPARATOR+"fileStore"+Constants.FILE_SEPARATOR+dirName + Constants.FILE_SEPARATOR + scriptsDirName.toString() + Constants.FILE_SEPARATOR + moduleName +Constants.FILE_SEPARATOR + moduleName +XML
+					xmlFile = new File(path)
+				}
 			}
 			else if(RDKB.equals(category)){
 				path = path + TESTSCRIPTS_RDKB + Constants.FILE_SEPARATOR + scriptsDirName.toString() + Constants.FILE_SEPARATOR + moduleName  +Constants.FILE_SEPARATOR+moduleName+XML
+				File xmlFile = new File(path)
+				if(!xmlFile?.exists()){
+					def dirName = primitiveService.getDirectoryName(params?.ptest)
+					path = getRealPath()+Constants.FILE_SEPARATOR+"fileStore"+Constants.FILE_SEPARATOR + dirName + Constants.FILE_SEPARATOR + scriptsDirName.toString() + Constants.FILE_SEPARATOR + moduleName  +Constants.FILE_SEPARATOR+moduleName+XML
+				}
 			}
 			ptest = primitiveService.getPrimitiveTest(path, params?.ptest)
 			def writer = new StringWriter()
@@ -1408,9 +1419,19 @@ class ScriptGroupController {
 		String dirname
 		if(RDKV.equals(category)){
 			filePath = getRealPath() + FILE_SEPARATOR + "fileStore"+ FILE_SEPARATOR + TESTSCRIPTS_RDKV + FILE_SEPARATOR + scriptsDirName + FILE_SEPARATOR + moduleName+ FILE_SEPARATOR + moduleName +XML
+			File xmlFile = new File(filePath)
+			if(!xmlFile?.exists()){
+				def dirName = primitiveService.getDirectoryName(params?.ptest)
+				filePath = getRealPath() + FILE_SEPARATOR + "fileStore"+ FILE_SEPARATOR + dirName + FILE_SEPARATOR + scriptsDirName + FILE_SEPARATOR + moduleName+ FILE_SEPARATOR + moduleName +XML
+			}
 		}
 		else if(RDKB.equals(category)){
 			filePath = getRealPath() + FILE_SEPARATOR + "fileStore"+ FILE_SEPARATOR + TESTSCRIPTS_RDKB + FILE_SEPARATOR + scriptsDirName + FILE_SEPARATOR + moduleName+ FILE_SEPARATOR + moduleName +XML
+			File xmlFile = new File(filePath)
+			if(!xmlFile?.exists()){
+				def dirName = primitiveService.getDirectoryName(params?.ptest)
+				filePath = getRealPath() + FILE_SEPARATOR + "fileStore"+ FILE_SEPARATOR + dirName + FILE_SEPARATOR + scriptsDirName + FILE_SEPARATOR + moduleName+ FILE_SEPARATOR + moduleName +XML
+			}
 		}
 		//def ptest = primitiveService.getPrimitiveTest(getRealPath()+"/fileStore/testscripts/"+scriptsDirName+"/"+moduleName+"/"+moduleName+".xml", params?.ptest)
 		def ptest = primitiveService.getPrimitiveTest(filePath, params?.ptest)
