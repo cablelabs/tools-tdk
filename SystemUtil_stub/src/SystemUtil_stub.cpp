@@ -414,6 +414,7 @@ void SystemUtilAgent::SystemUtilAgent_ExecuteBinary(IN const Json::Value& req, O
         DEBUG_PRINT(DEBUG_TRACE, "SystemUtilAgent_ExecuteBinary -->Entry\n");
         string scriptFile = req["shell_script"].asCString();
         string logFile = req["log_file"].asCString();
+        string toolPath = req["tool_path"].asCString();
         string ExecutionLogFile,ShellScript,testenvPath;
         int Status;
         try
@@ -431,9 +432,8 @@ void SystemUtilAgent::SystemUtilAgent_ExecuteBinary(IN const Json::Value& req, O
                       int fd = open(ExecutionLogFile.c_str(), O_WRONLY|O_CREAT, 0666);
                       dup2(fd, 1);
                       close(fd);
-                      execlp("/bin/sh","sh",ShellScript.c_str(),NULL);
+                      execlp("/bin/sh","sh",ShellScript.c_str(),toolPath.c_str(),NULL);
                 }
-
                 else if(idChild <0)
                 {
                     DEBUG_PRINT(DEBUG_ERROR,"\nFork failed");

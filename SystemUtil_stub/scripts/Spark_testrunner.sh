@@ -18,9 +18,10 @@
 ##########################################################################
 
 #!/bin/sh
+TOOL_PATH=$1
 IP=$(awk -F"@" '/Manager IP/{ip=$2}END{print ip}' $TDK_PATH/tdkconfig.ini )
 cd /home/root
 export HOME=/home/root/
-./pxscene http://$IP:8080/rdk-test-tool/scriptGroup/getTestJavaScript?category=RDKV&module=spark&scriptName=testrunner.js &
+./pxscene http://$IP:8080/$TOOL_PATH/fileStore/testscriptsRDKVJS/component/spark/testrunner.js &
 sleep 60
 pkill pxscene
