@@ -30,6 +30,7 @@ get_lan_ip_address()
 refresh_lan_network()
 {
         lan_down="$(ifconfig $var2 down > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+	sleep 5
         lan_up="$(ifconfig $var2 up > /dev/null && echo "SUCCESS" || echo "FAILURE")"
         if [ $lan_down = "SUCCESS" ] && [ $lan_up = "SUCCESS" ]; then
                 echo "OUTPUT:SUCCESS"
