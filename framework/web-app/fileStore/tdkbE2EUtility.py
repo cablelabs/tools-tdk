@@ -1326,6 +1326,46 @@ def parentalCntrlWgetToWAN(connectivityType,source_ip,gateway_ip,url,source="WLA
         return status;
 
 ########## End of Function ##########
+
+def wgetToGateway(dest_ip,connectivityType,source_ip,gw_port,source="WLAN"):
+# wgetToGateway
+
+# Syntax      : wgetToGateway(connectivityType,source_ip,gw_port,source="WLAN")
+# Description : Function to do wget to Gateway device
+# Parameters  : connectivityType - HTTP/HTTPS
+#               source_ip - Ip from which http/https to be placed
+#               gw_port - port for remote access to GW.
+#               source  :  client machine type from which wget is to be done
+# Return Value: Returns the status of wget operation
+
+        try:
+                status = clientConnect(source)
+                if status == "SUCCESS":
+                        if wlan_os_type == "UBUNTU":
+                                if source == "WLAN":
+                                    script_name = wlan_script;
+                                elif source == "LAN":
+                                    script_name = lan_script;
+                                else:
+                                    script_name = wan_script;
+                                if connectivityType == "WGET_HTTP":
+                                    command="sudo sh %s wget_http_network %s %s %s" %(script_name,source_ip,dest_ip,gw_port)
+                                elif connectivityType == "WGET_HTTPS":
+                                    command="sudo sh %s wget_https_network %s %s %s" %(script_name,source_ip,dest_ip,gw_port)
+                                status = executeCommand(command)
+                        else:
+                                status = "Only UBUNTU platform supported!!!"
+                else:
+                        return "Failed to connect to wan client"
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "Status of wgetToGateway:%s" %status;
+        return status;
+
+########## End of Function ##########
+
 def nslookupInClient(domainName,serverIP,source):
 
 # nslookupInClient
