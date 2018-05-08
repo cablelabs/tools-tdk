@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2016 RDK Management
+# Copyright 2018 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 <xml>
   <id></id>
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>3</version>
+  <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_HN_Persist_Enable_DIsable_Upnp</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
@@ -49,6 +49,14 @@
   <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
+    <!--  -->
+    <box_type>Emulator-Client</box_type>
+    <!--  -->
+    <box_type>RPI-HYB</box_type>
+    <!--  -->
+    <box_type>RPI-Client</box_type>
     <!--  -->
   </box_types>
   <rdk_versions>

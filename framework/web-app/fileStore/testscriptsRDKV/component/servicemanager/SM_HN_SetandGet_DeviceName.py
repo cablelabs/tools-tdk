@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2016 RDK Management
+# Copyright 2018 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,38 +17,61 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version="1.0" encoding="UTF-8"?><xml>
-  <id/>
-  <version>1</version>
+<?xml version='1.0' encoding='utf-8'?>
+<xml>
+  <id></id>
+  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+  <version>2</version>
+  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>SM_HN_SetandGet_DeviceName</name>
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id>138</primitive_test_id>
+  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>SM_HN_SetDeviceName</primitive_test_name>
+  <!--  -->
   <primitive_test_version>2</primitive_test_version>
+  <!--  -->
   <status>FREE</status>
+  <!--  -->
   <synopsis>Set and Get the device name using home networking service</synopsis>
-  <groups_id/>
+  <!--  -->
+  <groups_id />
+  <!--  -->
   <execution_time>2</execution_time>
+  <!--  -->
   <long_duration>false</long_duration>
+  <!--  -->
   <advanced_script>false</advanced_script>
-  <remarks/>
+  <!-- execution_time is the time out time for test execution -->
+  <remarks></remarks>
+  <!-- Reason for skipping the tests if marked to skip -->
   <skip>false</skip>
+  <!--  -->
   <box_types>
     <box_type>Hybrid-1</box_type>
+    <!--  -->
+    <box_type>Emulator-HYB</box_type>
+    <!--  -->
+    <box_type>RPI-HYB</box_type>
+    <!--  -->
+    <box_type>RPI-Client</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
+    <!--  -->
   </rdk_versions>
   <test_cases>
     <test_case_id>CT_Service Manager_63</test_case_id>
     <test_objective>Set and Get the device name using home networking service</test_objective>
     <test_type>Positive</test_type>
     <test_setup>XG1-V3</test_setup>
-    <pre_requisite/>
+    <pre_requisite></pre_requisite>
     <api_or_interface_used>bool registerService(const QString&amp; , ServiceStruct )
 Service* getGlobalService(const QString&amp; serviceName) virtual ServiceParams callMethod(const QString&amp; method,const ServiceParams&amp; params)
 bool unregisterService(const QString&amp;)</api_or_interface_used>
     <input_parameters>registerService : Qstring-serviceName, ServiceStruct - serviceStruct (function ptr)
-GetGlobalService: const Qstring Ã¢Â&#128;Â&#147; serviceName                                
+GetGlobalService: const Qstring Ã¢ÂÂ serviceName                                
 CallMethod : const QString - "set_device_name"/"get_device_name" ,const ServiceParams - bool
 UnregisterService : Qstring-serviceName</input_parameters>
     <automation_approch>1. TM loads the Service_Manager_Agent via the test agent.
@@ -63,11 +86,11 @@ Checkpoint 2. Check the value retrieved using get_device_name API is same as the
     <test_stub_interface>libservicemanagerstub.so</test_stub_interface>
     <test_script>SM_HN_SetandGet_DeviceName</test_script>
     <skipped>No</skipped>
-    <release_version/>
-    <remarks/>
+    <release_version></release_version>
+    <remarks></remarks>
   </test_cases>
+  <script_tags />
 </xml>
-
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
