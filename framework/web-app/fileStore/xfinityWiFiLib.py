@@ -64,9 +64,11 @@ def getPublicWiFiParamValues(obj):
 def setPublicWiFiParamValues(obj,paramList):
 
         tdkTestObj = obj.createTestStep("WIFIAgent_SetMultiple");
-	paramList1 = "Device.X_COMCAST-COM_GRE.Tunnel.1.DSCPMarkPolicy|%s|int|Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint|%s|string|Device.X_COMCAST-COM_GRE.Tunnel.1.SecondaryRemoteEndpoint|%s|string|Device.DeviceInfo.X_COMCAST_COM_xfinitywifiEnable|%s|bool" %(paramList[0],paramList[1],paramList[2],paramList[5])
+	paramList1 = "Device.X_COMCAST-COM_GRE.Tunnel.1.DSCPMarkPolicy|%s|int|Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint|%s|string|Device.X_COMCAST-COM_GRE.Tunnel.1.SecondaryRemoteEndpoint|%s|string" %(paramList[0],paramList[1],paramList[2])
 
-	paramList2 = "Device.WiFi.SSID.5.Enable|%s|bool|Device.WiFi.SSID.6.Enable|%s|bool" %(paramList[3],paramList[4])
+	paramList2 = "Device.WiFi.SSID.5.SSID|xwifi-2.4|string|Device.WiFi.SSID.6.SSID|xwifi-5|string|Device.WiFi.SSID.5.Enable|%s|bool|Device.WiFi.SSID.6.Enable|%s|bool" %(paramList[3],paramList[4])
+
+	paramList3 = "Device.DeviceInfo.X_COMCAST_COM_xfinitywifiEnable|%s|bool" %paramList[5]
 
         expectedresult="SUCCESS";
         tdkTestObj.addParameter("paramList",paramList1);
@@ -78,7 +80,12 @@ def setPublicWiFiParamValues(obj,paramList):
         tdkTestObj.executeTestCase(expectedresult);
         actualresult2 = tdkTestObj.getResult();
         details2 = tdkTestObj.getResultDetails();
-	if expectedresult in actualresult1 and expectedresult in actualresult2:
+
+	tdkTestObj.addParameter("paramList",paramList3);
+        tdkTestObj.executeTestCase(expectedresult);
+        actualresult3 = tdkTestObj.getResult();
+        details3 = tdkTestObj.getResultDetails();
+	if expectedresult in actualresult1 and expectedresult in actualresult2 and expectedresult in actualresult3:
 	    actualresult = "SUCCESS"
 	    details = "setPublicWiFiParamValues success"
 	else:
