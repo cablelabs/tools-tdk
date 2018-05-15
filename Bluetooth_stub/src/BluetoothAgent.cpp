@@ -279,7 +279,11 @@ void BluetoothAgent::Bluetooth_SetAdapterDiscoverable(IN const Json::Value& req,
 void BluetoothAgent::Bluetooth_StartDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartDeviceDiscovery --->Entry\n");
-   rc = BTRMGR_StartDeviceDiscovery(0);
+   int deviceType;
+   BTRMGR_DeviceOperationType_t BT_DEVICE_TYPE;
+   deviceType = req["devicetype"].asInt();
+   BT_DEVICE_TYPE = (BTRMGR_DeviceOperationType_t) deviceType;
+   rc = BTRMGR_StartDeviceDiscovery(0,BT_DEVICE_TYPE);
    if (BTRMGR_RESULT_SUCCESS == rc)
    {
        response["result"] = "SUCCESS";
@@ -303,7 +307,11 @@ void BluetoothAgent::Bluetooth_StartDeviceDiscovery(IN const Json::Value& req, O
 void BluetoothAgent::Bluetooth_StopDeviceDiscovery(IN const Json::Value& req, OUT Json::Value& response)
 {
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StopDeviceDiscovery --->Entry\n");
-   rc = BTRMGR_StopDeviceDiscovery(0);
+   int deviceType;
+   BTRMGR_DeviceOperationType_t BT_DEVICE_TYPE;
+   deviceType = req["devicetype"].asInt();
+   BT_DEVICE_TYPE = (BTRMGR_DeviceOperationType_t) deviceType;
+   rc = BTRMGR_StopDeviceDiscovery(0,BT_DEVICE_TYPE);
    if (BTRMGR_RESULT_SUCCESS == rc)
    {
        response["result"] = "SUCCESS";
@@ -371,11 +379,11 @@ void BluetoothAgent::Bluetooth_ConnectToDevice(IN const Json::Value& req, OUT Js
    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_ConnectToDevice --->Entry\n");
    unsigned long long int handle;
    int deviceType;
-   BTRMGR_DeviceConnect_Type_t BT_DEVICE_TYPE;
    char handleString[DEVICE_HANDLE_BUFFER]= {'\0'};
    char * pEnd;
+   BTRMGR_DeviceOperationType_t BT_DEVICE_TYPE;
    deviceType = req["devicetype"].asInt();
-   BT_DEVICE_TYPE = (BTRMGR_DeviceConnect_Type_t) deviceType;
+   BT_DEVICE_TYPE = (BTRMGR_DeviceOperationType_t) deviceType;
    strcpy(handleString,req["devicehandle"].asCString());
    handle = strtoull (handleString, &pEnd, 10);
    rc = BTRMGR_ConnectToDevice(0, handle,BT_DEVICE_TYPE);
@@ -394,6 +402,40 @@ void BluetoothAgent::Bluetooth_ConnectToDevice(IN const Json::Value& req, OUT Js
        return ;
    }
 }
+
+/****************************************************************************************************************************
+ *Function name :  Bluetooth_StartAudioStreamingOut
+ *Descrption    : This function is to automatically reconnect to the most recently connected Bluetooth audio sink at startup 
+ ****************************************************************************************************************************/
+void BluetoothAgent::Bluetooth_StartAudioStreamingOut(IN const Json::Value& req, OUT Json::Value& response)
+{
+   DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartAudioStreamingOut --->Entry\n");
+   unsigned long long int handle;
+   int deviceType;
+   char handleString[DEVICE_HANDLE_BUFFER]= {'\0'};
+   char * pEnd;
+   BTRMGR_DeviceOperationType_t BT_DEVICE_TYPE;
+   deviceType = req["devicetype"].asInt();
+   BT_DEVICE_TYPE = (BTRMGR_DeviceOperationType_t) deviceType;
+   strcpy(handleString,req["devicehandle"].asCString());
+   handle = strtoull (handleString, &pEnd, 10);
+   rc = BTRMGR_StartAudioStreamingOut(0, handle,BT_DEVICE_TYPE);
+   if (BTRMGR_RESULT_SUCCESS == rc)
+   {
+       response["result"] = "SUCCESS";
+       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StartAudioStreamingOut call is SUCCESS");
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartAudioStreamingOut --->Exit\n");
+       return ;
+   }
+   else
+   {
+       response["result"] = "FAILURE";
+       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StartAudioStreamingOut call is FAILURE");
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartAudioStreamingOut -->Exit\n");
+       return ;
+   }
+}
+
 
 /***************************************************************************
  *Function name : Bluetooth_DisconnectFromDevice
@@ -598,6 +640,20 @@ void BluetoothAgent::Bluetooth_GetDeviceProperties(IN const Json::Value& req, OU
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetDeviceProperties -->Exit\n");
        return ;
    }
+}
+
+/***************************************************************************
+ *Function name : Bluetooth_SendRequest
+ *Descrption    : This function is a dummy test funtion
+ *****************************************************************************/
+
+void BluetoothAgent::Bluetooth_SendRequest(IN const Json::Value& request, OUT Json::Value& response)
+{
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth SendRequest ---> Entry\n");
+       response["result"] = "SUCCESS";
+       response["details"] = "SUCCESS";
+       DEBUG_PRINT(DEBUG_TRACE,"Bluetooth SendRequest ---> Exit\n");
+       return ;
 }
 
 /**************************************************************************

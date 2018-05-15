@@ -61,8 +61,8 @@ class BluetoothAgent : public RDKTestStubInterface , public AbstractServer<Bluet
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_SetAdapterPowerStatus", PARAMS_BY_NAME, JSON_STRING,"powerstatus",JSON_INTEGER,NULL), &BluetoothAgent::Bluetooth_SetAdapterPowerStatus);
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_IsAdapterDiscoverable", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_IsAdapterDiscoverable);
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_SetAdapterDiscoverable", PARAMS_BY_NAME, JSON_STRING,"discoverablestatus",JSON_INTEGER,"timeout",JSON_INTEGER,NULL), &BluetoothAgent::Bluetooth_SetAdapterDiscoverable);
-                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_StartDeviceDiscovery", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_StartDeviceDiscovery);
-                   this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_StopDeviceDiscovery", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_StopDeviceDiscovery);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_StartDeviceDiscovery", PARAMS_BY_NAME, JSON_STRING,"devicetype",JSON_INTEGER,NULL), &BluetoothAgent::Bluetooth_StartDeviceDiscovery);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_StopDeviceDiscovery", PARAMS_BY_NAME, JSON_STRING,"devicetype",JSON_INTEGER,NULL), &BluetoothAgent::Bluetooth_StopDeviceDiscovery);
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetDiscoveredDevices", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetDiscoveredDevices);
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_ConnectToDevice", PARAMS_BY_NAME, JSON_STRING,"devicetype",JSON_INTEGER,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_ConnectToDevice);
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_DisconnectFromDevice", PARAMS_BY_NAME, JSON_STRING,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_DisconnectFromDevice);
@@ -71,6 +71,8 @@ class BluetoothAgent : public RDKTestStubInterface , public AbstractServer<Bluet
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_UnpairDevice", PARAMS_BY_NAME, JSON_STRING,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_UnpairDevice);
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetPairedDevices", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetPairedDevices);
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetDeviceProperties", PARAMS_BY_NAME, JSON_STRING,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetDeviceProperties);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_StartAudioStreamingOut", PARAMS_BY_NAME, JSON_STRING,"devicetype",JSON_INTEGER,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_StartAudioStreamingOut);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_SendRequest", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_SendRequest);
                 }
 
                 //Inherited functions
@@ -97,7 +99,9 @@ class BluetoothAgent : public RDKTestStubInterface , public AbstractServer<Bluet
                 void Bluetooth_PairDevice(IN const Json::Value& req, OUT Json::Value& response);
                 void Bluetooth_UnpairDevice(IN const Json::Value& req, OUT Json::Value& response);
                 void Bluetooth_GetPairedDevices(IN const Json::Value& req, OUT Json::Value& response);
-                void Bluetooth_GetDeviceProperties(IN const Json::Value& req, OUT Json::Value& response);            
+                void Bluetooth_GetDeviceProperties(IN const Json::Value& req, OUT Json::Value& response);         
+                void Bluetooth_StartAudioStreamingOut(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_SendRequest(IN const Json::Value& req, OUT Json::Value& response);
                
 };
 #endif //__BLUETOOTH_STUB_H__
