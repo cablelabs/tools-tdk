@@ -117,6 +117,7 @@ def getPowerStatus():
 
 def startDeviceDiscovery():
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StartDeviceDiscovery');
+   tdkTestObj.addParameter("devicetype",2)
    #Execute the test case in STB
    tdkTestObj.executeTestCase(expectedresult);
    actualresult = tdkTestObj.getResult();
@@ -129,6 +130,7 @@ def startDeviceDiscovery():
 
 def stopDeviceDiscovery():
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StopDeviceDiscovery');
+   tdkTestObj.addParameter("devicetype",2)
    #Execute the test case in STB
    tdkTestObj.executeTestCase(expectedresult);
    actualresult = tdkTestObj.getResult();
@@ -187,6 +189,9 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
    else:
        print "Bluetooth adapter is already ON"
 
+   tdkTestObj = bluetoothObj.createTestStep('Bluetooth_SendRequest');
+   #Execute the test case in STB
+   tdkTestObj.executeTestCase(expectedresult);
    print "Set the client device as discoverable before starting the discovery in DUT"
    commandList = ['bluetoothctl','discoverable on','quit'] 
    output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
@@ -194,6 +199,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
         tdkTestObj.setResultStatus("FAILURE");
         print "Connecting to client device got failed"
    else:
+       tdkTestObj.setResultStatus("SUCCESS");
        print "Discoverable enabled Client Device Name" , bluetoothlib.deviceName
        print "Starting the device discovery in DUT"
        returnValue = startDeviceDiscovery()

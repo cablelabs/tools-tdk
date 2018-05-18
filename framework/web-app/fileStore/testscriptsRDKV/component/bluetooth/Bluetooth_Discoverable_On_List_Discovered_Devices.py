@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2017 RDK Management
+# Copyright 2018 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,27 +17,43 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <xml>
-  <id/>
-  <version>3</version>
+  <id></id>
+  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+  <version>4</version>
+  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Bluetooth_Discoverable_On_List_Discovered_Devices</name>
-  <primitive_test_id/>
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
+  <primitive_test_id></primitive_test_id>
+  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>Bluetooth_GetDiscoveredDevices</primitive_test_name>
+  <!--  -->
   <primitive_test_version>1</primitive_test_version>
+  <!--  -->
   <status>FREE</status>
+  <!--  -->
   <synopsis>To check whether discoverable  devices are listed in the discovered devices list</synopsis>
-  <groups_id/>
-  <execution_time>1</execution_time>
+  <!--  -->
+  <groups_id />
+  <!--  -->
+  <execution_time>15</execution_time>
+  <!--  -->
   <long_duration>false</long_duration>
+  <!--  -->
   <advanced_script>false</advanced_script>
-  <remarks/>
+  <!-- execution_time is the time out time for test execution -->
+  <remarks></remarks>
+  <!-- Reason for skipping the tests if marked to skip -->
   <skip>false</skip>
+  <!--  -->
   <box_types>
     <box_type>IPClient-Wifi</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
+    <!--  -->
   </rdk_versions>
   <test_cases>
     <test_case_id>CT_BLUETOOTH_07</test_case_id>
@@ -75,12 +91,11 @@ Checkpoint 2.The bluetooth emulator name should be there in the discovered devic
     <test_stub_interface>libbluetoothstub.so.0</test_stub_interface>
     <test_script>Bluetooth_Discoverable_On_List_Discovered_Devices</test_script>
     <skipped>No</skipped>
-    <release_version/>
-    <remarks/>
+    <release_version></release_version>
+    <remarks></remarks>
   </test_cases>
-  <script_tags/>
+  <script_tags />
 </xml>
-
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
@@ -144,16 +159,21 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
    else:
        print "Bluetooth adapter is already ON"
 
+   tdkTestObj = bluetoothObj.createTestStep('Bluetooth_SendRequest');
+   #Execute the test case in STB
+   tdkTestObj.executeTestCase(expectedresult);
    print "Set the client device as discoverable before starting the discovery in DUT"
    commandList = ['bluetoothctl','discoverable on','quit'] 
    output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
    if "FAILURE" in output:
-        tdkTestObj.setResultStatus("FAILURE");
         print "Connecting to client device got failed"
+        tdkTestObj.setResultStatus("FAILURE");
    else:
+       tdkTestObj.setResultStatus("SUCCESS");
        print "Discoverable is enabled in Client Device" , bluetoothlib.deviceName
        print "Starting the device discovery in DUT"
        tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StartDeviceDiscovery');
+       tdkTestObj.addParameter("devicetype",2)
        #Execute the test case in STB
        tdkTestObj.executeTestCase(expectedresult);
        actualresult = tdkTestObj.getResult();
@@ -164,6 +184,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
            sleep(30);
            print "Stop the device discovery"
            tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StopDeviceDiscovery');
+	   tdkTestObj.addParameter("devicetype",2)
            #Execute the test case in STB
            tdkTestObj.executeTestCase(expectedresult);
            actualresult = tdkTestObj.getResult();

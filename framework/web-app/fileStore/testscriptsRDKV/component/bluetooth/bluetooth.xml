@@ -51,14 +51,6 @@
           <parameter name="timeout" value=""/>
         </parameters>
       </primitiveTest>
-      <primitiveTest id="" name="Bluetooth_StartDeviceDiscovery" version="1">
-        <function>TestMgr_Bluetooth_StartDeviceDiscovery</function>
-        <parameters/>
-      </primitiveTest>
-      <primitiveTest id="" name="Bluetooth_StopDeviceDiscovery" version="1">
-        <function>TestMgr_Bluetooth_StopDeviceDiscovery</function>
-        <parameters/>
-      </primitiveTest>
       <primitiveTest id="" name="Bluetooth_GetDiscoveredDevices" version="1">
         <function>TestMgr_Bluetooth_GetDiscoveredDevices</function>
         <parameters/>
@@ -96,11 +88,34 @@
         <function>TestMgr_Bluetooth_GetPairedDevices</function>
         <parameters/>
       </primitiveTest>
-      <primitiveTest name="Bluetooth_GetDeviceProperties" id=" " version="1">
+      <primitiveTest id=" " name="Bluetooth_GetDeviceProperties" version="1">
         <function>TestMgr_Bluetooth_GetDeviceProperties</function>
         <parameters>
           <parameter name="devicehandle" value=""/>
         </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="Bluetooth_StartAudioStreamingOut" version="1">
+        <function>TestMgr_Bluetooth_StartAudioStreamingOut</function>
+        <parameters>
+          <parameter name="devicehandle" value=""/>
+          <parameter name="devicetype" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="Bluetooth_StartDeviceDiscovery" version="1">
+        <function>TestMgr_Bluetooth_StartDeviceDiscovery</function>
+        <parameters>
+          <parameter name="devicetype" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest id=" " name="Bluetooth_StopDeviceDiscovery" version="1">
+        <function>TestMgr_Bluetooth_StopDeviceDiscovery</function>
+        <parameters>
+          <parameter name="devicetype" value=""/>
+        </parameters>
+      </primitiveTest>
+      <primitiveTest name="Bluetooth_SendRequest" id="" version="1">
+        <function>TestMgr_Bluetooth_SendRequest</function>
+        <parameters/>
       </primitiveTest>
     </primitiveTests>
   </module>

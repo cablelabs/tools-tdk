@@ -39,7 +39,9 @@ def executeBluetoothCtl(bluetoothObj,commands):
         print 'Commands List:', commands
         print "Connecting to client device"
         global session
-        session = pxssh.pxssh()
+        session = pxssh.pxssh(options={
+                            "StrictHostKeyChecking": "no",
+                            "UserKnownHostsFile": "/dev/null"})
         session.login(ip,username,password)
         print "Executing the bluetoothctl commands"
         for parameters in range(0,len(commands)):
