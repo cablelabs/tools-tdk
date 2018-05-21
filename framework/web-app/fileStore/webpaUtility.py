@@ -79,12 +79,13 @@ def webpaQuery(obj, parameter, method="get"):
 ########## End of Function ##########
 
 
-def parseWebpaResponse(response, method="get"):
+def parseWebpaResponse(response, count, method="get"):
 # parseWebpaResponse
 
 # Syntax      : parseWebpaResponse(response, method="get")
 # Description : Function to parse the WEBPA response
 # Parameters  : response - the response message to be parsed
+#	      : count  - no: of parameters to be get/set		
 #             : method - whether the method was get or set
 # Return Value: SUCCESS/FAILURE
 
@@ -94,7 +95,10 @@ def parseWebpaResponse(response, method="get"):
         print "GET/SET success for parameter: ",list(responseDict["parameters"])[0]['name']
 	msg = list(responseDict["parameters"])[0]['message']
         if method == "get":
-	   value = list(responseDict["parameters"])[0]['value']
+           value = " "
+           for i in range(count):
+                   value = value + list(responseDict["parameters"])[i]['value'] + "  "
+           value = value.strip()
            print "Got parameter value as: ",value
 	   return [responseDict['statusCode'],value]
         else:
