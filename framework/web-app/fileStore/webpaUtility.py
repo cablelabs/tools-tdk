@@ -60,7 +60,7 @@ def webpaQuery(obj, parameter, method="get"):
    curl.setopt(curl.URL, SERVER_URI+"/api/v2/device/mac:"+macaddress+"/config?names="+ parameter['name'])
 
    if SAT_REQUIRED == "true":
-       curl.setopt(curl.HTTPHEADER, ['Content-Type: application/json','Accept: application/json','Authorization:Bearer '+ SatKey])
+       curl.setopt(curl.HTTPHEADER, ['Content-Type: application/json','Accept: application/json','Authorization:' + AUTHTYPE + ' '+ SatKey])
    else:
        curl.setopt(curl.HTTPHEADER, ['Content-Type: application/json','Accept: application/json'])
 

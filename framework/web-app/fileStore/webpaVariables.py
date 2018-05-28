@@ -26,3 +26,6 @@ SAT_TOKEN_FILE =
 
 #WEBPA server uri
 SERVER_URI =
+
+#Give the authentication type, eg: AUTHTYPE="Basic" for community webpa server
+AUTHTYPE = 
