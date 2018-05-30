@@ -177,8 +177,10 @@ public final class Constants
     public static final String PENDING = "PENDING";
     public static final String PAUSED = "PAUSED";
     public static final String SKIPPED = "SKIPPED";
-    public static final String KEY_PERFORMANCE_BM = "PerformanceBenchMarking";
-    public static final String KEY_PERFORMANCE_SD ="PerformanceSystemDiagnostics";
+    public static final String KEY_PERFORMANCE_BM = "performanceBenchMarking";
+    public static final String KEY_DIAGNOSTICS = "diagnosticsTest";
+    public static final String KEY_PERFORMANCE_SD ="performanceSystemDiagnostics";
+    public static final String DEVICE_DIAGNOSTICS_LOG = "device_diagnostics.log";
     
     public static final String COMPONENT ="component";
     public static final String INTEGRATION ="integration";
@@ -326,6 +328,9 @@ public final class Constants
 	public static final String TCL_DEVICE_CONFIG     = "TCLE2E";
 	public static final String TXT_EXTN     = ".txt";
 	public static final String CONFIG_EXTN     = ".config";
+	
+	public static final String ALL_LOGS ="ALL";
+	public static final String FAILURE_LOGS ="FAILURE";
 	
 	
 }

@@ -812,13 +812,15 @@ class ScriptexecutionService {
 		def logTransferFileName = "${executionId}_${execDeviceId}_${executionResultId}_AgentConsoleLog.txt"
 		String performanceFileName
 		String performanceFilePath
+		String diagnosticsFilePath
 		if(isBenchMark.equals(TRUE) || isSystemDiagnostics.equals(TRUE)){
 			//new File("${realPath}//logs//performance//${executionId}//${executionDeviceInstance?.id}//${executionResultId}").mkdirs()
 			//performanceFilePath = "${realPath}//logs//performance//${executionId}//${executionDeviceInstance?.id}//${executionResultId}//"
 			performanceFileName = "${executionId}_${executionDeviceInstance?.id}_${executionResultId}"
 			performanceFilePath = "${realPath}//logs//performance//${executionId}//${executionDeviceInstance?.id}//${executionResultId}//"
+			diagnosticsFilePath = "${realPath}//logs//stblogs//${executionId}//${executionDeviceInstance?.id}//${executionResultId}//"
 		}
-	
+		def tmUrl = executionService.updateTMUrl(url,deviceInstance)
 		if(isBenchMark.equals(TRUE)){
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
 			def absolutePath = layoutFolder.absolutePath
@@ -855,6 +857,9 @@ class ScriptexecutionService {
 			ScriptExecutor scriptExecutor = new ScriptExecutor(executionName)
 			outData += scriptExecutor.executeScript(cmd,10)
 			executescriptService.copyPerformanceLogIntoDir(realPath, performanceFilePath ,executionId,executionDeviceInstance?.id,executionResultId)
+			
+			executescriptService.initiateDiagnosticsTest(deviceInstance, performanceFileName, tmUrl,executionName)
+			executescriptService.copyLogFileIntoDir(realPath, diagnosticsFilePath, executionId,executionDeviceInstance?.id, executionResultId,DEVICE_DIAGNOSTICS_LOG)
 		}
 		if(isLogReqd && isLogReqd?.toString().equalsIgnoreCase(TRUE)){
 			executescriptService.transferSTBLog(scriptInstance?.primitiveTest?.module?.name, deviceInstance,""+executionId,""+execDeviceId,""+executionResultId,realPath,url)

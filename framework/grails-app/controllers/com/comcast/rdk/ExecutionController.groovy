@@ -109,6 +109,7 @@ class ExecutionController {
 	public static final String EXPORT_COLUMN2_LABEL 		= "C2"
 	public static final String EXPORT_SHEET_NAME 			= "Execution_Results"
 	public static final String EXPORT_FILENAME 				= "ExecutionResults-"
+	public static final String EXPORT_COMPARE_FILENAME 		= "ExecutionResultsComparison-"
 	public static final String EXPORT_EXCEL_FORMAT 			= "excel"
 	public static final String EXPORT_ZIP_FORMAT 			= "zip"
 	public static final String EXPORT_EXCEL_EXTENSION 		= "xls"
@@ -1928,6 +1929,61 @@ class ExecutionController {
 		}
 
 	}
+	
+	/**
+	 * To download the test result comparison report
+	 */
+	def exportComparisonReport = {
+		if(!params.max) params.max = 100000
+		Map dataMap = [:]
+		List fieldLabels = []
+		Map fieldMap = [:]
+		Map parameters = [:]
+		List columnWidthList = [0.08,0.4,0.2]
+
+		Execution executionInstance = Execution.findById(params.id)
+		Execution [] executionList = Execution.findAllByScriptGroupAndNameNotEqualAndExecutionStatusNotEqual(executionInstance.scriptGroup,executionInstance?.name,Constants.ABORTED_STATUS,[max: 5, sort: "id", order: "desc"])
+		def nameList = executionList?.name
+		def colNameList = ["C4","C5","C6","C7","C8"]
+		def fieldList = ["C1","C2","C3"]
+		String executionInstanceStatus ;
+		executionInstanceStatus =executedbService?.isValidExecutionAvailable(executionInstance)
+		if(executionInstanceStatus?.equals(Constants.SUCCESS_STATUS)){
+
+			if(executionInstance){
+				int i = 0
+				fieldMap = ["C1":" Sl.No ", "C2":" Script Name ","C3":executionInstance?.name]
+				nameList?.each{ name ->
+					fieldMap.put(colNameList.get(i), name)
+					fieldList.add(colNameList.get(i))
+					columnWidthList.add(0.2)
+					i++
+				}
+				
+				dataMap = executedbService.getDataForComparisonExcelExport(executionList, executionInstance , getRealPath(),getApplicationUrl(),fieldList)
+				parameters = [ title: EXPORT_SHEET_NAME, "column.widths": columnWidthList]
+			}
+			else{
+				log.error "Invalid excution instance......"
+			}
+
+			params.format = EXPORT_EXCEL_FORMAT
+			params.extension = EXPORT_EXCEL_EXTENSION
+			response.contentType = grailsApplication.config.grails.mime.types[params.format]
+			def fileName = executionInstance.name
+			fileName = fileName?.replaceAll(" ","_")
+			response.setHeader("Content-disposition", "attachment; filename="+EXPORT_COMPARE_FILENAME+ fileName +".${params.extension}")
+			excelExportService.export(params.format, response.outputStream,dataMap, null,fieldMap,[:], parameters)
+			log.info "Completed excel export............. "
+		}
+		else{
+			redirect(action: "create");
+			flash.message= "No valid execution reports are available."
+			return
+		}
+
+		
+	}
 
 	/**
 	 * Method to perform delete operation for marked results.
@@ -3689,6 +3745,11 @@ class ExecutionController {
 	/*To handle the complete log download request*/
 	def downloadLogs(){
 		String executionId = params?.id
+		
+		String logType = ALL_LOGS
+		if(params?.logType && params?.logType?.equals("FAILURE")){
+			logType = FAILURE_LOGS
+		}
 		try {
 			Execution exec = Execution.get(executionId)
 			String fileName = exec?.name
@@ -3699,7 +3760,7 @@ class ExecutionController {
 				fileName = fileName?.replaceAll(" ","_")
 				response.setHeader("Content-Type", "application/zip")
 				response.setHeader("Content-disposition", "attachment; filename=ExecutionLogs_"+ fileName +".${params.extension}")
-				logZipService.zipLogs(getRealPath() , response.outputStream , executionId )
+				logZipService.zipLogs(getRealPath() , response.outputStream , executionId , logType)
 			}
 		} catch (Exception e) {
 			e.printStackTrace()
@@ -3731,4 +3792,5 @@ class ExecutionController {
 
 		return color
 	}
+	
 }

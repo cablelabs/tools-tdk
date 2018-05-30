@@ -1052,6 +1052,7 @@ class ScriptService {
 			}
 		} catch (Exception e) {
 			script = null
+			println " Script "+ fileName + " Error "+e.getMessage()
 			e.printStackTrace()
 		}
 		return script

@@ -114,6 +114,7 @@ class PrimitiveService {
 									}
 									primitiveMap.put(""+module.getName(), pList)
 								} catch (Exception e) {
+									println " Issue with Primitive File "+ file.getName() + " Error "+e.getMessage()
 									e.printStackTrace()
 								}
 							}

@@ -1108,4 +1108,119 @@ class ExecutedbService {
 		prepareStatusList(detailDataMap)
 		return detailDataMap
 	}
+	
+	/**
+	 * Method to get the data for creating the consolidated report in excel format.
+	 */
+	def getDataForComparisonExcelExport(def executionList, def executionInstance,String realPath,String appUrl,def fieldList) {
+
+		List executionDeviceList = []
+		List executionResultInstanceList = []
+		
+		String deviceDetails
+
+		String fileContents = ""
+		def deviceName = ""
+		def deviceIp = ""
+		def executionTime = ""
+		int totalCount = 0
+		int testCount =0
+
+		String filePath = ""
+		def executionDeviceId
+
+		Map summaryHead = [:]
+		Map statusValue = [:]
+
+		def execIds = executionList?.id
+		executionDeviceList = ExecutionDevice.findAllByExecution(executionInstance)
+		def detailDataMap = [:]
+		executionDeviceList.each{ executionDeviceInstance ->
+
+			deviceName = executionDeviceInstance?.device
+			deviceIp = executionDeviceInstance?.deviceIp
+			executionTime = executionDeviceInstance?.executionTime
+			executionTime = executionTimeFormat ( executionTime )
+			executionDeviceId = executionDeviceInstance?.id
+
+			executionResultInstanceList =  ExecutionResult.findAllByExecutionAndExecutionDevice(executionInstance,executionDeviceInstance)//,[sort: "script",order: "asc"])
+			
+			int counter = 1
+			int counter1=1
+			Date date = new Date()
+			executionResultInstanceList.each{ executionResultInstance ->
+				counter1= counter1+1
+			
+				String scriptName = executionResultInstance?.script
+				String status = executionResultInstance?.status
+				String moduleName = ""
+				
+				if(executionResultInstance?.category != Category.RDKB_TCL){
+					def sMap = scriptService.getScriptNameModuleNameMapping(realPath)
+					moduleName = sMap.get(scriptName)
+				}else{
+					moduleName = "tcl"
+				}
+				
+				int i = 0
+				
+				if(!moduleName.equals("")){
+		//			def scriptObj1 = ScriptFile.findByModuleName(moduleName)
+		
+	
+					def scriptObj = ScriptFile.findByScriptNameAndModuleName(scriptName,moduleName)
+					if(scriptObj){
+						def dataList
+						Map dataMapList = detailDataMap.get(moduleName)
+							if(dataMapList == null){
+								dataMapList = [:]
+								detailDataMap.put(moduleName,dataMapList)
+								//detailDataMap.put("total", summaryMap.get("Total Scripts"))
+							}
+						
+						if(dataMapList != null){
+							dataList = dataMapList.get("dataList")
+							if(dataList == null){
+								dataList = []
+								dataMapList.put("dataList",dataList)
+								dataMapList.put("fieldsList",fieldList)
+								counter = 1
+						}else{
+							counter =  dataMapList.get("counter")
+						}
+						if(dataList != null){
+								
+							Map dataMap
+							
+							dataMap =["C1":counter,"C2":scriptName,"C3":executionResultInstance?.status]
+							int j = 3;
+							executionList?.each{ exec ->
+								def statusData = getExecutionResultStatus(exec ,scriptName )
+								dataMap.put(fieldList.getAt(j), statusData)
+								j++
+							}
+							
+							dataList.add(dataMap)
+							counter ++
+							dataMapList.put("counter",counter)
+						}
+					}
+				}
+			}
+		}
+	}
+		return detailDataMap
+	}
+	
+	/**
+	 * to get the execution result status
+	 */
+	def getExecutionResultStatus(def execution , def script){
+		ExecutionResult exResult = ExecutionResult.findByExecutionAndScript(execution,script)
+		String status = "Nil"
+		if(exResult){
+			status = exResult?.status
+		}
+		return status
+	}
 }

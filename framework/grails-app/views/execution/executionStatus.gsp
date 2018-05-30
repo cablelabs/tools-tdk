@@ -158,7 +158,12 @@ function hideParameters(k){
 		<td colspan="2" align="right">
 		<g:link action="exportConsolidatedPerfToExcel" params="[id:"${executionInstance?.id}"]" >Download Consolidated Performance Report(Excel)</g:link>
 		<br>
+		<g:link action="exportComparisonReport" params="[id:"${executionInstance?.id}"]" >Download Comparison Report(Excel)</g:link>
+		<br>
 		<g:link action="downloadLogs" params="[id:"${executionInstance?.id}"]" >Download Execution Logs(Zip)</g:link>
+		<br>
+		<g:link action="downloadLogs" params="[id:"${executionInstance?.id}",logType:"FAILURE"]" >Download Failure Execution Logs(Zip)</g:link>
+		
 		</td>		
 	</tr>		
 	<tr class="odd">

@@ -1679,12 +1679,14 @@ class JobSchedulerService implements Job{
 		}
 		String performanceFilePath
 		String performanceFileName
+		String diagnosticsFilePath
 		if(isBenchMark.equals("true") || isSystemDiagnostics.equals("true")){
 			//new File("${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
-			performanceFileName =performanceFileName = "${executionId}_${executionDevice?.id}_${executionResultId}"
+			performanceFileName = "${executionId}_${executionDevice?.id}_${executionResultId}"
 			performanceFilePath = "${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}//"
+			diagnosticsFilePath = "${realPath}//logs//stblogs//${executionId}//${executionDevice?.id}//${executionResultId}//"
 		}
-
+		def tmUrl = updateTMUrl(url,deviceInstance)
 		if(isBenchMark.equals("true")){
 			File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
 			def absolutePath = layoutFolder.absolutePath
@@ -1719,6 +1721,9 @@ class JobSchedulerService implements Job{
 			ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 			htmlData += scriptExecutor.executeScript(cmd,1)
 			copyPerformanceLogIntoDir(realPath, performanceFilePath,executionId,executionDevice?.id, executionResultId)
+			
+			initiateDiagnosticsTest(deviceInstance, performanceFileName, tmUrl,uniqueExecutionName)
+			copyLogFileIntoDir(realPath, diagnosticsFilePath, executionId,executionDevice?.id, executionResultId,DEVICE_DIAGNOSTICS_LOG)
 		}
 		//def logTransferFileName1 = "${executionId.toString()}${deviceInstance?.id.toString()}${scriptInstance?.id.toString()}${executionDevice?.id.toString()}"
 		def logTransferFileName1 = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
@@ -2148,11 +2153,15 @@ class JobSchedulerService implements Job{
 		}
 		if(!ExecutionService.abortList.contains(executionInstance?.id?.toString())){
 			String performanceFilePath
+			String diagnosticsFilePath
+			String performanceFileName
 			if(isBenchMark.equals(TRUE) || isSystemDiagnostics.equals(TRUE)){
 				new File("${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}").mkdirs()
+				performanceFileName = "${executionId}_${executionDevice?.id}_${executionResultId}"
 				performanceFilePath = "${realPath}//logs//performance//${executionId}//${executionDevice?.id}//${executionResultId}//"
+				diagnosticsFilePath = "${realPath}//logs//stblogs//${executionId}//${executionDevice?.id}//${executionResultId}//"
 			}
-
+			def tmUrl = updateTMUrl(url,deviceInstance)
 			if(isBenchMark.equals(TRUE)){
 				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callPerformanceTest.py").file
 				def absolutePath = layoutFolder.absolutePath
@@ -2164,7 +2173,7 @@ class JobSchedulerService implements Job{
 					deviceInstance?.stbPort,
 					deviceInstance?.agentMonitorPort,
 					KEY_PERFORMANCE_BM,
-					performanceFilePath
+					performanceFileName
 				]
 				ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 				htmlData += scriptExecutor.executeScript(cmd,1)
@@ -2180,11 +2189,14 @@ class JobSchedulerService implements Job{
 					deviceInstance?.stbPort,
 					deviceInstance?.agentMonitorPort,
 					KEY_PERFORMANCE_SD,
-					performanceFilePath
+					performanceFileName
 				]
 				ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 				htmlData += scriptExecutor.executeScript(cmd,10)
 				copyPerformanceLogIntoDir(realPath, performanceFilePath, executionId,executionDevice?.id, executionResultId)
+				
+				initiateDiagnosticsTest(deviceInstance, performanceFileName, tmUrl,uniqueExecutionName)
+				copyLogFileIntoDir(realPath, diagnosticsFilePath, executionId,executionDevice?.id, executionResultId,DEVICE_DIAGNOSTICS_LOG)
 			}
 
 			def logTransferFileName = "${executionId}_${executionDevice?.id}_${executionResultId}_AgentConsoleLog.txt"
@@ -3599,6 +3611,67 @@ class JobSchedulerService implements Job{
 			   e.printStackTrace()
 		   }
 		   return url
+	   }
+	   
+	   /**
+	    *to Copy the logs into specified directory
+	    */
+	   def copyLogFileIntoDir(def realPath, def logTransferFilePath , def executionId, def executionDeviceId , def executionResultId , def fileName){
+		   try {
+			   String logsPath = realPath.toString()+"/logs/logs/"
+   
+			   File logDir  = new File(logsPath)
+			   if(logDir.isDirectory()){
+				   logDir.eachFile{ file->
+					   if(file.toString()?.contains(fileName)){
+						   def logFileName =  file.getName().split("_")
+						   if(logFileName?.length >= 3){
+							   if(executionId?.toString()?.equals(logFileName[0]?.toString()) && executionDeviceId?.toString()?.equals(logFileName[1]?.toString()) && executionResultId?.toString()?.equals(logFileName[2]?.toString())){
+								   new File(logTransferFilePath?.toString()).mkdirs()
+								   File logTransferPath  = new File(logTransferFilePath)
+								   if(file.exists()){
+									   boolean fileMoved = file.renameTo(new File(logTransferPath, logFileName.last()));
+								   }
+							   }
+						   }
+					   }
+				   }
+			   }
+		   } catch (Exception e) {
+			   println  " Error"+e.getMessage()
+			   e.printStackTrace()
+		   }
+	   }
+	   
+	   /**
+		* To initiate the diagnostics test
+		*/
+	   def initiateDiagnosticsTest(def deviceInstance , def diagFileName , def tmUrl ,def uniqueExecutionName){
+		   def output = ""
+		   try{
+				   if(deviceInstance?.category?.equals(Category.RDKB)){
+					   File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callDiagnosticsTest.py").file
+					   def absolutePath = layoutFolder.absolutePath
+			   
+					   String[] cmd = [
+						   PYTHON_COMMAND,
+						   absolutePath,
+						   deviceInstance?.stbIp,
+						   deviceInstance?.stbPort,
+						   deviceInstance?.agentMonitorPort,
+						   //deviceInstance?.logTransferPort,
+						   KEY_DIAGNOSTICS,
+						   diagFileName,
+						   tmUrl
+					   ]
+					   
+					   ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
+					    output = scriptExecutor.executeScript(cmd,10)
+				   }
+		   } catch (Exception e) {
+			   e.printStackTrace()
+		   }
+		   return output
 	   }
 
 }
