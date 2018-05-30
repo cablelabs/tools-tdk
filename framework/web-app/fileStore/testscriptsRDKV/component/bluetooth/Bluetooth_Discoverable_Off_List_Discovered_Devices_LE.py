@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2017 RDK Management
+# Copyright 2018 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 <xml>
   <id/>
   <version>2</version>
-  <name>Bluetooth_Discoverable_Off_List_Discovered_Devices</name>
+  <name>Bluetooth_Discoverable_Off_List_Discovered_Devices_LE</name>
   <primitive_test_id/>
   <primitive_test_name>Bluetooth_StartDeviceDiscovery</primitive_test_name>
   <primitive_test_version>1</primitive_test_version>
@@ -59,14 +59,14 @@ Bluetooth_GetDiscoveredDevices</api_or_interface_used>
     <input_parameters>BTRMGR_IsAdapterDiscoverable(0,&amp;discoverableStatus);
 BTRMGR_SetAdapterDiscoverable(0,discoverableStatus,Timeout);
 BTRMGR_GetAdapterPowerStatus(0, &amp;powerStatus);
-BTRMGR_SetAdapterPowerStatus(0,powerStatus);BTRMGR_StartDeviceDiscovery(0);
-BTRMGR_StopDeviceDiscovery(0);
+BTRMGR_SetAdapterPowerStatus(0,powerStatus);BTRMGR_StartDeviceDiscovery(0,devicetype);
+BTRMGR_StopDeviceDiscovery(0,devicetype);
 BTRMGR_GetDiscoveredDevices(0, &amp;discoveredDevices);</input_parameters>
     <automation_approch>1. TM loads the Bluetooth agent via the test agent.
 2  Turn ON the bluetotoh adapter if it is OFF
 3. Turn ONthe discoverable status of DUT
 4.Turn ON the discoverable status of bluetooth emulator
-5.Start the device discovery in DUT
+5.Start the device discovery in DUT with LE as input param
 6.Stop the device discovery after 30 seconds
 7.Check the discovered devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
 8.Turn OFF the discoverable status of bluetooth emulator
@@ -78,7 +78,7 @@ Checkpoint 2.The bluetooth emulator name should be there in the discovered devic
 Checkpoint 3 The bluetooth emulator name should NOT be there in the discovered devices list of DUT after the discoverable status of bluetooth emulator turned OFF</except_output>
     <priority>High</priority>
     <test_stub_interface>libbluetoothstub.so.0</test_stub_interface>
-    <test_script>Bluetooth_Discoverable_Off_List_Discovered_Devices</test_script>
+    <test_script>Bluetooth_Discoverable_Off_List_Discovered_Devices_LE</test_script>
     <skipped>No</skipped>
     <release_version/>
     <remarks/>
@@ -99,7 +99,7 @@ bluetoothObj = tdklib.TDKScriptingLibrary("bluetooth","2.0");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-bluetoothObj.configureTestCase(ip,port,'Bluetooth_Discoverable_Off_List_Discovered_Devices');
+bluetoothObj.configureTestCase(ip,port,'Bluetooth_Discoverable_Off_List_Discovered_Devices_LE');
 
 def getPowerStatus():
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterPowerStatus');
@@ -117,7 +117,7 @@ def getPowerStatus():
 
 def startDeviceDiscovery():
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StartDeviceDiscovery');
-   tdkTestObj.addParameter("devicetype",2)
+   tdkTestObj.addParameter("devicetype",4)
    #Execute the test case in STB
    tdkTestObj.executeTestCase(expectedresult);
    actualresult = tdkTestObj.getResult();
@@ -130,7 +130,7 @@ def startDeviceDiscovery():
 
 def stopDeviceDiscovery():
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StopDeviceDiscovery');
-   tdkTestObj.addParameter("devicetype",2)
+   tdkTestObj.addParameter("devicetype",4)
    #Execute the test case in STB
    tdkTestObj.executeTestCase(expectedresult);
    actualresult = tdkTestObj.getResult();

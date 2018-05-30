@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2017 RDK Management
+# Copyright 2018 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@
 <xml>
   <id/>
   <version>2</version>
-  <name>Bluetooth_Connect_Disconnect_Discovered_Device</name>
+  <name>Bluetooth_Connect_Disconnect_Discovered_Device_Audio_Output</name>
   <primitive_test_id/>
   <primitive_test_name>Bluetooth_ConnectToDevice</primitive_test_name>
   <primitive_test_version>2</primitive_test_version>
@@ -61,8 +61,8 @@ bool Bluetooth_GetConnectedDevices
 bool Bluetooth_DisconnectFromDevice
 bool Bluetooth_UnpairDevice</api_or_interface_used>
     <input_parameters>BTRMGR_GetAdapterPowerStatus(0, &amp;powerStatus);
-BTRMGR_SetAdapterPowerStatus(0,powerStatus);BTRMGR_StartDeviceDiscovery(0);
-BTRMGR_StopDeviceDiscovery(0);
+BTRMGR_SetAdapterPowerStatus(0,powerStatus);BTRMGR_StartDeviceDiscovery(0,devicetype);
+BTRMGR_StopDeviceDiscovery(0,devicetype);
 BTRMGR_GetDiscoveredDevices(0, &amp;discoveredDevices);
 BTRMGR_PairDevice(0, handle);
 BTRMGR_UnpairDevice(0, handle);
@@ -78,7 +78,7 @@ BTRMGR_DisconnectFromDevice(0, handle);</input_parameters>
 6.Check the discovered devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
 7.Pair with the bluetooth emulator
 8.Check the paired devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
-9.Connect with the device as an audio source
+9.Connect with the device with Audio Output as the parameter
 10. .Check the connected devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
 11.Disconnect and unpair the bluetooth emulator with the DUT</automation_approch>
     <except_output>Checkpoint 1.Verify the API call return value
@@ -89,7 +89,7 @@ Checkpoint 5 After disconnecting, the bluetooth emulator name should NOT be ther
 Checkpoint 6 After unpair, the bluetooth emulator name should NOT be there in the paired devices list of DUT</except_output>
     <priority>High</priority>
     <test_stub_interface>libbluetoothstub.so.0</test_stub_interface>
-    <test_script>Bluetooth_Connect_Disconnect_Discovered_Device</test_script>
+    <test_script>Bluetooth_Connect_Disconnect_Discovered_Device_Audio_Output</test_script>
     <skipped>No</skipped>
     <release_version/>
     <remarks/>
@@ -110,7 +110,7 @@ bluetoothObj = tdklib.TDKScriptingLibrary("bluetooth","2.0");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-bluetoothObj.configureTestCase(ip,port,'Bluetooth_Connect_Disconnect_Discovered_Device');
+bluetoothObj.configureTestCase(ip,port,'Bluetooth_Connect_Disconnect_Discovered_Device_Audio_Output');
 
 def getPowerStatus():
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterPowerStatus');
@@ -174,7 +174,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
        print "Discoverable is enabled in Client Device" , bluetoothlib.deviceName
        print "Starting the device discovery in DUT"
        tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StartDeviceDiscovery');
-       tdkTestObj.addParameter("devicetype",2)
+       tdkTestObj.addParameter("devicetype",1)
        #Execute the test case in STB
        tdkTestObj.executeTestCase(expectedresult);
        actualresult = tdkTestObj.getResult();
@@ -185,7 +185,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
            sleep(30);
            print "Stop the device discovery"
            tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StopDeviceDiscovery');
-	   tdkTestObj.addParameter("devicetype",2)
+	   tdkTestObj.addParameter("devicetype",1)
            #Execute the test case in STB
            tdkTestObj.executeTestCase(expectedresult);
            actualresult = tdkTestObj.getResult();
@@ -241,7 +241,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                                    print "Connect with the client device"
                                    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_ConnectToDevice')
                                    tdkTestObj.addParameter("devicehandle",handleNumber);
-                                   tdkTestObj.addParameter("devicetype",4)
+                                   tdkTestObj.addParameter("devicetype",1)
                                    #Execute the test case in STB
                                    tdkTestObj.executeTestCase(expectedresult);
                                    actualresult = tdkTestObj.getResult();

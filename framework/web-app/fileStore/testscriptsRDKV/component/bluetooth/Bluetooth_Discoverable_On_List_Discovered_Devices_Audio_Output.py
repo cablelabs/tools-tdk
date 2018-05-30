@@ -23,7 +23,7 @@
   <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
   <version>4</version>
   <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Bluetooth_Discoverable_On_List_Discovered_Devices</name>
+  <name>Bluetooth_Discoverable_On_List_Discovered_Devices_Audio_Output</name>
   <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
   <primitive_test_id></primitive_test_id>
   <!-- Do not change primitive_test_id if you are editing an existing script. -->
@@ -75,21 +75,21 @@ Bluetooth_GetDiscoveredDevices</api_or_interface_used>
     <input_parameters>BTRMGR_IsAdapterDiscoverable(0,&amp;discoverableStatus);
 BTRMGR_SetAdapterDiscoverable(0,discoverableStatus,Timeout);
 BTRMGR_GetAdapterPowerStatus(0, &amp;powerStatus);
-BTRMGR_SetAdapterPowerStatus(0,powerStatus);BTRMGR_StartDeviceDiscovery(0);
-BTRMGR_StopDeviceDiscovery(0);
+BTRMGR_SetAdapterPowerStatus(0,powerStatus);BTRMGR_StartDeviceDiscovery(0,devicetype);
+BTRMGR_StopDeviceDiscovery(0,devicetype);
 BTRMGR_GetDiscoveredDevices(0, &amp;discoveredDevices);</input_parameters>
     <automation_approch>1. TM loads the Bluetooth agent via the test agent.
 2  Turn On the bluetotoh adapter if it is OFF
 3. Turn on the discoverable status of DUT
 4.Turn on the discoverable status of bluetooth emulator
-5.Start the device discovery in DUT
+5.Start the device discovery in DUT with Audio_Output as param
 6.Stop the device discovery after 30 seconds
 7.Check the discovered devices list in DUT and confirm the bluetooth emulator adapter name is there in the list</automation_approch>
     <except_output>Checkpoint 1.Verify the API call return value
 Checkpoint 2.The bluetooth emulator name should be there in the discovered devices list of DUT</except_output>
     <priority>High</priority>
     <test_stub_interface>libbluetoothstub.so.0</test_stub_interface>
-    <test_script>Bluetooth_Discoverable_On_List_Discovered_Devices</test_script>
+    <test_script>Bluetooth_Discoverable_On_List_Discovered_Devices_Audio_Output</test_script>
     <skipped>No</skipped>
     <release_version></release_version>
     <remarks></remarks>
@@ -109,7 +109,7 @@ bluetoothObj = tdklib.TDKScriptingLibrary("bluetooth","2.0");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-bluetoothObj.configureTestCase(ip,port,'Bluetooth_Discoverable_On_List_Discovered_Devices');
+bluetoothObj.configureTestCase(ip,port,'Bluetooth_Discoverable_On_List_Discovered_Devices_Audio_Output');
 
 def getPowerStatus():
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterPowerStatus');
@@ -173,7 +173,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
        print "Discoverable is enabled in Client Device" , bluetoothlib.deviceName
        print "Starting the device discovery in DUT"
        tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StartDeviceDiscovery');
-       tdkTestObj.addParameter("devicetype",2)
+       tdkTestObj.addParameter("devicetype",1)
        #Execute the test case in STB
        tdkTestObj.executeTestCase(expectedresult);
        actualresult = tdkTestObj.getResult();
@@ -184,7 +184,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
            sleep(30);
            print "Stop the device discovery"
            tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StopDeviceDiscovery');
-	   tdkTestObj.addParameter("devicetype",2)
+	   tdkTestObj.addParameter("devicetype",1)
            #Execute the test case in STB
            tdkTestObj.executeTestCase(expectedresult);
            actualresult = tdkTestObj.getResult();
