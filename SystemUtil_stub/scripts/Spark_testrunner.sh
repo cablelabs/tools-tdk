@@ -22,6 +22,6 @@ TOOL_PATH=$1
 IP=$(awk -F"@" '/Manager IP/{ip=$2}END{print ip}' $TDK_PATH/tdkconfig.ini )
 cd /home/root
 export HOME=/home/root/
-./pxscene http://$IP:8080/$TOOL_PATH/fileStore/testscriptsRDKVJS/component/spark/testrunner.js &
+./pxscene http://$IP:8080/$TOOL_PATH/fileStore/testscriptsRDKVJS/component/spark/testrunner_v5.js &
 sleep 60
 pkill pxscene
