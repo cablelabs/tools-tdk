@@ -134,6 +134,7 @@ if "SUCCESS" in smLoadStatus.upper():
                 tdkTestObj.addParameter("service_name", serviceName);
                 tdkTestObj.addParameter("method_name", methodName);
                 tdkTestObj.addParameter("params",setKey);
+                tdkTestObj.addParameter("inputCount", 1);
                 tdkTestObj.executeTestCase(expectedresult);
                 print "Calling method :",methodName
                 actualresult = tdkTestObj.getResult();
