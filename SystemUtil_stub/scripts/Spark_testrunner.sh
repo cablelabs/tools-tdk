@@ -1,3 +1,4 @@
+#!/bin/sh
 ##########################################################################
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
@@ -17,7 +18,6 @@
 # limitations under the License.
 ##########################################################################
 
-#!/bin/sh
 TOOL_PATH=$1
 IP=$(awk -F"@" '/Manager IP/{ip=$2}END{print ip}' $TDK_PATH/tdkconfig.ini )
 cd /home/root
