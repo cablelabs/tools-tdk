@@ -67,6 +67,7 @@ std::string GetSubString (std::string strLine, std::string strDelimiter);
 #define CPU_IDLE_DATA_FILE       "cpu.log"                      // File to store cpu idle data
 #define MEMORY_USED_DATA_FILE    "memused.log"                  // File to store memory used data
 #define PERFORMANCE_CONFIG_FILE  "perfConfig.ini"               // File to store performance status which persist over reboot cycle
+#define DEVICE_DIAGNOSTICS_FILE  "device_diagnostics.log"     // File to store the device diagnostics data
 
 #define ENABLE_TDK_SCRIPT   "$TDK_PATH/EnableTDK.sh"      // Script to enable TDK
 #define DISABLE_TDK_SCRIPT   "$TDK_PATH/DisableTDK.sh"      // Script to disable TDK
@@ -78,6 +79,7 @@ std::string GetSubString (std::string strLine, std::string strDelimiter);
 #define SYSSTAT_SCRIPT       "sh $TDK_PATH/runSysStat.sh"	  // Script to get system diagnostic info from sar command
 #define PERF_DATA_EXTRACTOR_SCRIPT       "sh $TDK_PATH/PerformanceDataExtractor.sh"	  // Script to extract usage details for cpu amd memory
 #define UPLOAD_LOG_SCRIPT "$TDK_PATH/uploadLogs.sh"       // Script to upload log files when device IP is configured for IPv6
+#define DIAGNOSTICS_TEST_SCRIPT "sh $TDK_PATH/diagnosticsTest.sh"  //Script to collect the device diagnostics data
 #define NULL_LOG_FILE        "cat /dev/null > "
 #define GET_IMAGENAME_CMD    "cat /version.txt | grep imagename | cut -d: -f 2"
 #define TCP_PORT_1 18086
@@ -983,6 +985,8 @@ void RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
             /* Start thread only once */
             if(bKeepPerformanceAlive == false)
             {
+/* Commenting out PerformanceExecuter thread as we are not collecting performance data like cpu,mem,sysstat details */
+#if 0
                 bKeepPerformanceAlive = true;
 
                 /* Starting a thread to collect performance data during test execution */
@@ -991,6 +995,7 @@ void RpcMethods::RPCLoadModule (const Json::Value& request, Json::Value& respons
                 {
                     DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Performance Executer  \n");
                 }
+#endif
             }
         }
 			
@@ -1345,6 +1350,8 @@ void RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
         {
             if(bKeepPerformanceAlive == false)
             {
+/* Commenting out PerformanceExecuter thread as we are not collecting performance data like cpu,mem,sysstat details */
+#if 0
                 bKeepPerformanceAlive = true;
 
                 /* Starting a thread to collect performance data during test execution */
@@ -1353,6 +1360,7 @@ void RpcMethods::RPCRestorePreviousState (const Json::Value& request, Json::Valu
                 {
                     DEBUG_PRINT (DEBUG_ERROR, "\nAlert!!! Failed to start Performance Executer  \n");
                 }
+#endif
             }            
         }
         o_perfConfigFile.close();
@@ -1941,7 +1949,8 @@ void RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Js
     {
         bKeepPerformanceAlive = false;
         sleep (1);
-        pthread_join (performanceThreadId, NULL);
+	/* Commenting out PerformanceExecuter thread as we are not collecting performance data like cpu,mem,sysstat details */
+        //pthread_join (performanceThreadId, NULL);
     }
 	
     sleep(2);
@@ -1984,6 +1993,72 @@ void RpcMethods::RPCPerformanceSystemDiagnostics (const Json::Value& request, Js
 	
 } /* End of RPCPerformanceSystemDiagnostics */
 
+
+/********************************************************************************************************************
+ Purpose:               RPC Method to invoke a script which collects the diagnostic test details and send the log file to Test Manager.
+
+ Parameters:            request [IN]       - Json request.
+                        response [OUT]  - Json response with result "SUCCESS/FAILURE".
+
+ Return:                bool  -      Always returning true from this function, with details in response[result].
+
+*********************************************************************************************************************/
+void RpcMethods::RPCDiagnosticsTest(const Json::Value& request, Json::Value& response)
+{
+    bool bRet = true;
+    char szBuffer[LINE_LEN];
+    std::string strLogPath;
+    std::string strNullLog;
+
+    /* Constructing JSON response */
+    response["jsonrpc"] = "2.0";
+    response["id"]      = request["id"];
+
+    DEBUG_PRINT (DEBUG_LOG, "\nRPCDiagnosticsTest --> Entry \n");
+    std::cout << "Received query: " << request << std::endl;
+
+    /* Clearing data in file that keep performance data */
+    strNullLog = std::string(NULL_LOG_FILE) + RpcMethods::sm_strTDKPath;
+    strNullLog.append(DEVICE_DIAGNOSTICS_FILE);
+    system(strNullLog.c_str());
+ 
+    /* Creating pipe to execute script which will extract device diagnostics data */
+    FILE* pipe = popen(DIAGNOSTICS_TEST_SCRIPT, "r");
+    if (!pipe)
+    {
+        DEBUG_PRINT (DEBUG_LOG, "\nError in creating pipe to extract Diagnostics data\n");
+    }
+    else
+    {
+        while(!feof(pipe))
+        {
+            if(fgets(szBuffer, LINE_LEN, pipe) != NULL)
+            {
+                DEBUG_PRINT (DEBUG_LOG, "%s \n",szBuffer);
+            }
+        }
+
+        pclose(pipe);
+    }
+
+    strLogPath = RpcMethods::sm_strTDKPath;
+
+    if (std::ifstream(strLogPath.c_str()))
+    {
+        response["result"]  = "SUCCESS";
+        response["logpath"] = strLogPath.c_str();
+    }
+    else
+    {
+        DEBUG_PRINT (DEBUG_ERROR, "\nError!!!Path to log file (%s) not found\n",strLogPath.c_str());
+        response["result"]  = "FAILURE";
+    }
+
+    DEBUG_PRINT (DEBUG_LOG, "\nRPCDiagnosticsTest --> Exit \n");
+
+    return;
+
+} /* End of RPCDiagnosticsTest */
 
 /********************************************************************************************************************
  Purpose:               RPC Method to trigger logger shell script on request from test manager
