@@ -72,6 +72,9 @@ class BluetoothAgent : public RDKTestStubInterface , public AbstractServer<Bluet
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetPairedDevices", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetPairedDevices);
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_GetDeviceProperties", PARAMS_BY_NAME, JSON_STRING,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_GetDeviceProperties);
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_StartAudioStreamingOut", PARAMS_BY_NAME, JSON_STRING,"devicetype",JSON_INTEGER,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_StartAudioStreamingOut);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_StopAudioStreamingOut", PARAMS_BY_NAME,JSON_STRING,"devicehandle",JSON_STRING,NULL), &BluetoothAgent::Bluetooth_StopAudioStreamingOut);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_IsAudioStreamingOut", PARAMS_BY_NAME,JSON_STRING,NULL), &BluetoothAgent::Bluetooth_IsAudioStreamingOut);
+                    this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_ResetAdapter", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_ResetAdapter);
                     this->bindAndAddMethod(Procedure("TestMgr_Bluetooth_SendRequest", PARAMS_BY_NAME, JSON_STRING,NULL), &BluetoothAgent::Bluetooth_SendRequest);
                 }
 
@@ -101,6 +104,9 @@ class BluetoothAgent : public RDKTestStubInterface , public AbstractServer<Bluet
                 void Bluetooth_GetPairedDevices(IN const Json::Value& req, OUT Json::Value& response);
                 void Bluetooth_GetDeviceProperties(IN const Json::Value& req, OUT Json::Value& response);         
                 void Bluetooth_StartAudioStreamingOut(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_StopAudioStreamingOut(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_IsAudioStreamingOut(IN const Json::Value& req, OUT Json::Value& response);
+                void Bluetooth_ResetAdapter(IN const Json::Value& req, OUT Json::Value& response);
                 void Bluetooth_SendRequest(IN const Json::Value& req, OUT Json::Value& response);
                
 };

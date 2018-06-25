@@ -403,40 +403,6 @@ void BluetoothAgent::Bluetooth_ConnectToDevice(IN const Json::Value& req, OUT Js
    }
 }
 
-/****************************************************************************************************************************
- *Function name :  Bluetooth_StartAudioStreamingOut
- *Descrption    : This function is to automatically reconnect to the most recently connected Bluetooth audio sink at startup 
- ****************************************************************************************************************************/
-void BluetoothAgent::Bluetooth_StartAudioStreamingOut(IN const Json::Value& req, OUT Json::Value& response)
-{
-   DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartAudioStreamingOut --->Entry\n");
-   unsigned long long int handle;
-   int deviceType;
-   char handleString[DEVICE_HANDLE_BUFFER]= {'\0'};
-   char * pEnd;
-   BTRMGR_DeviceOperationType_t BT_DEVICE_TYPE;
-   deviceType = req["devicetype"].asInt();
-   BT_DEVICE_TYPE = (BTRMGR_DeviceOperationType_t) deviceType;
-   strcpy(handleString,req["devicehandle"].asCString());
-   handle = strtoull (handleString, &pEnd, 10);
-   rc = BTRMGR_StartAudioStreamingOut(0, handle,BT_DEVICE_TYPE);
-   if (BTRMGR_RESULT_SUCCESS == rc)
-   {
-       response["result"] = "SUCCESS";
-       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StartAudioStreamingOut call is SUCCESS");
-       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartAudioStreamingOut --->Exit\n");
-       return ;
-   }
-   else
-   {
-       response["result"] = "FAILURE";
-       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StartAudioStreamingOut call is FAILURE");
-       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartAudioStreamingOut -->Exit\n");
-       return ;
-   }
-}
-
-
 /***************************************************************************
  *Function name : Bluetooth_DisconnectFromDevice
  *Descrption    : This function is to connect to a device
@@ -638,6 +604,118 @@ void BluetoothAgent::Bluetooth_GetDeviceProperties(IN const Json::Value& req, OU
        response["result"] = "FAILURE";
        DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_GetDeviceProperties call is FAILURE");
        DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_GetDeviceProperties -->Exit\n");
+       return ;
+   }
+}
+
+/****************************************************************************************************************************
+ *Function name :  Bluetooth_StartAudioStreamingOut
+ *Descrption    : This function is to start audio streaming out
+ ****************************************************************************************************************************/
+void BluetoothAgent::Bluetooth_StartAudioStreamingOut(IN const Json::Value& req, OUT Json::Value& response)
+{
+   DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartAudioStreamingOut --->Entry\n");
+   unsigned long long int handle;
+   int deviceType;
+   char handleString[DEVICE_HANDLE_BUFFER]= {'\0'};
+   char * pEnd;
+   BTRMGR_DeviceOperationType_t BT_DEVICE_TYPE;
+   deviceType = req["devicetype"].asInt();
+   BT_DEVICE_TYPE = (BTRMGR_DeviceOperationType_t) deviceType;
+   strcpy(handleString,req["devicehandle"].asCString());
+   handle = strtoull (handleString, &pEnd, 10);
+   rc = BTRMGR_StartAudioStreamingOut(0, handle,BT_DEVICE_TYPE);
+   if (BTRMGR_RESULT_SUCCESS == rc)
+   {
+       response["result"] = "SUCCESS";
+       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StartAudioStreamingOut call is SUCCESS");
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartAudioStreamingOut --->Exit\n");
+       return ;
+   }
+   else
+   {
+       response["result"] = "FAILURE";
+       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StartAudioStreamingOut call is FAILURE");
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StartAudioStreamingOut -->Exit\n");
+       return ;
+   }
+}
+
+/****************************************************************************************************************************
+ *Function name :  Bluetooth_StopAudioStreamingOut
+ *Descrption    : This function is to stop the audio streaming out
+ ****************************************************************************************************************************/
+void BluetoothAgent::Bluetooth_StopAudioStreamingOut(IN const Json::Value& req, OUT Json::Value& response)
+{
+   DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StopAudioStreamingOut --->Entry\n");
+   unsigned long long int handle;
+   char handleString[DEVICE_HANDLE_BUFFER]= {'\0'};
+   char * pEnd;
+   strcpy(handleString,req["devicehandle"].asCString());
+   handle = strtoull (handleString, &pEnd, 10);
+   rc = BTRMGR_StopAudioStreamingOut(0, handle);
+   if (BTRMGR_RESULT_SUCCESS == rc)
+   {
+       response["result"] = "SUCCESS";
+       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StopAudioStreamingOut call is SUCCESS");
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StopAudioStreamingOut --->Exit\n");
+       return ;
+   }
+   else
+   {
+       response["result"] = "FAILURE";
+       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_StopAudioStreamingOut call is FAILURE");
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_StopAudioStreamingOut -->Exit\n");
+       return ;
+   }
+}
+
+/***************************************************************************
+ *Function name : Bluetooth_IsAudioStreamingOut
+ *Descrption    : This function is to get the audio streaming status
+ *****************************************************************************/
+void BluetoothAgent::Bluetooth_IsAudioStreamingOut(IN const Json::Value& req, OUT Json::Value& response)
+{
+   DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_IsAudioStreamingOut --->Entry\n");
+   unsigned char audioStreamingStatus;
+   rc = BTRMGR_IsAudioStreamingOut(0,&audioStreamingStatus);
+   if (BTRMGR_RESULT_SUCCESS == rc)
+   {
+       response["result"] = "SUCCESS";
+       response["details"] = audioStreamingStatus;
+       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_IsAudioStreamingOut call is SUCCESS");
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_IsAudioStreamingOut --->Exit\n");
+       return ;
+   }
+   else
+   {
+       response["result"] = "FAILURE";
+       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_IsAudioStreamingOut call is FAILURE");
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_IsAudioStreamingOut -->Exit\n");
+       return ;
+   }
+}
+
+/***************************************************************************
+ *Function name : Bluetooth_ResetAdapter
+ *Descrption    : This function is to reset the bluetooth adapter
+ *****************************************************************************/
+void BluetoothAgent::Bluetooth_ResetAdapter(IN const Json::Value& req, OUT Json::Value& response)
+{
+    DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_ResetAdapter --->Entry\n");
+    rc = BTRMGR_ResetAdapter(0);
+    if (BTRMGR_RESULT_SUCCESS == rc)
+   {
+       response["result"] = "SUCCESS";
+       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_ResetAdapter call is SUCCESS");
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_ResetAdapter --->Exit\n");
+       return ;
+   }
+   else
+   {
+       response["result"] = "FAILURE";
+       DEBUG_PRINT(DEBUG_ERROR, "Bluetooth_ResetAdapter call is FAILURE");
+       DEBUG_PRINT(DEBUG_TRACE, "Bluetooth_ResetAdapter -->Exit\n");
        return ;
    }
 }
