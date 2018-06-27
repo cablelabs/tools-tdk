@@ -19,13 +19,13 @@
 #
 
 #give SAT_REQUIRED = 'true' if SAT token is required otherwise 'false'
-SAT_REQUIRED=
+SAT_REQUIRED= ""
 
 #expects the name of file holding SAT token, including its path
-SAT_TOKEN_FILE =
+SAT_TOKEN_FILE = ""
 
 #WEBPA server uri
-SERVER_URI =
+SERVER_URI = ""
 
-#Give the authentication type, eg: AUTHTYPE="Basic" for community webpa server
-AUTHTYPE = 
+#Give the authentication type, eg: AUTHTYPE="Basic d2VicGFAMTIzNDU2Nzg5MA==" for community webpa server
+AUTHTYPE = ""

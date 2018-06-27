@@ -41,8 +41,8 @@ def webpaQuery(obj, parameter, method="get"):
    post_data=json.dumps({"parameters":parameter_list})
    print post_data
 
-   macaddress = snmplib.getMACAddress(obj);
-   macaddress = macaddress.replace(":","")
+   deviceDetails = obj.getDeviceDetails()
+   macaddress = deviceDetails["mac"]
 
    if SAT_REQUIRED == "true":
        SatKey=""
@@ -62,7 +62,7 @@ def webpaQuery(obj, parameter, method="get"):
    if SAT_REQUIRED == "true":
        curl.setopt(curl.HTTPHEADER, ['Content-Type: application/json','Accept: application/json','Authorization:' + AUTHTYPE + ' '+ SatKey])
    else:
-       curl.setopt(curl.HTTPHEADER, ['Content-Type: application/json','Accept: application/json'])
+       curl.setopt(curl.HTTPHEADER, ['Content-Type: application/json','Accept: application/json','Authorization:' + AUTHTYPE])
 
    if method == "set":
       curl.setopt(curl.POSTFIELDS, post_data)

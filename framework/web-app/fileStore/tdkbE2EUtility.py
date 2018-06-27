@@ -30,6 +30,8 @@ import ConfigParser
 import tdklib
 from time import sleep
 import commands
+import webpaUtility;
+from webpaUtility import *
 
 #Global variable to check whether login session is active
 isSessionActive = False
@@ -197,10 +199,20 @@ def parseDeviceConfig(obj):
                 ssid_2ghz_invalid_pwd = config.get(deviceConfig, "SSID_2GHZ_INVALID_PWD")
 
 		global ssid_2ghz_index
-        	ssid_2ghz_index = config.get(deviceConfig, "SSID_2GHZ_INDEX")
-
                 global radio_2ghz_index
-                radio_2ghz_index = config.get(deviceConfig, "RADIO_2GHZ_INDEX")
+                global ssid_5ghz_index
+                global radio_5ghz_index
+
+                if setup_type == "TDK":
+                        ssid_2ghz_index = config.get(deviceConfig, "TDK_SSID_2GHZ_INDEX")
+                        radio_2ghz_index = config.get(deviceConfig, "TDK_RADIO_2GHZ_INDEX")
+                        ssid_5ghz_index = config.get(deviceConfig, "TDK_SSID_5GHZ_INDEX")
+                        radio_5ghz_index = config.get(deviceConfig, "TDK_RADIO_5GHZ_INDEX")
+                else:
+                        ssid_2ghz_index = config.get(deviceConfig, "WEBPA_SSID_2GHZ_INDEX")
+                        radio_2ghz_index = config.get(deviceConfig, "WEBPA_RADIO_2GHZ_INDEX")
+                        ssid_5ghz_index = config.get(deviceConfig, "WEBPA_SSID_5GHZ_INDEX")
+                        radio_5ghz_index = config.get(deviceConfig, "WEBPA_RADIO_5GHZ_INDEX")
 
 		global ssid_5ghz_name
         	ssid_5ghz_name = config.get(deviceConfig, "SSID_5GHZ_NAME")
@@ -210,12 +222,6 @@ def parseDeviceConfig(obj):
 
                 global ssid_5ghz_invalid_pwd
                 ssid_5ghz_invalid_pwd = config.get(deviceConfig, "SSID_5GHZ_INVALID_PWD")
-
-		global ssid_5ghz_index
-        	ssid_5ghz_index = config.get(deviceConfig, "SSID_5GHZ_INDEX")
-
-                global radio_5ghz_index
-                radio_5ghz_index = config.get(deviceConfig, "RADIO_5GHZ_INDEX")
 
 		global connection_timeout
        		connection_timeout = config.get(deviceConfig, "CONNECTION_TIMEOUT")
@@ -916,20 +922,39 @@ def getMultipleParameterValues(obj,paramList):
     actualresult= [];
     orgValue = [];
 
-    #Parse and store the values retrieved in a list
-    for index in range(len(paramList)):
-        tdkTestObj = obj.createTestStep("tdkb_e2e_Get");
-        tdkTestObj.addParameter("paramName",paramList[index])
-        tdkTestObj.executeTestCase(expectedresult);
-        actualresult.append(tdkTestObj.getResult())
-	details = tdkTestObj.getResultDetails();
-	if "VALUE:" in details:
-        	orgValue.append( details.split("VALUE:")[1].split(' ')[0] );
+    if setup_type == "TDK":
+        #Parse and store the values retrieved in a list
+        for index in range(len(paramList)):
+                tdkTestObj = obj.createTestStep("tdkb_e2e_Get");
+                tdkTestObj.addParameter("paramName",paramList[index])
+                tdkTestObj.executeTestCase(expectedresult);
+                actualresult.append(tdkTestObj.getResult())
+                details = tdkTestObj.getResultDetails();
+                if "VALUE:" in details:
+                        orgValue.append( details.split("VALUE:")[1].split(' ')[0] );
 
-    for index in range(len(paramList)):
-	if expectedresult not in actualresult[index]:
-	    status = "FAILURE";
-	    break;
+        for index in range(len(paramList)):
+                if expectedresult not in actualresult[index]:
+                        status = "FAILURE";
+                        break;
+    else:
+        # Modify the input parameter to the format webpa is expecting
+        paramCount =  len(paramList)
+        param = ','.join(paramList)
+        param = {'name':param}
+
+        # Invoke webpa utility to post the query for get operation
+        queryResponse = webpaQuery(obj,param)
+        parsedResponse = parseWebpaResponse(queryResponse, paramCount)
+        tdkTestObj = obj.createTestStep("tdkb_e2e_Get");
+        tdkTestObj.executeTestCase("SUCCESS");
+        if 200 in parsedResponse:
+                orgValue = parsedResponse[1];
+                orgValue = orgValue.split()
+                status = "SUCCESS"
+        else:
+                orgValue = "WEBPA query failed"
+                status = "FAILURE"
 
     return (tdkTestObj,status,orgValue);
 
@@ -946,21 +971,56 @@ def getParameterValue(obj,param):
 #             : param - TR-181 parameter name
 # Return Value: SUCCESS/FAILURE
 
-    	expectedresult="SUCCESS";
+        if setup_type == "TDK":
+                expectedresult="SUCCESS";
 
-    	#Parse and store the values retrieved in a list
-    	tdkTestObj = obj.createTestStep("tdkb_e2e_Get");
-    	tdkTestObj.addParameter("paramName",param)
-    	tdkTestObj.executeTestCase(expectedresult);
-    	actualresult = tdkTestObj.getResult()
-    	details = tdkTestObj.getResultDetails();
-	if "VALUE:" in details:
-    		value = details.split("VALUE:")[1].split(' ')[0] ;
+                #Parse and store the values retrieved in a list
+                tdkTestObj = obj.createTestStep("tdkb_e2e_Get");
+                tdkTestObj.addParameter("paramName",param)
+                tdkTestObj.executeTestCase(expectedresult);
+                actualresult = tdkTestObj.getResult()
+                details = tdkTestObj.getResultDetails();
+                if "VALUE:" in details:
+                        value = details.split("VALUE:")[1].split(' ')[0] ;
+        else:
+                # Modify the input parameter to the format webpa is expecting
+                param = {'name':param}
 
-    	return (tdkTestObj,actualresult,value);
+                # Invoke webpa utility to post the query for get operation
+                queryResponse = webpaQuery(obj,param)
+                parsedResponse = parseWebpaResponse(queryResponse, 1);
+                tdkTestObj = obj.createTestStep("tdkb_e2e_Get");
+                tdkTestObj.executeTestCase("SUCCESS");
+                if 200 in parsedResponse:
+                        value = parsedResponse[1];
+                        actualresult = "SUCCESS"
+                else:
+                        value = "WEBPA query failed"
+                        actualresult = "FAILURE"
+
+        return (tdkTestObj,actualresult,value);
 
 ######### End of Function ##########
 
+def splitList(paramList, size):
+
+# splitList
+
+# Syntax      : splitList()
+# Description : Function to split the paramList into sublist based on the size passed
+# Parameters  : paramList - List of parameters to be passed to the setMultipleParameterValues function
+#             : size - size at which the paramList should be splitted into sublist
+# Return Value: Return the sublist based on the size
+
+     sublist = []
+     while len(paramList) > size:
+         List = paramList[:size]
+         sublist.append(List)
+         paramList = paramList[size:]
+     sublist.append(paramList)
+     return sublist
+
+######### End of Function ##########
 
 def setMultipleParameterValues(obj,paramList):
 
@@ -972,17 +1032,65 @@ def setMultipleParameterValues(obj,paramList):
 #             : paramList - List of parameter names
 # Return Value: SUCCESS/FAILURE
 
-	tdkTestObj = obj.createTestStep("tdkb_e2e_SetMultipleParams");
+        if setup_type == "TDK":
+                tdkTestObj = obj.createTestStep("tdkb_e2e_SetMultipleParams");
 
-	expectedresult="SUCCESS";
-	tdkTestObj.addParameter("paramList",paramList);
-	tdkTestObj.executeTestCase(expectedresult);
-	actualresult = tdkTestObj.getResult();
-	details = tdkTestObj.getResultDetails();
-	#This is a workaround added for emulator. This delay will be removed once RDKBEMU-498 is resolved
-	sleep(20)
+                expectedresult="SUCCESS";
+                tdkTestObj.addParameter("paramList",paramList);
+                tdkTestObj.executeTestCase(expectedresult);
+                actualresult = tdkTestObj.getResult();
+                details = tdkTestObj.getResultDetails();
+                #This is a workaround added for emulator. This delay will be removed once RDKBEMU-498 is resolved
+                sleep(20)
 
-	return (tdkTestObj,actualresult,details);
+                return (tdkTestObj,actualresult,details);
+        else:
+                tdkTestObj = obj.createTestStep("tdkb_e2e_Set");
+                tdkTestObj.executeTestCase("SUCCESS");
+
+                # Modify the input parameter to the format webpa is expecting
+                paramList = paramList.split("|")
+                paramList = (splitList(paramList, 3))
+                paramCount = len(paramList)
+
+                # Loop through to set multiple TR-181 prameters via webpa
+                for elements in paramList:
+                        # Modify the parameter data type according to the webpa
+                        if elements[2] == "string":
+                                queryParam = {'name':elements[0],'value':elements[1],'dataType':0}
+                        elif elements[2] == "boolean" or elements[2] == "bool":
+                                queryParam = {'name':elements[0],'value':elements[1],'dataType':3}
+                        elif elements[2] == "unsignedint" or elements[2] == "unsignedInt":
+                                queryParam = {'name':elements[0],'value':elements[1],'dataType':2}
+                        elif elements[2] == "int":
+                                queryParam = {'name':elements[0],'value':elements[1],'dataType':1}
+                        elif elements[2] == "double":
+                                queryParam = {'name':elements[0],'value':elements[1],'dataType':9}
+                        elif elements[2] == "long":
+                                queryParam = {'name':elements[0],'value':elements[1],'dataType':6}
+                        elif elements[2] == "unsignedlong":
+                                queryParam = {'name':elements[0],'value':elements[1],'dataType':7}
+                        elif elements[2] == "float":
+                                queryParam = {'name':elements[0],'value':elements[1],'dataType':8}
+                        else:
+                                actualresult = "FAILURE"
+                                details = "Invalid data type passed";
+                                return (tdkTestObj,actualresult,details);
+
+                        # Invoke webpa utility to post the query for set operation
+                        queryResponse = webpaQuery(obj, queryParam, "set")
+                        parsedResponse = parseWebpaResponse(queryResponse, 1, "set")
+                        if 200 in parsedResponse:
+                                details = "WEBPA query success";
+                                actualresult = "SUCCESS"
+                                #This sleep is required for any consequtive SET or SET/GET via WEBPA
+                                sleep(90);
+                        else:
+                                details = "WEBPA query failed"
+                                actualresult = "FAILURE"
+                                return (tdkTestObj,actualresult,details);
+
+                return (tdkTestObj,actualresult,details);
 
 ######### End of Function ##########
 
