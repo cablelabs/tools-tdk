@@ -17,47 +17,31 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>4</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
+  <id/>
+  <version>5</version>
   <name>Bluetooth_Discoverable_On_List_Discovered_Devices_Unknown</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id></primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
+  <primitive_test_id/>
   <primitive_test_name>Bluetooth_GetDiscoveredDevices</primitive_test_name>
-  <!--  -->
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
-  <synopsis>To check whether discoverable  devices are listed in the discovered devices list</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
-  <execution_time>15</execution_time>
-  <!--  -->
+  <synopsis>To check whether discoverable  devices are listed in the discovered devices list when the decvice type is Unknown</synopsis>
+  <groups_id/>
+  <execution_time>2</execution_time>
   <long_duration>false</long_duration>
-  <!--  -->
   <advanced_script>false</advanced_script>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-Wifi</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
   <test_cases>
-    <test_case_id>CT_BLUETOOTH_07</test_case_id>
-    <test_objective>To check whether discoverable  devices are listed in the discovered devices list of DUT</test_objective>
+    <test_case_id>CT_BLUETOOTH_35</test_case_id>
+    <test_objective>To check whether discoverable  devices are listed in the discovered devices list when the decvice type is Unknown</test_objective>
     <test_type>Positive</test_type>
     <test_setup>XI5</test_setup>
     <pre_requisite>1.Set the values in bluetoothcredential.config
@@ -83,7 +67,7 @@ BTRMGR_GetDiscoveredDevices(0, &amp;discoveredDevices);</input_parameters>
 3. Turn on the discoverable status of DUT
 4.Turn on the discoverable status of bluetooth emulator
 5.Start the device discovery in DUT with Unknown as param
-6.Stop the device discovery after 30 seconds
+6.Stop the device discovery with the decvice type as Unknown after 30 seconds
 7.Check the discovered devices list in DUT and confirm the bluetooth emulator adapter name is there in the list</automation_approch>
     <except_output>Checkpoint 1.Verify the API call return value
 Checkpoint 2.The bluetooth emulator name should be there in the discovered devices list of DUT</except_output>
@@ -91,11 +75,12 @@ Checkpoint 2.The bluetooth emulator name should be there in the discovered devic
     <test_stub_interface>libbluetoothstub.so.0</test_stub_interface>
     <test_script>Bluetooth_Discoverable_On_List_Discovered_Devices_Unknown</test_script>
     <skipped>No</skipped>
-    <release_version></release_version>
-    <remarks></remarks>
+    <release_version/>
+    <remarks/>
   </test_cases>
-  <script_tags />
+  <script_tags/>
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

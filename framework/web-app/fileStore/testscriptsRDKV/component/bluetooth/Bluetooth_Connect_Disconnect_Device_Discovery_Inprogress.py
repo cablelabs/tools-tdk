@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2017 RDK Management
+# Copyright 2018 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,27 +17,43 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <xml>
-  <id/>
-  <version>1</version>
+  <id></id>
+  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
+  <version>2</version>
+  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
   <name>Bluetooth_Connect_Disconnect_Device_Discovery_Inprogress</name>
-  <primitive_test_id/>
+  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
+  <primitive_test_id> </primitive_test_id>
+  <!-- Do not change primitive_test_id if you are editing an existing script. -->
   <primitive_test_name>Bluetooth_ConnectToDevice</primitive_test_name>
-  <primitive_test_version>2</primitive_test_version>
+  <!--  -->
+  <primitive_test_version>1</primitive_test_version>
+  <!--  -->
   <status>FREE</status>
+  <!--  -->
   <synopsis>To connect and disconnect with a device when the device discovery is in progress</synopsis>
-  <groups_id/>
-  <execution_time>1</execution_time>
+  <!--  -->
+  <groups_id />
+  <!--  -->
+  <execution_time>2</execution_time>
+  <!--  -->
   <long_duration>false</long_duration>
+  <!--  -->
   <advanced_script>false</advanced_script>
-  <remarks/>
+  <!-- execution_time is the time out time for test execution -->
+  <remarks></remarks>
+  <!-- Reason for skipping the tests if marked to skip -->
   <skip>false</skip>
+  <!--  -->
   <box_types>
     <box_type>IPClient-Wifi</box_type>
+    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
+    <!--  -->
   </rdk_versions>
   <test_cases>
     <test_case_id>CT_BLUETOOTH_24</test_case_id>
@@ -60,7 +76,7 @@ bool Bluetooth_GetConnectedDevices
 bool Bluetooth_DisconnectFromDevice
 bool Bluetooth_UnpairDevice</api_or_interface_used>
     <input_parameters>BTRMGR_GetAdapterPowerStatus(0, &amp;powerStatus);
-BTRMGR_SetAdapterPowerStatus(0,powerStatus);BTRMGR_StartDeviceDiscovery(0);
+BTRMGR_SetAdapterPowerStatus(0,powerStatus);BTRMGR_StartDeviceDiscovery(0,devicetype);
 BTRMGR_GetDiscoveredDevices(0, &amp;discoveredDevices);
 BTRMGR_PairDevice(0, handle);
 BTRMGR_UnpairDevice(0, handle);
@@ -89,11 +105,11 @@ Checkpoint 6 After unpair, the bluetooth emulator name should NOT be there in th
     <test_stub_interface>libbluetoothstub.so.0</test_stub_interface>
     <test_script>Bluetooth_Connect_Disconnect_Device_Discovery_Inprogress</test_script>
     <skipped>No</skipped>
-    <release_version/>
-    <remarks/>
+    <release_version></release_version>
+    <remarks></remarks>
   </test_cases>
+  <script_tags />
 </xml>
-
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;

@@ -113,9 +113,23 @@
           <parameter name="devicetype" value=""/>
         </parameters>
       </primitiveTest>
-      <primitiveTest name="Bluetooth_SendRequest" id="" version="1">
+      <primitiveTest id="" name="Bluetooth_SendRequest" version="1">
         <function>TestMgr_Bluetooth_SendRequest</function>
         <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="Bluetooth_ResetAdapter" version="1">
+        <function>TestMgr_Bluetooth_ResetAdapter</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest id="" name="Bluetooth_IsAudioStreamingOut" version="1">
+        <function>TestMgr_Bluetooth_IsAudioStreamingOut</function>
+        <parameters/>
+      </primitiveTest>
+      <primitiveTest name="Bluetooth_StopAudioStreamingOut" id=" " version="1">
+        <function>TestMgr_Bluetooth_StopAudioStreamingOut</function>
+        <parameters>
+          <parameter name="devicehandle" value=""/>
+        </parameters>
       </primitiveTest>
     </primitiveTests>
   </module>

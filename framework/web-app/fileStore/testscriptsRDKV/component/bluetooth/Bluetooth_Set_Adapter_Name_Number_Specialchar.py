@@ -2,7 +2,7 @@
 # If not stated otherwise in this file or this component's Licenses.txt
 # file the following copyright and licenses apply:
 #
-# Copyright 2017 RDK Management
+# Copyright 2018 RDK Management
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@
   <test_cases>
     <test_case_id>CT_BLUETOOTH_17</test_case_id>
     <test_objective>To set and get the Bluetooth adapter name with number and special characters</test_objective>
-    <test_type>Positive</test_type>
+    <test_type>Negative</test_type>
     <test_setup>XI5</test_setup>
     <pre_requisite>1. Initialize the bluetooth manager
 BTRMGR_Init();

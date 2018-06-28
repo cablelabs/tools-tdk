@@ -20,13 +20,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xml>
   <id/>
-  <version>2</version>
+  <version>3</version>
   <name>Bluetooth_Discoverable_Off_List_Discovered_Devices_Audio_Output</name>
   <primitive_test_id/>
   <primitive_test_name>Bluetooth_StartDeviceDiscovery</primitive_test_name>
   <primitive_test_version>1</primitive_test_version>
   <status>FREE</status>
-  <synopsis>To check whether undiscoverable  devices are removed from the list once it is available in the discovered devices list</synopsis>
+  <synopsis>To check whether undiscoverable  devices are removed from the list once it is available in the discovered devices list when the device type is audio output</synopsis>
   <groups_id/>
   <execution_time>2</execution_time>
   <long_duration>false</long_duration>
@@ -40,8 +40,8 @@
     <rdk_version>RDK2.0</rdk_version>
   </rdk_versions>
   <test_cases>
-    <test_case_id>CT_BLUETOOTH_08</test_case_id>
-    <test_objective>To check whether undiscoverable devices are getting removed from the discovered devices list of DUT</test_objective>
+    <test_case_id>CT_BLUETOOTH_30</test_case_id>
+    <test_objective>To check whether undiscoverable  devices are removed from the list once it is available in the discovered devices list when the device type is audio output</test_objective>
     <test_type>Positive</test_type>
     <test_setup>XI5</test_setup>
     <pre_requisite>1.Set the values in bluetoothcredential.config
@@ -66,12 +66,12 @@ BTRMGR_GetDiscoveredDevices(0, &amp;discoveredDevices);</input_parameters>
 2  Turn ON the bluetotoh adapter if it is OFF
 3. Turn ONthe discoverable status of DUT
 4.Turn ON the discoverable status of bluetooth emulator
-5.Start the device discovery in DUT
-6.Stop the device discovery after 30 seconds
+5.Start the device discovery with the device type as audio output in DUT
+6.Stop the device discovery with the device type as audio output after 30 seconds
 7.Check the discovered devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
 8.Turn OFF the discoverable status of bluetooth emulator
-9.Start the device discovery in DUT with Audio_Output as input param
-10.Stop the device discovery after 30 seconds
+9.Start the device discovery in DUT with Audio_Output as param
+10.Stop the device discovery with the device type as audio output  after 30 seconds
 11.Check the discovered devices list in DUT and confirm the bluetooth emulator adapter name is NOT there in the list</automation_approch>
     <except_output>Checkpoint 1.Verify the API call return value
 Checkpoint 2.The bluetooth emulator name should be there in the discovered devices list of DUT

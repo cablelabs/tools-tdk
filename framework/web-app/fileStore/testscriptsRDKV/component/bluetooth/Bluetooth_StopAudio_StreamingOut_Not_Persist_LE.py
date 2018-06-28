@@ -17,47 +17,31 @@
 # limitations under the License.
 ##########################################################################
 '''
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <xml>
-  <id></id>
-  <!-- Do not edit id. This will be auto filled while exporting. If you are adding a new script keep the id empty -->
-  <version>2</version>
-  <!-- Do not edit version. This will be auto incremented while updating. If you are adding a new script you can keep the vresion as 1 -->
-  <name>Bluetooth_Persist_Connect_Discovered_Device</name>
-  <!-- If you are adding a new script you can specify the script name. Script Name should be unique same as this file name with out .py extension -->
-  <primitive_test_id> </primitive_test_id>
-  <!-- Do not change primitive_test_id if you are editing an existing script. -->
-  <primitive_test_name>Bluetooth_ConnectToDevice</primitive_test_name>
-  <!--  -->
+  <id/>
+  <version>1</version>
+  <name>Bluetooth_StopAudio_StreamingOut_Not_Persist_LE</name>
+  <primitive_test_id/>
+  <primitive_test_name>Bluetooth_StopAudioStreamingOut</primitive_test_name>
   <primitive_test_version>1</primitive_test_version>
-  <!--  -->
   <status>FREE</status>
-  <!--  -->
-  <synopsis>To check whether connected devices details are persisting or not</synopsis>
-  <!--  -->
-  <groups_id />
-  <!--  -->
-  <execution_time>10</execution_time>
-  <!--  -->
+  <synopsis>To check whether audio streaming out device details are NOT persisting with the device type as  LE when the audio stream out is stopped before reboot</synopsis>
+  <groups_id/>
+  <execution_time>5</execution_time>
   <long_duration>false</long_duration>
-  <!--  -->
   <advanced_script>false</advanced_script>
-  <!-- execution_time is the time out time for test execution -->
-  <remarks></remarks>
-  <!-- Reason for skipping the tests if marked to skip -->
+  <remarks/>
   <skip>false</skip>
-  <!--  -->
   <box_types>
     <box_type>IPClient-Wifi</box_type>
-    <!--  -->
   </box_types>
   <rdk_versions>
     <rdk_version>RDK2.0</rdk_version>
-    <!--  -->
   </rdk_versions>
   <test_cases>
-    <test_case_id>CT_BLUETOOTH_19</test_case_id>
-    <test_objective>To check whether connected devices details are persisting or not</test_objective>
+    <test_case_id>CT_BLUETOOTH_45</test_case_id>
+    <test_objective>To check whether audio streaming out device details are NOT persisting with the device type as  LE when the audio stream out is stopped before reboot</test_objective>
     <test_type>Positive</test_type>
     <test_setup>XI5</test_setup>
     <pre_requisite>1.Set the values in bluetoothcredential.config
@@ -72,9 +56,10 @@ bool Bluetooth_StopDeviceDiscovery
 bool Bluetooth_GetDiscoveredDevices
 bool Bluetooth_PairDevice
 bool Bluetooth_GetPairedDevices
-bool Bluetooth_ConnectToDevice
+Bluetooth_StartAudioStreamingOut
+Bluetooth_IsAudioStreamingOut
 bool Bluetooth_GetConnectedDevices
-bool Bluetooth_DisconnectFromDevice
+Bluetooth_StopAudioStreamingOut
 bool Bluetooth_UnpairDevice</api_or_interface_used>
     <input_parameters>BTRMGR_GetAdapterPowerStatus(0, &amp;powerStatus);
 BTRMGR_SetAdapterPowerStatus(0,powerStatus);BTRMGR_StartDeviceDiscovery(0);
@@ -83,37 +68,38 @@ BTRMGR_GetDiscoveredDevices(0, &amp;discoveredDevices);
 BTRMGR_PairDevice(0, handle);
 BTRMGR_UnpairDevice(0, handle);
 BTRMGR_GetPairedDevices(0, &amp;pairedDevices);
-BTRMGR_ConnectToDevice(0, handle,BT_DEVICE_TYPE);
+BTRMGR_StartAudioStreamingOut(0, handle,BT_DEVICE_TYPE);
+ BTRMGR_IsAudioStreamingOut(0,audioStreamingStatus);
 BTRMGR_GetConnectedDevices(0, &amp;connectedDevices);
-BTRMGR_DisconnectFromDevice(0, handle);</input_parameters>
+ BTRMGR_StopAudioStreamingOut(0, handle);</input_parameters>
     <automation_approch>1. TM loads the Bluetooth agent via the test agent.
 2  Turn ON the bluetotoh adapter if it is OFF
 3.Turn ON the discoverable status of bluetooth emulator
-4.Start the device discovery in DUT
-5.Stop the device discovery after 30 seconds
+4.Start the device discovery with  the device type as LE in DUT
+5.Stop the device discovery  with the device type as LE after 30 seconds
 6.Check the discovered devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
 7.Pair with the bluetooth emulator
 8.Check the paired devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
-9.Connect with the device as an audio source
-10. .Check the connected devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
-11.Reboot the box
-12.Check the connected devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
-11.Disconnect and unpair the bluetooth emulator with the DUT</automation_approch>
+9.Start the audio out streaming in the device with device type as LE
+10. .Check the audio streaming is started out not 
+11.Stop the audio streaming out and check audio streaming out is stopped or nor
+12.Reboot the box if audio streaming is stopped
+13.Check the connected devices list in DUT and confirm the bluetooth emulator adapter name is NOT there in the list
+14. Unpair the bluetooth emulator with the DUT</automation_approch>
     <except_output>Checkpoint 1.Verify the API call return value
 Checkpoint 2.The bluetooth emulator name should be there in the discovered devices list of DUT
 Checkpoint 3 After pairing the bluetooth emulator name should be there in the paired devices list of DUT
-Checkpoint 4 After connecting and reboot the bluetooth emulator name should be there in the connecteddevices list of DUT
-Checkpoint 5 After disconnecting, the bluetooth emulator name should NOT be there in the connected devices list of DUT
-Checkpoint 6 After unpair, the bluetooth emulator name should NOT be there in the paired devices list of DUT</except_output>
+Checkpoint 4 After started and stopped the audio streaming out and reboot the DUT then check the bluetooth emulator name is not there in the connectedevices list of DUT
+Checkpoint 5 After unpair, the bluetooth emulator name should NOT be there in the paired devices list of DUT</except_output>
     <priority>High</priority>
     <test_stub_interface>libbluetoothstub.so.0</test_stub_interface>
-    <test_script>Bluetooth_Persist_Connect_Discovered_Device</test_script>
+    <test_script>Bluetooth_StopAudio_StreamingOut_Not_Persist_LE</test_script>
     <skipped>No</skipped>
-    <release_version></release_version>
-    <remarks></remarks>
+    <release_version/>
+    <remarks/>
   </test_cases>
-  <script_tags />
 </xml>
+
 '''
 # use tdklib library,which provides a wrapper for tdk testcase script
 import tdklib;
@@ -128,7 +114,7 @@ bluetoothObj = tdklib.TDKScriptingLibrary("bluetooth","2.0");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-bluetoothObj.configureTestCase(ip,port,'Bluetooth_Persist_Connect_Discovered_Device');
+bluetoothObj.configureTestCase(ip,port,'Bluetooth_StopAudio_StreamingOut_Not_Persist_LE');
 
 def getPowerStatus():
    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetAdapterPowerStatus');
@@ -143,6 +129,21 @@ def getPowerStatus():
    else:
        print "Bluetooth_GetAdapterPowerStatus call is FAILURE"
        tdkTestObj.setResultStatus("FAILURE");
+
+def isAudioStreamingOut():
+    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_IsAudioStreamingOut')
+    #Execute the test case in STB
+    tdkTestObj.executeTestCase(expectedresult);
+    actualresult = tdkTestObj.getResult();
+    audioStreamingStatus = tdkTestObj.getResultDetails();
+    print "Audio Streaming Status " , audioStreamingStatus
+    if actualresult == expectedresult:
+        tdkTestObj.setResultStatus("SUCCESS");
+        print "Bluetooth_IsAudioStreamingOut call is SUCCESS"
+        return audioStreamingStatus
+    else:
+        print "Bluetooth_IsAudioStreamingOut call is FAILURE"
+        tdkTestObj.setResultStatus("FAILURE");
 
 #Get the result of connection with test component and STB
 bluetoothLoadStatus =bluetoothObj.getLoadModuleResult();
@@ -192,7 +193,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
        print "Discoverable is enabled in Client Device" , bluetoothlib.deviceName
        print "Starting the device discovery in DUT"
        tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StartDeviceDiscovery');
-       tdkTestObj.addParameter("devicetype",2)
+       tdkTestObj.addParameter("devicetype",4)
        #Execute the test case in STB
        tdkTestObj.executeTestCase(expectedresult);
        actualresult = tdkTestObj.getResult();
@@ -203,7 +204,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
            sleep(30);
            print "Stop the device discovery"
            tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StopDeviceDiscovery');
-           tdkTestObj.addParameter("devicetype",2)
+           tdkTestObj.addParameter("devicetype",4)
            #Execute the test case in STB
            tdkTestObj.executeTestCase(expectedresult);
            actualresult = tdkTestObj.getResult();
@@ -256,53 +257,83 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                                if str(bluetoothlib.deviceName) in pairedDeviceNameList :
                                    tdkTestObj.setResultStatus("SUCCESS");
                                    print "Client device is successfully paired with DUT"
-                                   print "Connect with the client device"
+                                   print "Start the audio streaming out with device type as audio out"
                                    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StartAudioStreamingOut')
-                                   #tdkTestObj = bluetoothObj.createTestStep('Bluetooth_ConnectToDevice')
                                    tdkTestObj.addParameter("devicehandle",handleNumber);
-                                   tdkTestObj.addParameter("devicetype",2)
+                                   tdkTestObj.addParameter("devicetype",4)
                                    #Execute the test case in STB
                                    tdkTestObj.executeTestCase(expectedresult);
                                    actualresult = tdkTestObj.getResult();
                                    if actualresult == expectedresult:
                                        tdkTestObj.setResultStatus("SUCCESS");
-                                       print "Bluetooth_StartAudioStreamingOut call is SUCCESS"
-                                       #Reboot the STB
-                                       bluetoothObj.initiateReboot(); 
-                                       sleep(60);
-                                       print "Set the client device as discoverable"
-                                       commandList = ['bluetoothctl','discoverable on','quit'] 
-                                       output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
-                                       if "FAILURE" in output:
-                                           tdkTestObj.setResultStatus("FAILURE");
-                                           print "Connecting to client device got FAILED"
-                                       else:
-                                           print "Discoverable is enabled in Client Device" , bluetoothlib.deviceName
-                                           tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetConnectedDevices')
+                                       print "Bluetooth_StartAudioStreamingOut call is SUCCESS with device type as LE"
+                                       print "Check the audio stream out is started or not"
+                                       audioStreamingStartStatus = isAudioStreamingOut()
+                                       if audioStreamingStartStatus == '1':
+                                           tdkTestObj.setResultStatus("SUCCESS");
+                                           print "Audio Streaming Out Started Successfully with device type as LE"
+                                           print "Stop the Audio streaming out"
+                                           tdkTestObj = bluetoothObj.createTestStep('Bluetooth_StopAudioStreamingOut')
+                                           tdkTestObj.addParameter("devicehandle",handleNumber);
                                            #Execute the test case in STB
                                            tdkTestObj.executeTestCase(expectedresult);
                                            actualresult = tdkTestObj.getResult();
                                            if actualresult == expectedresult:
                                                tdkTestObj.setResultStatus("SUCCESS");
-                                               print "Bluetooth_GetConnectedDevices call is SUCCESS"
-                                               connectedDevicesList = tdkTestObj.getResultDetails();
-                                               connectedDevicesList = connectedDevicesList.split(';')[:-1]
-                                               print "Connected Devices List" , connectedDevicesList
-                                               connectedDeviceNameList=[]
-                                               for devices in range(len(connectedDevicesList)):  
-                                                   connectedDeviceNameList.append(connectedDevicesList[devices].split(':')[0])
-                                               if str(bluetoothlib.deviceName) in connectedDeviceNameList :
-                                                   tdkTestObj.setResultStatus("SUCCESS");
-                                                   print "Client device is successfully connected with DUT"
-                                               else:
-                                                   tdkTestObj.setResultStatus("FAILURE");
-                                                   print "Client device is NOT connected with DUT"
+                                               print "Bluetooth_StopAudioStreamingOut call is SUCCESS"
                                            else:
                                                tdkTestObj.setResultStatus("FAILURE");
-                                               print "Bluetooth_GetConnectedDevices call is FAILURE"
+                                               print "Bluetooth_StopAudioStreamingOut call is FAILURE"
+
+                                           print "Check the audio stream out is stopped or not"
+                                           audioStreamingStopStatus = isAudioStreamingOut()
+                                           if(audioStreamingStopStatus == '0'):
+                                               tdkTestObj.setResultStatus("SUCCESS");
+                                               print "Audio Streaming Out is Stopped Successfully"
+
+                                               #Reboot the STB
+                                               bluetoothObj.initiateReboot(); 
+                                               sleep(60);
+                                               print "Set the client device as discoverable"
+                                               commandList = ['bluetoothctl','discoverable on','quit'] 
+                                               output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
+                                               if "FAILURE" in output:
+                                                   tdkTestObj.setResultStatus("FAILURE");
+                                                   print "Connecting to client device got FAILED"
+                                               else:
+                                                   print "Discoverable is enabled in Client Device" , bluetoothlib.deviceName
+                                                   tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetConnectedDevices')
+                                                   #Execute the test case in STB
+                                                   tdkTestObj.executeTestCase(expectedresult);
+                                                   actualresult = tdkTestObj.getResult();
+                                                   if actualresult == expectedresult:
+                                                       tdkTestObj.setResultStatus("SUCCESS");
+                                                       print "Bluetooth_GetConnectedDevices call is SUCCESS"
+                                                       connectedDevicesList = tdkTestObj.getResultDetails();
+                                                       connectedDevicesList = connectedDevicesList.split(';')[:-1]
+                                                       print "Connected Devices List" , connectedDevicesList
+                                                       connectedDeviceNameList=[]
+                                                       for devices in range(len(connectedDevicesList)):  
+                                                           connectedDeviceNameList.append(connectedDevicesList[devices].split(':')[0])
+                                                       if str(bluetoothlib.deviceName)not in connectedDeviceNameList :
+                                                           tdkTestObj.setResultStatus("SUCCESS");
+                                                           print "Client device is NOT reconnected with DUT"
+                                                       else:
+                                                           tdkTestObj.setResultStatus("FAILURE");
+                                                           print "Client device is reconnected with DUT"
+                                                   else:
+                                                       tdkTestObj.setResultStatus("FAILURE");
+                                                       print "Bluetooth_GetConnectedDevices call is FAILURE"
+                                           else: 
+                                               tdkTestObj.setResultStatus("FAILURE");
+                                               print "Audio Streaming Out is NOT Stopped"
+                                       else: 
+                                           tdkTestObj.setResultStatus("FAILURE"); 
+                                           print "Audio Streaming Out is NOT Started with device type as LE"
                                    else: 
                                        tdkTestObj.setResultStatus("FAILURE");
-                                       print "Bluetooth_StartAudioStreamingOut call is FAILURE"      
+                                       print "Bluetooth_StartAudioStreamingOut call is FAILURE"
+
                                    print "Unpair the client device" 
                                    tdkTestObj = bluetoothObj.createTestStep('Bluetooth_UnpairDevice')
                                    tdkTestObj.addParameter("devicehandle",handleNumber);
@@ -359,11 +390,9 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
            tdkTestObj.setResultStatus("FAILURE");
            print "Bluetooth_StartDeviceDiscovery call is FAILURE"
 
-
    bluetoothObj.unloadModule("bluetooth");
 
 else:
     print "Failed to load bluetooth module\n";
     #Set the module loading status
     bluetoothObj.setLoadModuleStatus("FAILURE");
-

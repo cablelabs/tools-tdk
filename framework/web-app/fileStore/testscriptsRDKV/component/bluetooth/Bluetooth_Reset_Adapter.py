@@ -20,13 +20,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xml>
   <id/>
-  <version>2</version>
-  <name>Bluetooth_Get_Numberof_Adapters</name>
+  <version>1</version>
+  <name>Bluetooth_Reset_Adapter</name>
   <primitive_test_id/>
-  <primitive_test_name>Bluetooth_GetNumberOfAdapters</primitive_test_name>
+  <primitive_test_name>Bluetooth_ResetAdapter</primitive_test_name>
   <primitive_test_version>1</primitive_test_version>
   <status>FREE</status>
-  <synopsis>To get the number of Bluetooth adapters</synopsis>
+  <synopsis>To Reset the Bluetooth Adapter</synopsis>
   <groups_id/>
   <execution_time>1</execution_time>
   <long_duration>false</long_duration>
@@ -40,29 +40,29 @@
     <rdk_version>RDK2.0</rdk_version>
   </rdk_versions>
   <test_cases>
-    <test_case_id>CT_BLUETOOTH_01</test_case_id>
-    <test_objective>To get the number of Bluetooth adapters available</test_objective>
+    <test_case_id>CT_BLUETOOTH_48</test_case_id>
+    <test_objective>To Reset the Bluetooth Adapter</test_objective>
     <test_type>Positive</test_type>
     <test_setup>XI5</test_setup>
     <pre_requisite>1. Initialize the bluetooth manager
 BTRMGR_Init();
 2. Deinit the bluetooth manager after test
 BTRMGR_DeInit();</pre_requisite>
-    <api_or_interface_used>bool Bluetooth_GetNumberOfAdapters()</api_or_interface_used>
-    <input_parameters>BTRMGR_GetNumberOfAdapters(&amp;numOfAdapters)</input_parameters>
+    <api_or_interface_used>bool Bluetooth_ResetAdapter()
+</api_or_interface_used>
+    <input_parameters>BTRMGR_ResetAdapter(0)</input_parameters>
     <automation_approch>1. TM loads the Bluetooth agent via the test agent.
-2  Bluetooth agent will invoke the api   BTRMGR_GetNumberOfAdapters
-3.Check the return value retrieved from the API and also the number of adapters</automation_approch>
+2  Bluetooth agent will invoke the api   BTRMGR_ResetAdapter
+3.Check the return value retrieved from the API</automation_approch>
     <except_output>Checkpoint 1.Verify the API call return value
-Checkpoint 2.The number of adapters should  be greater than or equal to 1</except_output>
+</except_output>
     <priority>High</priority>
     <test_stub_interface>libbluetoothstub.so.0</test_stub_interface>
-    <test_script>Bluetooth_Get_Numberof_Adapters</test_script>
+    <test_script>Bluetooth_Reset_Adapter</test_script>
     <skipped>No</skipped>
     <release_version/>
     <remarks/>
   </test_cases>
-  <script_tags/>
 </xml>
 
 '''
@@ -76,7 +76,7 @@ bluetoothObj = tdklib.TDKScriptingLibrary("bluetooth","2.0");
 #This will be replaced with correspoing Box Ip and port while executing script
 ip = <ipaddress>
 port = <port>
-bluetoothObj.configureTestCase(ip,port,'Bluetooth_Get_Numberof_Adapters');
+bluetoothObj.configureTestCase(ip,port,'Bluetooth_Reset_Adapter');
 
 #Get the result of connection with test component and STB
 bluetoothLoadStatus =bluetoothObj.getLoadModuleResult();
@@ -87,21 +87,18 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
 
    #Prmitive test case which associated to this Script
    expectedresult="SUCCESS"
-   tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetNumberOfAdapters');
+   tdkTestObj = bluetoothObj.createTestStep('Bluetooth_ResetAdapter');
    #Execute the test case in STB
    tdkTestObj.executeTestCase(expectedresult);
    actualresult = tdkTestObj.getResult();
-   numAdapters = tdkTestObj.getResultDetails();
-   print "RESULT : Bluetooth_GetNumberOfAdapters : " , actualresult
-   print "DETAILS : Bluetooth_GetNumberOfAdapters : " , numAdapters
+   print "RESULT : Bluetooth_ResetAdapter : " , actualresult
 
-   if numAdapters >= 1 :
+   if actualresult == expectedresult:
        tdkTestObj.setResultStatus("SUCCESS");
-       print "Number of adapters available in the device is " ,numAdapters
-       print "Bluetooth_GetNumberOfAdapters API call returned valid value" 
+       print "Bluetooth_ResetAdapter API call is success"
    else:
        tdkTestObj.setResultStatus("FAILURE");
-       print "INVALID values returned from API Bluetooth_GetNumberOfAdapters"
+       print "Bluetooth_ResetAdapter API call is FAILURE"
 
    bluetoothObj.unloadModule("bluetooth");
 

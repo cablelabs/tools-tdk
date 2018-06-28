@@ -20,15 +20,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xml>
   <id/>
-  <version>2</version>
+  <version>3</version>
   <name>Bluetooth_Connect_Disconnect_Discovered_Device_Audio_Output</name>
   <primitive_test_id/>
   <primitive_test_name>Bluetooth_ConnectToDevice</primitive_test_name>
-  <primitive_test_version>2</primitive_test_version>
+  <primitive_test_version>1</primitive_test_version>
   <status>FREE</status>
-  <synopsis>To connect and disconnect with a discovered device</synopsis>
+  <synopsis>To connect and disconnect with a discovered device  when the device type is audio output</synopsis>
   <groups_id/>
-  <execution_time>1</execution_time>
+  <execution_time>2</execution_time>
   <long_duration>false</long_duration>
   <advanced_script>false</advanced_script>
   <remarks/>
@@ -40,8 +40,8 @@
     <rdk_version>RDK2.0</rdk_version>
   </rdk_versions>
   <test_cases>
-    <test_case_id>CT_BLUETOOTH_16</test_case_id>
-    <test_objective>To connect and disconnect with a discovered device</test_objective>
+    <test_case_id>CT_BLUETOOTH_27</test_case_id>
+    <test_objective>To connect and disconnect with a discovered device  when the device type is audio output</test_objective>
     <test_type>Positive</test_type>
     <test_setup>XI5</test_setup>
     <pre_requisite>1.Set the values in bluetoothcredential.config
@@ -73,12 +73,12 @@ BTRMGR_DisconnectFromDevice(0, handle);</input_parameters>
     <automation_approch>1. TM loads the Bluetooth agent via the test agent.
 2  Turn ON the bluetotoh adapter if it is OFF
 3.Turn ON the discoverable status of bluetooth emulator
-4.Start the device discovery in DUT
-5.Stop the device discovery after 30 seconds
+4.Start the device discovery in DUT with device type as audio output
+5.Stop the device discovery with device type as audio output after 30 seconds
 6.Check the discovered devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
 7.Pair with the bluetooth emulator
 8.Check the paired devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
-9.Connect with the device with Audio Output as the parameter
+9.Connect the the device with Audio Output as the device type
 10. .Check the connected devices list in DUT and confirm the bluetooth emulator adapter name is there in the list
 11.Disconnect and unpair the bluetooth emulator with the DUT</automation_approch>
     <except_output>Checkpoint 1.Verify the API call return value
@@ -264,25 +264,46 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                                            if str(bluetoothlib.deviceName) in connectedDeviceNameList :
                                                tdkTestObj.setResultStatus("SUCCESS");
                                                print "Client device is successfully connected with DUT"
+                                               print "Disconnect the client device"
+                                               tdkTestObj = bluetoothObj.createTestStep('Bluetooth_DisconnectFromDevice')
+                                               tdkTestObj.addParameter("devicehandle",handleNumber);
+                                               #Execute the test case in STB
+                                               tdkTestObj.executeTestCase(expectedresult);
+                                               actualresult = tdkTestObj.getResult();
+                                               if actualresult == expectedresult:
+                                                   tdkTestObj.setResultStatus("SUCCESS");
+                                                   print "Bluetooth_DisconnectFromDevice call is SUCCESS"
+                                                   tdkTestObj = bluetoothObj.createTestStep('Bluetooth_GetConnectedDevices')
+                                                   #Execute the test case in STB
+                                                   tdkTestObj.executeTestCase(expectedresult);
+                                                   actualresult = tdkTestObj.getResult();
+                                                   if actualresult == expectedresult:
+                                                       tdkTestObj.setResultStatus("SUCCESS");
+                                                       print "Bluetooth_GetConnectedDevices call is SUCCESS"
+                                                       connectedDevicesList = tdkTestObj.getResultDetails();
+                                                       connectedDevicesList = connectedDevicesList.split(';')[:-1]
+                                                       print "Connected Devices List" , connectedDevicesList
+                                                       connectedDeviceNameList=[]
+                                                       for devices in range(len(connectedDevicesList)):  
+                                                           connectedDeviceNameList.append(connectedDevicesList[devices].split(':')[0])
+                                                       if str(bluetoothlib.deviceName) not in connectedDeviceNameList :
+                                                           tdkTestObj.setResultStatus("SUCCESS");
+                                                           print "Client device is successfully disconnected from DUT after disconnect"
+                                                       else:
+                                                           tdkTestObj.setResultStatus("FAILURE");
+                                                           print "Client device is NOT disconnected from DUT after disconnect"
+                                                   else:
+                                                       tdkTestObj.setResultStatus("FAILURE");
+                                                       print "Bluetooth_GetConnectedDevices call is FAILURE"
+                                               else:
+                                                   tdkTestObj.setResultStatus("FAILURE");
+                                                   print "Bluetooth_DisconnectFromDevice call is FAILURE"
                                            else:
                                                tdkTestObj.setResultStatus("FAILURE");
                                                print "Client device is NOT connected with DUT"
                                        else:
                                            tdkTestObj.setResultStatus("FAILURE");
                                            print "Bluetooth_GetConnectedDevices call is FAILURE"
-
-                                       print "Disconnect the client device"
-                                       tdkTestObj = bluetoothObj.createTestStep('Bluetooth_DisconnectFromDevice')
-                                       tdkTestObj.addParameter("devicehandle",handleNumber);
-                                       #Execute the test case in STB
-                                       tdkTestObj.executeTestCase(expectedresult);
-                                       actualresult = tdkTestObj.getResult();
-                                       if actualresult == expectedresult:
-                                           tdkTestObj.setResultStatus("SUCCESS");
-                                           print "Bluetooth_DisconnectFromDevice call is SUCCESS"
-                                       else:
-                                           tdkTestObj.setResultStatus("FAILURE");
-                                           print "Bluetooth_DisconnectFromDevice call is FAILURE"
                                    else: 
                                        tdkTestObj.setResultStatus("FAILURE");
                                        print "Bluetooth_ConnectToDevice call is FAILURE"
