@@ -112,8 +112,13 @@ nslookup_in_client()
 {
         outStatus="$(nslookup $var2 $var3)"
         outStatus=$(printf "%s " $outStatus)
+        echo $outStatus
+        echo $var2
+        site=$(echo $var2 | sed 's/^.\{4\}//g')
+        echo $site
         case $outStatus in
             *"Non-authoritative answer: Name: $var2 Address:"*) value="SUCCESS";;
+            *"Non-authoritative answer: $var2 canonical name = $site. Name: $site Address:"*) value="SUCCESS";;
             *)value="FAILURE"
         esac
         echo "OUTPUT:$value"
@@ -225,6 +230,13 @@ remove_File()
         echo "OUTPUT:$value"
 }
 
+# To get the MAC address of the lan client
+get_lan_mac()
+{
+        value="$(ifconfig $var2 | grep HWaddr | awk '{ print $5 }')"
+        echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -278,5 +290,7 @@ case $event in
         touch_File;;
     "remove_File")
         remove_File;;
+    "get_lan_mac")
+        get_lan_mac;;
    *) echo "Invalid Argument passed";;
 esac

@@ -295,6 +295,27 @@ def parseDeviceConfig(obj):
 		global invalid_dns_server
                 invalid_dns_server = config.get(deviceConfig, "INVALID_DNS_SERVER")
 
+                global xdns_dns_server
+                xdns_dns_server = config.get(deviceConfig, "XDNS_DNS_SERVER")
+
+                global xdns_level1_dns_server
+                xdns_level1_dns_server = config.get(deviceConfig, "XDNS_LEVEL1_DNS_SERVER")
+
+                global xdns_level2_dns_server
+                xdns_level2_dns_server = config.get(deviceConfig, "XDNS_LEVEL2_DNS_SERVER")
+
+                global xdns_level3_dns_server
+                xdns_level3_dns_server = config.get(deviceConfig, "XDNS_LEVEL3_DNS_SERVER")
+
+                global xdns_level1_site
+                xdns_level1_site = config.get(deviceConfig, "XDNS_LEVEL1_SITE")
+
+                global xdns_level2_site
+                xdns_level2_site = config.get(deviceConfig, "XDNS_LEVEL2_SITE")
+
+                global xdns_level3_site
+                xdns_level3_site = config.get(deviceConfig, "XDNS_LEVEL3_SITE")
+
 	except Exception, e:
 		print e;
 		status = "Failed to parse the device specific configuration file"
@@ -744,6 +765,31 @@ def getWlanMACAddress(wlanInterface):
                 status = e;
 
         print "WLAN MAC Address after connecting to WIFI:%s" %status;
+        return status;
+
+########## End of Function ##########
+
+def getLanMACAddress(lanInterface):
+
+# getLanMACAddress
+
+# Syntax      : getLanMACAddress()
+# Description : Function to get the MAC address of the lan client on the given interface
+# Parameters  : lanInterface - lan interface name
+# Return Value: status - MAC Address of the LAN client
+
+        try:
+                if lan_os_type == "UBUNTU":
+                        command="sudo sh %s get_lan_mac %s" %(lan_script,lanInterface)
+                        status = executeCommand(command)
+                else:
+                        status = "Only UBUNTU platform supported!!!"
+
+        except Exception, e:
+                print e;
+                status = e;
+
+        print "LAN MAC Address:%s" %status;
         return status;
 
 ########## End of Function ##########
