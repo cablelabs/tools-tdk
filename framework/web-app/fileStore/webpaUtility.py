@@ -100,15 +100,15 @@ def parseWebpaResponse(response, count, method="get"):
                    value = value + list(responseDict["parameters"])[i]['value'] + "  "
            value = value.strip()
            print "Got parameter value as: ",value
-	   return [responseDict['statusCode'],value]
+	   return ["SUCCESS",value]
         else:
 	   print "Set operation response is: ", msg
-	   return [responseDict['statusCode'], msg]
+	   return ["SUCCESS", msg]
    else:
 	if method == "get":
 	    msg = responseDict["message"]
 	else:
 	    msg = list(responseDict["parameters"])[0]['message']
         print "GET/SET operation failed. Response msg for failure: ",msg
-        return [responseDict['statusCode'], msg]
+        return ["FAILURE", msg]
 ########## End of Function ##########

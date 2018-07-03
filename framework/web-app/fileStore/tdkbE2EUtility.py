@@ -994,7 +994,7 @@ def getMultipleParameterValues(obj,paramList):
         parsedResponse = parseWebpaResponse(queryResponse, paramCount)
         tdkTestObj = obj.createTestStep("tdkb_e2e_Get");
         tdkTestObj.executeTestCase("SUCCESS");
-        if 200 in parsedResponse:
+        if "SUCCESS" in parsedResponse[0]:
                 orgValue = parsedResponse[1];
                 orgValue = orgValue.split()
                 status = "SUCCESS"
@@ -1037,7 +1037,7 @@ def getParameterValue(obj,param):
                 parsedResponse = parseWebpaResponse(queryResponse, 1);
                 tdkTestObj = obj.createTestStep("tdkb_e2e_Get");
                 tdkTestObj.executeTestCase("SUCCESS");
-                if 200 in parsedResponse:
+                if "SUCCESS" in parsedResponse[0]:
                         value = parsedResponse[1];
                         actualresult = "SUCCESS"
                 else:
@@ -1126,7 +1126,7 @@ def setMultipleParameterValues(obj,paramList):
                         # Invoke webpa utility to post the query for set operation
                         queryResponse = webpaQuery(obj, queryParam, "set")
                         parsedResponse = parseWebpaResponse(queryResponse, 1, "set")
-                        if 200 in parsedResponse:
+                        if "SUCCESS" in parsedResponse[0]:
                                 details = "WEBPA query success";
                                 actualresult = "SUCCESS"
                                 #This sleep is required for any consequtive SET or SET/GET via WEBPA
