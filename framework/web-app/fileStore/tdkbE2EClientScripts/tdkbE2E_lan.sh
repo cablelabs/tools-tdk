@@ -112,10 +112,7 @@ nslookup_in_client()
 {
         outStatus="$(nslookup $var2 $var3)"
         outStatus=$(printf "%s " $outStatus)
-        echo $outStatus
-        echo $var2
         site=$(echo $var2 | sed 's/^.\{4\}//g')
-        echo $site
         case $outStatus in
             *"Non-authoritative answer: Name: $var2 Address:"*) value="SUCCESS";;
             *"Non-authoritative answer: $var2 canonical name = $site. Name: $site Address:"*) value="SUCCESS";;
