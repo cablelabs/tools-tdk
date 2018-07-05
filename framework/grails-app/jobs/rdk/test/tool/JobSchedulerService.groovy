@@ -3649,7 +3649,6 @@ class JobSchedulerService implements Job{
 	   def initiateDiagnosticsTest(def deviceInstance , def diagFileName , def tmUrl ,def uniqueExecutionName){
 		   def output = ""
 		   try{
-				   if(deviceInstance?.category?.equals(Category.RDKB)){
 					   File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callDiagnosticsTest.py").file
 					   def absolutePath = layoutFolder.absolutePath
 			   
@@ -3667,7 +3666,6 @@ class JobSchedulerService implements Job{
 					   
 					   ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 					    output = scriptExecutor.executeScript(cmd,10)
-				   }
 		   } catch (Exception e) {
 			   e.printStackTrace()
 		   }

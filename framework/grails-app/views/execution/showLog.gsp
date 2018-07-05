@@ -245,10 +245,14 @@ function hideParameters(k){
 		</th>
 		<th align="left">
 		 <g:if test="${executionInstance?.script}">
-			${testGroup}		 
+		 	<g:if test="${executionInstance?.script?.toString()?.equals("Multiple Scripts")}">
+		 	<g:link controller="scriptGroup" action="downloadMultiScriptXml" name = "${executionInstance?.name}" id="${executionInstance?.name}" target="_blank" >MultipleScripts </g:link>	
+		 	</g:if>
+			 <g:else>${testGroup}
+			 </g:else>		 
 		  </g:if>
 		  <g:else>
-		  	${executionInstance?.scriptGroup}
+		  <g:link controller="scriptGroup" action="downloadTestSuiteXml" name="${executionInstance?.scriptGroup}" id="${executionInstance?.scriptGroup}" target="_blank" >${executionInstance?.scriptGroup} </g:link>	
 		  </g:else> &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
 		  
 		  Result : 
@@ -317,7 +321,7 @@ function hideParameters(k){
 											url="[action: 'repeatExecution',params:[executionName : executionInstance?.name , device  : executionInstance?.device , scriptGroup : executionInstance?.scriptGroup , script : executionInstance?.script, devices :executionInstance?.device?.size(), rerun :1, isBenchMark :executionInstance?.isBenchMarkEnabled , isSystemDiagonisticEnabled :executionIntstance?.isSystemDiagnosticsEnabled ]]"
 										    before="deviceStatusCheck('${deviceInstance}','${deviceStatus}');" />
 									</td>
-								<td><g:submitToRemote value="Rerun On Failure Scripts"
+								<td><g:submitToRemote value="Rerun Of Failure Scripts"
 											url="[action :'rerunOnFailure', params:[executionName : executionInstance , device  : executionInstance?.device, scriptGroup : executionInstance?.scriptGroup , script : executionInstance?.script]]"
 											before="failureScriptCheck('${executionInstance}','${deviceInstance}','${deviceStatus}'  );" />
 								</td>					

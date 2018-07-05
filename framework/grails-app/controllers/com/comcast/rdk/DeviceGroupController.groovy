@@ -2178,6 +2178,10 @@ class DeviceGroupController {
 				status.put("category", dev?.category?.toString())
 				bType = dev?.getBoxType()
 				status.put("boxtype", bType?.getName())
+				def mac = dev?.getSerialNo()
+				if(mac){
+				status.put("mac", mac)
+				}
 			}else{
 				status.put("status", "FAILURE")
 				status.put("remarks", "No valid device found with provided data")

@@ -1823,7 +1823,7 @@ class ExecutescriptService {
 								}
 								scriptFile = ScriptFile?.findByScriptName(newScriptName) 								
 							}else{
-								script1=scriptService.getScript(realPath,scriptFile.moduleName,scriptFile.scriptName, scriptFile.category.toString())
+								script1=scriptService.getScript(realPath,scriptFile?.moduleName,scriptFile?.scriptName, scriptFile?.category.toString())
 								if(executionService.validateScriptBoxTypes(script1,executionDevice)){
 									validScript = true
 								}
@@ -1851,7 +1851,7 @@ class ExecutescriptService {
 									def startExecutionTime = new Date()
 									// ISSUE FIX related to restart execution not happening append category at the end.
 									if(!tclScript){
-										htmlData = executeScript(exResult?.execution?.name, execDevice, script1 , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple,exResult,execution?.isStbLogRequired, scriptFile.category?.toString())
+										htmlData = executeScript(exResult?.execution?.name, execDevice, script1 , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple,exResult,execution?.isStbLogRequired, scriptFile?.category?.toString())
 									}else{	// For TCL script execution																		
 										htmlData = tclExecutionService?.executeScript(exResult?.execution?.name, execDevice, scriptFile , executionDevice , url, filePath, realPath ,execution?.isBenchMarkEnabled.toString(), execution?.isSystemDiagnosticsEnabled?.toString(),exResult?.execution?.name,isMultiple?.toString(),exResult,execution?.isStbLogRequired, execution?.category,combinedScript)
 										
@@ -2406,7 +2406,6 @@ class ExecutescriptService {
 	def initiateDiagnosticsTest(def deviceInstance , def diagFileName , def tmUrl , def uniqueExecutionName ){
 		def output = ""
 		try{
-			if(deviceInstance?.category?.equals(Category.RDKB)){
 				File layoutFolder = grailsApplication.parentContext.getResource("//fileStore//callDiagnosticsTest.py").file
 				def absolutePath = layoutFolder.absolutePath
 		
@@ -2424,7 +2423,6 @@ class ExecutescriptService {
 				
 				ScriptExecutor scriptExecutor = new ScriptExecutor(uniqueExecutionName)
 				output = scriptExecutor.executeScript(cmd,10)
-			}
 		} catch (Exception e) {
 			e.printStackTrace()
 		}

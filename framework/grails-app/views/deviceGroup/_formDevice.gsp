@@ -206,7 +206,7 @@
 		<div
 			class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'serialNo', 'error')} ">
 			<label for="serialNo"> <g:message
-					code="device.serialNo.label" default="Serial No" />
+					code="device.serialNo.label" default="Mac Addr" />
 			</label>
 			<g:textField name="serialNo" id="serialNo" required=""
 				value="${deviceInstance?.serialNo}" class="textwidth" />

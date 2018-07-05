@@ -1733,6 +1733,14 @@ class ExecutionController {
 					executions.each{ execution ->
 						executionList.add(execution)
 					}
+				}else{
+				searchString = searchString?.trim()
+				def executionDevices = ExecutionDevice.findAllByBuildNameLike("%${searchString}%")
+				if(executionDevices?.size() >0){
+					executionDevices.each{ execDev ->
+						executionList.add(execDev?.execution)
+					}
+				}
 				}
 			}
 

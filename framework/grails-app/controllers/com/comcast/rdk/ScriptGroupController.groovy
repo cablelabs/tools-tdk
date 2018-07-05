@@ -2800,7 +2800,23 @@ class ScriptGroupController {
 	 * @return
 	 */	
 	def downloadXml(){
-		def scriptGrpName  = ScriptGroup.findByName(params.name)
+		def name = params?.name
+		String scriptGroupData = getScriptGroupData(name)
+		if(scriptGroupData){
+			params.format = "text"
+			params.extension = "xml"
+			response.setHeader("Content-Type", "application/octet-stream;")
+			response.setHeader("Content-Disposition", "attachment; filename=\""+ params?.name+".xml\"")
+			response.setHeader("Content-Length", ""+scriptGroupData.length())
+			response.outputStream << scriptGroupData.getBytes()
+		}else{
+			flash.message = "Download failed. Script Group data is not available."
+			redirect(action: "list")
+		}
+	}
+
+	def getScriptGroupData(String name){
+		def scriptGrpName  = ScriptGroup.findByName(name)
 		String scriptGroupData = ""
 		def writer = new StringWriter()
 		def xml = new MarkupBuilder(writer)
@@ -2822,17 +2838,7 @@ class ScriptGroupController {
 			log.error "ERROR "+e.getMessage()
 			e.printStackTrace()
 		}
-		if(scriptGroupData){
-			params.format = "text"
-			params.extension = "xml"
-			response.setHeader("Content-Type", "application/octet-stream;")
-			response.setHeader("Content-Disposition", "attachment; filename=\""+ params?.name+".xml\"")
-			response.setHeader("Content-Length", ""+scriptGroupData.length())
-			response.outputStream << scriptGroupData.getBytes()
-		}else{
-			flash.message = "Download failed. Script Group data is not available."
-			redirect(action: "list")
-		}
+		return scriptGroupData
 	}
 
 	/** This function used to uploading the new .xml fill in the test manager
@@ -4078,5 +4084,63 @@ class ScriptGroupController {
 		}
 		response.setHeader("Content-Type", "application/octet-stream;")
 		response.outputStream << data.getBytes()
+	}
+	
+	def downloadTestSuiteXml(){
+		def name = params?.id
+		String scriptGroupData = getScriptGroupData(name)
+		if(scriptGroupData){
+			params.format = "text"
+			params.extension = "xml"
+			response.setHeader("Content-Type", "application/octet-stream;")
+			response.setHeader("Content-Disposition", "attachment; filename=\""+ name +".xml\"")
+			response.setHeader("Content-Length", ""+scriptGroupData.length())
+			response.outputStream << scriptGroupData.getBytes()
+		}else{
+			flash.message = "Download failed. Script Group data is not available."
+			redirect(action: "list")
+		}
+	}
+	
+	def downloadMultiScriptXml(){
+		def exName= params?.id
+		String scriptGroupData
+		Execution exec = Execution.findByName(exName)
+		def exResList = ExecutionResult.findAllByExecution(exec)
+		if(exResList?.size() > 0){
+			def writer = new StringWriter()
+			def xml = new MarkupBuilder(writer)
+			try{
+				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
+				xml.xml(){
+					xml.script_group(){
+						xml.category(exec?.category)// for RDKB
+						xml.scripts(){
+							exResList?.each{ exRes ->
+								xml.script_name(exRes?.script)
+							}
+
+						}
+					}
+				}
+				scriptGroupData = writer.toString()
+			}catch (Exception e){
+				log.error "ERROR "+e.getMessage()
+				e.printStackTrace()
+			}
+		}
+
+		if(scriptGroupData){
+			params.format = "text"
+			params.extension = "xml"
+			response.setHeader("Content-Type", "application/octet-stream;")
+			response.setHeader("Content-Disposition", "attachment; filename=\""+ exName+".xml\"")
+			response.setHeader("Content-Length", ""+scriptGroupData.length())
+			response.outputStream << scriptGroupData.getBytes()
+		}else{
+			flash.message = "Download failed. Script Group data is not available."
+			redirect(action: "list")
+		}
+
 	}
 }
