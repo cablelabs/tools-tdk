@@ -159,6 +159,20 @@ AC_ARG_ENABLE([usbctrl],
            [echo "usbctrl component is not enabled"])
 AM_CONDITIONAL([USBCTRL], [test x$USBCTRL = xtrue])
 
+AC_ARG_ENABLE([wifihal],
+         AS_HELP_STRING([--enable-wifihal],[enable wifihal (default is no)]),
+         [
+           case "${enableval}" in
+              yes) WIFIHAL=true
+                   AS_IF([test x$CLIENT = xtrue], [SUBDIR_CLIENT+=" WIFIHAL_stub"],
+                          [echo box type not specified]) ;;
+             no) WIFIHAL=false ;;
+            *) AC_MSG_ERROR([bad value ${enableval} for --enable-wifihal ]) ;;
+             esac
+            ],
+           [echo "wifihal component is not enabled"])
+AM_CONDITIONAL([WIFIHAL], [test x$WIFIHAL = xtrue])
+
 AC_ARG_ENABLE([trace],
               AS_HELP_STRING([--enable-trace],[enable trace (default is no)]),
               [
@@ -225,5 +239,6 @@ AC_CONFIG_FILES([Makefile
          Bluetooth_stub/Makefile
 	 AudioCaptureMgr_stub/Makefile
 	 USBCtrl_stub/Makefile
-	 SystemUtil_stub/Makefile])
+	 SystemUtil_stub/Makefile
+	 WIFIHAL_stub/Makefile])
 AC_OUTPUT
