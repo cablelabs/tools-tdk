@@ -553,7 +553,7 @@ void BluetoothAgent::Bluetooth_GetPairedDevices(IN const Json::Value& req, OUT J
            char *pairedDeviceNameAddr = pairedDeviceName;
            for (; j< pairedDevices.m_numOfDevices; j++)
            {
-               pairedDeviceNameAddr += sprintf(pairedDeviceNameAddr,"%s;",pairedDevices.m_deviceProperty[j].m_name);
+               pairedDeviceNameAddr += sprintf(pairedDeviceNameAddr,"%s:%llu;",pairedDevices.m_deviceProperty[j].m_name,pairedDevices.m_deviceProperty[j].m_deviceHandle);
            }
            response["details"] = pairedDeviceName;
        }
