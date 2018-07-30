@@ -20,11 +20,12 @@
 
 import ConfigParser
 from pexpect import pxssh
+from time import sleep
 
 def executeBluetoothCtl(bluetoothObj,commands):
 
     try :
- 
+
         #Get Bluetooth configuration file
         bluetoothConfigFile = bluetoothObj.realpath+'fileStore/bluetoothcredential.config'
         configParser = ConfigParser.ConfigParser()
@@ -34,6 +35,7 @@ def executeBluetoothCtl(bluetoothObj,commands):
         password = configParser.get('bluetooth-config', 'password')
         global deviceName;
         deviceName = configParser.get('bluetooth-config','devicename')
+        BT_Mac =  configParser.get('bluetooth-config','DUT_BT_controller_mac')
         #Executing the commands in device
         print 'Number of commands:', len(commands)
         print 'Commands List:', commands
@@ -45,7 +47,22 @@ def executeBluetoothCtl(bluetoothObj,commands):
         session.login(ip,username,password)
         print "Executing the bluetoothctl commands"
         for parameters in range(0,len(commands)):
-            session.sendline(commands[parameters])
+            if 'scan on' in commands[parameters]:
+                session.sendline(commands[parameters])
+                print "Scanning started"
+                sleep(20);
+            elif 'pair' in commands[parameters]:
+                commands[parameters] += ' '+ BT_Mac;
+                session.sendline(commands[parameters])
+                print "Paired with DUT"
+                sleep(3);
+            elif 'remove' in commands[parameters]:
+                commands[parameters] += ' '+ BT_Mac;
+                session.sendline(commands[parameters])
+                print "Un Paired with DUT"
+                sleep(3);
+            else:
+                session.sendline(commands[parameters])
         session.prompt()
         status=session.before
         status=status.strip()
@@ -56,5 +73,5 @@ def executeBluetoothCtl(bluetoothObj,commands):
     except Exception, e:
         print e;
         status = "FAILURE"
-        
+
     return status
