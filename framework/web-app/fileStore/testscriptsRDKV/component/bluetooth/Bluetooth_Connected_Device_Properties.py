@@ -282,9 +282,9 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                                            deviceProperties =json.loads(json_acceptable_string)
                                            if "1" in deviceProperties['connected']:
                                                tdkTestObj.setResultStatus("SUCCESS");
-                                               print"Paired device property has valid value"
+                                               print"Connected device property has valid value"
                                            else:
-                                               print"Paired device property has INVALID value"
+                                               print"Connected device property has INVALID value"
                                                tdkTestObj.setResultStatus("FAILURE");
                                        else:
                                            tdkTestObj.setResultStatus("FAILURE");

@@ -56,7 +56,7 @@
     <!--  -->
   </rdk_versions>
   <test_cases>
-    <test_case_id>CT_BLUETOOTH_07</test_case_id>
+    <test_case_id>CT_BLUETOOTH_49</test_case_id>
     <test_objective>To check whether discoverable  devices are listed in the discovered devices list of DUT with Default input</test_objective>
     <test_type>Positive</test_type>
     <test_setup>XI5</test_setup>

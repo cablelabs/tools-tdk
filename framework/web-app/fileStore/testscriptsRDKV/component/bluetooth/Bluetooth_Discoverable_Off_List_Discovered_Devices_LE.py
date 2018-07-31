@@ -31,8 +31,11 @@
   <execution_time>2</execution_time>
   <long_duration>false</long_duration>
   <advanced_script>false</advanced_script>
-  <remarks/>
-  <skip>false</skip>
+  <!-- execution_time is the time out time for test execution -->
+  <remarks>Script is not applicable with Bluetooth emulator since LE profile is not enabled in that</remarks>
+  <!-- Reason for skipping the tests if marked to skip -->
+  <skip>true</skip>
+  <!--  -->
   <box_types>
     <box_type>IPClient-Wifi</box_type>
   </box_types>

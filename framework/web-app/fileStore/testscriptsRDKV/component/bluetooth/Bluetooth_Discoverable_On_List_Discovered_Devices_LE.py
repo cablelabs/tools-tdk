@@ -190,12 +190,12 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
                    deviceNameList=[]
                    for devices in range(len(discoveredDevicesList)):  
                        deviceNameList.append(discoveredDevicesList[devices].split(':')[0])
-                   if str(bluetoothlib.deviceName) in deviceNameList :
+                   if str(bluetoothlib.deviceName) not in deviceNameList :
                        tdkTestObj.setResultStatus("SUCCESS");
-                       print "Client device is successfully discovered in DUT" 
+                       print "Client device is NOT discovered in DUT since it is not an LE enabled device"
                    else:
                        tdkTestObj.setResultStatus("FAILURE");
-                       print "Client device is NOT discovered in DUT"
+                       print "Client device is discovered in DUT even if it is not an LE enabled device" 
                else:
                    tdkTestObj.setResultStatus("FAILURE");
                    print "Bluetooth_GetDiscoveredDevices call is FAILURE"

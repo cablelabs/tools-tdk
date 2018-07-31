@@ -183,7 +183,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
    #Execute the test case in STB
    tdkTestObj.executeTestCase(expectedresult);
    print "Set the client device as discoverable before starting the discovery in DUT"
-   commandList = ['bluetoothctl','discoverable on','quit'] 
+   commandList = ['bt-agent &','bluetoothctl','discoverable on','quit'] 
    output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
    if "FAILURE" in output:
         tdkTestObj.setResultStatus("FAILURE");
@@ -377,6 +377,18 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
            tdkTestObj.setResultStatus("FAILURE");
            print "Bluetooth_StartDeviceDiscovery call is FAILURE"
 
+       tdkTestObj = bluetoothObj.createTestStep('Bluetooth_SendRequest');
+       #Execute the test case in STB
+       tdkTestObj.executeTestCase(expectedresult);
+       print "Stop the bt-agent"
+       commandList = ['pkill bt-agent']
+       output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
+       if "FAILURE" in output:
+            tdkTestObj.setResultStatus("FAILURE");
+            print "Connecting to client device got failed"
+       else:
+           tdkTestObj.setResultStatus("SUCCESS");
+           print "BT agent stopped successfully"
 
    bluetoothObj.unloadModule("bluetooth");
 

@@ -31,8 +31,11 @@
   <execution_time>5</execution_time>
   <long_duration>false</long_duration>
   <advanced_script>false</advanced_script>
-  <remarks/>
-  <skip>false</skip>
+  <!-- execution_time is the time out time for test execution -->
+  <remarks>Script is not applicable with Bluetooth emulator since LE profile is not enabled in that</remarks>
+  <!-- Reason for skipping the tests if marked to skip -->
+  <skip>true</skip>
+  <!--  -->
   <box_types>
     <box_type>IPClient-Wifi</box_type>
   </box_types>
@@ -183,7 +186,7 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
    #Execute the test case in STB
    tdkTestObj.executeTestCase(expectedresult);
    print "Set the client device as discoverable before starting the discovery in DUT"
-   commandList = ['bluetoothctl','discoverable on','quit'] 
+   commandList = ['bt-agent &','bluetoothctl','discoverable on','quit'] 
    output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
    if "FAILURE" in output:
         tdkTestObj.setResultStatus("FAILURE");
@@ -389,6 +392,19 @@ if "SUCCESS" in bluetoothLoadStatus.upper():
        else:
            tdkTestObj.setResultStatus("FAILURE");
            print "Bluetooth_StartDeviceDiscovery call is FAILURE"
+
+       tdkTestObj = bluetoothObj.createTestStep('Bluetooth_SendRequest');
+       #Execute the test case in STB
+       tdkTestObj.executeTestCase(expectedresult);
+       print "Stop the bt-agent"
+       commandList = ['pkill bt-agent']
+       output = bluetoothlib.executeBluetoothCtl(bluetoothObj,commandList)
+       if "FAILURE" in output:
+            tdkTestObj.setResultStatus("FAILURE");
+            print "Connecting to client device got failed"
+       else:
+           tdkTestObj.setResultStatus("SUCCESS");
+           print "BT agent stopped successfully"
 
    bluetoothObj.unloadModule("bluetooth");
 
