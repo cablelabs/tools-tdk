@@ -57,9 +57,9 @@ class WIFIHAL : public RDKTestStubInterface, public AbstractServer<WIFIHAL>
 		  this->bindAndAddMethod(Procedure("TestMgr_WIFIHAL_GetRadioTrafficStats",PARAMS_BY_NAME, JSON_STRING, "radioIndex",JSON_INTEGER,NULL), &WIFIHAL::WIFI_HAL_GetRadioTrafficStats);
 		  this->bindAndAddMethod(Procedure("TestMgr_WIFIHAL_GetSSIDTrafficStats",PARAMS_BY_NAME, JSON_STRING, "radioIndex",JSON_INTEGER,NULL), &WIFIHAL::WIFI_HAL_GetSSIDTrafficStats);
 		  this->bindAndAddMethod(Procedure("TestMgr_WIFIHAL_GetNeighboringWiFiDiagnosticResult",PARAMS_BY_NAME, JSON_STRING, "radioIndex",JSON_INTEGER,NULL), &WIFIHAL::WIFI_HAL_GetNeighboringWiFiDiagnosticResult);
-                  this->bindAndAddMethod(Procedure("TestMgr_WIFIHAL_ConnectEndpoint", PARAMS_BY_NAME, JSON_STRING,"radioIndex", JSON_INTEGER,NULL), &WIFIHAL::WIFI_HAL_ConnectEndpoint);
+                  this->bindAndAddMethod(Procedure("TestMgr_WIFIHAL_ConnectEndpoint", PARAMS_BY_NAME, JSON_STRING,"radioIndex", JSON_INTEGER, "ssid",JSON_STRING, "security_mode",JSON_INTEGER, "WEPKey", JSON_STRING, "PreSharedKey", JSON_STRING, "KeyPassphrase", JSON_STRING, "privatekey", JSON_STRING, "eapIdentity", JSON_STRING, "saveSSID", JSON_INTEGER, NULL), &WIFIHAL::WIFI_HAL_ConnectEndpoint);
                   this->bindAndAddMethod(Procedure("TestMgr_WIFIHAL_LastConnected_Endpoint", PARAMS_BY_NAME, JSON_STRING,NULL), &WIFIHAL::WIFI_HAL_LastConnected_Endpoint);
-                  this->bindAndAddMethod(Procedure("TestMgr_WIFIHAL_DisconnectEndpoint", PARAMS_BY_NAME, JSON_STRING,"radioIndex", JSON_INTEGER,NULL), &WIFIHAL::WIFI_HAL_DisconnectEndpoint);
+                  this->bindAndAddMethod(Procedure("TestMgr_WIFIHAL_DisconnectEndpoint", PARAMS_BY_NAME, JSON_STRING,"radioIndex", JSON_INTEGER,"ssid", JSON_STRING, NULL), &WIFIHAL::WIFI_HAL_DisconnectEndpoint);
                 }
         /*inherited functions*/
         bool initialize(IN const char* szVersion);

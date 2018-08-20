@@ -27,7 +27,24 @@
 
 std::string WIFIHAL::testmodulepre_requisites()
 {
-    return "SUCCESS";
+    DEBUG_PRINT(DEBUG_TRACE,"\n testmodulepre_requisites ----->Entry\n");
+
+    int returnValue;
+    char details[200] = {'\0'};
+
+    returnValue = wifi_init();
+    if(0 == returnValue)
+    {
+        DEBUG_PRINT(DEBUG_TRACE,"\n testmodulepre_requisites ---> Initialize SUCCESS !!! \n");
+        DEBUG_PRINT(DEBUG_TRACE,"\n WIFIHAL testmodulepre_requisites --->Exit\n");
+        return "SUCCESS";
+    }
+    else
+    {
+       DEBUG_PRINT(DEBUG_TRACE,"\n testmodulepre_requisites --->Failed to initialize !!! \n");
+       DEBUG_PRINT(DEBUG_TRACE,"\n WIFIHAL testmodulepre_requisites --->Exit\n");
+       return "FAILURE";
+    }
 }
 
 /***************************************************************************
@@ -551,12 +568,17 @@ void WIFIHAL::WIFI_HAL_GetNeighboringWiFiDiagnosticResult(IN const Json::Value& 
  * Function Name        : WIFI_HAL_ConnectEndpoint
  * Description          : This function invokes WiFi hal api wifi_connectEndpoint()
  *
- * @param [in] req-    : methodName - identifier for the hal api name
-                          radioIndex - radio index value of wifi
-                          param     - the string value to be get
-                          paramType  - To indicate negative test scenario. it is set as NULL for negative sceanario, otherwise empty
-                          gOnly, nOnly, acOnly - the bool values to be set/get
- * @param [out] response - filled with SUCCESS or FAILURE based on the output staus of operation
+ * @param [in] req-    :  radioIndex - radio index value of wifi
+                          ssid     - ssid name of the router to which to be connected
+			  security_mode - Security modes this AccessPoint instance is capable of
+			  WEPKey - Key to be used when the mode is WEP-64 or WEP-128
+			  PreSharedKey - Key to be used when the mode is WPA or WPA2
+			  KeyPassphrase - Passphrase of the SSID
+			  eapIdentity - Extensible Authentication Protocol used when the mode is Enterprise type
+			  privatekey - Key to be used when the mode is Enterprise type
+			  saveSSID - Used to save the SSID details
+
+ * @param [out] response - filled with SUCCESS or FAILURE ased on the output staus of operation
  *
  ********************************************************************************************/
 void WIFIHAL::WIFI_HAL_ConnectEndpoint(IN const Json::Value& req, OUT Json::Value& response)
@@ -565,20 +587,69 @@ void WIFIHAL::WIFI_HAL_ConnectEndpoint(IN const Json::Value& req, OUT Json::Valu
     int radioIndex = 1;
     int returnValue;
     char details[200] = {'\0'};
+    char AP_ssid[30];
+    wifiSecurityMode_t AP_security_mode;
+    int security_mode = 0;
+    char AP_security_WEPKey[30] = {'\0'};
+    char AP_security_PreSharedKey[30] = {'\0'};;
+    char AP_security_KeyPassphrase[30] = {'\0'};;
+    int saveSSID = 1;
+    char eapIdentity[20] = "0";
+    char carootcert[20] = "0";
+    char clientcert[20] = "0";
+    char privatekey[20] = "0";;
 
     radioIndex = req["radioIndex"].asInt();
+    strcpy(AP_ssid,req["ssid"].asCString());
+    security_mode = req["security_mode"].asInt();
+    strcpy(AP_security_WEPKey,req["WEPKey"].asCString());
+    strcpy(AP_security_PreSharedKey,req["PreSharedKey"].asCString());
+    strcpy(AP_security_KeyPassphrase,req["KeyPassphrase"].asCString());
+    strcpy(privatekey,req["privatekey"].asCString());
+    strcpy(eapIdentity,req["eapIdentity"].asCString());
+    saveSSID = req["saveSSID"].asInt();
 
-    char ap_ssid[10] = "1";
-    wifiSecurityMode_t AP_security_mode = WIFI_SECURITY_WPA_PSK_AES;
-    char AP_security_WEPKey[30] = "1";
-    char AP_security_PreSharedKey[30] = "factor8490fifty";
-    char AP_security_KeyPassphrase[30] = "factor8490fifty";
-    int saveSSID = 1;
-    char eapIdentity[20];
-    char carootcert[20];
-    char clientcert[20];
-    char privatekey[20];
-    returnValue = wifi_connectEndpoint(radioIndex, ap_ssid,AP_security_mode,AP_security_WEPKey,AP_security_PreSharedKey,AP_security_KeyPassphrase,saveSSID,eapIdentity,carootcert,clientcert,privatekey);
+    switch(security_mode)
+        {
+        case 0: AP_security_mode = WIFI_SECURITY_NONE;
+                break;
+        case 1: AP_security_mode = WIFI_SECURITY_WEP_64;
+                break;
+        case 2: AP_security_mode = WIFI_SECURITY_WEP_128;
+                break;
+        case 3: AP_security_mode = WIFI_SECURITY_WPA_PSK_TKIP;
+                break;
+        case 4: AP_security_mode = WIFI_SECURITY_WPA_PSK_AES;
+                break;
+        case 5: AP_security_mode = WIFI_SECURITY_WPA2_PSK_TKIP;
+                break;
+        case 6: AP_security_mode = WIFI_SECURITY_WPA2_PSK_AES;
+                break;
+        case 7: AP_security_mode = WIFI_SECURITY_WPA_ENTERPRISE_TKIP;
+                break;
+        case 8: AP_security_mode = WIFI_SECURITY_WPA_ENTERPRISE_AES;
+                break;
+        case 9: AP_security_mode = WIFI_SECURITY_WPA2_ENTERPRISE_TKIP;
+                break;
+        case 10: AP_security_mode = WIFI_SECURITY_WPA2_ENTERPRISE_AES;
+                break;
+        case 11: AP_security_mode = WIFI_SECURITY_WPA_WPA2_PSK;
+                break;
+        case 12: AP_security_mode = WIFI_SECURITY_WPA_WPA2_ENTERPRISE;
+                break;
+        case 15: AP_security_mode = WIFI_SECURITY_NOT_SUPPORTED;
+                break;
+
+        }
+    printf("radioIndex: %d\n",radioIndex);
+    printf("AP_ssid: %s\n",AP_ssid);
+    printf("security_mode: %d\n",security_mode);
+    printf("AP_security_WEPKey: %s\n",AP_security_WEPKey);
+    printf("AP_security_PreSharedKey: %s\n",AP_security_PreSharedKey);
+    printf("AP_security_KeyPassphrase: %s\n", AP_security_KeyPassphrase);
+    printf("saveSSID: %d\n",saveSSID);
+
+    returnValue = wifi_connectEndpoint(radioIndex, AP_ssid,AP_security_mode,AP_security_WEPKey,AP_security_PreSharedKey,AP_security_KeyPassphrase,saveSSID,eapIdentity,carootcert,clientcert,privatekey);
     printf("return status from api call: %d",returnValue);
 
     if(0 == returnValue)
@@ -602,10 +673,8 @@ void WIFIHAL::WIFI_HAL_ConnectEndpoint(IN const Json::Value& req, OUT Json::Valu
  * Function Name        : WIFI_HAL_LastConnected_Endpoint
  * Description          : This function invokes WiFi hal api wifi_lastConnected_Endpoint()
  *
- * @param [in] req-    : methodName - identifier for the hal api name
-                          radioIndex - radio index value of wifi
-                          param     - the string value to be get
-                          paramType  - To indicate negative test scenario. it is set as NULL for negative sceanario, otherwise empty
+ * @param [in] req-    : NIL
+ *
  * @param [out] response - filled with SUCCESS or FAILURE based on the output staus of operation
  *
  ********************************************************************************************/
@@ -643,10 +712,9 @@ void WIFIHAL::WIFI_HAL_LastConnected_Endpoint(IN const Json::Value& req, OUT Jso
  * Function Name        : WIFI_HAL_DisconnectEndpoint
  * Description          : This function invokes WiFi hal api wifi_disconnectEndpoint()
  *
- * @param [in] req-    : methodName - identifier for the hal api name
-                          radioIndex - radio index value of wifi
-                          param     - the string value to be get
-                          paramType  - To indicate negative test scenario. it is set as NULL for negative sceanario, otherwise empty
+ * @param [in] req-    :  radioIndex - radio index value of wifi
+			  ssid - ssid to be disconnected
+
  * @param [out] response - filled with SUCCESS or FAILURE based on the output staus of operation
  *
  ********************************************************************************************/
@@ -656,11 +724,12 @@ void WIFIHAL::WIFI_HAL_DisconnectEndpoint(IN const Json::Value& req, OUT Json::V
     int radioIndex = 1;
     int returnValue;
     char details[500] = {'\0'};
-    char ap_ssid[10] = "1";
+    char AP_ssid[10] = "1";
 
     radioIndex = req["radioIndex"].asInt();
+    strcpy(AP_ssid,req["ssid"].asCString());
 
-    returnValue=wifi_disconnectEndpoint(radioIndex,ap_ssid);
+    returnValue=wifi_disconnectEndpoint(radioIndex,AP_ssid);
 
     printf("return status from api call: %d",returnValue);
 
