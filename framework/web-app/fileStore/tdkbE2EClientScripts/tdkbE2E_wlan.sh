@@ -252,6 +252,15 @@ validate_tcp_server_output()
         deleteTmpFile="$(sudo rm $var2 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
 }
 
+#To get the throughput from server
+validate_tcp_server_output_throughput()
+{
+        serverOutput="$(cat $var2 | grep bits/sec | cut -d ' ' -f 11)"
+        size="$(cat $var2 | grep bits/sec | cut -d ' ' -f 12)"
+        echo "OUTPUT:$serverOutput $size"
+        deleteTmpFile="$(sudo rm $var2 > /dev/null && echo "SUCCESS" || echo "FAILURE")"
+}
+
 # To set the UDP server in listening mode
 udp_init_server()
 {
@@ -331,6 +340,13 @@ validate_FTP()
         echo "OUTPUT:$value"
 }
 
+#To do ssh to client machines
+ssh_to_client()
+{
+        value="$(sshpass -p$var2 ssh $var3@$var4 ifconfig $var5 | grep "inet add" | cut -d ':' -f 2 | cut -d ' ' -f 1)"
+        echo "OUTPUT:$value"
+}
+
 # Store the arguments to a variable
 event=$1
 var2=$2
@@ -392,6 +408,8 @@ case $event in
         tcp_request;;
    "validate_tcp_server_output")
         validate_tcp_server_output;;
+   "validate_tcp_server_output_throughput")
+        validate_tcp_server_output_throughput;;
    "udp_init_server")
         udp_init_server;;
    "udp_request")
@@ -406,6 +424,8 @@ case $event in
         ftpFromlan;;
    "validate_FTP")
         validate_FTP;;
+    "ssh_to_client")
+        ssh_to_client;;
    *) echo "Invalid Argument passed";;
 esac
 

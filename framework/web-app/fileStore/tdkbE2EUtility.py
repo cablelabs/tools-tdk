@@ -105,6 +105,12 @@ def parseDeviceConfig(obj):
                 global wlan_5ghz_interface
                 wlan_5ghz_interface = config.get(deviceConfig, "WLAN_5GHZ_INTERFACE")
 
+                global wlan_2ghz_public_ssid_interface
+                wlan_2ghz_public_ssid_interface = config.get(deviceConfig, "WLAN_2GHZ_PUBLIC_SSID_INTERFACE")
+
+                global wlan_5ghz_public_ssid_interface
+                wlan_5ghz_public_ssid_interface = config.get(deviceConfig, "WLAN_5GHZ_PUBLIC_SSID_INTERFACE")
+
         	global wlan_inet_address
         	wlan_inet_address = config.get(deviceConfig, "WLAN_INET_ADDRESS")
 
@@ -125,6 +131,18 @@ def parseDeviceConfig(obj):
 
                 global wlan_5ghz_ssid_disconnect_status
                 wlan_5ghz_ssid_disconnect_status = config.get(deviceConfig, "WLAN_5GHZ_SSID_DISCONNECT_STATUS")
+
+                global wlan_2ghz_public_ssid_connect_status
+                wlan_2ghz_public_ssid_connect_status = config.get(deviceConfig, "WLAN_2GHZ_PUBLIC_SSID_CONNECT_STATUS")
+
+                global wlan_5ghz_public_ssid_connect_status
+                wlan_5ghz_public_ssid_connect_status = config.get(deviceConfig, "WLAN_5GHZ_PUBLIC_SSID_CONNECT_STATUS")
+
+                global wlan_2ghz_public_ssid_disconnect_status
+                wlan_2ghz_public_ssid_disconnect_status = config.get(deviceConfig, "WLAN_2GHZ_PUBLIC_SSID_DISCONNECT_STATUS")
+
+                global wlan_5ghz_public_ssid_disconnect_status
+                wlan_5ghz_public_ssid_disconnect_status = config.get(deviceConfig, "WLAN_5GHZ_PUBLIC_SSID_DISCONNECT_STATUS")
 
                 global lan_os_type
                 lan_os_type = config.get(deviceConfig, 'LAN_OS_TYPE')
@@ -554,7 +572,7 @@ def wlanConnectWifiSsid(ssidName,ssidPwd,wlanInterface,securityType= "Protected"
 			status = checkSsidAvailable(ssidName)
 			if ssidName in status:
 				status = wifiConnect(ssidName,ssidPwd,securityType)
-				if wlan_2ghz_ssid_connect_status in status or wlan_5ghz_ssid_connect_status in status:
+				if wlan_2ghz_ssid_connect_status in status or wlan_5ghz_ssid_connect_status in status or wlan_2ghz_public_ssid_connect_status in status or wlan_5ghz_public_ssid_connect_status in status:
                             		sleep(60);
 					status = getConnectedSsidName(wlanInterface)
 					if ssidName in status:
@@ -615,7 +633,7 @@ def wlanDisconnectWifiSsid(wlanInterface):
 
 	try:
         	status = wifiDisconnect(wlanInterface)
-        	if wlan_2ghz_ssid_disconnect_status in status or wlan_5ghz_ssid_disconnect_status in status or "SSID is already disconnected" in status:
+        	if wlan_2ghz_ssid_disconnect_status in status or wlan_5ghz_ssid_disconnect_status in status or wlan_2ghz_public_ssid_disconnect_status in status or wlan_5ghz_public_ssid_disconnect_status in status or "SSID is already disconnected" in status:
 			return "SUCCESS"
 		else:
                 	return "Failed to disconnect from wifi ssid"
@@ -1664,7 +1682,7 @@ def initServer(destination,dest_ip,connectivityType):
                     dest_script_name = lan_script;
                 else:
                     dest_script_name = wan_script;
-                if connectivityType == "TCP":
+                if "TCP" in connectivityType:
                     command="sudo sh %s tcp_init_server %s %s" %(dest_script_name,tmp_file_lan,dest_ip)
                 elif connectivityType == "UDP":
                     command="sudo sh %s udp_init_server %s" %(dest_script_name,dest_ip)
@@ -1701,7 +1719,7 @@ def RequestToServer(source,dest_ip,src_ip,connectivityType):
                    src_script_name = lan_script;
                else:
                    src_script_name = wan_script;
-               if connectivityType == "TCP":
+               if "TCP" in connectivityType:
                    command="sudo sh %s tcp_request %s %s %s" %(src_script_name,dest_ip,src_ip,tmp_file_wlan)
                elif connectivityType == "UDP":
                    command="sudo sh %s udp_request %s %s %s" %(src_script_name,dest_ip,tmp_file_wlan,src_ip)
@@ -1757,6 +1775,19 @@ def validateTcpUdpOutput(source,destination,connectivityType):
                         status = "FAILURE"
                 else:
                     status = "Failed to connect to client"
+
+            if connectivityType == "TCP_Throughput":
+                status = clientConnect(destination)
+                if status == "SUCCESS":
+                    #Get the bandwidth from server side and validate it.
+                    command="sudo sh %s validate_tcp_server_output_throughput %s" %(dest_script_name,tmp_file_lan)
+                    outputValue = executeCommand(command)
+                    if outputValue >= clientOutput:
+                        status = "SUCCESS"
+                    else:
+                        status = "FAILURE"
+                else:
+                    status = "Failed to connect to Client"
 
         except Exception, e:
                 print e;
@@ -1867,6 +1898,48 @@ def ftpToClient_File_Download(dest,dest_ip,src,src_ip):
 
 
 ########## End of Function ##########
+
+def sshToClient(dest_ip,dest_inteface,source,dest):
+# sshToClient
+# Syntax      : sshToClient()
+# Description : Function to ssh from one client to other client
+# Parameters  : dest_ip - IP to which ssh to be done
+#               dest_inteface - interface of the dest client ip
+#               source - Client from which ssh to be done
+#		dest - Client to which ss to be done
+# Return Value: Returns the status of ping operation
+        try:
+                status = clientConnect(source)
+                if status == "SUCCESS":
+                        if wlan_os_type == "UBUNTU":
+                                if source == "WLAN":
+                                    script_name = wlan_script;
+                                elif source == "LAN":
+                                    script_name = lan_script;
+                                else:
+                                    script_name = wan_script;
+                                if dest == "WLAN":
+                                    command="sudo sh %s ssh_to_client %s %s %s %s" %(script_name,wlan_password,wlan_username,dest_ip,dest_inteface)
+                                if dest == "LAN":
+                                    command="sudo sh %s ssh_to_client %s %s %s %s" %(script_name,lan_password,lan_username,dest_ip,dest_inteface)
+                                if dest == "WAN":
+                                    command="sudo sh %s ssh_to_client %s %s %s %s" %(script_name,wan_password,wan_username,dest_ip,dest_inteface)
+                                value = executeCommand(command)
+                                if value == dest_ip:
+                                    status = "SUCCESS"
+                                else:
+                                    status = "FAILURE";
+                        else:
+                                status = "Only UBUNTU platform supported!!!"
+                else:
+                        return "Failed to connect to wlan client"
+        except Exception, e:
+                print e;
+                status = e;
+        print "Status of sshToClient:%s" %status;
+        return status;
+########## End of Function ##########
+
 def postExecutionCleanup():
 
 # postExecutionCleanup
