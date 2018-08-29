@@ -30,8 +30,9 @@ Test case Id - CT_IARMBUS_64</synopsis>
   <groups_id/>
   <execution_time>3</execution_time>
   <long_duration>false</long_duration>
-  <remarks></remarks>
-  <skip>false</skip>
+  <remarks>needs reflash</remarks>
+  <!-- Reason for skipping the tests if marked to skip -->
+  <skip>true</skip>
   <box_types>
     <box_type>RPI-Client</box_type>
     <box_type>RPI-HYB</box_type>
