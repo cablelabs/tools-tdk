@@ -254,6 +254,8 @@
 								<h3 style="color: #A24C15;"><center><strong>RDK-V</strong></center></h3>
 							</div>
 						--%><div>
+							<g:link action="downloadAllDevices"  params="[category:'RDKV']" target="_blank"> Download All the RDK-V Device Details </g:link>
+							<br/>
 							<table id="devicetable" class="display">
 								<thead>
 									<tr>
@@ -301,13 +303,16 @@
 								</tbody>
 							</table>
 							
+							<br/>
+							<br/>
 							</div>
 							<%--<div style="padding-bottom: 2%; padding-top:2%;">
 								<h3 style="color: #A24C15;"><center><strong>RDK-B</strong></center></h3>
 							</div>
 							
 							--%><div>
-							
+							<g:link action="downloadAllDevices"  params="[category:'RDKB']" target="_blank"> Download All the RDK-B Device Details </g:link>
+							<br/>
 							<table id="devicetable2" class="display">
 								<thead>
 									<tr>
@@ -352,6 +357,8 @@
 									</g:each>
 								</tbody>
 							</table>
+							<br/>
+							<br/>
 							</div>
 							
 							

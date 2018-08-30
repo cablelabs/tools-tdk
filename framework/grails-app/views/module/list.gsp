@@ -46,8 +46,9 @@
 				<li><g:link class ="create" action="createParameter" params="[category:category]"> Create Parameters </g:link></li>			
 				<li> <img src="../images/reorder_up.png" height="12" width="12"/><g:submitToRemote class="test" 
 						before="hideModuleListPage()" action="uploadModule;"
-						value=" Upload Module Deails"/>
+						value=" Upload Module Details"/>
 				</li>
+				<li><g:link class="create" action="downloadAllModule"  params="[category:category]" target="_blank"> Download All the Module Details </g:link></li>
 				
 			</ul>
 		</div>

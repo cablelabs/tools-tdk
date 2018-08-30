@@ -328,6 +328,9 @@ public final class Constants
 	public static final String TCL_DEVICE_CONFIG     = "TCLE2E";
 	public static final String TXT_EXTN     = ".txt";
 	public static final String CONFIG_EXTN     = ".config";
+	public static final String EXPORT_ZIP_FORMAT 			= "zip";
+	public static final String EXPORT_EXCEL_EXTENSION 		= "xls";
+	public static final String EXPORT_ZIP_EXTENSION 		= "zip";
 	
 	public static final String ALL_LOGS ="ALL";
 	public static final String FAILURE_LOGS ="FAILURE";

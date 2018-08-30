@@ -39,6 +39,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject;
 
 import java.util.concurrent.Executors
+import java.util.zip.ZipOutputStream
 
 
 class DeviceGroupController {
@@ -57,6 +58,7 @@ class DeviceGroupController {
     static ExecutorService executorService = Executors.newCachedThreadPool()
     def executionService
 	def grailsApplication
+	def logZipService
 	
 	def index(){
 		redirect(action: "list")
@@ -1347,7 +1349,7 @@ class DeviceGroupController {
 									def  deviceIp =node?.device?.stb_ip?.text()?.trim()
 									String boxType = node?.device?.box_type?.text()?.trim()
 									def recorderId = node?.device?.recorder_id?.text()?.trim()
-									def socVendor = node?.device?.soc_vendour?.text()?.trim()
+									def socVendor = node?.device?.soc_vendor?.text()?.trim()
 									def boxManufacture = node?.device.box_manufacture?.text()?.trim()
 									def gateway = node?.device?.gateway_name?.text()?.trim()
 									def category = node?.device?.category?.text()?.trim()
@@ -1429,11 +1431,14 @@ class DeviceGroupController {
 											}
 											
 											if(category?.toString()?.equals(RDKB )){
-												def serialNo = node?.device?.serial_no?.text()?.trim()
+												def serialNo = node?.device?.mac_addr?.text()?.trim()
 												if(!serialNo){
+													serialNo = node?.device?.serial_no?.text()?.trim()
+													if(!serialNo){
 													valid = false
 													deviceObj.addProperty("STATUS","FAILURE")
 													deviceObj.addProperty("Remarks","Serial No should not be empty")
+													}
 												}
 											}
 										}
@@ -1454,7 +1459,10 @@ class DeviceGroupController {
 														status = 1
 														deviceInstance.gatewayIp =gateway
 													}else if(category?.equals(RDKB)){
-														serialNo = node?.device?.serial_no?.text()?.trim()
+														serialNo = node?.device?.mac_addr?.text()?.trim()
+														if(!serialNo){
+															serialNo = node?.device?.serial_no?.text()?.trim()
+														}
 															status = 1
 															deviceInstance?.serialNo =  serialNo?.toString()
 													}
@@ -1465,7 +1473,10 @@ class DeviceGroupController {
 														deviceInstance.recorderId = recorderId
 														deviceInstance.macId =null // HERE :  doubt --------->> null  / ""
 													}else if(category?.equals(RDKB)){
-														serialNo = node?.device?.serial_no?.text()?.trim()
+														serialNo = node?.device?.mac_addr?.text()?.trim()
+														if(!serialNo){
+															serialNo = node?.device?.serial_no?.text()?.trim()
+														}
 															status = 1
 															deviceInstance?.serialNo =  serialNo?.toString()
 													}
@@ -1543,64 +1554,7 @@ class DeviceGroupController {
 			def xml = new MarkupBuilder(writer)
 			String deviceData
 			try{
-				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
-				xml.xml(){
-					xml.device(){
-						mkp.yield "\r\n  "
-						mkp.comment "Unique name for the STB"
-						xml.stb_name(deviceInstance?.stbName)
-						mkp.yield "\r\n  "
-						mkp.comment "Unique IP for the STB "
-						xml.stb_ip(deviceInstance?.stbIp)
-						mkp.yield "\r\n  "
-						mkp.comment " BoxType for STB  "
-						xml.box_type(deviceInstance?.boxType)
-						mkp.yield "\r\n  "
-						mkp.comment "BoxManufacture for the STB"
-						xml.box_manufacture(deviceInstance?.boxManufacturer)
-						mkp.yield "\r\n  "
-						mkp.comment "SoC vendour for the STB"
-						xml.soc_vendour(deviceInstance?.soCVendor)
-						// Issue fix - category 
-						mkp.yield "\r\n  "
-						mkp.comment "Category for the STB"
-						xml.category(deviceInstance?.category)						
-						
-						
-						BoxType boxTypeInastnce = BoxType.findByName(deviceInstance?.boxType?.toString())
-						if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
-						|| boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
-							mkp.yield "\r\n  "
-							mkp.comment "RecorderId for Gateway device"
-							xml.recorder_id(deviceInstance?.recorderId)
-							mkp.yield "\r\n  "
-							mkp.comment "Streaming deatils with Ocap id "
-							xml.streams(){
-								mkp.yield "\r\n "
-								mkp.comment "<stream id='streamId'>OCAP_ID</stream>"
-								streamsDetails.each { streamid,ocapid->
-									xml.stream(id:streamid , ocapid?.toString())
-								}
-							}
-							if(boxTypeInastnce?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
-								mkp.yield "\r\n  "
-								mkp.comment "Gateway IP for Terminal-RNG box"
-								xml.gateway_ip(deviceInstance?.gatewayIp)
-							}
-						}else{
-							if(deviceInstance?.gatewayIp){
-								mkp.yield "\r\n  "
-								mkp.comment "Gateway IP for  IPClient STB"
-								xml.gateway_ip(deviceInstance?.gatewayIp)
-							}else{
-								mkp.yield "\r\n  "
-								mkp.comment "Gateway IP for IPClient STB"
-								xml.gateway_ip("")
-							}
-						}
-					}
-				}
-				deviceData= writer.toString()
+				deviceData= getRDKVDeviceDetails(deviceInstance)
 			} catch(Exception e){
 				println  "ERROR "+e.getMessage()
 				e.printStackTrace()
@@ -1635,44 +1589,7 @@ class DeviceGroupController {
 			def xml = new MarkupBuilder(writer)
 			String deviceData
 			try{
-				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
-				xml.xml(){
-					xml.device(){
-						mkp.yield "\r\n  "
-						mkp.comment "Unique name for the Device"
-						xml.gateway_name(deviceInstance?.stbName)
-						mkp.yield "\r\n  "
-						mkp.comment "Unique IP for the Device "
-						xml.gateway_ip(deviceInstance?.stbIp)
-						
-						mkp.yield "\r\n  "
-						mkp.comment " BoxType for Device  "
-						xml.box_type(deviceInstance?.boxType)
-						mkp.yield "\r\n  "
-						mkp.comment "BoxManufacture for the Device"
-						xml.box_manufacture(deviceInstance?.boxManufacturer)
-						mkp.yield "\r\n  "
-						mkp.comment "SoC vendour for the Device"
-						xml.soc_vendour(deviceInstance?.soCVendor)
-						// Issue fix - category
-						mkp.yield "\r\n  "
-						mkp.comment "Category for the Device"
-						xml.category(deviceInstance?.category)
-						
-						
-							if(deviceInstance?.serialNo){
-								mkp.yield "\r\n  "
-								mkp.comment "Serial Number for the Device"
-								xml.serial_no(deviceInstance?.serialNo)
-							}else{
-								mkp.yield "\r\n  "
-								mkp.comment "Serial Number for the Device"
-								xml.serial_no("")
-							}
-						
-					}
-				}
-				deviceData= writer.toString()
+				deviceData= getRDKBDeviceDetails(deviceInstance)
 			} catch(Exception e){
 				println  "ERROR "+e.getMessage()
 				e.printStackTrace()
@@ -1726,7 +1643,7 @@ class DeviceGroupController {
 							def  deviceIp =node?.device?.stb_ip?.text()?.trim()
 							String boxType = node?.device?.box_type?.text()?.trim()
 							def recorderId = node?.device?.recorder_id?.text()?.trim()
-							def socVendor = node?.device?.soc_vendour?.text()?.trim()
+							def socVendor = node?.device?.soc_vendor?.text()?.trim()
 							def boxManufacture = node?.device.box_manufacture?.text()?.trim()
 							def gateway = node?.device?.gateway_name?.text()?.trim()
 							def category = node?.device?.category?.text()?.trim()
@@ -1878,9 +1795,12 @@ class DeviceGroupController {
 							def deviceName =  node?.device?.gateway_name?.text()?.trim()
 							def  deviceIp =node?.device?.gateway_ip?.text()?.trim()
 							String boxType = node?.device?.box_type?.text()?.trim()
-							def socVendor = node?.device?.soc_vendour?.text()?.trim()
+							def socVendor = node?.device?.soc_vendor?.text()?.trim()
 							def boxManufacture = node?.device.box_manufacture?.text()?.trim()
-							def serialno = node?.device?.serial_no?.text()?.trim()
+							def serialno = node?.device?.mac_addr?.text()?.trim()
+							if(!serialno){
+								serialno = node?.device?.serial_no?.text()?.trim()
+							}
 							def category = node?.device?.category?.text()?.trim()
 							def boxTypeObj = BoxType.findByNameAndCategory(boxType,Utility.getCategory(category))
 							def boxManufactureObj = BoxManufacturer.findByNameAndCategory(boxManufacture,Utility.getCategory(category))
@@ -2243,7 +2163,183 @@ class DeviceGroupController {
 		render deviceObj
 	}
 		
+	/**
+	 * Function to fetch the rdk-v device details in XML format
+	 * @return
+	 */
+	def getRDKVDeviceDetails(def deviceInstance){
+		String deviceData
+		if(deviceInstance){
+			def streamsDetails = [:]
+			def deviceRadioStreamList = DeviceRadioStream.findAllByDevice(deviceInstance)
+			def deviceStreamList = DeviceStream?.findAllByDevice(deviceInstance)
+			//For streaming details
+			deviceStreamList?.each{
+				streamsDetails.put(it.stream?.toString(),it.ocapId?.toString())
+			}
+			//For radio streaming details
+			deviceRadioStreamList.each {
+				streamsDetails?.put(it.stream?.toString(),it.ocapId?.toString())
+			}
+			def writer = new StringWriter()
+			def xml = new MarkupBuilder(writer)
+			try{
+				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
+				xml.xml(){
+					xml.device(){
+						mkp.yield "\r\n  "
+						mkp.comment "Unique name for the STB"
+						xml.stb_name(deviceInstance?.stbName)
+						mkp.yield "\r\n  "
+						mkp.comment "Unique IP for the STB "
+						xml.stb_ip(deviceInstance?.stbIp)
+						mkp.yield "\r\n  "
+						if(deviceInstance?.serialNo){
+							mkp.comment "Mac Addr for the STB "
+							xml.mac_addr(deviceInstance?.serialNo)
+							mkp.yield "\r\n "
+						}else{
+							mkp.comment "Mac Addr for the Device"
+							xml.mac_addr("")
+							mkp.yield "\r\n  "
+						}
+						mkp.comment " BoxType for STB  "
+						xml.box_type(deviceInstance?.boxType)
+						mkp.yield "\r\n  "
+						mkp.comment "BoxManufacture for the STB"
+						xml.box_manufacture(deviceInstance?.boxManufacturer)
+						mkp.yield "\r\n  "
+						mkp.comment "SoC vendor for the STB"
+						xml.soc_vendor(deviceInstance?.soCVendor)
+						// Issue fix - category
+						mkp.yield "\r\n  "
+						mkp.comment "Category for the STB"
+						xml.category(deviceInstance?.category)
+						BoxType boxTypeInstance = BoxType.findByName(deviceInstance?.boxType?.toString())
+						if(boxTypeInstance?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_GATEWAY)
+						|| boxTypeInstance?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+							mkp.yield "\r\n  "
+							mkp.comment "RecorderId for Gateway device"
+							xml.recorder_id(deviceInstance?.recorderId)
+							mkp.yield "\r\n  "
+							mkp.comment "Streaming details with Ocap id "
+							xml.streams(){
+								mkp.yield "\r\n "
+								mkp.comment "<stream id='streamId'>OCAP_ID</stream>"
+								streamsDetails.each { streamid,ocapid->
+									xml.stream(id:streamid , ocapid?.toString())
+								}
+							}
+							if(boxTypeInstance?.type?.toString()?.toLowerCase()?.equals(BOXTYPE_STANDALONE_CLIENT)){
+								mkp.yield "\r\n  "
+								mkp.comment "Gateway IP for Terminal-RNG box"
+								xml.gateway_ip(deviceInstance?.gatewayIp)
+							}
+						}else{
+							if(deviceInstance?.gatewayIp){
+								mkp.yield "\r\n  "
+								mkp.comment "Gateway IP for  IPClient STB"
+								xml.gateway_ip(deviceInstance?.gatewayIp)
+							}else{
+								mkp.yield "\r\n  "
+								mkp.comment "Gateway IP for IPClient STB"
+								xml.gateway_ip("")
+							}
+						}
+					}
+				}
+				deviceData= writer.toString()
+			} catch(Exception e){
+				println  "ERROR "+e.getMessage()
+				e.printStackTrace()
+			}
+		}
+		return deviceData
+	}
+	/**
+	 * Function to fetch the rdk-b device details in XML format
+	 * @return
+	 */
+	def getRDKBDeviceDetails(def deviceInstance){
+		String deviceData
+		if(deviceInstance){
+			def writer = new StringWriter()
+			def xml = new MarkupBuilder(writer)
+			try{
+				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
+				xml.xml(){
+					xml.device(){
+						mkp.yield "\r\n  "
+						mkp.comment "Unique name for the Device"
+						xml.gateway_name(deviceInstance?.stbName)
+						mkp.yield "\r\n  "
+						mkp.comment "Unique IP for the Device "
+						xml.gateway_ip(deviceInstance?.stbIp)
+						mkp.yield "\r\n  "
+						mkp.comment " BoxType for Device  "
+						xml.box_type(deviceInstance?.boxType)
+						mkp.yield "\r\n  "
+						mkp.comment "BoxManufacture for the Device"
+						xml.box_manufacture(deviceInstance?.boxManufacturer)
+						mkp.yield "\r\n  "
+						mkp.comment "SoC vendor for the Device"
+						xml.soc_vendor(deviceInstance?.soCVendor)
+						// Issue fix - category
+						mkp.yield "\r\n  "
+						mkp.comment "Category for the Device"
+						xml.category(deviceInstance?.category)
+						mkp.yield "\r\n  "
+						mkp.comment "Mac Addr for the Device"
+						if(deviceInstance?.serialNo){
+							xml.mac_addr(deviceInstance?.serialNo)
+						}else{
+							xml.mac_addr("")
+						}
+					}
+				}
+				deviceData= writer.toString()
+			} catch(Exception e){
+				println  "ERROR "+e.getMessage()
+				e.printStackTrace()
+			}
+		}
+	}
 	
+	/**
+	 * Function for download all device details as XML as zip
+	 * @return
+	 */
+	def downloadAllDevices(){
+		String category = params?.category
+		try {
+			def deviceList = Device.findAllByCategory(category)
+			if(deviceList?.size() > 0){
+				ZipOutputStream zos = new ZipOutputStream(response.outputStream);
+				params.format = EXPORT_ZIP_FORMAT
+				params.extension = EXPORT_ZIP_EXTENSION
+				response.contentType = grailsApplication.config.grails.mime.types[params.format]
+				response.setHeader("Content-Type", "application/zip")
+				response.setHeader("Content-disposition", "attachment; filename=DeviceXML_"+ category +".${params.extension}")
+				deviceList?.each{ devObj ->
+					def xmlData = ""
+					if(category?.equals(Category.RDKB?.toString())){
+						xmlData = getRDKBDeviceDetails(devObj)
+					}else{
+						xmlData = getRDKVDeviceDetails(devObj)
+					}
+					logZipService.writeZipEntry(xmlData , "${category}/${devObj?.stbName}.xml" , zos)
+				}
+				zos.closeEntry();
+				zos.close();
+			}else{
+				flash.message = "Download failed due to device information not available."
+				redirect(action:"list")
+			}
+		} catch (Exception e) {
+			println" Error "+e.getMessage()
+			e.printStackTrace()
+		}
+	}
 	
 }
 

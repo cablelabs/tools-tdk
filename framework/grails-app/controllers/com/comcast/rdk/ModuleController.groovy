@@ -18,9 +18,10 @@
 */
 package com.comcast.rdk
 
-import static com.comcast.rdk.Constants.KEY_ON
+import static com.comcast.rdk.Constants.*
 
 import java.util.List;
+import java.util.zip.ZipOutputStream
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject
@@ -41,6 +42,7 @@ class ModuleController {
 
 	def utilityService
 	def moduleService
+	def logZipService
 	
 	def rootPath = null
 	static allowedMethods = [save: "POST", update: "POST", delete: "POST"]
@@ -751,64 +753,47 @@ class ModuleController {
 		}
 	}
 	
-	
+	/**
+	 * Function for download all module details as XML as zip
+	 * @return
+	 */
+	def downloadAllModule(){
+		String category = params?.category
+		try {
+			def moduleList = Module.findAllByCategory(category)
+			if(moduleList?.size() > 0){
+				ZipOutputStream zos = new ZipOutputStream(response.outputStream);
+				params.format = EXPORT_ZIP_FORMAT
+				params.extension = EXPORT_ZIP_EXTENSION
+				response.contentType = grailsApplication.config.grails.mime.types[params.format]
+				response.setHeader("Content-Type", "application/zip")
+				response.setHeader("Content-disposition", "attachment; filename=ModuleXMLs_"+ category +".${params.extension}")
+				moduleList?.each{ moduleObj ->
+					def moduleXmlData = getModuleXMLData(moduleObj, category)
+					logZipService.writeZipEntry(moduleXmlData , "${moduleObj?.name}.xml" , zos)
+				}
+				zos.closeEntry();
+				zos.close();
+			}else{
+				flash.message ="Modules do not exist"
+				redirect(action:"show")
+			}
+		} catch (Exception e) {
+			e.printStackTrace()
+		}
+	}
 	/**
 	 * Function for download module details as XML
 	 * @return
 	 */
 	def downloadXml(){
-		def moduleName  = Module?.findById(params?.id)
+		def moduleObj  = Module?.findById(params?.id)
 		String moduleData = ""
 		def writer = new StringWriter()
 		def xml = new MarkupBuilder(writer)
-		if(moduleName){
+		if(moduleObj){
 			try{
-				xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
-				xml.xml(){
-				xml.module(){
-					mkp.yield "\r\n  "
-					mkp.comment "Module Name "
-					xml.moduleName(moduleName)
-					mkp.yield "\r\n  "
-					mkp.comment "Category of the module "
-					xml.category(params.category)
-					mkp.yield "\r\n  "
-					mkp.comment "Excecution time out of module"
-					xml.executionTimeOut(moduleName?.executionTime)
-					mkp.yield "\r\n  "
-					mkp.comment "Excecution time out of module"
-					xml.testGroup(moduleName?.testGroup)
-					mkp.yield "\r\n  "
-					mkp.comment "Logs File Names of module"
-					xml.logFileNames(moduleName?.stbLogFiles)
-					mkp.yield "\r\n  "
-					mkp.comment "Crash File Names of the module"
-					xml.crashFileNames(moduleName?.logFileNames)
-					def functions = Function.findAllByModule(moduleName)
-					if(functions){
-						mkp.yield "\r\n  "
-						mkp.comment "Total functions corresponding module "
-						xml.functions(){
-							functions?.each{ funName ->
-								xml.function(name:funName?.toString())
-							}
-						}
-						mkp.yield "\r\n  "
-						mkp.comment "Total parameters corresponding module "
-						xml.parameters(){
-							functions?.each{ funName ->
-								def parameterInstance =  ParameterType?.findAllByFunction(funName)
-								if(parameterInstance){
-									parameterInstance?.each{ parameterName->
-										xml.parameter(funName:funName,parameterName:parameterName,parameterType:parameterName?.parameterTypeEnum ,range:parameterName?.rangeVal)
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			moduleData = writer?.toString()
+				moduleData = getModuleXMLData(moduleObj,params?.category)
 			}catch(Exception e){
 				println " ERROR "+ e.printStackTrace()
 			}
@@ -816,10 +801,10 @@ class ModuleController {
 				params.format = "text"
 				params.extension = "xml"
 				response.setHeader("Content-Type", "application/octet-stream;")
-				response.setHeader("Content-Disposition", "attachment; filename=\""+ moduleName?.toString()+"-module.xml\"")
+				response.setHeader("Content-Disposition", "attachment; filename=\""+ moduleObj?.toString()+"-module.xml\"")
 				response.outputStream << moduleData.getBytes()
 			}else{
-				flash.message = "Download failed due to device information not available."
+				flash.message = "Download failed due to module information not available."
 				redirect(action: "show")
 			}
 		}else{
@@ -828,6 +813,66 @@ class ModuleController {
 		}
 	}
 	
+	/**
+	 * Function to fetch the module details in XML format
+	 * @return
+	 */
+	def getModuleXMLData(def moduleObj , def category){
+		String moduleData = ""
+		def writer = new StringWriter()
+		def xml = new MarkupBuilder(writer)
+		try{
+			xml.mkp.xmlDeclaration(version: "1.0", encoding: "utf-8")
+			xml.xml(){
+			xml.module(){
+				mkp.yield "\r\n  "
+				mkp.comment "Module Name "
+				xml.moduleName(moduleObj?.name)
+				mkp.yield "\r\n  "
+				mkp.comment "Category of the module "
+				xml.category(category)
+				mkp.yield "\r\n  "
+				mkp.comment "Excecution time out of module"
+				xml.executionTimeOut(moduleObj?.executionTime)
+				mkp.yield "\r\n  "
+				mkp.comment "Excecution time out of module"
+				xml.testGroup(moduleObj?.testGroup)
+				mkp.yield "\r\n  "
+				mkp.comment "Logs File Names of module"
+				xml.logFileNames(moduleObj?.stbLogFiles)
+				mkp.yield "\r\n  "
+				mkp.comment "Crash File Names of the module"
+				xml.crashFileNames(moduleObj?.logFileNames)
+				def functions = Function.findAllByModuleAndCategory(moduleObj,category)
+				if(functions){
+					mkp.yield "\r\n  "
+					mkp.comment "Total functions corresponding module "
+					xml.functions(){
+						functions?.each{ funName ->
+							xml.function(name:funName?.toString())
+						}
+					}
+					mkp.yield "\r\n  "
+					mkp.comment "Total parameters corresponding module "
+					xml.parameters(){
+						functions?.each{ funName ->
+							def parameterInstance =  ParameterType?.findAllByFunction(funName)
+							if(parameterInstance){
+								parameterInstance?.each{ parameterName->
+									xml.parameter(funName:funName,parameterName:parameterName,parameterType:parameterName?.parameterTypeEnum ,range:parameterName?.rangeVal)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		moduleData = writer?.toString()
+		}catch(Exception e){
+			println " ERROR "+ e.printStackTrace()
+		}
+		return moduleData
+	}
 
 
 	/**
