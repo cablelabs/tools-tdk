@@ -202,13 +202,13 @@
 		<g:textField id="stbIp" name="stbIp" required=""
 			value="${deviceInstance?.stbIp}" class="textwidth" />
 	</div>
-	<g:if test="${deviceInstance.category == Category.RDKB}">
+	<g:if test="${deviceInstance.isChild  == 0}">
 		<div
 			class="fieldcontain ${hasErrors(bean: deviceInstance, field: 'serialNo', 'error')} ">
 			<label for="serialNo"> <g:message
 					code="device.serialNo.label" default="Mac Addr" />
 			</label>
-			<g:textField name="serialNo" id="serialNo" required=""
+			<g:textField name="serialNo" id="serialNo"
 				value="${deviceInstance?.serialNo}" class="textwidth" />
 		</div>
 	</g:if>

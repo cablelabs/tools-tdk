@@ -3608,27 +3608,30 @@ class ExecutionController {
 	 */
 	def uploadLogs(String fileName){
 		String data = "";
-			try {
-				String deviceStreams , deviceOcapId
-				def node
-				if(params?.logFile){
-					def uploadedFile = request.getFile("logFile")
-					if(uploadedFile){
-						InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
-						def fileContent = reader?.readLines()
-						def logPath = "${realPath}/logs//logs"
-						File logFile = new File(logPath+"//${fileName}")
-						fileContent?.each { logg ->
-							data = data + logg+"\n";
-							logFile << logg+"\n"
-						}
+		try {
+			if(params?.logFile){
+				def uploadedFile = request.getFile("logFile")
+				if(uploadedFile){
+					InputStreamReader reader = new InputStreamReader(uploadedFile?.getInputStream())
+					def fileContent = reader?.readLines()
+					def logPath = "${realPath}/logs//logs"
+					File logFile = new File(logPath+"//${fileName}")
+					logFile.write ""
+					fileContent?.each { logg ->
+						data = data + logg+"\n";
+						logFile << logg+"\n"
 					}
 				}
-			}catch(Exception e ){
-				println  "uploadLogs ERROR "+ e.getMessage()
 			}
-			render data;
+		}catch(Exception e ){
+			println  "uploadLogs ERROR "+ e.getMessage()
+		}
+		render data;
 	}
+	
+	/**
+	 * REST API : invoked by devices to upload the logs to TM which will append if the file exists
+	 */
 	def securedUploadLogs(String fileName){
 		String data = "";
 			try {

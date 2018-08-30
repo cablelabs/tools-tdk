@@ -26,7 +26,7 @@ class SecurityFilters {
     def publicActions = [     
 		user: ['changePassword','registerUser','saveUser'],
 		primitiveTest : ['getJson','getStreamDetails'],
-		execution : ['saveLoadModuleStatus','saveResultDetails','getDeviceStatusList','getDeviceStatus','thirdPartyJsonResult','thirdPartyTest','showResult','getDetailedTestResult','getClientPort','stopThirdPartyTestExecution','getAgentConsoleLog','getRealtimeDeviceStatus','getExecutionOutput','thirdPartySingleTestExecution','thirdPartyJsonPerformanceResult','getExecutionId','getImageName','getExecutionList', 'getDeviceImageName','thirdPartyMultipleScriptExecution','uploadLogs','getExecutionStatus','exportConsolidatedToExcel','getTMIPAddress'],
+		execution : ['saveLoadModuleStatus','saveResultDetails','getDeviceStatusList','getDeviceStatus','thirdPartyJsonResult','thirdPartyTest','showResult','getDetailedTestResult','getClientPort','stopThirdPartyTestExecution','getAgentConsoleLog','getRealtimeDeviceStatus','getExecutionOutput','thirdPartySingleTestExecution','thirdPartyJsonPerformanceResult','getExecutionId','getImageName','getExecutionList', 'getDeviceImageName','thirdPartyMultipleScriptExecution','uploadLogs','getExecutionStatus','exportConsolidatedToExcel','getTMIPAddress','securedUploadLogs'],
 		deviceGroup : ['uploadAgentBinaries','getDeviceList','deleteDeviceMethod','createNewDevice','uploadTclConfig','getDeviceBoxType','getDeviceDetails','uploadE2EConfig'],
 		scriptGroup : ['getScriptsByScriptGroup','getScriptsByModule','getAllScriptGroups','deleteScriptGroup','createNewScriptGroup','verifyScriptGroup','getScriptTimeout','getTestJavaScript'],
 		module : ['getModuleScriptTimeOut']
