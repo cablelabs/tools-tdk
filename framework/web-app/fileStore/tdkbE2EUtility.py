@@ -210,6 +210,9 @@ def parseDeviceConfig(obj):
 		global ssid_2ghz_name
         	ssid_2ghz_name = config.get(deviceConfig, "SSID_2GHZ_NAME")
 
+                global ssid_2ghz_public_name
+                ssid_2ghz_public_name = config.get(deviceConfig, "SSID_2GHZ_PUBLIC_NAME")
+
 		global ssid_2ghz_pwd
         	ssid_2ghz_pwd = config.get(deviceConfig, "SSID_2GHZ_PWD")
 
@@ -220,20 +223,29 @@ def parseDeviceConfig(obj):
                 global radio_2ghz_index
                 global ssid_5ghz_index
                 global radio_5ghz_index
+                global ssid_2ghz_public_index
+                global ssid_5ghz_public_index
 
                 if setup_type == "TDK":
                         ssid_2ghz_index = config.get(deviceConfig, "TDK_SSID_2GHZ_INDEX")
                         radio_2ghz_index = config.get(deviceConfig, "TDK_RADIO_2GHZ_INDEX")
                         ssid_5ghz_index = config.get(deviceConfig, "TDK_SSID_5GHZ_INDEX")
                         radio_5ghz_index = config.get(deviceConfig, "TDK_RADIO_5GHZ_INDEX")
+                        ssid_2ghz_public_index = config.get(deviceConfig, "TDK_SSID_2GHZ_PUBLIC_INDEX")
+                        ssid_5ghz_public_index = config.get(deviceConfig, "TDK_SSID_5GHZ_PUBLIC_INDEX")
                 else:
                         ssid_2ghz_index = config.get(deviceConfig, "WEBPA_SSID_2GHZ_INDEX")
                         radio_2ghz_index = config.get(deviceConfig, "WEBPA_RADIO_2GHZ_INDEX")
                         ssid_5ghz_index = config.get(deviceConfig, "WEBPA_SSID_5GHZ_INDEX")
                         radio_5ghz_index = config.get(deviceConfig, "WEBPA_RADIO_5GHZ_INDEX")
+                        ssid_2ghz_public_index = config.get(deviceConfig, "WEBPA_SSID_2GHZ_PUBLIC_INDEX")
+                        ssid_5ghz_index = config.get(deviceConfig, "WEBPA_SSID_5GHZ_PUBLIC_INDEX")
 
 		global ssid_5ghz_name
         	ssid_5ghz_name = config.get(deviceConfig, "SSID_5GHZ_NAME")
+
+                global ssid_5ghz_public_name
+                ssid_5ghz_public_name = config.get(deviceConfig, "SSID_5GHZ_PUBLIC_NAME")
 
 		global ssid_5ghz_pwd
       		ssid_5ghz_pwd = config.get(deviceConfig, "SSID_5GHZ_PWD")
@@ -1066,6 +1078,41 @@ def getParameterValue(obj,param):
 
 ######### End of Function ##########
 
+
+def getPublicWiFiParamValues(obj):
+
+# Syntax      : getPublicWiFiParamValues()
+# Description : A utility function to get the public wifi parameters.
+# Parameters  : obj - module object
+# Return Value: SUCCESS/FAILURE
+
+    expectedresult="SUCCESS";
+    status = "SUCCESS";
+
+    actualresult= [];
+    orgValue = [];
+    ssid2 = "Device.WiFi.SSID.%s.SSID"%ssid_2ghz_public_index
+    ssid5 = "Device.WiFi.SSID.%s.SSID"%ssid_5ghz_public_index
+    enable2 = "Device.WiFi.SSID.%s.Enable"%ssid_2ghz_public_index
+    enable5 = "Device.WiFi.SSID.%s.Enable"%ssid_5ghz_public_index
+
+    paramList = ["Device.X_COMCAST-COM_GRE.Tunnel.1.DSCPMarkPolicy","Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint","Device.X_COMCAST-COM_GRE.Tunnel.1.SecondaryRemoteEndpoint",ssid2, ssid5, enable2, enable5,"Device.DeviceInfo.X_COMCAST_COM_xfinitywifiEnable"];
+
+    #Parse and store the values retrieved in a list
+    for index in range(len(paramList)):
+        tdkTestObj,retStatus,getValue = getParameterValue(obj,paramList[index])
+        actualresult.append(retStatus)
+        orgValue.append(getValue)
+
+    for index in range(len(paramList)):
+        if expectedresult not in actualresult[index]:
+            status = "FAILURE";
+            break;
+
+    return (tdkTestObj,status,orgValue);
+####################### End of Function #######################
+
+
 def splitList(paramList, size):
 
 # splitList
@@ -1157,6 +1204,37 @@ def setMultipleParameterValues(obj,paramList):
                 return (tdkTestObj,actualresult,details);
 
 ######### End of Function ##########
+
+
+def setPublicWiFiParamValues(obj,paramList):
+# A utility function to enable the public wifi parameters.
+#
+# Syntax       : setPublicWiFiParamValues(obj,paramList)
+#
+# Parameters   : obj,paramList
+#
+# Return Value : Execution status
+
+        paramList1 = "Device.X_COMCAST-COM_GRE.Tunnel.1.DSCPMarkPolicy|%s|int|Device.X_COMCAST-COM_GRE.Tunnel.1.PrimaryRemoteEndpoint|%s|string|Device.X_COMCAST-COM_GRE.Tunnel.1.SecondaryRemoteEndpoint|%s|string" %(paramList[0],paramList[1],paramList[2])
+
+        paramList2 = "Device.WiFi.SSID.%s.SSID|%s|string|Device.WiFi.SSID.%s.SSID|%s|string|Device.WiFi.SSID.%s.Enable|%s|bool|Device.WiFi.SSID.%s.Enable|%s|bool" %(ssid_2ghz_public_index,paramList[3],ssid_5ghz_public_index,paramList[4],ssid_2ghz_public_index,paramList[5],ssid_5ghz_public_index,paramList[6])
+
+        paramList3 = "Device.DeviceInfo.X_COMCAST_COM_xfinitywifiEnable|%s|bool" %paramList[7]
+
+        expectedresult="SUCCESS";
+        tdkTestObj,actualresult1,details1 = setMultipleParameterValues(obj,paramList1)
+        tdkTestObj,actualresult2,details2 = setMultipleParameterValues(obj,paramList2)
+        tdkTestObj,actualresult3,details3 = setMultipleParameterValues(obj,paramList3)
+
+        if expectedresult in actualresult1 and expectedresult in actualresult2 and expectedresult in actualresult3:
+            actualresult = "SUCCESS"
+            details = "setPublicWiFiParamValues success"
+        else:
+            actualresult = "FAILURE"
+            details = "setPublicWiFiParamValues failed"
+        return (tdkTestObj,actualresult,details);
+
+#################### End of Function ##########################
 
 
 def verifyNetworkConnectivity(dest_ip,connectivityType,source_ip,gateway_ip,source="WLAN"):
