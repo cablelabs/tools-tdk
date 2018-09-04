@@ -1350,6 +1350,9 @@ class DeviceGroupController {
 									String boxType = node?.device?.box_type?.text()?.trim()
 									def recorderId = node?.device?.recorder_id?.text()?.trim()
 									def socVendor = node?.device?.soc_vendor?.text()?.trim()
+									if(!socVendor){
+										socVendor = node?.device?.soc_vendour?.text()?.trim()
+									}
 									def boxManufacture = node?.device.box_manufacture?.text()?.trim()
 									def gateway = node?.device?.gateway_name?.text()?.trim()
 									def category = node?.device?.category?.text()?.trim()
@@ -1644,6 +1647,9 @@ class DeviceGroupController {
 							String boxType = node?.device?.box_type?.text()?.trim()
 							def recorderId = node?.device?.recorder_id?.text()?.trim()
 							def socVendor = node?.device?.soc_vendor?.text()?.trim()
+							if(!socVendor){
+								socVendor = node?.device?.soc_vendour?.text()?.trim()
+							}
 							def boxManufacture = node?.device.box_manufacture?.text()?.trim()
 							def gateway = node?.device?.gateway_name?.text()?.trim()
 							def category = node?.device?.category?.text()?.trim()
@@ -1796,6 +1802,9 @@ class DeviceGroupController {
 							def  deviceIp =node?.device?.gateway_ip?.text()?.trim()
 							String boxType = node?.device?.box_type?.text()?.trim()
 							def socVendor = node?.device?.soc_vendor?.text()?.trim()
+							if(!socVendor){
+								socVendor = node?.device?.soc_vendour?.text()?.trim()
+							}
 							def boxManufacture = node?.device.box_manufacture?.text()?.trim()
 							def serialno = node?.device?.mac_addr?.text()?.trim()
 							if(!serialno){
